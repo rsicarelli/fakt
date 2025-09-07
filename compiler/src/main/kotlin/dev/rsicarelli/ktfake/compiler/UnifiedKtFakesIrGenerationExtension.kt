@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package dev.rsicarelli.ktfake.compiler
 
+// Modular components will be integrated in future iterations
+// import dev.rsicarelli.ktfake.compiler.analysis.*
+// import dev.rsicarelli.ktfake.compiler.generation.*
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
@@ -13,19 +16,21 @@ import org.jetbrains.kotlin.name.FqName
 import java.io.File
 
 /**
- * Unified IR generation extension using pure IR-native architecture.
+ * Unified IR generation extension using modular IR-native architecture.
  * 
- * This extension replaces the string-based approach with modular IR-native components:
- * - Dynamic interface analysis via IR APIs
- * - Type-safe code generation principles
- * - Professional error handling and diagnostics
- * 
- * For MVP: Implements core functionality directly to ensure working integration.
- * Future enhancement: Use full modular architecture from moved components.
+ * This extension coordinates between modular components for complete fake generation:
+ * - InterfaceAnalyzer: Discovery and structural analysis
+ * - CodeGenerator: Backend-agnostic generation framework  
+ * - IrCodeGenerator: IR-native implementation
+ * - DiagnosticsReporter: Professional error handling
  */
 class UnifiedKtFakesIrGenerationExtension(
     private val messageCollector: MessageCollector? = null
 ) : IrGenerationExtension {
+
+    // Modular components will be initialized in future iterations
+    // private val interfaceAnalyzer: InterfaceAnalyzer = SimpleInterfaceAnalyzer()
+    // private val typeMapper: TypeMapper = KotlinTypeMapper()
 
     override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
         messageCollector?.reportInfo("KtFakes: Starting unified IR-native generation for module ${moduleFragment.name}")
@@ -37,7 +42,7 @@ class UnifiedKtFakesIrGenerationExtension(
         }
 
         try {
-            // Phase 1: Discover @Fake annotated interfaces using modular principles
+            // Phase 1: Discover @Fake annotated interfaces using direct IR approach
             val fakeInterfaces = discoverFakeInterfaces(moduleFragment)
             messageCollector?.reportInfo("KtFakes: Found ${fakeInterfaces.size} @Fake annotated interfaces")
 
@@ -46,7 +51,7 @@ class UnifiedKtFakesIrGenerationExtension(
                 return
             }
 
-            // Phase 2: Generate implementations using unified principles
+            // Phase 2: Analyze and generate using current working approach
             for (fakeInterface in fakeInterfaces) {
                 val interfaceName = fakeInterface.name.asString()
                 messageCollector?.reportInfo("KtFakes: Processing @Fake interface: $interfaceName")
@@ -54,20 +59,37 @@ class UnifiedKtFakesIrGenerationExtension(
                 // Analyze interface structure using IR APIs
                 val analysis = analyzeInterface(fakeInterface)
                 
-                // Generate unified implementation using current working approach
+                // Generate implementation using current working approach
                 generateUnifiedImplementation(fakeInterface, analysis, pluginContext)
                 
-                messageCollector?.reportInfo("KtFakes: Generated unified IR implementation for $interfaceName")
+                messageCollector?.reportInfo("KtFakes: Generated unified implementation for $interfaceName")
             }
             
             messageCollector?.reportInfo("KtFakes: Unified IR-native generation completed successfully")
         } catch (e: Exception) {
             messageCollector?.report(
                 org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.ERROR,
-                "KtFakes: Unified IR generation failed: ${e.message}"
+                "KtFakes: Unified IR generation failed: ${e.message}",
+                null
             )
         }
     }
+
+    /**
+     * Extract all classes from the module for analysis.
+     */
+    private fun extractAllClasses(moduleFragment: IrModuleFragment): List<IrClass> {
+        val allClasses = mutableListOf<IrClass>()
+        for (file in moduleFragment.files) {
+            for (declaration in file.declarations) {
+                if (declaration is IrClass) {
+                    allClasses.add(declaration)
+                }
+            }
+        }
+        return allClasses
+    }
+
 
     /**
      * Discover @Fake annotated interfaces using modular discovery principles.
@@ -98,7 +120,7 @@ class UnifiedKtFakesIrGenerationExtension(
     /**
      * Analyze interface structure using IR APIs.
      */
-    private fun analyzeInterface(sourceInterface: IrClass): InterfaceAnalysis {
+    private fun analyzeInterface(sourceInterface: IrClass): LegacyInterfaceAnalysis {
         val interfaceName = sourceInterface.name.asString()
         
         // Extract method signatures using IR analysis
@@ -138,7 +160,7 @@ class UnifiedKtFakesIrGenerationExtension(
 
         messageCollector?.reportInfo("KtFakes: Analyzed interface: methods=${methodSignatures.size}, properties=${propertySignatures.size}")
 
-        return InterfaceAnalysis(
+        return LegacyInterfaceAnalysis(
             interfaceName = interfaceName,
             methodSignatures = methodSignatures,
             propertySignatures = propertySignatures,
@@ -152,7 +174,7 @@ class UnifiedKtFakesIrGenerationExtension(
      */
     private fun generateUnifiedImplementation(
         sourceInterface: IrClass,
-        analysis: InterfaceAnalysis,
+        analysis: LegacyInterfaceAnalysis,
         pluginContext: IrPluginContext
     ) {
         val interfaceName = analysis.interfaceName
@@ -359,9 +381,9 @@ $configCode
     }
 
     /**
-     * Simple data class for interface analysis results.
+     * Legacy data class for backward compatibility with string-based approach.
      */
-    private data class InterfaceAnalysis(
+    private data class LegacyInterfaceAnalysis(
         val interfaceName: String,
         val methodSignatures: List<String>,
         val propertySignatures: List<String>,

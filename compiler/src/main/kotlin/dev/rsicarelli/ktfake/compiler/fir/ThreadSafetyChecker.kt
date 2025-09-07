@@ -10,7 +10,7 @@ import org.jetbrains.kotlin.fir.declarations.FirRegularClass
 import org.jetbrains.kotlin.fir.declarations.hasAnnotation
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
-import dev.rsicarelli.ktfake.compiler.diagnostics.KtFakesErrors
+// import dev.rsicarelli.ktfake.compiler.diagnostics.KtFakesErrors
 
 /**
  * FIR checker for thread-safety validation of @Fake annotations.
