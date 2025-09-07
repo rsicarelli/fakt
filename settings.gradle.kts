@@ -25,7 +25,10 @@ include(
   ":compiler-tests",
   ":gradle-plugin",
   ":runtime",
-  ":test-sample"
+  ":samples:single-module",
+  ":samples:multi-module:api",
+  ":samples:multi-module:core",
+  ":samples:multi-module:app"
 )
 
 val VERSION_NAME: String by extra.properties

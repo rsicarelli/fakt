@@ -34,6 +34,7 @@ public class KtFakeCompilerPluginRegistrar : CompilerPluginRegistrar() {
 
     @OptIn(ExperimentalCompilerApi::class)
     override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
+        // Pass the configuration to the options loader
         val options = KtFakeOptions.load(configuration)
 
         if (!options.enabled) {
@@ -53,7 +54,7 @@ public class KtFakeCompilerPluginRegistrar : CompilerPluginRegistrar() {
         FirExtensionRegistrarAdapter.registerExtension(KtFakesFirExtensionRegistrar())
 
         // Register unified IR-native generation extension
-        IrGenerationExtension.registerExtension(UnifiedKtFakesIrGenerationExtension(messageCollector))
+        IrGenerationExtension.registerExtension(UnifiedKtFakesIrGenerationExtension(messageCollector, options.outputDir))
 
         messageCollector.report(
             CompilerMessageSeverity.INFO,
@@ -71,15 +72,16 @@ internal data class KtFakeOptions(
     val debug: Boolean = false,
     val generateCallTracking: Boolean = true,
     val generateBuilderPatterns: Boolean = true,
-    val strictMode: Boolean = false
+    val strictMode: Boolean = false,
+    val outputDir: String? = null
 ) {
     companion object {
         fun load(configuration: CompilerConfiguration): KtFakeOptions {
-            // Load configuration from compiler arguments if available, otherwise use defaults
-            // This is sufficient for MVP - more sophisticated config loading can be added later
+            // Load configuration from the command line processor
             return KtFakeOptions(
-                enabled = true,  // Always enabled for MVP
-                debug = true     // Always debug for MVP
+                enabled = configuration.get(KtFakeCommandLineProcessor.ENABLED_KEY, true),
+                debug = configuration.get(KtFakeCommandLineProcessor.DEBUG_KEY, true),
+                outputDir = configuration.get(KtFakeCommandLineProcessor.OUTPUT_DIR_KEY)
             )
         }
     }

@@ -25,24 +25,29 @@ kotlin {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-test")
             }
-            kotlin.srcDir("build/generated/ktfake/test/kotlin")
+            kotlin.srcDir("build/generated/ktfake/jvmTest/kotlin")
         }
     }
 }
 
 // Dependencies are now configured in sourceSets above
 
-// Configure compiler plugin for all Kotlin compilation tasks
+// Configure compiler plugin ONLY for main compilation tasks (not test)
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    compilerOptions {
-        // Apply our unified compiler plugin manually for testing
-        val compilerJar = project.rootProject.project(":compiler").tasks.named("shadowJar").get().outputs.files.singleFile
-        println("KtFake compiler plugin path: ${compilerJar.absolutePath}")
-        freeCompilerArgs.addAll(listOf(
-            "-Xplugin=${compilerJar.absolutePath}",
-            "-P", "plugin:dev.rsicarelli.ktfake:enabled=true",
-            "-P", "plugin:dev.rsicarelli.ktfake:debug=true"
-        ))
+    // Only apply plugin to main source sets, not test source sets
+    if (!name.contains("Test")) {
+        compilerOptions {
+            // Apply our unified compiler plugin manually for testing
+            val compilerJar = project.rootProject.project(":compiler").tasks.named("shadowJar").get().outputs.files.singleFile
+            println("KtFake compiler plugin path: ${compilerJar.absolutePath}")
+            
+            freeCompilerArgs.addAll(listOf(
+                "-Xplugin=${compilerJar.absolutePath}",
+                "-P", "plugin:dev.rsicarelli.ktfake:enabled=true",
+                "-P", "plugin:dev.rsicarelli.ktfake:debug=true",
+                "-P", "plugin:dev.rsicarelli.ktfake:outputDir=${project.buildDir.absolutePath}/generated/ktfake"
+            ))
+        }
     }
 }
 
