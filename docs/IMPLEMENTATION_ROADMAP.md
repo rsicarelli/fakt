@@ -29,69 +29,148 @@
 - **Performance**: IR-native, no string parsing overhead
 - **Documentation**: Complete API specs with working examples
 
-## 🚀 **Phase 2: Enhanced Features (Next 3-6 Months)**
+## 🚨 **Phase 2: CRITICAL FIXES (IMMEDIATE PRIORITY)**
+
+> **ALERT**: Sample analysis revealed critical compiler limitations blocking real-world usage.
+> **Status**: Multiple compilation failures in test scenarios
+> **Required**: Immediate fixes before any feature enhancements
+
+### **🚨 Priority 1: Cross-Module Import Resolution** 
+**Status**: CRITICAL BUG - Multi-module scenarios fail to compile
+
+**Current Problem**:
+```kotlin
+// Generated code in core/build/generated/ktfake/commonTest/kotlin/
+class FakeUserServiceImpl : UserService {
+    // ERROR: NetworkService not imported!
+    private var networkServiceBehavior: () -> NetworkService = { ... }
+    private var storageServiceBehavior: () -> StorageService = { ... }
+    //                                      ^^^^^^^^^^^^^^
+    //                          Unresolved reference errors
+}
+```
+
+**Required Fix**:
+```kotlin
+// Must generate proper imports
+package core.business
+
+import api.shared.NetworkService    // <-- MISSING
+import api.shared.StorageService    // <-- MISSING  
+import api.shared.LoggingService    // <-- MISSING
+
+class FakeUserServiceImpl : UserService { ... }
+```
+
+**Implementation Plan**:
+- **Import analysis**: Detect cross-module type references in IR
+- **Module resolution**: Map types to their source modules
+- **Import generation**: Generate proper import statements
+- **Validation**: Ensure all referenced types are imported
+
+### **🚨 Priority 2: Generic Type Parameter Handling**
+**Status**: CRITICAL BUG - All generic types lose type safety
+
+**Current Problem**:
+```kotlin
+// Input interface
+interface UserRepository {
+    fun findByAge(min: Int, max: Int): List<User>
+    fun processNumbers(items: Set<Int>): Map<String, Int>
+}
+
+// BROKEN Generated code
+class FakeUserRepositoryImpl : UserRepository {
+    // Type parameters stripped! Compilation errors!
+    private var findByAgeBehavior: (Int, Int) -> List = { _, _ -> TODO("Implement default for List") }
+    private var processNumbersBehavior: (Set) -> Map = { _ -> TODO("Implement default for Map") }
+    //                                    ^^^     ^^^
+    //                              Missing type parameters
+}
+```
+
+**Required Fix**:
+```kotlin
+// CORRECT Generated code
+class FakeUserRepositoryImpl : UserRepository {
+    private var findByAgeBehavior: (Int, Int) -> List<User> = { _, _ -> emptyList() }
+    private var processNumbersBehavior: (Set<Int>) -> Map<String, Int> = { _ -> emptyMap() }
+}
+```
+
+**Implementation Plan**:
+- **Type parameter extraction**: Preserve generic type information in IR analysis
+- **Default value mapping**: Smart defaults for common generic types
+- **Type rendering**: Proper generic type string generation
+
+### **🚨 Priority 3: Function Type Resolution**
+**Status**: CRITICAL BUG - Higher-order functions generate uncompilable code
+
+**Current Problem**:
+```kotlin
+// Input interface  
+interface EventProcessor {
+    fun process(item: Any, processor: (Any) -> String): String
+    suspend fun processAsync(item: String, processor: suspend (String) -> String): String
+}
+
+// BROKEN Generated code
+class FakeEventProcessorImpl : EventProcessor {
+    // Function types become unresolvable symbols!
+    private var processBehavior: (Any, Function1) -> String = { _, _ -> "" }
+    private var processAsyncBehavior: suspend (String, SuspendFunction1) -> String = { _, _ -> "" }
+    //                                                     ^^^^^^^^^^^^^^^^
+    //                                             Unresolved reference
+}
+```
+
+**Required Fix**:
+```kotlin
+// CORRECT Generated code
+class FakeEventProcessorImpl : EventProcessor {
+    private var processBehavior: (Any, (Any) -> String) -> String = { _, _ -> "" }
+    private var processAsyncBehavior: suspend (String, suspend (String) -> String) -> String = { _, _ -> "" }
+}
+```
+
+**Implementation Plan**:
+- **Function type analysis**: Properly handle function type IR nodes
+- **Lambda type generation**: Convert function types to proper Kotlin syntax
+- **Suspend function support**: Handle suspend function types correctly
+
+### **🚨 Priority 4: Intelligent Default Value Generation**
+**Status**: HIGH PRIORITY - Generated code contains compilation-blocking TODOs
+
+**Current Problem**:
+```kotlin
+// Generated code with blocking TODOs
+private var findByAgeBehavior: (Int, Int) -> List<User> = { _, _ -> TODO("Implement default for List") }
+private var getResultBehavior: () -> Result<String> = { TODO("Implement default for Result") }
+private var getUserBehavior: () -> User = { TODO("Implement default for User") }
+//                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//                                         Causes compilation failure!
+```
+
+**Required Fix**:
+```kotlin
+// Smart defaults that compile
+private var findByAgeBehavior: (Int, Int) -> List<User> = { _, _ -> emptyList() }
+private var getResultBehavior: () -> Result<String> = { Result.success("") }
+private var getUserBehavior: () -> User = { User("", "", "") } // or null if nullable
+```
+
+**Implementation Plan**:
+- **Type-aware defaults**: Map common types to sensible defaults
+- **Constructor analysis**: For data classes, use primary constructor with defaults
+- **Nullable handling**: Use null for nullable types, constructor calls for non-nullable
+
+## 🚀 **Phase 3: Enhanced Features (After Critical Fixes)**
 
 ### **🎯 Priority 1: Parameter-Aware Behavior Configuration**
+*Moved from Phase 2 - requires functional type system first*
 
-**Current Limitation**:
-```kotlin
-// Current: No access to method parameters
-val service = fakeUserService {
-    getUser { "static-value" } // Can't use 'id' parameter
-}
-```
-
-**Target Enhancement**:
-```kotlin
-// Enhanced: Parameter-aware behavior
-val service = fakeUserService {
-    getUser { id -> "User-$id" }              // Access to parameters
-    updateUser { id, name -> id.isNotEmpty() } // Multi-parameter support
-    deleteUser { id -> 
-        println("Deleting user: $id")
-        if (id == "protected") throw SecurityException()
-    }
-}
-```
-
-**Implementation Plan**:
-- **Signature analysis**: Extract parameter names and types from IR
-- **Behavior type generation**: Create `(ParamTypes...) -> ReturnType` behaviors  
-- **Configuration DSL updates**: Support parameter-aware lambdas
-- **Type safety**: Ensure parameter types match exactly
-
-### **🎯 Priority 2: Advanced Type System Support**
-
-**Current Support**:
-```kotlin
-// Basic types only
-String -> ""
-Int -> 0
-Boolean -> false
-Unit -> ""
-```
-
-**Target Enhancement**:
-```kotlin
-// Enhanced type system
-List<T> -> emptyList()
-Set<T> -> emptySet() 
-Map<K, V> -> emptyMap()
-Flow<T> -> emptyFlow()
-Result<T> -> Result.success(defaultValue<T>())
-Optional<T> -> Optional.empty()
-Nullable<T?> -> null
-
-// Custom defaults
-@Fake(defaults = ["getUsers=listOf(User.sample())"])
-interface UserService { ... }
-```
-
-**Implementation Plan**:
-- **Generic type handling**: Extract type parameters from IR
-- **Collection defaults**: Smart defaults for common collections
-- **Custom default values**: Support annotation-based defaults
-- **Nullable handling**: Proper null vs non-null defaults
+### **🎯 Priority 2: Call Tracking Implementation** 
+*Enhanced priority due to testing framework importance*
 
 ### **🎯 Priority 3: Call Tracking Implementation** 
 
@@ -228,13 +307,22 @@ val service = fakeUserService {
 - **Call stack clarity**: Clear fake method traces
 - **Error messages**: Precise error location mapping
 
-## 📊 **Feature Priority Matrix**
+## 📊 **Feature Priority Matrix - UPDATED After Sample Analysis**
 
+### **🚨 CRITICAL FIXES (Must Complete Before Any Features)**
+| Critical Issue | Impact | Effort | Priority | Timeline | Blocker |
+|---------------|--------|--------|----------|----------|---------|
+| Cross-module imports | CRITICAL | Medium | P0 | 1-2 weeks | Multi-module fails |
+| Generic type parameters | CRITICAL | High | P0 | 2-3 weeks | Type safety lost |
+| Function type resolution | CRITICAL | Medium | P0 | 1-2 weeks | Higher-order functions fail |
+| Smart default values | HIGH | Medium | P0 | 1 week | Compilation errors |
+
+### **📈 FEATURE DEVELOPMENT (After Critical Fixes)**
 | Feature | Impact | Effort | Priority | Timeline |
 |---------|--------|--------|----------|----------|
 | Parameter-aware behavior | High | Medium | P1 | 1-2 months |
-| Advanced type system | High | Medium | P1 | 1-2 months |
-| Call tracking | Medium | High | P2 | 2-3 months |
+| Call tracking | Medium | High | P1 | 2-3 months |
+| Advanced collection support | High | Low | P2 | 2-3 weeks |
 | Cross-module dependencies | High | High | P2 | 3-4 months |
 | Builder patterns | Medium | Medium | P3 | 4-5 months |
 | Exception handling | Medium | Low | P3 | 1 month |
@@ -304,9 +392,15 @@ val service = fakeUserService {
 - Factory functions and configuration DSL
 - Test-only generation with security
 
-### **v1.1.0 - Enhanced Behaviors** (Next Release)
+### **v1.0.1 - Critical Fixes** (IMMEDIATE NEXT RELEASE)
+- Cross-module import resolution (fixes multi-module compilation)
+- Generic type parameter preservation (restores type safety)
+- Function type resolution (fixes higher-order functions)
+- Smart default value generation (removes compilation-blocking TODOs)
+
+### **v1.1.0 - Enhanced Behaviors** (After Critical Fixes)
 - Parameter-aware behavior configuration
-- Advanced type system support
+- Advanced collection type support
 - Improved error messages and diagnostics
 
 ### **v1.2.0 - Call Tracking**

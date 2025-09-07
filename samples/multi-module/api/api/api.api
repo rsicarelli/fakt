@@ -1,0 +1,56 @@
+public abstract interface class api/jvm/DatabaseService {
+	public abstract fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun connect (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun execute (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun isConnected ()Z
+}
+
+public abstract interface class api/jvm/FileSystemService {
+	public abstract fun createDirectory (Ljava/lang/String;)Z
+	public abstract fun deleteFile (Ljava/lang/String;)Z
+	public abstract fun getCurrentDirectory ()Ljava/lang/String;
+	public abstract fun readFile (Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun writeFile (Ljava/lang/String;Ljava/lang/String;)Z
+}
+
+public abstract interface class api/jvm/JvmSystemService {
+	public abstract fun getAvailableProcessors ()I
+	public abstract fun getCurrentTime ()Ljava/lang/String;
+	public abstract fun getEnvironmentVariable (Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun getJavaVersion ()Ljava/lang/String;
+	public abstract fun getMaxMemory ()J
+	public abstract fun getOsName ()Ljava/lang/String;
+	public abstract fun getSystemProperty (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public abstract interface class api/shared/LoggingService {
+	public abstract fun debug (Ljava/lang/String;)V
+	public abstract fun error (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public static synthetic fun error$default (Lapi/shared/LoggingService;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)V
+	public abstract fun getLogLevel ()Ljava/lang/String;
+	public abstract fun info (Ljava/lang/String;)V
+	public abstract fun warn (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public static synthetic fun warn$default (Lapi/shared/LoggingService;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)V
+}
+
+public final class api/shared/LoggingService$DefaultImpls {
+	public static synthetic fun error$default (Lapi/shared/LoggingService;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)V
+	public static synthetic fun warn$default (Lapi/shared/LoggingService;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)V
+}
+
+public abstract interface class api/shared/NetworkService {
+	public abstract fun fetchData (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun get (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getBaseUrl ()Ljava/lang/String;
+	public abstract fun getTimeout ()J
+	public abstract fun post (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class api/shared/StorageService {
+	public abstract fun clear (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun delete (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun isConnected ()Z
+	public abstract fun load (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun save (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

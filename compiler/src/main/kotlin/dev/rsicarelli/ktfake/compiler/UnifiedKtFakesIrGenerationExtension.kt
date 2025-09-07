@@ -479,12 +479,13 @@ class UnifiedKtFakesIrGenerationExtension(
             moduleName.contains("mingw") -> "mingwTest"
             moduleName.contains("native") -> "nativeTest"
             
-            // Sample projects and already test modules
-            moduleName.contains("sample") -> "commonTest"
-            moduleName.contains("test") -> "commonTest"
+            // Sample projects - since single-module uses JVM target, default to jvmTest
+            moduleName.contains("single-module") -> "jvmTest"
+            moduleName.contains("sample") -> "jvmTest"  // Default samples to JVM test
+            moduleName.contains("test") -> "jvmTest"
             
-            // Ultimate fallback
-            else -> "commonTest"
+            // Ultimate fallback - prefer jvmTest over commonTest for better compatibility
+            else -> "jvmTest"
         }
     }
     

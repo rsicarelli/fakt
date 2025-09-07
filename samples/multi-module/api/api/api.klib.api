@@ -1,0 +1,69 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, linuxX64, macosArm64, macosX64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ktfake.samples.multi-module:api>
+abstract interface api.shared/LoggingService { // api.shared/LoggingService|null[0]
+    abstract val logLevel // api.shared/LoggingService.logLevel|{}logLevel[0]
+        abstract fun <get-logLevel>(): kotlin/String // api.shared/LoggingService.logLevel.<get-logLevel>|<get-logLevel>(){}[0]
+
+    abstract fun debug(kotlin/String) // api.shared/LoggingService.debug|debug(kotlin.String){}[0]
+    abstract fun error(kotlin/String, kotlin/Throwable? = ...) // api.shared/LoggingService.error|error(kotlin.String;kotlin.Throwable?){}[0]
+    abstract fun info(kotlin/String) // api.shared/LoggingService.info|info(kotlin.String){}[0]
+    abstract fun warn(kotlin/String, kotlin/Throwable? = ...) // api.shared/LoggingService.warn|warn(kotlin.String;kotlin.Throwable?){}[0]
+}
+
+abstract interface api.shared/NetworkService { // api.shared/NetworkService|null[0]
+    abstract val baseUrl // api.shared/NetworkService.baseUrl|{}baseUrl[0]
+        abstract fun <get-baseUrl>(): kotlin/String // api.shared/NetworkService.baseUrl.<get-baseUrl>|<get-baseUrl>(){}[0]
+    abstract val timeout // api.shared/NetworkService.timeout|{}timeout[0]
+        abstract fun <get-timeout>(): kotlin/Long // api.shared/NetworkService.timeout.<get-timeout>|<get-timeout>(){}[0]
+
+    abstract suspend fun fetchData(kotlin/String): kotlin/String // api.shared/NetworkService.fetchData|fetchData(kotlin.String){}[0]
+    abstract suspend fun get(kotlin/String): kotlin/String // api.shared/NetworkService.get|get(kotlin.String){}[0]
+    abstract suspend fun post(kotlin/String, kotlin/String): kotlin/String // api.shared/NetworkService.post|post(kotlin.String;kotlin.String){}[0]
+}
+
+abstract interface api.shared/StorageService { // api.shared/StorageService|null[0]
+    abstract val isConnected // api.shared/StorageService.isConnected|{}isConnected[0]
+        abstract fun <get-isConnected>(): kotlin/Boolean // api.shared/StorageService.isConnected.<get-isConnected>|<get-isConnected>(){}[0]
+
+    abstract suspend fun clear(): kotlin/Boolean // api.shared/StorageService.clear|clear(){}[0]
+    abstract suspend fun delete(kotlin/String): kotlin/Boolean // api.shared/StorageService.delete|delete(kotlin.String){}[0]
+    abstract suspend fun load(kotlin/String): kotlin/String? // api.shared/StorageService.load|load(kotlin.String){}[0]
+    abstract suspend fun save(kotlin/String, kotlin/String): kotlin/Boolean // api.shared/StorageService.save|save(kotlin.String;kotlin.String){}[0]
+}
+
+// Targets: [js]
+abstract interface api.js/BrowserService { // api.js/BrowserService|null[0]
+    abstract val currentUrl // api.js/BrowserService.currentUrl|{}currentUrl[0]
+        abstract fun <get-currentUrl>(): kotlin/String // api.js/BrowserService.currentUrl.<get-currentUrl>|<get-currentUrl>(){}[0]
+    abstract val userAgent // api.js/BrowserService.userAgent|{}userAgent[0]
+        abstract fun <get-userAgent>(): kotlin/String // api.js/BrowserService.userAgent.<get-userAgent>|<get-userAgent>(){}[0]
+
+    abstract fun confirmDialog(kotlin/String): kotlin/Boolean // api.js/BrowserService.confirmDialog|confirmDialog(kotlin.String){}[0]
+    abstract fun navigateTo(kotlin/String) // api.js/BrowserService.navigateTo|navigateTo(kotlin.String){}[0]
+    abstract fun promptInput(kotlin/String, kotlin/String): kotlin/String? // api.js/BrowserService.promptInput|promptInput(kotlin.String;kotlin.String){}[0]
+    abstract fun reload() // api.js/BrowserService.reload|reload(){}[0]
+    abstract fun showAlert(kotlin/String) // api.js/BrowserService.showAlert|showAlert(kotlin.String){}[0]
+}
+
+// Targets: [js]
+abstract interface api.js/FetchService { // api.js/FetchService|null[0]
+    abstract suspend fun delete(kotlin/String): kotlin/String // api.js/FetchService.delete|delete(kotlin.String){}[0]
+    abstract suspend fun get(kotlin/String): kotlin/String // api.js/FetchService.get|get(kotlin.String){}[0]
+    abstract suspend fun post(kotlin/String, kotlin/String): kotlin/String // api.js/FetchService.post|post(kotlin.String;kotlin.String){}[0]
+    abstract suspend fun put(kotlin/String, kotlin/String): kotlin/String // api.js/FetchService.put|put(kotlin.String;kotlin.String){}[0]
+}
+
+// Targets: [js]
+abstract interface api.js/LocalStorage { // api.js/LocalStorage|null[0]
+    abstract fun clear() // api.js/LocalStorage.clear|clear(){}[0]
+    abstract fun getItem(kotlin/String): kotlin/String? // api.js/LocalStorage.getItem|getItem(kotlin.String){}[0]
+    abstract fun getLength(): kotlin/Int // api.js/LocalStorage.getLength|getLength(){}[0]
+    abstract fun removeItem(kotlin/String) // api.js/LocalStorage.removeItem|removeItem(kotlin.String){}[0]
+    abstract fun setItem(kotlin/String, kotlin/String) // api.js/LocalStorage.setItem|setItem(kotlin.String;kotlin.String){}[0]
+}

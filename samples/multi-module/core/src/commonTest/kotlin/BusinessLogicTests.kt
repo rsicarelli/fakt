@@ -35,7 +35,9 @@ class BusinessLogicTests {
 
     @Test
     fun `OrderService fake can be created with nested dependencies`() {
-        val fakeOrderService = fakeOrderService()
+        val fakeOrderService = fakeOrderService {
+
+        }
         
         assertNotNull(fakeOrderService)
         assertTrue(fakeOrderService is OrderService)

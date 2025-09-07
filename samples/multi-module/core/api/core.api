@@ -1,0 +1,76 @@
+public final class core/business/Order {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;DLjava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;DLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()D
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;DLjava/lang/String;)Lcore/business/Order;
+	public static synthetic fun copy$default (Lcore/business/Order;Ljava/lang/String;Ljava/lang/String;DLjava/lang/String;ILjava/lang/Object;)Lcore/business/Order;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getStatus ()Ljava/lang/String;
+	public final fun getTotalAmount ()D
+	public final fun getUserId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class core/business/OrderService {
+	public abstract fun calculateTotal (DDLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun cancelOrder (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun createOrder (Ljava/lang/String;DLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getNetworkService ()Lapi/shared/NetworkService;
+	public abstract fun getOrderById (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getStorageService ()Lapi/shared/StorageService;
+	public abstract fun getUserService ()Lcore/business/UserService;
+	public abstract fun updateOrderStatus (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class core/business/OrderStatus : java/lang/Enum {
+	public static final field CANCELLED Lcore/business/OrderStatus;
+	public static final field CONFIRMED Lcore/business/OrderStatus;
+	public static final field DELIVERED Lcore/business/OrderStatus;
+	public static final field PENDING Lcore/business/OrderStatus;
+	public static final field SHIPPED Lcore/business/OrderStatus;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcore/business/OrderStatus;
+	public static fun values ()[Lcore/business/OrderStatus;
+}
+
+public abstract interface class core/business/PaymentService {
+	public abstract fun getPaymentStatus (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun isProcessing ()Z
+	public abstract fun processPayment (Ljava/lang/String;DLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun refundPayment (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class core/business/User {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Z
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)Lcore/business/User;
+	public static synthetic fun copy$default (Lcore/business/User;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Lcore/business/User;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEmail ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isActive ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class core/business/UserService {
+	public abstract fun createUser (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun deleteUser (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getLoggingService ()Lapi/shared/LoggingService;
+	public abstract fun getNetworkService ()Lapi/shared/NetworkService;
+	public abstract fun getStorageService ()Lapi/shared/StorageService;
+	public abstract fun getUserById (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun isUserActive (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun updateUser (Lcore/business/User;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
