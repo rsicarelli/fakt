@@ -6,7 +6,7 @@ import dev.rsicarelli.ktfake.Fake
 
 @Fake
 interface TestService {
-    val memes: String
+    val stringValue: String
     fun getValue(): String
     fun setValue(value: String)
 }

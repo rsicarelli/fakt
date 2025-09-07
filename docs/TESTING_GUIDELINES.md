@@ -1,677 +1,1230 @@
-# KtFakes Testing Guidelines - Unified Architecture
+# KMP Lint NG - Testing Guidelines
 
-> **Status**: Production Testing Framework ✅  
-> **Architecture**: Unified IR-Native Compiler Plugin Testing  
-> **Last Updated**: September 2025
+**Core Principle**: Every code must have comprehensive unit tests using vanilla testing with BDD naming conventions.
 
-## 🎯 **Overview**
+## 🎯 **Golden Rule**
 
-This document provides comprehensive testing guidelines for KtFakes unified IR-native architecture. Our testing approach ensures production quality through multiple testing layers, from unit tests to end-to-end compiler plugin validation.
+> **"Simplicity, clarity and comprehensive coverage. Use vanilla testing with descriptive BDD names."**
 
-## 📋 **Testing Strategy**
+Every test should follow:
+1. **GIVEN**: Context of the situation being tested
+2. **WHEN**: The action being executed 
+3. **THEN**: The expected result
 
-### **Multi-Layer Testing Approach**
+## 🏗️ **Testing Stack**
 
+### **Framework**
+- **100% Kotlin Test + JUnit5** (NO custom matchers)
+- **Nested Tests** (`@Nested`) for logical grouping
+- **Parameterized Tests** (`@ParameterizedTest`) for data-driven testing
+- **Coroutines Test** for async code
+- **Fakes instead of mocks**
+- **Optimized parallel execution**
+
+### **Project Structure**
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    KtFakes Testing Pyramid                     │
-├─────────────────────────────────────────────────────────────────┤
-│  🔧 End-to-End Tests                                           │
-│    • Real compilation with test-sample/                        │
-│    • Generated code execution validation                       │
-│    • Multi-interface scenarios                                 │
-│    • Working examples validation                               │
-├─────────────────────────────────────────────────────────────────┤
-│  🧪 Integration Tests                                          │
-│    • Compiler plugin pipeline testing                          │
-│    • Module coordination validation                            │
-│    • IR generation with Kotlin compiler                        │
-│    • Cross-module fake generation                              │
-├─────────────────────────────────────────────────────────────────┤
-│  ⚡ Component Tests                                            │
-│    • Individual module functionality                           │
-│    • Interface analysis accuracy                               │
-│    • Code generation correctness                               │
-│    • Configuration DSL behavior                                │
-├─────────────────────────────────────────────────────────────────┤
-│  🎯 Unit Tests                                                 │
-│    • Pure function logic testing                               │
-│    • Type mapping accuracy                                     │
-│    • Edge case handling                                        │
-│    • Error condition validation                                │
-└─────────────────────────────────────────────────────────────────┘
+module/
+├── src/
+│   ├── main/kotlin/...
+│   └── test/kotlin/
+│       ├── com/rsicarelli/kmp/lint/...Test.kt
+│       └── utilities/
+│           ├── TestBuilders.kt
+│           ├── TestExtensions.kt
+│           └── TestFakes.kt
+└── build.gradle.kts (JUnit5 configuration)
 ```
 
-## 🧪 **Unit Testing (Foundation Layer)**
+## ⚡ **Optimized JUnit5 Configuration**
 
-### **BDD-Style Test Naming**
-
-Following our established naming convention for clarity and documentation:
-
+### **build.gradle.kts**
 ```kotlin
-class TypeMapperTest {
-    @Test
-    fun `should map String type to empty string default`() {
-        val mapper = KotlinTypeMapper()
-        val result = mapper.mapType("String")
-        assertEquals("\"\"", result)
-    }
+tasks.test {
+    useJUnitPlatform()
     
-    @Test
-    fun `should map suspend function to suspend lambda type`() {
-        val mapper = KotlinTypeMapper()
-        val result = mapper.mapSuspendFunction("suspend () -> String")
-        assertEquals("suspend () -> String", result.behaviorType)
-    }
+    // Optimized parallel execution
+    systemProperty("junit.jupiter.execution.parallel.enabled", "true")
+    systemProperty("junit.jupiter.execution.parallel.mode.default", "concurrent")
+    systemProperty("junit.jupiter.execution.parallel.mode.classes.default", "concurrent")
     
-    @Test
-    fun `should handle nullable types with null default`() {
-        val mapper = KotlinTypeMapper()
-        val result = mapper.mapType("String?")
-        assertEquals("null", result)
+    // Hardware-based thread configuration
+    systemProperty("junit.jupiter.execution.parallel.config.strategy", "dynamic")
+    systemProperty("junit.jupiter.execution.parallel.config.dynamic.factor", "2.0")
+    
+    // Global timeout to prevent hanging tests
+    systemProperty("junit.jupiter.execution.timeout.default", "30s")
+    
+    maxParallelForks = Runtime.getRuntime().availableProcessors()
+    
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = false
     }
 }
 ```
 
-### **Comprehensive Type System Testing**
+### **junit-platform.properties**
+```properties
+# /src/test/resources/junit-platform.properties
 
-**Current Test Coverage** (38+ tests implemented):
+# Test Instance Lifecycle - Use PER_CLASS for better performance and immutable fields
+junit.jupiter.testinstance.lifecycle.default=per_class
 
+# Parallel Execution Configuration
+junit.jupiter.execution.parallel.enabled=true
+junit.jupiter.execution.parallel.mode.default=concurrent
+junit.jupiter.execution.parallel.mode.classes.default=concurrent
+
+# Dynamic Parallel Strategy - Adapts to hardware capabilities
+junit.jupiter.execution.parallel.config.strategy=dynamic
+junit.jupiter.execution.parallel.config.dynamic.factor=2.0
+
+# Alternative: Fixed parallel strategy (use if dynamic doesn't work well)
+# junit.jupiter.execution.parallel.config.strategy=fixed
+# junit.jupiter.execution.parallel.config.fixed.parallelism=4
+
+# Global Test Timeouts
+junit.jupiter.execution.timeout.default=30s
+junit.jupiter.execution.timeout.testable.method.default=10s
+junit.jupiter.execution.timeout.testtemplate.method.default=30s
+
+# Display Names
+junit.jupiter.displayname.generator.default=org.junit.jupiter.api.DisplayNameGenerator$ReplaceUnderscores
+
+# Test Method Ordering (optional - use when test order matters)
+# junit.jupiter.testmethod.order.default=org.junit.jupiter.api.MethodOrderer$OrderAnnotation
+
+# Parameterized Tests
+junit.jupiter.params.displayname.default={displayName} [{index}] {arguments}
+
+# Conditional Test Execution  
+junit.jupiter.conditions.deactivate=org.junit.jupiter.api.condition.*
+
+# Extensions auto-detection (for custom extensions)
+junit.jupiter.extensions.autodetection.enabled=true
+
+# Cleanup Mode - Clean up test resources after each test
+junit.jupiter.cleanup.mode=always
+
+# Logging Configuration (if using java.util.logging)
+java.util.logging.config.file=src/test/resources/logging-test.properties
+
+# Memory Management for Large Test Suites
+# -XX:MaxRAMPercentage=80 (add to JVM args in build.gradle.kts)
+```
+
+## 📋 **Test Template**
+
+### **Basic Structure with Isolation**
 ```kotlin
-// Type mapping validation
-class KotlinTypeMapperTest {
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class RuleEngineTest {
     
-    @Test fun `should map basic types correctly`()
-    @Test fun `should map collection types to empty collections`()
-    @Test fun `should map coroutine types with proper defaults`()
-    @Test fun `should map Result types with success defaults`()
-    @Test fun `should handle generic types with bounds`()
-    @Test fun `should map custom types with constructor defaults`()
-    @Test fun `should handle nullable vs non-null distinctions`()
-    
-    // Edge cases
-    @Test fun `should handle deeply nested generic types`()
-    @Test fun `should map sealed classes appropriately`()
-    @Test fun `should handle variance annotations in generics`()
+    @Test 
+    fun `GIVEN source file with violations WHEN analyzing THEN should return violations list`() = runTest {
+        // Given - each test creates its own instances
+        val sourceFile = sourceFile { 
+            name = "TestFile.kt"
+            content = "class myClass" // naming violation
+        }
+        val ruleEngine = DefaultRuleEngine()
+        
+        // When
+        val violations = ruleEngine.analyzeFile(sourceFile)
+        
+        // Then
+        assertEquals(1, violations.size)
+        assertTrue(violations.first().message.contains("naming convention"))
+    }
 }
 ```
 
-### **Interface Analysis Testing**
-
+### **Practical Example - KMP Lint**
 ```kotlin
-class InterfaceAnalyzerTest {
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class PenaltySystemTest {
     
     @Test
-    fun `should analyze interface with properties and methods`() {
-        val analyzer = SimpleInterfaceAnalyzer()
-        val mockInterface = createMockInterface {
-            methods = listOf("fun getValue(): String", "suspend fun getUser(id: String): User")
-            properties = listOf("val name: String", "var isEnabled: Boolean")
+    fun `GIVEN violations with different severities WHEN calculating penalties THEN should sum correctly`() = runTest {
+        // Given - isolated instances for each test
+        val violations = listOf(
+            violation { severity = PenaltySeverity.CRITICAL },
+            violation { severity = PenaltySeverity.MAJOR },
+            violation { severity = PenaltySeverity.MINOR }
+        )
+        val penaltySystem = DefaultPenaltySystem()
+        
+        // When
+        val result = penaltySystem.calculatePenalties(violations)
+        
+        // Then
+        assertEquals(3, result.totalViolations)
+        assertEquals(16, result.weightedTotal) // 10 + 5 + 1
+    }
+    
+    @Nested
+    inner class ThresholdValidation {
+        @Test
+        fun `GIVEN module over threshold WHEN validating THEN should fail validation`() = runTest {
+            // Given - fresh instance for isolation
+            val moduleViolations = 15
+            val threshold = 10
+            val validator = thresholdValidator { maxViolations = threshold }
+            
+            // When
+            val result = validator.validate(moduleViolations)
+            
+            // Then
+            assertFalse(result.passed)
+            assertEquals("Module exceeds threshold: 15 > 10", result.message)
+        }
+    }
+}
+```
+
+## 🏗️ **Advanced JUnit5 Features**
+
+### **Nested Tests for Logical Grouping**
+```kotlin
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class PenaltySystemTest {
+    
+    @Nested
+    inner class ThresholdValidation {
+        
+        @Test
+        fun `GIVEN module within threshold WHEN validating THEN should pass`() = runTest {
+            // Given
+            val violations = listOf(violation(severity = PenaltySeverity.MINOR))
+            val configuration = penaltyConfiguration { 
+                moduleThreshold("test-module") { maxMinor = 10 }
+            }
+            val penaltySystem = DefaultPenaltySystem()
+            
+            // When
+            val result = penaltySystem.calculatePenalties(violations, configuration)
+            val validation = penaltySystem.validateThresholds(result, configuration)
+            
+            // Then
+            assertTrue(validation.passed)
         }
         
-        val analysis = analyzer.analyzeInterface(mockInterface)
-        
-        assertEquals("TestService", analysis.interfaceName)
-        assertEquals(2, analysis.methods.size)
-        assertEquals(2, analysis.properties.size)
-        assertTrue(analysis.methods.any { it.isSuspend })
+        @Test 
+        fun `GIVEN module over threshold WHEN validating THEN should fail`() = runTest {
+            // Given
+            val violations = listOf(violation(severity = PenaltySeverity.CRITICAL))
+            val configuration = penaltyConfiguration { 
+                moduleThreshold("test-module") { maxCritical = 0 }
+            }
+            val penaltySystem = DefaultPenaltySystem()
+            
+            // When
+            val result = penaltySystem.calculatePenalties(violations, configuration)
+            val validation = penaltySystem.validateThresholds(result, configuration)
+            
+            // Then
+            assertFalse(validation.passed)
+            assertEquals(listOf("test-module"), validation.failedModules)
+        }
     }
     
-    @Test
-    fun `should validate interface compatibility`() {
-        val analyzer = SimpleInterfaceAnalyzer()
-        val invalidInterface = createMockInterface {
-            methods = listOf("fun getValue(): Nothing") // Invalid return type
+    @Nested
+    inner class SuggestionGeneration {
+        
+        @Test
+        fun `GIVEN violations with quick fixes WHEN generating suggestions THEN should include quick fix options`() = runTest {
+            // Test implementation
         }
-        
-        val validation = analyzer.validateInterface(invalidInterface)
-        
-        assertIs<ValidationResult.Invalid>(validation)
-        assertTrue(validation.errors.any { it.contains("Nothing") })
     }
 }
 ```
 
-## ⚡ **Component Testing (Module Layer)**
-
-### **Code Generation Testing**
-
+### **Parameterized Tests for Data-Driven Testing**
 ```kotlin
-class UnifiedCodeGeneratorTest {
+class SeverityWeightTest {
     
-    @Test
-    fun `should generate complete implementation class`() {
-        val generator = UnifiedCodeGenerator()
-        val analysis = createAnalysisFor {
-            interfaceName = "UserService"
-            methods = listOf("suspend fun getUser(id: String): User")
-            properties = listOf("val currentUser: String")
-        }
+    @ParameterizedTest
+    @CsvSource(
+        "CRITICAL, 10",
+        "MAJOR, 3", 
+        "MINOR, 1"
+    )
+    fun `GIVEN penalty severity WHEN calculating weight THEN should return correct value`(
+        severity: PenaltySeverity,
+        expectedWeight: Int
+    ) = runTest {
+        // Given
+        val configuration = penaltyConfiguration()
         
-        val implementation = generator.generateImplementation(analysis)
+        // When
+        val actualWeight = configuration.penaltyWeights[severity]
         
-        // Verify structure
-        assertTrue(implementation.contains("class FakeUserServiceImpl : UserService"))
-        assertTrue(implementation.contains("private var getUserBehavior: suspend () -> User"))
-        assertTrue(implementation.contains("override suspend fun getUser(id: String): User"))
-        assertTrue(implementation.contains("override val currentUser: String"))
-        
-        // Verify compilation
-        assertCompiles(implementation)
+        // Then
+        assertEquals(expectedWeight, actualWeight)
     }
     
-    @Test
-    fun `should generate factory function with configuration DSL`() {
-        val generator = UnifiedCodeGenerator()
-        val analysis = createBasicAnalysis()
+    @ParameterizedTest
+    @ValueSource(strings = ["TestClass", "AnotherClass", "YetAnotherClass"])
+    fun `GIVEN different class names WHEN analyzing THEN should detect naming violations`(
+        className: String
+    ) = runTest {
+        // Given
+        val rule = NamingConventionRule()
+        val element = ktClass { name = className.lowercase() } // Force violation
         
-        val factory = generator.generateFactoryFunction(analysis)
+        // When
+        val violations = rule.analyze(element)
         
-        assertTrue(factory.contains("fun fakeUserService("))
-        assertTrue(factory.contains("configure: FakeUserServiceConfig.() -> Unit"))
-        assertTrue(factory.contains("return FakeUserServiceImpl()"))
-        assertCompiles(factory)
+        // Then
+        assertEquals(1, violations.size)
+        assertTrue(violations.first().message.contains("PascalCase"))
     }
     
-    @Test
-    fun `should generate configuration DSL with type-safe methods`() {
-        val generator = UnifiedCodeGenerator()
-        val analysis = createAnalysisWithSuspendFunction()
+    @ParameterizedTest
+    @MethodSource("provideViolationScenarios")
+    fun `GIVEN various violation scenarios WHEN processing THEN should handle correctly`(
+        scenario: ViolationScenario
+    ) = runTest {
+        // Given
+        val penaltySystem = DefaultPenaltySystem()
         
-        val dsl = generator.generateConfigurationDsl(analysis)
+        // When
+        val result = penaltySystem.calculatePenalties(scenario.violations, scenario.configuration)
         
-        assertTrue(dsl.contains("class FakeUserServiceConfig"))
-        assertTrue(dsl.contains("fun getUser(behavior: suspend () -> User)"))
-        assertCompiles(dsl)
-    }
-}
-```
-
-### **Compiler Plugin Component Testing**
-
-```kotlin
-class UnifiedIrGenerationExtensionTest {
-    
-    @Test
-    fun `should process fake interfaces in test modules only`() {
-        val extension = UnifiedKtFakesIrGenerationExtension()
-        val testModule = createMockModuleFragment("test-sample")
-        val prodModule = createMockModuleFragment("main")
-        
-        val testResult = extension.shouldProcessModule(testModule)
-        val prodResult = extension.shouldProcessModule(prodModule)
-        
-        assertTrue(testResult)
-        assertFalse(prodResult)
+        // Then
+        assertEquals(scenario.expectedTotalViolations, result.totalViolations)
+        assertEquals(scenario.expectedWeightedTotal, result.weightedTotal)
     }
     
-    @Test
-    fun `should discover fake annotated interfaces`() {
-        val extension = UnifiedKtFakesIrGenerationExtension()
-        val moduleWithFakes = createMockModuleWithInterfaces {
-            interfaces = listOf(
-                createMockInterface("UserService", hasFakeAnnotation = true),
-                createMockInterface("RegularService", hasFakeAnnotation = false)
+    companion object {
+        @JvmStatic
+        fun provideViolationScenarios() = listOf(
+            ViolationScenario(
+                violations = listOf(violation(severity = PenaltySeverity.CRITICAL)),
+                configuration = penaltyConfiguration(),
+                expectedTotalViolations = 1,
+                expectedWeightedTotal = 10
+            ),
+            ViolationScenario(
+                violations = listOf(
+                    violation(severity = PenaltySeverity.MAJOR),
+                    violation(severity = PenaltySeverity.MINOR)
+                ),
+                configuration = penaltyConfiguration(),
+                expectedTotalViolations = 2,
+                expectedWeightedTotal = 4
             )
-        }
-        
-        val discovered = extension.discoverFakeInterfaces(moduleWithFakes)
-        
-        assertEquals(1, discovered.size)
-        assertEquals("UserService", discovered[0].name.asString())
+        )
     }
+    
+    data class ViolationScenario(
+        val violations: List<RuleViolation>,
+        val configuration: PenaltyConfiguration,
+        val expectedTotalViolations: Int,
+        val expectedWeightedTotal: Int
+    )
 }
 ```
 
-## 🧪 **Integration Testing (Pipeline Layer)**
+## 🧪 **Testing Principles**
 
-### **End-to-End Compilation Testing**
+### **🎯 Comprehensive Tests**
+Implement unit tests (logic, behavior, integration) comprehensively:
+
+- **High coverage**: Focus primarily on core (analysis-api, rule-system) and rules layers
+- **Edge-cases**: Test edge cases and failure scenarios exhaustively
+- **Behavior**: Follow Gherkin Given/When/Then format
+
+### **🔌 Dependency Minimization**
+Reduce external dependencies through:
+- **Inversion of control**
+- **Higher-order functions**
+- **Loose coupling**
 
 ```kotlin
-class CompilerPluginIntegrationTest {
-    
-    @Test
-    fun `should compile test-sample project successfully`() = runTest {
-        // Prepare clean environment
-        cleanTestSample()
-        
-        // Run compilation
-        val result = compileTestSample()
-        
-        // Verify compilation success
-        assertTrue(result.isSuccessful)
-        assertEquals(0, result.exitCode)
-        
-        // Verify generated files exist
-        val generatedFiles = findGeneratedFakes()
-        assertTrue(generatedFiles.isNotEmpty())
-        
-        // Verify generated code compiles
-        generatedFiles.forEach { file ->
-            assertCompiles(file.readText())
-        }
+// ✅ Good practice - Injected dependency
+class RuleProcessor(private val analyzer: CodeAnalyzer) {
+    fun processFile(file: SourceFile): List<RuleViolation> {
+        val analysisResult = analyzer.analyze(file)
+        return analysisResult.violations
     }
-    
+}
+
+// ✅ Test with fake
+class RuleProcessorTest {
     @Test
-    fun `should generate working fakes for all test interfaces`() {
-        val generatedFiles = findGeneratedFakes()
-        
-        // TestService
-        val testServiceFake = generatedFiles.find { it.name == "TestServiceFakes.kt" }
-        assertNotNull(testServiceFake)
-        assertTrue(testServiceFake.readText().contains("fun fakeTestService"))
-        
-        // AsyncUserService  
-        val asyncServiceFake = generatedFiles.find { it.name == "AsyncUserServiceFakes.kt" }
-        assertNotNull(asyncServiceFake)
-        assertTrue(asyncServiceFake.readText().contains("suspend fun getUser"))
-        
-        // AnalyticsService
-        val analyticsServiceFake = generatedFiles.find { it.name == "AnalyticsServiceFakes.kt" }
-        assertNotNull(analyticsServiceFake)
-        assertTrue(analyticsServiceFake.readText().contains("fun track"))
-    }
-    
-    @Test
-    fun `should support multiple interfaces in single compilation`() {
-        val result = compileTestSample()
-        
-        assertTrue(result.isSuccessful)
-        
-        val generatedFiles = findGeneratedFakes()
-        assertTrue(generatedFiles.size >= 3) // TestService, AsyncUserService, AnalyticsService
-        
-        // Verify each interface has its own fake file
-        val expectedFiles = listOf("TestServiceFakes.kt", "AsyncUserServiceFakes.kt", "AnalyticsServiceFakes.kt")
-        expectedFiles.forEach { expectedFile ->
-            assertTrue(generatedFiles.any { it.name == expectedFile })
+    fun `GIVEN fake analyzer WHEN processing file THEN should return violations`() {
+        // Given - isolated instance
+        val fakeAnalyzer = fakeCodeAnalyzer {
+            onAnalyze { violations(violation("test violation")) }
         }
+        val ruleProcessor = RuleProcessor(fakeAnalyzer)
+        val testFile = sourceFile("Test.kt", "class Test")
+        
+        // When
+        val result = ruleProcessor.processFile(testFile)
+        
+        // Then
+        assertFalse(result.isEmpty())
     }
 }
 ```
 
-### **Cross-Module Integration Testing**
+### **🏗️ Modular and Testable Design**
+Organize code in small independent parts:
 
 ```kotlin
-class CrossModuleIntegrationTest {
-    
-    @Test  
-    fun `should coordinate between analyzer and generator modules`() {
-        val analyzer = SimpleInterfaceAnalyzer()
-        val generator = UnifiedCodeGenerator()
+interface LintRule {
+    fun analyze(element: KtElement): List<RuleViolation>
+}
+
+class NamingConventionRule : LintRule {
+    override fun analyze(element: KtElement): List<RuleViolation> {
+        if (element is KtClass && !element.name!!.isPascalCase()) {
+            return listOf(violation("Class should use PascalCase"))
+        }
+        return emptyList()
+    }
+}
+
+class NamingConventionRuleTest {
+    @Test
+    fun `GIVEN class with camelCase name WHEN analyzing THEN should return violation`() {
+        // Given - new instance for each test
+        val rule = NamingConventionRule()
+        val element = ktClass { name = "myClass" }
         
-        // Analyze interface
-        val mockInterface = createComplexMockInterface()
-        val analysis = analyzer.analyzeInterface(mockInterface)
+        // When
+        val violations = rule.analyze(element)
         
-        // Generate code
-        val implementation = generator.generateImplementation(analysis)
-        val factory = generator.generateFactoryFunction(analysis)
-        val dsl = generator.generateConfigurationDsl(analysis)
-        
-        // Verify coordination
-        assertTrue(implementation.contains(analysis.interfaceName))
-        assertTrue(factory.contains("fake${analysis.interfaceName}"))
-        assertTrue(dsl.contains("Fake${analysis.interfaceName}Config"))
-        
-        // Verify all compile together
-        val completeCode = listOf(implementation, factory, dsl).joinToString("\n\n")
-        assertCompiles(completeCode)
+        // Then
+        assertEquals(1, violations.size)
+        assertTrue(violations.first().message.contains("PascalCase"))
     }
 }
 ```
 
-## 🔧 **End-to-End Testing (System Layer)**
+## 🎭 **Fakes Instead of Mocks**
 
-### **Real-World Usage Validation**
-
-Our `test-sample` project serves as a comprehensive end-to-end test:
-
+### **Fluent Fake Builders with Higher-Order Functions**
 ```kotlin
-// test-sample/src/commonMain/kotlin/TestService.kt
-@Fake
-interface TestService {
-    val memes: String
-    fun getValue(): String  
-    fun setValue(value: String)
+// ✅ Idiomatic Kotlin - Fluent builders with DSL
+fun fakeCodeAnalyzer(configure: FakeCodeAnalyzerScope.() -> Unit = {}): CodeAnalyzer =
+    FakeCodeAnalyzer().apply { FakeCodeAnalyzerScope(this).configure() }
+
+class FakeCodeAnalyzerScope(private val fake: FakeCodeAnalyzer) {
+    fun onAnalyze(block: (SourceFile) -> AnalysisResult) {
+        fake.analyzeHandler = block
+    }
+    
+    fun simulateFailure(message: String = "Simulated failure") {
+        fake.shouldFail = true
+        fake.failureMessage = message
+    }
 }
 
-@Fake
-interface AsyncUserService {
-    suspend fun getUser(id: String): String
-    suspend fun updateUser(id: String, name: String): Boolean
-    suspend fun deleteUser(id: String)
-}
-
-@Fake(trackCalls = true)
-interface AnalyticsService {
-    fun track(event: String)
+class FakeCodeAnalyzer : CodeAnalyzer {
+    var lastAnalyzedFile: SourceFile? = null
+    var shouldFail: Boolean = false
+    var failureMessage: String = "Analysis failed"
+    var analyzeHandler: (SourceFile) -> AnalysisResult = { AnalysisResult(it, emptyList()) }
+    
+    override suspend fun analyze(file: SourceFile): AnalysisResult {
+        lastAnalyzedFile = file
+        return if (shouldFail) {
+            throw AnalysisException(failureMessage)
+        } else {
+            analyzeHandler(file)
+        }
+    }
 }
 ```
 
-**Validation Commands**:
-```bash
-# Clean compilation
-cd test-sample && rm -rf build/generated && ../gradlew clean compileKotlinJvm --no-build-cache
-
-# Verify generated fakes exist and compile
-ls -la build/generated/ktfake/test/kotlin/
-# Should show: TestServiceFakes.kt, AsyncUserServiceFakes.kt, AnalyticsServiceFakes.kt
-
-# Verify generated code quality
-cat build/generated/ktfake/test/kotlin/TestServiceFakes.kt
-# Should show professional, type-safe code
-```
-
-### **Usage Scenario Testing**
-
+### **Test Data Builders with Default Arguments**
 ```kotlin
-class EndToEndUsageTest {
+// ✅ Idiomatic Kotlin - Functions with default arguments
+fun sourceFile(
+    name: String = "Test.kt",
+    content: String = "class Test",
+    configure: SourceFileScope.() -> Unit = {}
+): SourceFile = SourceFile(name, content).apply { SourceFileScope(this).configure() }
+
+fun violation(
+    message: String = "Test violation",
+    severity: PenaltySeverity = PenaltySeverity.MAJOR,
+    configure: ViolationScope.() -> Unit = {}
+): RuleViolation = RuleViolation(
+    rule = ruleMetadata(),
+    element = null,
+    message = message,
+    severity = severity,
+    quickFixes = emptyList(),
+    context = emptyMap()
+).apply { ViolationScope(this).configure() }
+
+fun ruleMetadata(
+    id: String = "test.rule",
+    category: RuleCategory = RuleCategory.CORRECTNESS
+): RuleMetadata = RuleMetadata(
+    id = id,
+    name = "Test Rule",
+    description = "Rule for testing",
+    category = category,
+    severity = PenaltySeverity.MAJOR
+)
+
+// Usage examples
+fun violations(vararg violations: RuleViolation): List<RuleViolation> = violations.toList()
+
+fun thresholdValidator(configure: ThresholdValidatorScope.() -> Unit): ThresholdValidator =
+    ThresholdValidator().apply { ThresholdValidatorScope(this).configure() }
+```
+
+### **Test Data with Data Classes**
+```kotlin
+// ✅ Use data classes for expected objects in assertions
+data class ExpectedAnalysisResult(
+    val totalViolations: Int,
+    val criticalCount: Int,
+    val majorCount: Int,
+    val minorCount: Int,
+    val moduleNames: List<String> = emptyList()
+)
+
+// ✅ Use data classes for parameterized test scenarios
+data class PenaltyScenario(
+    val description: String,
+    val violations: List<RuleViolation>,
+    val expectedResult: ExpectedAnalysisResult
+)
+
+// ✅ Helper functions with comprehensive default arguments
+fun analysisResult(
+    totalViolations: Int = 0,
+    criticalCount: Int = 0,
+    majorCount: Int = 0,
+    minorCount: Int = 0,
+    moduleNames: List<String> = emptyList(),
+    configure: AnalysisResultScope.() -> Unit = {}
+): AnalysisResult = AnalysisResult(
+    violations = generateViolations(criticalCount, majorCount, minorCount),
+    moduleResults = moduleNames.associateWith { ModuleResult(it) },
+    totalCount = totalViolations
+).apply { AnalysisResultScope(this).configure() }
+
+// ✅ Builder pattern with data classes for complex scenarios
+fun penaltyScenario(
+    description: String,
+    configure: PenaltyScenarioBuilder.() -> Unit
+): PenaltyScenario = PenaltyScenarioBuilder(description).apply(configure).build()
+
+class PenaltyScenarioBuilder(private val description: String) {
+    private val violations = mutableListOf<RuleViolation>()
+    private var expectedResult: ExpectedAnalysisResult? = null
+    
+    fun withViolations(vararg violations: RuleViolation) {
+        this.violations.addAll(violations)
+    }
+    
+    fun expectResult(configure: ExpectedAnalysisResult.Builder.() -> Unit) {
+        expectedResult = ExpectedAnalysisResult.Builder().apply(configure).build()
+    }
+    
+    fun build() = PenaltyScenario(description, violations.toList(), expectedResult!!)
+}
+```
+
+### **Test Extension Functions**
+```kotlin
+// ✅ Idiomatic Kotlin - Extension functions for frequently used values
+fun Int.toInstant(): Instant = Instant.ofEpochSecond(this.toLong())
+fun Int.toUUID(): UUID = UUID.fromString("00000000-0000-0000-a000-${this.toString().padStart(11, '0')}")
+fun String.toPath(): Path = Paths.get(this)
+
+// ✅ Test-specific utility functions (NO custom matchers)
+fun assertWithinTolerance(expected: Float, actual: Float, tolerance: Float = 0.001f) {
+    assertTrue(kotlin.math.abs(expected - actual) <= tolerance, 
+               "Expected $actual to be within $tolerance of $expected")
+}
+
+// ✅ Collection helper functions
+fun <T> Collection<T>.assertContainsExactly(vararg expected: T) {
+    assertEquals(expected.size, this.size, "Collection size mismatch")
+    expected.forEach { expectedItem ->
+        assertTrue(this.contains(expectedItem), "Expected collection to contain $expectedItem")
+    }
+}
+
+fun <T> Collection<T>.assertContainsInOrder(vararg expected: T) {
+    val actualList = this.toList()
+    assertEquals(expected.size, actualList.size, "Collection size mismatch")
+    expected.forEachIndexed { index, expectedItem ->
+        assertEquals(expectedItem, actualList[index], "Item at index $index doesn't match")
+    }
+}
+
+// ✅ String content verification helpers
+fun String.assertContainsAll(vararg substrings: String) {
+    substrings.forEach { substring ->
+        assertTrue(this.contains(substring), "Expected '$this' to contain '$substring'")
+    }
+}
+
+fun String.assertMatchesPattern(pattern: Regex, message: String = "String doesn't match expected pattern") {
+    assertTrue(pattern.matches(this), "$message. Pattern: $pattern, Actual: $this")
+}
+
+// ✅ File and path helpers
+fun Path.createTempFileWithContent(content: String, suffix: String = ".tmp"): Path {
+    val tempFile = Files.createTempFile(this, "test", suffix)
+    Files.write(tempFile, content.toByteArray())
+    return tempFile
+}
+
+fun Path.assertFileExists(message: String = "File should exist") {
+    assertTrue(Files.exists(this), "$message: $this")
+}
+
+fun Path.assertFileNotExists(message: String = "File should not exist") {
+    assertFalse(Files.exists(this), "$message: $this")
+}
+
+// ✅ Time and duration helpers
+fun Duration.assertLessThan(maxDuration: Duration) {
+    assertTrue(this < maxDuration, "Duration $this should be less than $maxDuration")
+}
+
+fun measureTestTime(block: () -> Unit): Duration {
+    val start = System.nanoTime()
+    block()
+    val end = System.nanoTime()
+    return Duration.ofNanos(end - start)
+}
+
+// ✅ Exception helpers
+inline fun <reified T : Throwable> assertThrowsWithMessage(
+    expectedMessage: String,
+    noinline executable: () -> Any?
+): T {
+    val exception = assertFailsWith<T> { executable() }
+    assertTrue(exception.message?.contains(expectedMessage) == true,
+              "Expected exception message to contain '$expectedMessage', but was: '${exception.message}'")
+    return exception
+}
+
+// ✅ Resource cleanup helpers
+fun <T : AutoCloseable, R> T.useInTest(block: (T) -> R): R {
+    return this.use(block)
+}
+
+// ✅ Data validation helpers
+fun <T> T?.assertNotNullAndGet(message: String = "Value should not be null"): T {
+    assertNotNull(this, message)
+    return this!!
+}
+
+fun <T> List<T>.assertSingleElement(message: String = "List should contain exactly one element"): T {
+    assertEquals(1, this.size, message)
+    return this.first()
+}
+
+// ✅ Fluent assertions for complex objects
+fun <T> T.assertThat(assertion: (T) -> Unit): T {
+    assertion(this)
+    return this
+}
+
+// Usage example:
+// result.assertThat { 
+//     assertEquals(expectedCount, it.totalViolations)
+//     assertTrue(it.hasWarnings)
+// }
+```
+
+### **Comprehensive Failure Testing**
+```kotlin
+class LintRuleFailureTest {
     
     @Test
-    fun `should support basic fake usage patterns`() {
-        // Basic usage
-        val service = fakeTestService()
-        assertEquals("", service.memes)
-        assertEquals("", service.getValue())
-        
-        // Custom behavior
-        val customService = fakeTestService {
-            memes { "Much wow" }
-            getValue { "custom-value" }
+    fun `GIVEN malformed source code WHEN analyzing THEN should handle gracefully`() {
+        // Given - isolated instance
+        val rule = NamingConventionRule()
+        val malformedElement = ktClass { 
+            name = null // Malformed
+            isValid = false 
         }
         
-        assertEquals("Much wow", customService.memes)
-        assertEquals("custom-value", customService.getValue())
+        // When & Then
+        assertDoesNotThrow {
+            val violations = rule.analyze(malformedElement)
+            assertTrue(violations.isEmpty()) // Should handle gracefully
+        }
     }
     
     @Test
-    fun `should support suspend function fakes`() = runTest {
-        val userService = fakeAsyncUserService {
-            getUser { "User-${System.currentTimeMillis()}" }
-            updateUser { delay(100); true }
-            deleteUser { delay(50) }
-        }
+    fun `GIVEN very long class name WHEN analyzing THEN should detect violation`() {
+        // Given
+        val rule = NamingConventionRule()
+        val veryLongName = "A".repeat(100)
+        val element = ktClass { name = veryLongName }
         
-        val user = userService.getUser("123")
-        assertTrue(user.startsWith("User-"))
+        // When
+        val violations = rule.analyze(element)
         
-        val updated = userService.updateUser("123", "New Name")  
-        assertTrue(updated)
-        
-        userService.deleteUser("123") // Should not throw
+        // Then
+        assertEquals(1, violations.size)
+        assertTrue(violations.first().message.contains("too long"))
     }
     
     @Test
-    fun `should support multiple fakes in same test`() = runTest {
-        val userService = fakeAsyncUserService {
-            getUser { "Test User" }
+    fun `GIVEN network failure during analysis WHEN processing THEN should retry gracefully`() {
+        // Given
+        val analyzer = fakeCodeAnalyzer {
+            simulateFailure("Network timeout")
         }
+        val file = sourceFile("Remote.kt", "class Remote")
         
-        val analytics = fakeAnalyticsService {
-            track { println("Event tracked") }
+        // When & Then
+        val result = assertFailsWith<AnalysisException> {
+            analyzer.analyze(file)
         }
-        
-        val testService = fakeTestService {
-            getValue { "test-value" }
-        }
-        
-        // All should work independently
-        assertEquals("Test User", userService.getUser("123"))
-        analytics.track("test-event")
-        assertEquals("test-value", testService.getValue())
+        assertTrue(result.message!!.contains("Network timeout"))
     }
 }
 ```
 
-## 📊 **Test Coverage Standards**
+## 🧹 **Resource Management and Cleanup**
 
-### **Module-Level Coverage Requirements**
+### **Immutable Test Data (Preferred)**
+```kotlin
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class RuleEngineTest {
+    
+    // ✅ Immutable, non-nullable fields using val
+    private val testConfiguration = penaltyConfiguration {
+        moduleThreshold("test-module") { maxCritical = 0; maxMajor = 5 }
+    }
+    
+    private val sampleViolations = listOf(
+        violation(severity = PenaltySeverity.CRITICAL),
+        violation(severity = PenaltySeverity.MAJOR)
+    )
+    
+    @Test
+    fun `GIVEN configuration WHEN processing violations THEN should validate correctly`() = runTest {
+        // Given - reuse immutable data
+        val ruleEngine = DefaultRuleEngine()
+        
+        // When
+        val result = ruleEngine.processViolations(sampleViolations, testConfiguration)
+        
+        // Then
+        assertNotNull(result)
+    }
+}
+```
 
-| Module | Unit Tests | Integration Tests | Coverage Target |
-|--------|------------|-------------------|-----------------|
-| Compiler Core | ✅ Complete | ✅ Pipeline tests | 95%+ |
-| Interface Analysis | ✅ 15+ tests | ✅ Cross-module | 90%+ |
-| Code Generation | ✅ 20+ tests | ✅ Compilation | 90%+ |
-| Type System | ✅ 38+ tests | ✅ Edge cases | 95%+ |
-| Configuration DSL | ✅ 10+ tests | ✅ Usage patterns | 85%+ |
-| Diagnostics | ✅ Error tests | ✅ Error scenarios | 85%+ |
+### **Temporary File Management**
+```kotlin
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class FileAnalysisTest {
+    
+    private lateinit var tempDirectory: Path
+    
+    @BeforeAll
+    fun setupTempDirectory() {
+        tempDirectory = Files.createTempDirectory("kmp-lint-test")
+    }
+    
+    @AfterAll
+    fun cleanupTempDirectory() {
+        Files.walk(tempDirectory)
+            .sorted(Comparator.reverseOrder())
+            .forEach(Files::delete)
+    }
+    
+    @Test
+    fun `GIVEN source file WHEN analyzing THEN should detect violations`() = runTest {
+        // Given - create temp file
+        val sourceFile = tempDirectory.createTempFileWithContent(
+            content = "class myClass", // naming violation
+            suffix = ".kt"
+        )
+        
+        // When
+        val analyzer = KotlinFileAnalyzer()
+        val violations = analyzer.analyze(sourceFile)
+        
+        // Then
+        assertEquals(1, violations.size)
+        assertTrue(violations.first().message.contains("naming convention"))
+        
+        // File cleanup happens automatically in @AfterAll
+    }
+}
+```
+
+### **Database/Container Cleanup Patterns**
+```kotlin
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class IntegrationTest {
+    
+    private lateinit var testDatabase: TestDatabase
+    
+    @BeforeAll
+    fun setupDatabase() {
+        testDatabase = TestDatabase.start()
+    }
+    
+    @AfterAll
+    fun tearDownDatabase() {
+        testDatabase.stop()
+    }
+    
+    @BeforeEach
+    fun cleanDatabase() {
+        // Clean database before each test for isolation
+        testDatabase.clean()
+    }
+    
+    @Test
+    fun `GIVEN empty database WHEN inserting violations THEN should persist correctly`() = runTest {
+        // Test implementation with clean database state
+    }
+}
+```
+
+### **Resource Cleanup with use() Extension**
+```kotlin
+class FileProcessingTest {
+    
+    @Test
+    fun `GIVEN large file WHEN processing THEN should handle resources properly`() = runTest {
+        // Given
+        val largeFile = createLargeTestFile()
+        
+        // When & Then - automatic resource cleanup
+        largeFile.inputStream().useInTest { stream ->
+            val processor = FileProcessor()
+            val result = processor.process(stream)
+            
+            assertNotNull(result)
+            assertTrue(result.isProcessed)
+        }
+        
+        // Stream is automatically closed
+    }
+}
+```
+
+### **Exception Safety in Cleanup**
+```kotlin
+class RobustCleanupTest {
+    
+    @Test 
+    fun `GIVEN resources WHEN exception occurs THEN should cleanup safely`() = runTest {
+        var resource1: TestResource? = null
+        var resource2: TestResource? = null
+        
+        try {
+            resource1 = TestResource.create()
+            resource2 = TestResource.create()
+            
+            // Test logic that might throw
+            performRiskyOperation(resource1, resource2)
+            
+        } finally {
+            // Safe cleanup - handle null and exceptions
+            resource1?.let { res ->
+                kotlin.runCatching { res.close() }.onFailure { 
+                    // Log cleanup failure but don't rethrow
+                    println("Warning: Failed to cleanup resource1: ${it.message}")
+                }
+            }
+            resource2?.let { res ->
+                kotlin.runCatching { res.close() }.onFailure { 
+                    println("Warning: Failed to cleanup resource2: ${it.message}")
+                }
+            }
+        }
+    }
+}
+```
+
+### **Memory Management for Large Test Suites**
+```kotlin
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class MemoryAwareTest {
+    
+    // ✅ Use val for immutable shared data
+    private val sharedConfiguration = heavyConfiguration()
+    
+    @AfterEach
+    fun garbageCollectAfterTest() {
+        // Force garbage collection after memory-intensive tests
+        if (isMemoryIntensiveTest()) {
+            System.gc()
+        }
+    }
+    
+    @Test
+    fun `GIVEN large dataset WHEN processing THEN should not leak memory`() = runTest {
+        // Given
+        val largeDataset = generateLargeDataset()
+        
+        // When
+        val result = processLargeDataset(largeDataset)
+        
+        // Then
+        assertNotNull(result)
+        
+        // Clear large objects explicitly if needed
+        @Suppress("UNUSED_VALUE")
+        largeDataset = null // Help GC
+    }
+}
+```
+
+## 🔒 **Test Isolation**
+
+### **❌ Bad Practice - Shared State**
+```kotlin
+// ❌ Avoid - shared state between tests
+class RuleEngineTest {
+    private lateinit var ruleEngine: RuleEngine
+    
+    @BeforeEach
+    fun setUp() {
+        ruleEngine = DefaultRuleEngine() // Dangerous reuse
+    }
+}
+```
+
+### **✅ Good Practice - Isolated Instances**
+```kotlin
+// ✅ Each test creates its own instances
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class RuleEngineTest {
+    
+    @Test
+    fun `GIVEN valid source file WHEN analyzing THEN should return analysis result`() {
+        // Given - new instance ensuring isolation
+        val ruleEngine = DefaultRuleEngine()
+        val sourceFile = sourceFile("Test.kt", "class Test")
+        
+        // When & Then
+        assertNotNull(ruleEngine.analyzeFile(sourceFile))
+    }
+    
+    @Test
+    fun `GIVEN invalid syntax file WHEN analyzing THEN should handle error`() {
+        // Given - another isolated instance
+        val ruleEngine = DefaultRuleEngine()
+        val invalidFile = sourceFile("Invalid.kt", "class {")
+        
+        // When & Then
+        assertDoesNotThrow { 
+            ruleEngine.analyzeFile(invalidFile) 
+        }
+    }
+}
+```
+
+## 📏 **Test Method Organization**
+
+### **Logical Grouping with @Nested**
+```kotlin
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class ComprehensiveRuleEngineTest {
+    
+    @Nested
+    inner class RuleRegistration {
+        
+        @Test
+        fun `GIVEN new rule WHEN registering THEN should be available in registry`() = runTest {
+            // Test implementation
+        }
+        
+        @Test
+        fun `GIVEN duplicate rule ID WHEN registering THEN should replace existing`() = runTest {
+            // Test implementation
+        }
+        
+        @ParameterizedTest
+        @EnumSource(RuleCategory::class)
+        fun `GIVEN rules from different categories WHEN registering THEN should organize by category`(
+            category: RuleCategory
+        ) = runTest {
+            // Test implementation with category parameter
+        }
+    }
+    
+    @Nested
+    inner class RuleExecution {
+        
+        @Test
+        fun `GIVEN registered rules WHEN executing analysis THEN should process all applicable rules`() = runTest {
+            // Test implementation
+        }
+        
+        @Nested
+        inner class ErrorHandling {
+            
+            @Test
+            fun `GIVEN rule throws exception WHEN executing THEN should handle gracefully`() = runTest {
+                // Test implementation
+            }
+            
+            @Test
+            fun `GIVEN malformed input WHEN processing THEN should return meaningful errors`() = runTest {
+                // Test implementation
+            }
+        }
+    }
+    
+    @Nested
+    inner class Performance {
+        
+        @Test
+        fun `GIVEN large codebase WHEN analyzing THEN should complete within timeout`() = runTest {
+            // Performance test implementation
+        }
+        
+        @Test
+        fun `GIVEN parallel execution WHEN processing multiple files THEN should scale linearly`() = runTest {
+            // Concurrency test implementation
+        }
+    }
+}
+```
+
+### **Test Method Naming Conventions**
+```kotlin
+class RuleEngineNamingExamplesTest {
+    
+    // ✅ GOOD: Clear, descriptive BDD-style names
+    @Test
+    fun `GIVEN empty rule registry WHEN adding first rule THEN should initialize successfully`() = runTest { }
+    
+    @Test
+    fun `GIVEN source file with 10 violations WHEN applying severity filter THEN should return only critical violations`() = runTest { }
+    
+    @Test
+    fun `GIVEN rule with quick fixes WHEN violation detected THEN should include applicable fixes in result`() = runTest { }
+    
+    // ✅ GOOD: Edge cases clearly identified
+    @Test
+    fun `GIVEN null input file WHEN processing THEN should throw IllegalArgumentException`() = runTest { }
+    
+    @Test
+    fun `GIVEN empty string as rule ID WHEN registering THEN should reject with validation error`() = runTest { }
+    
+    // ✅ GOOD: Integration scenarios
+    @Test
+    fun `GIVEN multiple modules with cross-dependencies WHEN analyzing project THEN should detect circular references`() = runTest { }
+}
+```
+
+### **Test Data Organization**
+```kotlin
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class WellOrganizedTest {
+    
+    // ✅ Immutable test data organized by purpose
+    private val validationScenarios = listOf(
+        ValidationScenario("empty input", "", ValidationResult.INVALID),
+        ValidationScenario("valid class", "class MyClass", ValidationResult.VALID),
+        ValidationScenario("invalid naming", "class myClass", ValidationResult.INVALID)
+    )
+    
+    private val performanceTestData = PerformanceTestData(
+        smallCodebase = generateCodebase(fileCount = 10),
+        mediumCodebase = generateCodebase(fileCount = 100),
+        largeCodebase = generateCodebase(fileCount = 1000)
+    )
+    
+    // ✅ Group related test data
+    companion object {
+        
+        @JvmStatic
+        fun severityTestCases(): List<Arguments> = listOf(
+            Arguments.of(PenaltySeverity.CRITICAL, 10, "should fail build"),
+            Arguments.of(PenaltySeverity.MAJOR, 3, "should warn but continue"),
+            Arguments.of(PenaltySeverity.MINOR, 1, "should pass with notification")
+        )
+        
+        @JvmStatic
+        fun ruleConfigurationCases(): List<RuleConfiguration> = listOf(
+            ruleConfiguration { strictMode = true },
+            ruleConfiguration { strictMode = false },
+            ruleConfiguration { customThresholds = mapOf("test" to 5) }
+        )
+    }
+    
+    @Nested
+    inner class ValidationTests {
+        
+        @ParameterizedTest(name = "{0}")
+        @MethodSource("com.rsicarelli.kmp.lint.WellOrganizedTest#severityTestCases")
+        fun `GIVEN different penalty severities WHEN processing THEN should handle according to configuration`(
+            severity: PenaltySeverity,
+            expectedWeight: Int,
+            expectedBehavior: String
+        ) = runTest {
+            // Test implementation using parameters
+        }
+    }
+}
+```
+
+### **Test Lifecycle Management**
+```kotlin
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class LifecycleAwareTest {
+    
+    private lateinit var expensiveResource: ExpensiveResource
+    private val testMetrics = TestMetrics()
+    
+    @BeforeAll
+    fun initializeOnce() {
+        // ✅ Initialize expensive resources once per class
+        expensiveResource = ExpensiveResource.initialize()
+        testMetrics.startSuite("LifecycleAwareTest")
+    }
+    
+    @AfterAll
+    fun cleanupOnce() {
+        // ✅ Cleanup expensive resources
+        expensiveResource.cleanup()
+        testMetrics.finalizeSuite()
+        testMetrics.printReport()
+    }
+    
+    @BeforeEach
+    fun prepareTest() {
+        // ✅ Reset state before each test
+        expensiveResource.reset()
+        testMetrics.startTest()
+    }
+    
+    @AfterEach
+    fun verifyTest() {
+        // ✅ Verify test state and collect metrics
+        testMetrics.endTest()
+        assertTrue(expensiveResource.isInValidState(), "Resource should be in valid state after test")
+    }
+    
+    @Test
+    fun `GIVEN initialized resource WHEN performing operation THEN should maintain consistency`() = runTest {
+        // Test implementation that uses expensiveResource
+    }
+}
+```
+
+### **Complex Scenario Organization**
+```kotlin
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class ComplexScenarioTest {
+    
+    @Nested
+    @DisplayName("Multi-module Project Analysis")
+    inner class MultiModuleAnalysis {
+        
+        @Test
+        @DisplayName("Should analyze dependencies correctly")
+        fun `GIVEN project with multiple modules WHEN analyzing dependencies THEN should build correct dependency graph`() = runTest {
+            // Given
+            val project = multiModuleProject {
+                module("core") {
+                    sourceFile("Domain.kt", "class User")
+                }
+                module("feature-auth") {
+                    dependency("core")
+                    sourceFile("AuthService.kt", "class AuthService(user: User)")
+                }
+                module("app") {
+                    dependency("core")
+                    dependency("feature-auth")
+                }
+            }
+            
+            // When
+            val analyzer = ProjectAnalyzer()
+            val result = analyzer.analyze(project)
+            
+            // Then
+            assertEquals(3, result.modules.size)
+            assertTrue(result.hasDependency("feature-auth", "core"))
+            assertTrue(result.hasDependency("app", "feature-auth"))
+            assertFalse(result.hasCircularDependencies())
+        }
+        
+        @Nested
+        @DisplayName("Circular Dependency Detection")
+        inner class CircularDependencyDetection {
+            
+            @Test
+            fun `GIVEN modules with circular dependency WHEN analyzing THEN should detect cycle`() = runTest {
+                // Nested test for specific circular dependency scenarios
+            }
+        }
+    }
+}
+```
+
+## 📊 **Coverage and Quality**
+
+### **Coverage Goals**
+- **Core Layer** (analysis-api, rule-system, penalty-system): 95%+ coverage
+- **Rules Layer** (correctness-rules, performance-rules, etc): 90%+ coverage  
+- **Integrations Layer**: Focus on CLI and Gradle Plugin
 
 ### **Quality Gates**
+- Execution on all PRs
+- Merge blocking if coverage < minimum
+- Mandatory review for adjustments
 
-Before any release, all tests must pass:
-
-```bash
-# Unit and component tests
-./gradlew test
-
-# Integration tests with real compilation  
-cd test-sample && ../gradlew clean build
-
-# End-to-end usage validation
-./gradlew :compiler-tests:test
-
-# Performance regression tests
-./gradlew benchmark
-```
-
-## 🚀 **Testing Tools and Utilities**
-
-### **Mock Creation Utilities**
-
+### **Integration Test Example**
 ```kotlin
-// Test utilities for creating mock interfaces
-fun createMockInterface(
-    name: String, 
-    hasFakeAnnotation: Boolean = true,
-    methods: List<String> = emptyList(),
-    properties: List<String> = emptyList()
-): IrClass {
-    return mockk<IrClass> {
-        every { name } returns Name.identifier(name)
-        every { annotations } returns if (hasFakeAnnotation) {
-            listOf(createFakeAnnotation())
-        } else emptyList()
-        every { kind } returns ClassKind.INTERFACE
-        // Additional setup...
-    }
-}
-
-// Analysis creation utilities
-fun createAnalysisFor(block: AnalysisBuilder.() -> Unit): InterfaceAnalysis {
-    val builder = AnalysisBuilder()
-    builder.block()
-    return builder.build()
-}
-```
-
-### **Compilation Testing Utilities**
-
-```kotlin
-// Verify generated code compiles
-fun assertCompiles(code: String) {
-    val result = compileKotlinCode(code)
-    if (!result.isSuccessful) {
-        fail("Generated code failed to compile:\n${result.errors}")
-    }
-}
-
-// Test-sample compilation utilities
-fun compileTestSample(): CompilationResult {
-    return ProcessBuilder()
-        .directory(File("test-sample"))
-        .command("../gradlew", "clean", "compileKotlinJvm", "--no-build-cache")
-        .start()
-        .waitFor()
-}
-
-fun cleanTestSample() {
-    val generatedDir = File("test-sample/build/generated")
-    if (generatedDir.exists()) {
-        generatedDir.deleteRecursively()
-    }
-}
-```
-
-## 🐛 **Error Testing and Diagnostics**
-
-### **Error Scenario Coverage**
-
-```kotlin
-class ErrorHandlingTest {
+class GradlePluginIntegrationTest {
     
     @Test
-    fun `should report clear error for invalid interface`() {
-        val analyzer = SimpleInterfaceAnalyzer()
-        val invalidInterface = createMockInterface {
-            methods = listOf("fun getValue(): Nothing") // Invalid return type
+    fun `GIVEN project with lint violations WHEN running gradle task THEN should fail build`() {
+        // Given - isolated project for testing
+        val testProject = testProject {
+            sourceFile("BadCode.kt", "class myClass") // Naming violation
         }
         
-        val validation = analyzer.validateInterface(invalidInterface)
+        // When
+        val result = testProject.runTask("kmpLint")
         
-        assertIs<ValidationResult.Invalid>(validation)
-        val error = validation.errors.first()
-        assertTrue(error.contains("Nothing return type not supported"))
-        assertTrue(error.contains("getValue"))
-    }
-    
-    @Test
-    fun `should handle missing annotation gracefully`() {
-        val extension = UnifiedKtFakesIrGenerationExtension()
-        val interfaceWithoutAnnotation = createMockInterface(hasFakeAnnotation = false)
-        
-        val shouldProcess = extension.shouldProcessInterface(interfaceWithoutAnnotation)
-        
-        assertFalse(shouldProcess)
-    }
-    
-    @Test
-    fun `should validate circular dependencies`() {
-        val analyzer = SimpleInterfaceAnalyzer()
-        val interfaceWithCircularDep = createMockInterface {
-            dependencies = listOf("SelfReferencingService")
-        }
-        
-        val validation = analyzer.validateInterface(interfaceWithCircularDep)
-        
-        assertIs<ValidationResult.Invalid>(validation)
-        assertTrue(validation.errors.any { it.contains("circular") })
+        // Then
+        assertFalse(result.success)
+        assertTrue(result.output.contains("naming convention"))
     }
 }
 ```
 
-### **Debug Information Testing**
+## 🚫 **Prohibited Practices**
 
-```kotlin
-class DebugSupportTest {
-    
-    @Test
-    fun `should include source mapping in generated code`() {
-        val generator = UnifiedCodeGenerator(includeSourceMaps = true)
-        val analysis = createBasicAnalysis()
-        
-        val implementation = generator.generateImplementation(analysis)
-        
-        assertTrue(implementation.contains("// Generated from: TestService.kt:5"))
-        assertTrue(implementation.contains("// Method: getValue() at line 8"))
-    }
-    
-    @Test
-    fun `should provide helpful compiler messages`() {
-        val extension = UnifiedKtFakesIrGenerationExtension()
-        val mockCollector = MockMessageCollector()
-        
-        extension.reportProgress("Processing interface: UserService", mockCollector)
-        
-        assertTrue(mockCollector.messages.any { 
-            it.contains("KtFakes: Processing interface: UserService") 
-        })
-    }
-}
-```
+❌ **Custom BDD frameworks**  
+❌ **Complex test DSLs**  
+❌ **Custom matchers** (use kotlin-test assertions only)  
+❌ **Mocks** (use fakes)  
+❌ **Unnecessary builders**  
+❌ **Testing framework instead of code**  
 
-## 📈 **Performance Testing**
+## ✅ **Recommended Practices**
 
-### **Compilation Performance Tests**
-
-```kotlin
-class PerformanceTest {
-    
-    @Test
-    fun `should handle large interfaces efficiently`() {
-        val analyzer = SimpleInterfaceAnalyzer()
-        val largeInterface = createMockInterfaceWith100Methods()
-        
-        val startTime = System.currentTimeMillis()
-        val analysis = analyzer.analyzeInterface(largeInterface)
-        val analysisTime = System.currentTimeMillis() - startTime
-        
-        assertTrue(analysisTime < 1000) // Should complete within 1 second
-        assertEquals(100, analysis.methods.size)
-    }
-    
-    @Test
-    fun `should generate code for complex interfaces quickly`() {
-        val generator = UnifiedCodeGenerator()
-        val complexAnalysis = createComplexInterfaceAnalysis()
-        
-        val startTime = System.currentTimeMillis()
-        val implementation = generator.generateImplementation(complexAnalysis)
-        val generationTime = System.currentTimeMillis() - startTime
-        
-        assertTrue(generationTime < 500) // Should generate within 500ms
-        assertTrue(implementation.length > 1000) // Should generate substantial code
-    }
-}
-```
-
-### **Memory Usage Testing**
-
-```kotlin
-class MemoryTest {
-    
-    @Test
-    fun `should not leak memory during generation`() {
-        val initialMemory = Runtime.getRuntime().freeMemory()
-        
-        repeat(100) {
-            val generator = UnifiedCodeGenerator()
-            val analysis = createRandomInterfaceAnalysis()
-            generator.generateImplementation(analysis)
-        }
-        
-        System.gc()
-        val finalMemory = Runtime.getRuntime().freeMemory()
-        
-        val memoryIncrease = initialMemory - finalMemory
-        assertTrue(memoryIncrease < 10_000_000) // Less than 10MB increase
-    }
-}
-```
-
-## 🔮 **Testing Roadmap**
-
-### **Current Testing Status** ✅
-- **Unit Tests**: 38+ comprehensive type system tests
-- **Component Tests**: Complete module-level testing
-- **Integration Tests**: Cross-module coordination validated
-- **End-to-End Tests**: Real compilation with test-sample
-- **Performance Tests**: Basic performance validation
-
-### **Next Testing Enhancements**
-- **Fuzz Testing**: Random interface generation and validation
-- **Property-Based Testing**: QuickCheck-style property validation
-- **Stress Testing**: Large-scale interface processing
-- **Multiplatform Testing**: JS, Native, WASM validation
-
-### **Advanced Testing Features**
-- **Visual Test Reports**: HTML test coverage reports
-- **Performance Regression Detection**: Automated performance monitoring
-- **Real-World Integration**: Testing with actual Android/JVM projects
-- **Community Test Cases**: User-contributed test scenarios
-
----
-
-**Testing Status**: ✅ Production-Ready Comprehensive Testing Framework  
-**Coverage**: 90%+ across all modules with end-to-end validation  
-**Quality**: BDD naming, clear error scenarios, performance validated
+✅ Descriptive test names with Given-When-Then  
+✅ Simple and focused fakes  
+✅ Higher-order functions for test utilities  
+✅ Extension functions for common values  
+✅ Default arguments for test data builders  
+✅ **100% Standard kotlin-test assertions** (NO custom matchers)  
+✅ **@Nested inner classes** for logical test grouping  
+✅ **@ParameterizedTest** for data-driven testing  
+✅ **runTest** for coroutines code  
+✅ **Focused and independent tests**  
+✅ **Data classes for test parameters**  
+✅ **Val fields with PER_CLASS lifecycle**

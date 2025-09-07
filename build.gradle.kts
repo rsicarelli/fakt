@@ -116,7 +116,7 @@ subprojects {
           "-Xjsr305=strict",
           "-Xjvm-default=all",
           "-Xtype-enhancement-improvements-strict-mode",
-          "-Xcontext-receivers",
+          "-Xcontext-parameters",
         )
       }
     }
@@ -141,7 +141,7 @@ subprojects {
       compilerOptions {
         freeCompilerArgs.addAll(
           "-progressive",
-          "-Xcontext-receivers",
+          "-Xcontext-parameters",
         )
       }
     }
