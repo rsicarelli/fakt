@@ -1,0 +1,54 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, linuxArm64, linuxX64, macosArm64, macosX64, mingwX64, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ktfake:runtime>
+open annotation class dev.rsicarelli.ktfake/CallTracking : kotlin/Annotation { // dev.rsicarelli.ktfake/CallTracking|null[0]
+    constructor <init>(kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/Int = ..., kotlin/Boolean = ..., kotlin/Boolean = ...) // dev.rsicarelli.ktfake/CallTracking.<init>|<init>(kotlin.Boolean;kotlin.Boolean;kotlin.Int;kotlin.Boolean;kotlin.Boolean){}[0]
+
+    final val autoVerify // dev.rsicarelli.ktfake/CallTracking.autoVerify|{}autoVerify[0]
+        final fun <get-autoVerify>(): kotlin/Boolean // dev.rsicarelli.ktfake/CallTracking.autoVerify.<get-autoVerify>|<get-autoVerify>(){}[0]
+    final val captureArguments // dev.rsicarelli.ktfake/CallTracking.captureArguments|{}captureArguments[0]
+        final fun <get-captureArguments>(): kotlin/Boolean // dev.rsicarelli.ktfake/CallTracking.captureArguments.<get-captureArguments>|<get-captureArguments>(){}[0]
+    final val captureReturnValues // dev.rsicarelli.ktfake/CallTracking.captureReturnValues|{}captureReturnValues[0]
+        final fun <get-captureReturnValues>(): kotlin/Boolean // dev.rsicarelli.ktfake/CallTracking.captureReturnValues.<get-captureReturnValues>|<get-captureReturnValues>(){}[0]
+    final val enableTimestamps // dev.rsicarelli.ktfake/CallTracking.enableTimestamps|{}enableTimestamps[0]
+        final fun <get-enableTimestamps>(): kotlin/Boolean // dev.rsicarelli.ktfake/CallTracking.enableTimestamps.<get-enableTimestamps>|<get-enableTimestamps>(){}[0]
+    final val maxCalls // dev.rsicarelli.ktfake/CallTracking.maxCalls|{}maxCalls[0]
+        final fun <get-maxCalls>(): kotlin/Int // dev.rsicarelli.ktfake/CallTracking.maxCalls.<get-maxCalls>|<get-maxCalls>(){}[0]
+}
+
+open annotation class dev.rsicarelli.ktfake/Fake : kotlin/Annotation { // dev.rsicarelli.ktfake/Fake|null[0]
+    constructor <init>(kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/Array<kotlin.reflect/KClass<*>> = ..., kotlin/Boolean = ..., kotlin/String = ...) // dev.rsicarelli.ktfake/Fake.<init>|<init>(kotlin.Boolean;kotlin.Boolean;kotlin.Array<kotlin.reflect.KClass<*>>;kotlin.Boolean;kotlin.String){}[0]
+
+    final val builder // dev.rsicarelli.ktfake/Fake.builder|{}builder[0]
+        final fun <get-builder>(): kotlin/Boolean // dev.rsicarelli.ktfake/Fake.builder.<get-builder>|<get-builder>(){}[0]
+    final val concurrent // dev.rsicarelli.ktfake/Fake.concurrent|{}concurrent[0]
+        final fun <get-concurrent>(): kotlin/Boolean // dev.rsicarelli.ktfake/Fake.concurrent.<get-concurrent>|<get-concurrent>(){}[0]
+    final val dependencies // dev.rsicarelli.ktfake/Fake.dependencies|{}dependencies[0]
+        final fun <get-dependencies>(): kotlin/Array<kotlin.reflect/KClass<*>> // dev.rsicarelli.ktfake/Fake.dependencies.<get-dependencies>|<get-dependencies>(){}[0]
+    final val scope // dev.rsicarelli.ktfake/Fake.scope|{}scope[0]
+        final fun <get-scope>(): kotlin/String // dev.rsicarelli.ktfake/Fake.scope.<get-scope>|<get-scope>(){}[0]
+    final val trackCalls // dev.rsicarelli.ktfake/Fake.trackCalls|{}trackCalls[0]
+        final fun <get-trackCalls>(): kotlin/Boolean // dev.rsicarelli.ktfake/Fake.trackCalls.<get-trackCalls>|<get-trackCalls>(){}[0]
+}
+
+open annotation class dev.rsicarelli.ktfake/FakeConfig : kotlin/Annotation { // dev.rsicarelli.ktfake/FakeConfig|null[0]
+    constructor <init>(kotlin/String = ..., kotlin/Array<kotlin/String> = ..., kotlin/Array<kotlin/String> = ..., kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/String = ...) // dev.rsicarelli.ktfake/FakeConfig.<init>|<init>(kotlin.String;kotlin.Array<kotlin.String>;kotlin.Array<kotlin.String>;kotlin.Boolean;kotlin.Boolean;kotlin.String){}[0]
+
+    final val customScope // dev.rsicarelli.ktfake/FakeConfig.customScope|{}customScope[0]
+        final fun <get-customScope>(): kotlin/String // dev.rsicarelli.ktfake/FakeConfig.customScope.<get-customScope>|<get-customScope>(){}[0]
+    final val defaults // dev.rsicarelli.ktfake/FakeConfig.defaults|{}defaults[0]
+        final fun <get-defaults>(): kotlin/Array<kotlin/String> // dev.rsicarelli.ktfake/FakeConfig.defaults.<get-defaults>|<get-defaults>(){}[0]
+    final val excludeMethods // dev.rsicarelli.ktfake/FakeConfig.excludeMethods|{}excludeMethods[0]
+        final fun <get-excludeMethods>(): kotlin/Array<kotlin/String> // dev.rsicarelli.ktfake/FakeConfig.excludeMethods.<get-excludeMethods>|<get-excludeMethods>(){}[0]
+    final val factoryName // dev.rsicarelli.ktfake/FakeConfig.factoryName|{}factoryName[0]
+        final fun <get-factoryName>(): kotlin/String // dev.rsicarelli.ktfake/FakeConfig.factoryName.<get-factoryName>|<get-factoryName>(){}[0]
+    final val generateDsl // dev.rsicarelli.ktfake/FakeConfig.generateDsl|{}generateDsl[0]
+        final fun <get-generateDsl>(): kotlin/Boolean // dev.rsicarelli.ktfake/FakeConfig.generateDsl.<get-generateDsl>|<get-generateDsl>(){}[0]
+    final val strictMode // dev.rsicarelli.ktfake/FakeConfig.strictMode|{}strictMode[0]
+        final fun <get-strictMode>(): kotlin/Boolean // dev.rsicarelli.ktfake/FakeConfig.strictMode.<get-strictMode>|<get-strictMode>(){}[0]
+}

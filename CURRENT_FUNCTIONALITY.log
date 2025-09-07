@@ -1,0 +1,276 @@
+Calculating task graph as configuration cache cannot be reused because file 'settings.gradle.kts' has changed.
+
+> Configure project :runtime
+w: [33m[1m⚠️ JS Environment Not Selected[0m[0m
+Please choose a WebAssembly-JavaScript environment to build distributions and run tests.
+Not choosing any of them will be an error in the future releases.
+kotlin {
+    wasmJs {
+        // To build distributions for and run tests use one or several of:
+        browser()
+        nodejs()
+        d8
+    }
+}
+[32m[1mSolution:[0m[0m
+[32m[3mPlease choose a WebAssembly-JavaScript environment to build distributions and run tests.[0m[0m
+
+
+> Configure project :test-sample
+KtFake compiler plugin path: /Users/rsicarelli/Workspace/Personal/ktfakes-prototype/ktfake/compiler/build/libs/compiler.jar
+KtFake compiler plugin path: /Users/rsicarelli/Workspace/Personal/ktfakes-prototype/ktfake/compiler/build/libs/compiler.jar
+
+> Task :assemble UP-TO-DATE
+> Task :runtime:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :compiler:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :compiler-tests:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :runtime:jvmProcessResources NO-SOURCE
+> Task :runtime:processJvmMainResources SKIPPED
+> Task :compiler-tests:processTestResources NO-SOURCE
+> Task :compiler:processResources UP-TO-DATE
+> Task :gradle-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :compiler:processTestResources NO-SOURCE
+> Task :compiler-tests:processResources NO-SOURCE
+> Task :compiler-tests:generateTests UP-TO-DATE
+> Task :compiler-tests:compileKotlin NO-SOURCE
+> Task :gradle-plugin:processFunctionalTestResources NO-SOURCE
+> Task :gradle-plugin:processTestResources NO-SOURCE
+> Task :runtime:metadataCommonMainProcessResources NO-SOURCE
+> Task :gradle-plugin:pluginDescriptors UP-TO-DATE
+> Task :runtime:metadataLinuxMainProcessResources NO-SOURCE
+> Task :runtime:metadataAppleMainProcessResources NO-SOURCE
+> Task :runtime:metadataNativeMainProcessResources NO-SOURCE
+> Task :runtime:generateProjectStructureMetadata UP-TO-DATE
+> Task :compiler-tests:compileJava NO-SOURCE
+> Task :compiler-tests:classes UP-TO-DATE
+> Task :runtime:transformCommonMainDependenciesMetadata UP-TO-DATE
+> Task :runtime:commonizeNativeDistribution UP-TO-DATE
+> Task :gradle-plugin:processResources UP-TO-DATE
+> Task :spotlessInternalRegisterDependencies UP-TO-DATE
+> Task :runtime:compileKotlinJvm UP-TO-DATE
+> Task :compiler-tests:jar UP-TO-DATE
+> Task :compiler-tests:assemble UP-TO-DATE
+> Task :spotlessKotlinGradle
+> Task :spotlessKotlinGradleCheck
+> Task :runtime:transformNativeMainDependenciesMetadata
+> Task :runtime:compileKotlinLinuxArm64 UP-TO-DATE
+> Task :spotlessMisc UP-TO-DATE
+> Task :spotlessMiscCheck UP-TO-DATE
+> Task :compiler:spotlessJava UP-TO-DATE
+> Task :compiler:spotlessJavaCheck UP-TO-DATE
+> Task :compiler:spotlessKotlinGradle UP-TO-DATE
+> Task :compiler:spotlessKotlin
+> Task :compiler:spotlessKotlinGradleCheck UP-TO-DATE
+> Task :compiler:spotlessKotlinCheck
+> Task :compiler:spotlessMisc UP-TO-DATE
+> Task :compiler:spotlessMiscCheck UP-TO-DATE
+> Task :compiler-tests:spotlessJava UP-TO-DATE
+> Task :compiler-tests:spotlessJavaCheck UP-TO-DATE
+> Task :compiler-tests:spotlessKotlin UP-TO-DATE
+> Task :compiler-tests:spotlessKotlinCheck UP-TO-DATE
+> Task :compiler-tests:spotlessKotlinGradle UP-TO-DATE
+> Task :compiler-tests:spotlessKotlinGradleCheck UP-TO-DATE
+> Task :compiler-tests:spotlessLicenseKotlin UP-TO-DATE
+> Task :compiler-tests:spotlessLicenseKotlinCheck UP-TO-DATE
+> Task :compiler:spotlessLicenseKotlin
+> Task :compiler-tests:spotlessMisc UP-TO-DATE
+> Task :compiler:spotlessLicenseKotlinCheck
+> Task :compiler:spotlessCheck
+> Task :compiler-tests:spotlessMiscCheck UP-TO-DATE
+> Task :compiler-tests:spotlessCheck UP-TO-DATE
+> Task :runtime:compileJvmMainJava NO-SOURCE
+> Task :runtime:jvmMainClasses UP-TO-DATE
+> Task :runtime:jvmJar UP-TO-DATE
+> Task :gradle-plugin:spotlessJava UP-TO-DATE
+> Task :gradle-plugin:spotlessKotlin UP-TO-DATE
+> Task :gradle-plugin:spotlessJavaCheck UP-TO-DATE
+> Task :gradle-plugin:spotlessKotlinCheck UP-TO-DATE
+> Task :gradle-plugin:spotlessKotlinGradle UP-TO-DATE
+> Task :gradle-plugin:spotlessKotlinGradleCheck UP-TO-DATE
+> Task :gradle-plugin:spotlessMisc UP-TO-DATE
+> Task :gradle-plugin:spotlessMiscCheck UP-TO-DATE
+> Task :runtime:transformLinuxMainDependenciesMetadata
+> Task :gradle-plugin:spotlessLicenseKotlin UP-TO-DATE
+> Task :gradle-plugin:spotlessLicenseKotlinCheck UP-TO-DATE
+> Task :gradle-plugin:spotlessCheck UP-TO-DATE
+> Task :runtime:transformAppleMainDependenciesMetadata
+> Task :runtime:transformIosMainDependenciesMetadata
+
+> Task :compiler:compileKotlin
+w: Experimental context receivers are superseded by context parameters.
+Replace the '-Xcontext-receivers' compiler argument with '-Xcontext-parameters' and migrate to the new syntax.
+
+See the context parameters proposal for more details: https://kotl.in/context-parameters
+This warning will become an error in future releases.
+
+> Task :compiler:compileJava NO-SOURCE
+> Task :compiler:classes UP-TO-DATE
+> Task :compiler:jar SKIPPED
+> Task :compiler:assemble UP-TO-DATE
+> Task :compiler:shadowJar
+
+> Task :runtime:compileCommonMainKotlinMetadata
+w: Experimental context receivers are superseded by context parameters.
+Replace the '-Xcontext-receivers' compiler argument with '-Xcontext-parameters' and migrate to the new syntax.
+
+See the context parameters proposal for more details: https://kotl.in/context-parameters
+This warning will become an error in future releases.
+
+> Task :compiler-tests:compileTestKotlin NO-SOURCE
+> Task :compiler-tests:compileTestJava NO-SOURCE
+> Task :compiler-tests:testClasses UP-TO-DATE
+> Task :compiler-tests:test NO-SOURCE
+> Task :compiler-tests:check UP-TO-DATE
+> Task :compiler-tests:build UP-TO-DATE
+> Task :spotlessKotlin UP-TO-DATE
+> Task :spotlessLicenseKotlin UP-TO-DATE
+> Task :spotlessJava UP-TO-DATE
+> Task :spotlessJavaCheck UP-TO-DATE
+> Task :runtime:metadataCommonMainClasses
+> Task :spotlessKotlinCheck UP-TO-DATE
+> Task :spotlessLicenseKotlinCheck UP-TO-DATE
+> Task :spotlessCheck
+> Task :check
+> Task :build
+> Task :runtime:compileNativeMainKotlinMetadata NO-SOURCE
+> Task :runtime:metadataNativeMainClasses UP-TO-DATE
+> Task :runtime:compileLinuxMainKotlinMetadata NO-SOURCE
+> Task :runtime:metadataLinuxMainClasses UP-TO-DATE
+> Task :runtime:compileAppleMainKotlinMetadata NO-SOURCE
+> Task :runtime:metadataAppleMainClasses UP-TO-DATE
+> Task :runtime:compileIosMainKotlinMetadata NO-SOURCE
+> Task :runtime:transformMacosMainDependenciesMetadata
+> Task :runtime:compileMacosMainKotlinMetadata NO-SOURCE
+> Task :runtime:iosArm64ProcessResources NO-SOURCE
+> Task :runtime:iosSimulatorArm64ProcessResources NO-SOURCE
+> Task :runtime:iosX64ProcessResources NO-SOURCE
+> Task :runtime:linuxArm64ProcessResources NO-SOURCE
+> Task :runtime:linuxArm64MainKlibrary UP-TO-DATE
+> Task :runtime:allMetadataJar
+> Task :runtime:linuxX64ProcessResources NO-SOURCE
+> Task :runtime:macosArm64ProcessResources NO-SOURCE
+> Task :runtime:macosX64ProcessResources NO-SOURCE
+> Task :runtime:mingwX64ProcessResources NO-SOURCE
+> Task :runtime:metadataIosMainProcessResources NO-SOURCE
+> Task :runtime:metadataIosMainClasses UP-TO-DATE
+> Task :runtime:metadataMacosMainProcessResources NO-SOURCE
+> Task :runtime:metadataMacosMainClasses UP-TO-DATE
+> Task :runtime:iosArm64MetadataElements
+> Task :runtime:iosSimulatorArm64MetadataElements
+> Task :runtime:iosX64MetadataElements
+> Task :runtime:compileKotlinIosSimulatorArm64 UP-TO-DATE
+> Task :runtime:iosSimulatorArm64MainKlibrary UP-TO-DATE
+> Task :compiler:compileTestKotlin UP-TO-DATE
+> Task :compiler:compileTestJava NO-SOURCE
+> Task :compiler:testClasses UP-TO-DATE
+> Task :runtime:compileKotlinIosArm64 UP-TO-DATE
+> Task :runtime:iosArm64MainKlibrary UP-TO-DATE
+> Task :runtime:compileKotlinIosX64 UP-TO-DATE
+> Task :runtime:iosX64MainKlibrary UP-TO-DATE
+
+> Task :runtime:compileKotlinLinuxX64
+w: Experimental context receivers are superseded by context parameters.
+Replace the '-Xcontext-receivers' compiler argument with '-Xcontext-parameters' and migrate to the new syntax.
+
+See the context parameters proposal for more details: https://kotl.in/context-parameters
+This warning will become an error in future releases.
+
+> Task :runtime:linuxX64MainKlibrary
+
+> Task :runtime:compileTestKotlinLinuxArm64
+w: Experimental context receivers are superseded by context parameters.
+Replace the '-Xcontext-receivers' compiler argument with '-Xcontext-parameters' and migrate to the new syntax.
+
+See the context parameters proposal for more details: https://kotl.in/context-parameters
+This warning will become an error in future releases.
+
+> Task :runtime:jsProcessResources NO-SOURCE
+> Task :kotlinKotlinNpmCachesSetup
+
+> Task :compiler:test FAILED
+
+CallTrackingIntegrationTest > GIVEN @Fake without trackCalls WHEN generating implementation THEN should not include call tracking() FAILED
+    org.opentest4j.AssertionFailedError at CallTrackingIntegrationTest.kt:48
+
+135 tests completed, 1 failed
+
+> Task :runtime:jsPackageJson
+
+> Task :runtime:compileTestKotlinLinuxX64
+w: Experimental context receivers are superseded by context parameters.
+Replace the '-Xcontext-receivers' compiler argument with '-Xcontext-parameters' and migrate to the new syntax.
+
+See the context parameters proposal for more details: https://kotl.in/context-parameters
+This warning will become an error in future releases.
+
+> Task :runtime:compileKotlinMingwX64
+w: Experimental context receivers are superseded by context parameters.
+Replace the '-Xcontext-receivers' compiler argument with '-Xcontext-parameters' and migrate to the new syntax.
+
+See the context parameters proposal for more details: https://kotl.in/context-parameters
+This warning will become an error in future releases.
+
+> Task :runtime:compileKotlinJs
+w: Experimental context receivers are superseded by context parameters.
+Replace the '-Xcontext-receivers' compiler argument with '-Xcontext-parameters' and migrate to the new syntax.
+
+See the context parameters proposal for more details: https://kotl.in/context-parameters
+This warning will become an error in future releases.
+
+> Task :runtime:compileTestKotlinIosX64
+w: Experimental context receivers are superseded by context parameters.
+Replace the '-Xcontext-receivers' compiler argument with '-Xcontext-parameters' and migrate to the new syntax.
+
+See the context parameters proposal for more details: https://kotl.in/context-parameters
+This warning will become an error in future releases.
+
+> Task :runtime:compileTestKotlinIosArm64
+w: Experimental context receivers are superseded by context parameters.
+Replace the '-Xcontext-receivers' compiler argument with '-Xcontext-parameters' and migrate to the new syntax.
+
+See the context parameters proposal for more details: https://kotl.in/context-parameters
+This warning will become an error in future releases.
+
+> Task :runtime:compileTestKotlinIosSimulatorArm64
+w: Experimental context receivers are superseded by context parameters.
+Replace the '-Xcontext-receivers' compiler argument with '-Xcontext-parameters' and migrate to the new syntax.
+
+See the context parameters proposal for more details: https://kotl.in/context-parameters
+This warning will become an error in future releases.
+
+> Task :gradle-plugin:compileKotlin
+w: Experimental context receivers are superseded by context parameters.
+Replace the '-Xcontext-receivers' compiler argument with '-Xcontext-parameters' and migrate to the new syntax.
+
+See the context parameters proposal for more details: https://kotl.in/context-parameters
+This warning will become an error in future releases.
+
+> Task :runtime:compileKotlinMacosX64
+w: Experimental context receivers are superseded by context parameters.
+Replace the '-Xcontext-receivers' compiler argument with '-Xcontext-parameters' and migrate to the new syntax.
+
+See the context parameters proposal for more details: https://kotl.in/context-parameters
+This warning will become an error in future releases.
+
+> Task :runtime:compileKotlinMacosArm64
+w: Experimental context receivers are superseded by context parameters.
+Replace the '-Xcontext-receivers' compiler argument with '-Xcontext-parameters' and migrate to the new syntax.
+
+See the context parameters proposal for more details: https://kotl.in/context-parameters
+This warning will become an error in future releases.
+
+[Incubating] Problems report is available at: file:///Users/rsicarelli/Workspace/Personal/ktfakes-prototype/ktfake/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compiler:test'.
+> There were failing tests. See the report at: file:///Users/rsicarelli/Workspace/Personal/ktfakes-prototype/ktfake/compiler/build/reports/tests/test/index.html
+
+BUILD FAILED in 4s
+82 actionable tasks: 32 executed, 50 up-to-date
+
+Publishing Build Scan...
+https://gradle.com/s/jrpc4bt5ynloa
+
+Configuration cache entry stored.

@@ -29,7 +29,7 @@ plugins {
 }
 
 apiValidation {
-  ignoredProjects += listOf("compiler-unified", "compiler-tests")
+  ignoredProjects += listOf("compiler", "compiler-tests")
   ignoredPackages += listOf("dev.rsicarelli.ktfake.internal")
   @OptIn(ExperimentalBCVApi::class)
   klib {

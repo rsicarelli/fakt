@@ -1,0 +1,16 @@
+public abstract interface class test/sample/AnalyticsService {
+	public abstract fun track (Ljava/lang/String;)V
+}
+
+public abstract interface class test/sample/AsyncUserService {
+	public abstract fun deleteUser (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getUser (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun updateUser (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class test/sample/TestService {
+	public abstract fun getMemes ()Ljava/lang/String;
+	public abstract fun getValue ()Ljava/lang/String;
+	public abstract fun setValue (Ljava/lang/String;)V
+}
+

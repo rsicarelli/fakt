@@ -11,19 +11,14 @@ import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import dev.rsicarelli.ktfake.compiler.fir.KtFakesFirExtensionRegistrar
-import dev.rsicarelli.ktfake.compiler.UnifiedKtFakesIrGenerationExtension
+import dev.rsicarelli.ktfake.compiler.ir.KtFakesIrGenerationExtension
 
 /**
- * Main entry point for the KtFake compiler plugin with unified IR-native architecture.
+ * Main entry point for the KtFake compiler plugin.
  *
- * This registrar follows the two-phase approach:
- * 1. FIR extensions for @Fake annotation detection and validation
- * 2. Unified IR-native extension for type-safe code generation
- *
- * The plugin uses modular components from the unified architecture:
- * - InterfaceAnalyzer: Dynamic interface analysis
- * - IrCodeGenerator: Pure IR node generation 
- * - DiagnosticsReporter: Professional error reporting
+ * This registrar follows Metro's two-phase approach:
+ * 1. FIR extensions for analysis and validation
+ * 2. IR extensions for code generation
  *
  * The plugin is only enabled when explicitly configured and supports K2 compilation.
  */
@@ -52,8 +47,8 @@ public class KtFakeCompilerPluginRegistrar : CompilerPluginRegistrar() {
         // Register FIR extensions for analysis phase
         FirExtensionRegistrarAdapter.registerExtension(KtFakesFirExtensionRegistrar())
 
-        // Register unified IR-native generation extension
-        IrGenerationExtension.registerExtension(UnifiedKtFakesIrGenerationExtension(messageCollector))
+        // Register IR extensions for code generation phase
+        IrGenerationExtension.registerExtension(KtFakesIrGenerationExtension(messageCollector))
 
         messageCollector.report(
             CompilerMessageSeverity.INFO,

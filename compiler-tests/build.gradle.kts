@@ -5,7 +5,7 @@ plugins {
 }
 
 dependencies {
-  testImplementation(project(":compiler-unified"))
+  testImplementation(project(":compiler"))
   testImplementation(project(":runtime"))
 
   testImplementation(libs.kotlin.compilerTestFramework)

@@ -11,7 +11,7 @@ kotlin {
 }
 
 dependencies {
-  implementation(project(":compiler-unified"))
+  implementation(project(":compiler"))
   implementation(libs.kotlin.gradlePlugin)
   implementation(libs.kotlin.gradlePlugin.api)
 

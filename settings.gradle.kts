@@ -21,7 +21,7 @@ plugins { id("com.gradle.develocity") }
 rootProject.name = "ktfake"
 
 include(
-  ":compiler-unified",
+  ":compiler",
   ":compiler-tests",
   ":gradle-plugin",
   ":runtime",

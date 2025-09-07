@@ -36,7 +36,7 @@ kotlin {
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     compilerOptions {
         // Apply our unified compiler plugin manually for testing
-        val compilerJar = project.rootProject.project(":compiler-unified").tasks.named("shadowJar").get().outputs.files.singleFile
+        val compilerJar = project.rootProject.project(":compiler").tasks.named("shadowJar").get().outputs.files.singleFile
         println("KtFake compiler plugin path: ${compilerJar.absolutePath}")
         freeCompilerArgs.addAll(listOf(
             "-Xplugin=${compilerJar.absolutePath}",

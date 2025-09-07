@@ -1,0 +1,51 @@
+public final class dev/rsicarelli/ktfake/gradle/KtFakeGradleSubplugin : org/jetbrains/kotlin/gradle/plugin/KotlinCompilerPluginSupportPlugin {
+	public static final field Companion Ldev/rsicarelli/ktfake/gradle/KtFakeGradleSubplugin$Companion;
+	public static final field PLUGIN_ARTIFACT_NAME Ljava/lang/String;
+	public static final field PLUGIN_GROUP_ID Ljava/lang/String;
+	public static final field PLUGIN_ID Ljava/lang/String;
+	public static final field PLUGIN_VERSION Ljava/lang/String;
+	public fun <init> ()V
+	public synthetic fun apply (Ljava/lang/Object;)V
+	public fun apply (Lorg/gradle/api/Project;)V
+	public fun applyToCompilation (Lorg/jetbrains/kotlin/gradle/plugin/KotlinCompilation;)Lorg/gradle/api/provider/Provider;
+	public fun getCompilerPluginId ()Ljava/lang/String;
+	public fun getPluginArtifact ()Lorg/jetbrains/kotlin/gradle/plugin/SubpluginArtifact;
+	public fun getPluginArtifactForNative ()Lorg/jetbrains/kotlin/gradle/plugin/SubpluginArtifact;
+	public fun isApplicable (Lorg/jetbrains/kotlin/gradle/plugin/KotlinCompilation;)Z
+}
+
+public final class dev/rsicarelli/ktfake/gradle/KtFakeGradleSubplugin$Companion {
+}
+
+public class dev/rsicarelli/ktfake/gradle/KtFakePluginExtension {
+	public fun <init> (Lorg/gradle/api/model/ObjectFactory;)V
+	public final fun generation (Lkotlin/jvm/functions/Function1;)V
+	public final fun getDebug ()Lorg/gradle/api/provider/Property;
+	public final fun getEnabled ()Lorg/gradle/api/provider/Property;
+	public final fun getGenerateBuilderPatterns ()Lorg/gradle/api/provider/Property;
+	public final fun getGenerateCallTracking ()Lorg/gradle/api/provider/Property;
+	public final fun getReportsDestination ()Lorg/gradle/api/file/DirectoryProperty;
+	public final fun getThreadSafetyChecks ()Lorg/gradle/api/provider/Property;
+	public final fun performance (Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class dev/rsicarelli/ktfake/gradle/KtFakePluginExtension$GenerationOptions {
+	public fun <init> ()V
+	public final fun getGenerateDocs ()Z
+	public final fun getGenerateNullChecks ()Z
+	public final fun getGenerateUtilities ()Z
+	public final fun setGenerateDocs (Z)V
+	public final fun setGenerateNullChecks (Z)V
+	public final fun setGenerateUtilities (Z)V
+}
+
+public final class dev/rsicarelli/ktfake/gradle/KtFakePluginExtension$PerformanceOptions {
+	public fun <init> ()V
+	public final fun getEnableCaching ()Z
+	public final fun getIncrementalCompilation ()Z
+	public final fun getParallelGeneration ()Z
+	public final fun setEnableCaching (Z)V
+	public final fun setIncrementalCompilation (Z)V
+	public final fun setParallelGeneration (Z)V
+}
+
