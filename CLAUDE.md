@@ -1,13 +1,13 @@
 # KtFakes Development Guide - MAP Edition 🚀
 
-> **Status**: MAP (Minimum Awesome Product) Complete ✅  
-> **Last Updated**: September 2025  
+> **Status**: MAP (Minimum Awesome Product) Complete ✅
+> **Last Updated**: September 2025
 > **Philosophy**: Build awesome tools that compete on developer experience, not just functionality
 
 ## 🎯 **MAP vs MVP Philosophy**
 
 **We Don't Build MVPs - We Build MAPs**
-- **MVP Mindset**: "Get something working quickly" 
+- **MVP Mindset**: "Get something working quickly"
 - **MAP Mindset**: "Build something developers will love using"
 - **Why MAP**: Kotlin ecosystem has high standards - MockK, Mockito-Kotlin set the bar high
 - **Our Standard**: Every feature must be production-quality and delightful
@@ -28,7 +28,7 @@ Quality Standards Met:
   - Smart default value system ✅ NEW! (Result, Collections, complex types)
   - Cross-module import resolution ✅ NEW! (multi-module scenarios)
   - Function type resolution ✅ NEW! (Function1 -> (T) -> R syntax)
-  
+
 Developer Experience:
   - Idiomatic Kotlin patterns ✅
   - Clear error messages ✅
@@ -65,7 +65,7 @@ ktfakes-prototype/
 │   │   │   ├── UnifiedKtFakesIrGenerationExtension.kt   # Unified IR generator ✅
 │   │   │   └── fir/                  # FIR phase: @Fake detection
 │   │   ├── analysis/                 # Interface analysis (modular)
-│   │   ├── generation/               # Code generation (modular)  
+│   │   ├── generation/               # Code generation (modular)
 │   │   ├── codegen-ir/               # IR-specific generation
 │   │   ├── types/                    # Type system support
 │   │   ├── config/                   # Configuration handling
@@ -82,7 +82,7 @@ ktfakes-prototype/
 │           └── AnalyticsServiceFakes.kt        # Method-only interface
 ├── CLAUDE.md                        # This context file (UNIFIED!)
 ├── UNIFIED-ARCHITECTURE-PLAN.md     # Migration plan (COMPLETED!)
-├── README.md                        # Public documentation  
+├── README.md                        # Public documentation
 ├── ARCHITECTURE.md                  # Technical architecture deep-dive
 ├── API_SPECIFICATIONS.md            # API docs with working examples ✅
 ├── IMPLEMENTATION_ROADMAP.md        # MAP-focused development plan ✅
@@ -139,7 +139,7 @@ interface TestService {
 interface CacheService<TKey, TValue> {
     val size: Int
     val maxSize: Int?
-    
+
     fun get(key: TKey): TValue?
     fun put(key: TKey, value: TValue): TValue?
     fun remove(key: TKey): TValue?
@@ -151,7 +151,7 @@ interface CacheService<TKey, TValue> {
 interface AuthenticationService {
     val isLoggedIn: Boolean
     val currentUser: User?
-    
+
     suspend fun login(username: String, password: String): Result<User>
     fun hasAnyPermission(vararg permissions: String): Boolean
     fun hasAllPermissions(permissions: Collection<String>): Boolean
@@ -188,10 +188,10 @@ class FakeCacheServiceImpl : CacheService<Any, Any> {
     private var getBehavior: (Any) -> Any? = { _ -> null }
     private var putBehavior: (Any, Any) -> Any? = { _, _ -> null }
     private var sizeBehavior: () -> Int = { 0 }
-    
+
     override fun get(key: Any): Any? = getBehavior(key)
     override fun put(key: Any, value: Any): Any? = putBehavior(key, value)
-    // Method-level generics preserved: <R> 
+    // Method-level generics preserved: <R>
     override fun <R>computeIfAbsent(key: Any, computer: (Any) -> Any): Any = ...
     override suspend fun <R>asyncComputeIfAbsent(key: Any, computer: suspend (Any) -> Any): Any = ...
     override val size: Int get() = sizeBehavior()
@@ -200,7 +200,7 @@ class FakeCacheServiceImpl : CacheService<Any, Any> {
 // Varargs handling: vararg permissions: String
 class FakeAuthenticationServiceImpl : AuthenticationService {
     private var hasAnyPermissionBehavior: (Array<String>) -> Boolean = { _ -> false }
-    
+
     // Suspend functions and Result types handled
     override suspend fun login(username: String, password: String): Result<User> = ...
     override fun hasAnyPermission(vararg permissions: Array<String>): Boolean = ...
@@ -258,7 +258,7 @@ ktfake/compiler/src/main/kotlin/dev/rsicarelli/ktfake/compiler/
 ```
 ktfake/runtime/src/commonMain/kotlin/dev/rsicarelli/ktfake/
 ├── Fake.kt                              # @Fake annotation
-├── FakeConfig.kt                        # @FakeConfig annotation  
+├── FakeConfig.kt                        # @FakeConfig annotation
 └── CallTracking.kt                      # @CallTracking annotation
 ```
 
@@ -286,7 +286,7 @@ ktfake/compiler-ir-native/
 # Test specific interface generation
 cd test-sample && ../gradlew compileTestKotlinJvm
 
-# Run IR-Native module tests  
+# Run IR-Native module tests
 ./gradlew :ktfake-analysis:test
 
 # Full test suite
@@ -313,7 +313,7 @@ cd test-sample && ../gradlew compileTestKotlinJvm
 - ❌ **Return type precision**: Some TODO defaults causing compilation errors
 
 ### **📈 PROGRESS METRICS**
-- **Architecture**: 100% complete (unified IR-native approach) 
+- **Architecture**: 100% complete (unified IR-native approach)
 - **Type System**: 85% complete (major generics working, edge cases remain)
 - **Code Generation**: 90% complete (professional quality output)
 - **Error Handling**: 80% complete (good diagnostics, refinement needed)
@@ -382,7 +382,7 @@ cd test-sample && ../gradlew compileTestKotlinJvm
 
 ### **Current Status**
 - **String-based implementation**: Production-ready MAP ✅
-- **IR-Native foundation**: 90% complete with comprehensive tests ✅  
+- **IR-Native foundation**: 90% complete with comprehensive tests ✅
 - **Working example**: Full end-to-end pipeline in test-sample/ ✅
 - **Documentation**: Updated with MAP mindset and working examples ✅
 

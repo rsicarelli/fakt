@@ -13,7 +13,7 @@ import dev.rsicarelli.ktfake.Fake
 interface BrowserService {
     val userAgent: String
     val currentUrl: String
-    
+
     fun navigateTo(url: String)
     fun reload()
     fun showAlert(message: String)
@@ -30,7 +30,7 @@ interface LocalStorage {
     fun getLength(): Int
 }
 
-@Fake  
+@Fake
 interface FetchService {
     suspend fun get(url: String): String
     suspend fun post(url: String, body: String): String

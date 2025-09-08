@@ -13,7 +13,7 @@ class JsServiceTests {
         val fakeBrowserService = fakeBrowserService()
         assertNotNull(fakeBrowserService)
         assertTrue(fakeBrowserService is BrowserService)
-        
+
         // Properties should be accessible
         fakeBrowserService.userAgent
         fakeBrowserService.currentUrl
@@ -26,7 +26,7 @@ class JsServiceTests {
         val fakeStorage = fakeStorage()
         assertNotNull(fakeStorage)
         assertTrue(fakeStorage is Storage)
-        
+
         // Basic method calls should not throw
         fakeStorage.getItem("key")
         fakeStorage.setItem("key", "value")
@@ -46,7 +46,7 @@ class JsServiceTests {
         val fakeResponse = fakeResponse()
         assertNotNull(fakeResponse)
         assertTrue(fakeResponse is Response)
-        
+
         // Properties should be accessible
         fakeResponse.ok
         fakeResponse.status

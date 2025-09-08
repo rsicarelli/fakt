@@ -6,7 +6,7 @@ This directory contains comprehensive samples demonstrating KtFakes capabilities
 
 ### 📦 **single-module**
 A single KMP module demonstrating core KtFakes features:
-- **Basic Interfaces**: Simple property and method faking  
+- **Basic Interfaces**: Simple property and method faking
 - **Suspend Functions**: Async/coroutine support with proper handling
 - **Data Classes**: Value object faking with copy semantics
 - **Higher-Order Functions**: Function type parameters and lambdas
@@ -30,7 +30,7 @@ A complex multi-module KMP project showcasing:
 Each sample serves as a **battle test** for the KtFakes compiler plugin:
 
 1. **Compilation Success**: All generated code must compile without errors
-2. **Type Safety**: No `Any` casts, proper generic handling throughout  
+2. **Type Safety**: No `Any` casts, proper generic handling throughout
 3. **Runtime Verification**: Factory functions work, DSL configuration functions
 4. **Platform Coverage**: Every KMP target supported with appropriate test generation
 5. **Edge Case Handling**: Complex types, nested generics, suspend functions, etc.
@@ -58,7 +58,7 @@ KtFakes generates fakes at the appropriate test source set level:
 cd samples/single-module
 ../../gradlew build
 
-# Test multi-module sample  
+# Test multi-module sample
 cd samples/multi-module
 ../../gradlew build
 
@@ -71,7 +71,7 @@ cd samples/multi-module
 Each sample must pass:
 
 - ✅ **Compilation**: Zero errors in generated code
-- ✅ **Type Safety**: Proper generics, no Any casts  
+- ✅ **Type Safety**: Proper generics, no Any casts
 - ✅ **Factory Functions**: `fakeServiceName {}` DSL works
 - ✅ **Configuration**: Type-safe behavior setup
 - ✅ **Platform Support**: All KMP targets compile and test

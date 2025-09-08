@@ -22,7 +22,7 @@ import dev.rsicarelli.ktfake.compiler.UnifiedKtFakesIrGenerationExtension
  *
  * The plugin uses modular components from the unified architecture:
  * - InterfaceAnalyzer: Dynamic interface analysis
- * - IrCodeGenerator: Pure IR node generation 
+ * - IrCodeGenerator: Pure IR node generation
  * - DiagnosticsReporter: Professional error reporting
  *
  * The plugin is only enabled when explicitly configured and supports K2 compilation.

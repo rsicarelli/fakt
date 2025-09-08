@@ -29,7 +29,7 @@ class SharedServiceTests {
         }
         assertNotNull(fakeLoggingService)
         assertTrue(fakeLoggingService is LoggingService)
-        
+
         // Basic method calls should not throw
         fakeLoggingService.debug("test message")
         fakeLoggingService.info("test info")

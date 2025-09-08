@@ -15,6 +15,7 @@ import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
+import org.jetbrains.kotlin.ir.types.IrTypeParameter
 import org.jetbrains.kotlin.ir.types.IrTypeProjection
 import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.getClass
@@ -433,11 +434,17 @@ class UnifiedKtFakesIrGenerationExtension(
 
     /**
      * Convert IR type to Kotlin string representation with full generic type support.
-     * Handles List<T>, Map<K,V>, Result<T>, custom generics, and nullability.
+     * Handles List<T>, Map<K,V>, Result<T>, custom generics, type parameters, and nullability.
      */
     internal fun irTypeToKotlinString(irType: IrType): String {
         return when {
-            // Handle primitive types first
+            // Handle type parameters first (critical for generics like <T>)
+            irType is IrTypeParameter -> {
+                val typeName = irType.name.asString()
+                if (irType.isMarkedNullable()) "${typeName}?" else typeName
+            }
+
+            // Handle primitive types
             irType.isString() -> "String"
             irType.isInt() -> "Int"
             irType.isBoolean() -> "Boolean"

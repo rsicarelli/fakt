@@ -22,7 +22,7 @@ class FakeAnnotationDetectorSimpleTest {
     fun `GIVEN detector instance WHEN creating THEN should initialize successfully`() = runTest {
         // Given - detector creation
         val detector = FakeAnnotationDetector()
-        
+
         // When - checking instance
         // Then - should create valid detector instance
         assertNotNull(detector, "Detector should be created successfully")
@@ -32,7 +32,7 @@ class FakeAnnotationDetectorSimpleTest {
     fun `GIVEN default parameters WHEN creating instance THEN should have correct default values`() = runTest {
         // Given - default parameters instance
         val params = FakeAnnotationParameters()
-        
+
         // When - checking default values
         // Then - should have sensible defaults
         assertFalse(params.trackCalls, "Should have call tracking disabled by default")
@@ -56,7 +56,7 @@ class FakeAnnotationDetectorSimpleTest {
             concurrent = false,
             scope = "integration"
         )
-        
+
         // When - checking custom values
         // Then - should preserve all custom settings
         assertTrue(params.trackCalls, "Should preserve call tracking setting")
@@ -71,11 +71,11 @@ class FakeAnnotationDetectorSimpleTest {
         // Given - various FqName patterns for testing
         val testFqNames = listOf(
             "dev.rsicarelli.ktfake.Fake",
-            "dev.rsicarelli.ktfake.FakeConfig", 
+            "dev.rsicarelli.ktfake.FakeConfig",
             "com.example.CustomAnnotation",
             "org.test.nested.package.Annotation"
         )
-        
+
         // When - creating ClassId from FqNames
         // Then - should create valid ClassIds for all patterns
         testFqNames.forEach { fqNameString ->
@@ -90,14 +90,14 @@ class FakeAnnotationDetectorSimpleTest {
     fun `GIVEN annotation detection methods WHEN called without FIR session THEN should handle gracefully`() = runTest {
         // Given - detector instance
         val detector = FakeAnnotationDetector()
-        
+
         // When - attempting to use detection methods
         // Then - should have the methods available (actual FIR testing requires complex setup)
-        assertTrue(detector::hasFakeAnnotation.name == "hasFakeAnnotation", 
+        assertTrue(detector::hasFakeAnnotation.name == "hasFakeAnnotation",
                   "Should have hasFakeAnnotation method")
-        assertTrue(detector::hasFakeConfigAnnotation.name == "hasFakeConfigAnnotation", 
+        assertTrue(detector::hasFakeConfigAnnotation.name == "hasFakeConfigAnnotation",
                   "Should have hasFakeConfigAnnotation method")
-        assertTrue(detector::extractFakeParameters.name == "extractFakeParameters", 
+        assertTrue(detector::extractFakeParameters.name == "extractFakeParameters",
                   "Should have extractFakeParameters method")
     }
 
@@ -105,14 +105,14 @@ class FakeAnnotationDetectorSimpleTest {
     fun `GIVEN parameter extraction method WHEN called without annotation THEN should return default parameters`() = runTest {
         // Given - detector for testing extraction logic
         val detector = FakeAnnotationDetector()
-        
+
         // When - testing extraction logic behavior
         // Note: We can't easily mock FIR objects without complex setup, so we test the data structure
         val defaultParams = FakeAnnotationParameters()
-        
+
         // Then - default parameters should be sensible for annotation-less interfaces
         assertFalse(defaultParams.trackCalls, "Should not track calls by default")
-        assertFalse(defaultParams.builder, "Should not generate builders by default") 
+        assertFalse(defaultParams.builder, "Should not generate builders by default")
         assertEquals(emptyList<ClassId>(), defaultParams.dependencies, "Should have no dependencies by default")
         assertTrue(defaultParams.concurrent, "Should be thread-safe by default")
         assertEquals("test", defaultParams.scope, "Should use test scope by default")
@@ -128,19 +128,19 @@ class FakeAnnotationDetectorSimpleTest {
         val manyDeps = FakeAnnotationParameters(dependencies = (1..5).map {
             ClassId.topLevel(FqName("com.example.Dep$it"))
         })
-        
+
         // When - handling different dependency scenarios
         // Then - should handle all list sizes correctly
         assertEquals(0, emptyDeps.dependencies.size, "Should handle empty dependencies")
         assertEquals(1, singleDep.dependencies.size, "Should handle single dependency")
         assertEquals(5, manyDeps.dependencies.size, "Should handle many dependencies")
-        
+
         // Verify dependency content preservation
-        assertEquals("com.example.SingleDep", 
+        assertEquals("com.example.SingleDep",
                     singleDep.dependencies.first().asSingleFqName().asString(),
                     "Should preserve single dependency correctly")
-        assertTrue(manyDeps.dependencies.any { 
-            it.asSingleFqName().asString() == "com.example.Dep3" 
+        assertTrue(manyDeps.dependencies.any {
+            it.asSingleFqName().asString() == "com.example.Dep3"
         }, "Should preserve all dependencies in large list")
     }
 }

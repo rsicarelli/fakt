@@ -133,7 +133,7 @@ interface ComplexApiService {
     val baseUrl: String
     val timeout: Long
     val retryCount: Int?
-    
+
     fun makeRequest(
         endpoint: String,
         method: String = "GET",
@@ -141,19 +141,19 @@ interface ComplexApiService {
         body: String? = null,
         timeout: Long = 30000L
     ): String
-    
+
     suspend fun makeBatchRequests(
         requests: List<Pair<String, Map<String, String>>>,
         parallel: Boolean = true,
         onProgress: ((Int, Int) -> Unit)? = null
     ): List<Result<String>>
-    
+
     fun <T> parseResponse(
         response: String,
         parser: (String) -> T?,
         fallback: T? = null
     ): T?
-    
+
     suspend fun <TRequest, TResponse> processWithRetry(
         request: TRequest,
         processor: suspend (TRequest) -> TResponse,
@@ -167,7 +167,7 @@ interface AuthenticationService {
     val isLoggedIn: Boolean
     val currentUser: User?
     val permissions: Set<String>
-    
+
     suspend fun login(username: String, password: String): Result<User>
     suspend fun logout(): Result<Unit>
     suspend fun refreshToken(): Result<String>
@@ -180,7 +180,7 @@ interface AuthenticationService {
 interface CacheService<TKey, TValue> {
     val size: Int
     val maxSize: Int?
-    
+
     fun get(key: TKey): TValue?
     fun put(key: TKey, value: TValue): TValue?
     fun remove(key: TKey): TValue?

@@ -34,9 +34,9 @@ enum class OrderStatus {
 interface UserService {
     // Cross-module dependency - uses API interfaces
     val networkService: NetworkService
-    val storageService: StorageService  
+    val storageService: StorageService
     val loggingService: LoggingService
-    
+
     suspend fun createUser(name: String, email: String): User?
     suspend fun getUserById(id: String): User?
     suspend fun updateUser(user: User): User?
@@ -49,7 +49,7 @@ interface OrderService {
     val userService: UserService
     val networkService: NetworkService
     val storageService: StorageService
-    
+
     suspend fun createOrder(userId: String, amount: Double): Order?
     suspend fun getOrderById(id: String): Order?
     suspend fun updateOrderStatus(orderId: String, status: String): Order?

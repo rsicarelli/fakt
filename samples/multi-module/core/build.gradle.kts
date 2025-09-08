@@ -1,6 +1,5 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-
 plugins {
     kotlin("multiplatform")
 }
@@ -13,11 +12,11 @@ kotlin {
 
     // Targets matching api module
     jvm()
-    js(IR) { 
+    js(IR) {
         browser()
-        nodejs() 
+        nodejs()
     }
-    
+
     // Native targets
     linuxX64()
     macosX64()
@@ -33,7 +32,7 @@ kotlin {
                 implementation(project(":runtime"))
             }
         }
-        
+
         commonTest {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-test")
@@ -51,7 +50,7 @@ kotlin {
             // Add generated sources directory for jsTest
             kotlin.srcDir("build/generated/ktfake/jsTest/kotlin")
         }
-        
+
         nativeTest {
             // Add generated sources directory for nativeTest
             kotlin.srcDir("build/generated/ktfake/nativeTest/kotlin")

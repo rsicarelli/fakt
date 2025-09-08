@@ -40,7 +40,7 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
             // Apply our unified compiler plugin manually for testing
             val compilerJar = project.rootProject.project(":compiler").tasks.named("shadowJar").get().outputs.files.singleFile
             println("KtFake compiler plugin path: ${compilerJar.absolutePath}")
-            
+
             freeCompilerArgs.addAll(listOf(
                 "-Xplugin=${compilerJar.absolutePath}",
                 "-P", "plugin:dev.rsicarelli.ktfake:enabled=true",

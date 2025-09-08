@@ -43,8 +43,8 @@ class UnifiedKtFakesIrGenerationExtensionTest {
         // Given - unified IR generation extension
         val messageCollector = TestMessageCollector()
         val extension = UnifiedKtFakesIrGenerationExtension(messageCollector)
-        
-        // When - checking available methods  
+
+        // When - checking available methods
         val methods = extension::class.java.declaredMethods.map { it.name }
 
         // Then - should have core generation capabilities
@@ -61,13 +61,13 @@ class UnifiedKtFakesIrGenerationExtensionTest {
         val messageCollector = TestMessageCollector()
         val extension = UnifiedKtFakesIrGenerationExtension(messageCollector)
         val testValue = "testValue"
-        
+
         // When - using string capitalization utility
         val result = extension.javaClass.getDeclaredMethod("capitalize", String::class.java).let { method ->
             method.isAccessible = true
             method.invoke(extension, testValue) as String
         }
-        
+
         // Then - should capitalize first letter correctly
         assertEquals("TestValue", result, "Should capitalize first letter correctly")
     }
@@ -79,11 +79,11 @@ class UnifiedKtFakesIrGenerationExtensionTest {
         val extension = UnifiedKtFakesIrGenerationExtension(messageCollector)
         val testCases = mapOf(
             "userService" to "UserService",
-            "asyncUserService" to "AsyncUserService", 
+            "asyncUserService" to "AsyncUserService",
             "analyticsService" to "AnalyticsService",
             "testService" to "TestService"
         )
-        
+
         // When - processing interface names through capitalize utility
         // Then - should properly capitalize interface names for class generation
         testCases.forEach { (input, expected) ->
@@ -99,14 +99,14 @@ class UnifiedKtFakesIrGenerationExtensionTest {
         // Given - extension with message collector
         val messageCollector = TestMessageCollector()
         val extension = UnifiedKtFakesIrGenerationExtension(messageCollector)
-        
+
         // When - reporting an info message
         messageCollector.report(
             org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.INFO,
             "KtFakes: Test message",
             null
         )
-        
+
         // Then - should collect messages properly
         assertEquals(1, messageCollector.messages.size, "Should have collected one message")
         assertTrue(messageCollector.messages.first().contains("Test message"), "Should contain test message")
@@ -118,14 +118,14 @@ class UnifiedKtFakesIrGenerationExtensionTest {
         // Given - extension with message collector
         val messageCollector = TestMessageCollector()
         val extension = UnifiedKtFakesIrGenerationExtension(messageCollector)
-        
+
         // When - reporting an error message
         messageCollector.report(
             org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.ERROR,
             "KtFakes: Test error",
             null
         )
-        
+
         // Then - should detect errors correctly
         assertTrue(messageCollector.hasErrors(), "Should detect ERROR severity messages")
         assertEquals(1, messageCollector.messages.size, "Should collect error message")
@@ -136,7 +136,7 @@ class UnifiedKtFakesIrGenerationExtensionTest {
     fun `GIVEN basic type names WHEN validating type mappings THEN should provide correct type string mappings`() = runTest {
         // Given - basic Kotlin type names that our extension should handle
         val testTypeNames = listOf("String", "Int", "Boolean", "Unit", "Long", "Float", "Double")
-        
+
         // When - validating type name properties
         // Then - type names should be properly formatted
         testTypeNames.forEach { typeName ->
@@ -150,13 +150,13 @@ class UnifiedKtFakesIrGenerationExtensionTest {
         // Given - nullable and non-nullable type examples
         val nullableTypes = listOf("String?", "Int?", "Boolean?", "Unit?")
         val nonNullableTypes = listOf("String", "Int", "Boolean", "Unit")
-        
+
         // When - checking nullable type formatting
         // Then - nullable types should end with '?' and non-nullable should not
         nullableTypes.forEach { type ->
             assertTrue(type.endsWith("?"), "Nullable type $type should end with '?'")
         }
-        
+
         nonNullableTypes.forEach { type ->
             assertTrue(!type.endsWith("?"), "Non-nullable type $type should not end with '?'")
         }
@@ -167,11 +167,11 @@ class UnifiedKtFakesIrGenerationExtensionTest {
         // Given - test cases for different parameter counts and expected lambda patterns
         val testCases = mapOf(
             0 to "{ \"\" }",              // No parameters
-            1 to "{ _ -> \"\" }",          // One parameter  
+            1 to "{ _ -> \"\" }",          // One parameter
             2 to "{ _, _ -> false }",      // Two parameters
             3 to "{ _, _, _ -> Unit }"     // Three parameters
         )
-        
+
         // When - validating lambda signature generation logic
         // Then - should generate proper parameter placeholders
         testCases.forEach { (paramCount, expectedPattern) ->
@@ -187,21 +187,21 @@ class UnifiedKtFakesIrGenerationExtensionTest {
     @Nested
     @DisplayName("Core Generation Methods")
     inner class CoreGenerationMethods {
-        
+
         // TODO: These tests require proper IR mocking infrastructure
         // For Phase 1, we'll validate the core methods exist and can be called
         // More comprehensive tests will be added in Phase 2 with proper IR infrastructure
-        
+
         @Test
         fun `GIVEN extension instance WHEN checking core generation methods THEN should have generateImplementationClass method`() = runTest {
             // Given - extension instance
             val messageCollector = TestMessageCollector()
             val extension = UnifiedKtFakesIrGenerationExtension(messageCollector)
-            
+
             // When - checking for core generation methods
             val methods = extension::class.java.declaredMethods.map { it.name }
-            
-            // Then - should have the core generation capabilities  
+
+            // Then - should have the core generation capabilities
             assertTrue(methods.any { it.contains("generateImplementationClass") }, "Should have generateImplementationClass method")
             assertTrue(methods.any { it.contains("generateFactoryFunction") }, "Should have generateFactoryFunction method")
             assertTrue(methods.any { it.contains("generateConfigurationDsl") }, "Should have generateConfigurationDsl method")
@@ -209,16 +209,16 @@ class UnifiedKtFakesIrGenerationExtensionTest {
             assertTrue(methods.any { it.contains("discoverFakeInterfaces") }, "Should have fake interface discovery method")
         }
     }
-    
+
     @Nested
     @DisplayName("Type System Handling")
     inner class TypeSystemHandling {
-        
+
         @Test
         fun `GIVEN primitive types WHEN validating type patterns THEN should handle all primitive types correctly`() = runTest {
             // Given - primitive type examples that our extension should handle
             val primitiveTypes = listOf("String", "Int", "Boolean", "Unit", "Long", "Float", "Double")
-            
+
             // When - validating type string patterns
             // Then - primitive types should follow Kotlin naming conventions
             primitiveTypes.forEach { typeName ->
@@ -227,29 +227,29 @@ class UnifiedKtFakesIrGenerationExtensionTest {
                 assertTrue(!typeName.contains("?"), "Non-nullable type $typeName should not contain ?")
             }
         }
-        
+
         @Test
         fun `GIVEN nullable types WHEN validating type patterns THEN should handle nullable types correctly`() = runTest {
             // Given - nullable and non-nullable type examples
             val nullableTypes = listOf("String?", "Int?", "Boolean?", "List<String>?")
             val nonNullableTypes = listOf("String", "Int", "Boolean", "List<String>")
-            
+
             // When - checking nullable type patterns
             // Then - should distinguish between nullable and non-nullable types
             nullableTypes.forEach { type ->
                 assertTrue(type.endsWith("?"), "Nullable type $type should end with ?")
             }
-            
+
             nonNullableTypes.forEach { type ->
                 assertTrue(!type.endsWith("?"), "Non-nullable type $type should not end with ?")
             }
         }
-        
+
         @Test
         fun `GIVEN collection types WHEN validating type patterns THEN should handle collection types correctly`() = runTest {
             // Given - collection type examples
             val collectionTypes = listOf("List<String>", "Set<Int>", "Map<String, Int>", "Array<Boolean>")
-            
+
             // When - validating collection type patterns
             // Then - should be properly formatted generic types
             collectionTypes.forEach { type ->
@@ -258,52 +258,52 @@ class UnifiedKtFakesIrGenerationExtensionTest {
             }
         }
     }
-    
+
     @Nested
     @DisplayName("Behavior Cases - Basic Fake Generation")
     inner class BehaviorCases {
-        
+
         @Test
         fun `GIVEN simple interface with single method WHEN generating fake THEN should create implementation class`() = runTest {
             // Given - extension instance and simple interface pattern
             val messageCollector = TestMessageCollector()
             val extension = UnifiedKtFakesIrGenerationExtension(messageCollector)
-            
+
             // When - checking for implementation generation capability
             val methods = extension::class.java.declaredMethods.map { it.name }
-            
+
             // Then - should have implementation generation method available
-            assertTrue(methods.any { it.contains("generateImplementationClass") }, 
+            assertTrue(methods.any { it.contains("generateImplementationClass") },
                       "Should have implementation class generation capability")
-            assertTrue(methods.any { it.contains("analyzeInterfaceDynamically") }, 
+            assertTrue(methods.any { it.contains("analyzeInterfaceDynamically") },
                       "Should have dynamic interface analysis capability")
         }
-        
+
         @Test
         fun `GIVEN interface with properties WHEN generating fake THEN should create property implementations`() = runTest {
             // Given - interface with properties pattern
             val messageCollector = TestMessageCollector()
             val extension = UnifiedKtFakesIrGenerationExtension(messageCollector)
-            
+
             // When - checking property generation capabilities
             val methods = extension::class.java.declaredMethods.map { it.name }
-            
+
             // Then - should handle property generation
-            assertTrue(methods.any { it.contains("generateImplementationClass") }, 
+            assertTrue(methods.any { it.contains("generateImplementationClass") },
                       "Should generate implementation with properties")
-            assertTrue(methods.any { it.contains("analyzeProperty") || it.contains("property") }, 
+            assertTrue(methods.any { it.contains("analyzeProperty") || it.contains("property") },
                       "Should analyze properties")
         }
-        
+
         @Test
         fun `GIVEN interface with suspend functions WHEN generating fake THEN should handle suspend modifiers`() = runTest {
             // Given - suspend function patterns
             val suspendFunctionPatterns = listOf(
                 "suspend fun getData(): String",
-                "suspend fun saveData(data: String): Unit", 
+                "suspend fun saveData(data: String): Unit",
                 "suspend fun processAsync(): Boolean"
             )
-            
+
             // When - validating suspend function patterns
             // Then - suspend functions should be properly formatted
             suspendFunctionPatterns.forEach { pattern ->
@@ -311,16 +311,16 @@ class UnifiedKtFakesIrGenerationExtensionTest {
                 assertTrue(pattern.contains("fun "), "Should contain function declaration")
             }
         }
-        
+
         @Test
         fun `GIVEN interface with multiple methods WHEN generating fake THEN should handle all methods`() = runTest {
-            // Given - multi-method interface pattern  
+            // Given - multi-method interface pattern
             val methodPatterns = mapOf(
                 "getData" to "() -> String",
                 "saveData" to "(String) -> Unit",
                 "processData" to "(List<String>) -> Boolean"
             )
-            
+
             // When - checking method pattern support
             // Then - all method types should be supported
             methodPatterns.forEach { (methodName, signature) ->
@@ -329,17 +329,17 @@ class UnifiedKtFakesIrGenerationExtensionTest {
             }
         }
     }
-    
+
     @Nested
     @DisplayName("Edge Cases - Boundaries and Special Scenarios")
     inner class EdgeCases {
-        
+
         @Test
         fun `GIVEN empty interface WHEN processing THEN should handle gracefully`() = runTest {
             // Given - extension instance
             val messageCollector = TestMessageCollector()
             val extension = UnifiedKtFakesIrGenerationExtension(messageCollector)
-            
+
             // When - processing empty interface scenario
             // Then - should not fail on empty interfaces
             assertDoesNotThrow("Should handle empty interfaces gracefully") {
@@ -348,12 +348,12 @@ class UnifiedKtFakesIrGenerationExtensionTest {
                 assertTrue(methods.isNotEmpty(), "Extension should have processing methods")
             }
         }
-        
+
         @Test
         fun `GIVEN interface with single property WHEN generating fake THEN should create minimal implementation`() = runTest {
             // Given - single property scenario
             val propertyTypes = listOf("String", "Int", "Boolean", "List<String>")
-            
+
             // When - checking single property handling
             // Then - should handle all property types
             propertyTypes.forEach { type ->
@@ -361,24 +361,24 @@ class UnifiedKtFakesIrGenerationExtensionTest {
                 assertTrue(type.isNotEmpty(), "Property type should not be empty")
             }
         }
-        
+
         @Test
         fun `GIVEN interface with nullable parameters WHEN generating fake THEN should handle nullable types`() = runTest {
             // Given - nullable parameter scenarios
             val nullableScenarios = listOf(
                 "fun process(data: String?): Boolean",
-                "fun save(item: User?): Unit", 
+                "fun save(item: User?): Unit",
                 "val currentUser: User?",
                 "fun findById(id: String?): User?"
             )
-            
+
             // When - validating nullable parameter patterns
             // Then - should properly handle nullable types
             nullableScenarios.forEach { scenario ->
                 assertTrue(scenario.contains("?"), "Nullable scenario $scenario should contain ?")
             }
         }
-        
+
         @Test
         fun `GIVEN interface with default parameter values WHEN generating fake THEN should handle defaults`() = runTest {
             // Given - default parameter patterns
@@ -387,7 +387,7 @@ class UnifiedKtFakesIrGenerationExtensionTest {
                 "fun save(user: User, validate: Boolean = true)",
                 "fun query(sql: String, limit: Int = 100)"
             )
-            
+
             // When - checking default parameter support
             // Then - should recognize default parameters
             defaultParameterPatterns.forEach { pattern ->
@@ -396,29 +396,29 @@ class UnifiedKtFakesIrGenerationExtensionTest {
             }
         }
     }
-    
+
     @Nested
     @DisplayName("Error Cases - Invalid Scenarios")
     inner class ErrorCases {
-        
+
         @Test
         fun `GIVEN null message collector WHEN creating extension THEN should handle null gracefully`() = runTest {
             // Given - null message collector scenario
             val nullMessageCollector: MessageCollector? = null
-            
+
             // When - creating extension with null collector
             val extension = UnifiedKtFakesIrGenerationExtension(nullMessageCollector)
-            
+
             // Then - should create extension without errors
             assertNotNull(extension, "Extension should handle null message collector")
         }
-        
+
         @Test
         fun `GIVEN malformed interface WHEN processing THEN should handle errors gracefully`() = runTest {
             // Given - extension instance
             val messageCollector = TestMessageCollector()
             val extension = UnifiedKtFakesIrGenerationExtension(messageCollector)
-            
+
             // When - simulating malformed interface processing
             // Then - should not throw exceptions
             assertDoesNotThrow("Should handle malformed interfaces gracefully") {
@@ -426,19 +426,19 @@ class UnifiedKtFakesIrGenerationExtensionTest {
                 assertNotNull(extension)
             }
         }
-        
+
         @Test
         fun `GIVEN interface without @Fake annotation WHEN processing THEN should skip gracefully`() = runTest {
             // Given - non-@Fake interface scenario
             val messageCollector = TestMessageCollector()
             val extension = UnifiedKtFakesIrGenerationExtension(messageCollector)
-            
+
             // When - processing non-annotated interface
             // Then - should skip without errors
             assertTrue(extension::class.java.declaredMethods.any { it.name.contains("discoverFakeInterfaces") },
                       "Should have interface discovery capability")
         }
-        
+
         @Test
         fun `GIVEN interface with invalid method signatures WHEN processing THEN should report errors appropriately`() = runTest {
             // Given - invalid method signature patterns
@@ -448,7 +448,7 @@ class UnifiedKtFakesIrGenerationExtensionTest {
                 "fun ()", // No name
                 "fun test" // No parentheses
             )
-            
+
             // When - validating against invalid signatures
             // Then - should identify invalid patterns
             invalidSignatures.forEach { signature ->
@@ -460,31 +460,31 @@ class UnifiedKtFakesIrGenerationExtensionTest {
             }
         }
     }
-    
+
     @Nested
     @DisplayName("Happy Cases - Complex Interfaces with Generics")
     inner class HappyCases {
-        
+
         @Test
         fun `GIVEN interface with interface-level generics WHEN generating fake THEN should handle type parameters`() = runTest {
             // Given - interface-level generic patterns
             val genericInterfacePatterns = listOf(
                 "Repository<T>",
-                "Service<TKey, TValue>", 
+                "Service<TKey, TValue>",
                 "Cache<K, V>",
                 "Processor<TInput, TOutput>"
             )
-            
+
             // When - validating generic interface patterns
             // Then - should recognize generic type parameters
             genericInterfacePatterns.forEach { pattern ->
-                assertTrue(pattern.contains("<") && pattern.contains(">"), 
+                assertTrue(pattern.contains("<") && pattern.contains(">"),
                           "Generic interface $pattern should have type parameters")
                 assertTrue(pattern.substringAfter("<").substringBefore(">").isNotEmpty(),
                           "Should have non-empty type parameters")
             }
         }
-        
+
         @Test
         fun `GIVEN interface with method-level generics WHEN generating fake THEN should preserve generic methods`() = runTest {
             // Given - method-level generic patterns
@@ -493,16 +493,16 @@ class UnifiedKtFakesIrGenerationExtensionTest {
                 "fun <T, R> transform(input: T, mapper: (T) -> R): R",
                 "suspend fun <T> save(item: T): Result<T>"
             )
-            
+
             // When - validating generic method patterns
             // Then - should handle method-level generics
             genericMethodPatterns.forEach { pattern ->
-                assertTrue(pattern.contains("<") && pattern.contains(">"), 
+                assertTrue(pattern.contains("<") && pattern.contains(">"),
                           "Generic method $pattern should have type parameters")
                 assertTrue(pattern.contains("fun "), "Should be valid method declaration")
             }
         }
-        
+
         @Test
         fun `GIVEN interface with Result types WHEN generating fake THEN should handle Result wrappers`() = runTest {
             // Given - Result type patterns
@@ -512,7 +512,7 @@ class UnifiedKtFakesIrGenerationExtensionTest {
                 "Result<List<String>>",
                 "Result<Unit>"
             )
-            
+
             // When - validating Result type patterns
             // Then - should handle Result wrapper types
             resultPatterns.forEach { pattern ->
@@ -520,7 +520,7 @@ class UnifiedKtFakesIrGenerationExtensionTest {
                           "Result pattern $pattern should be properly formatted")
             }
         }
-        
+
         @Test
         fun `GIVEN interface with complex collection types WHEN generating fake THEN should handle nested generics`() = runTest {
             // Given - complex collection patterns
@@ -530,7 +530,7 @@ class UnifiedKtFakesIrGenerationExtensionTest {
                 "Map<String, List<Result<User>>>",
                 "Array<Pair<String, Int>>"
             )
-            
+
             // When - validating complex collection patterns
             // Then - should handle nested generic types
             complexCollectionPatterns.forEach { pattern ->
@@ -541,11 +541,11 @@ class UnifiedKtFakesIrGenerationExtensionTest {
             }
         }
     }
-    
+
     @Nested
     @DisplayName("Complex Cases - Advanced Scenarios")
     inner class ComplexCases {
-        
+
         @Test
         fun `GIVEN interface with varargs parameters WHEN generating fake THEN should handle varargs correctly`() = runTest {
             // Given - varargs parameter patterns
@@ -554,7 +554,7 @@ class UnifiedKtFakesIrGenerationExtensionTest {
                 "fun combine(first: String, vararg rest: String)",
                 "fun validate(vararg rules: (String) -> Boolean)"
             )
-            
+
             // When - validating varargs patterns
             // Then - should handle varargs parameters
             varargsPatterns.forEach { pattern ->
@@ -562,7 +562,7 @@ class UnifiedKtFakesIrGenerationExtensionTest {
                 assertTrue(pattern.contains("fun "), "Should be valid function declaration")
             }
         }
-        
+
         @Test
         fun `GIVEN interface with function types WHEN generating fake THEN should handle function parameters`() = runTest {
             // Given - function type patterns
@@ -572,7 +572,7 @@ class UnifiedKtFakesIrGenerationExtensionTest {
                 "fun filter(predicate: (User) -> Boolean)",
                 "suspend fun processAsync(handler: suspend (String) -> String)"
             )
-            
+
             // When - validating function type patterns
             // Then - should handle function type parameters
             functionTypePatterns.forEach { pattern ->
@@ -581,7 +581,7 @@ class UnifiedKtFakesIrGenerationExtensionTest {
                           "Should have proper parameter syntax")
             }
         }
-        
+
         @Test
         fun `GIVEN interface with constraint bounds WHEN generating fake THEN should handle type constraints`() = runTest {
             // Given - type constraint patterns
@@ -590,7 +590,7 @@ class UnifiedKtFakesIrGenerationExtensionTest {
                 "fun <T : Comparable<T>> sort(items: List<T>)",
                 "fun <T : AutoCloseable> useResource(resource: T)"
             )
-            
+
             // When - validating constraint patterns
             // Then - should recognize type constraints
             constraintPatterns.forEach { pattern ->
@@ -599,16 +599,16 @@ class UnifiedKtFakesIrGenerationExtensionTest {
                           "Should have generic type parameters")
             }
         }
-        
+
         @Test
         fun `GIVEN multi-module cross-dependencies WHEN analyzing THEN should resolve imports correctly`() = runTest {
             // Given - cross-module dependency patterns
             val crossModulePatterns = listOf(
                 "import com.example.core.User",
-                "import com.example.network.ApiService", 
+                "import com.example.network.ApiService",
                 "import com.example.database.Repository"
             )
-            
+
             // When - validating import resolution patterns
             // Then - should handle cross-module imports
             crossModulePatterns.forEach { pattern ->
@@ -616,7 +616,7 @@ class UnifiedKtFakesIrGenerationExtensionTest {
                 assertTrue(pattern.contains("."), "Should have package structure")
             }
         }
-        
+
         @Test
         fun `GIVEN interface with inline and reified parameters WHEN generating fake THEN should handle advanced modifiers`() = runTest {
             // Given - advanced modifier patterns
@@ -625,7 +625,7 @@ class UnifiedKtFakesIrGenerationExtensionTest {
                 "inline fun <reified T> create(): T",
                 "tailrec fun recursive(n: Int): Int"
             )
-            
+
             // When - validating advanced modifier patterns
             // Then - should recognize advanced Kotlin modifiers
             advancedModifierPatterns.forEach { pattern ->
@@ -638,14 +638,14 @@ class UnifiedKtFakesIrGenerationExtensionTest {
             }
         }
     }
-    
+
     // For now, let's use a simplified approach that doesn't require complex IR mocking
     // This will be expanded as we implement more advanced testing patterns
-    
+
     // Test utility class for message collection - each test creates its own instance
     private class TestMessageCollector : MessageCollector {
         val messages = mutableListOf<String>()
-        
+
         override fun report(severity: org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity, message: String, location: org.jetbrains.kotlin.cli.common.messages.CompilerMessageSourceLocation?) {
             messages.add("$severity: $message")
         }

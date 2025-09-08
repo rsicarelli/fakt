@@ -12,7 +12,7 @@ class JvmServiceTests {
         val fakeFileSystemService = fakeFileSystemService()
         assertNotNull(fakeFileSystemService)
         assertTrue(fakeFileSystemService is FileSystemService)
-        
+
         // Basic method calls should not throw
         fakeFileSystemService.readFile("test.txt")
         fakeFileSystemService.writeFile("test.txt", "content")
@@ -24,7 +24,7 @@ class JvmServiceTests {
         val fakeDatabaseService = fakeDatabaseService()
         assertNotNull(fakeDatabaseService)
         assertTrue(fakeDatabaseService is DatabaseService)
-        
+
         // Properties should be accessible
         fakeDatabaseService.isConnected
     }
@@ -34,7 +34,7 @@ class JvmServiceTests {
         val fakeSystemService = fakeJvmSystemService()
         assertNotNull(fakeSystemService)
         assertTrue(fakeSystemService is JvmSystemService)
-        
+
         // Properties should be accessible (will return default values from fake)
         fakeSystemService.javaVersion
         fakeSystemService.osName

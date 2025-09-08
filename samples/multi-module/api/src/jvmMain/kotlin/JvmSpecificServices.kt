@@ -32,7 +32,7 @@ interface JvmSystemService {
     val osName: String
     val availableProcessors: Int
     val maxMemory: Long
-    
+
     fun getCurrentTime(): String
     fun getSystemProperty(key: String): String?
     fun getEnvironmentVariable(key: String): String?

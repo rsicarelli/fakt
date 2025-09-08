@@ -24,10 +24,10 @@ class KtFakeCompilerPluginRegistrarSimpleTest {
     fun `GIVEN default registrar instance WHEN checking K2 support THEN should support K2 compiler`() = runTest {
         // Given - fresh registrar instance
         val registrar = KtFakeCompilerPluginRegistrar()
-        
+
         // When - checking K2 support
         val supportsK2 = registrar.supportsK2
-        
+
         // Then - should support K2 compiler
         assertTrue(supportsK2, "KtFake plugin should support K2 compiler")
     }
@@ -36,10 +36,10 @@ class KtFakeCompilerPluginRegistrarSimpleTest {
     fun `GIVEN registrar instance WHEN checking plugin inheritance THEN should extend CompilerPluginRegistrar`() = runTest {
         // Given - registrar instance
         val registrar = KtFakeCompilerPluginRegistrar()
-        
+
         // When - checking class hierarchy
         val isPluginRegistrar = registrar is CompilerPluginRegistrar
-        
+
         // Then - should be a proper compiler plugin registrar
         assertTrue(isPluginRegistrar, "Should extend CompilerPluginRegistrar")
         assertNotNull(registrar, "Registrar instance should not be null")
@@ -49,7 +49,7 @@ class KtFakeCompilerPluginRegistrarSimpleTest {
     fun `GIVEN default options WHEN creating instance THEN should have correct defaults`() = runTest {
         // Given - default options instance
         val options = KtFakeOptions()
-        
+
         // When - checking default values
         // Then - should have sensible defaults
         assertFalse(options.enabled, "Should be disabled by default")
@@ -71,7 +71,7 @@ class KtFakeCompilerPluginRegistrarSimpleTest {
             strictMode = true,
             outputDir = "/custom/path"
         )
-        
+
         // When - checking custom values
         // Then - should preserve all custom settings
         assertTrue(customOptions.enabled, "Should preserve enabled state")
@@ -92,10 +92,10 @@ class KtFakeCompilerPluginRegistrarSimpleTest {
             generateBuilderPatterns = false,
             strictMode = true
         )
-        
+
         // When - converting to string
         val stringRepresentation = options.toString()
-        
+
         // Then - should contain all configuration values
         assertTrue(stringRepresentation.contains("enabled=true"), "Should show enabled state")
         assertTrue(stringRepresentation.contains("debug=false"), "Should show debug state")
@@ -109,10 +109,10 @@ class KtFakeCompilerPluginRegistrarSimpleTest {
         // Given - minimal configuration
         val configuration = CompilerConfiguration()
         // Not setting any KtFake-specific keys
-        
+
         // When - loading options
         val options = KtFakeOptions.load(configuration)
-        
+
         // Then - should handle missing keys gracefully with defaults
         // NOTE: KtFakeOptions.load() defaults to enabled=true, debug=true when keys are missing
         assertTrue(options.enabled, "Should default enabled to true when not specified")
