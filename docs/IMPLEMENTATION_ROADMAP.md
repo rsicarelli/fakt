@@ -310,23 +310,23 @@ val service = fakeUserService {
 ## 📊 **Feature Priority Matrix - UPDATED After Sample Analysis**
 
 ### **🚨 CRITICAL FIXES (Must Complete Before Any Features)**
-| Critical Issue | Impact | Effort | Priority | Timeline | Blocker |
-|---------------|--------|--------|----------|----------|---------|
-| Cross-module imports | CRITICAL | Medium | P0 | 1-2 weeks | Multi-module fails |
-| Generic type parameters | CRITICAL | High | P0 | 2-3 weeks | Type safety lost |
-| Function type resolution | CRITICAL | Medium | P0 | 1-2 weeks | Higher-order functions fail |
-| Smart default values | HIGH | Medium | P0 | 1 week | Compilation errors |
+| Critical Issue | Impact | Effort | Priority | Timeline | Definition of Done |
+|---------------|--------|--------|----------|----------|-------------------|
+| Generic type parameters | CRITICAL | High | P0 | 2-3 weeks | ✅ `suspend fun <T> processData(data: T): T` generates correct types<br/>✅ All sample interfaces compile without errors<br/>✅ Type safety preserved in generated code<br/>✅ No `Any` fallbacks for known generic types |
+| Smart default values | CRITICAL | Medium | P0 | 1 week | ✅ Zero TODO statements in generated code<br/>✅ All basic types have sensible defaults<br/>✅ Result<T> generates `Result.success(defaultValue)`<br/>✅ Complex types use null or constructor calls |
+| Function type resolution | HIGH | Medium | P0 | 1-2 weeks | ✅ `(T) -> R` function types generate correctly<br/>✅ `suspend (T) -> R` generates correctly<br/>✅ No `Function1`, `SuspendFunction1` artifacts<br/>✅ Higher-order functions compile successfully |
+| Cross-module imports | MEDIUM | Medium | P1 | 1-2 weeks | ✅ Generated files include proper imports<br/>✅ Multi-module scenarios compile<br/>✅ Cross-module type references work<br/>✅ Package resolution handles all dependencies |
 
 ### **📈 FEATURE DEVELOPMENT (After Critical Fixes)**
-| Feature | Impact | Effort | Priority | Timeline |
-|---------|--------|--------|----------|----------|
-| Parameter-aware behavior | High | Medium | P1 | 1-2 months |
-| Call tracking | Medium | High | P1 | 2-3 months |
-| Advanced collection support | High | Low | P2 | 2-3 weeks |
-| Cross-module dependencies | High | High | P2 | 3-4 months |
-| Builder patterns | Medium | Medium | P3 | 4-5 months |
-| Exception handling | Medium | Low | P3 | 1 month |
-| IDE integration | Low | High | P4 | 6+ months |
+| Feature | Impact | Effort | Priority | Timeline | Definition of Done |
+|---------|--------|--------|----------|----------|-------------------|
+| Parameter-aware behavior | High | Medium | P1 | 1-2 months | ✅ `getUser { id -> "User-$id" }` syntax works<br/>✅ Multiple parameter support<br/>✅ Type-safe parameter passing<br/>✅ Full API documentation with examples |
+| Call tracking | Medium | High | P1 | 2-3 months | ✅ `@Fake(trackCalls = true)` implemented<br/>✅ Verification DSL: `verify().method(times(1))`<br/>✅ Call history access and clearing<br/>✅ Performance: <5% overhead when enabled |
+| Advanced collection support | High | Low | P2 | 2-3 weeks | ✅ `List<User>`, `Map<String, Int>` generate correctly<br/>✅ Nested collections work: `Map<String, List<Set<Int>>>`<br/>✅ Smart defaults for all collection types<br/>✅ Generic constraints preserved |
+| Cross-module dependencies | High | High | P2 | 3-4 months | ✅ `@Fake(dependencies = [UserService::class])` works<br/>✅ Nested configuration DSL<br/>✅ Circular dependency detection<br/>✅ Integration tests across modules |
+| Builder patterns | Medium | Medium | P3 | 4-5 months | ✅ `@Fake(builder = true)` for data classes<br/>✅ Fluent builder API generation<br/>✅ Nested object builder support<br/>✅ Type-safe builder validation |
+| Exception handling | Medium | Low | P3 | 1 month | ✅ `throws` parameter support<br/>✅ Conditional exception throwing<br/>✅ Common exception shortcuts<br/>✅ Exception verification in tests |
+| MVP completeness | High | Low | P1 | 2 weeks | ✅ Replace all "For MVP" comments<br/>✅ Remove all "TODO" placeholders<br/>✅ Upgrade FIR detection from placeholder<br/>✅ Complete ThreadSafetyChecker implementation |
 
 ## 🧪 **Development Methodology**
 
