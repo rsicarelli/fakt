@@ -13,7 +13,7 @@ This document provides complete API specifications for KtFakes with **working ex
 ### **@Fake Annotation**
 
 ```kotlin
-package dev.rsicarelli.ktfake
+package com.rsicarelli.fakt
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
@@ -53,7 +53,7 @@ interface TestService {
 
 package test.sample
 
-import dev.rsicarelli.ktfake.*
+import com.rsicarelli.fakt.*
 
 class FakeTestServiceImpl : TestService {
     private var getValueBehavior: () -> String = { "" }
@@ -131,7 +131,7 @@ interface AsyncUserService {
 
 package test.sample
 
-import dev.rsicarelli.ktfake.*
+import com.rsicarelli.fakt.*
 
 class FakeAsyncUserServiceImpl : AsyncUserService {
     private var getUserBehavior: suspend () -> String = { "" }
@@ -209,7 +209,7 @@ interface AnalyticsService {
 
 package test.sample
 
-import dev.rsicarelli.ktfake.*
+import com.rsicarelli.fakt.*
 
 class FakeAnalyticsServiceImpl : AnalyticsService {
     private var trackBehavior: () -> Unit = {  }

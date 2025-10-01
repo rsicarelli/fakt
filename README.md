@@ -1,14 +1,14 @@
-# 🚀 KtFake
+# 🚀 Fakt
 
 **High-performance fake generator for Kotlin test environments using FIR + IR compiler plugin architecture.**
 
-[![Build](https://img.shields.io/github/actions/workflow/status/rsicarelli/ktfake/ci.yml)](https://github.com/rsicarelli/ktfake/actions)
-[![Maven Central](https://img.shields.io/maven-central/v/dev.rsicarelli.ktfake/runtime)](https://search.maven.org/search?q=g:dev.rsicarelli.ktfake)
+[![Build](https://img.shields.io/github/actions/workflow/status/rsicarelli/fakt/ci.yml)](https://github.com/rsicarelli/fakt/actions)
+[![Maven Central](https://img.shields.io/maven-central/v/com.rsicarelli.fakt/runtime)](https://search.maven.org/search?q=g:com.rsicarelli.fakt)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## Overview
 
-KtFake is a compile-time fake generator that provides **90% reduction** in test boilerplate while **eliminating race conditions** through thread-safe design. Built as a Kotlin compiler plugin using FIR + IR architecture, inspired by [Metro](https://github.com/ZacSweers/metro).
+Fakt is a compile-time fake generator that provides **90% reduction** in test boilerplate while **eliminating race conditions** through thread-safe design. Built as a Kotlin compiler plugin using FIR + IR architecture, inspired by [Metro](https://github.com/ZacSweers/metro).
 
 ### Core Benefits
 
@@ -25,13 +25,13 @@ Apply the gradle plugin:
 
 ```kotlin
 plugins {
-  id("dev.rsicarelli.ktfake") version "x.y.z"
+  id("com.rsicarelli.fakt") version "x.y.z"
 }
 ```
 
 ### Basic Usage
 
-**Before KtFake** - Manual fake (50+ lines):
+**Before Fakt** - Manual fake (50+ lines):
 ```kotlin
 internal object FakeUserService : UserService {
     var valueToReturn: User = fakeUser
@@ -40,7 +40,7 @@ internal object FakeUserService : UserService {
 }
 ```
 
-**After KtFake** - Single annotation:
+**After Fakt** - Single annotation:
 ```kotlin
 @Fake
 interface UserService {

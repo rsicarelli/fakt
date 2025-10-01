@@ -1,7 +1,9 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
 pluginManagement {
+  includeBuild("build-logic")
   repositories {
+    mavenLocal()
     mavenCentral()
     google()
     gradlePluginPortal()
@@ -11,6 +13,7 @@ pluginManagement {
 
 dependencyResolutionManagement {
   repositories {
+    mavenLocal()
     mavenCentral()
     google()
   }
@@ -18,14 +21,15 @@ dependencyResolutionManagement {
 
 plugins { id("com.gradle.develocity") }
 
-rootProject.name = "ktfake"
+rootProject.name = "fakt"
 
 include(
   ":compiler",
-  ":compiler-tests",
   ":gradle-plugin",
   ":runtime",
   ":samples:single-module",
+  ":samples:kmp-comprehensive-test",
+  ":samples:published-modules-test",
   ":samples:multi-module:api",
   ":samples:multi-module:core",
   ":samples:multi-module:app"

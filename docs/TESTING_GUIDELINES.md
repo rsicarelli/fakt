@@ -1227,4 +1227,4 @@ class GradlePluginIntegrationTest {
 ✅ **runTest** for coroutines code  
 ✅ **Focused and independent tests**  
 ✅ **Data classes for test parameters**  
-✅ **Val fields with PER_CLASS lifecycle**
+✅ **Val fields with PER_CLASS lifecycle**	

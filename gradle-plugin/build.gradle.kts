@@ -1,13 +1,9 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
 plugins {
-  alias(libs.plugins.kotlin.jvm)
+  id("fakt-kotlin-jvm")
   `java-gradle-plugin`
-  // alias(libs.plugins.mavenPublish)
-}
-
-kotlin {
-  jvmToolchain(21)
+  alias(libs.plugins.mavenPublish)
 }
 
 dependencies {
@@ -22,11 +18,12 @@ dependencies {
 
 gradlePlugin {
   plugins {
-    create("ktfakePlugin") {
-      id = "dev.rsicarelli.ktfake"
-      implementationClass = "dev.rsicarelli.ktfake.gradle.KtFakeGradleSubplugin"
-      displayName = "KtFake Plugin"
+    create("faktPlugin") {
+      id = "com.rsicarelli.fakt"
+      implementationClass = "com.rsicarelli.fakt.gradle.FaktGradleSubplugin"
+      displayName = "Fakt Plugin"
       description = "High-performance fake generator for Kotlin test environments using FIR + IR compiler plugin architecture"
+      version = "1.0.0-SNAPSHOT"
     }
   }
 }

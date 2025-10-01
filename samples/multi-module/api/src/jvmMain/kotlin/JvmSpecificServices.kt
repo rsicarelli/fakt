@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package api.jvm
 
-import dev.rsicarelli.ktfake.Fake
+import com.rsicarelli.fakt.Fake
 
 // ============================================================================
 // JVM-SPECIFIC INTERFACES - Java platform specific features

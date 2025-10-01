@@ -29,8 +29,8 @@ plugins {
 }
 
 apiValidation {
-  ignoredProjects += listOf("compiler", "compiler-tests")
-  ignoredPackages += listOf("dev.rsicarelli.ktfake.internal")
+  ignoredProjects += listOf("compiler")
+  ignoredPackages += listOf("com.rsicarelli.fakt.internal")
   @OptIn(ExperimentalBCVApi::class)
   klib {
     enabled = true
@@ -151,7 +151,6 @@ subprojects {
   pluginManager.withPlugin("com.vanniktech.maven.publish.base") {
     configure<MavenPublishBaseExtension> {
       publishToMavenCentral(automaticRelease = true)
-      signAllPublications()
     }
   }
 }

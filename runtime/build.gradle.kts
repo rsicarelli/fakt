@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
 plugins {
-  alias(libs.plugins.kotlin.multiplatform)
-  // alias(libs.plugins.mavenPublish)
+  id("fakt-multiplatform")
+  alias(libs.plugins.mavenPublish)
 }
 
 kotlin {

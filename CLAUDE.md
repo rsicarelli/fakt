@@ -1,4 +1,4 @@
-# KtFakes Development Guide - MAP Edition 🚀
+# Fakts Development Guide - MAP Edition 🚀
 
 > **Status**: MAP (Minimum Awesome Product) Complete ✅
 > **Last Updated**: September 2025
@@ -57,12 +57,12 @@ Architecture Excellence:
 
 ### **Project Structure (UNIFIED Sept 2025)** 🚀
 ```
-ktfakes-prototype/
-├── ktfake/                           # Core project modules
+fakts-prototype/
+├── fakt/                           # Core project modules
 │   ├── compiler/                     # UNIFIED IR-NATIVE ARCHITECTURE ✅
-│   │   ├── src/main/kotlin/dev/rsicarelli/ktfake/compiler/
-│   │   │   ├── KtFakeCompilerPluginRegistrar.kt         # Main entry point
-│   │   │   ├── UnifiedKtFakesIrGenerationExtension.kt   # Unified IR generator ✅
+│   │   ├── src/main/kotlin/dev/rsicarelli/fakt/compiler/
+│   │   │   ├── FaktCompilerPluginRegistrar.kt         # Main entry point
+│   │   │   ├── UnifiedFaktsIrGenerationExtension.kt   # Unified IR generator ✅
 │   │   │   └── fir/                  # FIR phase: @Fake detection
 │   │   ├── analysis/                 # Interface analysis (modular)
 │   │   ├── generation/               # Code generation (modular)
@@ -76,7 +76,7 @@ ktfakes-prototype/
 │   ├── runtime/                     # Multiplatform runtime API
 │   └── test-sample/                 # Working example project ✅
 │       ├── src/commonMain/kotlin/TestService.kt         # @Fake interfaces
-│       └── build/generated/ktfake/test/kotlin/          # Generated fakes ✅
+│       └── build/generated/fakt/test/kotlin/          # Generated fakes ✅
 │           ├── TestServiceFakes.kt             # Basic interface + properties
 │           ├── AsyncUserServiceFakes.kt        # Suspend functions ✅
 │           └── AnalyticsServiceFakes.kt        # Method-only interface
@@ -86,7 +86,9 @@ ktfakes-prototype/
 ├── ARCHITECTURE.md                  # Technical architecture deep-dive
 ├── API_SPECIFICATIONS.md            # API docs with working examples ✅
 ├── IMPLEMENTATION_ROADMAP.md        # MAP-focused development plan ✅
-└── TESTING_GUIDELINES.md           # Compiler plugin testing practices
+└── TESTING_GUIDELINES.md           # Original testing practices
+├── .claude/                          # Claude Code optimized structure
+│   └── docs/validation/testing-guidelines.md  # THE ABSOLUTE TESTING STANDARD
 ```
 
 ## 🔧 **Essential Commands**
@@ -112,13 +114,13 @@ cd test-sample && rm -rf build/generated && ../gradlew compileKotlinJvm --no-bui
 ### **Debugging & Development**
 ```bash
 # Enable plugin debug info
-../gradlew compileKotlinJvm -i | grep -E "(KtFakes|Generated|ERROR)"
+../gradlew compileKotlinJvm -i | grep -E "(Fakts|Generated|ERROR)"
 
 # Clean everything for fresh start
 ./gradlew clean --no-build-cache
 
 # Test specific module
-./gradlew :ktfake-analysis:test
+./gradlew :fakt-analysis:test
 ```
 
 ## 🎯 **Current Working Examples**
@@ -244,11 +246,11 @@ val customService = fakeTestService {
 
 ### **Core Compiler Plugin (Working)**
 ```
-ktfake/compiler/src/main/kotlin/dev/rsicarelli/ktfake/compiler/
-├── KtFakeCompilerPluginRegistrar.kt     # Plugin registration & entry
-├── fir/KtFakesFirSuppressionGenerator.kt # @Fake detection (FIR phase)
+fakt/compiler/src/main/kotlin/dev/rsicarelli/fakt/compiler/
+├── FaktCompilerPluginRegistrar.kt     # Plugin registration & entry
+├── fir/FaktsFirSuppressionGenerator.kt # @Fake detection (FIR phase)
 └── ir/
-    ├── KtFakesIrGenerationExtension.kt   # Main code generator
+    ├── FaktsIrGenerationExtension.kt   # Main code generator
     ├── ImplementationClassGenerator.kt   # Fake class generation ✅
     ├── ConfigurationDslGenerator.kt      # Type-safe DSL creation ✅
     └── FactoryFunctionGenerator.kt       # Factory function creation ✅
@@ -256,7 +258,7 @@ ktfake/compiler/src/main/kotlin/dev/rsicarelli/ktfake/compiler/
 
 ### **Runtime Annotations**
 ```
-ktfake/runtime/src/commonMain/kotlin/dev/rsicarelli/ktfake/
+fakt/runtime/src/commonMain/kotlin/dev/rsicarelli/fakt/
 ├── Fake.kt                              # @Fake annotation
 ├── FakeConfig.kt                        # @FakeConfig annotation
 └── CallTracking.kt                      # @CallTracking annotation
@@ -264,22 +266,38 @@ ktfake/runtime/src/commonMain/kotlin/dev/rsicarelli/ktfake/
 
 ### **IR-Native Modules (Future)**
 ```
-ktfake/compiler-ir-native/
-├── ktfake-analysis/                     # Real IR interface analysis ✅
-├── ktfake-generation/                   # IR node generation ✅
-├── ktfake-dsl-creation/                 # Configuration DSL ✅
-├── ktfake-factory-functions/            # Factory functions ✅
-├── ktfake-validation/                   # Compile-time validation ✅
-└── ktfake-integration/                  # End-to-end integration ✅
+fakt/compiler-ir-native/
+├── fakt-analysis/                     # Real IR interface analysis ✅
+├── fakt-generation/                   # IR node generation ✅
+├── fakt-dsl-creation/                 # Configuration DSL ✅
+├── fakt-factory-functions/            # Factory functions ✅
+├── fakt-validation/                   # Compile-time validation ✅
+└── fakt-integration/                  # End-to-end integration ✅
 ```
 
 ## 🧪 **Testing Strategy (MAP Quality)**
 
+> **CRITICAL**: Follow Fakts GIVEN-WHEN-THEN testing patterns ONLY
+> **Testing Standard**: [📋 Testing Guidelines](.claude/docs/validation/testing-guidelines.md)
+
 ### **Test Types**
-- **Unit Tests**: 38+ BDD-style tests across IR-Native modules
+- **Unit Tests**: 38+ GIVEN-WHEN-THEN tests across IR-Native modules
 - **Integration Tests**: End-to-end compilation in test-sample/ ✅
 - **Box Tests**: Compiler plugin execution validation
 - **Type Safety Tests**: Ensure generated code compiles without errors
+
+### **Required Testing Patterns**
+```kotlin
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class ExampleTest {
+    @Test
+    fun `GIVEN interface with methods WHEN generating fake THEN should create implementation`() = runTest {
+        // Use vanilla kotlin-test assertions only
+        assertEquals(expected, actual)
+        assertTrue(condition)
+    }
+}
+```
 
 ### **Testing Commands**
 ```bash
@@ -287,7 +305,7 @@ ktfake/compiler-ir-native/
 cd test-sample && ../gradlew compileTestKotlinJvm
 
 # Run IR-Native module tests
-./gradlew :ktfake-analysis:test
+./gradlew :fakt-analysis:test
 
 # Full test suite
 ./gradlew test
@@ -335,14 +353,14 @@ cd test-sample && ../gradlew compileTestKotlinJvm
 ## 🔧 **Development Workflow (MAP Standards)**
 
 ### **For String-Based Improvements**
-1. Edit generators in `ktfake/compiler/src/main/kotlin/.../ir/`
+1. Edit generators in `fakt/compiler/src/main/kotlin/.../ir/`
 2. Rebuild: `./gradlew :compiler:shadowJar`
 3. Test: `cd test-sample && ../gradlew clean compileKotlinJvm --no-build-cache`
 4. Verify: Check generated code quality in `test-sample/build/generated/`
 
 ### **For IR-Native Development**
-1. Work in `ktfake/compiler-ir-native/` modules
-2. Write BDD tests first: `should_handle_complex_interface_with_generics()`
+1. Work in `fakt/compiler-ir-native/` modules
+2. Write GIVEN-WHEN-THEN tests first: `GIVEN complex interface WHEN processing generics THEN should handle correctly`
 3. Implement with MAP quality standards
 4. Integration test with main compiler
 
@@ -358,7 +376,7 @@ cd test-sample && ../gradlew compileTestKotlinJvm
 ### **Code Standards**
 - **MAP Quality**: Every feature must be production-ready and delightful
 - **Type Safety**: Proper generics, no Any casting
-- **Testing**: Comprehensive BDD tests for all new features
+- **Testing**: Comprehensive GIVEN-WHEN-THEN tests for all new features (see [Testing Guidelines](.claude/docs/validation/testing-guidelines.md))
 - **Documentation**: Keep all docs current with code changes
 
 ### **Don't Touch**

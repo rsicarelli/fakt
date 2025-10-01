@@ -1,1 +1,1 @@
-dev.rsicarelli.ktfake.compiler.KtFakeCompilerPluginRegistrar
+com.rsicarelli.fakt.compiler.FaktCompilerPluginRegistrar

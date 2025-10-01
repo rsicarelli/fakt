@@ -38,14 +38,14 @@ dependencies {
 
 // Apply compiler plugin
 plugins {
-    id("dev.rsicarelli.ktfake") version "1.0.0"
+    id("com.rsicarelli.fakt") version "1.0.0"
 }
 ```
 
 ### 2. **Annotate Interfaces**
 
 ```kotlin
-import dev.rsicarelli.ktfake.Fake
+import com.rsicarelli.fakt.Fake
 
 @Fake
 interface UserService {
@@ -149,7 +149,7 @@ cd test-sample && ../gradlew build
 cd test-sample && rm -rf build/generated && ../gradlew compileKotlinJvm --no-build-cache
 ```
 
-## 🎯 **Why KtFakes?**
+## 🎯 **Why Fakt**
 
 ### **Compared to MockK/Mockito**
 - **Compile-time generation**: No reflection overhead

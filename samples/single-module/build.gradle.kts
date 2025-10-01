@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 plugins {
     kotlin("multiplatform") version "2.2.10"
-    // Plugin will be tested separately - for now just test basic compilation
+    id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -17,47 +18,14 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(project(":runtime"))
+                implementation("com.rsicarelli.fakt:runtime:1.0.0-SNAPSHOT")
             }
         }
 
-        jvmTest {
+        commonTest {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-test")
             }
-            kotlin.srcDir("build/generated/ktfake/jvmTest/kotlin")
         }
     }
-}
-
-// Dependencies are now configured in sourceSets above
-
-// Configure compiler plugin ONLY for main compilation tasks (not test)
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    // Only apply plugin to main source sets, not test source sets
-    if (!name.contains("Test")) {
-        compilerOptions {
-            // Apply our unified compiler plugin manually for testing
-            val compilerJar = project.rootProject.project(":compiler").tasks.named("shadowJar").get().outputs.files.singleFile
-            println("KtFake compiler plugin path: ${compilerJar.absolutePath}")
-
-            freeCompilerArgs.addAll(listOf(
-                "-Xplugin=${compilerJar.absolutePath}",
-                "-P", "plugin:dev.rsicarelli.ktfake:enabled=true",
-                "-P", "plugin:dev.rsicarelli.ktfake:debug=true",
-                "-P", "plugin:dev.rsicarelli.ktfake:outputDir=${project.buildDir.absolutePath}/generated/ktfake"
-            ))
-        }
-    }
-}
-
-// Ensure jvmTest compilation runs after jvm compilation to generate fakes first
-tasks.named("compileKotlinJvm") {
-    doLast {
-        println("JVM compilation completed - fakes should be generated")
-    }
-}
-
-tasks.named("compileTestKotlinJvm") {
-    dependsOn("compileKotlinJvm")
 }

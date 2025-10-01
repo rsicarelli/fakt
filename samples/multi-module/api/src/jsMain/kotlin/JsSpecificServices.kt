@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package api.js
 
-import dev.rsicarelli.ktfake.Fake
+import com.rsicarelli.fakt.Fake
 
 // ============================================================================
 // JS-SPECIFIC INTERFACES - JavaScript platform specific features

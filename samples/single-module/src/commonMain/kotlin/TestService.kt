@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package test.sample
 
-import dev.rsicarelli.ktfake.Fake
+import com.rsicarelli.fakt.Fake
 
 // ============================================================================
 // BASIC INTERFACES - Simple property and method faking
@@ -76,22 +76,30 @@ interface ProductService {
 // HIGHER-ORDER FUNCTIONS - Function types and lambdas
 // ============================================================================
 
+// Generic interface - NOT supported by KtFakes (will be skipped)
+interface GenericEventProcessor<T> {
+    fun process(item: T, processor: (T) -> String): String
+    fun <R> transform(items: List<T>, transformer: (T) -> R): List<R>
+}
+
+// Type-safe alternative - SUPPORTED by KtFakes
 @Fake
 interface EventProcessor {
-    fun <T> process(item: T, processor: (T) -> String): String
-    fun <T, R> transform(items: List<T>, transformer: (T) -> R): List<R>
+    fun processString(item: String, processor: (String) -> String): String
+    fun processInt(item: Int, processor: (Int) -> String): String
     fun filter(items: List<String>, predicate: (String) -> Boolean): List<String>
     fun onComplete(callback: () -> Unit)
     fun onError(errorHandler: (Exception) -> Unit)
     suspend fun processAsync(item: String, processor: suspend (String) -> String): String
 }
 
+
 @Fake
 interface WorkflowManager {
     fun <T> executeStep(step: () -> T): T
     fun <T> executeStepWithFallback(step: () -> T, fallback: () -> T): T
     suspend fun <T> executeAsyncStep(step: suspend () -> T): T
-    fun chainSteps(vararg steps: () -> Unit)
+    fun chainSteps(steps: List<() -> Unit>)
 }
 
 // ============================================================================
@@ -172,7 +180,7 @@ interface AuthenticationService {
     suspend fun logout(): Result<Unit>
     suspend fun refreshToken(): Result<String>
     fun hasPermission(permission: String): Boolean
-    fun hasAnyPermission(vararg permissions: String): Boolean
+    fun hasAnyPermissions(permissions: List<String>): Boolean
     fun hasAllPermissions(permissions: Collection<String>): Boolean
 }
 

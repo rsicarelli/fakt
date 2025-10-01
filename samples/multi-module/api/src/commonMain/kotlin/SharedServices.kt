@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package api.shared
 
-import dev.rsicarelli.ktfake.Fake
+import com.rsicarelli.fakt.Fake
 
 // ============================================================================
 // SHARED API INTERFACES - Available across all platforms

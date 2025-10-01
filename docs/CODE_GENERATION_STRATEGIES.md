@@ -327,7 +327,7 @@ class ASTBasedGenerator {
             
             imports {
                 import(interfaceSymbol.fullyQualifiedName)
-                import("dev.rsicarelli.ktfake.*")
+                import("com.rsicarelli.fakt.*")
             }
             
             classDeclaration("Fake${interfaceSymbol.simpleName}Impl") {

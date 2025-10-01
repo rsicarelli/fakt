@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package core.business
 
-import dev.rsicarelli.ktfake.Fake
+import com.rsicarelli.fakt.Fake
 import api.shared.NetworkService
 import api.shared.StorageService
 import api.shared.LoggingService

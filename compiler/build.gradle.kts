@@ -3,13 +3,9 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
-  alias(libs.plugins.kotlin.jvm)
+  id("fakt-kotlin-jvm")
+  alias(libs.plugins.mavenPublish)
   alias(libs.plugins.shadow) apply false
-}
-
-java {
-  targetCompatibility = JavaVersion.VERSION_21
-  sourceCompatibility = JavaVersion.VERSION_21
 }
 
 dependencies {
@@ -34,10 +30,11 @@ val shadowJar = tasks.register("shadowJar", ShadowJar::class.java) {
     exclude(dependency("org.jetbrains.kotlin:.*"))
   }
 
-  relocate("com.google.auto.service", "dev.rsicarelli.ktfake.shaded.autoservice")
+  relocate("com.google.auto.service", "com.rsicarelli.fakt.shaded.autoservice")
 }
 
 tasks {
+
   // Configure test task
   test {
     // Compiler tests need more memory
@@ -52,6 +49,7 @@ tasks {
   }
 }
 
+// Configure shadow JAR artifacts for consumption
 for (c in arrayOf("apiElements", "runtimeElements")) {
   configurations.named(c) { artifacts.removeIf { true } }
   artifacts.add(c, shadowJar)
