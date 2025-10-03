@@ -1,414 +1,765 @@
-# Fakts Development Guide - MAP Edition 🚀
+# 🤖 CLAUDE.md - Fakt Compiler Plugin
 
-> **Status**: MAP (Minimum Awesome Product) Complete ✅
-> **Last Updated**: September 2025
-> **Philosophy**: Build awesome tools that compete on developer experience, not just functionality
+> **Metro-inspired Kotlin compiler plugin for type-safe fake generation**
+> **Status**: MAP (Minimum Awesome Product) - Core architecture complete, final polish in progress
+> **Last Updated**: January 2025
 
-## 🎯 **MAP vs MVP Philosophy**
+## 🎯 What is Fakt?
 
-**We Don't Build MVPs - We Build MAPs**
-- **MVP Mindset**: "Get something working quickly"
-- **MAP Mindset**: "Build something developers will love using"
-- **Why MAP**: Kotlin ecosystem has high standards - MockK, Mockito-Kotlin set the bar high
-- **Our Standard**: Every feature must be production-quality and delightful
+**Fakt** (formerly ktfakes-prototype) is a Kotlin compiler plugin that generates type-safe test fakes at compile time using the `@Fake` annotation. Inspired by the [Metro Dependency Injection framework](https://github.com/slackhq/metro), Fakt follows a two-phase FIR → IR compilation approach to analyze interfaces and generate production-quality fake implementations.
 
-## 🏆 **Current MAP Achievements**
+**Key Differences from Metro:**
+- **Metro**: Dependency injection code generation for production use
+- **Fakt**: Test fake generation for testing scenarios only
+- **Shared Patterns**: Two-phase FIR/IR compilation, CompilerPluginRegistrar structure, IrGenerationExtension patterns
 
-### 🚀 **UNIFIED IR-NATIVE ARCHITECTURE: 100% COMPLETE** ✅
-```yaml
-Quality Standards Met:
-  - Dynamic interface analysis (properties + methods) ✅
-  - Professional code generation ✅
-  - End-to-end pipeline working ✅
-  - JDK 21 fully tested and optimized ✅
-  - Suspend function support ✅ NEW!
-  - Interface-level generics ✅ NEW! (GenericRepository<T>, CacheService<K,V>)
-  - Method-level generics ✅ NEW! (fun <T>process(), fun <T,R>map())
-  - Varargs parameter handling ✅ NEW! (vararg permissions: String)
-  - Smart default value system ✅ NEW! (Result, Collections, complex types)
-  - Cross-module import resolution ✅ NEW! (multi-module scenarios)
-  - Function type resolution ✅ NEW! (Function1 -> (T) -> R syntax)
+**Problem Solved:**
+Writing test fakes manually is tedious and error-prone. Fakt generates type-safe fakes automatically with a clean DSL for configuring behavior, eliminating boilerplate while maintaining compile-time safety.
 
-Developer Experience:
-  - Idiomatic Kotlin patterns ✅
-  - Clear error messages ✅
-  - Intuitive factory functions ✅
-  - Thread-safe by design ✅
-  - Modern JVM features utilized ✅
-  - Multi-interface support ✅ NEW!
-  - Complex interface scenarios ✅ NEW!
+## 🏗️ Architecture
 
-Architecture Excellence:
-  - Unified IR-native compiler ✅ NEW!
-  - Sophisticated type system handling ✅ NEW!
-  - Modular design principles ✅
-  - Clean separation of concerns ✅
-  - Professional code quality ✅
-  - Test-sample working end-to-end ✅ NEW!
+### **Two-Phase Compilation (Metro-Inspired)**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  PHASE 1: FIR (Frontend Intermediate Representation)           │
+│  ════════════════════════════════════════════════════════       │
+│  • FaktFirExtensionRegistrar                                    │
+│  • Detects @Fake annotations on interfaces                     │
+│  • Validates interface structure                               │
+│  • Passes validated interfaces to IR phase                     │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  PHASE 2: IR (Intermediate Representation)                     │
+│  ════════════════════════════════════════════════════════       │
+│  • UnifiedFaktIrGenerationExtension                             │
+│  • InterfaceAnalyzer: Extracts interface metadata              │
+│  • IrCodeGenerator: Generates IR nodes                         │
+│  • Outputs: Implementation class + Factory + Config DSL        │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  OUTPUT: Generated Kotlin Code (commonTest/ or test/)          │
+│  ════════════════════════════════════════════════════════       │
+│  • FakeXxxImpl.kt         - Fake implementation class          │
+│  • fakeXxx() factory      - Type-safe factory function         │
+│  • FakeXxxConfig          - Configuration DSL                  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-## 🛠️ **Tech Stack & Architecture**
+### **Key Components**
 
-### **Core Technologies**
-- **Kotlin**: 2.2.10+ (K2 compiler required)
-- **Gradle**: 8.0+ with shadow JAR packaging
-- **JVM**: 21+ (LTS, fully tested and optimized)
-- **Architecture**: FIR + IR compiler plugin (Metro-inspired)
-
-### **Project Structure (UNIFIED Sept 2025)** 🚀
-```
-fakts-prototype/
-├── fakt/                           # Core project modules
-│   ├── compiler/                     # UNIFIED IR-NATIVE ARCHITECTURE ✅
-│   │   ├── src/main/kotlin/dev/rsicarelli/fakt/compiler/
-│   │   │   ├── FaktCompilerPluginRegistrar.kt         # Main entry point
-│   │   │   ├── UnifiedFaktsIrGenerationExtension.kt   # Unified IR generator ✅
-│   │   │   └── fir/                  # FIR phase: @Fake detection
-│   │   ├── analysis/                 # Interface analysis (modular)
-│   │   ├── generation/               # Code generation (modular)
-│   │   ├── codegen-ir/               # IR-specific generation
-│   │   ├── types/                    # Type system support
-│   │   ├── config/                   # Configuration handling
-│   │   ├── diagnostics/              # Error reporting
-│   │   └── build/libs/compiler.jar   # Shadow JAR for plugin
-│   ├── compiler-tests/              # Box tests and diagnostics
-│   ├── gradle-plugin/               # Gradle integration
-│   ├── runtime/                     # Multiplatform runtime API
-│   └── test-sample/                 # Working example project ✅
-│       ├── src/commonMain/kotlin/TestService.kt         # @Fake interfaces
-│       └── build/generated/fakt/test/kotlin/          # Generated fakes ✅
-│           ├── TestServiceFakes.kt             # Basic interface + properties
-│           ├── AsyncUserServiceFakes.kt        # Suspend functions ✅
-│           └── AnalyticsServiceFakes.kt        # Method-only interface
-├── CLAUDE.md                        # This context file (UNIFIED!)
-├── UNIFIED-ARCHITECTURE-PLAN.md     # Migration plan (COMPLETED!)
-├── README.md                        # Public documentation
-├── ARCHITECTURE.md                  # Technical architecture deep-dive
-├── API_SPECIFICATIONS.md            # API docs with working examples ✅
-├── IMPLEMENTATION_ROADMAP.md        # MAP-focused development plan ✅
-└── TESTING_GUIDELINES.md           # Original testing practices
-├── .claude/                          # Claude Code optimized structure
-│   └── docs/validation/testing-guidelines.md  # THE ABSOLUTE TESTING STANDARD
+```kotlin
+ktfake/
+├── compiler/                          # Main compiler plugin
+│   ├── FaktCompilerPluginRegistrar.kt   # Entry point (Metro pattern)
+│   ├── UnifiedFaktIrGenerationExtension.kt  # IR generation
+│   ├── fir/
+│   │   └── FaktFirExtensionRegistrar.kt     # @Fake detection (FIR phase)
+│   ├── analysis/
+│   │   └── InterfaceAnalyzer.kt             # Interface structure analysis
+│   ├── generation/
+│   │   ├── ImplementationGenerator.kt       # Fake class generation
+│   │   ├── FactoryGenerator.kt              # Factory function generation
+│   │   └── ConfigurationDslGenerator.kt     # DSL generation
+│   └── types/
+│       ├── TypeResolver.kt                  # Type system handling
+│       └── ImportResolver.kt                # Cross-module imports
+├── runtime/                           # Multiplatform annotations
+│   └── @Fake                             # Main annotation
+├── gradle-plugin/                     # Gradle integration
+└── samples/
+    ├── single-module/                 # ✅ Working example
+    ├── kmp-comprehensive-test/        # KMP testing
+    └── published-modules-test/        # Multi-module testing
 ```
 
-## 🔧 **Essential Commands**
+## ⚡ Essential Commands
 
-### **Core Development**
+### **Development Workflow**
+
 ```bash
-# Build the compiler plugin
-./gradlew :compiler:shadowJar
+# 🏗️ Build compiler plugin
+make shadowJar                                    # or: cd ktfake && ./gradlew :compiler:shadowJar
 
-# Test the working example (test-sample)
-cd test-sample && ../gradlew build
+# 🧪 Test working example
+make test-sample                                  # or: cd ktfake && ./gradlew :samples:single-module:build
 
-# Rebuild with fresh generated code
-cd test-sample && rm -rf build/generated && ../gradlew compileKotlinJvm --no-build-cache
+# ⚡ Quick rebuild cycle (no cache)
+make quick-test                                   # Rebuild plugin + test sample fresh
 
-# Run all tests
-./gradlew jvmTest
+# 💥 Nuclear option (full clean rebuild)
+make full-rebuild                                 # Clean + rebuild everything
 
-# Format code (required before commits)
-./gradlew spotlessApply
+# 🔍 Debug compiler plugin output
+make debug                                        # Show Fakt-specific logs
+
+# ✨ Format code (required before commits)
+make format                                       # or: cd ktfake && ./gradlew spotlessApply
+
+# 🧹 Clean build artifacts
+make clean                                        # or: cd ktfake && ./gradlew clean
+
+# 📚 Show all commands
+make help
 ```
 
-### **Debugging & Development**
+### **Slash Commands (Claude Code)**
+
 ```bash
-# Enable plugin debug info
-../gradlew compileKotlinJvm -i | grep -E "(Fakts|Generated|ERROR)"
+# 🔬 Debug IR generation for specific interface
+/debug-ir-generation <interface_name>
 
-# Clean everything for fresh start
-./gradlew clean --no-build-cache
+# 📚 Query Kotlin compiler source code
+/consult-kotlin-api <api_class>
 
-# Test specific module
-./gradlew :fakt-analysis:test
+# 🏆 Check Metro pattern alignment
+/validate-metro-alignment
+
+# 🧪 Run BDD-style tests
+/run-bdd-tests <pattern>
+
+# 📊 Check implementation status
+/check-implementation-status
+
+# 🔍 Analyze interface structure
+/analyze-interface-structure <interface_name>
 ```
 
-## 🎯 **Current Working Examples**
+## 🐛 Bugs Resolvidos e Lições Aprendidas
 
-### **Basic Interface**
+### **Bug #1: Property<Boolean>.toString() - Gradle Property Evaluation**
+
+**Problema:**
 ```kotlin
-@Fake
-interface TestService {
-    val stringValue: String
-    fun getValue(): String
-    fun setValue(value: String)
-}
+// ❌ Wrong: Passes Property object instead of value
+options.add(PluginOption(ENABLED_KEY.optionName, extension.enabled.toString()))
+// Output: "ENABLED:Property(value=true)" instead of "ENABLED:true"
 ```
 
-### **Advanced Interface with Generics & Complex Features**
+**Fix:**
 ```kotlin
-@Fake
-interface CacheService<TKey, TValue> {
-    val size: Int
-    val maxSize: Int?
-
-    fun get(key: TKey): TValue?
-    fun put(key: TKey, value: TValue): TValue?
-    fun remove(key: TKey): TValue?
-    fun <R : TValue> computeIfAbsent(key: TKey, computer: (TKey) -> R): R
-    suspend fun <R : TValue> asyncComputeIfAbsent(key: TKey, computer: suspend (TKey) -> R): R
-}
-
-@Fake
-interface AuthenticationService {
-    val isLoggedIn: Boolean
-    val currentUser: User?
-
-    suspend fun login(username: String, password: String): Result<User>
-    fun hasAnyPermission(vararg permissions: String): Boolean
-    fun hasAllPermissions(permissions: Collection<String>): Boolean
-}
+// ✅ Correct: Use .get() to evaluate Gradle Property
+options.add(PluginOption(ENABLED_KEY.optionName, extension.enabled.get().toString()))
 ```
 
-### **Generated MAP-Quality Output**
+**Lição Aprendida:** Gradle `Property<T>` objects must be explicitly evaluated with `.get()` before passing to compiler options. Always test with `--info` flag to see actual values passed to compiler.
 
-**Basic Interface Generation:**
+---
+
+### **Bug #2: Output Directory Mapping - Main vs Test Source Sets**
+
+**Problema:**
 ```kotlin
-class FakeTestServiceImpl : TestService {
-    private var getValueBehavior: () -> String = { "" }
-    private var setValueBehavior: (String) -> Unit = { _ -> Unit }
-    private var stringValueBehavior: () -> String = { "" }
-
-    override fun getValue(): String = getValueBehavior()
-    override fun setValue(value: String): Unit = setValueBehavior(value)
-    override val stringValue: String get() = stringValueBehavior()
-
-    internal fun configureGetValue(behavior: () -> String) { getValueBehavior = behavior }
-    internal fun configureSetValue(behavior: (String) -> Unit) { setValueBehavior = behavior }
-    internal fun configureStringValue(behavior: () -> String) { stringValueBehavior = behavior }
-}
-
-fun fakeTestService(configure: FakeTestServiceConfig.() -> Unit = {}): TestService {
-    return FakeTestServiceImpl().apply { FakeTestServiceConfig(this).configure() }
-}
+// ❌ Wrong: Generated code for main compilation went to main sourceSet
+// This caused fakes to be generated in production code instead of test code
+compilation.output.classesDirs.from(generatedSourcesDir)
 ```
 
-**Advanced Interface with Generics:**
+**Fix:**
 ```kotlin
-// Interface-level generics: CacheService<TKey, TValue> → CacheService<Any, Any>
-class FakeCacheServiceImpl : CacheService<Any, Any> {
-    private var getBehavior: (Any) -> Any? = { _ -> null }
-    private var putBehavior: (Any, Any) -> Any? = { _, _ -> null }
-    private var sizeBehavior: () -> Int = { 0 }
-
-    override fun get(key: Any): Any? = getBehavior(key)
-    override fun put(key: Any, value: Any): Any? = putBehavior(key, value)
-    // Method-level generics preserved: <R>
-    override fun <R>computeIfAbsent(key: Any, computer: (Any) -> Any): Any = ...
-    override suspend fun <R>asyncComputeIfAbsent(key: Any, computer: suspend (Any) -> Any): Any = ...
-    override val size: Int get() = sizeBehavior()
-}
-
-// Varargs handling: vararg permissions: String
-class FakeAuthenticationServiceImpl : AuthenticationService {
-    private var hasAnyPermissionBehavior: (Array<String>) -> Boolean = { _ -> false }
-
-    // Suspend functions and Result types handled
-    override suspend fun login(username: String, password: String): Result<User> = ...
-    override fun hasAnyPermission(vararg permissions: Array<String>): Boolean = ...
+// ✅ Correct: Map main compilations to their corresponding test directories
+val outputCompilationName = when (compilation.name) {
+    "main" -> "test"
+    "jvmMain" -> "jvmTest"
+    "commonMain" -> "commonTest"
+    else -> compilation.name  // Already test compilation
 }
 ```
 
-### **Usage (Developer Experience)**
+**Lição Aprendida:** Fakes are generated **FROM** main interfaces **FOR** test usage. The plugin receives main compilation events but must write to test output directories. KMP projects require platform-specific mapping (jvmMain → jvmTest, etc.).
+
+---
+
+### **Bug #3: KMP commonTest Detection - Platform-Specific vs Shared Tests**
+
+**Problema:**
 ```kotlin
-// Simple usage
-val service = fakeTestService()
+// ❌ Wrong: KMP projects with commonTest couldn't see fakes in platform-specific directories
+// Generated in: build/generated/fakt/jvm/test/kotlin/
+// Expected in: common/test/kotlin/ (for shared test code)
+```
 
-// Type-safe configuration
-val customService = fakeTestService {
-    getValue { "Custom Value" }
-    memes { "Doge" }
+**Fix:**
+```kotlin
+// ✅ Correct: Detect commonTest and generate in shared location
+val isCommonTest = project.kotlinExtension
+    .sourceSets
+    .any { it.name == "commonTest" }
+
+val outputPath = if (isCommonTest) {
+    "common/test/kotlin"
+} else {
+    // Platform-specific path
 }
-
-// Perfect for testing
-@Test fun testAwesomeService() {
-    val fake = fakeTestService { getValue { "test-value" } }
-    assertEquals("test-value", fake.getValue())
-}
 ```
 
-## 🏗️ **Architecture Principles (MAP-Focused)**
+**Lição Aprendida:** KMP projects have two test scenarios:
+1. **Platform-specific tests** (`jvmTest`, `iosTest`) - Generate in platform directories
+2. **Shared tests** (`commonTest`) - Generate in `common/test/kotlin` for cross-platform use
 
-### **Quality Standards**
-- **Type Safety First**: No `Any` casting, proper generic handling
-- **Zero Errors**: Generated code must compile without warnings
-- **Developer UX**: Intuitive DSL, clear error messages, idiomatic patterns
-- **Production Ready**: Thread-safe, performant, extensible
+Always check for `commonTest` source set existence to determine KMP shared test scenario.
 
-### **Design Patterns**
-- **Factory Functions**: `fakeService {}` over singleton objects
-- **Configuration DSL**: Type-safe behavior setup
-- **FIR Phase**: @Fake detection, interface validation
-- **IR Phase**: Professional code generation
-- **Modular Architecture**: Separation of concerns
+---
 
-## 📁 **Key Implementation Files**
+### **Summary: Critical Testing Practices**
 
-### **Core Compiler Plugin (Working)**
-```
-fakt/compiler/src/main/kotlin/dev/rsicarelli/fakt/compiler/
-├── FaktCompilerPluginRegistrar.kt     # Plugin registration & entry
-├── fir/FaktsFirSuppressionGenerator.kt # @Fake detection (FIR phase)
-└── ir/
-    ├── FaktsIrGenerationExtension.kt   # Main code generator
-    ├── ImplementationClassGenerator.kt   # Fake class generation ✅
-    ├── ConfigurationDslGenerator.kt      # Type-safe DSL creation ✅
-    └── FactoryFunctionGenerator.kt       # Factory function creation ✅
-```
+✅ **Always test with published plugin** (`publishToMavenLocal`)
+✅ **Use `--info` flag** to verify actual compiler options
+✅ **Test both single-platform and KMP scenarios**
+✅ **Verify generated code location** matches source set expectations
+✅ **Check compilation output** - generated code must compile without errors
 
-### **Runtime Annotations**
-```
-fakt/runtime/src/commonMain/kotlin/dev/rsicarelli/fakt/
-├── Fake.kt                              # @Fake annotation
-├── FakeConfig.kt                        # @FakeConfig annotation
-└── CallTracking.kt                      # @CallTracking annotation
-```
+## ✅ Testing Guidelines
 
-### **IR-Native Modules (Future)**
-```
-fakt/compiler-ir-native/
-├── fakt-analysis/                     # Real IR interface analysis ✅
-├── fakt-generation/                   # IR node generation ✅
-├── fakt-dsl-creation/                 # Configuration DSL ✅
-├── fakt-factory-functions/            # Factory functions ✅
-├── fakt-validation/                   # Compile-time validation ✅
-└── fakt-integration/                  # End-to-end integration ✅
-```
+> **THE ABSOLUTE STANDARD**: Every test MUST follow GIVEN-WHEN-THEN pattern
+> **Full Specification**: `.claude/docs/validation/testing-guidelines.md`
 
-## 🧪 **Testing Strategy (MAP Quality)**
+### **Golden Rule**
 
-> **CRITICAL**: Follow Fakts GIVEN-WHEN-THEN testing patterns ONLY
-> **Testing Standard**: [📋 Testing Guidelines](.claude/docs/validation/testing-guidelines.md)
-
-### **Test Types**
-- **Unit Tests**: 38+ GIVEN-WHEN-THEN tests across IR-Native modules
-- **Integration Tests**: End-to-end compilation in test-sample/ ✅
-- **Box Tests**: Compiler plugin execution validation
-- **Type Safety Tests**: Ensure generated code compiles without errors
-
-### **Required Testing Patterns**
 ```kotlin
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class ExampleTest {
+class UnifiedFaktIrGenerationExtensionTest {
+
     @Test
-    fun `GIVEN interface with methods WHEN generating fake THEN should create implementation`() = runTest {
-        // Use vanilla kotlin-test assertions only
-        assertEquals(expected, actual)
-        assertTrue(condition)
+    fun `GIVEN interface with suspend functions WHEN generating fake THEN should preserve suspend signatures`() = runTest {
+        // Given - create isolated instances
+        val asyncInterface = createTestInterface("AsyncService") {
+            method("getUser") { suspend(); returns("User") }
+        }
+        val generator = UnifiedFaktIrGenerationExtension()
+
+        // When
+        val result = generator.generateFakeImplementation(asyncInterface)
+
+        // Then
+        assertTrue(result.hasMethod("getUser"))
+        assertTrue(result.getMethod("getUser").isSuspend)
+        assertTrue(result.compiles())
     }
 }
 ```
 
-### **Testing Commands**
-```bash
-# Test specific interface generation
-cd test-sample && ../gradlew compileTestKotlinJvm
+### **Required Framework**
 
-# Run IR-Native module tests
-./gradlew :fakt-analysis:test
+- ✅ **Vanilla JUnit5** + Kotlin Test (NO custom matchers)
+- ✅ **@TestInstance(TestInstance.Lifecycle.PER_CLASS)** (always required)
+- ✅ **GIVEN-WHEN-THEN naming** (uppercase, BDD style)
+- ✅ **runTest** for coroutines code
+- ✅ **Isolated instances** per test (no shared state)
+- ✅ **Fakes instead of mocks** with builder patterns
 
-# Full test suite
-./gradlew test
+### **Prohibited Practices**
+
+❌ "should" naming pattern
+❌ Custom BDD frameworks
+❌ Custom matchers (assertThat, etc.)
+❌ Mocks (use fakes)
+❌ @BeforeEach/@AfterEach (use isolated instances)
+
+## 📊 Status Atual do Projeto
+
+### **✅ Funcionando (Production-Ready)**
+
+#### **Core Infrastructure**
+- ✅ Plugin discovery via Service Loader
+- ✅ Two-phase FIR → IR compilation
+- ✅ Gradle plugin integration
+- ✅ Maven publishing to mavenLocal
+- ✅ Shadow JAR packaging
+
+#### **Interface Support**
+- ✅ Basic interfaces (methods + properties)
+- ✅ Suspend functions (`suspend fun login()`)
+- ✅ Properties (val/var with getters)
+- ✅ Method-only interfaces
+- ✅ Property-only interfaces
+- ✅ Multiple interfaces in single module
+
+#### **Code Generation**
+- ✅ Implementation classes (`FakeXxxImpl`)
+- ✅ Factory functions (`fakeXxx {}`)
+- ✅ Configuration DSL (`FakeXxxConfig`)
+- ✅ Type-safe behavior configuration
+- ✅ Thread-safe fake instances
+
+#### **Multiplatform Support**
+- ✅ KMP project detection
+- ✅ commonTest source set support
+- ✅ Platform-specific test directories (jvmTest, iosTest)
+- ✅ Shared test code generation
+
+---
+
+### **❌ Não Funcionando (Conhecido)**
+
+#### **Generic Type Handling**
+- ❌ Interface-level generics (`interface Repo<T>`)
+- ❌ Method-level generics (`fun <T> process()`)
+- ❌ Generic constraints (`<T : Comparable<T>>`)
+- ❌ Variance annotations (`out T`, `in T`)
+
+#### **Advanced Features**
+- ❌ Inline functions
+- ❌ Operator overloading
+- ❌ Delegation (by keyword)
+- ❌ Call tracking (`@Fake(trackCalls = true)`)
+- ❌ Builder patterns (`@Fake(builder = true)`)
+
+#### **Edge Cases**
+- ❌ Nested interfaces
+- ❌ Sealed interfaces
+- ❌ Functional interfaces (SAM)
+- ❌ Interfaces with companion objects
+
+---
+
+### **🔧 Em Progresso (Phase 2 Focus)**
+
+#### **Type System Improvements**
+- 🔧 Generic type scoping resolution (class-level vs method-level)
+- 🔧 Smart default values for generic types
+- 🔧 Cross-module type imports
+- 🔧 Function type resolution (`(T) -> R` syntax)
+
+#### **Error Handling**
+- 🔧 Better diagnostic messages
+- 🔧 Compilation error reporting
+- 🔧 Invalid interface detection
+
+#### **Performance**
+- 🔧 Incremental compilation support
+- 🔧 Build cache optimization
+- 🔧 Compilation time benchmarks
+
+## 🚨 Regras Críticas
+
+### **✅ SEMPRE FAZER:**
+
+1. **🏆 Consultar Metro patterns primeiro**
+   - Metro é nossa inspiração arquitetural
+   - Use `/validate-metro-alignment` antes de decisões arquiteturais
+   - Referência: `.claude/docs/development/metro-alignment.md`
+
+2. **🎯 Validar com Kotlin compiler source**
+   - APIs do compilador mudam entre versões
+   - Use `/consult-kotlin-api <class>` para verificar
+   - Referência: `kotlin/compiler/` (local source copy)
+
+3. **⚡ TDD com vanilla JUnit5**
+   - BDD naming: `GIVEN x WHEN y THEN z`
+   - Isolated instances per test
+   - Compilation validation: generated code MUST compile
+
+4. **🧪 Test with published plugin**
+   - Always `./gradlew publishToMavenLocal` before testing
+   - Test both project dependencies AND published plugin
+   - Use `--info` flag to debug compiler options
+
+5. **📋 MAP quality standards**
+   - Minimum Awesome Product sempre
+   - Type-safe code generation
+   - Professional error messages
+   - Zero compilation errors
+
+---
+
+### **❌ JAMAIS FAZER:**
+
+1. **🚨 Ignorar Metro patterns**
+   - Sempre check Metro solutions first
+   - Two-phase FIR → IR é obrigatório
+   - Context patterns devem ser seguidos
+
+2. **🚨 Skip Kotlin API validation**
+   - APIs marcadas como `@UnsafeApi` podem mudar
+   - Sempre verificar com `/consult-kotlin-api`
+   - Test against multiple Kotlin versions when possible
+
+3. **🚨 Marketing over reality**
+   - Real technical status sempre
+   - Document known issues openly
+   - Progress metrics devem ser honestos
+
+4. **🚨 Skip compilation testing**
+   - Generated code deve compilar sem erros
+   - Test both single-module and KMP scenarios
+   - Verify output in correct source set (test vs main)
+
+5. **🚨 Custom test frameworks**
+   - Vanilla JUnit5 only
+   - NO custom matchers or BDD libraries
+   - Follow GIVEN-WHEN-THEN standard absolutely
+
+---
+
+### **🎯 Metro Alignment Rules:**
+
+- **📐 Follow Metro architecture** - FIR → IR two-phase compilation
+- **🔧 Use Metro patterns** - CompilerPluginRegistrar, IrGenerationExtension
+- **🧪 Metro testing approach** - compiler-tests/ structure (future)
+- **📊 Metro quality standards** - Binary compatibility, API validation
+
+## 📚 Referências Críticas
+
+### **Metro Source Code (Local)**
+- **Compiler Plugin**: `metro/compiler/src/main/kotlin/dev/zacsweers/metro/compiler/`
+- **IR Generation**: `metro/compiler/src/.../ir/MetroIrGenerationExtension.kt`
+- **Testing Structure**: `metro/compiler-tests/`
+- **Samples**: `metro/samples/`
+
+### **Kotlin Compiler APIs (Local)**
+- **IR APIs**: `kotlin/compiler/ir/backend.common/src/.../extensions/`
+- **FIR APIs**: `kotlin/compiler/fir/`
+- **Plugin API**: `kotlin/compiler/plugin-api/src/`
+
+### **Fakt Documentation**
+- **Testing Guidelines**: `.claude/docs/validation/testing-guidelines.md` ⭐
+- **Metro Alignment**: `.claude/docs/development/metro-alignment.md`
+- **Current Status**: `.claude/docs/implementation/current-status.md`
+- **Architecture**: `.claude/docs/architecture/unified-ir-native.md`
+- **Decision Tree**: `.claude/docs/development/decision-tree.md`
+
+### **Quick Reference**
+- **Makefile Commands**: `make help`
+- **Gradle Tasks**: `cd ktfake && ./gradlew tasks`
+- **Debug Compilation**: `make debug` or `--info` flag
+
+## 🎯 Do's and Don'ts
+
+### **✅ SEMPRE FAZER**
+
+#### **Development**
+- ✅ Use `make` commands from project root (avoid `cd ktfake/` constantly)
+- ✅ Test with `publishToMavenLocal` before claiming success
+- ✅ Verify generated code compiles without errors
+- ✅ Check both single-platform and KMP scenarios
+- ✅ Use `--info` flag to debug compiler plugin behavior
+- ✅ Follow Metro patterns as architectural inspiration
+- ✅ Write GIVEN-WHEN-THEN tests for all new features
+- ✅ Format code with `make format` before commits
+
+#### **Architecture**
+- ✅ Consult Metro patterns before major decisions
+- ✅ Validate Kotlin API usage with `/consult-kotlin-api`
+- ✅ Keep FIR and IR phases separate
+- ✅ Use modular design (analysis → generation → output)
+- ✅ Generate code in test source sets only
+
+#### **Testing**
+- ✅ BDD naming: `GIVEN x WHEN y THEN z`
+- ✅ Isolated instances per test
+- ✅ Vanilla JUnit5 + kotlin-test assertions only
+- ✅ Test compilation of generated code
+- ✅ Use fakes instead of mocks in tests
+
+---
+
+### **❌ JAMAIS FAZER**
+
+#### **Development**
+- ❌ Skip compilation testing
+- ❌ Use deprecated Kotlin APIs
+- ❌ Ignore warnings in generated code
+- ❌ Assume project dependencies work like published plugin
+- ❌ Generate code in main/production source sets
+- ❌ Use `buildDir` (deprecated in Gradle 8+)
+
+#### **Architecture**
+- ❌ Mix FIR and IR phase logic
+- ❌ Skip Metro pattern consultation
+- ❌ Use `Any` type for generics without strategy
+- ❌ Ignore cross-module import resolution
+- ❌ Hardcode output directories
+
+#### **Testing**
+- ❌ Use "should" naming pattern
+- ❌ Custom BDD frameworks or matchers
+- ❌ Shared state between tests
+- ❌ @BeforeEach/@AfterEach hooks
+- ❌ Mocks instead of fakes
+
+---
+
+### **🎯 Specific Guidelines**
+
+#### **Generic Type Handling**
+- ✅ Document current limitations openly
+- ✅ Use identity functions for method-level generics
+- ✅ Replace class-level generics with `Any`
+- ❌ Claim generic support without thorough testing
+- ❌ Generate code that doesn't compile
+
+#### **Error Messages**
+- ✅ Clear, actionable error messages
+- ✅ Include interface name and location
+- ✅ Suggest fixes when possible
+- ❌ Cryptic compiler errors
+- ❌ Silent failures
+
+#### **Performance**
+- ✅ Benchmark compilation time impact
+- ✅ Optimize generated code size
+- ✅ Support incremental compilation
+- ❌ Generate unnecessary code
+- ❌ Ignore build performance
+
+## 📄 Convenções de Código
+
+### **Naming Conventions**
+
+```kotlin
+// Generated class naming
+@Fake interface UserService
+// → FakeUserServiceImpl (implementation class)
+// → fakeUserService {} (factory function)
+// → FakeUserServiceConfig (DSL config class)
+
+// Package structure
+com.example.services.UserService
+// → com.example.services.FakeUserServiceImpl (same package)
+
+// Behavior properties naming
+interface UserService {
+    fun getUser(): User
+}
+// → private var getUserBehavior: () -> User = { ... }
+// → fun configureGetUser(behavior: () -> User) { getUserBehavior = behavior }
 ```
 
-## 📊 **Current Status (September 2025)**
+### **Code Style**
 
-### **🎉 MAJOR ACHIEVEMENTS COMPLETED**
-- ✅ **Interface-level generics**: `GenericRepository<T>` → `FakeGenericRepositoryImpl : GenericRepository<Any>`
-- ✅ **Method-level generics**: `fun <T>process()`, `fun <T,R>map()` with proper type parameter preservation
-- ✅ **Varargs parameters**: `fun hasAnyPermission(vararg permissions: String)` correctly handled
-- ✅ **Suspend functions**: `suspend fun login(): Result<User>` fully supported
-- ✅ **Smart defaults system**: Result types, collections, complex types with intelligent defaults
-- ✅ **Cross-module imports**: Full import resolution for multi-module scenarios
-- ✅ **Function type resolution**: `Function1<T, R>` → `(T) -> R` proper Kotlin syntax
-- ✅ **Dynamic interface analysis**: Properties, methods, type parameters extracted via IR APIs
-- ✅ **End-to-end pipeline**: 14 complex interfaces successfully processed
+```kotlin
+// File headers (managed by Spotless)
+// Copyright (C) 2025 Rodrigo Sicarelli
+// SPDX-License-Identifier: Apache-2.0
 
-### **🔧 CURRENT ISSUES (Final 15%)**
-- ❌ **Method signature matching**: Generated signatures need exact interface compliance
-- ❌ **Varargs type handling**: `vararg permissions: Array<String>` vs `vararg permissions: String`
-- ❌ **Generic type bounds**: Constraints like `<R : TValue>` need preservation
-- ❌ **Return type precision**: Some TODO defaults causing compilation errors
+// License: Apache 2.0
+// Formatting: ktfmt Google style
+// Max line length: 100 characters
+// Import order: Standard Kotlin → Third-party → Project
+```
 
-### **📈 PROGRESS METRICS**
-- **Architecture**: 100% complete (unified IR-native approach)
-- **Type System**: 85% complete (major generics working, edge cases remain)
-- **Code Generation**: 90% complete (professional quality output)
-- **Error Handling**: 80% complete (good diagnostics, refinement needed)
-- **Overall Completion**: ~85% (production-ready core, final polish needed)
+### **Generated Code Patterns**
 
-## 🚀 **Next MAP Priorities**
+```kotlin
+// Implementation class pattern
+class Fake{Interface}Impl : {Interface} {
+    // Behavior properties for each method/property
+    private var {method}Behavior: ({params}) -> {return} = { default }
 
-### **Critical (Final 15%)**
-1. **Method signature compliance**: Exact interface method matching
-2. **Varargs type correction**: Array vs element type handling
-3. **Generic bounds preservation**: `<R : TValue>` constraint handling
-4. **Comprehensive test coverage**: BDD-style compiler tests
+    // Override interface members
+    override fun {method}({params}): {return} = {method}Behavior({params})
 
-### **Enhancement Opportunities**
-5. **Call Tracking**: `@Fake(trackCalls = true)` implementation
-6. **Advanced Features**: Inline functions, operator overloading
-7. **Performance optimization**: Build time and generation speed
+    // Internal configuration methods
+    internal fun configure{Method}(behavior: ({params}) -> {return}) {
+        {method}Behavior = behavior
+    }
+}
 
-## 🔧 **Development Workflow (MAP Standards)**
+// Factory function pattern
+fun fake{Interface}(configure: Fake{Interface}Config.() -> Unit = {}): {Interface} {
+    return Fake{Interface}Impl().apply {
+        Fake{Interface}Config(this).configure()
+    }
+}
 
-### **For String-Based Improvements**
-1. Edit generators in `fakt/compiler/src/main/kotlin/.../ir/`
-2. Rebuild: `./gradlew :compiler:shadowJar`
-3. Test: `cd test-sample && ../gradlew clean compileKotlinJvm --no-build-cache`
-4. Verify: Check generated code quality in `test-sample/build/generated/`
+// Configuration DSL pattern
+class Fake{Interface}Config(private val fake: Fake{Interface}Impl) {
+    fun {method}(behavior: ({params}) -> {return}) {
+        fake.configure{Method}(behavior)
+    }
+}
+```
 
-### **For IR-Native Development**
-1. Work in `fakt/compiler-ir-native/` modules
-2. Write GIVEN-WHEN-THEN tests first: `GIVEN complex interface WHEN processing generics THEN should handle correctly`
-3. Implement with MAP quality standards
-4. Integration test with main compiler
+## 🔄 Development Workflow
 
-### **Quality Gates**
-- ✅ Zero compilation errors in generated code
-- ✅ Type-safe DSL (no Any casting)
-- ✅ All tests pass
-- ✅ Professional code formatting
-- ✅ Clear error messages
+### **For New Features**
 
-## 📋 **Repository Guidelines**
+```bash
+# 1. Write failing test first (TDD)
+# In ktfake/compiler/src/test/kotlin/
+@Test
+fun `GIVEN interface with feature X WHEN generating fake THEN should handle correctly`() = runTest {
+    // Test implementation
+}
 
-### **Code Standards**
-- **MAP Quality**: Every feature must be production-ready and delightful
-- **Type Safety**: Proper generics, no Any casting
-- **Testing**: Comprehensive GIVEN-WHEN-THEN tests for all new features (see [Testing Guidelines](.claude/docs/validation/testing-guidelines.md))
-- **Documentation**: Keep all docs current with code changes
+# 2. Implement feature in appropriate module
+# - InterfaceAnalyzer for analysis phase
+# - IrCodeGenerator for generation phase
+# - ConfigurationDslGenerator for DSL creation
 
-### **Don't Touch**
-- `gradle/libs.versions.toml` - Synced with Metro versions
-- Generated files in `build/generated/` - Managed by compiler
-- Copyright headers - Managed by Spotless
+# 3. Rebuild and test
+make shadowJar
+make test-sample
 
-### **Architecture Decisions**
-- **Single @Fake annotation** - Simple, clear API
-- **Factory functions** - Thread-safe over singletons
-- **Type-safe DSL** - Better UX than generic configuration
-- **Metro alignment** - Proven compiler plugin patterns
+# 4. Verify generated code
+cat ktfake/samples/single-module/build/generated/fakt/test/kotlin/FakeXxxImpl.kt
 
-## 🎯 **Context for AI Development**
+# 5. Format and validate
+make format
+make test
+```
+
+### **For Bug Fixes**
+
+```bash
+# 1. Reproduce bug with test
+@Test
+fun `GIVEN interface causing bug WHEN generating THEN should not fail`() = runTest {
+    // Reproduce bug scenario
+}
+
+# 2. Debug with --info flag
+make debug
+
+# 3. Fix issue in source
+# Edit compiler/src/main/kotlin/...
+
+# 4. Verify fix
+make quick-test
+
+# 5. Update documentation if needed
+# Add to "Bugs Resolvidos" section if critical
+```
+
+### **For Metro Pattern Updates**
+
+```bash
+# 1. Review Metro source code
+cd metro/compiler/src/main/kotlin/dev/zacsweers/metro/compiler/
+
+# 2. Identify applicable pattern
+# Example: Error handling, type resolution, context usage
+
+# 3. Validate with command
+/validate-metro-alignment
+
+# 4. Apply pattern to Fakt
+# Update compiler/src/main/kotlin/... with Metro-inspired approach
+
+# 5. Document decision
+# Update .claude/docs/development/metro-alignment.md
+```
+
+## 🎯 Context for AI Development
 
 ### **Project Philosophy**
-- We build **MAPs not MVPs** - compete on developer experience
-- **Quality first** - Kotlin developers expect professional tools
-- **Type safety** - Leverage Kotlin's type system fully
-- **Developer delight** - Every interaction should feel polished
 
-### **Current Status**
-- **String-based implementation**: Production-ready MAP ✅
-- **IR-Native foundation**: 90% complete with comprehensive tests ✅
-- **Working example**: Full end-to-end pipeline in test-sample/ ✅
-- **Documentation**: Updated with MAP mindset and working examples ✅
+**MAP (Minimum Awesome Product) vs MVP**
+- We don't build "just working" MVPs
+- Every feature must be production-quality and delightful
+- Kotlin developers expect professional tools (MockK/Mockito quality)
+- Type safety and developer experience are non-negotiable
+
+**Metro-Inspired Architecture**
+- Follow proven patterns from production DI framework
+- Two-phase FIR → IR compilation is mandatory
+- Context-driven generation with proper error handling
+- Professional code quality matches Metro standards
+
+**TDD Compiler Plugin Development**
+- Test-first development for compiler features
+- GIVEN-WHEN-THEN pattern is THE ABSOLUTE STANDARD
+- Compilation validation is critical (generated code must work)
+- Vanilla JUnit5 only (no custom frameworks)
+
+---
+
+### **Current State (January 2025)**
+
+**What Works (Production-Ready):**
+- ✅ Basic interface fake generation (methods + properties)
+- ✅ Suspend functions fully supported
+- ✅ Type-safe factory functions and DSL
+- ✅ KMP project support (commonTest + platform-specific)
+- ✅ Published plugin working via mavenLocal
+- ✅ End-to-end compilation in single-module sample
+
+**What Doesn't Work (Known Limitations):**
+- ❌ Generic types (interface-level and method-level)
+- ❌ Inline functions
+- ❌ Advanced features (call tracking, builder patterns)
+
+**What's In Progress (Phase 2 Focus):**
+- 🔧 Generic type scoping resolution
+- 🔧 Improved error diagnostics
+- 🔧 Performance optimization
+- 🔧 Comprehensive test coverage
+
+---
 
 ### **Success Metrics**
-- Zero compilation errors in generated code ✅
-- Type-safe DSL without Any casting ✅
-- Professional code generation quality ✅
-- Developer-friendly error messages ✅
-- Competitive with MockK/Mockito-Kotlin UX ✅
 
-This context should help you understand exactly where we are and maintain our MAP quality standards! 🚀
+**Technical Quality:**
+- ✅ Zero compilation errors in generated code
+- ✅ Type-safe DSL without `Any` casting
+- ✅ Professional code formatting and structure
+- ✅ Clear, actionable error messages
+
+**Developer Experience:**
+- ✅ Intuitive API (`@Fake` annotation + `fakeXxx {}` factory)
+- ✅ Clean generated code (readable, idiomatic Kotlin)
+- ✅ Fast compilation (minimal overhead)
+- ✅ Works with KMP and single-platform projects
+
+**Project Health:**
+- ✅ Comprehensive GIVEN-WHEN-THEN test coverage
+- ✅ Metro pattern alignment verified
+- ✅ Documentation up-to-date with code
+- ✅ Known issues documented openly
+
+---
+
+### **Key Files to Understand**
+
+**Entry Point:**
+```kotlin
+ktfake/compiler/src/main/kotlin/com/rsicarelli/fakt/compiler/
+└── FaktCompilerPluginRegistrar.kt    # Service Loader entry, FIR + IR registration
+```
+
+**Core Generation:**
+```kotlin
+ktfake/compiler/src/main/kotlin/com/rsicarelli/fakt/compiler/
+├── UnifiedFaktIrGenerationExtension.kt  # Main IR generation logic
+├── analysis/InterfaceAnalyzer.kt        # Interface metadata extraction
+└── generation/
+    ├── ImplementationGenerator.kt       # Fake class generation
+    ├── FactoryGenerator.kt              # Factory function generation
+    └── ConfigurationDslGenerator.kt     # DSL generation
+```
+
+**Testing:**
+```kotlin
+.claude/docs/validation/testing-guidelines.md  # THE ABSOLUTE STANDARD
+ktfake/samples/single-module/                  # Working example project
+```
+
+---
+
+### **Critical Documentation**
+
+1. **Testing Guidelines** (⭐ MUST READ)
+   - `.claude/docs/validation/testing-guidelines.md`
+   - GIVEN-WHEN-THEN pattern is mandatory
+   - Vanilla JUnit5 + kotlin-test only
+
+2. **Metro Alignment**
+   - `.claude/docs/development/metro-alignment.md`
+   - Architectural inspiration and patterns
+   - When to consult Metro source
+
+3. **Current Status**
+   - `.claude/docs/implementation/current-status.md`
+   - Real progress tracking (no marketing)
+   - Known issues and limitations
+
+4. **Makefile Commands**
+   - `make help` - Show all available commands
+   - Root-level commands avoid `cd ktfake/` constantly
+
+---
+
+This context should provide everything needed to understand Fakt's architecture, development workflow, and quality standards. Remember: We build MAPs, not MVPs. Every feature should be production-ready and delightful! 🚀

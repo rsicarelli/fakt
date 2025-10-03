@@ -1,44 +1,120 @@
-# Copyright (C) 2025 Rodrigo Sicarelli
-# SPDX-License-Identifier: Apache-2.0
+# Fakt Development Commands
+# Run from project root to avoid cd ktfake/ constantly
 
-.PHONY: help docs docs-serve docs-open clean
+.PHONY: build test compile clean format shadowJar test-sample validate quick-test full-rebuild docs docs-serve docs-open docs-stop
 
-# Default target
-help:
-	@echo "Fakt Development Commands:"
-	@echo ""
-	@echo "Documentation:"
-	@echo "  make docs        - Generate Dokka documentation"
-	@echo "  make docs-serve  - Generate and serve docs at http://localhost:8000"
-	@echo "  make docs-open   - Generate, serve, and open docs in browser"
-	@echo ""
-	@echo "Cleanup:"
-	@echo "  make clean       - Clean all build artifacts"
+# Core build commands
+build:
+	@echo "🏗️ Building Fakt..."
+	cd ktfake && ./gradlew build
 
-# Generate Dokka documentation
-docs:
-	@echo "🔨 Generating Dokka documentation..."
-	./gradlew dokkaGenerate
-	@echo "✅ Documentation generated at build/dokka/html/"
-	@echo "   Serve with: make docs-serve"
+test:
+	@echo "🧪 Running tests..."
+	cd ktfake && ./gradlew test
 
-# Generate and serve documentation via HTTP
-docs-serve: docs
-	@echo "🌐 Starting HTTP server at http://localhost:8000"
-	@echo "   Press Ctrl+C to stop"
-	@cd build/dokka/html && python3 -m http.server 8000
+compile:
+	@echo "⚙️ Compiling Kotlin sources..."
+	cd ktfake && ./gradlew compileKotlinJvm
 
-# Generate, serve, and open in browser
-docs-open: docs
-	@echo "🌐 Starting HTTP server and opening browser..."
-	@cd build/dokka/html && python3 -m http.server 8000 > /dev/null 2>&1 & \
-		sleep 2 && open http://localhost:8000
-	@echo "✅ Documentation opened at http://localhost:8000"
-	@echo "   Server running in background (PID: $$(pgrep -f 'python3 -m http.server 8000'))"
-	@echo "   To stop: kill $$(pgrep -f 'python3 -m http.server 8000')"
-
-# Clean build artifacts
 clean:
 	@echo "🧹 Cleaning build artifacts..."
-	./gradlew clean
-	@echo "✅ Build artifacts cleaned"
+	cd ktfake && ./gradlew clean
+
+format:
+	@echo "✨ Formatting code..."
+	cd ktfake && ./gradlew spotlessApply
+
+# Compiler plugin specific
+shadowJar:
+	@echo "📦 Building compiler plugin JAR..."
+	cd ktfake && ./gradlew :compiler:shadowJar
+
+# Test the working example
+test-sample:
+	@echo "🎯 Testing sample project..."
+	cd ktfake && ./gradlew :samples:single-module:build
+
+# Multi-module sample
+test-multi-module:
+	@echo "🏢 Testing multi-module sample..."
+	cd ktfake && ./gradlew :samples:multi-module:app:build
+
+# Comprehensive validation workflow
+validate: shadowJar test-sample test
+	@echo "✅ Full validation complete!"
+
+# Quick development cycle
+quick-test: shadowJar
+	@echo "⚡ Quick test cycle..."
+	cd ktfake && rm -rf samples/single-module/build/generated
+	cd ktfake && ./gradlew :samples:single-module:compileKotlinJvm --no-build-cache
+
+# Full rebuild (nuclear option)
+full-rebuild:
+	@echo "💥 Full rebuild with clean slate..."
+	cd ktfake && ./gradlew clean --no-build-cache
+	cd ktfake && ./gradlew :compiler:shadowJar
+	cd ktfake && rm -rf samples/single-module/build/generated
+	cd ktfake && ./gradlew :samples:single-module:build
+
+# Debug compiler plugin
+debug:
+	@echo "🐛 Debugging compiler plugin..."
+	cd ktfake && ./gradlew :samples:single-module:compileKotlinJvm -i | grep -E "(Fakt|Generated|ERROR)"
+
+# Documentation
+docs:
+	@echo "📚 Generating Dokka documentation..."
+	cd ktfake && ./gradlew dokkaGenerate
+	@echo "✅ Documentation generated at ktfake/build/dokka/html/"
+	@echo "   Serve with: make docs-serve"
+
+docs-serve: docs
+	@echo "🛑 Stopping any existing server on port 8000..."
+	@lsof -ti:8000 | xargs kill -9 2>/dev/null || true
+	@sleep 1
+	@echo "🌐 Starting HTTP server at http://localhost:8000"
+	@echo "   Press Ctrl+C to stop"
+	@cd ktfake/build/dokka/html && python3 -m http.server 8000
+
+docs-open: docs
+	@echo "🛑 Stopping any existing server on port 8000..."
+	@lsof -ti:8000 | xargs kill -9 2>/dev/null || true
+	@sleep 1
+	@echo "🌐 Starting HTTP server in background..."
+	@nohup python3 -m http.server 8000 --directory ktfake/build/dokka/html > /tmp/docs-server.log 2>&1 & echo $$! > /tmp/docs-server.pid; \
+		sleep 2; \
+		echo "✅ Server started at http://localhost:8000 (PID: $$(cat /tmp/docs-server.pid))"; \
+		open http://localhost:8000; \
+		echo "   Logs: /tmp/docs-server.log"; \
+		echo "   To stop server: make docs-stop"
+
+docs-stop:
+	@echo "🛑 Stopping documentation server..."
+	@lsof -ti:8000 | xargs kill -9 2>/dev/null && echo "✅ Server stopped" || echo "⚠️  No server running"
+
+# Help
+help:
+	@echo "📚 Fakt Development Commands:"
+	@echo ""
+	@echo "  build           - Build entire project"
+	@echo "  test            - Run all tests"
+	@echo "  compile         - Compile Kotlin sources"
+	@echo "  clean           - Clean build artifacts"
+	@echo "  format          - Format code with Spotless"
+	@echo ""
+	@echo "  shadowJar       - Build compiler plugin JAR"
+	@echo "  test-sample     - Test single-module sample"
+	@echo "  test-multi-module - Test multi-module sample"
+	@echo ""
+	@echo "  validate        - Full validation workflow"
+	@echo "  quick-test      - Quick development cycle"
+	@echo "  full-rebuild    - Nuclear rebuild option"
+	@echo "  debug           - Debug compiler plugin output"
+	@echo ""
+	@echo "  docs            - Generate Dokka documentation"
+	@echo "  docs-serve      - Generate and serve docs (Ctrl+C to stop)"
+	@echo "  docs-open       - Generate, serve and open docs in browser"
+	@echo "  docs-stop       - Stop documentation server"
+	@echo ""
+	@echo "  help            - Show this help"
