@@ -61,5 +61,5 @@ public annotation class FakeConfig(
     val excludeMethods: Array<String> = [],
     val strictMode: Boolean = false,
     val generateDsl: Boolean = false,
-    val customScope: String = ""
+    val customScope: String = "",
 )

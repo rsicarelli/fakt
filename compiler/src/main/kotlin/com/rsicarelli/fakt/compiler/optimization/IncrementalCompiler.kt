@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.optimization
 
+import com.rsicarelli.fakt.compiler.CompilationMetrics
 import com.rsicarelli.fakt.compiler.CompilerOptimizations
 import com.rsicarelli.fakt.compiler.TypeInfo
-import com.rsicarelli.fakt.compiler.CompilationMetrics
 
 /**
  * Refactored implementation of [CompilerOptimizations] with clear separation of concerns.
@@ -27,9 +27,8 @@ import com.rsicarelli.fakt.compiler.CompilationMetrics
  */
 internal class IncrementalCompiler(
     private val fakeAnnotations: List<String>,
-    outputDir: String? = null
+    outputDir: String? = null,
 ) : CompilerOptimizations {
-
     /** Persistent signature cache */
     private val signatureCache = SignatureCache(outputDir)
 
@@ -45,19 +44,16 @@ internal class IncrementalCompiler(
     /** Compilation metrics for simple reporting */
     private val metrics = CompilationMetrics()
 
-    override fun isConfiguredFor(annotation: String): Boolean {
-        return annotation in fakeAnnotations
-    }
+    override fun isConfiguredFor(annotation: String): Boolean = annotation in fakeAnnotations
 
     override fun indexType(type: TypeInfo) {
         indexedTypes.add(type)
     }
 
-    override fun findTypesWithAnnotation(annotation: String): List<TypeInfo> {
-        return indexedTypes.filter { type ->
+    override fun findTypesWithAnnotation(annotation: String): List<TypeInfo> =
+        indexedTypes.filter { type ->
             type.annotations.any { it == annotation }
         }
-    }
 
     override fun needsRegeneration(type: TypeInfo): Boolean {
         val cacheKey = changeDetector.generateCacheKey(type)
@@ -79,14 +75,13 @@ internal class IncrementalCompiler(
     /**
      * Get current compilation metrics for reporting.
      */
-    fun getMetrics(): CompilationMetrics {
-        return metrics.copy(
+    fun getMetrics(): CompilationMetrics =
+        metrics.copy(
             typesIndexed = indexedTypes.size,
             typesGenerated = generatedTypes.size,
             typesSkipped = indexedTypes.size - generatedTypes.size,
-            annotationsConfigured = fakeAnnotations.size
+            annotationsConfigured = fakeAnnotations.size,
         )
-    }
 
     /**
      * Saves signatures to persistent cache for next compilation.
@@ -103,43 +98,53 @@ internal class IncrementalCompiler(
 
         try {
             val reportMetrics = getMetrics()
-            val reportData = mapOf(
-                "timestamp" to System.currentTimeMillis(),
-                "date" to java.time.LocalDateTime.now().toString(),
-                "compilation" to mapOf(
-                    "typesIndexed" to reportMetrics.typesIndexed,
-                    "typesGenerated" to reportMetrics.typesGenerated,
-                    "typesSkipped" to reportMetrics.typesSkipped,
-                    "compilationTimeMs" to reportMetrics.compilationTimeMs,
-                    "annotationsConfigured" to reportMetrics.annotationsConfigured
-                ),
-                "annotations" to mapOf(
-                    "configured" to fakeAnnotations,
-                    "discovered" to indexedTypes.groupBy { type ->
-                        type.annotations.firstOrNull { isConfiguredFor(it) } ?: "unknown"
-                    }.mapValues { it.value.size }
-                ),
-                "types" to indexedTypes.map { type ->
-                    mapOf(
-                        "name" to type.name,
-                        "package" to type.packageName,
-                        "file" to type.fileName,
-                        "annotations" to type.annotations,
-                        "generated" to (type.signature in generatedTypes)
-                    )
-                }
-            )
+            val reportData =
+                mapOf(
+                    "timestamp" to System.currentTimeMillis(),
+                    "date" to
+                        java.time.LocalDateTime
+                            .now()
+                            .toString(),
+                    "compilation" to
+                        mapOf(
+                            "typesIndexed" to reportMetrics.typesIndexed,
+                            "typesGenerated" to reportMetrics.typesGenerated,
+                            "typesSkipped" to reportMetrics.typesSkipped,
+                            "compilationTimeMs" to reportMetrics.compilationTimeMs,
+                            "annotationsConfigured" to reportMetrics.annotationsConfigured,
+                        ),
+                    "annotations" to
+                        mapOf(
+                            "configured" to fakeAnnotations,
+                            "discovered" to
+                                indexedTypes
+                                    .groupBy { type ->
+                                        type.annotations.firstOrNull { isConfiguredFor(it) } ?: "unknown"
+                                    }.mapValues { it.value.size },
+                        ),
+                    "types" to
+                        indexedTypes.map { type ->
+                            mapOf(
+                                "name" to type.name,
+                                "package" to type.packageName,
+                                "file" to type.fileName,
+                                "annotations" to type.annotations,
+                                "generated" to (type.signature in generatedTypes),
+                            )
+                        },
+                )
 
-            val reportJson = buildString {
-                append("{\n")
-                reportData.entries.forEachIndexed { index, (key, value) ->
-                    append("  \"$key\": ")
-                    append(formatJsonValue(value, 2))
-                    if (index < reportData.size - 1) append(",")
-                    append("\n")
+            val reportJson =
+                buildString {
+                    append("{\n")
+                    reportData.entries.forEachIndexed { index, (key, value) ->
+                        append("  \"$key\": ")
+                        append(formatJsonValue(value, 2))
+                        if (index < reportData.size - 1) append(",")
+                        append("\n")
+                    }
+                    append("}")
                 }
-                append("}")
-            }
 
             val reportFile = java.io.File(outputDir, "ktfakes-report.json")
             reportFile.parentFile?.mkdirs()
@@ -154,30 +159,38 @@ internal class IncrementalCompiler(
     /**
      * Gets cache statistics for debugging.
      */
-    fun getCacheStats(): Map<String, Any> {
-        return mapOf(
+    fun getCacheStats(): Map<String, Any> =
+        mapOf(
             "cacheSize" to signatureCache.size(),
             "indexedTypes" to indexedTypes.size,
             "generatedThisSession" to generatedTypes.size,
-            "annotationsConfigured" to fakeAnnotations.size
+            "annotationsConfigured" to fakeAnnotations.size,
         )
-    }
 
-    private fun formatJsonValue(value: Any?, indent: Int): String {
+    private fun formatJsonValue(
+        value: Any?,
+        indent: Int,
+    ): String {
         val indentStr = " ".repeat(indent)
         return when (value) {
             is String -> "\"$value\""
             is Number -> value.toString()
             is Boolean -> value.toString()
             is List<*> -> {
-                if (value.isEmpty()) "[]"
-                else "[\n${value.joinToString(",\n") { "$indentStr  ${formatJsonValue(it, indent + 2)}" }}\n$indentStr]"
+                if (value.isEmpty()) {
+                    "[]"
+                } else {
+                    "[\n${value.joinToString(",\n") { "$indentStr  ${formatJsonValue(it, indent + 2)}" }}\n$indentStr]"
+                }
             }
             is Map<*, *> -> {
-                if (value.isEmpty()) "{}"
-                else "{\n${value.entries.joinToString(",\n") { (k, v) ->
-                    "$indentStr  \"$k\": ${formatJsonValue(v, indent + 2)}"
-                }}\n$indentStr}"
+                if (value.isEmpty()) {
+                    "{}"
+                } else {
+                    "{\n${value.entries.joinToString(",\n") { (k, v) ->
+                        "$indentStr  \"$k\": ${formatJsonValue(v, indent + 2)}"
+                    }}\n$indentStr}"
+                }
             }
             null -> "null"
             else -> "\"$value\""

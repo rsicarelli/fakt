@@ -14,9 +14,8 @@ import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
  */
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 internal class ConfigurationDslGenerator(
-    private val typeResolver: TypeResolver
+    private val typeResolver: TypeResolver,
 ) {
-
     /**
      * Generates a configuration DSL class for the fake implementation.
      *
@@ -28,7 +27,7 @@ internal class ConfigurationDslGenerator(
     fun generateConfigurationDsl(
         analysis: InterfaceAnalysis,
         fakeClassName: String,
-        packageName: String
+        packageName: String,
     ): String {
         val interfaceName = analysis.interfaceName
         val configClassName = "Fake${interfaceName}Config"
@@ -41,30 +40,35 @@ internal class ConfigurationDslGenerator(
                 val functionName = function.name
 
                 // Use EXACT parameter types for type-safe configuration
-                val parameterTypes = if (function.parameters.isEmpty()) {
-                    ""
-                } else {
-                    function.parameters.joinToString(", ") { param ->
-                        val varargsPrefix = if (param.isVararg) "vararg " else ""
-                        val paramType = if (param.isVararg) {
-                            // For varargs, unwrap Array<T> to T
-                            val arrayType = typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
-                            val unwrappedType = if (arrayType.startsWith("Array<") && arrayType.endsWith(">")) {
-                                arrayType.substring(6, arrayType.length - 1) // Extract T from Array<T>
-                            } else {
-                                "String" // Safe fallback for varargs
-                            }
-                            unwrappedType
-                        } else {
-                            typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                val parameterTypes =
+                    if (function.parameters.isEmpty()) {
+                        ""
+                    } else {
+                        function.parameters.joinToString(", ") { param ->
+                            val varargsPrefix = if (param.isVararg) "vararg " else ""
+                            val paramType =
+                                if (param.isVararg) {
+                                    // For varargs, unwrap Array<T> to T
+                                    val arrayType = typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                                    val unwrappedType =
+                                        if (arrayType.startsWith("Array<") && arrayType.endsWith(">")) {
+                                            arrayType.substring(6, arrayType.length - 1) // Extract T from Array<T>
+                                        } else {
+                                            "String" // Safe fallback for varargs
+                                        }
+                                    unwrappedType
+                                } else {
+                                    typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                                }
+                            varargsPrefix + paramType
                         }
-                        varargsPrefix + paramType
                     }
-                }
 
                 val returnType = typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
                 val suspendModifier = if (function.isSuspend) "suspend " else ""
-                appendLine("    fun $functionName(behavior: ${suspendModifier}($parameterTypes) -> $returnType) { fake.configure${functionName.capitalize()}(behavior) }")
+                appendLine(
+                    "    fun $functionName(behavior: $suspendModifier($parameterTypes) -> $returnType) { fake.configure${functionName.capitalize()}(behavior) }",
+                )
             }
 
             // Generate configuration methods for properties (TYPE-SAFE: Use exact types)

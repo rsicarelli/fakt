@@ -2,16 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler
 
+import com.rsicarelli.fakt.compiler.UnifiedFaktIrGenerationExtension
+import com.rsicarelli.fakt.compiler.fir.FaktFirExtensionRegistrar
+import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
-import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
+import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
-import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
-import com.rsicarelli.fakt.compiler.fir.FaktFirExtensionRegistrar
-import com.rsicarelli.fakt.compiler.UnifiedFaktIrGenerationExtension
 
 /**
  * Main entry point for the KtFake compiler plugin with unified IR-native architecture.
@@ -29,7 +29,6 @@ import com.rsicarelli.fakt.compiler.UnifiedFaktIrGenerationExtension
  */
 @OptIn(ExperimentalCompilerApi::class)
 public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
-
     override val supportsK2: Boolean = true
 
     @OptIn(ExperimentalCompilerApi::class)
@@ -38,11 +37,11 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
 
         messageCollector.report(
             CompilerMessageSeverity.INFO,
-            "============================================"
+            "============================================",
         )
         messageCollector.report(
             CompilerMessageSeverity.INFO,
-            "KtFakes: Compiler Plugin Registrar Invoked"
+            "KtFakes: Compiler Plugin Registrar Invoked",
         )
 
         // Pass the configuration to the options loader
@@ -50,17 +49,17 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
 
         messageCollector.report(
             CompilerMessageSeverity.INFO,
-            "KtFakes: Plugin enabled: ${options.enabled}"
+            "KtFakes: Plugin enabled: ${options.enabled}",
         )
 
         if (!options.enabled) {
             messageCollector.report(
                 CompilerMessageSeverity.INFO,
-                "KtFakes: Plugin disabled, skipping registration"
+                "KtFakes: Plugin disabled, skipping registration",
             )
             messageCollector.report(
                 CompilerMessageSeverity.INFO,
-                "============================================"
+                "============================================",
             )
             return
         }
@@ -68,41 +67,42 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
         if (options.debug) {
             messageCollector.report(
                 CompilerMessageSeverity.INFO,
-                "KtFake compiler plugin enabled with options: $options"
+                "KtFake compiler plugin enabled with options: $options",
             )
         }
 
         // Register FIR extensions for analysis phase
         messageCollector.report(
             CompilerMessageSeverity.INFO,
-            "KtFakes: Registering FIR extension"
+            "KtFakes: Registering FIR extension",
         )
         FirExtensionRegistrarAdapter.registerExtension(FaktFirExtensionRegistrar())
 
         // Register unified IR-native generation extension with custom annotation support
-        val customAnnotations = listOf(
-            "com.rsicarelli.fakt.Fake",
-            "test.sample.CompanyTestDouble"  // Test custom annotation
-        )
+        val customAnnotations =
+            listOf(
+                "com.rsicarelli.fakt.Fake",
+                "test.sample.CompanyTestDouble", // Test custom annotation
+            )
         messageCollector.report(
             CompilerMessageSeverity.INFO,
-            "KtFakes: Registering IR generation extension"
+            "KtFakes: Registering IR generation extension",
         )
         IrGenerationExtension.registerExtension(
             UnifiedFaktIrGenerationExtension(
                 messageCollector = messageCollector,
                 outputDir = options.outputDir,
-                fakeAnnotations = customAnnotations
-            )
+                fakeAnnotations = customAnnotations,
+            ),
         )
 
         messageCollector.report(
             CompilerMessageSeverity.INFO,
-            "KtFake compiler plugin registered successfully"
+            "KtFake compiler plugin registered successfully",
         )
         messageCollector.report(
             CompilerMessageSeverity.INFO,
-            "============================================"
+            "============================================",
         )
     }
 }
@@ -117,7 +117,7 @@ internal data class FaktOptions(
     val generateCallTracking: Boolean = true,
     val generateBuilderPatterns: Boolean = true,
     val strictMode: Boolean = false,
-    val outputDir: String? = null
+    val outputDir: String? = null,
 ) {
     companion object {
         fun load(configuration: CompilerConfiguration): FaktOptions {
@@ -130,20 +130,19 @@ internal data class FaktOptions(
             return FaktOptions(
                 enabled = enabled,
                 debug = debug,
-                outputDir = outputDir
+                outputDir = outputDir,
             )
         }
     }
 
-    override fun toString(): String {
-        return """
-            FaktOptions(
-                enabled=$enabled,
-                debug=$debug,
-                generateCallTracking=$generateCallTracking,
-                generateBuilderPatterns=$generateBuilderPatterns,
-                strictMode=$strictMode
-            )
+    override fun toString(): String =
+        """
+        FaktOptions(
+            enabled=$enabled,
+            debug=$debug,
+            generateCallTracking=$generateCallTracking,
+            generateBuilderPatterns=$generateBuilderPatterns,
+            strictMode=$strictMode
+        )
         """.trimIndent()
-    }
 }

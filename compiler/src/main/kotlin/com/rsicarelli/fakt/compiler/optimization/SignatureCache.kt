@@ -15,7 +15,7 @@ import java.io.File
  * @since 1.0.0
  */
 internal class SignatureCache(
-    private val outputDir: String?
+    private val outputDir: String?,
 ) {
     /** In-memory cache of interface signatures: typeKey -> signature */
     private val signatures = mutableMapOf<String, String>()
@@ -30,9 +30,7 @@ internal class SignatureCache(
      * @param typeKey Unique identifier for the type (fullyQualifiedName@fileName)
      * @return Cached signature or null if not found
      */
-    fun getSignature(typeKey: String): String? {
-        return signatures[typeKey]
-    }
+    fun getSignature(typeKey: String): String? = signatures[typeKey]
 
     /**
      * Stores a signature for a type in the cache.
@@ -40,7 +38,10 @@ internal class SignatureCache(
      * @param typeKey Unique identifier for the type
      * @param signature Interface signature for change detection
      */
-    fun putSignature(typeKey: String, signature: String) {
+    fun putSignature(
+        typeKey: String,
+        signature: String,
+    ) {
         signatures[typeKey] = signature
     }
 
@@ -50,18 +51,14 @@ internal class SignatureCache(
      * @param typeKey Unique identifier for the type
      * @return true if signature is cached, false otherwise
      */
-    fun hasSignature(typeKey: String): Boolean {
-        return typeKey in signatures
-    }
+    fun hasSignature(typeKey: String): Boolean = typeKey in signatures
 
     /**
      * Gets the number of cached signatures.
      *
      * @return Count of signatures in cache
      */
-    fun size(): Int {
-        return signatures.size
-    }
+    fun size(): Int = signatures.size
 
     /**
      * Saves all cached signatures to persistent storage.
@@ -76,9 +73,10 @@ internal class SignatureCache(
             val cacheFile = File(outputDir, CACHE_FILE_NAME)
             cacheFile.parentFile?.mkdirs()
 
-            val content = signatures.entries.joinToString("\n") { (key, signature) ->
-                "$key=$signature"
-            }
+            val content =
+                signatures.entries.joinToString("\n") { (key, signature) ->
+                    "$key=$signature"
+                }
 
             cacheFile.writeText(content)
             println("KtFakes: Saved ${signatures.size} signatures to cache")
@@ -97,9 +95,7 @@ internal class SignatureCache(
     /**
      * Gets all cached signatures as a read-only map.
      */
-    fun getAllSignatures(): Map<String, String> {
-        return signatures.toMap()
-    }
+    fun getAllSignatures(): Map<String, String> = signatures.toMap()
 
     /**
      * Loads signatures from persistent storage if available.

@@ -52,9 +52,8 @@ import org.jetbrains.kotlin.ir.util.packageFqName
 class UnifiedFaktIrGenerationExtension(
     private val messageCollector: MessageCollector? = null,
     private val outputDir: String? = null,
-    private val fakeAnnotations: List<String> = listOf("com.rsicarelli.fakt.Fake")
+    private val fakeAnnotations: List<String> = listOf("com.rsicarelli.fakt.Fake"),
 ) : IrGenerationExtension {
-
     private val optimizations = CompilerOptimizations(fakeAnnotations, outputDir)
 
     // Extracted modules following DRY principles
@@ -68,17 +67,21 @@ class UnifiedFaktIrGenerationExtension(
     private val implementationGenerator = ImplementationGenerator(typeResolver)
     private val factoryGenerator = FactoryGenerator()
     private val configurationDslGenerator = ConfigurationDslGenerator(typeResolver)
-    private val codeGenerator = CodeGenerator(
-        typeResolver = typeResolver,
-        importResolver = importResolver,
-        sourceSetMapper = sourceSetMapper,
-        implementationGenerator = implementationGenerator,
-        factoryGenerator = factoryGenerator,
-        configurationDslGenerator = configurationDslGenerator,
-        messageCollector = messageCollector
-    )
+    private val codeGenerator =
+        CodeGenerator(
+            typeResolver = typeResolver,
+            importResolver = importResolver,
+            sourceSetMapper = sourceSetMapper,
+            implementationGenerator = implementationGenerator,
+            factoryGenerator = factoryGenerator,
+            configurationDslGenerator = configurationDslGenerator,
+            messageCollector = messageCollector,
+        )
 
-    override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
+    override fun generate(
+        moduleFragment: IrModuleFragment,
+        pluginContext: IrPluginContext,
+    ) {
         messageCollector?.reportInfo("============================================")
         messageCollector?.reportInfo("KtFakes: IR Generation Extension Invoked")
         messageCollector?.reportInfo("KtFakes: Module: ${moduleFragment.name}")
@@ -107,14 +110,15 @@ class UnifiedFaktIrGenerationExtension(
                 val interfaceName = fakeInterface.name.asString()
 
                 // Check if this interface needs regeneration (incremental compilation optimization)
-                val typeInfo = TypeInfo(
-                    name = interfaceName,
-                    fullyQualifiedName = fakeInterface.kotlinFqName.asString(),
-                    packageName = fakeInterface.packageFqName?.asString() ?: "",
-                    fileName = "",
-                    annotations = fakeInterface.annotations.mapNotNull { it.type.classFqName?.asString() },
-                    signature = computeInterfaceSignature(fakeInterface)
-                )
+                val typeInfo =
+                    TypeInfo(
+                        name = interfaceName,
+                        fullyQualifiedName = fakeInterface.kotlinFqName.asString(),
+                        packageName = fakeInterface.packageFqName?.asString() ?: "",
+                        fileName = "",
+                        annotations = fakeInterface.annotations.mapNotNull { it.type.classFqName?.asString() },
+                        signature = computeInterfaceSignature(fakeInterface),
+                    )
 
                 if (!optimizations.needsRegeneration(typeInfo)) {
                     messageCollector?.reportInfo("KtFakes: Skipping unchanged interface: $interfaceName")
@@ -137,7 +141,7 @@ class UnifiedFaktIrGenerationExtension(
                 codeGenerator.generateWorkingFakeImplementation(
                     sourceInterface = fakeInterface,
                     analysis = interfaceAnalysis,
-                    moduleFragment = moduleFragment
+                    moduleFragment = moduleFragment,
                 )
 
                 // Record successful generation for incremental compilation
@@ -154,11 +158,10 @@ class UnifiedFaktIrGenerationExtension(
             messageCollector?.report(
                 org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.ERROR,
                 "KtFakes: IR-native generation failed: ${e.message}",
-                null
+                null,
             )
         }
     }
-
 
     private fun MessageCollector.reportInfo(message: String) {
         this.report(org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.INFO, message)

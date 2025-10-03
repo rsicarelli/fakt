@@ -11,7 +11,6 @@ import kotlin.test.assertTrue
  * Full IR integration tests will be added when integrated with the main compiler.
  */
 class GenericPatternAnalyzerTest {
-
     private val analyzer = GenericPatternAnalyzer()
 
     @Test
@@ -36,8 +35,11 @@ class GenericPatternAnalyzerTest {
     fun `GIVEN GenericPatternAnalyzer WHEN detecting contextual types from interface THEN should access detection method`() {
         // Test contextual type detection using reflection
         val analyzerClass = analyzer::class.java
-        val detectContextualTypesMethod = analyzerClass.getDeclaredMethod("detectContextualTypes",
-            org.jetbrains.kotlin.ir.declarations.IrClass::class.java)
+        val detectContextualTypesMethod =
+            analyzerClass.getDeclaredMethod(
+                "detectContextualTypes",
+                org.jetbrains.kotlin.ir.declarations.IrClass::class.java,
+            )
         detectContextualTypesMethod.isAccessible = true
 
         // For now, we'll test the logic without full IR mocks
@@ -67,10 +69,11 @@ class GenericPatternAnalyzerTest {
 
     @Test
     fun `GIVEN ClassLevelGenerics pattern WHEN getting analysis summary THEN should describe generic type parameters`() {
-        val classLevelPattern = GenericPattern.ClassLevelGenerics(
-            typeParameters = emptyList(), // In real usage, would have actual IrTypeParameters
-            constraints = emptyList()
-        )
+        val classLevelPattern =
+            GenericPattern.ClassLevelGenerics(
+                typeParameters = emptyList(), // In real usage, would have actual IrTypeParameters
+                constraints = emptyList(),
+            )
         val summary = analyzer.getAnalysisSummary(classLevelPattern)
 
         assertTrue(summary.contains("Class-level generics"))
@@ -79,11 +82,12 @@ class GenericPatternAnalyzerTest {
 
     @Test
     fun `GIVEN MethodLevelGenerics pattern WHEN getting analysis summary THEN should include detected types and patterns`() {
-        val methodLevelPattern = GenericPattern.MethodLevelGenerics(
-            genericMethods = emptyList(),
-            detectedTypes = setOf("User", "Order"),
-            transformationPatterns = listOf(TransformationPattern("User", "UserDto"))
-        )
+        val methodLevelPattern =
+            GenericPattern.MethodLevelGenerics(
+                genericMethods = emptyList(),
+                detectedTypes = setOf("User", "Order"),
+                transformationPatterns = listOf(TransformationPattern("User", "UserDto")),
+            )
         val summary = analyzer.getAnalysisSummary(methodLevelPattern)
 
         assertTrue(summary.contains("Method-level generics"))
@@ -93,13 +97,14 @@ class GenericPatternAnalyzerTest {
 
     @Test
     fun `GIVEN MixedGenerics pattern WHEN getting analysis summary THEN should describe both class and method generics`() {
-        val mixedPattern = GenericPattern.MixedGenerics(
-            classTypeParameters = emptyList(),
-            classConstraints = emptyList(),
-            genericMethods = emptyList(),
-            detectedTypes = setOf("User"),
-            transformationPatterns = emptyList()
-        )
+        val mixedPattern =
+            GenericPattern.MixedGenerics(
+                classTypeParameters = emptyList(),
+                classConstraints = emptyList(),
+                genericMethods = emptyList(),
+                detectedTypes = setOf("User"),
+                transformationPatterns = emptyList(),
+            )
         val summary = analyzer.getAnalysisSummary(mixedPattern)
 
         assertTrue(summary.contains("Mixed generics"))

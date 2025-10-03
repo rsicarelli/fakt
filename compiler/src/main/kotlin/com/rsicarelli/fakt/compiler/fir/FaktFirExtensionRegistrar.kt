@@ -17,7 +17,6 @@ import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
  * - Error reporting infrastructure
  */
 class FaktFirExtensionRegistrar : FirExtensionRegistrar() {
-
     /**
      * Configure the FIR plugin extensions.
      *

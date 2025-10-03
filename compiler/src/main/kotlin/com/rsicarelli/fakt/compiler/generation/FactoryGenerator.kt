@@ -11,7 +11,6 @@ import com.rsicarelli.fakt.compiler.analysis.InterfaceAnalysis
  * @since 1.0.0
  */
 internal class FactoryGenerator {
-
     /**
      * Generates a factory function for the fake implementation.
      *
@@ -23,19 +22,20 @@ internal class FactoryGenerator {
     fun generateFactoryFunction(
         analysis: InterfaceAnalysis,
         fakeClassName: String,
-        packageName: String
+        packageName: String,
     ): String {
         val interfaceName = analysis.interfaceName
-        val factoryFunctionName = "fake${interfaceName}"
+        val factoryFunctionName = "fake$interfaceName"
         val configClassName = "Fake${interfaceName}Config"
 
         // Handle interface-level generics for NoGenerics pattern
-        val interfaceWithGenerics = if (analysis.typeParameters.isNotEmpty()) {
-            val genericParams = analysis.typeParameters.joinToString(", ") { "Any" }
-            "$interfaceName<$genericParams>"
-        } else {
-            interfaceName
-        }
+        val interfaceWithGenerics =
+            if (analysis.typeParameters.isNotEmpty()) {
+                val genericParams = analysis.typeParameters.joinToString(", ") { "Any" }
+                "$interfaceName<$genericParams>"
+            } else {
+                interfaceName
+            }
 
         return buildString {
             appendLine("fun $factoryFunctionName(configure: $configClassName.() -> Unit = {}): $interfaceWithGenerics {")

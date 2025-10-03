@@ -19,7 +19,6 @@ import kotlin.test.assertTrue
  * Uses TDD approach with GIVEN-WHEN-THEN structure for all scenarios.
  */
 class CompilerOptimizationsTest {
-
     @Test
     fun `GIVEN default configuration WHEN creating optimizations THEN should support standard Fake annotation`() {
         // GIVEN - Default configuration
@@ -33,10 +32,11 @@ class CompilerOptimizationsTest {
     @Test
     fun `GIVEN custom annotation configuration WHEN creating optimizations THEN should support only configured annotations`() {
         // GIVEN
-        val customAnnotations = listOf(
-            "com.company.TestDouble",
-            "com.enterprise.MockService"
-        )
+        val customAnnotations =
+            listOf(
+                "com.company.TestDouble",
+                "com.enterprise.MockService",
+            )
 
         // WHEN
         val optimizations = CompilerOptimizations(customAnnotations)
@@ -51,12 +51,13 @@ class CompilerOptimizationsTest {
     @Test
     fun `GIVEN multiple annotations WHEN configuring optimizations THEN should support all provided annotations`() {
         // GIVEN
-        val annotations = listOf(
-            "com.company.TestDouble",
-            "org.framework.Mock",
-            "com.rsicarelli.fakt.Fake",
-            "com.enterprise.FakeService"
-        )
+        val annotations =
+            listOf(
+                "com.company.TestDouble",
+                "org.framework.Mock",
+                "com.rsicarelli.fakt.Fake",
+                "com.enterprise.FakeService",
+            )
 
         // WHEN
         val optimizations = CompilerOptimizations(annotations)
@@ -86,14 +87,15 @@ class CompilerOptimizationsTest {
         val targetAnnotation = "com.company.TestDouble"
         val optimizations = CompilerOptimizations(listOf(targetAnnotation))
 
-        val userServiceType = TypeInfo(
-            name = "UserService",
-            fullyQualifiedName = "com.example.UserService",
-            packageName = "com.example",
-            fileName = "UserService.kt",
-            annotations = listOf(targetAnnotation),
-            signature = "interface UserService { fun getUser(): String }"
-        )
+        val userServiceType =
+            TypeInfo(
+                name = "UserService",
+                fullyQualifiedName = "com.example.UserService",
+                packageName = "com.example",
+                fileName = "UserService.kt",
+                annotations = listOf(targetAnnotation),
+                signature = "interface UserService { fun getUser(): String }",
+            )
 
         // WHEN
         optimizations.indexType(userServiceType)
@@ -112,14 +114,15 @@ class CompilerOptimizationsTest {
         val wrongAnnotation = "com.other.DifferentAnnotation"
         val optimizations = CompilerOptimizations(listOf(targetAnnotation))
 
-        val userServiceType = TypeInfo(
-            name = "UserService",
-            fullyQualifiedName = "com.example.UserService",
-            packageName = "com.example",
-            fileName = "UserService.kt",
-            annotations = listOf(wrongAnnotation),
-            signature = "interface UserService { fun getUser(): String }"
-        )
+        val userServiceType =
+            TypeInfo(
+                name = "UserService",
+                fullyQualifiedName = "com.example.UserService",
+                packageName = "com.example",
+                fileName = "UserService.kt",
+                annotations = listOf(wrongAnnotation),
+                signature = "interface UserService { fun getUser(): String }",
+            )
 
         // WHEN
         optimizations.indexType(userServiceType)
@@ -135,18 +138,20 @@ class CompilerOptimizationsTest {
         val targetAnnotation = "com.company.TestDouble"
         val optimizations = CompilerOptimizations(listOf(targetAnnotation))
 
-        val userServiceType = TypeInfo(
-            name = "UserService",
-            fullyQualifiedName = "com.example.UserService",
-            packageName = "com.example",
-            fileName = "UserService.kt",
-            annotations = listOf(
-                "javax.inject.Inject",
-                targetAnnotation,  // Target annotation present
-                "org.springframework.stereotype.Service"
-            ),
-            signature = "interface UserService { fun getUser(): String }"
-        )
+        val userServiceType =
+            TypeInfo(
+                name = "UserService",
+                fullyQualifiedName = "com.example.UserService",
+                packageName = "com.example",
+                fileName = "UserService.kt",
+                annotations =
+                    listOf(
+                        "javax.inject.Inject",
+                        targetAnnotation, // Target annotation present
+                        "org.springframework.stereotype.Service",
+                    ),
+                signature = "interface UserService { fun getUser(): String }",
+            )
 
         // WHEN
         optimizations.indexType(userServiceType)
@@ -164,32 +169,35 @@ class CompilerOptimizationsTest {
         val otherAnnotation = "com.other.Mock"
         val optimizations = CompilerOptimizations(listOf(targetAnnotation))
 
-        val userServiceType = TypeInfo(
-            name = "UserService",
-            fullyQualifiedName = "com.example.UserService",
-            packageName = "com.example",
-            fileName = "UserService.kt",
-            annotations = listOf(targetAnnotation),
-            signature = "interface UserService { fun getUser(): String }"
-        )
+        val userServiceType =
+            TypeInfo(
+                name = "UserService",
+                fullyQualifiedName = "com.example.UserService",
+                packageName = "com.example",
+                fileName = "UserService.kt",
+                annotations = listOf(targetAnnotation),
+                signature = "interface UserService { fun getUser(): String }",
+            )
 
-        val orderServiceType = TypeInfo(
-            name = "OrderService",
-            fullyQualifiedName = "com.example.OrderService",
-            packageName = "com.example",
-            fileName = "OrderService.kt",
-            annotations = listOf(otherAnnotation),
-            signature = "interface OrderService { fun getOrders(): List<Order> }"
-        )
+        val orderServiceType =
+            TypeInfo(
+                name = "OrderService",
+                fullyQualifiedName = "com.example.OrderService",
+                packageName = "com.example",
+                fileName = "OrderService.kt",
+                annotations = listOf(otherAnnotation),
+                signature = "interface OrderService { fun getOrders(): List<Order> }",
+            )
 
-        val paymentServiceType = TypeInfo(
-            name = "PaymentService",
-            fullyQualifiedName = "com.example.PaymentService",
-            packageName = "com.example",
-            fileName = "PaymentService.kt",
-            annotations = listOf(targetAnnotation),
-            signature = "interface PaymentService { fun processPayment(): Boolean }"
-        )
+        val paymentServiceType =
+            TypeInfo(
+                name = "PaymentService",
+                fullyQualifiedName = "com.example.PaymentService",
+                packageName = "com.example",
+                fileName = "PaymentService.kt",
+                annotations = listOf(targetAnnotation),
+                signature = "interface PaymentService { fun processPayment(): Boolean }",
+            )
 
         // WHEN
         optimizations.indexType(userServiceType)
@@ -209,14 +217,15 @@ class CompilerOptimizationsTest {
     fun `GIVEN new type WHEN checking regeneration THEN should return true`() {
         // GIVEN
         val optimizations = CompilerOptimizations()
-        val newType = TypeInfo(
-            name = "UserService",
-            fullyQualifiedName = "com.example.UserService",
-            packageName = "com.example",
-            fileName = "UserService.kt",
-            annotations = listOf("com.rsicarelli.fakt.Fake"),
-            signature = "interface UserService { fun getUser(): String }"
-        )
+        val newType =
+            TypeInfo(
+                name = "UserService",
+                fullyQualifiedName = "com.example.UserService",
+                packageName = "com.example",
+                fileName = "UserService.kt",
+                annotations = listOf("com.rsicarelli.fakt.Fake"),
+                signature = "interface UserService { fun getUser(): String }",
+            )
 
         // WHEN
         val needsRegeneration = optimizations.needsRegeneration(newType)
@@ -229,14 +238,15 @@ class CompilerOptimizationsTest {
     fun `GIVEN generated type WHEN checking regeneration with same signature THEN should return false`() {
         // GIVEN
         val optimizations = CompilerOptimizations()
-        val typeInfo = TypeInfo(
-            name = "UserService",
-            fullyQualifiedName = "com.example.UserService",
-            packageName = "com.example",
-            fileName = "UserService.kt",
-            annotations = listOf("com.rsicarelli.fakt.Fake"),
-            signature = "interface UserService { fun getUser(): String }"
-        )
+        val typeInfo =
+            TypeInfo(
+                name = "UserService",
+                fullyQualifiedName = "com.example.UserService",
+                packageName = "com.example",
+                fileName = "UserService.kt",
+                annotations = listOf("com.rsicarelli.fakt.Fake"),
+                signature = "interface UserService { fun getUser(): String }",
+            )
 
         // WHEN
         optimizations.recordGeneration(typeInfo)
@@ -250,18 +260,20 @@ class CompilerOptimizationsTest {
     fun `GIVEN generated type WHEN signature changes THEN should return true for regeneration`() {
         // GIVEN
         val optimizations = CompilerOptimizations()
-        val originalType = TypeInfo(
-            name = "UserService",
-            fullyQualifiedName = "com.example.UserService",
-            packageName = "com.example",
-            fileName = "UserService.kt",
-            annotations = listOf("com.rsicarelli.fakt.Fake"),
-            signature = "interface UserService { fun getUser(): String }"
-        )
+        val originalType =
+            TypeInfo(
+                name = "UserService",
+                fullyQualifiedName = "com.example.UserService",
+                packageName = "com.example",
+                fileName = "UserService.kt",
+                annotations = listOf("com.rsicarelli.fakt.Fake"),
+                signature = "interface UserService { fun getUser(): String }",
+            )
 
-        val changedType = originalType.copy(
-            signature = "interface UserService { fun getUser(): String; fun setUser(user: String): Unit }"
-        )
+        val changedType =
+            originalType.copy(
+                signature = "interface UserService { fun getUser(): String; fun setUser(user: String): Unit }",
+            )
 
         // WHEN
         optimizations.recordGeneration(originalType)
@@ -276,23 +288,25 @@ class CompilerOptimizationsTest {
         // GIVEN
         val optimizations = CompilerOptimizations()
 
-        val userServiceType = TypeInfo(
-            name = "UserService",
-            fullyQualifiedName = "com.example.UserService",
-            packageName = "com.example",
-            fileName = "UserService.kt",
-            annotations = listOf("com.rsicarelli.fakt.Fake"),
-            signature = "interface UserService { fun getUser(): String }"
-        )
+        val userServiceType =
+            TypeInfo(
+                name = "UserService",
+                fullyQualifiedName = "com.example.UserService",
+                packageName = "com.example",
+                fileName = "UserService.kt",
+                annotations = listOf("com.rsicarelli.fakt.Fake"),
+                signature = "interface UserService { fun getUser(): String }",
+            )
 
-        val orderServiceType = TypeInfo(
-            name = "OrderService",
-            fullyQualifiedName = "com.example.OrderService",
-            packageName = "com.example",
-            fileName = "OrderService.kt",
-            annotations = listOf("com.rsicarelli.fakt.Fake"),
-            signature = "interface OrderService { fun getOrders(): List<Order> }"
-        )
+        val orderServiceType =
+            TypeInfo(
+                name = "OrderService",
+                fullyQualifiedName = "com.example.OrderService",
+                packageName = "com.example",
+                fileName = "OrderService.kt",
+                annotations = listOf("com.rsicarelli.fakt.Fake"),
+                signature = "interface OrderService { fun getOrders(): List<Order> }",
+            )
 
         // WHEN
         optimizations.recordGeneration(userServiceType)
@@ -330,20 +344,22 @@ class CompilerOptimizationsTest {
         // Index many types to test performance
         repeat(1000) { index ->
             val hasTargetAnnotation = index % 10 == 0 // Every 10th type has target annotation
-            val annotations = if (hasTargetAnnotation) {
-                listOf(targetAnnotation)
-            } else {
-                listOf("com.other.Annotation$index")
-            }
+            val annotations =
+                if (hasTargetAnnotation) {
+                    listOf(targetAnnotation)
+                } else {
+                    listOf("com.other.Annotation$index")
+                }
 
-            val typeInfo = TypeInfo(
-                name = "Service$index",
-                fullyQualifiedName = "com.example.Service$index",
-                packageName = "com.example",
-                fileName = "Service$index.kt",
-                annotations = annotations,
-                signature = "interface Service$index { fun method$index(): String }"
-            )
+            val typeInfo =
+                TypeInfo(
+                    name = "Service$index",
+                    fullyQualifiedName = "com.example.Service$index",
+                    packageName = "com.example",
+                    fileName = "Service$index.kt",
+                    annotations = annotations,
+                    signature = "interface Service$index { fun method$index(): String }",
+                )
             optimizations.indexType(typeInfo)
         }
 

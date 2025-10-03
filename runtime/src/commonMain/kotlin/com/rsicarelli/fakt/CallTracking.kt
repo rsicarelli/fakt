@@ -47,5 +47,5 @@ public annotation class CallTracking(
     val captureReturnValues: Boolean = false,
     val maxCalls: Int = -1,
     val enableTimestamps: Boolean = false,
-    val autoVerify: Boolean = false
+    val autoVerify: Boolean = false,
 )

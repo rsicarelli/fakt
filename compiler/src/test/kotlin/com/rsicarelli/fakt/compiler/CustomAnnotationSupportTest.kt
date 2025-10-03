@@ -23,16 +23,16 @@ import kotlin.test.assertTrue
  * being hardcoded to `dev.rsicarelli.ktfake.Fake`.
  */
 class CustomAnnotationSupportTest {
-
     @Test
     fun `GIVEN custom annotation configuration WHEN creating compiler THEN should accept any annotation`() {
         // GIVEN
         val customAnnotation = "com.company.testing.TestDouble"
 
         // WHEN
-        val optimizations = CompilerOptimizations(
-            fakeAnnotations = listOf(customAnnotation)
-        )
+        val optimizations =
+            CompilerOptimizations(
+                fakeAnnotations = listOf(customAnnotation),
+            )
 
         // THEN
         assertTrue(optimizations.isConfiguredFor(customAnnotation))
@@ -41,16 +41,18 @@ class CustomAnnotationSupportTest {
     @Test
     fun `GIVEN multiple annotation configuration WHEN checking types THEN should support all annotations`() {
         // GIVEN
-        val annotations = listOf(
-            "com.company.TestDouble",
-            "org.framework.Mock",
-            "com.rsicarelli.fakt.Fake"
-        )
+        val annotations =
+            listOf(
+                "com.company.TestDouble",
+                "org.framework.Mock",
+                "com.rsicarelli.fakt.Fake",
+            )
 
         // WHEN
-        val optimizations = CompilerOptimizations(
-            fakeAnnotations = annotations
-        )
+        val optimizations =
+            CompilerOptimizations(
+                fakeAnnotations = annotations,
+            )
 
         // THEN
         annotations.forEach { annotation ->
@@ -62,18 +64,20 @@ class CustomAnnotationSupportTest {
     fun `GIVEN type discovery WHEN using custom annotation THEN should find annotated types`() {
         // GIVEN
         val customAnnotation = "com.company.TestDouble"
-        val optimizations = CompilerOptimizations(
-            fakeAnnotations = listOf(customAnnotation)
-        )
+        val optimizations =
+            CompilerOptimizations(
+                fakeAnnotations = listOf(customAnnotation),
+            )
 
-        val mockType = TypeInfo(
-            name = "UserService",
-            fullyQualifiedName = "com.example.UserService",
-            packageName = "com.example",
-            fileName = "UserService.kt",
-            annotations = listOf(customAnnotation),
-            signature = "interface UserService { fun getUser(): String }"
-        )
+        val mockType =
+            TypeInfo(
+                name = "UserService",
+                fullyQualifiedName = "com.example.UserService",
+                packageName = "com.example",
+                fileName = "UserService.kt",
+                annotations = listOf(customAnnotation),
+                signature = "interface UserService { fun getUser(): String }",
+            )
 
         // WHEN
         optimizations.indexType(mockType)
@@ -90,18 +94,20 @@ class CustomAnnotationSupportTest {
         val targetAnnotation = "com.company.TestDouble"
         val wrongAnnotation = "com.other.SomeOtherAnnotation"
 
-        val optimizations = CompilerOptimizations(
-            fakeAnnotations = listOf(targetAnnotation)
-        )
+        val optimizations =
+            CompilerOptimizations(
+                fakeAnnotations = listOf(targetAnnotation),
+            )
 
-        val mockType = TypeInfo(
-            name = "UserService",
-            fullyQualifiedName = "com.example.UserService",
-            packageName = "com.example",
-            fileName = "UserService.kt",
-            annotations = listOf(wrongAnnotation), // Wrong annotation
-            signature = "interface UserService { fun getUser(): String }"
-        )
+        val mockType =
+            TypeInfo(
+                name = "UserService",
+                fullyQualifiedName = "com.example.UserService",
+                packageName = "com.example",
+                fileName = "UserService.kt",
+                annotations = listOf(wrongAnnotation), // Wrong annotation
+                signature = "interface UserService { fun getUser(): String }",
+            )
 
         // WHEN
         optimizations.indexType(mockType)
@@ -115,22 +121,25 @@ class CustomAnnotationSupportTest {
     fun `GIVEN type with multiple annotations WHEN discovering THEN should find if any match`() {
         // GIVEN
         val targetAnnotation = "com.company.TestDouble"
-        val optimizations = CompilerOptimizations(
-            fakeAnnotations = listOf(targetAnnotation)
-        )
+        val optimizations =
+            CompilerOptimizations(
+                fakeAnnotations = listOf(targetAnnotation),
+            )
 
-        val mockType = TypeInfo(
-            name = "UserService",
-            fullyQualifiedName = "com.example.UserService",
-            packageName = "com.example",
-            fileName = "UserService.kt",
-            annotations = listOf(
-                "javax.inject.Inject",
-                targetAnnotation,  // Target annotation present
-                "org.springframework.stereotype.Service"
-            ),
-            signature = "interface UserService { fun getUser(): String }"
-        )
+        val mockType =
+            TypeInfo(
+                name = "UserService",
+                fullyQualifiedName = "com.example.UserService",
+                packageName = "com.example",
+                fileName = "UserService.kt",
+                annotations =
+                    listOf(
+                        "javax.inject.Inject",
+                        targetAnnotation, // Target annotation present
+                        "org.springframework.stereotype.Service",
+                    ),
+                signature = "interface UserService { fun getUser(): String }",
+            )
 
         // WHEN
         optimizations.indexType(mockType)
@@ -145,22 +154,25 @@ class CustomAnnotationSupportTest {
     fun `GIVEN incremental compilation WHEN type signature changes THEN should detect change regardless of annotation`() {
         // GIVEN
         val customAnnotation = "com.company.TestDouble"
-        val optimizations = CompilerOptimizations(
-            fakeAnnotations = listOf(customAnnotation)
-        )
+        val optimizations =
+            CompilerOptimizations(
+                fakeAnnotations = listOf(customAnnotation),
+            )
 
-        val originalType = TypeInfo(
-            name = "UserService",
-            fullyQualifiedName = "com.example.UserService",
-            packageName = "com.example",
-            fileName = "UserService.kt",
-            annotations = listOf(customAnnotation),
-            signature = "interface UserService { fun getUser(): String }"
-        )
+        val originalType =
+            TypeInfo(
+                name = "UserService",
+                fullyQualifiedName = "com.example.UserService",
+                packageName = "com.example",
+                fileName = "UserService.kt",
+                annotations = listOf(customAnnotation),
+                signature = "interface UserService { fun getUser(): String }",
+            )
 
-        val changedType = originalType.copy(
-            signature = "interface UserService { fun getUser(): String; fun setUser(user: String): Unit }"
-        )
+        val changedType =
+            originalType.copy(
+                signature = "interface UserService { fun getUser(): String; fun setUser(user: String): Unit }",
+            )
 
         // WHEN
         optimizations.recordGeneration(originalType)

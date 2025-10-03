@@ -15,9 +15,8 @@ import org.jetbrains.kotlin.ir.types.isAny
  */
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 internal class ImplementationGenerator(
-    private val typeResolver: TypeResolver
+    private val typeResolver: TypeResolver,
 ) {
-
     companion object {
         // Regex patterns for generic type detection (moved outside class for performance)
         private val GENERIC_TYPE_PATTERN = Regex(".*\\b[A-Z]\\b.*")
@@ -32,16 +31,17 @@ internal class ImplementationGenerator(
      */
     fun generateImplementation(
         analysis: InterfaceAnalysis,
-        fakeClassName: String
-    ): String {
-        return buildString {
+        fakeClassName: String,
+    ): String =
+        buildString {
             // Handle interface-level generics (Option 1: Use Any for type erasure)
-            val interfaceWithGenerics = if (analysis.typeParameters.isNotEmpty()) {
-                val genericParams = analysis.typeParameters.joinToString(", ") { "Any" }
-                "${analysis.interfaceName}<$genericParams>"
-            } else {
-                analysis.interfaceName
-            }
+            val interfaceWithGenerics =
+                if (analysis.typeParameters.isNotEmpty()) {
+                    val genericParams = analysis.typeParameters.joinToString(", ") { "Any" }
+                    "${analysis.interfaceName}<$genericParams>"
+                } else {
+                    analysis.interfaceName
+                }
             appendLine("class $fakeClassName : $interfaceWithGenerics {")
 
             // Generate behavior fields for functions (TYPE-SAFE: Use exact types)
@@ -49,33 +49,36 @@ internal class ImplementationGenerator(
                 val functionName = function.name
 
                 // Use EXACT parameter types for type safety
-                val parameterTypes = if (function.parameters.isEmpty()) {
-                    ""
-                } else {
-                    function.parameters.joinToString(", ") { param ->
-                        val varargsPrefix = if (param.isVararg) "vararg " else ""
-                        val paramType = if (param.isVararg) {
-                            // For varargs, unwrap Array<T> to T
-                            val arrayType = typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
-                            val unwrappedType = if (arrayType.startsWith("Array<") && arrayType.endsWith(">")) {
-                                arrayType.substring(6, arrayType.length - 1) // Extract T from Array<T>
-                            } else {
-                                "String" // Safe fallback for varargs
-                            }
-                            unwrappedType
-                        } else {
-                            typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                val parameterTypes =
+                    if (function.parameters.isEmpty()) {
+                        ""
+                    } else {
+                        function.parameters.joinToString(", ") { param ->
+                            val varargsPrefix = if (param.isVararg) "vararg " else ""
+                            val paramType =
+                                if (param.isVararg) {
+                                    // For varargs, unwrap Array<T> to T
+                                    val arrayType = typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                                    val unwrappedType =
+                                        if (arrayType.startsWith("Array<") && arrayType.endsWith(">")) {
+                                            arrayType.substring(6, arrayType.length - 1) // Extract T from Array<T>
+                                        } else {
+                                            "String" // Safe fallback for varargs
+                                        }
+                                    unwrappedType
+                                } else {
+                                    typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                                }
+                            varargsPrefix + paramType
                         }
-                        varargsPrefix + paramType
                     }
-                }
 
                 // Use EXACT return type for type safety
                 val returnType = typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
                 val defaultLambda = generateTypeSafeDefault(function, analysis)
 
                 val suspendModifier = if (function.isSuspend) "suspend " else ""
-                appendLine("    private var ${functionName}Behavior: ${suspendModifier}($parameterTypes) -> $returnType = $defaultLambda")
+                appendLine("    private var ${functionName}Behavior: $suspendModifier($parameterTypes) -> $returnType = $defaultLambda")
             }
 
             // Generate behavior fields for properties (TYPE-SAFE: Use exact types)
@@ -94,24 +97,27 @@ internal class ImplementationGenerator(
 
                 // Preserve EXACT method signature from interface
                 val returnTypeString = typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
-                val parameters = function.parameters.joinToString(", ") { param ->
-                    val varargsPrefix = if (param.isVararg) "vararg " else ""
-                    val paramType = if (param.isVararg) {
-                        // For varargs, unwrap Array<T> to T
-                        val arrayType = typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
-                        val unwrappedType = if (arrayType.startsWith("Array<") && arrayType.endsWith(">")) {
-                            arrayType.substring(6, arrayType.length - 1) // Extract T from Array<T>
-                        } else {
-                            "String" // Safe fallback for varargs
-                        }
-                        unwrappedType
-                    } else {
-                        typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
-                    }
+                val parameters =
+                    function.parameters.joinToString(", ") { param ->
+                        val varargsPrefix = if (param.isVararg) "vararg " else ""
+                        val paramType =
+                            if (param.isVararg) {
+                                // For varargs, unwrap Array<T> to T
+                                val arrayType = typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                                val unwrappedType =
+                                    if (arrayType.startsWith("Array<") && arrayType.endsWith(">")) {
+                                        arrayType.substring(6, arrayType.length - 1) // Extract T from Array<T>
+                                    } else {
+                                        "String" // Safe fallback for varargs
+                                    }
+                                unwrappedType
+                            } else {
+                                typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                            }
 
-                    // Override methods cannot have default values - interface already defines them
-                    "$varargsPrefix${param.name}: $paramType"
-                }
+                        // Override methods cannot have default values - interface already defines them
+                        "$varargsPrefix${param.name}: $paramType"
+                    }
                 val parameterNames = function.parameters.joinToString(", ") { it.name }
 
                 val suspendModifier = if (function.isSuspend) "suspend " else ""
@@ -138,48 +144,57 @@ internal class ImplementationGenerator(
                 val functionName = function.name
 
                 // Use EXACT parameter types for type-safe configuration
-                val parameterTypes = if (function.parameters.isEmpty()) {
-                    ""
-                } else {
-                    function.parameters.joinToString(", ") { param ->
-                        val varargsPrefix = if (param.isVararg) "vararg " else ""
-                        val paramType = if (param.isVararg) {
-                            // For varargs, unwrap Array<T> to T
-                            val arrayType = typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
-                            val unwrappedType = if (arrayType.startsWith("Array<") && arrayType.endsWith(">")) {
-                                arrayType.substring(6, arrayType.length - 1) // Extract T from Array<T>
-                            } else {
-                                "String" // Safe fallback for varargs
-                            }
-                            unwrappedType
-                        } else {
-                            typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                val parameterTypes =
+                    if (function.parameters.isEmpty()) {
+                        ""
+                    } else {
+                        function.parameters.joinToString(", ") { param ->
+                            val varargsPrefix = if (param.isVararg) "vararg " else ""
+                            val paramType =
+                                if (param.isVararg) {
+                                    // For varargs, unwrap Array<T> to T
+                                    val arrayType = typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                                    val unwrappedType =
+                                        if (arrayType.startsWith("Array<") && arrayType.endsWith(">")) {
+                                            arrayType.substring(6, arrayType.length - 1) // Extract T from Array<T>
+                                        } else {
+                                            "String" // Safe fallback for varargs
+                                        }
+                                    unwrappedType
+                                } else {
+                                    typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                                }
+                            varargsPrefix + paramType
                         }
-                        varargsPrefix + paramType
                     }
-                }
 
                 val returnType = typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
                 val suspendModifier = if (function.isSuspend) "suspend " else ""
-                appendLine("    internal fun configure${functionName.capitalize()}(behavior: ${suspendModifier}($parameterTypes) -> $returnType) { ${functionName}Behavior = behavior }")
+                appendLine(
+                    "    internal fun configure${functionName.capitalize()}(behavior: $suspendModifier($parameterTypes) -> $returnType) { ${functionName}Behavior = behavior }",
+                )
             }
 
             // Generate configuration methods for properties (TYPE-SAFE: Use exact types)
             for (property in analysis.properties) {
                 val propertyName = property.name
                 val propertyType = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
-                appendLine("    internal fun configure${propertyName.capitalize()}(behavior: () -> $propertyType) { ${propertyName}Behavior = behavior }")
+                appendLine(
+                    "    internal fun configure${propertyName.capitalize()}(behavior: () -> $propertyType) { ${propertyName}Behavior = behavior }",
+                )
             }
 
             append("}")
         }
-    }
 
     /**
      * Substitute interface-level type parameters with Any for NoGenerics pattern.
      * Example: TKey -> Any, TValue -> Any, but preserve method-level generics like T, R
      */
-    private fun substituteInterfaceTypeParameters(typeString: String, interfaceTypeParams: List<String>): String {
+    private fun substituteInterfaceTypeParameters(
+        typeString: String,
+        interfaceTypeParams: List<String>,
+    ): String {
         var result = typeString
         for (typeParam in interfaceTypeParams) {
             // Replace interface-level type parameters with Any
@@ -202,7 +217,10 @@ internal class ImplementationGenerator(
         return function.parameters.any { param ->
             val paramType = typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
             // Simple heuristic: if type contains single letters or known generic patterns, it's likely generic
-            paramType.matches(GENERIC_TYPE_PATTERN) || paramType.contains("<") || paramType == "T" || paramType == "K" || paramType == "V" || paramType == "R"
+            paramType.matches(
+                GENERIC_TYPE_PATTERN,
+            ) || paramType.contains("<") || paramType == "T" || paramType == "K" || paramType == "V" ||
+                paramType == "R"
         }
     }
 
@@ -210,7 +228,10 @@ internal class ImplementationGenerator(
      * Generate type-safe default for functions.
      * Uses broad Kotlin stdlib support with exact types - no casting!
      */
-    private fun generateTypeSafeDefault(function: com.rsicarelli.fakt.compiler.analysis.FunctionAnalysis, analysis: InterfaceAnalysis): String {
+    private fun generateTypeSafeDefault(
+        function: com.rsicarelli.fakt.compiler.analysis.FunctionAnalysis,
+        analysis: InterfaceAnalysis,
+    ): String {
         val returnType = typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
         val defaultValue = generateKotlinStdlibDefault(returnType)
 
@@ -227,7 +248,10 @@ internal class ImplementationGenerator(
      * Generate type-safe default for properties.
      * Uses broad Kotlin stdlib support with exact types - no casting!
      */
-    private fun generateTypeSafePropertyDefault(property: com.rsicarelli.fakt.compiler.analysis.PropertyAnalysis, analysis: InterfaceAnalysis): String {
+    private fun generateTypeSafePropertyDefault(
+        property: com.rsicarelli.fakt.compiler.analysis.PropertyAnalysis,
+        analysis: InterfaceAnalysis,
+    ): String {
         val propertyType = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
         val defaultValue = generateKotlinStdlibDefault(propertyType)
         return "{ $defaultValue }"
@@ -237,8 +261,8 @@ internal class ImplementationGenerator(
      * Generate defaults for Kotlin stdlib types - broad support!
      * This covers all common Kotlin types developers use.
      */
-    private fun generateKotlinStdlibDefault(typeString: String): String {
-        return when {
+    private fun generateKotlinStdlibDefault(typeString: String): String =
+        when {
             // ✅ Primitive types
             typeString == "String" -> "\"\""
             typeString == "Int" -> "0"
@@ -286,14 +310,19 @@ internal class ImplementationGenerator(
             // ❌ Domain types (user provides defaults via factory)
             else -> "TODO(\"Provide default for domain type '$typeString' via factory configuration\")"
         }
-    }
 
-    private fun extractAndCreateCollection(typeString: String, constructor: String): String {
+    private fun extractAndCreateCollection(
+        typeString: String,
+        constructor: String,
+    ): String {
         val typeParam = extractFirstTypeParameter(typeString)
         return "$constructor<$typeParam>()"
     }
 
-    private fun extractAndCreateMap(typeString: String, constructor: String): String {
+    private fun extractAndCreateMap(
+        typeString: String,
+        constructor: String,
+    ): String {
         val typeParams = extractMapTypeParameters(typeString)
         return "$constructor<${typeParams.first}, ${typeParams.second}>()"
     }
@@ -313,7 +342,11 @@ internal class ImplementationGenerator(
         val start = typeString.indexOf('<') + 1
         val end = typeString.indexOf('>', start)
         return if (start > 0 && end > start) {
-            typeString.substring(start, end).split(',').first().trim()
+            typeString
+                .substring(start, end)
+                .split(',')
+                .first()
+                .trim()
         } else {
             "Any"
         }

@@ -56,5 +56,5 @@ public annotation class Fake(
     val builder: Boolean = false,
     val dependencies: Array<KClass<*>> = [],
     val concurrent: Boolean = true,
-    val scope: String = "test"
+    val scope: String = "test",
 )

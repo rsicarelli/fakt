@@ -10,13 +10,15 @@ import org.gradle.api.Project
  * Applies:
  * - kotlin-jvm plugin
  * - FaktBasePlugin (common configuration)
+ * - Ktlint formatting
  *
  * Note: Publishing should be explicitly applied in module build file
  * to avoid conflicts with gradle-plugin mechanism.
  */
 class FaktKotlinJvmPlugin : Plugin<Project> {
-  override fun apply(target: Project) {
-    target.pluginManager.apply("org.jetbrains.kotlin.jvm")
-    target.pluginManager.apply("fakt-base")
-  }
+    override fun apply(target: Project) {
+        target.pluginManager.apply("org.jetbrains.kotlin.jvm")
+        target.applyCommonConventions()
+        target.applyKtlintConvention()
+    }
 }

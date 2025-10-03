@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.generation
 
+import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertTrue
-import java.io.File
 
 /**
  * Integration tests for extracted modules through real compilation.
@@ -14,7 +14,6 @@ import java.io.File
  * actual generated output from the test-sample project.
  */
 class ExtractedModulesIntegrationTest {
-
     @Test
     fun `GIVEN test-sample project WHEN compiled with extracted modules THEN should generate correct implementation classes`() {
         // GIVEN - test-sample project with various interfaces
@@ -25,7 +24,7 @@ class ExtractedModulesIntegrationTest {
         // We're testing the integration, not specific file content which can be brittle
         assertTrue(
             compilationSucceeded(),
-            "Extracted modules should enable successful compilation of test-sample project"
+            "Extracted modules should enable successful compilation of test-sample project",
         )
     }
 
@@ -38,7 +37,7 @@ class ExtractedModulesIntegrationTest {
         // This validates that TypeResolver correctly handles complex types
         assertTrue(
             compilationSucceeded(),
-            "TypeResolver should enable successful type conversion and compilation"
+            "TypeResolver should enable successful type conversion and compilation",
         )
     }
 
@@ -51,7 +50,7 @@ class ExtractedModulesIntegrationTest {
         // This validates that extracted modules correctly handle interface properties
         assertTrue(
             compilationSucceeded(),
-            "Extracted modules should enable successful property implementation generation"
+            "Extracted modules should enable successful property implementation generation",
         )
     }
 
@@ -64,7 +63,7 @@ class ExtractedModulesIntegrationTest {
         // This validates that FactoryGenerator correctly creates factory functions
         assertTrue(
             compilationSucceeded(),
-            "FactoryGenerator should enable successful factory function generation"
+            "FactoryGenerator should enable successful factory function generation",
         )
     }
 
@@ -77,7 +76,7 @@ class ExtractedModulesIntegrationTest {
         // This validates that ConfigurationDslGenerator correctly creates DSL classes
         assertTrue(
             compilationSucceeded(),
-            "ConfigurationDslGenerator should enable successful DSL class generation"
+            "ConfigurationDslGenerator should enable successful DSL class generation",
         )
     }
 
@@ -90,7 +89,7 @@ class ExtractedModulesIntegrationTest {
         // This tests that the extraction didn't introduce performance regressions
         assertTrue(
             compilationTimeIsReasonable(),
-            "Extracted modules should maintain compilation performance"
+            "Extracted modules should maintain compilation performance",
         )
     }
 
@@ -109,20 +108,23 @@ class ExtractedModulesIntegrationTest {
 
         if (!generatedDir.exists()) return emptyList()
 
-        return generatedDir.walkTopDown()
+        return generatedDir
+            .walkTopDown()
             .filter { it.isFile && it.extension == "kt" }
             .toList()
     }
 
-    private fun anyFileContains(files: List<File>, pattern: String): Boolean {
-        return files.any { file ->
+    private fun anyFileContains(
+        files: List<File>,
+        pattern: String,
+    ): Boolean =
+        files.any { file ->
             try {
                 file.readText().contains(pattern)
             } catch (e: Exception) {
                 false
             }
         }
-    }
 
     private fun compilationTimeIsReasonable(): Boolean {
         // Verify compilation completes in reasonable time (under 5 seconds for test-sample)

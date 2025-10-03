@@ -12,7 +12,6 @@ import kotlin.test.assertTrue
  * Unit tests for KtFakes Gradle plugin.
  */
 class FaktGradleSubpluginTest {
-
     @Test
     fun `plugin applies successfully to project`() {
         // Given: A test project

@@ -34,7 +34,11 @@ kotlinx-coroutines = "1.10.2"
 kotlinx-serialization = "1.9.0"
 ksp = "2.2.10-2.0.2"
 ktfmt = "0.56"
+ktlint = "1.7.1"
+ktlint-gradle = "13.1.0"
 ktor = "3.2.2"
+mavenPublish = "0.34.0"
+spotless = "7.2.1"
 okhttp = "5.1.0"
 okio = "3.16.0"
 pluginId = "dev.zacsweers.metro.compiler"
@@ -58,10 +62,11 @@ binaryCompatibilityValidator = { id = "org.jetbrains.kotlinx.binary-compatibilit
 buildConfig = { id = "com.github.gmazzo.buildconfig", version = "5.6.7" }
 dokka = { id = "org.jetbrains.dokka", version = "2.1.0-Beta" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.34.0" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint-gradle" }
+mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
 poko = { id = "dev.drewhamilton.poko", version.ref = "poko" }
 shadow = { id = "com.gradleup.shadow", version = "9.1.0" }
-spotless = { id = "com.diffplug.spotless", version = "7.2.1" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 testkit = { id = "com.autonomousapps.testkit", version = "0.16" }
 wire = { id = "com.squareup.wire", version.ref = "wire" }
 
@@ -167,5 +172,7 @@ testkit-truth = { module =  "com.autonomousapps:gradle-testkit-truth", version =
 truth = { module = "com.google.truth:truth", version = "1.4.4" }
 kct = { module = "dev.zacsweers.kctfork:core", version.ref = "kct" }
 kct-ksp = { module = "dev.zacsweers.kctfork:ksp", version.ref = "kct" }
+
+ktlint-gradle-plugin = { module = "org.jlleitschuh.gradle.ktlint:org.jlleitschuh.gradle.ktlint.gradle.plugin", version.ref = "ktlint-gradle" }
 
 wire-runtime = { module = "com.squareup.wire:wire-runtime-jvm", version.ref = "wire" }

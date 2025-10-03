@@ -23,7 +23,6 @@ import kotlin.reflect.KClass
 @OptIn(org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI::class)
 @Suppress("DEPRECATION")
 class GenericPatternAnalyzer {
-
     /**
      * Analyze an interface to determine its generic pattern and optimal generation strategy.
      */
@@ -42,7 +41,7 @@ class GenericPatternAnalyzer {
             classTypeParams.isNotEmpty() && methodTypeParams.isEmpty() -> {
                 GenericPattern.ClassLevelGenerics(
                     typeParameters = classTypeParams,
-                    constraints = extractTypeConstraints(classTypeParams)
+                    constraints = extractTypeConstraints(classTypeParams),
                 )
             }
 
@@ -51,7 +50,7 @@ class GenericPatternAnalyzer {
                 GenericPattern.MethodLevelGenerics(
                     genericMethods = methodTypeParams,
                     detectedTypes = usageAnalysis.concreteTypes,
-                    transformationPatterns = usageAnalysis.transformations
+                    transformationPatterns = usageAnalysis.transformations,
                 )
             }
 
@@ -62,7 +61,7 @@ class GenericPatternAnalyzer {
                     classConstraints = extractTypeConstraints(classTypeParams),
                     genericMethods = methodTypeParams,
                     detectedTypes = usageAnalysis.concreteTypes,
-                    transformationPatterns = usageAnalysis.transformations
+                    transformationPatterns = usageAnalysis.transformations,
                 )
             }
         }
@@ -71,8 +70,8 @@ class GenericPatternAnalyzer {
     /**
      * Extract method-level type parameters from all functions in the interface.
      */
-    private fun extractMethodTypeParameters(irClass: IrClass): List<GenericMethod> {
-        return irClass.declarations
+    private fun extractMethodTypeParameters(irClass: IrClass): List<GenericMethod> =
+        irClass.declarations
             .filterIsInstance<IrSimpleFunction>()
             .filter { it.typeParameters.isNotEmpty() }
             .map { function ->
@@ -82,25 +81,23 @@ class GenericPatternAnalyzer {
                     constraints = extractTypeConstraints(function.typeParameters),
                     parameters = emptyList(), // TODO: Implement parameter extraction without deprecated APIs
                     returnType = function.returnType,
-                    isSuspend = function.isSuspend
+                    isSuspend = function.isSuspend,
                 )
             }
-    }
 
     /**
      * Extract type constraints (where clauses) from type parameters.
      */
-    private fun extractTypeConstraints(typeParameters: List<IrTypeParameter>): List<TypeConstraint> {
-        return typeParameters.flatMap { typeParam ->
+    private fun extractTypeConstraints(typeParameters: List<IrTypeParameter>): List<TypeConstraint> =
+        typeParameters.flatMap { typeParam ->
             typeParam.superTypes.map { superType ->
                 TypeConstraint(
                     typeParameter = typeParam.name.asString(),
                     constraint = irTypeToString(superType),
-                    constraintType = superType
+                    constraintType = superType,
                 )
             }
         }
-    }
 
     /**
      * Analyze usage patterns to detect which concrete types are used with generic methods.
@@ -135,7 +132,7 @@ class GenericPatternAnalyzer {
 
         return UsageAnalysis(
             concreteTypes = detectedTypes,
-            transformations = transformations
+            transformations = transformations,
         )
     }
 
@@ -152,7 +149,8 @@ class GenericPatternAnalyzer {
                 if (classifier !is IrTypeParameterSymbol) {
                     val typeName = irTypeToString(irType)
                     if (!typeName.contains("kotlin.") ||
-                        typeName in setOf("kotlin.String", "kotlin.Int", "kotlin.Long", "kotlin.Boolean")) {
+                        typeName in setOf("kotlin.String", "kotlin.Int", "kotlin.Long", "kotlin.Boolean")
+                    ) {
                         hints.add(typeName)
                     }
                 }
@@ -198,8 +196,11 @@ class GenericPatternAnalyzer {
     /**
      * Extract which type parameter is being used in an IrType.
      */
-    private fun extractTypeParameterUsage(irType: IrType, typeParams: List<String>): String? {
-        return when {
+    private fun extractTypeParameterUsage(
+        irType: IrType,
+        typeParams: List<String>,
+    ): String? =
+        when {
             irType is IrSimpleType && irType.classifier is IrTypeParameterSymbol -> {
                 val typeParam = irType.classifier as IrTypeParameterSymbol
                 val paramName = typeParam.owner.name.asString()
@@ -207,7 +208,6 @@ class GenericPatternAnalyzer {
             }
             else -> null
         }
-    }
 
     /**
      * Detect contextual types based on interface naming and structure.
@@ -259,7 +259,7 @@ class GenericPatternAnalyzer {
             "User", // Common domain type
             "Order", // Common domain type
             "Product", // Common domain type
-            "Entity" // Common base type
+            "Entity", // Common base type
         )
     }
 
@@ -272,38 +272,39 @@ class GenericPatternAnalyzer {
 
         // Common transformation patterns in enterprise applications
         baseTypes.forEach { baseType ->
-            patterns.addAll(listOf(
-                // Entity to DTO patterns
-                TransformationPattern(baseType, "${baseType}Dto"),
-                TransformationPattern(baseType, "${baseType}Response"),
-                TransformationPattern(baseType, "${baseType}Summary"),
-                TransformationPattern(baseType, "${baseType}View"),
-                TransformationPattern(baseType, "${baseType}Info"),
-
-                // Request to entity patterns
-                TransformationPattern("${baseType}Request", baseType),
-                TransformationPattern("Create${baseType}Request", baseType),
-                TransformationPattern("Update${baseType}Request", baseType),
-
-                // Collection transformations
-                TransformationPattern("List<$baseType>", "List<${baseType}Dto>"),
-                TransformationPattern("Set<$baseType>", "Set<${baseType}Summary>"),
-
-                // Async patterns
-                TransformationPattern(baseType, "Result<$baseType>"),
-                TransformationPattern(baseType, "CompletableFuture<$baseType>"),
-                TransformationPattern(baseType, "Flow<$baseType>")
-            ))
+            patterns.addAll(
+                listOf(
+                    // Entity to DTO patterns
+                    TransformationPattern(baseType, "${baseType}Dto"),
+                    TransformationPattern(baseType, "${baseType}Response"),
+                    TransformationPattern(baseType, "${baseType}Summary"),
+                    TransformationPattern(baseType, "${baseType}View"),
+                    TransformationPattern(baseType, "${baseType}Info"),
+                    // Request to entity patterns
+                    TransformationPattern("${baseType}Request", baseType),
+                    TransformationPattern("Create${baseType}Request", baseType),
+                    TransformationPattern("Update${baseType}Request", baseType),
+                    // Collection transformations
+                    TransformationPattern("List<$baseType>", "List<${baseType}Dto>"),
+                    TransformationPattern("Set<$baseType>", "Set<${baseType}Summary>"),
+                    // Async patterns
+                    TransformationPattern(baseType, "Result<$baseType>"),
+                    TransformationPattern(baseType, "CompletableFuture<$baseType>"),
+                    TransformationPattern(baseType, "Flow<$baseType>"),
+                ),
+            )
         }
 
         // Generic patterns
-        patterns.addAll(listOf(
-            TransformationPattern("T", "Result<T>"),
-            TransformationPattern("T", "Optional<T>"),
-            TransformationPattern("T", "List<T>"),
-            TransformationPattern("List<T>", "T"),
-            TransformationPattern("T", "CompletableFuture<T>")
-        ))
+        patterns.addAll(
+            listOf(
+                TransformationPattern("T", "Result<T>"),
+                TransformationPattern("T", "Optional<T>"),
+                TransformationPattern("T", "List<T>"),
+                TransformationPattern("List<T>", "T"),
+                TransformationPattern("T", "CompletableFuture<T>"),
+            ),
+        )
 
         return patterns
     }
@@ -311,48 +312,57 @@ class GenericPatternAnalyzer {
     /**
      * Convert IrType to string representation for analysis.
      */
-    private fun irTypeToString(irType: IrType): String {
-        return when {
+    private fun irTypeToString(irType: IrType): String =
+        when {
             irType is IrSimpleType && irType.classifier is IrTypeParameterSymbol -> {
                 val typeParam = irType.classifier as IrTypeParameterSymbol
                 val paramName = typeParam.owner.name.asString()
-                if (irType.isMarkedNullable()) "${paramName}?" else paramName
+                if (irType.isMarkedNullable()) "$paramName?" else paramName
             }
             irType is IrSimpleType -> {
                 // Build full qualified name with type arguments
                 val classifier = irType.classifier
-                val baseName = classifier.toString()
-                    .substringAfterLast('/')
-                    .substringAfterLast('.')
+                val baseName =
+                    classifier
+                        .toString()
+                        .substringAfterLast('/')
+                        .substringAfterLast('.')
 
-                val typeArguments = if (irType.arguments.isNotEmpty()) {
-                    val args = irType.arguments.mapNotNull { arg ->
-                        when (arg) {
-                            is IrType -> irTypeToString(arg)
-                            else -> null
-                        }
+                val typeArguments =
+                    if (irType.arguments.isNotEmpty()) {
+                        val args =
+                            irType.arguments.mapNotNull { arg ->
+                                when (arg) {
+                                    is IrType -> irTypeToString(arg)
+                                    else -> null
+                                }
+                            }
+                        if (args.isNotEmpty()) "<${args.joinToString(", ")}>" else ""
+                    } else {
+                        ""
                     }
-                    if (args.isNotEmpty()) "<${args.joinToString(", ")}>" else ""
-                } else ""
 
                 val fullType = baseName + typeArguments
-                if (irType.isMarkedNullable()) "${fullType}?" else fullType
+                if (irType.isMarkedNullable()) "$fullType?" else fullType
             }
             else -> {
                 // Fallback to toString for other types
                 val typeString = irType.toString()
                 // Clean up common IR type representations
-                typeString.substringAfterLast('/')
+                typeString
+                    .substringAfterLast('/')
                     .substringAfterLast('.')
                     .replace("IrClass", "")
             }
         }
-    }
 
     /**
      * Validate the analyzed pattern for consistency and completeness.
      */
-    fun validatePattern(pattern: GenericPattern, irClass: IrClass): List<String> {
+    fun validatePattern(
+        pattern: GenericPattern,
+        irClass: IrClass,
+    ): List<String> {
         val warnings = mutableListOf<String>()
 
         when (pattern) {
@@ -388,9 +398,10 @@ class GenericPatternAnalyzer {
             GenericPattern.NoGenerics -> {
                 // Verify there really are no generics
                 val hasClassGenerics = irClass.typeParameters.isNotEmpty()
-                val hasMethodGenerics = irClass.declarations
-                    .filterIsInstance<IrSimpleFunction>()
-                    .any { it.typeParameters.isNotEmpty() }
+                val hasMethodGenerics =
+                    irClass.declarations
+                        .filterIsInstance<IrSimpleFunction>()
+                        .any { it.typeParameters.isNotEmpty() }
 
                 if (hasClassGenerics || hasMethodGenerics) {
                     warnings.add("Interface has generics but classified as NoGenerics")
@@ -404,26 +415,25 @@ class GenericPatternAnalyzer {
     /**
      * Get a summary of the analysis results for debugging.
      */
-    fun getAnalysisSummary(pattern: GenericPattern): String {
-        return when (pattern) {
+    fun getAnalysisSummary(pattern: GenericPattern): String =
+        when (pattern) {
             GenericPattern.NoGenerics ->
                 "No generic parameters detected - using simple generation"
 
             is GenericPattern.ClassLevelGenerics ->
                 "Class-level generics: ${pattern.typeParameters.size} type parameters, " +
-                "${pattern.constraints.size} constraints"
+                    "${pattern.constraints.size} constraints"
 
             is GenericPattern.MethodLevelGenerics ->
                 "Method-level generics: ${pattern.genericMethods.size} generic methods, " +
-                "${pattern.detectedTypes.size} detected types, " +
-                "${pattern.transformationPatterns.size} transformation patterns"
+                    "${pattern.detectedTypes.size} detected types, " +
+                    "${pattern.transformationPatterns.size} transformation patterns"
 
             is GenericPattern.MixedGenerics ->
                 "Mixed generics: ${pattern.classTypeParameters.size} class type parameters, " +
-                "${pattern.genericMethods.size} generic methods, " +
-                "${pattern.detectedTypes.size} detected types"
+                    "${pattern.genericMethods.size} generic methods, " +
+                    "${pattern.detectedTypes.size} detected types"
         }
-    }
 }
 
 /**
@@ -442,7 +452,7 @@ sealed class GenericPattern {
      */
     data class ClassLevelGenerics(
         val typeParameters: List<IrTypeParameter>,
-        val constraints: List<TypeConstraint>
+        val constraints: List<TypeConstraint>,
     ) : GenericPattern()
 
     /**
@@ -452,7 +462,7 @@ sealed class GenericPattern {
     data class MethodLevelGenerics(
         val genericMethods: List<GenericMethod>,
         val detectedTypes: Set<String>,
-        val transformationPatterns: List<TransformationPattern>
+        val transformationPatterns: List<TransformationPattern>,
     ) : GenericPattern()
 
     /**
@@ -464,7 +474,7 @@ sealed class GenericPattern {
         val classConstraints: List<TypeConstraint>,
         val genericMethods: List<GenericMethod>,
         val detectedTypes: Set<String>,
-        val transformationPatterns: List<TransformationPattern>
+        val transformationPatterns: List<TransformationPattern>,
     ) : GenericPattern()
 }
 
@@ -477,7 +487,7 @@ data class GenericMethod(
     val constraints: List<TypeConstraint>,
     val parameters: List<MethodParameter>,
     val returnType: IrType,
-    val isSuspend: Boolean
+    val isSuspend: Boolean,
 )
 
 /**
@@ -486,7 +496,7 @@ data class GenericMethod(
 data class MethodParameter(
     val name: String,
     val type: IrType,
-    val isVararg: Boolean
+    val isVararg: Boolean,
 )
 
 /**
@@ -495,7 +505,7 @@ data class MethodParameter(
 data class TypeConstraint(
     val typeParameter: String,
     val constraint: String,
-    val constraintType: IrType
+    val constraintType: IrType,
 )
 
 /**
@@ -503,7 +513,7 @@ data class TypeConstraint(
  */
 data class UsageAnalysis(
     val concreteTypes: Set<String>,
-    val transformations: List<TransformationPattern>
+    val transformations: List<TransformationPattern>,
 )
 
 /**
@@ -511,5 +521,5 @@ data class UsageAnalysis(
  */
 data class TransformationPattern(
     val inputType: String,
-    val outputType: String
+    val outputType: String,
 )

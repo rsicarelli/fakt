@@ -10,12 +10,14 @@ import org.gradle.api.Project
  * Applies:
  * - kotlin-multiplatform plugin
  * - FaktBasePlugin (common configuration)
+ * - Ktlint formatting
  *
  * Note: Publishing should be explicitly applied in module build file.
  */
 class FaktMultiplatformPlugin : Plugin<Project> {
-  override fun apply(target: Project) {
-    target.pluginManager.apply("org.jetbrains.kotlin.multiplatform")
-    target.pluginManager.apply("fakt-base")
-  }
+    override fun apply(target: Project) {
+        target.pluginManager.apply("org.jetbrains.kotlin.multiplatform")
+        target.applyCommonConventions()
+        target.applyKtlintConvention()
+    }
 }

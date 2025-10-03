@@ -5,9 +5,14 @@ package com.rsicarelli.fakt.compiler.fir
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.declarations.FirRegularClass
 import org.jetbrains.kotlin.fir.declarations.hasAnnotation
-import org.jetbrains.kotlin.fir.expressions.*
+import org.jetbrains.kotlin.fir.expressions.FirAnnotation
+import org.jetbrains.kotlin.fir.expressions.FirExpression
+import org.jetbrains.kotlin.fir.expressions.FirLiteralExpression
+import org.jetbrains.kotlin.fir.expressions.argumentMapping
 import org.jetbrains.kotlin.fir.resolve.toSymbol
-import org.jetbrains.kotlin.fir.types.*
+import org.jetbrains.kotlin.fir.types.ConeKotlinType
+import org.jetbrains.kotlin.fir.types.coneType
+import org.jetbrains.kotlin.fir.types.toRegularClassSymbol
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 
@@ -20,30 +25,33 @@ import org.jetbrains.kotlin.name.FqName
  * - Validating annotation parameter values
  */
 class FakeAnnotationDetector {
-
     companion object {
-        private val FAKE_ANNOTATION_CLASS_ID = ClassId.topLevel(
-            FqName("com.rsicarelli.fakt.Fake")
-        )
+        private val FAKE_ANNOTATION_CLASS_ID =
+            ClassId.topLevel(
+                FqName("com.rsicarelli.fakt.Fake"),
+            )
 
-        private val FAKE_CONFIG_ANNOTATION_CLASS_ID = ClassId.topLevel(
-            FqName("com.rsicarelli.fakt.FakeConfig")
-        )
+        private val FAKE_CONFIG_ANNOTATION_CLASS_ID =
+            ClassId.topLevel(
+                FqName("com.rsicarelli.fakt.FakeConfig"),
+            )
     }
 
     /**
      * Check if a declaration has @Fake annotation.
      */
-    fun hasFakeAnnotation(declaration: FirRegularClass, session: FirSession): Boolean {
-        return declaration.hasAnnotation(FAKE_ANNOTATION_CLASS_ID, session)
-    }
+    fun hasFakeAnnotation(
+        declaration: FirRegularClass,
+        session: FirSession,
+    ): Boolean = declaration.hasAnnotation(FAKE_ANNOTATION_CLASS_ID, session)
 
     /**
      * Check if a declaration has @FakeConfig annotation.
      */
-    fun hasFakeConfigAnnotation(declaration: FirRegularClass, session: FirSession): Boolean {
-        return declaration.hasAnnotation(FAKE_CONFIG_ANNOTATION_CLASS_ID, session)
-    }
+    fun hasFakeConfigAnnotation(
+        declaration: FirRegularClass,
+        session: FirSession,
+    ): Boolean = declaration.hasAnnotation(FAKE_CONFIG_ANNOTATION_CLASS_ID, session)
 
     /**
      * Extract @Fake annotation parameters.
@@ -52,11 +60,12 @@ class FakeAnnotationDetector {
      */
     fun extractFakeParameters(
         declaration: FirRegularClass,
-        session: FirSession
+        session: FirSession,
     ): FakeAnnotationParameters {
-        val annotation = declaration.annotations.find { annotation ->
-            annotation.toAnnotationClassId(session) == FAKE_ANNOTATION_CLASS_ID
-        }
+        val annotation =
+            declaration.annotations.find { annotation ->
+                annotation.toAnnotationClassId(session) == FAKE_ANNOTATION_CLASS_ID
+            }
 
         return if (annotation != null) {
             extractParametersFromAnnotation(annotation, session)
@@ -67,18 +76,18 @@ class FakeAnnotationDetector {
 
     private fun extractParametersFromAnnotation(
         annotation: FirAnnotation,
-        session: FirSession
+        session: FirSession,
     ): FakeAnnotationParameters {
         // Extract parameter values from annotation arguments
         // For MVP, return sensible defaults - parameter extraction is complex and not critical for basic functionality
         // Real parameter extraction will be implemented when more stable FIR APIs are available
 
         return FakeAnnotationParameters(
-            trackCalls = false,      // Default: no call tracking
-            builder = false,         // Default: no builder pattern
+            trackCalls = false, // Default: no call tracking
+            builder = false, // Default: no builder pattern
             dependencies = emptyList(), // Default: no dependencies
-            concurrent = true,       // Default: thread-safe
-            scope = "test"          // Default: test scope
+            concurrent = true, // Default: thread-safe
+            scope = "test", // Default: test scope
         )
     }
 
@@ -109,5 +118,5 @@ data class FakeAnnotationParameters(
     val builder: Boolean = false,
     val dependencies: List<ClassId> = emptyList(),
     val concurrent: Boolean = true,
-    val scope: String = "test"
+    val scope: String = "test",
 )

@@ -23,5 +23,5 @@ data class TypeInfo(
     val packageName: String,
     val fileName: String,
     val annotations: List<String>,
-    val signature: String
+    val signature: String,
 )

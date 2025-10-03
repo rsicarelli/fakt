@@ -13,7 +13,6 @@ import com.rsicarelli.fakt.compiler.TypeInfo
  * @since 1.0.0
  */
 internal class ChangeDetector {
-
     /**
      * Determines if a type needs regeneration based on signature comparison.
      *
@@ -26,8 +25,11 @@ internal class ChangeDetector {
      * @param cachedSignature Previously cached signature, or null if new
      * @return true if type needs regeneration, false if can be skipped
      */
-    fun needsRegeneration(type: TypeInfo, cachedSignature: String?): Boolean {
-        return when (cachedSignature) {
+    fun needsRegeneration(
+        type: TypeInfo,
+        cachedSignature: String?,
+    ): Boolean =
+        when (cachedSignature) {
             null -> {
                 // No cached signature - this is a new type
                 true
@@ -41,7 +43,6 @@ internal class ChangeDetector {
                 true
             }
         }
-    }
 
     /**
      * Generates a unique cache key for a type.
@@ -52,9 +53,7 @@ internal class ChangeDetector {
      * @param type Type information
      * @return Unique cache key for the type
      */
-    fun generateCacheKey(type: TypeInfo): String {
-        return "${type.fullyQualifiedName}@${type.fileName}"
-    }
+    fun generateCacheKey(type: TypeInfo): String = "${type.fullyQualifiedName}@${type.fileName}"
 
     /**
      * Compares two signatures and returns true if they represent the same interface.
@@ -63,9 +62,10 @@ internal class ChangeDetector {
      * @param signature2 Second signature to compare
      * @return true if signatures are equivalent, false otherwise
      */
-    fun signaturesMatch(signature1: String, signature2: String): Boolean {
-        return signature1 == signature2
-    }
+    fun signaturesMatch(
+        signature1: String,
+        signature2: String,
+    ): Boolean = signature1 == signature2
 
     /**
      * Validates that a signature is well-formed and non-empty.
@@ -73,7 +73,5 @@ internal class ChangeDetector {
      * @param signature Signature to validate
      * @return true if signature is valid, false otherwise
      */
-    fun isValidSignature(signature: String): Boolean {
-        return signature.isNotBlank() && signature.contains("|")
-    }
+    fun isValidSignature(signature: String): Boolean = signature.isNotBlank() && signature.contains("|")
 }

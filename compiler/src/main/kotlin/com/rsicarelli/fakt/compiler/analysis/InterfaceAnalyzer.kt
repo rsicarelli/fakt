@@ -12,9 +12,9 @@ import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
-import org.jetbrains.kotlin.ir.types.isMarkedNullable
-import org.jetbrains.kotlin.ir.types.isAny
 import org.jetbrains.kotlin.ir.types.getClass
+import org.jetbrains.kotlin.ir.types.isAny
+import org.jetbrains.kotlin.ir.types.isMarkedNullable
 import org.jetbrains.kotlin.ir.util.isVararg
 
 /**
@@ -31,7 +31,6 @@ import org.jetbrains.kotlin.ir.util.isVararg
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 @Suppress("DEPRECATION")
 internal class InterfaceAnalyzer {
-
     private val patternAnalyzer = GenericPatternAnalyzer()
 
     /**
@@ -46,21 +45,22 @@ internal class InterfaceAnalyzer {
         if (irClass.typeParameters.isNotEmpty()) {
             val typeParams = irClass.typeParameters.joinToString(", ") { it.name.asString() }
             return "Generic interfaces not supported: ${irClass.name.asString()}<$typeParams>. " +
-                    "Consider creating a non-generic interface that extends this one: " +
-                    "interface User${irClass.name.asString()} : ${irClass.name.asString()}<User>"
+                "Consider creating a non-generic interface that extends this one: " +
+                "interface User${irClass.name.asString()} : ${irClass.name.asString()}<User>"
         }
 
         // Check method-level type parameters
-        val functionsWithGenerics = irClass.declarations
-            .filterIsInstance<IrSimpleFunction>()
-            .filter { it.typeParameters.isNotEmpty() }
+        val functionsWithGenerics =
+            irClass.declarations
+                .filterIsInstance<IrSimpleFunction>()
+                .filter { it.typeParameters.isNotEmpty() }
 
         if (functionsWithGenerics.isNotEmpty()) {
             val methodName = functionsWithGenerics.first().name.asString()
             val typeParams =
                 functionsWithGenerics.first().typeParameters.joinToString(", ") { it.name.asString() }
             return "Generic methods not supported: $methodName<$typeParams>. " +
-                    "Consider creating methods with specific types instead of generics."
+                "Consider creating methods with specific types instead of generics."
         }
 
         // TODO: Add varargs detection (skip for now)
@@ -104,7 +104,7 @@ internal class InterfaceAnalyzer {
             functions = functions,
             sourceInterface = sourceInterface,
             genericPattern = genericPattern,
-            debugInfo = StringBuilder()
+            debugInfo = StringBuilder(),
         )
     }
 
@@ -115,15 +115,16 @@ internal class InterfaceAnalyzer {
      * @return Property analysis with type information
      */
     private fun analyzeProperty(property: IrProperty): PropertyAnalysis {
-        val propertyType = property.getter?.returnType ?: property.backingField?.type
-        ?: throw IllegalStateException("Property ${property.name} has no determinable type")
+        val propertyType =
+            property.getter?.returnType ?: property.backingField?.type
+                ?: throw IllegalStateException("Property ${property.name} has no determinable type")
 
         return PropertyAnalysis(
             name = property.name.asString(),
             type = propertyType,
             isMutable = property.isVar,
             isNullable = propertyType.isMarkedNullable(),
-            irProperty = property
+            irProperty = property,
         )
     }
 
@@ -136,33 +137,37 @@ internal class InterfaceAnalyzer {
     private fun analyzeFunction(function: IrSimpleFunction): FunctionAnalysis {
         // Use modern API: function.parameters instead of deprecated valueParameters
         // Filter for regular parameters only (excludes receiver parameters, etc.)
-        val parameters = function.parameters
-            .filter { it.kind == IrParameterKind.Regular }
-            .map { param ->
-                ParameterAnalysis(
-                    name = param.name.asString(),
-                    type = param.type,
-                    hasDefaultValue = param.defaultValue != null,
-                    isVararg = param.isVararg
-                )
-            }
+        val parameters =
+            function.parameters
+                .filter { it.kind == IrParameterKind.Regular }
+                .map { param ->
+                    ParameterAnalysis(
+                        name = param.name.asString(),
+                        type = param.type,
+                        hasDefaultValue = param.defaultValue != null,
+                        isVararg = param.isVararg,
+                    )
+                }
 
         // Extract type parameter bounds (e.g., R : TValue)
-        val typeParameterBounds = function.typeParameters.associate { typeParam ->
-            val paramName = typeParam.name.asString()
+        val typeParameterBounds =
+            function.typeParameters.associate { typeParam ->
+                val paramName = typeParam.name.asString()
 
-            val bounds = if (typeParam.superTypes.isNotEmpty()) {
-                // Check all supertypes and find the first one that's not "Any"
-                val explicitBound = typeParam.superTypes
-                    .map { convertIrTypeToString(it) }
-                    .firstOrNull { it != "Any" }
+                val bounds =
+                    if (typeParam.superTypes.isNotEmpty()) {
+                        // Check all supertypes and find the first one that's not "Any"
+                        val explicitBound =
+                            typeParam.superTypes
+                                .map { convertIrTypeToString(it) }
+                                .firstOrNull { it != "Any" }
 
-                explicitBound ?: "Any" // Use explicit bound or default to Any
-            } else {
-                "Any" // Default bound when no explicit bounds
+                        explicitBound ?: "Any" // Use explicit bound or default to Any
+                    } else {
+                        "Any" // Default bound when no explicit bounds
+                    }
+                paramName to bounds
             }
-            paramName to bounds
-        }
 
         return FunctionAnalysis(
             name = function.name.asString(),
@@ -172,7 +177,7 @@ internal class InterfaceAnalyzer {
             isInline = function.isInline,
             typeParameters = function.typeParameters.map { it.name.asString() },
             typeParameterBounds = typeParameterBounds,
-            irFunction = function
+            irFunction = function,
         )
     }
 
@@ -185,16 +190,16 @@ internal class InterfaceAnalyzer {
     private fun isSpecialFunction(function: IrSimpleFunction): Boolean {
         val name = function.name.asString()
         return name in setOf("equals", "hashCode", "toString") ||
-                name.startsWith("component") ||
-                name == "copy"
+            name.startsWith("component") ||
+            name == "copy"
     }
 
     /**
      * Converts an IR type to a simple string representation for bound analysis.
      * This is a simplified version that focuses on extracting bound names.
      */
-    private fun convertIrTypeToString(irType: IrType): String {
-        return when {
+    private fun convertIrTypeToString(irType: IrType): String =
+        when {
             irType.isAny() -> "Any"
             // Handle type parameters (like TValue, TKey)
             irType is IrSimpleType && irType.classifier.owner is IrTypeParameter -> {
@@ -207,7 +212,6 @@ internal class InterfaceAnalyzer {
                 irClass?.name?.asString() ?: "Any"
             }
         }
-    }
 }
 
 /**
@@ -220,7 +224,7 @@ internal data class InterfaceAnalysis(
     val functions: List<FunctionAnalysis>,
     val sourceInterface: IrClass,
     val genericPattern: GenericPattern, // Smart pattern analysis for optimal code generation
-    val debugInfo: StringBuilder = StringBuilder() // Debug information for troubleshooting
+    val debugInfo: StringBuilder = StringBuilder(), // Debug information for troubleshooting
 )
 
 /**
@@ -231,7 +235,7 @@ internal data class PropertyAnalysis(
     val type: IrType,
     val isMutable: Boolean,
     val isNullable: Boolean,
-    val irProperty: IrProperty
+    val irProperty: IrProperty,
 )
 
 /**
@@ -245,7 +249,7 @@ internal data class FunctionAnalysis(
     val isInline: Boolean,
     val typeParameters: List<String>, // Method-level type parameters like <T>, <T, R>
     val typeParameterBounds: Map<String, String>, // Type parameter bounds like R : TValue
-    val irFunction: IrSimpleFunction
+    val irFunction: IrSimpleFunction,
 )
 
 /**
@@ -255,5 +259,5 @@ internal data class ParameterAnalysis(
     val name: String,
     val type: IrType,
     val hasDefaultValue: Boolean,
-    val isVararg: Boolean
+    val isVararg: Boolean,
 )

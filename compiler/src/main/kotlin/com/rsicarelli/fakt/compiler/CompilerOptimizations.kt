@@ -18,7 +18,6 @@ package com.rsicarelli.fakt.compiler
  * @see TypeInfo
  */
 interface CompilerOptimizations {
-
     /**
      * Checks if the optimization system is configured to process the specified annotation.
      *
@@ -77,9 +76,9 @@ interface CompilerOptimizations {
          */
         operator fun invoke(
             fakeAnnotations: List<String> = listOf("com.rsicarelli.fakt.Fake"),
-            outputDir: String? = null
-        ): CompilerOptimizations {
-            return com.rsicarelli.fakt.compiler.optimization.IncrementalCompiler(fakeAnnotations, outputDir)
-        }
+            outputDir: String? = null,
+        ): CompilerOptimizations =
+            com.rsicarelli.fakt.compiler.optimization
+                .IncrementalCompiler(fakeAnnotations, outputDir)
     }
 }

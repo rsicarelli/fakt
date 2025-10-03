@@ -3,54 +3,55 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
-  id("fakt-kotlin-jvm")
-  alias(libs.plugins.mavenPublish)
-  alias(libs.plugins.shadow) apply false
+    id("fakt-kotlin-jvm")
+    alias(libs.plugins.mavenPublish)
+    alias(libs.plugins.shadow) apply false
 }
 
 dependencies {
-  implementation(libs.kotlin.compilerEmbeddable)
-  implementation(libs.autoService)
+    implementation(libs.kotlin.compilerEmbeddable)
+    implementation(libs.autoService)
 
-  testImplementation(libs.kotlin.test)
-  testImplementation(libs.kotlin.testJunit5)
-  testImplementation(libs.junit.jupiter)
-  testImplementation(libs.coroutines.test)
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.kotlin.testJunit5)
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.coroutines.test)
 }
 
 tasks.jar.configure { enabled = false }
 
-val shadowJar = tasks.register("shadowJar", ShadowJar::class.java) {
-  from(sourceSets.main.map { it.output })
-  configurations.add(project.configurations["compileClasspath"])
+val shadowJar =
+    tasks.register("shadowJar", ShadowJar::class.java) {
+        from(sourceSets.main.map { it.output })
+        configurations.add(project.configurations["compileClasspath"])
 
-  dependencies {
-    exclude(dependency("org.jetbrains:.*"))
-    exclude(dependency("org.intellij:.*"))
-    exclude(dependency("org.jetbrains.kotlin:.*"))
-  }
+        dependencies {
+            exclude(dependency("org.jetbrains:.*"))
+            exclude(dependency("org.intellij:.*"))
+            exclude(dependency("org.jetbrains.kotlin:.*"))
+        }
 
-  relocate("com.google.auto.service", "com.rsicarelli.fakt.shaded.autoservice")
-}
+        relocate("com.google.auto.service", "com.rsicarelli.fakt.shaded.autoservice")
+    }
 
 tasks {
 
-  // Configure test task
-  test {
-    // Compiler tests need more memory
-    jvmArgs("-Xmx2g", "-XX:MaxMetaspaceSize=512m")
+    // Configure test task
+    test {
+        // Compiler tests need more memory
+        jvmArgs("-Xmx2g", "-XX:MaxMetaspaceSize=512m")
 
-    // Extended timeout for compiler operations
-    systemProperty("junit.jupiter.execution.timeout.default", "60s")
+        // Extended timeout for compiler operations
+        systemProperty("junit.jupiter.execution.timeout.default", "60s")
 
-    // Limited parallelism for resource-intensive compiler tests
-    systemProperty("junit.jupiter.execution.parallel.config.strategy", "fixed")
-    systemProperty("junit.jupiter.execution.parallel.config.fixed.parallelism", "2")
-  }
+        // Limited parallelism for resource-intensive compiler tests
+        systemProperty("junit.jupiter.execution.parallel.config.strategy", "fixed")
+        systemProperty("junit.jupiter.execution.parallel.config.fixed.parallelism", "2")
+    }
 }
 
 // Configure shadow JAR artifacts for consumption
 for (c in arrayOf("apiElements", "runtimeElements")) {
-  configurations.named(c) { artifacts.removeIf { true } }
-  artifacts.add(c, shadowJar)
+    configurations.named(c) { artifacts.removeIf { true } }
+    artifacts.add(c, shadowJar)
 }

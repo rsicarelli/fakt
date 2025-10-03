@@ -22,7 +22,6 @@ import java.io.File
  * 4. Configures the plugin for test-only code generation
  */
 class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
-
     companion object {
         const val PLUGIN_ID = "com.rsicarelli.fakt"
         const val PLUGIN_ARTIFACT_NAME = "compiler"
@@ -51,11 +50,12 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         // - KMP projects: "jvmMain", "jsMain", "iosMain", "commonMain", etc.
         val compilationName = kotlinCompilation.name.lowercase()
 
-        val isMainCompilation = compilationName == "main" ||
-                               compilationName.endsWith("main")
+        val isMainCompilation =
+            compilationName == "main" ||
+                compilationName.endsWith("main")
 
         kotlinCompilation.project.logger.info(
-            "KtFakes: Checking compilation '${kotlinCompilation.name}' - applicable: $isMainCompilation"
+            "KtFakes: Checking compilation '${kotlinCompilation.name}' - applicable: $isMainCompilation",
         )
 
         return isMainCompilation
@@ -63,15 +63,14 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
 
     override fun getCompilerPluginId(): String = PLUGIN_ID
 
-    override fun getPluginArtifact(): SubpluginArtifact = SubpluginArtifact(
-        groupId = PLUGIN_GROUP_ID,
-        artifactId = PLUGIN_ARTIFACT_NAME,
-        version = PLUGIN_VERSION
-    )
+    override fun getPluginArtifact(): SubpluginArtifact =
+        SubpluginArtifact(
+            groupId = PLUGIN_GROUP_ID,
+            artifactId = PLUGIN_ARTIFACT_NAME,
+            version = PLUGIN_VERSION,
+        )
 
-    override fun applyToCompilation(
-        kotlinCompilation: KotlinCompilation<*>
-    ): Provider<List<SubpluginOption>> {
+    override fun applyToCompilation(kotlinCompilation: KotlinCompilation<*>): Provider<List<SubpluginOption>> {
         val project = kotlinCompilation.project
         val extension = project.extensions.getByType(FaktPluginExtension::class.java)
 
@@ -88,7 +87,7 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 val outputDir = getGeneratedSourcesDirectory(project, kotlinCompilation)
                 add(SubpluginOption(key = "outputDir", value = outputDir))
 
-                project.logger.info("KtFakes: Configured compiler plugin with ${size} options")
+                project.logger.info("KtFakes: Configured compiler plugin with $size options")
             }
         }
     }
@@ -111,7 +110,10 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
     /**
      * Configure multiplatform source sets to include generated fakes.
      */
-    private fun configureMultiplatformSourceSets(project: Project, kotlin: KotlinMultiplatformExtension) {
+    private fun configureMultiplatformSourceSets(
+        project: Project,
+        kotlin: KotlinMultiplatformExtension,
+    ) {
         kotlin.sourceSets.configureEach { sourceSet ->
             if (sourceSet.name.endsWith("Test")) {
                 val generatedDir = getGeneratedSourcesDirectoryForSourceSet(project, sourceSet.name)
@@ -143,7 +145,10 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
      * Since we generate fakes FROM main sources FOR test usage, we always output to test directories.
      * For KMP projects with shared code, we generate to common/test/kotlin for maximum compatibility.
      */
-    private fun getGeneratedSourcesDirectory(project: Project, compilation: KotlinCompilation<*>): String {
+    private fun getGeneratedSourcesDirectory(
+        project: Project,
+        compilation: KotlinCompilation<*>,
+    ): String {
         val compilationName = compilation.name
         val targetName = compilation.target.name
 
@@ -166,12 +171,13 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
 
         // Map main compilation names to test directories
         // main → test, jvmMain → jvmTest, iosMain → iosTest, etc.
-        val testDirName = when {
-            compilationName.equals("main", ignoreCase = true) -> "test"
-            compilationName.endsWith("Main", ignoreCase = true) ->
-                compilationName.removeSuffix("Main").removeSuffix("main") + "Test"
-            else -> compilationName
-        }
+        val testDirName =
+            when {
+                compilationName.equals("main", ignoreCase = true) -> "test"
+                compilationName.endsWith("Main", ignoreCase = true) ->
+                    compilationName.removeSuffix("Main").removeSuffix("main") + "Test"
+                else -> compilationName
+            }
 
         // For specific platform targets in KMP: build/generated/ktfake/{targetName}/test/kotlin
         // For single-platform JVM: build/generated/ktfake/test/kotlin (targetName="jvm", compilationName="main")
@@ -183,8 +189,11 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
     /**
      * Get generated sources directory for a specific source set.
      */
-    private fun getGeneratedSourcesDirectoryForSourceSet(project: Project, sourceSetName: String): File {
-        return when {
+    private fun getGeneratedSourcesDirectoryForSourceSet(
+        project: Project,
+        sourceSetName: String,
+    ): File =
+        when {
             sourceSetName == "commonTest" -> File(project.buildDir, "generated/ktfake/common/test/kotlin")
             sourceSetName.endsWith("Test") -> {
                 val target = sourceSetName.removeSuffix("Test")
@@ -192,7 +201,6 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             }
             else -> File(project.buildDir, "generated/ktfake/common/test/kotlin")
         }
-    }
 
     /**
      * Add runtime dependency to test configurations automatically.
@@ -203,11 +211,11 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             val configName = configuration.name.lowercase()
 
             if (configName.contains("test") &&
-                (configName.endsWith("implementation") || configName.endsWith("api"))) {
-
+                (configName.endsWith("implementation") || configName.endsWith("api"))
+            ) {
                 project.dependencies.add(
                     configuration.name,
-                    "${PLUGIN_GROUP_ID}:runtime:${PLUGIN_VERSION}"
+                    "${PLUGIN_GROUP_ID}:runtime:${PLUGIN_VERSION}",
                 )
 
                 project.logger.info("KtFakes: Added runtime dependency to configuration ${configuration.name}")

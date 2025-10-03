@@ -6,8 +6,11 @@ import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrEnumEntry
 import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
-import org.jetbrains.kotlin.ir.types.*
+import org.jetbrains.kotlin.ir.types.IrSimpleType
+import org.jetbrains.kotlin.ir.types.IrType
+import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.ir.types.impl.IrSimpleTypeImpl
+import org.jetbrains.kotlin.ir.types.isNullable
 import org.jetbrains.kotlin.ir.util.kotlinFqName
 
 /**
@@ -17,16 +20,13 @@ import org.jetbrains.kotlin.ir.util.kotlinFqName
  */
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 internal class TypeResolver {
-
     /**
      * Converts IR type to readable Kotlin string representation.
      *
      * @param irType The IR type to convert
      * @return String representation of the type
      */
-    fun irTypeToKotlinString(irType: IrType): String {
-        return irTypeToKotlinString(irType, preserveTypeParameters = false)
-    }
+    fun irTypeToKotlinString(irType: IrType): String = irTypeToKotlinString(irType, preserveTypeParameters = false)
 
     /**
      * Converts IR type to readable Kotlin string representation with optional type parameter preservation.
@@ -35,8 +35,11 @@ internal class TypeResolver {
      * @param preserveTypeParameters Whether to preserve generic type parameters
      * @return String representation of the type
      */
-    fun irTypeToKotlinString(irType: IrType, preserveTypeParameters: Boolean): String {
-        return when {
+    fun irTypeToKotlinString(
+        irType: IrType,
+        preserveTypeParameters: Boolean,
+    ): String =
+        when {
             // Handle nullable types
             irType.isMarkedNullable() -> {
                 val baseType = irTypeToKotlinString(irType.makeNotNull(), preserveTypeParameters)
@@ -102,7 +105,6 @@ internal class TypeResolver {
                 }
             }
         }
-    }
 
     /**
      * Generates appropriate default values for IR types.
@@ -110,8 +112,8 @@ internal class TypeResolver {
      * @param irType The type to generate a default value for
      * @return String representation of the default value
      */
-    fun getDefaultValue(irType: IrType): String {
-        return when {
+    fun getDefaultValue(irType: IrType): String =
+        when {
             // Handle primitive types first
             irType.isString() -> "\"\""
             irType.isInt() -> "0"
@@ -145,39 +147,44 @@ internal class TypeResolver {
                 handleClassDefault(irType)
             }
         }
-    }
 
     /**
      * Handles function type conversion to Kotlin syntax.
      */
-    private fun handleFunctionType(irType: IrType, preserveTypeParameters: Boolean): String {
+    private fun handleFunctionType(
+        irType: IrType,
+        preserveTypeParameters: Boolean,
+    ): String {
         // Extract function arity from class name (Function0, Function1, etc.)
         val irClass = irType.getClass()
         val className = irClass?.name?.asString() ?: ""
 
         if (className.startsWith("Function") || className.startsWith("SuspendFunction")) {
-            val arityString = when {
-                className.startsWith("SuspendFunction") -> className.removePrefix("SuspendFunction")
-                className.startsWith("Function") -> className.removePrefix("Function")
-                else -> ""
-            }
+            val arityString =
+                when {
+                    className.startsWith("SuspendFunction") -> className.removePrefix("SuspendFunction")
+                    className.startsWith("Function") -> className.removePrefix("Function")
+                    else -> ""
+                }
             val arity = arityString.toIntOrNull() ?: 0
 
             if (irType is IrSimpleType && irType.arguments.size == arity + 1) {
-                val paramTypes = irType.arguments.take(arity).map { arg ->
-                    if (arg is IrTypeProjection) {
-                        irTypeToKotlinString(arg.type, preserveTypeParameters)
-                    } else {
-                        "Any"
+                val paramTypes =
+                    irType.arguments.take(arity).map { arg ->
+                        if (arg is IrTypeProjection) {
+                            irTypeToKotlinString(arg.type, preserveTypeParameters)
+                        } else {
+                            "Any"
+                        }
                     }
-                }
-                val returnType = irType.arguments.lastOrNull()?.let { arg ->
-                    if (arg is IrTypeProjection) {
-                        irTypeToKotlinString(arg.type, preserveTypeParameters)
-                    } else {
-                        "Any"
-                    }
-                } ?: "Unit"
+                val returnType =
+                    irType.arguments.lastOrNull()?.let { arg ->
+                        if (arg is IrTypeProjection) {
+                            irTypeToKotlinString(arg.type, preserveTypeParameters)
+                        } else {
+                            "Any"
+                        }
+                    } ?: "Unit"
 
                 return if (paramTypes.isEmpty()) {
                     "() -> $returnType"
@@ -194,7 +201,10 @@ internal class TypeResolver {
     /**
      * Handles generic type conversion with proper type parameter handling.
      */
-    private fun handleGenericType(irType: IrSimpleType, preserveTypeParameters: Boolean): String {
+    private fun handleGenericType(
+        irType: IrSimpleType,
+        preserveTypeParameters: Boolean,
+    ): String {
         val irClass = irType.getClass()
         if (irClass == null) return "Any"
 
@@ -202,12 +212,13 @@ internal class TypeResolver {
         val packageName = irClass.kotlinFqName.parent().asString()
 
         if (preserveTypeParameters && irType.arguments.isNotEmpty()) {
-            val typeArgs = irType.arguments.map { arg ->
-                when (arg) {
-                    is IrTypeProjection -> irTypeToKotlinString(arg.type, preserveTypeParameters)
-                    else -> "Any"
+            val typeArgs =
+                irType.arguments.map { arg ->
+                    when (arg) {
+                        is IrTypeProjection -> irTypeToKotlinString(arg.type, preserveTypeParameters)
+                        else -> "Any"
+                    }
                 }
-            }
             return "$className<${typeArgs.joinToString(", ")}>"
         } else {
             // NoGenerics pattern: Use specific type erasure rules for common types
@@ -227,16 +238,17 @@ internal class TypeResolver {
      * Generates default values for function types.
      */
     private fun generateFunctionDefault(irType: IrType): String {
-        val returnType = if (irType is IrSimpleType && irType.arguments.isNotEmpty()) {
-            val lastArg = irType.arguments.last()
-            if (lastArg is IrTypeProjection) {
-                getDefaultValue(lastArg.type)
+        val returnType =
+            if (irType is IrSimpleType && irType.arguments.isNotEmpty()) {
+                val lastArg = irType.arguments.last()
+                if (lastArg is IrTypeProjection) {
+                    getDefaultValue(lastArg.type)
+                } else {
+                    "Unit"
+                }
             } else {
                 "Unit"
             }
-        } else {
-            "Unit"
-        }
 
         return "{ $returnType }"
     }
@@ -311,7 +323,10 @@ internal class TypeResolver {
     /**
      * Handles enum default value generation.
      */
-    private fun handleEnumDefault(irClass: IrClass, className: String): String {
+    private fun handleEnumDefault(
+        irClass: IrClass,
+        className: String,
+    ): String {
         val enumEntries = irClass.declarations.filterIsInstance<IrEnumEntry>()
         return if (enumEntries.isNotEmpty()) {
             "$className.${enumEntries.first().name.asString()}"
@@ -323,19 +338,16 @@ internal class TypeResolver {
     /**
      * Gets simple class name from FQ name, avoiding package qualification.
      */
-    private fun getSimpleClassName(irClass: IrClass): String {
-        return irClass.name.asString()
-    }
+    private fun getSimpleClassName(irClass: IrClass): String = irClass.name.asString()
 
     /**
      * Check if a type is primitive and doesn't need imports.
      */
-    fun isPrimitiveType(irType: IrType): Boolean {
-        return irType.isString() || irType.isInt() || irType.isBoolean() ||
-                irType.isUnit() || irType.isLong() || irType.isFloat() ||
-                irType.isDouble() || irType.isChar() || irType.isByte() ||
-                irType.isShort()
-    }
+    fun isPrimitiveType(irType: IrType): Boolean =
+        irType.isString() || irType.isInt() || irType.isBoolean() ||
+            irType.isUnit() || irType.isLong() || irType.isFloat() ||
+            irType.isDouble() || irType.isChar() || irType.isByte() ||
+            irType.isShort()
 
     /**
      * Checks if an IR type represents a function type.

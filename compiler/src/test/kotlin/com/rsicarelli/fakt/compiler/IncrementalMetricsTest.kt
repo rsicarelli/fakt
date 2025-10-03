@@ -2,9 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler
 
-import kotlin.test.*
 import java.io.File
 import java.nio.file.Files
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /**
  * Tests for incremental compilation metrics, specifically validating
@@ -12,17 +17,17 @@ import java.nio.file.Files
  * in different compilation scenarios.
  */
 class IncrementalMetricsTest {
-
     private lateinit var tempDir: File
     private lateinit var optimizations: CompilerOptimizationsImpl
 
     @BeforeTest
     fun setup() {
         tempDir = Files.createTempDirectory("ktfakes-metrics-test").toFile()
-        optimizations = CompilerOptimizationsImpl(
-            fakeAnnotations = listOf("com.rsicarelli.fakt.Fake"),
-            outputDir = tempDir.absolutePath
-        )
+        optimizations =
+            CompilerOptimizationsImpl(
+                fakeAnnotations = listOf("com.rsicarelli.fakt.Fake"),
+                outputDir = tempDir.absolutePath,
+            )
     }
 
     @AfterTest
@@ -33,11 +38,12 @@ class IncrementalMetricsTest {
     @Test
     fun `GIVEN no previous cache WHEN first compilation THEN typesSkipped should be 0`() {
         // GIVEN - fresh compilation with multiple types
-        val types = listOf(
-            createTypeInfo("UserService", "interface UserService|props:1|funs:2"),
-            createTypeInfo("OrderService", "interface OrderService|props:0|funs:3"),
-            createTypeInfo("PaymentService", "interface PaymentService|props:2|funs:1")
-        )
+        val types =
+            listOf(
+                createTypeInfo("UserService", "interface UserService|props:1|funs:2"),
+                createTypeInfo("OrderService", "interface OrderService|props:0|funs:3"),
+                createTypeInfo("PaymentService", "interface PaymentService|props:2|funs:1"),
+            )
 
         // WHEN - process all types (first compilation)
         types.forEach { type ->
@@ -58,10 +64,11 @@ class IncrementalMetricsTest {
     @Test
     fun `GIVEN unchanged interfaces WHEN recompilation THEN typesSkipped should equal total`() {
         // GIVEN - first compilation
-        val types = listOf(
-            createTypeInfo("UserService", "interface UserService|props:1|funs:2"),
-            createTypeInfo("OrderService", "interface OrderService|props:0|funs:3")
-        )
+        val types =
+            listOf(
+                createTypeInfo("UserService", "interface UserService|props:1|funs:2"),
+                createTypeInfo("OrderService", "interface OrderService|props:0|funs:3"),
+            )
 
         types.forEach { type ->
             optimizations.indexType(type)
@@ -70,10 +77,11 @@ class IncrementalMetricsTest {
         optimizations.saveSignatures()
 
         // WHEN - second compilation with same types (unchanged)
-        val newOptimizations = CompilerOptimizationsImpl(
-            fakeAnnotations = listOf("com.rsicarelli.fakt.Fake"),
-            outputDir = tempDir.absolutePath
-        )
+        val newOptimizations =
+            CompilerOptimizationsImpl(
+                fakeAnnotations = listOf("com.rsicarelli.fakt.Fake"),
+                outputDir = tempDir.absolutePath,
+            )
 
         types.forEach { type ->
             newOptimizations.indexType(type)
@@ -92,11 +100,12 @@ class IncrementalMetricsTest {
     @Test
     fun `GIVEN 1 changed interface WHEN recompilation THEN typesSkipped should be N-1`() {
         // GIVEN - first compilation with 3 types
-        val originalTypes = listOf(
-            createTypeInfo("UserService", "interface UserService|props:1|funs:2"),
-            createTypeInfo("OrderService", "interface OrderService|props:0|funs:3"),
-            createTypeInfo("PaymentService", "interface PaymentService|props:2|funs:1")
-        )
+        val originalTypes =
+            listOf(
+                createTypeInfo("UserService", "interface UserService|props:1|funs:2"),
+                createTypeInfo("OrderService", "interface OrderService|props:0|funs:3"),
+                createTypeInfo("PaymentService", "interface PaymentService|props:2|funs:1"),
+            )
 
         originalTypes.forEach { type ->
             optimizations.indexType(type)
@@ -105,16 +114,18 @@ class IncrementalMetricsTest {
         optimizations.saveSignatures()
 
         // WHEN - second compilation with 1 changed type
-        val newOptimizations = CompilerOptimizationsImpl(
-            fakeAnnotations = listOf("com.rsicarelli.fakt.Fake"),
-            outputDir = tempDir.absolutePath
-        )
+        val newOptimizations =
+            CompilerOptimizationsImpl(
+                fakeAnnotations = listOf("com.rsicarelli.fakt.Fake"),
+                outputDir = tempDir.absolutePath,
+            )
 
-        val changedTypes = listOf(
-            createTypeInfo("UserService", "interface UserService|props:1|funs:2"), // Unchanged
-            createTypeInfo("OrderService", "interface OrderService|props:0|funs:4"), // Changed: +1 function
-            createTypeInfo("PaymentService", "interface PaymentService|props:2|funs:1") // Unchanged
-        )
+        val changedTypes =
+            listOf(
+                createTypeInfo("UserService", "interface UserService|props:1|funs:2"), // Unchanged
+                createTypeInfo("OrderService", "interface OrderService|props:0|funs:4"), // Changed: +1 function
+                createTypeInfo("PaymentService", "interface PaymentService|props:2|funs:1"), // Unchanged
+            )
 
         var generated = 0
         var skipped = 0
@@ -142,10 +153,11 @@ class IncrementalMetricsTest {
     @Test
     fun `GIVEN mixed changed and new interfaces WHEN recompilation THEN metrics should be accurate`() {
         // GIVEN - first compilation with 2 types
-        val originalTypes = listOf(
-            createTypeInfo("UserService", "interface UserService|props:1|funs:2"),
-            createTypeInfo("OrderService", "interface OrderService|props:0|funs:3")
-        )
+        val originalTypes =
+            listOf(
+                createTypeInfo("UserService", "interface UserService|props:1|funs:2"),
+                createTypeInfo("OrderService", "interface OrderService|props:0|funs:3"),
+            )
 
         originalTypes.forEach { type ->
             optimizations.indexType(type)
@@ -154,16 +166,18 @@ class IncrementalMetricsTest {
         optimizations.saveSignatures()
 
         // WHEN - second compilation with 1 unchanged, 1 changed, 1 new
-        val newOptimizations = CompilerOptimizationsImpl(
-            fakeAnnotations = listOf("com.rsicarelli.fakt.Fake"),
-            outputDir = tempDir.absolutePath
-        )
+        val newOptimizations =
+            CompilerOptimizationsImpl(
+                fakeAnnotations = listOf("com.rsicarelli.fakt.Fake"),
+                outputDir = tempDir.absolutePath,
+            )
 
-        val secondCompilationTypes = listOf(
-            createTypeInfo("UserService", "interface UserService|props:1|funs:2"), // Unchanged
-            createTypeInfo("OrderService", "interface OrderService|props:1|funs:3"), // Changed: +1 property
-            createTypeInfo("PaymentService", "interface PaymentService|props:0|funs:1") // New
-        )
+        val secondCompilationTypes =
+            listOf(
+                createTypeInfo("UserService", "interface UserService|props:1|funs:2"), // Unchanged
+                createTypeInfo("OrderService", "interface OrderService|props:1|funs:3"), // Changed: +1 property
+                createTypeInfo("PaymentService", "interface PaymentService|props:0|funs:1"), // New
+            )
 
         var generated = 0
         var skipped = 0
@@ -191,13 +205,14 @@ class IncrementalMetricsTest {
     @Test
     fun `GIVEN compilation metrics WHEN calculating skipped THEN should match manual count`() {
         // GIVEN - setup with multiple types in different states
-        val types = listOf(
-            createTypeInfo("Service1", "interface Service1|props:1|funs:1"),
-            createTypeInfo("Service2", "interface Service2|props:0|funs:2"),
-            createTypeInfo("Service3", "interface Service3|props:2|funs:0"),
-            createTypeInfo("Service4", "interface Service4|props:1|funs:3"),
-            createTypeInfo("Service5", "interface Service5|props:0|funs:1")
-        )
+        val types =
+            listOf(
+                createTypeInfo("Service1", "interface Service1|props:1|funs:1"),
+                createTypeInfo("Service2", "interface Service2|props:0|funs:2"),
+                createTypeInfo("Service3", "interface Service3|props:2|funs:0"),
+                createTypeInfo("Service4", "interface Service4|props:1|funs:3"),
+                createTypeInfo("Service5", "interface Service5|props:0|funs:1"),
+            )
 
         // First compilation
         types.forEach { type ->
@@ -207,18 +222,20 @@ class IncrementalMetricsTest {
         optimizations.saveSignatures()
 
         // WHEN - second compilation with mixed changes
-        val newOptimizations = CompilerOptimizationsImpl(
-            fakeAnnotations = listOf("com.rsicarelli.fakt.Fake"),
-            outputDir = tempDir.absolutePath
-        )
+        val newOptimizations =
+            CompilerOptimizationsImpl(
+                fakeAnnotations = listOf("com.rsicarelli.fakt.Fake"),
+                outputDir = tempDir.absolutePath,
+            )
 
-        val changedTypes = listOf(
-            createTypeInfo("Service1", "interface Service1|props:1|funs:1"), // Unchanged
-            createTypeInfo("Service2", "interface Service2|props:0|funs:3"), // Changed
-            createTypeInfo("Service3", "interface Service3|props:2|funs:0"), // Unchanged
-            createTypeInfo("Service4", "interface Service4|props:2|funs:3"), // Changed
-            createTypeInfo("Service5", "interface Service5|props:0|funs:1")  // Unchanged
-        )
+        val changedTypes =
+            listOf(
+                createTypeInfo("Service1", "interface Service1|props:1|funs:1"), // Unchanged
+                createTypeInfo("Service2", "interface Service2|props:0|funs:3"), // Changed
+                createTypeInfo("Service3", "interface Service3|props:2|funs:0"), // Unchanged
+                createTypeInfo("Service4", "interface Service4|props:2|funs:3"), // Changed
+                createTypeInfo("Service5", "interface Service5|props:0|funs:1"), // Unchanged
+            )
 
         var manualGenerated = 0
         var manualSkipped = 0
@@ -246,15 +263,17 @@ class IncrementalMetricsTest {
     @Test
     fun `GIVEN no outputDir WHEN compiling THEN should not track skipped metrics persistently`() {
         // GIVEN - optimization without persistent cache
-        val noCacheOptimizations = CompilerOptimizationsImpl(
-            fakeAnnotations = listOf("com.rsicarelli.fakt.Fake"),
-            outputDir = null
-        )
+        val noCacheOptimizations =
+            CompilerOptimizationsImpl(
+                fakeAnnotations = listOf("com.rsicarelli.fakt.Fake"),
+                outputDir = null,
+            )
 
-        val types = listOf(
-            createTypeInfo("Service1", "interface Service1|props:1|funs:1"),
-            createTypeInfo("Service2", "interface Service2|props:0|funs:2")
-        )
+        val types =
+            listOf(
+                createTypeInfo("Service1", "interface Service1|props:1|funs:1"),
+                createTypeInfo("Service2", "interface Service2|props:0|funs:2"),
+            )
 
         // WHEN - first compilation
         types.forEach { type ->
@@ -265,10 +284,11 @@ class IncrementalMetricsTest {
         val firstMetrics = noCacheOptimizations.getMetrics()
 
         // New session (simulating separate compilation)
-        val newSessionOptimizations = CompilerOptimizationsImpl(
-            fakeAnnotations = listOf("com.rsicarelli.fakt.Fake"),
-            outputDir = null
-        )
+        val newSessionOptimizations =
+            CompilerOptimizationsImpl(
+                fakeAnnotations = listOf("com.rsicarelli.fakt.Fake"),
+                outputDir = null,
+            )
 
         types.forEach { type ->
             newSessionOptimizations.indexType(type)
@@ -289,9 +309,10 @@ class IncrementalMetricsTest {
     @Test
     fun `GIVEN metrics during compilation WHEN checking compilation time THEN should be reasonable`() {
         // GIVEN - types to process
-        val types = (1..10).map { i ->
-            createTypeInfo("Service$i", "interface Service$i|props:1|funs:$i")
-        }
+        val types =
+            (1..10).map { i ->
+                createTypeInfo("Service$i", "interface Service$i|props:1|funs:$i")
+            }
 
         val startTime = System.currentTimeMillis()
 
@@ -313,12 +334,15 @@ class IncrementalMetricsTest {
         assertEquals(0, metrics.typesSkipped, "Should skip 0 types in first compilation")
     }
 
-    private fun createTypeInfo(name: String, signature: String) = TypeInfo(
+    private fun createTypeInfo(
+        name: String,
+        signature: String,
+    ) = TypeInfo(
         name = name,
         fullyQualifiedName = "com.example.$name",
         packageName = "com.example",
         fileName = "$name.kt",
         annotations = listOf("com.rsicarelli.fakt.Fake"),
-        signature = signature
+        signature = signature,
     )
 }

@@ -14,46 +14,49 @@ import org.jetbrains.kotlin.config.CompilerConfigurationKey
  */
 @OptIn(ExperimentalCompilerApi::class)
 class FaktCommandLineProcessor : CommandLineProcessor {
-
     companion object {
         val ENABLED_KEY = CompilerConfigurationKey<Boolean>("ktfake.enabled")
         val DEBUG_KEY = CompilerConfigurationKey<Boolean>("ktfake.debug")
         val OUTPUT_DIR_KEY = CompilerConfigurationKey<String>("ktfake.outputDir")
 
-        val ENABLED_OPTION = CliOption(
-            optionName = "enabled",
-            valueDescription = "true|false",
-            description = "Enable KtFake compiler plugin",
-            required = false
-        )
+        val ENABLED_OPTION =
+            CliOption(
+                optionName = "enabled",
+                valueDescription = "true|false",
+                description = "Enable KtFake compiler plugin",
+                required = false,
+            )
 
-        val DEBUG_OPTION = CliOption(
-            optionName = "debug",
-            valueDescription = "true|false",
-            description = "Enable debug logging",
-            required = false
-        )
+        val DEBUG_OPTION =
+            CliOption(
+                optionName = "debug",
+                valueDescription = "true|false",
+                description = "Enable debug logging",
+                required = false,
+            )
 
-        val OUTPUT_DIR_OPTION = CliOption(
-            optionName = "outputDir",
-            valueDescription = "path",
-            description = "Output directory for generated fakes",
-            required = false
-        )
+        val OUTPUT_DIR_OPTION =
+            CliOption(
+                optionName = "outputDir",
+                valueDescription = "path",
+                description = "Output directory for generated fakes",
+                required = false,
+            )
     }
 
     override val pluginId: String = "com.rsicarelli.fakt"
 
-    override val pluginOptions: Collection<CliOption> = listOf(
-        ENABLED_OPTION,
-        DEBUG_OPTION,
-        OUTPUT_DIR_OPTION
-    )
+    override val pluginOptions: Collection<CliOption> =
+        listOf(
+            ENABLED_OPTION,
+            DEBUG_OPTION,
+            OUTPUT_DIR_OPTION,
+        )
 
     override fun processOption(
         option: AbstractCliOption,
         value: String,
-        configuration: CompilerConfiguration
+        configuration: CompilerConfiguration,
     ) {
         when (option.optionName) {
             "enabled" -> configuration.put(ENABLED_KEY, value.toBoolean())

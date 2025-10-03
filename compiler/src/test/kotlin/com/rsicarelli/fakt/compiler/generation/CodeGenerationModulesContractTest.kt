@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.generation
 
-import com.rsicarelli.fakt.compiler.types.TypeResolver
-import com.rsicarelli.fakt.compiler.types.ImportResolver
 import com.rsicarelli.fakt.compiler.sourceset.SourceSetMapper
+import com.rsicarelli.fakt.compiler.types.ImportResolver
+import com.rsicarelli.fakt.compiler.types.TypeResolver
 import kotlin.test.Test
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.test.assertFalse
 
 /**
  * Contract tests for extracted code generation modules.
@@ -18,7 +18,6 @@ import kotlin.test.assertFalse
  * module structure.
  */
 class CodeGenerationModulesContractTest {
-
     @Test
     fun `GIVEN TypeResolver module WHEN instantiating THEN should create successfully`() {
         // GIVEN - TypeResolver extracted from UnifiedFaktIrGenerationExtension
@@ -54,10 +53,11 @@ class CodeGenerationModulesContractTest {
     fun `GIVEN SourceSetMapper module WHEN instantiating THEN should create successfully`() {
         // GIVEN - SourceSetMapper extracted from UnifiedFaktIrGenerationExtension
         // WHEN - Creating instance with required parameters
-        val sourceSetMapper = SourceSetMapper(
-            outputDir = "/tmp/test",
-            messageCollector = null
-        )
+        val sourceSetMapper =
+            SourceSetMapper(
+                outputDir = "/tmp/test",
+                messageCollector = null,
+            )
 
         // THEN - Should exist and have expected methods
         assertNotNull(sourceSetMapper, "SourceSetMapper should be instantiable")
@@ -118,31 +118,36 @@ class CodeGenerationModulesContractTest {
         // GIVEN - CodeGenerator with full dependency injection setup
         val typeResolver = TypeResolver()
         val importResolver = ImportResolver(typeResolver)
-        val sourceSetMapper = SourceSetMapper(
-            outputDir = "/tmp/test",
-            messageCollector = null
-        )
+        val sourceSetMapper =
+            SourceSetMapper(
+                outputDir = "/tmp/test",
+                messageCollector = null,
+            )
         val implementationGenerator = ImplementationGenerator(typeResolver)
         val factoryGenerator = FactoryGenerator()
         val configurationDslGenerator = ConfigurationDslGenerator(typeResolver)
 
         // WHEN - Creating CodeGenerator with all dependencies
-        val codeGenerator = CodeGenerator(
-            typeResolver = typeResolver,
-            importResolver = importResolver,
-            sourceSetMapper = sourceSetMapper,
-            implementationGenerator = implementationGenerator,
-            factoryGenerator = factoryGenerator,
-            configurationDslGenerator = configurationDslGenerator,
-            messageCollector = null
-        )
+        val codeGenerator =
+            CodeGenerator(
+                typeResolver = typeResolver,
+                importResolver = importResolver,
+                sourceSetMapper = sourceSetMapper,
+                implementationGenerator = implementationGenerator,
+                factoryGenerator = factoryGenerator,
+                configurationDslGenerator = configurationDslGenerator,
+                messageCollector = null,
+            )
 
         // THEN - Should exist and demonstrate proper dependency injection architecture
         assertNotNull(codeGenerator, "CodeGenerator should be instantiable with all dependencies")
 
         // Verify orchestrator method exists
         val methods = CodeGenerator::class.java.declaredMethods.map { it.name }
-        assertTrue(methods.contains("generateWorkingFakeImplementation"), "Should have generateWorkingFakeImplementation orchestrator method")
+        assertTrue(
+            methods.contains("generateWorkingFakeImplementation"),
+            "Should have generateWorkingFakeImplementation orchestrator method",
+        )
     }
 
     @Test
@@ -150,10 +155,11 @@ class CodeGenerationModulesContractTest {
         // GIVEN - All extracted modules
         val typeResolver = TypeResolver()
         val importResolver = ImportResolver(typeResolver)
-        val sourceSetMapper = SourceSetMapper(
-            outputDir = "/tmp/test",
-            messageCollector = null
-        )
+        val sourceSetMapper =
+            SourceSetMapper(
+                outputDir = "/tmp/test",
+                messageCollector = null,
+            )
 
         // WHEN - Checking module independence
         // THEN - Modules should not have circular dependencies
@@ -162,14 +168,14 @@ class CodeGenerationModulesContractTest {
         val typeResolverFields = TypeResolver::class.java.declaredFields
         assertFalse(
             typeResolverFields.any { it.type.simpleName.contains("ImportResolver") },
-            "TypeResolver should not depend on ImportResolver"
+            "TypeResolver should not depend on ImportResolver",
         )
 
         // ImportResolver should be independent
         val importResolverFields = ImportResolver::class.java.declaredFields
         assertFalse(
             importResolverFields.any { it.type.simpleName.contains("SourceSetMapper") },
-            "ImportResolver should not depend on SourceSetMapper"
+            "ImportResolver should not depend on SourceSetMapper",
         )
 
         // This verifies the SOLID principles extraction was successful

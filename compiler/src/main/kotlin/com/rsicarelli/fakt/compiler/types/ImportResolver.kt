@@ -4,7 +4,9 @@ package com.rsicarelli.fakt.compiler.types
 
 import com.rsicarelli.fakt.compiler.analysis.InterfaceAnalysis
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
-import org.jetbrains.kotlin.ir.types.*
+import org.jetbrains.kotlin.ir.types.IrSimpleType
+import org.jetbrains.kotlin.ir.types.IrType
+import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.ir.util.kotlinFqName
 
 /**
@@ -15,9 +17,8 @@ import org.jetbrains.kotlin.ir.util.kotlinFqName
  */
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 internal class ImportResolver(
-    private val typeResolver: TypeResolver
+    private val typeResolver: TypeResolver,
 ) {
-
     /**
      * Collect all required import statements for types used in the interface.
      * This fixes cross-module import resolution by analyzing all type references.
@@ -26,7 +27,10 @@ internal class ImportResolver(
      * @param currentPackage The package of the generated fake class
      * @return Set of fully qualified type names that need to be imported
      */
-    fun collectRequiredImports(analysis: InterfaceAnalysis, currentPackage: String): Set<String> {
+    fun collectRequiredImports(
+        analysis: InterfaceAnalysis,
+        currentPackage: String,
+    ): Set<String> {
         val imports = mutableSetOf<String>()
 
         // Collect imports from function return types and parameters
@@ -53,7 +57,11 @@ internal class ImportResolver(
      * @param currentPackage The current package context
      * @param imports Mutable set to collect import requirements
      */
-    private fun collectImportsFromType(irType: IrType, currentPackage: String, imports: MutableSet<String>) {
+    private fun collectImportsFromType(
+        irType: IrType,
+        currentPackage: String,
+        imports: MutableSet<String>,
+    ) {
         // Skip primitive types - they don't need imports
         if (typeResolver.isPrimitiveType(irType)) {
             return
@@ -87,12 +95,14 @@ internal class ImportResolver(
      * @param currentPackage Package of the generated class
      * @return true if the type should be imported, false otherwise
      */
-    private fun shouldImportType(typePackage: String, currentPackage: String): Boolean {
-        return typePackage.isNotEmpty() &&
-                typePackage != currentPackage &&
-                !typePackage.startsWith("kotlin.") &&
-                !isKotlinBuiltIn(typePackage)
-    }
+    private fun shouldImportType(
+        typePackage: String,
+        currentPackage: String,
+    ): Boolean =
+        typePackage.isNotEmpty() &&
+            typePackage != currentPackage &&
+            !typePackage.startsWith("kotlin.") &&
+            !isKotlinBuiltIn(typePackage)
 
     /**
      * Checks if a package contains Kotlin built-in types that don't need imports.
@@ -100,22 +110,21 @@ internal class ImportResolver(
      * @param packageName The package to check
      * @return true if this is a built-in package, false otherwise
      */
-    private fun isKotlinBuiltIn(packageName: String): Boolean {
-        return packageName in KOTLIN_BUILTIN_PACKAGES
-    }
+    private fun isKotlinBuiltIn(packageName: String): Boolean = packageName in KOTLIN_BUILTIN_PACKAGES
 
     companion object {
         /**
          * Set of Kotlin packages that contain built-in types and don't require explicit imports.
          */
-        private val KOTLIN_BUILTIN_PACKAGES = setOf(
-            "kotlin",
-            "kotlin.collections",
-            "kotlin.ranges",
-            "kotlin.sequences",
-            "kotlin.text",
-            "kotlin.io",
-            "kotlin.comparisons"
-        )
+        private val KOTLIN_BUILTIN_PACKAGES =
+            setOf(
+                "kotlin",
+                "kotlin.collections",
+                "kotlin.ranges",
+                "kotlin.sequences",
+                "kotlin.text",
+                "kotlin.io",
+                "kotlin.comparisons",
+            )
     }
 }

@@ -5,12 +5,12 @@ package com.rsicarelli.fakt.compiler.discovery
 import com.rsicarelli.fakt.compiler.CompilerOptimizations
 import com.rsicarelli.fakt.compiler.TypeInfo
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
+import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
-import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.util.kotlinFqName
@@ -29,9 +29,8 @@ import org.jetbrains.kotlin.ir.util.packageFqName
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 internal class InterfaceDiscovery(
     private val optimizations: CompilerOptimizations,
-    private val messageCollector: MessageCollector? = null
+    private val messageCollector: MessageCollector? = null,
 ) {
-
     /**
      * Discovers all interfaces in the module that should have fakes generated.
      *
@@ -52,23 +51,25 @@ internal class InterfaceDiscovery(
                     declaration.origin != IrDeclarationOrigin.IR_EXTERNAL_DECLARATION_STUB
                 ) {
                     // Check if the interface has any of our target annotations
-                    val matchingAnnotation = declaration.annotations.find { annotation ->
-                        val annotationFqName = annotation.type.classFqName?.asString()
-                        annotationFqName != null && optimizations.isConfiguredFor(annotationFqName)
-                    }
+                    val matchingAnnotation =
+                        declaration.annotations.find { annotation ->
+                            val annotationFqName = annotation.type.classFqName?.asString()
+                            annotationFqName != null && optimizations.isConfiguredFor(annotationFqName)
+                        }
 
                     if (matchingAnnotation != null) {
                         discoveredInterfaces.add(declaration)
 
                         // Create TypeInfo for optimization tracking
-                        val typeInfo = TypeInfo(
-                            name = declaration.name.asString(),
-                            fullyQualifiedName = declaration.kotlinFqName.asString(),
-                            packageName = declaration.packageFqName?.asString() ?: "",
-                            fileName = file.fileEntry.name,
-                            annotations = declaration.annotations.mapNotNull { it.type.classFqName?.asString() },
-                            signature = computeInterfaceSignature(declaration)
-                        )
+                        val typeInfo =
+                            TypeInfo(
+                                name = declaration.name.asString(),
+                                fullyQualifiedName = declaration.kotlinFqName.asString(),
+                                packageName = declaration.packageFqName?.asString() ?: "",
+                                fileName = file.fileEntry.name,
+                                annotations = declaration.annotations.mapNotNull { it.type.classFqName?.asString() },
+                                signature = computeInterfaceSignature(declaration),
+                            )
                         optimizations.indexType(typeInfo)
 
                         val annotationName =
@@ -109,7 +110,7 @@ internal class InterfaceDiscovery(
         this.report(
             org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.INFO,
             message,
-            null
+            null,
         )
     }
 }

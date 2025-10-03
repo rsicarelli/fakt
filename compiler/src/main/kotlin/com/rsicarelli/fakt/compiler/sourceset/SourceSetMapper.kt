@@ -14,9 +14,8 @@ import java.io.File
  */
 internal class SourceSetMapper(
     private val outputDir: String?,
-    private val messageCollector: MessageCollector?
+    private val messageCollector: MessageCollector?,
 ) {
-
     /**
      * Get generated sources directory with intelligent source set mapping and fallback strategy.
      * Maps source locations to appropriate test source sets with hierarchical fallback:
@@ -146,7 +145,7 @@ internal class SourceSetMapper(
 
             // Sample projects - since single-module uses JVM target, default to jvmTest
             normalizedName.contains("single-module") -> "jvmTest"
-            normalizedName.contains("sample") -> "jvmTest"  // Default samples to JVM test
+            normalizedName.contains("sample") -> "jvmTest" // Default samples to JVM test
             normalizedName.contains("test") -> "jvmTest"
 
             // Ultimate intelligent fallback
@@ -161,8 +160,8 @@ internal class SourceSetMapper(
      * @param moduleName The module name to build fallback chain for
      * @return List of fallback source set names in priority order
      */
-    private fun buildFallbackChain(moduleName: String): List<String> {
-        return when {
+    private fun buildFallbackChain(moduleName: String): List<String> =
+        when {
             // Apple platform hierarchy: platform -> apple -> native -> common
             moduleName.contains("ios") -> listOf("appleTest", "nativeTest", "commonTest")
             moduleName.contains("macos") -> listOf("appleTest", "nativeTest", "commonTest")
@@ -194,7 +193,6 @@ internal class SourceSetMapper(
             // Default fallback
             else -> listOf("commonTest")
         }
-    }
 
     /**
      * Resolves Android test target based on project configuration.
@@ -216,8 +214,8 @@ internal class SourceSetMapper(
      * @param moduleName The module name to analyze
      * @return The best guess test source set name
      */
-    private fun intelligentFallback(moduleName: String): String {
-        return when {
+    private fun intelligentFallback(moduleName: String): String =
+        when {
             moduleName.contains("android") -> "androidUnitTest"
             moduleName.contains("jvm") -> "jvmTest"
             moduleName.contains("js") -> "jsTest"
@@ -232,15 +230,14 @@ internal class SourceSetMapper(
             moduleName.contains("test") -> "commonTest"
             else -> "commonTest" // Ultimate fallback
         }
-    }
 
     /**
      * Resolves the base directory for generated sources.
      *
      * @return The base directory for output
      */
-    private fun resolveBaseDirectory(): File {
-        return when {
+    private fun resolveBaseDirectory(): File =
+        when {
             outputDir != null -> File(outputDir)
             else -> {
                 // Fallback: Try to find project directory by looking for build.gradle.kts
@@ -256,13 +253,12 @@ internal class SourceSetMapper(
                 File(dir, "build/generated/ktfake")
             }
         }
-    }
 
     /**
      * Attempts to find project directory when running from Kotlin daemon.
      */
-    private fun findProjectFromDaemon(): File? {
-        return try {
+    private fun findProjectFromDaemon(): File? =
+        try {
             val classLoader = this::class.java.classLoader
             val resourceUrl = classLoader.getResource("")
             if (resourceUrl != null) {
@@ -273,11 +269,12 @@ internal class SourceSetMapper(
                     parent = parent.parentFile
                 }
                 if (File(parent, "build.gradle.kts").exists()) parent else null
-            } else null
+            } else {
+                null
+            }
         } catch (e: Exception) {
             null
         }
-    }
 
     /**
      * Finds the project root by looking for build.gradle.kts.
@@ -301,8 +298,8 @@ internal class SourceSetMapper(
      * @param dir The directory to check/create
      * @return true if directory is usable, false otherwise
      */
-    private fun ensureDirectoryExists(dir: File): Boolean {
-        return try {
+    private fun ensureDirectoryExists(dir: File): Boolean =
+        try {
             if (!dir.exists()) {
                 dir.mkdirs()
             }
@@ -311,12 +308,15 @@ internal class SourceSetMapper(
             messageCollector?.reportInfo("KtFakes: Cannot access directory ${dir.absolutePath}: ${e.message}")
             false
         }
-    }
 
     /**
      * Reports successful primary target mapping.
      */
-    private fun reportMapping(moduleName: String, primaryTarget: String, dir: File) {
+    private fun reportMapping(
+        moduleName: String,
+        primaryTarget: String,
+        dir: File,
+    ) {
         messageCollector?.reportInfo("KtFakes: Module '$moduleName' -> Primary target '$primaryTarget'")
         messageCollector?.reportInfo("KtFakes: Output directory: ${dir.absolutePath}")
     }
@@ -324,9 +324,14 @@ internal class SourceSetMapper(
     /**
      * Reports fallback target usage.
      */
-    private fun reportFallback(moduleName: String, primaryTarget: String, fallbackTarget: String, dir: File) {
+    private fun reportFallback(
+        moduleName: String,
+        primaryTarget: String,
+        fallbackTarget: String,
+        dir: File,
+    ) {
         messageCollector?.reportInfo(
-            "KtFakes: Module '$moduleName' -> Primary target '$primaryTarget' not available, using fallback '$fallbackTarget'"
+            "KtFakes: Module '$moduleName' -> Primary target '$primaryTarget' not available, using fallback '$fallbackTarget'",
         )
         messageCollector?.reportInfo("KtFakes: Output directory: ${dir.absolutePath}")
     }
@@ -334,7 +339,11 @@ internal class SourceSetMapper(
     /**
      * Reports creation of new primary target directory.
      */
-    private fun reportCreated(moduleName: String, primaryTarget: String, dir: File) {
+    private fun reportCreated(
+        moduleName: String,
+        primaryTarget: String,
+        dir: File,
+    ) {
         messageCollector?.reportInfo("KtFakes: Module '$moduleName' -> Created primary target '$primaryTarget' (fallbacks unavailable)")
         messageCollector?.reportInfo("KtFakes: Output directory: ${dir.absolutePath}")
     }
