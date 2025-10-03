@@ -3,6 +3,7 @@
 package com.rsicarelli.fakt.compiler.ir
 
 import com.rsicarelli.fakt.compiler.codegen.CodeGenerator
+import com.rsicarelli.fakt.compiler.codegen.CodeGenerators
 import com.rsicarelli.fakt.compiler.codegen.ConfigurationDslGenerator
 import com.rsicarelli.fakt.compiler.codegen.FactoryGenerator
 import com.rsicarelli.fakt.compiler.codegen.ImplementationGenerator
@@ -21,21 +22,7 @@ import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
-import org.jetbrains.kotlin.ir.types.IrSimpleType
-import org.jetbrains.kotlin.ir.types.IrType
-import org.jetbrains.kotlin.ir.types.IrTypeProjection
 import org.jetbrains.kotlin.ir.types.classFqName
-import org.jetbrains.kotlin.ir.types.getClass
-import org.jetbrains.kotlin.ir.types.isBoolean
-import org.jetbrains.kotlin.ir.types.isByte
-import org.jetbrains.kotlin.ir.types.isChar
-import org.jetbrains.kotlin.ir.types.isDouble
-import org.jetbrains.kotlin.ir.types.isFloat
-import org.jetbrains.kotlin.ir.types.isInt
-import org.jetbrains.kotlin.ir.types.isLong
-import org.jetbrains.kotlin.ir.types.isShort
-import org.jetbrains.kotlin.ir.types.isString
-import org.jetbrains.kotlin.ir.types.isUnit
 import org.jetbrains.kotlin.ir.util.kotlinFqName
 import org.jetbrains.kotlin.ir.util.packageFqName
 
@@ -66,17 +53,18 @@ class UnifiedFaktIrGenerationExtension(
     private val interfaceAnalyzer = InterfaceAnalyzer()
 
     // Code generation modules following SOLID principles
-    private val implementationGenerator = ImplementationGenerator(typeResolver)
-    private val factoryGenerator = FactoryGenerator()
-    private val configurationDslGenerator = ConfigurationDslGenerator(typeResolver)
+    private val generators =
+        CodeGenerators(
+            implementation = ImplementationGenerator(typeResolver),
+            factory = FactoryGenerator(),
+            configDsl = ConfigurationDslGenerator(typeResolver),
+        )
     private val codeGenerator =
         CodeGenerator(
             typeResolver = typeResolver,
             importResolver = importResolver,
             sourceSetMapper = sourceSetMapper,
-            implementationGenerator = implementationGenerator,
-            factoryGenerator = factoryGenerator,
-            configurationDslGenerator = configurationDslGenerator,
+            generators = generators,
             messageCollector = messageCollector,
         )
 
@@ -108,33 +96,33 @@ class UnifiedFaktIrGenerationExtension(
             }
 
             // Phase 2: IR-Native Code Generation with Incremental Compilation
-            for (fakeInterface in fakeInterfaces) {
+            // Filter interfaces that need processing before the loop
+            val interfacesToProcess =
+                fakeInterfaces
+                    .mapNotNull { fakeInterface ->
+                        val interfaceName = fakeInterface.name.asString()
+                        val typeInfo = createTypeInfo(fakeInterface)
+
+                        when {
+                            !optimizations.needsRegeneration(typeInfo) -> {
+                                messageCollector?.reportInfo("Fakt: Skipping unchanged interface: $interfaceName")
+                                null
+                            }
+
+                            interfaceAnalyzer.checkGenericSupport(fakeInterface) != null -> {
+                                val genericError =
+                                    interfaceAnalyzer.checkGenericSupport(fakeInterface)
+                                messageCollector?.reportInfo("Fakt: Skipping generic interface: $genericError")
+                                null
+                            }
+
+                            else -> fakeInterface to typeInfo
+                        }
+                    }
+
+            for ((fakeInterface, typeInfo) in interfacesToProcess) {
                 val interfaceName = fakeInterface.name.asString()
-
-                // Check if this interface needs regeneration (incremental compilation optimization)
-                val typeInfo =
-                    TypeInfo(
-                        name = interfaceName,
-                        fullyQualifiedName = fakeInterface.kotlinFqName.asString(),
-                        packageName = fakeInterface.packageFqName?.asString() ?: "",
-                        fileName = "",
-                        annotations = fakeInterface.annotations.mapNotNull { it.type.classFqName?.asString() },
-                        signature = computeInterfaceSignature(fakeInterface),
-                    )
-
-                if (!optimizations.needsRegeneration(typeInfo)) {
-                    messageCollector?.reportInfo("Fakt: Skipping unchanged interface: $interfaceName")
-                    continue
-                }
-
                 messageCollector?.reportInfo("Fakt: Processing interface: $interfaceName")
-
-                // Check for generic support - skip generics with helpful error
-                val genericError = interfaceAnalyzer.checkGenericSupport(fakeInterface)
-                if (genericError != null) {
-                    messageCollector?.reportInfo("Fakt: Skipping generic interface: $genericError")
-                    continue
-                }
 
                 // Dynamic interface analysis using IR APIs (IR-native approach!)
                 val interfaceAnalysis = interfaceAnalyzer.analyzeInterfaceDynamically(fakeInterface)
@@ -157,7 +145,9 @@ class UnifiedFaktIrGenerationExtension(
             messageCollector?.reportInfo("Fakt: IR-native generation completed successfully")
 
             // Generate simple compilation report and save signatures for incremental compilation
-            (optimizations as? com.rsicarelli.fakt.compiler.optimization.IncrementalCompiler)?.generateReport(outputDir)
+            (optimizations as? com.rsicarelli.fakt.compiler.optimization.IncrementalCompiler)?.generateReport(
+                outputDir
+            )
             (optimizations as? com.rsicarelli.fakt.compiler.optimization.IncrementalCompiler)?.saveSignatures()
         } catch (e: Exception) {
             messageCollector?.report(
@@ -170,6 +160,29 @@ class UnifiedFaktIrGenerationExtension(
 
     private fun MessageCollector.reportInfo(message: String) {
         this.report(org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.INFO, message)
+    }
+
+    /**
+     * Creates TypeInfo for incremental compilation tracking.
+     *
+     * @param fakeInterface The IR class to create TypeInfo for
+     * @return TypeInfo containing interface metadata
+     */
+    private fun createTypeInfo(fakeInterface: IrClass): TypeInfo {
+        val interfaceName = fakeInterface.name.asString()
+        val fullyQualifiedName = fakeInterface.kotlinFqName.asString()
+        // Use FQN as fileName since we don't have direct access to IrFile from IrClass
+        // This is sufficient for incremental compilation tracking
+        val fileName = "$fullyQualifiedName.kt"
+
+        return TypeInfo(
+            name = interfaceName,
+            fullyQualifiedName = fullyQualifiedName,
+            packageName = fakeInterface.packageFqName?.asString() ?: "",
+            fileName = fileName,
+            annotations = fakeInterface.annotations.mapNotNull { it.type.classFqName?.asString() },
+            signature = computeInterfaceSignature(fakeInterface),
+        )
     }
 
     /**

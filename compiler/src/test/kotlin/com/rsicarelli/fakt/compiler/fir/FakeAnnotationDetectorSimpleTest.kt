@@ -96,13 +96,12 @@ class FakeAnnotationDetectorSimpleTest {
         }
 
     @Test
-    fun `GIVEN annotation detection methods WHEN called without FIR session THEN should handle gracefully`() =
+    fun `GIVEN annotation detection methods WHEN checking method existence THEN should have expected methods`() =
         runTest {
-            // Given - detector instance
+            // Given
             val detector = FakeAnnotationDetector()
 
-            // When - attempting to use detection methods
-            // Then - should have the methods available (actual FIR testing requires complex setup)
+            // When & Then
             assertTrue(
                 detector::hasFakeAnnotation.name == "hasFakeAnnotation",
                 "Should have hasFakeAnnotation method",
@@ -118,16 +117,12 @@ class FakeAnnotationDetectorSimpleTest {
         }
 
     @Test
-    fun `GIVEN parameter extraction method WHEN called without annotation THEN should return default parameters`() =
+    fun `GIVEN default parameters WHEN creating instance THEN should have expected default values`() =
         runTest {
-            // Given - detector for testing extraction logic
-            val detector = FakeAnnotationDetector()
-
-            // When - testing extraction logic behavior
-            // Note: We can't easily mock FIR objects without complex setup, so we test the data structure
+            // Given & When
             val defaultParams = FakeAnnotationParameters()
 
-            // Then - default parameters should be sensible for annotation-less interfaces
+            // Then
             assertFalse(defaultParams.trackCalls, "Should not track calls by default")
             assertFalse(defaultParams.builder, "Should not generate builders by default")
             assertEquals(emptyList<ClassId>(), defaultParams.dependencies, "Should have no dependencies by default")

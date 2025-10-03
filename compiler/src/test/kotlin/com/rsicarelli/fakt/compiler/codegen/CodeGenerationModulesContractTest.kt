@@ -2,10 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.codegen
 
-import com.rsicarelli.fakt.compiler.codegen.CodeGenerator
-import com.rsicarelli.fakt.compiler.codegen.ConfigurationDslGenerator
-import com.rsicarelli.fakt.compiler.codegen.FactoryGenerator
-import com.rsicarelli.fakt.compiler.codegen.ImplementationGenerator
 import com.rsicarelli.fakt.compiler.output.SourceSetMapper
 import com.rsicarelli.fakt.compiler.types.ImportResolver
 import com.rsicarelli.fakt.compiler.types.TypeResolver
@@ -15,17 +11,15 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
- * Contract tests for extracted code generation modules.
+ * Contract tests for code generation modules.
  *
- * These tests verify that the extracted modules exist, have correct constructors,
- * and can be instantiated. This ensures the refactoring didn't break the basic
- * module structure.
+ * Verifies that all code generation modules have correct constructors,
+ * can be instantiated, and maintain expected method contracts.
  */
 class CodeGenerationModulesContractTest {
     @Test
     fun `GIVEN TypeResolver module WHEN instantiating THEN should create successfully`() {
-        // GIVEN - TypeResolver extracted from UnifiedFaktIrGenerationExtension
-        // WHEN - Creating instance
+        // GIVEN & WHEN
         val typeResolver = TypeResolver()
 
         // THEN - Should exist and have expected methods
@@ -39,10 +33,8 @@ class CodeGenerationModulesContractTest {
 
     @Test
     fun `GIVEN ImportResolver module WHEN instantiating THEN should create successfully`() {
-        // GIVEN - ImportResolver extracted from UnifiedFaktIrGenerationExtension
+        // GIVEN & WHEN
         val typeResolver = TypeResolver()
-
-        // WHEN - Creating instance with required dependency
         val importResolver = ImportResolver(typeResolver)
 
         // THEN - Should exist and have expected methods
@@ -55,8 +47,7 @@ class CodeGenerationModulesContractTest {
 
     @Test
     fun `GIVEN SourceSetMapper module WHEN instantiating THEN should create successfully`() {
-        // GIVEN - SourceSetMapper extracted from UnifiedFaktIrGenerationExtension
-        // WHEN - Creating instance with required parameters
+        // GIVEN & WHEN
         val sourceSetMapper =
             SourceSetMapper(
                 outputDir = "/tmp/test",
@@ -73,10 +64,8 @@ class CodeGenerationModulesContractTest {
 
     @Test
     fun `GIVEN ImplementationGenerator module WHEN instantiating with TypeResolver THEN should create successfully`() {
-        // GIVEN - ImplementationGenerator with dependency injection
+        // GIVEN & WHEN
         val typeResolver = TypeResolver()
-
-        // WHEN - Creating instance with dependency
         val implementationGenerator = ImplementationGenerator(typeResolver)
 
         // THEN - Should exist and have expected methods
@@ -89,8 +78,7 @@ class CodeGenerationModulesContractTest {
 
     @Test
     fun `GIVEN FactoryGenerator module WHEN instantiating THEN should create successfully`() {
-        // GIVEN - FactoryGenerator extracted from UnifiedFaktIrGenerationExtension
-        // WHEN - Creating instance
+        // GIVEN & WHEN
         val factoryGenerator = FactoryGenerator()
 
         // THEN - Should exist and have expected methods
@@ -103,10 +91,8 @@ class CodeGenerationModulesContractTest {
 
     @Test
     fun `GIVEN ConfigurationDslGenerator module WHEN instantiating with TypeResolver THEN should create successfully`() {
-        // GIVEN - ConfigurationDslGenerator with dependency injection
+        // GIVEN & WHEN
         val typeResolver = TypeResolver()
-
-        // WHEN - Creating instance with dependency
         val configurationDslGenerator = ConfigurationDslGenerator(typeResolver)
 
         // THEN - Should exist and have expected methods
@@ -119,7 +105,7 @@ class CodeGenerationModulesContractTest {
 
     @Test
     fun `GIVEN CodeGenerator orchestrator WHEN instantiating with all dependencies THEN should create successfully`() {
-        // GIVEN - CodeGenerator with full dependency injection setup
+        // GIVEN & WHEN
         val typeResolver = TypeResolver()
         val importResolver = ImportResolver(typeResolver)
         val sourceSetMapper =
@@ -131,19 +117,23 @@ class CodeGenerationModulesContractTest {
         val factoryGenerator = FactoryGenerator()
         val configurationDslGenerator = ConfigurationDslGenerator(typeResolver)
 
-        // WHEN - Creating CodeGenerator with all dependencies
+        val generators =
+            CodeGenerators(
+                implementation = implementationGenerator,
+                factory = factoryGenerator,
+                configDsl = configurationDslGenerator,
+            )
+
         val codeGenerator =
             CodeGenerator(
                 typeResolver = typeResolver,
                 importResolver = importResolver,
                 sourceSetMapper = sourceSetMapper,
-                implementationGenerator = implementationGenerator,
-                factoryGenerator = factoryGenerator,
-                configurationDslGenerator = configurationDslGenerator,
+                generators = generators,
                 messageCollector = null,
             )
 
-        // THEN - Should exist and demonstrate proper dependency injection architecture
+        // THEN
         assertNotNull(codeGenerator, "CodeGenerator should be instantiable with all dependencies")
 
         // Verify orchestrator method exists
@@ -155,8 +145,8 @@ class CodeGenerationModulesContractTest {
     }
 
     @Test
-    fun `GIVEN extracted modules WHEN checking module separation THEN should be properly decoupled`() {
-        // GIVEN - All extracted modules
+    fun `GIVEN code generation modules WHEN checking module separation THEN should be properly decoupled`() {
+        // GIVEN & WHEN
         val typeResolver = TypeResolver()
         val importResolver = ImportResolver(typeResolver)
         val sourceSetMapper =
@@ -164,9 +154,6 @@ class CodeGenerationModulesContractTest {
                 outputDir = "/tmp/test",
                 messageCollector = null,
             )
-
-        // WHEN - Checking module independence
-        // THEN - Modules should not have circular dependencies
 
         // TypeResolver should be independent
         val typeResolverFields = TypeResolver::class.java.declaredFields
@@ -181,8 +168,5 @@ class CodeGenerationModulesContractTest {
             importResolverFields.any { it.type.simpleName.contains("SourceSetMapper") },
             "ImportResolver should not depend on SourceSetMapper",
         )
-
-        // This verifies the SOLID principles extraction was successful
-        assertTrue(true, "Module decoupling verified - SOLID principles maintained")
     }
 }

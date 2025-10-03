@@ -2,16 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.analysis
 
-import com.rsicarelli.fakt.compiler.ir.analysis.GenericPattern
-import com.rsicarelli.fakt.compiler.ir.analysis.GenericPatternAnalyzer
-import com.rsicarelli.fakt.compiler.ir.analysis.TransformationPattern
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
- * Tests for GenericPatternAnalyzer focusing on testable functionality.
- * Full IR integration tests will be added when integrated with the main compiler.
+ * Tests for GenericPatternAnalyzer with data structure validation.
  */
 class GenericPatternAnalyzerTest {
     private val analyzer = GenericPatternAnalyzer()
@@ -32,21 +28,6 @@ class GenericPatternAnalyzerTest {
         assertTrue(patterns.any { it.inputType == "T" && it.outputType == "Result<T>" })
         assertTrue(patterns.any { it.inputType == "Order" && it.outputType == "OrderSummary" })
         assertTrue(patterns.any { it.inputType == "Product" && it.outputType == "ProductDto" })
-    }
-
-    @Test
-    fun `GIVEN GenericPatternAnalyzer WHEN detecting contextual types from interface THEN should access detection method`() {
-        // Test contextual type detection using reflection
-        val analyzerClass = analyzer::class.java
-        val detectContextualTypesMethod =
-            analyzerClass.getDeclaredMethod(
-                "detectContextualTypes",
-                org.jetbrains.kotlin.ir.declarations.IrClass::class.java,
-            )
-        detectContextualTypesMethod.isAccessible = true
-
-        // For now, we'll test the logic without full IR mocks
-        // These will be expanded when we have proper IR test infrastructure
     }
 
     @Test
@@ -74,7 +55,7 @@ class GenericPatternAnalyzerTest {
     fun `GIVEN ClassLevelGenerics pattern WHEN getting analysis summary THEN should describe generic type parameters`() {
         val classLevelPattern =
             GenericPattern.ClassLevelGenerics(
-                typeParameters = emptyList(), // In real usage, would have actual IrTypeParameters
+                typeParameters = emptyList(),
                 constraints = emptyList(),
             )
         val summary = analyzer.getAnalysisSummary(classLevelPattern)

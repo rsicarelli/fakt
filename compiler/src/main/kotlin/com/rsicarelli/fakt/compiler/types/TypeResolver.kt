@@ -146,26 +146,14 @@ internal class TypeResolver {
      * @param irType The type to generate a default value for
      * @return String representation of the default value
      */
-    fun getDefaultValue(irType: IrType): String {
-        // Try primitive defaults first
-        getPrimitiveDefault(irType)?.let { return it }
-
-        // Handle nullable types - always use null as default
-        if (irType.isMarkedNullable()) return "null"
-
-        // Handle type parameters (T, K, V, etc.)
-        if (irType is IrSimpleType && irType.classifier.owner is IrTypeParameter) {
-            return "Any()"
-        }
-
-        // Handle function types
-        if (isFunction(irType) || isSuspendFunction(irType)) {
-            return generateFunctionDefault(irType)
-        }
-
-        // Handle non-nullable class types
-        return handleClassDefault(irType)
-    }
+    fun getDefaultValue(irType: IrType): String =
+        getPrimitiveDefault(irType)
+            ?: when {
+                irType.isMarkedNullable() -> "null"
+                irType is IrSimpleType && irType.classifier.owner is IrTypeParameter -> "Any()"
+                isFunction(irType) || isSuspendFunction(irType) -> generateFunctionDefault(irType)
+                else -> handleClassDefault(irType)
+            }
 
     /**
      * Returns default value for primitive types, or null if not a primitive.
@@ -248,44 +236,41 @@ internal class TypeResolver {
         irType: IrSimpleType,
         preserveTypeParameters: Boolean,
     ): String {
-        val irClass = irType.getClass()
-        if (irClass == null) return "Any"
-
+        val irClass = irType.getClass() ?: return "Any"
         val className = getSimpleClassName(irClass)
         val packageName = irClass.kotlinFqName.parent().asString()
 
-        if (preserveTypeParameters && irType.arguments.isNotEmpty()) {
-            val typeArgsString = typeArgumentsToString(irType.arguments, preserveTypeParameters)
-            return "$className$typeArgsString"
-        } else {
-            // NoGenerics pattern: Use specific type erasure rules for common types
-            return when {
-                packageName == "kotlin.collections" && className in
-                    listOf(
-                        "List",
-                        "MutableList",
-                    )
-                -> "List<Any>"
-
-                packageName == "kotlin.collections" && className in
-                    listOf(
-                        "Set",
-                        "MutableSet",
-                    )
-                -> "Set<Any>"
-
-                packageName == "kotlin.collections" && className in
-                    listOf(
-                        "Map",
-                        "MutableMap",
-                    )
-                -> "Map<Any, Any>"
-
-                packageName == "kotlin.collections" && className == "Collection" -> "Collection<Any>"
-                packageName == "kotlin" && className == "Result" -> "Result<Any>"
-                packageName == "kotlin" && className == "Array" -> "Array<Any>"
-                else -> className
+        return when {
+            preserveTypeParameters && irType.arguments.isNotEmpty() -> {
+                val typeArgsString = typeArgumentsToString(irType.arguments, preserveTypeParameters)
+                "$className$typeArgsString"
             }
+            // NoGenerics pattern: Use specific type erasure rules for common types
+            packageName == "kotlin.collections" && className in
+                listOf(
+                    "List",
+                    "MutableList",
+                )
+            -> "List<Any>"
+
+            packageName == "kotlin.collections" && className in
+                listOf(
+                    "Set",
+                    "MutableSet",
+                )
+            -> "Set<Any>"
+
+            packageName == "kotlin.collections" && className in
+                listOf(
+                    "Map",
+                    "MutableMap",
+                )
+            -> "Map<Any, Any>"
+
+            packageName == "kotlin.collections" && className == "Collection" -> "Collection<Any>"
+            packageName == "kotlin" && className == "Result" -> "Result<Any>"
+            packageName == "kotlin" && className == "Array" -> "Array<Any>"
+            else -> className
         }
     }
 
@@ -336,85 +321,63 @@ internal class TypeResolver {
      * Handles default values for class types with intelligent defaults.
      */
     private fun handleClassDefault(irType: IrType): String {
-        val irClass = irType.getClass()
+        val irClass = irType.getClass() ?: return "TODO(\"Unknown type\")"
+        val className = getSimpleClassName(irClass)
+        val packageName = irClass.kotlinFqName.parent().asString()
 
-        return if (irClass != null) {
-            val className = getSimpleClassName(irClass)
-            val packageName = irClass.kotlinFqName.parent().asString()
-
-            when {
-                // Handle collections with proper defaults
-                packageName == "kotlin.collections" && className in
-                    listOf(
-                        "List",
-                        "MutableList",
-                    )
-                -> "emptyList<Any>()"
-
-                packageName == "kotlin.collections" && className in
-                    listOf(
-                        "Set",
-                        "MutableSet",
-                    )
-                -> "emptySet<Any>()"
-
-                packageName == "kotlin.collections" && className in
-                    listOf(
-                        "Map",
-                        "MutableMap",
-                    )
-                -> "emptyMap<Any, Any>()"
-
-                packageName == "kotlin.collections" && className == "Collection" -> "emptyList<Any>()"
-
-                // Handle Result<T> - use success with default value for T
-                packageName == "kotlin" && className == "Result" -> {
-                    "Result.success(Any())"
-                }
-
-                // Handle Array types
-                packageName == "kotlin" && className == "Array" -> {
-                    "emptyArray<Any>()"
-                }
-
-                // Handle common Kotlin types
-                packageName == "kotlin" && className == "Pair" -> "Pair(null, null)"
-                packageName == "kotlin" && className == "Triple" -> "Triple(null, null, null)"
-
-                // Handle function types (should not reach here due to earlier handling, but safety)
-                packageName == "kotlin" && className.startsWith("Function") -> "{ TODO(\"Function not implemented\") }"
-
-                // Handle custom data classes and interfaces - use null for safety
-                irClass.kind == org.jetbrains.kotlin.descriptors.ClassKind.CLASS -> "null"
-
-                // Handle interfaces - cannot instantiate, use null
-                irClass.kind == org.jetbrains.kotlin.descriptors.ClassKind.INTERFACE -> "null"
-
-                // Handle enums - use first enum value if possible
-                irClass.kind == org.jetbrains.kotlin.descriptors.ClassKind.ENUM_CLASS -> {
-                    handleEnumDefault(irClass, className)
-                }
-
-                // Default fallback for unknown types
+        return getCollectionDefault(packageName, className)
+            ?: getKotlinStdlibDefault(packageName, className)
+            ?: when (irClass.kind) {
+                org.jetbrains.kotlin.descriptors.ClassKind.CLASS -> "null"
+                org.jetbrains.kotlin.descriptors.ClassKind.INTERFACE -> "null"
+                org.jetbrains.kotlin.descriptors.ClassKind.ENUM_CLASS -> handleEnumDefault(irClass, className)
                 else -> "TODO(\"Implement default for $className\")"
             }
-        } else {
-            "TODO(\"Unknown type\")"
+    }
+
+    /**
+     * Returns default value for Kotlin stdlib types (Result, Array, Pair, Triple).
+     *
+     * @param packageName The package name of the type
+     * @param className The simple class name
+     * @return Default value or null if not a stdlib type
+     */
+    private fun getKotlinStdlibDefault(
+        packageName: String,
+        className: String,
+    ): String? {
+        if (packageName != "kotlin") return null
+
+        return when {
+            className == "Result" -> "Result.success(Any())"
+            className == "Array" -> "emptyArray<Any>()"
+            className == "Pair" -> "Pair(null, null)"
+            className == "Triple" -> "Triple(null, null, null)"
+            className.startsWith("Function") -> "{ TODO(\"Function not implemented\") }"
+            else -> null
         }
     }
 
     /**
-     * Handles Result<T> default value generation.
+     * Returns default value for Kotlin collection types.
+     *
+     * @param packageName The package name of the type
+     * @param className The simple class name
+     * @return Default value or null if not a collection
      */
-    private fun handleResultDefault(irType: IrType): String {
-        if (irType is IrSimpleType && irType.arguments.isNotEmpty()) {
-            val typeArg = irType.arguments[0]
-            if (typeArg is IrTypeProjection) {
-                val innerDefault = getDefaultValue(typeArg.type)
-                return "Result.success($innerDefault)"
-            }
+    private fun getCollectionDefault(
+        packageName: String,
+        className: String,
+    ): String? {
+        if (packageName != "kotlin.collections") return null
+
+        return when (className) {
+            "List", "MutableList" -> "emptyList<Any>()"
+            "Set", "MutableSet" -> "emptySet<Any>()"
+            "Map", "MutableMap" -> "emptyMap<Any, Any>()"
+            "Collection" -> "emptyList<Any>()"
+            else -> null
         }
-        return "Result.success(null)"
     }
 
     /**

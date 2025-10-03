@@ -4,12 +4,10 @@ package com.rsicarelli.fakt.gradle
 
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
-import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
-import java.io.File
 
 /**
  * Gradle plugin for Fakt compiler plugin.
@@ -35,7 +33,8 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
 
         // Configure source sets automatically after project evaluation
         target.afterEvaluate {
-            configureSourceSets(target)
+            val configurator = SourceSetConfigurator(target)
+            configurator.configureSourceSets()
         }
 
         // Add runtime dependency to test configurations
@@ -84,167 +83,14 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 add(SubpluginOption(key = "debug", value = extension.debug.get().toString()))
 
                 // Automatically configure output directory based on compilation type
-                val outputDir = getGeneratedSourcesDirectory(project, kotlinCompilation)
+                val configurator = SourceSetConfigurator(project)
+                val outputDir = configurator.getGeneratedSourcesDirectory(kotlinCompilation)
                 add(SubpluginOption(key = "outputDir", value = outputDir))
 
                 project.logger.info("Fakt: Configured compiler plugin with $size options")
             }
         }
     }
-
-    /**
-     * Automatically configure source sets for multiplatform projects.
-     * This ensures generated fakes are accessible from test source sets.
-     */
-    private fun configureSourceSets(project: Project) {
-        // Check if this is a multiplatform project
-        val kotlinExtension =
-            project.extensions.findByType(KotlinMultiplatformExtension::class.java)
-        if (kotlinExtension != null) {
-            configureMultiplatformSourceSets(project, kotlinExtension)
-        } else {
-            // For single-platform projects, configure based on applied plugins
-            configureJvmOnlySourceSets(project)
-        }
-    }
-
-    /**
-     * Configure multiplatform source sets to include generated fakes.
-     */
-    private fun configureMultiplatformSourceSets(
-        project: Project,
-        kotlin: KotlinMultiplatformExtension,
-    ) {
-        kotlin.sourceSets.configureEach { sourceSet ->
-            if (sourceSet.name.endsWith("Test")) {
-                val generatedDir = getGeneratedSourcesDirectoryForSourceSet(project, sourceSet.name)
-                sourceSet.kotlin.srcDir(generatedDir)
-
-                project.logger.info("Fakt: Configured source set '${sourceSet.name}' to include generated sources from: $generatedDir")
-            }
-        }
-    }
-
-    /**
-     * Configure JVM-only projects.
-     */
-    private fun configureJvmOnlySourceSets(project: Project) {
-        // For JVM-only projects, add generated sources to test source sets
-        project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class.java) { task ->
-            if (task.name.contains("Test", ignoreCase = true)) {
-                val generatedDir =
-                    File(
-                        project.layout.buildDirectory
-                            .get()
-                            .asFile,
-                        "generated/fakt/test/kotlin",
-                    )
-                task.source(generatedDir)
-
-                project.logger.info("Fakt: Configured test compilation task '${task.name}' to include generated sources")
-            }
-        }
-    }
-
-    /**
-     * Get the appropriate generated sources directory for a compilation.
-     *
-     * Since we generate fakes FROM main sources FOR test usage, we always output to test directories.
-     * For KMP projects with shared code, we generate to common/test/kotlin for maximum compatibility.
-     */
-    private fun getGeneratedSourcesDirectory(
-        project: Project,
-        compilation: KotlinCompilation<*>,
-    ): String {
-        val compilationName = compilation.name
-        val targetName = compilation.target.name
-
-        // For KMP projects, check if this is processing commonMain or metadata
-        if (compilationName.equals("commonMain", ignoreCase = true) || targetName == "metadata") {
-            return File(
-                project.layout.buildDirectory
-                    .get()
-                    .asFile,
-                "generated/fakt/common/test/kotlin",
-            ).absolutePath
-        }
-
-        // Check if this is a KMP project with commonTest source set
-        // If so, generate to common/test for all targets to share
-        val kotlinExtension =
-            project.extensions.findByType(KotlinMultiplatformExtension::class.java)
-        if (kotlinExtension != null) {
-            // This is a KMP project - check if commonTest exists
-            val hasCommonTest = kotlinExtension.sourceSets.findByName("commonTest") != null
-            if (hasCommonTest) {
-                // Generate to common/test so all platform tests can access
-                return File(
-                    project.layout.buildDirectory
-                        .get()
-                        .asFile,
-                    "generated/fakt/common/test/kotlin",
-                ).absolutePath
-            }
-        }
-
-        // Map main compilation names to test directories
-        // main → test, jvmMain → jvmTest, iosMain → iosTest, etc.
-        val testDirName =
-            when {
-                compilationName.equals("main", ignoreCase = true) -> "test"
-                compilationName.endsWith("Main", ignoreCase = true) ->
-                    compilationName.removeSuffix("Main").removeSuffix("main") + "Test"
-
-                else -> compilationName
-            }
-
-        // For specific platform targets in KMP: build/generated/fakt/{targetName}/test/kotlin
-        // For single-platform JVM: build/generated/fakt/test/kotlin (targetName="jvm", compilationName="main")
-        val directory =
-            File(
-                project.layout.buildDirectory
-                    .get()
-                    .asFile,
-                "generated/fakt/$targetName/$testDirName/kotlin",
-            )
-
-        return directory.absolutePath
-    }
-
-    /**
-     * Get generated sources directory for a specific source set.
-     */
-    private fun getGeneratedSourcesDirectoryForSourceSet(
-        project: Project,
-        sourceSetName: String,
-    ): File =
-        when {
-            sourceSetName == "commonTest" ->
-                File(
-                    project.layout.buildDirectory
-                        .get()
-                        .asFile,
-                    "generated/fakt/common/test/kotlin",
-                )
-
-            sourceSetName.endsWith("Test") -> {
-                val target = sourceSetName.removeSuffix("Test")
-                File(
-                    project.layout.buildDirectory
-                        .get()
-                        .asFile,
-                    "generated/fakt/$target/test/kotlin",
-                )
-            }
-
-            else ->
-                File(
-                    project.layout.buildDirectory
-                        .get()
-                        .asFile,
-                    "generated/fakt/common/test/kotlin",
-                )
-        }
 
     /**
      * Add runtime dependency to test configurations automatically.

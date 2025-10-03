@@ -16,13 +16,11 @@ internal class FactoryGenerator {
      *
      * @param analysis The analyzed interface metadata
      * @param fakeClassName The name of the fake implementation class
-     * @param packageName The package name for type references
      * @return The generated factory function code
      */
     fun generateFactoryFunction(
         analysis: InterfaceAnalysis,
         fakeClassName: String,
-        packageName: String,
     ): String {
         val interfaceName = analysis.interfaceName
         val factoryFunctionName = "fake$interfaceName"
@@ -38,7 +36,10 @@ internal class FactoryGenerator {
             }
 
         return buildString {
-            appendLine("fun $factoryFunctionName(configure: $configClassName.() -> Unit = {}): $interfaceWithGenerics {")
+            appendLine(
+                "fun $factoryFunctionName(configure: $configClassName.() -> Unit = {}): " +
+                        "$interfaceWithGenerics {",
+            )
             appendLine("    return $fakeClassName().apply { $configClassName(this).configure() }")
             appendLine("}")
         }

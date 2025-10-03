@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.analysis
 
-import com.rsicarelli.fakt.compiler.ir.analysis.GenericPattern
-import com.rsicarelli.fakt.compiler.ir.analysis.GenericPatternAnalyzer
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.declarations.IrProperty
@@ -40,32 +38,44 @@ internal class InterfaceAnalyzer {
      * @param irClass The interface class to check
      * @return null if supported, error message if has generics
      */
-    fun checkGenericSupport(irClass: IrClass): String? {
-        // Check interface-level type parameters
-        if (irClass.typeParameters.isNotEmpty()) {
-            val typeParams = irClass.typeParameters.joinToString(", ") { it.name.asString() }
-            return "Generic interfaces not supported: ${irClass.name.asString()}<$typeParams>. " +
-                "Consider creating a non-generic interface that extends this one: " +
-                "interface User${irClass.name.asString()} : ${irClass.name.asString()}<User>"
-        }
+    fun checkGenericSupport(irClass: IrClass): String? =
+        checkInterfaceLevelGenerics(irClass)
+            ?: checkMethodLevelGenerics(irClass)
 
-        // Check method-level type parameters
+    /**
+     * Checks for interface-level type parameters (e.g., interface Repo<T>).
+     *
+     * @param irClass The interface class to check
+     * @return Error message if generics found, null otherwise
+     */
+    private fun checkInterfaceLevelGenerics(irClass: IrClass): String? {
+        if (irClass.typeParameters.isEmpty()) return null
+
+        val typeParams = irClass.typeParameters.joinToString(", ") { it.name.asString() }
+        return "Generic interfaces not supported: ${irClass.name.asString()}<$typeParams>. " +
+            "Consider creating a non-generic interface that extends this one: " +
+            "interface User${irClass.name.asString()} : ${irClass.name.asString()}<User>"
+    }
+
+    /**
+     * Checks for method-level type parameters (e.g., fun <T> process()).
+     *
+     * @param irClass The interface class to check
+     * @return Error message if generics found, null otherwise
+     */
+    private fun checkMethodLevelGenerics(irClass: IrClass): String? {
         val functionsWithGenerics =
             irClass.declarations
                 .filterIsInstance<IrSimpleFunction>()
                 .filter { it.typeParameters.isNotEmpty() }
 
-        if (functionsWithGenerics.isNotEmpty()) {
-            val methodName = functionsWithGenerics.first().name.asString()
-            val typeParams =
-                functionsWithGenerics.first().typeParameters.joinToString(", ") { it.name.asString() }
-            return "Generic methods not supported: $methodName<$typeParams>. " +
-                "Consider creating methods with specific types instead of generics."
-        }
+        if (functionsWithGenerics.isEmpty()) return null
 
-        // TODO: Add varargs detection (skip for now)
-
-        return null // Supported
+        val methodName = functionsWithGenerics.first().name.asString()
+        val typeParams =
+            functionsWithGenerics.first().typeParameters.joinToString(", ") { it.name.asString() }
+        return "Generic methods not supported: $methodName<$typeParams>. " +
+            "Consider creating methods with specific types instead of generics."
     }
 
     fun analyzeInterfaceDynamically(sourceInterface: IrClass): InterfaceAnalysis {
@@ -117,7 +127,7 @@ internal class InterfaceAnalyzer {
     private fun analyzeProperty(property: IrProperty): PropertyAnalysis {
         val propertyType =
             property.getter?.returnType ?: property.backingField?.type
-                ?: throw IllegalStateException("Property ${property.name} has no determinable type")
+                ?: error("Property ${property.name} has no determinable type")
 
         return PropertyAnalysis(
             name = property.name.asString(),
@@ -217,7 +227,7 @@ internal class InterfaceAnalyzer {
 /**
  * Complete analysis of an interface including all its members and metadata.
  */
-internal data class InterfaceAnalysis(
+data class InterfaceAnalysis(
     val interfaceName: String,
     val typeParameters: List<String>, // Interface-level type parameters like <T>, <K, V>
     val properties: List<PropertyAnalysis>,
@@ -230,7 +240,7 @@ internal data class InterfaceAnalysis(
 /**
  * Analysis of a property within an interface.
  */
-internal data class PropertyAnalysis(
+data class PropertyAnalysis(
     val name: String,
     val type: IrType,
     val isMutable: Boolean,
@@ -241,7 +251,7 @@ internal data class PropertyAnalysis(
 /**
  * Analysis of a function within an interface.
  */
-internal data class FunctionAnalysis(
+data class FunctionAnalysis(
     val name: String,
     val parameters: List<ParameterAnalysis>,
     val returnType: IrType,
@@ -255,7 +265,7 @@ internal data class FunctionAnalysis(
 /**
  * Analysis of a function parameter.
  */
-internal data class ParameterAnalysis(
+data class ParameterAnalysis(
     val name: String,
     val type: IrType,
     val hasDefaultValue: Boolean,

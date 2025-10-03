@@ -46,35 +46,19 @@ internal class InterfaceDiscovery(
         // Traverse all files in the module
         moduleFragment.files.forEach { file ->
             file.declarations.forEach { declaration ->
-                if (declaration is IrClass &&
-                    declaration.kind == ClassKind.INTERFACE &&
-                    declaration.origin != IrDeclarationOrigin.IR_EXTERNAL_DECLARATION_STUB
-                ) {
-                    // Check if the interface has any of our target annotations
-                    val matchingAnnotation =
-                        declaration.annotations.find { annotation ->
-                            val annotationFqName = annotation.type.classFqName?.asString()
-                            annotationFqName != null && optimizations.isConfiguredFor(annotationFqName)
-                        }
+                if (isValidFakeInterface(declaration)) {
+                    val matchingAnnotation = findMatchingAnnotation(declaration as IrClass)
 
                     if (matchingAnnotation != null) {
                         discoveredInterfaces.add(declaration)
 
                         // Create TypeInfo for optimization tracking
-                        val typeInfo =
-                            TypeInfo(
-                                name = declaration.name.asString(),
-                                fullyQualifiedName = declaration.kotlinFqName.asString(),
-                                packageName = declaration.packageFqName?.asString() ?: "",
-                                fileName = file.fileEntry.name,
-                                annotations = declaration.annotations.mapNotNull { it.type.classFqName?.asString() },
-                                signature = computeInterfaceSignature(declaration),
-                            )
+                        val typeInfo = createTypeInfo(declaration, file)
                         optimizations.indexType(typeInfo)
 
-                        val annotationName =
-                            matchingAnnotation.type.classFqName?.asString() ?: "unknown"
-                        messageCollector?.reportInfo("Fakt: Discovered interface with $annotationName: ${declaration.name}")
+                        messageCollector?.reportInfo(
+                            "Fakt: Discovered interface with $matchingAnnotation: ${declaration.name}",
+                        )
                     }
                 }
             }
@@ -83,6 +67,52 @@ internal class InterfaceDiscovery(
         messageCollector?.reportInfo("Fakt: Found ${discoveredInterfaces.size} fake interfaces to process")
         return discoveredInterfaces
     }
+
+    /**
+     * Checks if a declaration is a valid interface for fake generation.
+     *
+     * @param declaration The declaration to check
+     * @return true if it's a valid interface, false otherwise
+     */
+    private fun isValidFakeInterface(declaration: org.jetbrains.kotlin.ir.declarations.IrDeclaration): Boolean =
+        declaration is IrClass &&
+            declaration.kind == ClassKind.INTERFACE &&
+            declaration.origin != IrDeclarationOrigin.IR_EXTERNAL_DECLARATION_STUB
+
+    /**
+     * Finds a matching fake annotation on the interface.
+     *
+     * @param declaration The interface to check
+     * @return The fully qualified name of the matching annotation, or null if none found
+     */
+    private fun findMatchingAnnotation(declaration: IrClass): String? {
+        val matchingAnnotation =
+            declaration.annotations.find { annotation ->
+                val annotationFqName = annotation.type.classFqName?.asString()
+                annotationFqName != null && optimizations.isConfiguredFor(annotationFqName)
+            }
+        return matchingAnnotation?.type?.classFqName?.asString()
+    }
+
+    /**
+     * Creates TypeInfo metadata for the discovered interface.
+     *
+     * @param declaration The interface declaration
+     * @param file The IR file containing the interface
+     * @return TypeInfo object for optimization tracking
+     */
+    private fun createTypeInfo(
+        declaration: IrClass,
+        file: org.jetbrains.kotlin.ir.declarations.IrFile,
+    ): TypeInfo =
+        TypeInfo(
+            name = declaration.name.asString(),
+            fullyQualifiedName = declaration.kotlinFqName.asString(),
+            packageName = declaration.packageFqName?.asString() ?: "",
+            fileName = file.fileEntry.name,
+            annotations = declaration.annotations.mapNotNull { it.type.classFqName?.asString() },
+            signature = computeInterfaceSignature(declaration),
+        )
 
     /**
      * Computes a signature for an interface for change detection.

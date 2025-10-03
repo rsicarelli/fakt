@@ -10,9 +10,46 @@ import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
-import org.jetbrains.kotlin.ir.util.kotlinFqName
 import org.jetbrains.kotlin.ir.util.packageFqName
-import java.io.File
+
+/**
+ * Groups the code generators used by CodeGenerator.
+ *
+ * @property implementation Generator for fake implementation classes
+ * @property factory Generator for factory functions
+ * @property configDsl Generator for configuration DSL
+ */
+internal data class CodeGenerators(
+    val implementation: ImplementationGenerator,
+    val factory: FactoryGenerator,
+    val configDsl: ConfigurationDslGenerator,
+)
+
+/**
+ * Contains all generated code pieces for a fake implementation.
+ *
+ * @property implementation The generated implementation class code
+ * @property factory The generated factory function code
+ * @property configDsl The generated configuration DSL code
+ */
+internal data class GeneratedCode(
+    val implementation: String,
+    val factory: String,
+    val configDsl: String,
+)
+
+/**
+ * Contains metadata for writing generated code to a file.
+ *
+ * @property packageName The package name for the generated code
+ * @property fakeClassName The name of the fake implementation class
+ * @property interfaceName The original interface name
+ */
+internal data class WriteContext(
+    val packageName: String,
+    val fakeClassName: String,
+    val interfaceName: String,
+)
 
 /**
  * Handles code generation for fake implementations.
@@ -22,12 +59,11 @@ import java.io.File
  */
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 internal class CodeGenerator(
+    @Suppress("UnusedPrivateProperty") // Used by importResolver dependency injection
     private val typeResolver: TypeResolver,
     private val importResolver: ImportResolver,
     private val sourceSetMapper: SourceSetMapper,
-    private val implementationGenerator: ImplementationGenerator,
-    private val factoryGenerator: FactoryGenerator,
-    private val configurationDslGenerator: ConfigurationDslGenerator,
+    private val generators: CodeGenerators,
     private val messageCollector: MessageCollector?,
 ) {
     /**
@@ -49,25 +85,23 @@ internal class CodeGenerator(
         messageCollector?.reportInfo("Fakt: Generating fake for interface $interfaceName")
 
         try {
-            // Generate the implementation class
-            val implementationCode = implementationGenerator.generateImplementation(analysis, fakeClassName)
+            val generatedCode =
+                GeneratedCode(
+                    implementation = generators.implementation.generateImplementation(analysis, fakeClassName),
+                    factory = generators.factory.generateFactoryFunction(analysis, fakeClassName),
+                    configDsl = generators.configDsl.generateConfigurationDsl(analysis, fakeClassName),
+                )
 
-            // Generate the factory function
-            val factoryCode = factoryGenerator.generateFactoryFunction(analysis, fakeClassName, packageName)
-
-            // Generate the configuration DSL
-            val configDslCode = configurationDslGenerator.generateConfigurationDsl(analysis, fakeClassName, packageName)
-
-            // Write generated code to output directory, preserving package structure
             writeGeneratedCode(
                 moduleFragment = moduleFragment,
-                packageName = packageName,
-                fakeClassName = fakeClassName,
-                interfaceName = interfaceName,
+                context =
+                    WriteContext(
+                        packageName = packageName,
+                        fakeClassName = fakeClassName,
+                        interfaceName = interfaceName,
+                    ),
                 analysis = analysis,
-                implementationCode = implementationCode,
-                factoryCode = factoryCode,
-                configDslCode = configDslCode,
+                code = generatedCode,
             )
 
             messageCollector?.reportInfo("Fakt: Successfully generated fake for $interfaceName -> $fakeClassName")
@@ -82,14 +116,13 @@ internal class CodeGenerator(
      */
     private fun writeGeneratedCode(
         moduleFragment: IrModuleFragment,
-        packageName: String,
-        fakeClassName: String,
-        interfaceName: String,
+        context: WriteContext,
         analysis: InterfaceAnalysis,
-        implementationCode: String,
-        factoryCode: String,
-        configDslCode: String,
+        code: GeneratedCode,
     ) {
+        val packageName = context.packageName
+        val fakeClassName = context.fakeClassName
+        val interfaceName = context.interfaceName
         val outputDir = sourceSetMapper.getGeneratedSourcesDir(moduleFragment)
 
         // Create subdirectories matching the package structure
@@ -117,17 +150,17 @@ internal class CodeGenerator(
                 }
 
                 // Add implementation class
-                append(implementationCode)
+                append(code.implementation)
                 appendLine()
                 appendLine()
 
                 // Add factory function
-                append(factoryCode)
+                append(code.factory)
                 appendLine()
                 appendLine()
 
                 // Add configuration DSL
-                append(configDslCode)
+                append(code.configDsl)
                 appendLine()
             }
 

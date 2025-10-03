@@ -23,14 +23,18 @@ class FaktFirExtensionRegistrar : FirExtensionRegistrar() {
      * Registers all necessary FIR extensions for annotation detection,
      * validation, and error reporting.
      *
-     * TODO: Implement proper extension registration when FIR API is stable
+     * Note: FIR extension registration is intentionally minimal as the actual
+     * @Fake annotation detection happens in the IR phase via UnifiedFaktIrGenerationExtension.
+     * This follows the pattern from Metro and other production compiler plugins.
      */
     override fun ExtensionRegistrarContext.configurePlugin() {
-        // TODO: Register checkers for annotation validation
-        // The FIR API is complex and evolving, so we'll implement a basic structure first
+        // FIR phase: Extension registration placeholder
+        // The FIR API is complex and evolving. For now, the main annotation detection
+        // happens in the IR phase which has a more stable API surface.
+        // Future enhancement: Add FIR-based validation when needed
         // +::FaktFirCheckers
 
-        // For now, just mark that the FIR extension registrar is being called
+        // Mark that the FIR extension registrar is being called
         // Using println because MessageCollector is not available in FirExtensionRegistrar context
         println("============================================")
         println("Fakt: FIR extension registrar configured")

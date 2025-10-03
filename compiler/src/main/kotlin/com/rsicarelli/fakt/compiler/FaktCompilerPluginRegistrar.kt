@@ -39,67 +39,17 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
                 CommonConfigurationKeys.MESSAGE_COLLECTOR_KEY,
                 MessageCollector.NONE,
             )
-
-        messageCollector.report(
-            CompilerMessageSeverity.INFO,
-            "============================================",
-        )
-        messageCollector.report(
-            CompilerMessageSeverity.INFO,
-            "Fakt: Compiler Plugin Registrar Invoked",
-        )
-
-        // Pass the configuration to the options loader
         val options = FaktOptions.load(configuration)
 
-        messageCollector.report(
-            CompilerMessageSeverity.INFO,
-            "Fakt: Plugin enabled: ${options.enabled}",
-        )
+        reportPluginInvocation(messageCollector, options)
 
         if (!options.enabled) {
-            messageCollector.report(
-                CompilerMessageSeverity.INFO,
-                "Fakt: Plugin disabled, skipping registration",
-            )
-            messageCollector.report(
-                CompilerMessageSeverity.INFO,
-                "============================================",
-            )
+            reportPluginDisabled(messageCollector)
             return
         }
 
-        if (options.debug) {
-            messageCollector.report(
-                CompilerMessageSeverity.INFO,
-                "Fakt compiler plugin enabled with options: $options",
-            )
-        }
-
-        // Register FIR extensions for analysis phase
-        messageCollector.report(
-            CompilerMessageSeverity.INFO,
-            "Fakt: Registering FIR extension",
-        )
-        FirExtensionRegistrarAdapter.registerExtension(FaktFirExtensionRegistrar())
-
-        // Register unified IR-native generation extension with custom annotation support
-        val customAnnotations =
-            listOf(
-                "com.rsicarelli.fakt.Fake",
-                "test.sample.CompanyTestDouble", // Test custom annotation
-            )
-        messageCollector.report(
-            CompilerMessageSeverity.INFO,
-            "Fakt: Registering IR generation extension",
-        )
-        IrGenerationExtension.registerExtension(
-            UnifiedFaktIrGenerationExtension(
-                messageCollector = messageCollector,
-                outputDir = options.outputDir,
-                fakeAnnotations = customAnnotations,
-            ),
-        )
+        registerFirExtension(messageCollector)
+        registerIrExtension(messageCollector, options)
 
         messageCollector.report(
             CompilerMessageSeverity.INFO,
@@ -108,6 +58,69 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
         messageCollector.report(
             CompilerMessageSeverity.INFO,
             "============================================",
+        )
+    }
+
+    /**
+     * Reports plugin invocation status and configuration to the message collector.
+     *
+     * @param messageCollector The message collector for compiler output
+     * @param options The loaded plugin options
+     */
+    private fun reportPluginInvocation(
+        messageCollector: MessageCollector,
+        options: FaktOptions,
+    ) {
+        messageCollector.report(CompilerMessageSeverity.INFO, "============================================")
+        messageCollector.report(CompilerMessageSeverity.INFO, "Fakt: Compiler Plugin Registrar Invoked")
+        messageCollector.report(CompilerMessageSeverity.INFO, "Fakt: Plugin enabled: ${options.enabled}")
+        if (options.debug) {
+            messageCollector.report(CompilerMessageSeverity.INFO, "Fakt compiler plugin enabled with options: $options")
+        }
+    }
+
+    /**
+     * Reports that the plugin is disabled and skips registration.
+     *
+     * @param messageCollector The message collector for compiler output
+     */
+    private fun reportPluginDisabled(messageCollector: MessageCollector) {
+        messageCollector.report(CompilerMessageSeverity.INFO, "Fakt: Plugin disabled, skipping registration")
+        messageCollector.report(CompilerMessageSeverity.INFO, "============================================")
+    }
+
+    /**
+     * Registers the FIR extension for @Fake annotation detection in the FIR phase.
+     *
+     * @param messageCollector The message collector for compiler output
+     */
+    private fun ExtensionStorage.registerFirExtension(messageCollector: MessageCollector) {
+        messageCollector.report(CompilerMessageSeverity.INFO, "Fakt: Registering FIR extension")
+        FirExtensionRegistrarAdapter.registerExtension(FaktFirExtensionRegistrar())
+    }
+
+    /**
+     * Registers the unified IR generation extension for fake implementation generation.
+     *
+     * @param messageCollector The message collector for compiler output
+     * @param options The loaded plugin options
+     */
+    private fun ExtensionStorage.registerIrExtension(
+        messageCollector: MessageCollector,
+        options: FaktOptions,
+    ) {
+        val customAnnotations =
+            listOf(
+                "com.rsicarelli.fakt.Fake",
+                "test.sample.CompanyTestDouble",
+            )
+        messageCollector.report(CompilerMessageSeverity.INFO, "Fakt: Registering IR generation extension")
+        IrGenerationExtension.registerExtension(
+            UnifiedFaktIrGenerationExtension(
+                messageCollector = messageCollector,
+                outputDir = options.outputDir,
+                fakeAnnotations = customAnnotations,
+            ),
         )
     }
 }

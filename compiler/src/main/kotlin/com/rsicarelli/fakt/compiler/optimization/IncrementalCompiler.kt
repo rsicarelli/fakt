@@ -147,7 +147,7 @@ internal class IncrementalCompiler(
             reportFile.writeText(reportJson)
 
             println("Fakt: Report generated at ${reportFile.absolutePath}")
-        } catch (e: Exception) {
+        } catch (e: java.io.IOException) {
             println("Fakt: Failed to generate report: ${e.message}")
         }
     }
@@ -160,17 +160,46 @@ internal class IncrementalCompiler(
 
         try {
             val cacheFile = java.io.File(outputDir, "fakt-signatures.cache")
-            if (cacheFile.exists()) {
-                cacheFile.readLines().forEach { line ->
-                    val parts = line.split("=", limit = 2)
-                    if (parts.size == 2) {
-                        previousSignatures[parts[0]] = parts[1]
-                    }
-                }
-                println("Fakt: Loaded ${previousSignatures.size} cached signatures for incremental compilation")
+            val loaded = loadCacheFromFile(cacheFile)
+            previousSignatures.putAll(loaded)
+            if (loaded.isNotEmpty()) {
+                println("Fakt: Loaded ${loaded.size} cached signatures for incremental compilation")
             }
-        } catch (e: Exception) {
+        } catch (e: java.io.IOException) {
             println("Fakt: Failed to load signature cache: ${e.message}")
+        }
+    }
+
+    /**
+     * Loads signature cache from file if it exists.
+     *
+     * @param cacheFile The cache file to load from
+     * @return Map of type keys to their signatures
+     */
+    private fun loadCacheFromFile(cacheFile: java.io.File): Map<String, String> {
+        if (!cacheFile.exists()) return emptyMap()
+
+        val signatures = mutableMapOf<String, String>()
+        cacheFile.readLines().forEach { line ->
+            parseCacheLine(line)?.let { (key, signature) ->
+                signatures[key] = signature
+            }
+        }
+        return signatures
+    }
+
+    /**
+     * Parses a single line from the signature cache file.
+     *
+     * @param line The cache line to parse
+     * @return Pair of (key, signature) if valid, null otherwise
+     */
+    private fun parseCacheLine(line: String): Pair<String, String>? {
+        val parts = line.split("=", limit = 2)
+        return if (parts.size == 2) {
+            parts[0] to parts[1]
+        } else {
+            null
         }
     }
 
@@ -190,7 +219,7 @@ internal class IncrementalCompiler(
                 },
             )
             println("Fakt: Saved ${previousSignatures.size} signatures to cache")
-        } catch (e: Exception) {
+        } catch (e: java.io.IOException) {
             println("Fakt: Failed to save signature cache: ${e.message}")
         }
     }

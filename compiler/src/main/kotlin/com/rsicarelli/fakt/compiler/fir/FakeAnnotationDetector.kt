@@ -68,6 +68,7 @@ class FakeAnnotationDetector {
         }
     }
 
+    @Suppress("UnusedParameter") // Parameters reserved for future FIR API usage
     private fun extractParametersFromAnnotation(
         annotation: FirAnnotation,
         session: FirSession,
@@ -85,6 +86,7 @@ class FakeAnnotationDetector {
         )
     }
 
+    @Suppress("UnusedParameter") // Parameter reserved for future FIR API usage
     private fun FirAnnotation.toAnnotationClassId(session: FirSession): ClassId? {
         // Extract ClassId from annotation type reference
         // For MVP, use a simple approach that's less likely to break with FIR API changes

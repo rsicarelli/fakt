@@ -3,6 +3,7 @@
 package com.rsicarelli.fakt.compiler.codegen
 
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
+import com.rsicarelli.fakt.compiler.ir.analysis.ParameterAnalysis
 import com.rsicarelli.fakt.compiler.types.TypeResolver
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 
@@ -16,18 +17,23 @@ import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 internal class ConfigurationDslGenerator(
     private val typeResolver: TypeResolver,
 ) {
+    companion object {
+        /**
+         * Length of "Array<" prefix when extracting generic type from Array<T>.
+         */
+        private const val ARRAY_PREFIX_LENGTH = 6
+    }
+
     /**
      * Generates a configuration DSL class for the fake implementation.
      *
      * @param analysis The analyzed interface metadata
      * @param fakeClassName The name of the fake implementation class
-     * @param packageName The package name for type references
      * @return The generated configuration DSL class code
      */
     fun generateConfigurationDsl(
         analysis: InterfaceAnalysis,
         fakeClassName: String,
-        packageName: String,
     ): String {
         val interfaceName = analysis.interfaceName
         val configClassName = "Fake${interfaceName}Config"
@@ -38,44 +44,29 @@ internal class ConfigurationDslGenerator(
             // Generate configuration methods for functions (TYPE-SAFE: Use exact types)
             for (function in analysis.functions) {
                 val functionName = function.name
+                val parameterTypes = buildParameterTypeString(function.parameters)
 
-                // Use EXACT parameter types for type-safe configuration
-                val parameterTypes =
-                    if (function.parameters.isEmpty()) {
-                        ""
-                    } else {
-                        function.parameters.joinToString(", ") { param ->
-                            val varargsPrefix = if (param.isVararg) "vararg " else ""
-                            val paramType =
-                                if (param.isVararg) {
-                                    // For varargs, unwrap Array<T> to T
-                                    val arrayType = typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
-                                    val unwrappedType =
-                                        if (arrayType.startsWith("Array<") && arrayType.endsWith(">")) {
-                                            arrayType.substring(6, arrayType.length - 1) // Extract T from Array<T>
-                                        } else {
-                                            "String" // Safe fallback for varargs
-                                        }
-                                    unwrappedType
-                                } else {
-                                    typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
-                                }
-                            varargsPrefix + paramType
-                        }
-                    }
-
-                val returnType = typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+                val returnType =
+                    typeResolver.irTypeToKotlinString(
+                        function.returnType,
+                        preserveTypeParameters = true,
+                    )
                 val suspendModifier = if (function.isSuspend) "suspend " else ""
                 appendLine(
-                    "    fun $functionName(behavior: $suspendModifier($parameterTypes) -> $returnType) { fake.configure${functionName.capitalize()}(behavior) }",
+                    "    fun $functionName(behavior: $suspendModifier($parameterTypes) -> $returnType) " +
+                            "{ fake.configure${functionName.capitalize()}(behavior) }",
                 )
             }
 
             // Generate configuration methods for properties (TYPE-SAFE: Use exact types)
             for (property in analysis.properties) {
                 val propertyName = property.name
-                val propertyType = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
-                appendLine("    fun $propertyName(behavior: () -> $propertyType) { fake.configure${propertyName.capitalize()}(behavior) }")
+                val propertyType =
+                    typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
+                appendLine(
+                    "    fun $propertyName(behavior: () -> $propertyType) " +
+                            "{ fake.configure${propertyName.capitalize()}(behavior) }",
+                )
             }
 
             append("}")
@@ -86,4 +77,49 @@ internal class ConfigurationDslGenerator(
      * Capitalize first letter of string.
      */
     private fun String.capitalize(): String = replaceFirstChar { it.uppercase() }
+
+    /**
+     * Builds parameter type string for configuration DSL methods.
+     *
+     * @param parameters List of parameters to process
+     * @return Comma-separated parameter type string with varargs support
+     */
+    private fun buildParameterTypeString(parameters: List<ParameterAnalysis>): String =
+        if (parameters.isEmpty()) {
+            ""
+        } else {
+            parameters.joinToString(", ") { param ->
+                val varargsPrefix = if (param.isVararg) "vararg " else ""
+                val paramType = resolveParameterType(param)
+                varargsPrefix + paramType
+            }
+        }
+
+    /**
+     * Resolves the Kotlin type string for a parameter, unwrapping varargs if needed.
+     *
+     * @param param The parameter to resolve
+     * @return The Kotlin type string
+     */
+    private fun resolveParameterType(param: ParameterAnalysis): String =
+        if (param.isVararg) {
+            unwrapVarargsType(param)
+        } else {
+            typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+        }
+
+    /**
+     * Unwraps varargs Array<T> to element type T.
+     *
+     * @param param The varargs parameter
+     * @return The unwrapped element type
+     */
+    private fun unwrapVarargsType(param: ParameterAnalysis): String {
+        val arrayType = typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+        return if (arrayType.startsWith("Array<") && arrayType.endsWith(">")) {
+            arrayType.substring(ARRAY_PREFIX_LENGTH, arrayType.length - 1)
+        } else {
+            "String" // Safe fallback for varargs
+        }
+    }
 }

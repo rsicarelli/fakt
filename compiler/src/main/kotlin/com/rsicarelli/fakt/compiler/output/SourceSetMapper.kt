@@ -33,36 +33,86 @@ internal class SourceSetMapper(
 
         // If outputDir is explicitly provided by Gradle plugin, use it directly
         // The Gradle plugin already handles the source set mapping (main -> test)
-        if (outputDir != null) {
-            val dir = File(outputDir)
-            if (ensureDirectoryExists(dir)) {
-                messageCollector?.reportInfo("Fakt: Using Gradle-provided output directory: ${dir.absolutePath}")
-                return dir
-            }
-        }
+        return tryGradleProvidedOutputDir()
+            ?: tryIntelligentSourceSetMapping(moduleName)
+    }
 
-        // Otherwise, use intelligent source set mapping for auto-detection
+    /**
+     * Attempts to use Gradle-provided output directory if available.
+     *
+     * @return File if Gradle output dir exists and is valid, null otherwise
+     */
+    private fun tryGradleProvidedOutputDir(): File? {
+        if (outputDir == null) return null
+
+        val dir = File(outputDir)
+        return if (ensureDirectoryExists(dir)) {
+            messageCollector?.reportInfo("Fakt: Using Gradle-provided output directory: ${dir.absolutePath}")
+            dir
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Uses intelligent source set mapping with fallback hierarchy.
+     *
+     * @param moduleName The module name to map
+     * @return File pointing to the appropriate test source set directory
+     */
+    private fun tryIntelligentSourceSetMapping(moduleName: String): File {
         val primaryTarget = mapToTestSourceSet(moduleName)
         val baseDir = resolveBaseDirectory()
-
-        // Try primary target first
         val primaryDir = File(baseDir, "$primaryTarget/kotlin")
+
+        return tryPrimaryTarget(moduleName, primaryTarget, primaryDir)
+            ?: tryFallbackTargets(moduleName, primaryTarget, baseDir)
+            ?: createPrimaryTarget(moduleName, primaryTarget, primaryDir)
+    }
+
+    /**
+     * Attempts to use primary target directory.
+     */
+    private fun tryPrimaryTarget(
+        moduleName: String,
+        primaryTarget: String,
+        primaryDir: File,
+    ): File? =
         if (ensureDirectoryExists(primaryDir)) {
             reportMapping(moduleName, primaryTarget, primaryDir)
-            return primaryDir
+            primaryDir
+        } else {
+            null
         }
 
-        // Fall back through hierarchy if primary target fails
+    /**
+     * Attempts to use fallback target directories.
+     */
+    private fun tryFallbackTargets(
+        moduleName: String,
+        primaryTarget: String,
+        baseDir: File,
+    ): File? {
         val fallbackTargets = buildFallbackChain(moduleName)
-        for (fallbackTarget in fallbackTargets) {
+        return fallbackTargets.firstNotNullOfOrNull { fallbackTarget ->
             val fallbackDir = File(baseDir, "$fallbackTarget/kotlin")
             if (ensureDirectoryExists(fallbackDir)) {
                 reportFallback(moduleName, primaryTarget, fallbackTarget, fallbackDir)
-                return fallbackDir
+                fallbackDir
+            } else {
+                null
             }
         }
+    }
 
-        // Create primary target if all fallbacks fail
+    /**
+     * Creates primary target directory as last resort.
+     */
+    private fun createPrimaryTarget(
+        moduleName: String,
+        primaryTarget: String,
+        primaryDir: File,
+    ): File {
         primaryDir.mkdirs()
         reportCreated(moduleName, primaryTarget, primaryDir)
         return primaryDir
@@ -125,7 +175,7 @@ internal class SourceSetMapper(
             normalizedName.contains("androidnativex86main") -> "androidNativeX86Test"
 
             // Tier 6: Android special cases
-            normalizedName.contains("androidmain") -> resolveAndroidTestTarget(normalizedName)
+            normalizedName.contains("androidmain") -> ANDROID_UNIT_TEST_TARGET
 
             // Tier 7: Legacy JVM projects
             normalizedName.contains("main") && !normalizedName.contains("test") -> "test"
@@ -194,17 +244,13 @@ internal class SourceSetMapper(
             else -> listOf("commonTest")
         }
 
-    /**
-     * Resolves Android test target based on project configuration.
-     * Defaults to androidUnitTest (unit tests) vs androidInstrumentedTest (integration tests).
-     *
-     * @param moduleName The Android module name
-     * @return The appropriate Android test source set
-     */
-    private fun resolveAndroidTestTarget(moduleName: String): String {
-        // Strategy: Default to androidUnitTest, can be enhanced later for instrumented tests
-        // Future enhancement: detect if project has androidInstrumentedTest configured
-        return "androidUnitTest" // vs "androidInstrumentedTest"
+    companion object {
+        /**
+         * Default Android test target.
+         * Currently defaults to androidUnitTest (unit tests) vs androidInstrumentedTest (integration tests).
+         * Future enhancement: detect if project has androidInstrumentedTest configured.
+         */
+        private const val ANDROID_UNIT_TEST_TARGET = "androidUnitTest"
     }
 
     /**
@@ -272,7 +318,11 @@ internal class SourceSetMapper(
             } else {
                 null
             }
-        } catch (e: Exception) {
+        } catch (e: java.io.IOException) {
+            messageCollector?.reportInfo("Fakt: IOException finding project from daemon: ${e.message}")
+            null
+        } catch (e: SecurityException) {
+            messageCollector?.reportInfo("Fakt: SecurityException finding project from daemon: ${e.message}")
             null
         }
 
@@ -304,8 +354,11 @@ internal class SourceSetMapper(
                 dir.mkdirs()
             }
             dir.exists() && dir.isDirectory && dir.canWrite()
-        } catch (e: Exception) {
+        } catch (e: java.io.IOException) {
             messageCollector?.reportInfo("Fakt: Cannot access directory ${dir.absolutePath}: ${e.message}")
+            false
+        } catch (e: SecurityException) {
+            messageCollector?.reportInfo("Fakt: Security restriction on directory ${dir.absolutePath}: ${e.message}")
             false
         }
 
@@ -331,7 +384,8 @@ internal class SourceSetMapper(
         dir: File,
     ) {
         messageCollector?.reportInfo(
-            "Fakt: Module '$moduleName' -> Primary target '$primaryTarget' not available, using fallback '$fallbackTarget'",
+            "Fakt: Module '$moduleName' -> Primary target '$primaryTarget' not available, " +
+                "using fallback '$fallbackTarget'",
         )
         messageCollector?.reportInfo("Fakt: Output directory: ${dir.absolutePath}")
     }
@@ -344,7 +398,10 @@ internal class SourceSetMapper(
         primaryTarget: String,
         dir: File,
     ) {
-        messageCollector?.reportInfo("Fakt: Module '$moduleName' -> Created primary target '$primaryTarget' (fallbacks unavailable)")
+        messageCollector?.reportInfo(
+            "Fakt: Module '$moduleName' -> Created primary target '$primaryTarget' " +
+                "(fallbacks unavailable)",
+        )
         messageCollector?.reportInfo("Fakt: Output directory: ${dir.absolutePath}")
     }
 
