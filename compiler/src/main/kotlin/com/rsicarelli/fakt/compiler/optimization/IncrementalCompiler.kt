@@ -93,54 +93,18 @@ internal class IncrementalCompiler(
         if (outputDir == null) return
 
         try {
+            val reportGenerator = JsonReportGenerator()
             val reportMetrics = getMetrics()
+
             val reportData =
-                mapOf(
-                    "timestamp" to System.currentTimeMillis(),
-                    "date" to
-                        java.time.LocalDateTime
-                            .now()
-                            .toString(),
-                    "compilation" to
-                        mapOf(
-                            "typesIndexed" to reportMetrics.typesIndexed,
-                            "typesGenerated" to reportMetrics.typesGenerated,
-                            "typesSkipped" to reportMetrics.typesSkipped,
-                            "compilationTimeMs" to reportMetrics.compilationTimeMs,
-                            "annotationsConfigured" to reportMetrics.annotationsConfigured,
-                        ),
-                    "annotations" to
-                        mapOf(
-                            "configured" to fakeAnnotations,
-                            "discovered" to
-                                indexedTypes
-                                    .groupBy { type ->
-                                        type.annotations.firstOrNull { isConfiguredFor(it) } ?: "unknown"
-                                    }.mapValues { it.value.size },
-                        ),
-                    "types" to
-                        indexedTypes.map { type ->
-                            mapOf(
-                                "name" to type.name,
-                                "package" to type.packageName,
-                                "file" to type.fileName,
-                                "annotations" to type.annotations,
-                                "generated" to (type.signature in generatedTypes),
-                            )
-                        },
+                reportGenerator.generateReportData(
+                    metrics = reportMetrics,
+                    fakeAnnotations = fakeAnnotations,
+                    indexedTypes = indexedTypes,
+                    generatedTypes = generatedTypes,
                 )
 
-            val reportJson =
-                buildString {
-                    append("{\n")
-                    reportData.entries.forEachIndexed { index, (key, value) ->
-                        append("  \"$key\": ")
-                        append(formatJsonValue(value, 2))
-                        if (index < reportData.size - 1) append(",")
-                        append("\n")
-                    }
-                    append("}")
-                }
+            val reportJson = reportGenerator.toJsonString(reportData)
 
             val reportFile = java.io.File(outputDir, "fakt-report.json")
             reportFile.parentFile?.mkdirs()
@@ -221,36 +185,6 @@ internal class IncrementalCompiler(
             println("Fakt: Saved ${previousSignatures.size} signatures to cache")
         } catch (e: java.io.IOException) {
             println("Fakt: Failed to save signature cache: ${e.message}")
-        }
-    }
-
-    private fun formatJsonValue(
-        value: Any?,
-        indent: Int,
-    ): String {
-        val indentStr = " ".repeat(indent)
-        return when (value) {
-            is String -> "\"$value\""
-            is Number -> value.toString()
-            is Boolean -> value.toString()
-            is List<*> -> {
-                if (value.isEmpty()) {
-                    "[]"
-                } else {
-                    "[\n${value.joinToString(",\n") { "$indentStr  ${formatJsonValue(it, indent + 2)}" }}\n$indentStr]"
-                }
-            }
-            is Map<*, *> -> {
-                if (value.isEmpty()) {
-                    "{}"
-                } else {
-                    "{\n${value.entries.joinToString(",\n") { (k, v) ->
-                        "$indentStr  \"$k\": ${formatJsonValue(v, indent + 2)}"
-                    }}\n$indentStr}"
-                }
-            }
-            null -> "null"
-            else -> "\"$value\""
         }
     }
 }

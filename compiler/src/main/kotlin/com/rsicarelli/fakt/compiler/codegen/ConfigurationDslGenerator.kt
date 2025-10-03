@@ -54,7 +54,7 @@ internal class ConfigurationDslGenerator(
                 val suspendModifier = if (function.isSuspend) "suspend " else ""
                 appendLine(
                     "    fun $functionName(behavior: $suspendModifier($parameterTypes) -> $returnType) " +
-                            "{ fake.configure${functionName.capitalize()}(behavior) }",
+                        "{ fake.configure${functionName.capitalize()}(behavior) }",
                 )
             }
 
@@ -65,7 +65,7 @@ internal class ConfigurationDslGenerator(
                     typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
                 appendLine(
                     "    fun $propertyName(behavior: () -> $propertyType) " +
-                            "{ fake.configure${propertyName.capitalize()}(behavior) }",
+                        "{ fake.configure${propertyName.capitalize()}(behavior) }",
                 )
             }
 

@@ -86,24 +86,16 @@ class FakeAnnotationDetector {
         )
     }
 
-    @Suppress("UnusedParameter") // Parameter reserved for future FIR API usage
-    private fun FirAnnotation.toAnnotationClassId(session: FirSession): ClassId? {
-        // Extract ClassId from annotation type reference
-        // For MVP, use a simple approach that's less likely to break with FIR API changes
-        return try {
-            // Try to get the ClassId using available stable APIs
-            val typeRef = annotationTypeRef
-            if (typeRef is FirResolvedTypeRef) {
-                // For MVP, we'll rely on string-based matching rather than complex type analysis
-                null
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            // If ClassId extraction fails, return null to indicate unknown annotation
-            null
-        }
-    }
+    /**
+     * Extension function to extract ClassId from FirAnnotation.
+     * Reserved for future FIR API usage when annotation type resolution is stable.
+     * Current implementation returns null and relies on string-based matching in IR phase for MVP.
+     *
+     * @param session The FIR session (reserved for future use)
+     * @return ClassId of the annotation, currently always null
+     */
+    @Suppress("UnusedParameter", "FunctionOnlyReturningConstant")
+    private fun FirAnnotation.toAnnotationClassId(session: FirSession): ClassId? = null
 }
 
 /**

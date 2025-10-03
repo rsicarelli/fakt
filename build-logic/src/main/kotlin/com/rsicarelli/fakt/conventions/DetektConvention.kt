@@ -48,6 +48,12 @@ fun Project.applyDetektToAllProjects() {
             // JVM target for analysis
             jvmTarget = "21"
 
+            // Use baseline file if it exists (for compiler module)
+            val baselineFile = file("detekt-baseline.xml")
+            if (baselineFile.exists()) {
+                baseline.set(baselineFile)
+            }
+
             // Report configuration
             reports {
                 html.required.set(true)

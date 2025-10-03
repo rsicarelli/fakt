@@ -373,84 +373,93 @@ class GenericPatternAnalyzer {
             }
         }
 
-    /**
-     * Validate the analyzed pattern for consistency and completeness.
-     */
-    fun validatePattern(
-        pattern: GenericPattern,
-        irClass: IrClass,
-    ): List<String> {
-        val warnings = mutableListOf<String>()
+    companion object {
+        /**
+         * Validate the analyzed pattern for consistency and completeness.
+         *
+         * @param pattern The generic pattern to validate
+         * @param irClass The IR class being validated
+         * @return List of validation warnings (empty if valid)
+         */
+        fun validatePattern(
+            pattern: GenericPattern,
+            irClass: IrClass,
+        ): List<String> {
+            val warnings = mutableListOf<String>()
 
-        when (pattern) {
-            is GenericPattern.ClassLevelGenerics -> {
-                if (pattern.typeParameters.isEmpty()) {
-                    warnings.add("ClassLevelGenerics pattern has no type parameters")
+            when (pattern) {
+                is GenericPattern.ClassLevelGenerics -> {
+                    if (pattern.typeParameters.isEmpty()) {
+                        warnings.add("ClassLevelGenerics pattern has no type parameters")
+                    }
+
+                    // Validate constraints are properly extracted
+                    pattern.constraints.forEach { constraint ->
+                        if (constraint.constraint.isBlank()) {
+                            warnings.add("Empty constraint found for type parameter ${constraint.typeParameter}")
+                        }
+                    }
                 }
 
-                // Validate constraints are properly extracted
-                pattern.constraints.forEach { constraint ->
-                    if (constraint.constraint.isBlank()) {
-                        warnings.add("Empty constraint found for type parameter ${constraint.typeParameter}")
+                is GenericPattern.MethodLevelGenerics -> {
+                    if (pattern.genericMethods.isEmpty()) {
+                        warnings.add("MethodLevelGenerics pattern has no generic methods")
+                    }
+
+                    if (pattern.detectedTypes.isEmpty()) {
+                        warnings.add("No concrete types detected for method-level generics")
+                    }
+                }
+
+                is GenericPattern.MixedGenerics -> {
+                    if (pattern.classTypeParameters.isEmpty() && pattern.genericMethods.isEmpty()) {
+                        warnings.add("MixedGenerics pattern has neither class nor method generics")
+                    }
+                }
+
+                GenericPattern.NoGenerics -> {
+                    // Verify there really are no generics
+                    val hasClassGenerics = irClass.typeParameters.isNotEmpty()
+                    val hasMethodGenerics =
+                        irClass.declarations
+                            .filterIsInstance<IrSimpleFunction>()
+                            .any { it.typeParameters.isNotEmpty() }
+
+                    if (hasClassGenerics || hasMethodGenerics) {
+                        warnings.add("Interface has generics but classified as NoGenerics")
                     }
                 }
             }
 
-            is GenericPattern.MethodLevelGenerics -> {
-                if (pattern.genericMethods.isEmpty()) {
-                    warnings.add("MethodLevelGenerics pattern has no generic methods")
-                }
-
-                if (pattern.detectedTypes.isEmpty()) {
-                    warnings.add("No concrete types detected for method-level generics")
-                }
-            }
-
-            is GenericPattern.MixedGenerics -> {
-                if (pattern.classTypeParameters.isEmpty() && pattern.genericMethods.isEmpty()) {
-                    warnings.add("MixedGenerics pattern has neither class nor method generics")
-                }
-            }
-
-            GenericPattern.NoGenerics -> {
-                // Verify there really are no generics
-                val hasClassGenerics = irClass.typeParameters.isNotEmpty()
-                val hasMethodGenerics =
-                    irClass.declarations
-                        .filterIsInstance<IrSimpleFunction>()
-                        .any { it.typeParameters.isNotEmpty() }
-
-                if (hasClassGenerics || hasMethodGenerics) {
-                    warnings.add("Interface has generics but classified as NoGenerics")
-                }
-            }
+            return warnings
         }
 
-        return warnings
+        /**
+         * Get a summary of the analysis results for debugging.
+         *
+         * @param pattern The generic pattern to summarize
+         * @return Human-readable summary string
+         */
+        fun getAnalysisSummary(pattern: GenericPattern): String =
+            when (pattern) {
+                GenericPattern.NoGenerics ->
+                    "No generic parameters detected - using simple generation"
+
+                is GenericPattern.ClassLevelGenerics ->
+                    "Class-level generics: ${pattern.typeParameters.size} type parameters, " +
+                        "${pattern.constraints.size} constraints"
+
+                is GenericPattern.MethodLevelGenerics ->
+                    "Method-level generics: ${pattern.genericMethods.size} generic methods, " +
+                        "${pattern.detectedTypes.size} detected types, " +
+                        "${pattern.transformationPatterns.size} transformation patterns"
+
+                is GenericPattern.MixedGenerics ->
+                    "Mixed generics: ${pattern.classTypeParameters.size} class type parameters, " +
+                        "${pattern.genericMethods.size} generic methods, " +
+                        "${pattern.detectedTypes.size} detected types"
+            }
     }
-
-    /**
-     * Get a summary of the analysis results for debugging.
-     */
-    fun getAnalysisSummary(pattern: GenericPattern): String =
-        when (pattern) {
-            GenericPattern.NoGenerics ->
-                "No generic parameters detected - using simple generation"
-
-            is GenericPattern.ClassLevelGenerics ->
-                "Class-level generics: ${pattern.typeParameters.size} type parameters, " +
-                    "${pattern.constraints.size} constraints"
-
-            is GenericPattern.MethodLevelGenerics ->
-                "Method-level generics: ${pattern.genericMethods.size} generic methods, " +
-                    "${pattern.detectedTypes.size} detected types, " +
-                    "${pattern.transformationPatterns.size} transformation patterns"
-
-            is GenericPattern.MixedGenerics ->
-                "Mixed generics: ${pattern.classTypeParameters.size} class type parameters, " +
-                    "${pattern.genericMethods.size} generic methods, " +
-                    "${pattern.detectedTypes.size} detected types"
-        }
 }
 
 /**

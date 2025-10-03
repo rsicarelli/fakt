@@ -45,7 +45,7 @@ class GenericPatternAnalyzerTest {
     @Test
     fun `GIVEN NoGenerics pattern WHEN getting analysis summary THEN should provide meaningful description`() {
         val noGenericsPattern = GenericPattern.NoGenerics
-        val summary = analyzer.getAnalysisSummary(noGenericsPattern)
+        val summary = GenericPatternAnalyzer.getAnalysisSummary(noGenericsPattern)
 
         assertTrue(summary.contains("No generic parameters"))
         assertTrue(summary.contains("simple generation"))
@@ -58,7 +58,7 @@ class GenericPatternAnalyzerTest {
                 typeParameters = emptyList(),
                 constraints = emptyList(),
             )
-        val summary = analyzer.getAnalysisSummary(classLevelPattern)
+        val summary = GenericPatternAnalyzer.getAnalysisSummary(classLevelPattern)
 
         assertTrue(summary.contains("Class-level generics"))
         assertTrue(summary.contains("type parameters"))
@@ -72,7 +72,7 @@ class GenericPatternAnalyzerTest {
                 detectedTypes = setOf("User", "Order"),
                 transformationPatterns = listOf(TransformationPattern("User", "UserDto")),
             )
-        val summary = analyzer.getAnalysisSummary(methodLevelPattern)
+        val summary = GenericPatternAnalyzer.getAnalysisSummary(methodLevelPattern)
 
         assertTrue(summary.contains("Method-level generics"))
         assertTrue(summary.contains("detected types"))
@@ -89,7 +89,7 @@ class GenericPatternAnalyzerTest {
                 detectedTypes = setOf("User"),
                 transformationPatterns = emptyList(),
             )
-        val summary = analyzer.getAnalysisSummary(mixedPattern)
+        val summary = GenericPatternAnalyzer.getAnalysisSummary(mixedPattern)
 
         assertTrue(summary.contains("Mixed generics"))
         assertTrue(summary.contains("class type parameters"))

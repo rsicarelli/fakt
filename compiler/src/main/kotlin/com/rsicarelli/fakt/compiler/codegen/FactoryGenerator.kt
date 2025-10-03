@@ -38,7 +38,7 @@ internal class FactoryGenerator {
         return buildString {
             appendLine(
                 "fun $factoryFunctionName(configure: $configClassName.() -> Unit = {}): " +
-                        "$interfaceWithGenerics {",
+                    "$interfaceWithGenerics {",
             )
             appendLine("    return $fakeClassName().apply { $configClassName(this).configure() }")
             appendLine("}")

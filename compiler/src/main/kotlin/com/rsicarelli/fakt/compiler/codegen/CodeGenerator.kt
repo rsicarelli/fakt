@@ -106,6 +106,9 @@ internal class CodeGenerator(
 
             messageCollector?.reportInfo("Fakt: Successfully generated fake for $interfaceName -> $fakeClassName")
         } catch (e: Exception) {
+            // Top-level error boundary: Catch all exceptions during code generation
+            // This is a legitimate use of generic exception handling to provide context
+            // We log the error with interface name for debugging, then re-throw to fail fast
             messageCollector?.reportError("Fakt: Failed to generate fake for $interfaceName: ${e.message}")
             throw e
         }

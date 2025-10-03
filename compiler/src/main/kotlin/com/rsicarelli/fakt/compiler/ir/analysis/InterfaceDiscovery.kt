@@ -45,27 +45,40 @@ internal class InterfaceDiscovery(
 
         // Traverse all files in the module
         moduleFragment.files.forEach { file ->
-            file.declarations.forEach { declaration ->
-                if (isValidFakeInterface(declaration)) {
-                    val matchingAnnotation = findMatchingAnnotation(declaration as IrClass)
-
-                    if (matchingAnnotation != null) {
-                        discoveredInterfaces.add(declaration)
-
-                        // Create TypeInfo for optimization tracking
-                        val typeInfo = createTypeInfo(declaration, file)
-                        optimizations.indexType(typeInfo)
-
-                        messageCollector?.reportInfo(
-                            "Fakt: Discovered interface with $matchingAnnotation: ${declaration.name}",
-                        )
-                    }
-                }
-            }
+            processFileDeclarations(file, discoveredInterfaces)
         }
 
         messageCollector?.reportInfo("Fakt: Found ${discoveredInterfaces.size} fake interfaces to process")
         return discoveredInterfaces
+    }
+
+    /**
+     * Processes all declarations in a file to find @Fake annotated interfaces.
+     *
+     * @param file The IR file to process
+     * @param discoveredInterfaces Mutable list to collect discovered interfaces
+     */
+    private fun processFileDeclarations(
+        file: org.jetbrains.kotlin.ir.declarations.IrFile,
+        discoveredInterfaces: MutableList<IrClass>,
+    ) {
+        file.declarations.forEach { declaration ->
+            if (isValidFakeInterface(declaration)) {
+                val matchingAnnotation = findMatchingAnnotation(declaration as IrClass)
+
+                if (matchingAnnotation != null) {
+                    discoveredInterfaces.add(declaration)
+
+                    // Create TypeInfo for optimization tracking
+                    val typeInfo = createTypeInfo(declaration, file)
+                    optimizations.indexType(typeInfo)
+
+                    messageCollector?.reportInfo(
+                        "Fakt: Discovered interface with $matchingAnnotation: ${declaration.name}",
+                    )
+                }
+            }
+        }
     }
 
     /**

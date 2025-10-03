@@ -96,29 +96,7 @@ class UnifiedFaktIrGenerationExtension(
             }
 
             // Phase 2: IR-Native Code Generation with Incremental Compilation
-            // Filter interfaces that need processing before the loop
-            val interfacesToProcess =
-                fakeInterfaces
-                    .mapNotNull { fakeInterface ->
-                        val interfaceName = fakeInterface.name.asString()
-                        val typeInfo = createTypeInfo(fakeInterface)
-
-                        when {
-                            !optimizations.needsRegeneration(typeInfo) -> {
-                                messageCollector?.reportInfo("Fakt: Skipping unchanged interface: $interfaceName")
-                                null
-                            }
-
-                            interfaceAnalyzer.checkGenericSupport(fakeInterface) != null -> {
-                                val genericError =
-                                    interfaceAnalyzer.checkGenericSupport(fakeInterface)
-                                messageCollector?.reportInfo("Fakt: Skipping generic interface: $genericError")
-                                null
-                            }
-
-                            else -> fakeInterface to typeInfo
-                        }
-                    }
+            val interfacesToProcess = filterInterfacesToProcess(fakeInterfaces)
 
             for ((fakeInterface, typeInfo) in interfacesToProcess) {
                 val interfaceName = fakeInterface.name.asString()
@@ -146,10 +124,13 @@ class UnifiedFaktIrGenerationExtension(
 
             // Generate simple compilation report and save signatures for incremental compilation
             (optimizations as? com.rsicarelli.fakt.compiler.optimization.IncrementalCompiler)?.generateReport(
-                outputDir
+                outputDir,
             )
             (optimizations as? com.rsicarelli.fakt.compiler.optimization.IncrementalCompiler)?.saveSignatures()
         } catch (e: Exception) {
+            // Top-level error boundary: Catch all exceptions to prevent compiler crashes
+            // This is a legitimate use of generic exception handling at the plugin boundary
+            // We log the error and allow compilation to continue for other modules
             messageCollector?.report(
                 org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.ERROR,
                 "Fakt: IR-native generation failed: ${e.message}",
@@ -186,6 +167,36 @@ class UnifiedFaktIrGenerationExtension(
     }
 
     /**
+     * Filters interfaces to determine which need fake generation.
+     * Skips unchanged interfaces (incremental compilation) and unsupported generic interfaces.
+     *
+     * @param fakeInterfaces All discovered @Fake interfaces
+     * @return List of interfaces paired with their TypeInfo that need processing
+     */
+    private fun filterInterfacesToProcess(
+        fakeInterfaces: List<IrClass>,
+    ): List<Pair<IrClass, com.rsicarelli.fakt.compiler.types.TypeInfo>> =
+        fakeInterfaces.mapNotNull { fakeInterface ->
+            val interfaceName = fakeInterface.name.asString()
+            val typeInfo = createTypeInfo(fakeInterface)
+
+            when {
+                !optimizations.needsRegeneration(typeInfo) -> {
+                    messageCollector?.reportInfo("Fakt: Skipping unchanged interface: $interfaceName")
+                    null
+                }
+
+                interfaceAnalyzer.checkGenericSupport(fakeInterface) != null -> {
+                    val genericError = interfaceAnalyzer.checkGenericSupport(fakeInterface)
+                    messageCollector?.reportInfo("Fakt: Skipping generic interface: $genericError")
+                    null
+                }
+
+                else -> fakeInterface to typeInfo
+            }
+        }
+
+    /**
      * Validates the analyzed generic pattern and logs warnings and analysis summary.
      * Extracted to reduce complexity of the main generate() method.
      *
@@ -198,13 +209,9 @@ class UnifiedFaktIrGenerationExtension(
         fakeInterface: IrClass,
         interfaceName: String,
     ) {
-        val patternAnalyzer =
-            com.rsicarelli.fakt.compiler.ir.analysis
-                .GenericPatternAnalyzer()
-
-        // Validate pattern for consistency
+        // Validate pattern for consistency using companion object methods
         val warnings =
-            patternAnalyzer.validatePattern(
+            com.rsicarelli.fakt.compiler.ir.analysis.GenericPatternAnalyzer.validatePattern(
                 interfaceAnalysis.genericPattern,
                 fakeInterface,
             )
@@ -217,7 +224,10 @@ class UnifiedFaktIrGenerationExtension(
         }
 
         // Log analysis summary for debugging
-        val summary = patternAnalyzer.getAnalysisSummary(interfaceAnalysis.genericPattern)
+        val summary =
+            com.rsicarelli.fakt.compiler.ir.analysis.GenericPatternAnalyzer.getAnalysisSummary(
+                interfaceAnalysis.genericPattern,
+            )
         messageCollector?.reportInfo("Fakt: Analysis - $summary")
     }
 

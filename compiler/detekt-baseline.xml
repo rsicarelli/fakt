@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<SmellBaseline>
+  <!--
+    ARCHITECTURAL BASELINE FOR FAKT COMPILER
+
+    This baseline documents 13 legitimate complexity issues that have been reviewed
+    and accepted as necessary architectural decisions.
+
+    Total suppressed: 13 issues
+    Reduction achieved: 51.9% (from 27 initial issues to 13 accepted)
+
+    Categories:
+    - Error Boundaries (2): Top-level plugin exception handlers
+    - Type System (5): Kotlin type resolution complexity
+    - Platform Mapping (2): Multiplatform source set handling
+    - Code Generation (1): Default value generation for all Kotlin types
+    - At Threshold (2): Classes with exactly 11 functions (threshold)
+    - Pattern Detection (1): Generic pattern transformation analysis
+
+    Maintenance: Review this baseline when making architectural changes.
+  -->
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:SourceSetMapper.kt$SourceSetMapper$private fun mapToTestSourceSet(moduleName: String): String</ID>
+    <ID>CyclomaticComplexMethod:TypeResolver.kt$TypeResolver$private fun handleFunctionType( irType: IrType, preserveTypeParameters: Boolean, ): String</ID>
+    <ID>CyclomaticComplexMethod:TypeResolver.kt$TypeResolver$private fun handleGenericType( irType: IrSimpleType, preserveTypeParameters: Boolean, ): String</ID>
+    <ID>NestedBlockDepth:GenericPatternAnalyzer.kt$GenericPatternAnalyzer$private fun detectTransformationPatterns(function: IrSimpleFunction): List&lt;TransformationPattern></ID>
+    <ID>NestedBlockDepth:ImportResolver.kt$ImportResolver$private fun collectImportsFromType( irType: IrType, currentPackage: String, imports: MutableSet&lt;String>, )</ID>
+    <ID>NestedBlockDepth:TypeResolver.kt$TypeResolver$private fun handleFunctionType( irType: IrType, preserveTypeParameters: Boolean, ): String</ID>
+    <ID>TooGenericExceptionCaught:CodeGenerator.kt$CodeGenerator$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension$e: Exception</ID>
+    <ID>TooManyFunctions:GenericPatternAnalyzer.kt$GenericPatternAnalyzer</ID>
+    <ID>TooManyFunctions:ImplementationGenerator.kt$ImplementationGenerator</ID>
+    <ID>TooManyFunctions:IncrementalCompiler.kt$IncrementalCompiler : CompilerOptimizations</ID>
+    <ID>TooManyFunctions:SourceSetMapper.kt$SourceSetMapper</ID>
+    <ID>TooManyFunctions:TypeResolver.kt$TypeResolver</ID>
+  </CurrentIssues>
+</SmellBaseline>
