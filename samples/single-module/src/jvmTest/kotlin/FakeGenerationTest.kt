@@ -16,7 +16,6 @@ import kotlin.test.assertTrue
  * 4. Configuration DSL is generated and usable
  */
 class FakeGenerationTest {
-
     @Test
     fun `generated fake factory functions work`() {
         // Test TestService fake
@@ -52,15 +51,17 @@ class FakeGenerationTest {
     @Test
     fun `generated configuration DSL is available`() {
         // Test configuration DSL works without throwing
-        val configuredTestService = fakeTestService {
-            // Configuration methods should be available
-            // Note: The actual configuration logic isn't implemented yet,
-            // but the DSL structure should be present
-        }
+        val configuredTestService =
+            fakeTestService {
+                // Configuration methods should be available
+                // Note: The actual configuration logic isn't implemented yet,
+                // but the DSL structure should be present
+            }
 
-        val configuredAnalyticsService = fakeAnalyticsService {
-            // Configuration methods should be available
-        }
+        val configuredAnalyticsService =
+            fakeAnalyticsService {
+                // Configuration methods should be available
+            }
 
         assertNotNull(configuredTestService)
         assertNotNull(configuredAnalyticsService)

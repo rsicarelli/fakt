@@ -61,13 +61,24 @@ kotlin {
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     if (!name.contains("Test")) {
         compilerOptions {
-            val compilerJar = project.rootProject.project(":compiler").tasks.named("shadowJar").get().outputs.files.singleFile
-            freeCompilerArgs.addAll(listOf(
-                "-Xplugin=${compilerJar.absolutePath}",
-                "-P", "plugin:com.rsicarelli.fakt:enabled=true",
-                "-P", "plugin:com.rsicarelli.fakt:debug=true",
-                "-P", "plugin:com.rsicarelli.fakt:outputDir=${project.layout.buildDirectory.get().asFile.absolutePath}/generated/ktfake"
-            ))
+            val compilerJar =
+                project.rootProject
+                    .project(":compiler")
+                    .tasks
+                    .named("shadowJar")
+                    .get()
+                    .outputs.files.singleFile
+            freeCompilerArgs.addAll(
+                listOf(
+                    "-Xplugin=${compilerJar.absolutePath}",
+                    "-P",
+                    "plugin:com.rsicarelli.fakt:enabled=true",
+                    "-P",
+                    "plugin:com.rsicarelli.fakt:debug=true",
+                    "-P",
+                    "plugin:com.rsicarelli.fakt:outputDir=${project.layout.buildDirectory.get().asFile.absolutePath}/generated/ktfake",
+                ),
+            )
         }
     }
 }

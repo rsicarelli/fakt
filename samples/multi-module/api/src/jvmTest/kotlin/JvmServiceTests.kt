@@ -5,8 +5,8 @@ package api.jvm
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-class JvmServiceTests {
 
+class JvmServiceTests {
     @Test
     fun `FileSystemService fake can be created`() {
         val fakeFileSystemService = fakeFileSystemService()

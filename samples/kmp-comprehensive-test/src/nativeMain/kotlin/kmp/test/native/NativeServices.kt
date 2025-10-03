@@ -16,8 +16,11 @@ interface NativeMemoryService {
     val freeMemory: Long
 
     fun allocate(size: Long): Boolean
+
     fun deallocate(pointer: Long)
+
     suspend fun gc(): Boolean
+
     fun <T> withMemoryPool(action: () -> T): T
 }
 
@@ -27,9 +30,16 @@ interface NativeFileSystemService {
     val homeDirectory: String
 
     fun exists(path: String): Boolean
+
     fun createDirectory(path: String): Boolean
+
     suspend fun listFiles(path: String): List<String>
-    fun <T> withPermissions(path: String, permissions: Int, action: () -> T): T
+
+    fun <T> withPermissions(
+        path: String,
+        permissions: Int,
+        action: () -> T,
+    ): T
 }
 
 @Fake
@@ -38,9 +48,16 @@ interface NativeSystemService<TConfig> {
     val architecture: String
 
     fun getEnvironmentVariable(name: String): String?
-    fun setEnvironmentVariable(name: String, value: String): Boolean
+
+    fun setEnvironmentVariable(
+        name: String,
+        value: String,
+    ): Boolean
+
     suspend fun executeCommand(command: String): String
+
     fun configure(config: TConfig)
+
     fun <R> withSystemLock(action: () -> R): R
 }
 
@@ -49,12 +66,12 @@ data class NativeSystemInfo(
     val platform: String,
     val architecture: String,
     val version: String,
-    val capabilities: Set<String>
+    val capabilities: Set<String>,
 )
 
 data class NativeFileInfo(
     val path: String,
     val size: Long,
     val permissions: Int,
-    val lastModified: Long
+    val lastModified: Long,
 )

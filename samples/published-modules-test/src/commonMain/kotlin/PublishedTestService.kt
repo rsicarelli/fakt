@@ -10,13 +10,20 @@ interface PublishedTestService {
     val isActive: Boolean
 
     fun getName(): String
+
     fun setActive(active: Boolean)
+
     fun processData(input: String): String
 }
 
 @Fake
 interface PublishedUserService {
     suspend fun fetchUser(id: String): String
+
     fun hasPermission(permission: String): Boolean
-    fun validateCredentials(username: String, password: String): Boolean
+
+    fun validateCredentials(
+        username: String,
+        password: String,
+    ): Boolean
 }

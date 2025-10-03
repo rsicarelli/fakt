@@ -7,7 +7,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class SharedServiceTests {
-
     @Test
     fun `NetworkService fake can be created`() {
         val fakeNetworkService = fakeNetworkService()
@@ -24,9 +23,10 @@ class SharedServiceTests {
 
     @Test
     fun `LoggingService fake can be created with configuration`() {
-        val fakeLoggingService = fakeLoggingService {
-            // Configuration DSL should be available
-        }
+        val fakeLoggingService =
+            fakeLoggingService {
+                // Configuration DSL should be available
+            }
         assertNotNull(fakeLoggingService)
         assertTrue(fakeLoggingService is LoggingService)
 

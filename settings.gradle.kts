@@ -28,7 +28,7 @@ include(
     ":samples:published-modules-test",
     ":samples:multi-module:api",
     ":samples:multi-module:core",
-    ":samples:multi-module:app"
+    ":samples:multi-module:app",
 )
 
 rootProject.name = "fakt"

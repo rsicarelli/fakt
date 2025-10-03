@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package core.business
 
-import api.shared.*
+import api.shared.LoggingService
+import api.shared.NetworkService
+import api.shared.StorageService
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -12,12 +14,12 @@ import kotlin.test.assertTrue
  * This module defines @Fake interfaces that depend on interfaces from the API module.
  */
 class BusinessLogicTests {
-
     @Test
     fun `UserService fake can be created with cross-module dependencies`() {
-        val fakeUserService = fakeUserService {
-            // Should have access to cross-module dependency configuration
-        }
+        val fakeUserService =
+            fakeUserService {
+                // Should have access to cross-module dependency configuration
+            }
 
         assertNotNull(fakeUserService)
         assertTrue(fakeUserService is UserService)
@@ -35,9 +37,9 @@ class BusinessLogicTests {
 
     @Test
     fun `OrderService fake can be created with nested dependencies`() {
-        val fakeOrderService = fakeOrderService {
-
-        }
+        val fakeOrderService =
+            fakeOrderService {
+            }
 
         assertNotNull(fakeOrderService)
         assertTrue(fakeOrderService is OrderService)
@@ -66,17 +68,19 @@ class BusinessLogicTests {
     @Test
     fun `business logic integration with faked dependencies`() {
         // Create a configured business service with mocked dependencies
-        val fakeUserService = fakeUserService {
-            // In the future, this will configure behavior like:
-            // networkService {
-            //     get { url -> Result.success("mock-response") }
-            // }
-        }
+        val fakeUserService =
+            fakeUserService {
+                // In the future, this will configure behavior like:
+                // networkService {
+                //     get { url -> Result.success("mock-response") }
+                // }
+            }
 
-        val fakeOrderService = fakeOrderService {
-            // Configure with the fake user service
-            // userService { fakeUserService }
-        }
+        val fakeOrderService =
+            fakeOrderService {
+                // Configure with the fake user service
+                // userService { fakeUserService }
+            }
 
         assertNotNull(fakeUserService)
         assertNotNull(fakeOrderService)

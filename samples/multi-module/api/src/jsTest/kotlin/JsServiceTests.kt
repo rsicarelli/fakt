@@ -7,7 +7,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class JsServiceTests {
-
     @Test
     fun `BrowserService fake can be created`() {
         val fakeBrowserService = fakeBrowserService()

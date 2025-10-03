@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.gradle
 
-import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
-import kotlin.test.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 

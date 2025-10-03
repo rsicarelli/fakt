@@ -16,8 +16,11 @@ interface WasmMemoryService {
     val maxMemorySize: Int
 
     fun allocateMemory(size: Int): Int
+
     fun deallocateMemory(pointer: Int)
+
     suspend fun growMemory(pages: Int): Boolean
+
     fun <T> withMemoryView(action: () -> T): T
 }
 
@@ -27,8 +30,17 @@ interface WasmModuleService<TExport> {
     val imports: Map<String, Any>
 
     suspend fun loadModule(wasmBytes: ByteArray): Boolean
-    fun <T> callExport(name: String, args: Array<Any>): T?
-    fun setImport(name: String, value: Any)
+
+    fun <T> callExport(
+        name: String,
+        args: Array<Any>,
+    ): T?
+
+    fun setImport(
+        name: String,
+        value: Any,
+    )
+
     fun <R> withModule(action: () -> R): R
 }
 
@@ -37,9 +49,18 @@ interface WasmInteropService {
     val jsContext: Any?
     val wasmContext: Any?
 
-    suspend fun callJs(functionName: String, args: Array<Any>): Any?
-    suspend fun callWasm(functionName: String, args: Array<Any>): Any?
+    suspend fun callJs(
+        functionName: String,
+        args: Array<Any>,
+    ): Any?
+
+    suspend fun callWasm(
+        functionName: String,
+        args: Array<Any>,
+    ): Any?
+
     fun <T> bridge(jsValue: Any): T?
+
     fun <R> withInterop(action: () -> R): R
 }
 
@@ -48,12 +69,12 @@ data class WasmModule(
     val name: String,
     val size: Int,
     val exports: List<String>,
-    val imports: List<String>
+    val imports: List<String>,
 )
 
 data class WasmMemoryInfo(
     val currentPages: Int,
     val maxPages: Int?,
     val pageSize: Int,
-    val shared: Boolean
+    val shared: Boolean,
 )

@@ -12,17 +12,31 @@ import com.rsicarelli.fakt.Fake
 @Fake
 interface FileSystemService {
     fun readFile(path: String): String
-    fun writeFile(path: String, content: String): Boolean
+
+    fun writeFile(
+        path: String,
+        content: String,
+    ): Boolean
+
     fun createDirectory(path: String): Boolean
+
     fun deleteFile(path: String): Boolean
+
     val currentDirectory: String
 }
 
 @Fake
 interface DatabaseService {
-    suspend fun connect(url: String, username: String, password: String): Boolean
+    suspend fun connect(
+        url: String,
+        username: String,
+        password: String,
+    ): Boolean
+
     suspend fun execute(sql: String): Int
+
     suspend fun close()
+
     val isConnected: Boolean
 }
 
@@ -34,6 +48,8 @@ interface JvmSystemService {
     val maxMemory: Long
 
     fun getCurrentTime(): String
+
     fun getSystemProperty(key: String): String?
+
     fun getEnvironmentVariable(key: String): String?
 }

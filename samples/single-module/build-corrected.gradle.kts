@@ -43,15 +43,26 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     if (!name.contains("Test")) {
         compilerOptions {
             // Apply our unified compiler plugin manually for testing
-            val compilerJar = project.rootProject.project(":compiler").tasks.named("shadowJar").get().outputs.files.singleFile
+            val compilerJar =
+                project.rootProject
+                    .project(":compiler")
+                    .tasks
+                    .named("shadowJar")
+                    .get()
+                    .outputs.files.singleFile
             println("Fakt compiler plugin path: ${compilerJar.absolutePath}")
 
-            freeCompilerArgs.addAll(listOf(
-                "-Xplugin=${compilerJar.absolutePath}",
-                "-P", "plugin:dev.rsicarelli.ktfake:enabled=true",
-                "-P", "plugin:dev.rsicarelli.ktfake:debug=true",
-                "-P", "plugin:dev.rsicarelli.ktfake:outputDir=${project.layout.buildDirectory.get().asFile.absolutePath}/generated/ktfake/commonTest"
-            ))
+            freeCompilerArgs.addAll(
+                listOf(
+                    "-Xplugin=${compilerJar.absolutePath}",
+                    "-P",
+                    "plugin:dev.rsicarelli.ktfake:enabled=true",
+                    "-P",
+                    "plugin:dev.rsicarelli.ktfake:debug=true",
+                    "-P",
+                    "plugin:dev.rsicarelli.ktfake:outputDir=${project.layout.buildDirectory.get().asFile.absolutePath}/generated/ktfake/commonTest",
+                ),
+            )
         }
     }
 }

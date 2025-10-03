@@ -1,5 +1,5 @@
-public final class dev/rsicarelli/ktfake/gradle/KtFakeGradleSubplugin : org/jetbrains/kotlin/gradle/plugin/KotlinCompilerPluginSupportPlugin {
-	public static final field Companion Ldev/rsicarelli/ktfake/gradle/KtFakeGradleSubplugin$Companion;
+public final class com/rsicarelli/fakt/gradle/FaktGradleSubplugin : org/jetbrains/kotlin/gradle/plugin/KotlinCompilerPluginSupportPlugin {
+	public static final field Companion Lcom/rsicarelli/fakt/gradle/FaktGradleSubplugin$Companion;
 	public static final field PLUGIN_ARTIFACT_NAME Ljava/lang/String;
 	public static final field PLUGIN_GROUP_ID Ljava/lang/String;
 	public static final field PLUGIN_ID Ljava/lang/String;
@@ -14,10 +14,10 @@ public final class dev/rsicarelli/ktfake/gradle/KtFakeGradleSubplugin : org/jetb
 	public fun isApplicable (Lorg/jetbrains/kotlin/gradle/plugin/KotlinCompilation;)Z
 }
 
-public final class dev/rsicarelli/ktfake/gradle/KtFakeGradleSubplugin$Companion {
+public final class com/rsicarelli/fakt/gradle/FaktGradleSubplugin$Companion {
 }
 
-public class dev/rsicarelli/ktfake/gradle/KtFakePluginExtension {
+public class com/rsicarelli/fakt/gradle/FaktPluginExtension {
 	public fun <init> (Lorg/gradle/api/model/ObjectFactory;)V
 	public final fun generation (Lkotlin/jvm/functions/Function1;)V
 	public final fun getDebug ()Lorg/gradle/api/provider/Property;
@@ -29,7 +29,7 @@ public class dev/rsicarelli/ktfake/gradle/KtFakePluginExtension {
 	public final fun performance (Lkotlin/jvm/functions/Function1;)V
 }
 
-public final class dev/rsicarelli/ktfake/gradle/KtFakePluginExtension$GenerationOptions {
+public final class com/rsicarelli/fakt/gradle/FaktPluginExtension$GenerationOptions {
 	public fun <init> ()V
 	public final fun getGenerateDocs ()Z
 	public final fun getGenerateNullChecks ()Z
@@ -39,7 +39,7 @@ public final class dev/rsicarelli/ktfake/gradle/KtFakePluginExtension$Generation
 	public final fun setGenerateUtilities (Z)V
 }
 
-public final class dev/rsicarelli/ktfake/gradle/KtFakePluginExtension$PerformanceOptions {
+public final class com/rsicarelli/fakt/gradle/FaktPluginExtension$PerformanceOptions {
 	public fun <init> ()V
 	public final fun getEnableCaching ()Z
 	public final fun getIncrementalCompilation ()Z

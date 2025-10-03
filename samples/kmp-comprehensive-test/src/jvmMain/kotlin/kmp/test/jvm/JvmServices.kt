@@ -15,17 +15,32 @@ interface JvmDatabaseService {
     val isConnected: Boolean
 
     suspend fun connect(): Boolean
+
     suspend fun disconnect()
+
     suspend fun executeQuery(sql: String): List<Map<String, Any>>
+
     fun <T> transaction(block: () -> T): T
 }
 
 @Fake
 interface JvmFileService {
     fun readFile(path: String): String?
-    fun writeFile(path: String, content: String): Boolean
-    suspend fun copyFile(source: String, destination: String): Boolean
-    fun <T> withLock(file: String, action: () -> T): T
+
+    fun writeFile(
+        path: String,
+        content: String,
+    ): Boolean
+
+    suspend fun copyFile(
+        source: String,
+        destination: String,
+    ): Boolean
+
+    fun <T> withLock(
+        file: String,
+        action: () -> T,
+    ): T
 }
 
 @Fake
@@ -34,8 +49,17 @@ interface JvmHttpClient<TRequest, TResponse> {
     val timeout: Long
 
     suspend fun get(endpoint: String): TResponse?
-    suspend fun post(endpoint: String, body: TRequest): TResponse?
-    suspend fun <R> processResponse(response: TResponse, processor: (TResponse) -> R): R
+
+    suspend fun post(
+        endpoint: String,
+        body: TRequest,
+    ): TResponse?
+
+    suspend fun <R> processResponse(
+        response: TResponse,
+        processor: (TResponse) -> R,
+    ): R
+
     fun configure(block: (JvmHttpClient<TRequest, TResponse>) -> Unit)
 }
 
@@ -44,17 +68,17 @@ data class JvmConnection(
     val host: String,
     val port: Int,
     val database: String,
-    val credentials: Map<String, String>
+    val credentials: Map<String, String>,
 )
 
 data class JvmHttpRequest(
     val method: String,
     val headers: Map<String, String>,
-    val body: String?
+    val body: String?,
 )
 
 data class JvmHttpResponse(
     val status: Int,
     val headers: Map<String, String>,
-    val body: String
+    val body: String,
 )

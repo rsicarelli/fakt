@@ -12,21 +12,33 @@ import com.rsicarelli.fakt.Fake
 @Fake
 interface CommonDataService {
     val version: String
+
     suspend fun fetchData(query: String): List<String>
+
     fun <T> processData(data: T): T
 }
 
 @Fake
 interface CommonCacheService<K, V> {
     fun get(key: K): V?
-    fun put(key: K, value: V): V?
+
+    fun put(
+        key: K,
+        value: V,
+    ): V?
+
     fun size(): Int
 }
 
 @Fake
 interface CommonEventBus {
     fun <T> publish(event: T)
-    fun <T> subscribe(eventType: String, handler: (T) -> Unit)
+
+    fun <T> subscribe(
+        eventType: String,
+        handler: (T) -> Unit,
+    )
+
     suspend fun <T> publishAsync(event: T): Boolean
 }
 
@@ -34,11 +46,11 @@ interface CommonEventBus {
 data class CommonEvent(
     val id: String,
     val type: String,
-    val data: Map<String, Any>
+    val data: Map<String, Any>,
 )
 
 data class CommonResult<T>(
     val success: Boolean,
     val data: T?,
-    val error: String?
+    val error: String?,
 )

@@ -1,4 +1,4 @@
-public abstract interface annotation class dev/rsicarelli/ktfake/CallTracking : java/lang/annotation/Annotation {
+public abstract interface annotation class com/rsicarelli/fakt/CallTracking : java/lang/annotation/Annotation {
 	public abstract fun autoVerify ()Z
 	public abstract fun captureArguments ()Z
 	public abstract fun captureReturnValues ()Z
@@ -6,7 +6,7 @@ public abstract interface annotation class dev/rsicarelli/ktfake/CallTracking : 
 	public abstract fun maxCalls ()I
 }
 
-public abstract interface annotation class dev/rsicarelli/ktfake/Fake : java/lang/annotation/Annotation {
+public abstract interface annotation class com/rsicarelli/fakt/Fake : java/lang/annotation/Annotation {
 	public abstract fun builder ()Z
 	public abstract fun concurrent ()Z
 	public abstract fun dependencies ()[Ljava/lang/Class;
@@ -14,7 +14,7 @@ public abstract interface annotation class dev/rsicarelli/ktfake/Fake : java/lan
 	public abstract fun trackCalls ()Z
 }
 
-public abstract interface annotation class dev/rsicarelli/ktfake/FakeConfig : java/lang/annotation/Annotation {
+public abstract interface annotation class com/rsicarelli/fakt/FakeConfig : java/lang/annotation/Annotation {
 	public abstract fun customScope ()Ljava/lang/String;
 	public abstract fun defaults ()[Ljava/lang/String;
 	public abstract fun excludeMethods ()[Ljava/lang/String;

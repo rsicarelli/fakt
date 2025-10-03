@@ -9,7 +9,6 @@ import kotlin.test.*
  * This validates our type-safe API with the actual generated fakes.
  */
 class RealWorldValidationTest {
-
     @Test
     fun `GIVEN generated fakes WHEN using basic patterns THEN should work seamlessly`() {
         // Test that the fake factory functions work
@@ -23,8 +22,8 @@ class RealWorldValidationTest {
         assertNotNull(auth, "fakeAuthenticationService should be created")
 
         // Test default behavior works
-        analytics.track("test_event")  // Should not throw
-        testService.setValue("test")   // Should not throw
+        analytics.track("test_event") // Should not throw
+        testService.setValue("test") // Should not throw
 
         // Test default values
         assertEquals("", testService.getValue())
@@ -38,20 +37,22 @@ class RealWorldValidationTest {
         var capturedEvent: String? = null
 
         // Test type-safe configuration
-        val analytics = fakeAnalyticsService {
-            track { event ->
-                capturedEvent = event  // Type-safe: event is String
+        val analytics =
+            fakeAnalyticsService {
+                track { event ->
+                    capturedEvent = event // Type-safe: event is String
+                }
             }
-        }
 
         analytics.track("test_event")
         assertEquals("test_event", capturedEvent)
 
         // Test service configuration
-        val testService = fakeTestService {
-            getValue { "configured_value" }
-            stringValue { "configured_property" }
-        }
+        val testService =
+            fakeTestService {
+                getValue { "configured_value" }
+                stringValue { "configured_property" }
+            }
 
         assertEquals("configured_value", testService.getValue())
         assertEquals("configured_property", testService.stringValue)
@@ -61,23 +62,24 @@ class RealWorldValidationTest {
     fun `GIVEN authentication service WHEN configuring complex behavior THEN should maintain state`() {
         var isLoggedIn = false
 
-        val auth = fakeAuthenticationService {
-            login { username, password ->
-                isLoggedIn = username == "admin" && password == "secret"
-                if (isLoggedIn) {
-                    Result.success(User("1", "admin", "admin@test.com"))
-                } else {
-                    Result.failure(Exception("Invalid credentials"))
+        val auth =
+            fakeAuthenticationService {
+                login { username, password ->
+                    isLoggedIn = username == "admin" && password == "secret"
+                    if (isLoggedIn) {
+                        Result.success(User("1", "admin", "admin@test.com"))
+                    } else {
+                        Result.failure(Exception("Invalid credentials"))
+                    }
+                }
+
+                isLoggedIn { isLoggedIn }
+
+                logout {
+                    isLoggedIn = false
+                    Result.success(Unit)
                 }
             }
-
-            isLoggedIn { isLoggedIn }
-
-            logout {
-                isLoggedIn = false
-                Result.success(Unit)
-            }
-        }
 
         // Test login flow
         assertFalse(auth.isLoggedIn)
@@ -89,17 +91,19 @@ class RealWorldValidationTest {
 
     @Test
     fun `GIVEN user repository WHEN configuring collections THEN should handle complex types`() {
-        val users = listOf(
-            User("1", "Alice", "alice@test.com"),
-            User("2", "Bob", "bob@test.com")
-        )
+        val users =
+            listOf(
+                User("1", "Alice", "alice@test.com"),
+                User("2", "Bob", "bob@test.com"),
+            )
 
-        val userRepo = fakeUserRepository {
-            users { users }
-            findById { id -> users.find { it.id == id } }
-            save { user -> user }  // Identity function
-            delete { id -> users.any { it.id == id } }
-        }
+        val userRepo =
+            fakeUserRepository {
+                users { users }
+                findById { id -> users.find { it.id == id } }
+                save { user -> user } // Identity function
+                delete { id -> users.any { it.id == id } }
+            }
 
         // Test collection behavior
         assertEquals(users, userRepo.users)
@@ -111,22 +115,25 @@ class RealWorldValidationTest {
 
     @Test
     fun `GIVEN multiple services WHEN integrating THEN should work together`() {
-        val auth = fakeAuthenticationService {
-            isLoggedIn { true }
-            currentUser { User("1", "TestUser", "test@test.com") }
-        }
-
-        val analytics = fakeAnalyticsService {
-            track { event ->
-                assertTrue(event.isNotEmpty())
+        val auth =
+            fakeAuthenticationService {
+                isLoggedIn { true }
+                currentUser { User("1", "TestUser", "test@test.com") }
             }
-        }
 
-        val userRepo = fakeUserRepository {
-            findById { id ->
-                if (id == "1") User("1", "TestUser", "test@test.com") else null
+        val analytics =
+            fakeAnalyticsService {
+                track { event ->
+                    assertTrue(event.isNotEmpty())
+                }
             }
-        }
+
+        val userRepo =
+            fakeUserRepository {
+                findById { id ->
+                    if (id == "1") User("1", "TestUser", "test@test.com") else null
+                }
+            }
 
         // Test integration
         if (auth.isLoggedIn) {
@@ -144,22 +151,23 @@ class RealWorldValidationTest {
     @Test
     fun `GIVEN type-safe DSL WHEN making configuration mistakes THEN should be caught at compile time`() {
         // This test validates compile-time type safety
-        val auth = fakeAuthenticationService {
-            hasPermission { permission ->
-                // permission is String (not Any?) - compile-time safe
-                permission.startsWith("admin")  // String methods available
-            }
+        val auth =
+            fakeAuthenticationService {
+                hasPermission { permission ->
+                    // permission is String (not Any?) - compile-time safe
+                    permission.startsWith("admin") // String methods available
+                }
 
-            hasAnyPermissions { permissions ->
-                // permissions is List<String> - compile-time safe
-                permissions.any { it.startsWith("read") }  // List methods available
-            }
+                hasAnyPermissions { permissions ->
+                    // permissions is List<String> - compile-time safe
+                    permissions.any { it.startsWith("read") } // List methods available
+                }
 
-            currentUser {
-                // Return type is User? - compile-time safe
-                User("test", "Test User", "test@test.com")
+                currentUser {
+                    // Return type is User? - compile-time safe
+                    User("test", "Test User", "test@test.com")
+                }
             }
-        }
 
         assertTrue(auth.hasPermission("admin_user"))
         assertTrue(auth.hasAnyPermissions(listOf("read_users", "write_data")))
@@ -170,19 +178,23 @@ class RealWorldValidationTest {
     fun `GIVEN generated fakes WHEN checking implementation THEN should use exact types`() {
         // This validates our core achievement: no unsafe casting!
 
-        val testService = fakeTestService {
-            getValue { "test" }  // () -> String (exact type!)
-            setValue { value ->   // (String) -> Unit (exact type!)
-                assertTrue(value is String)  // Type is guaranteed
+        val testService =
+            fakeTestService {
+                getValue { "test" } // () -> String (exact type!)
+                setValue { value ->
+                    // (String) -> Unit (exact type!)
+                    assertTrue(value is String) // Type is guaranteed
+                }
             }
-        }
 
-        val auth = fakeAuthenticationService {
-            hasPermission { permission ->  // (String) -> Boolean (exact type!)
-                assertTrue(permission is String)  // No Any? casting needed!
-                permission.length > 0
+        val auth =
+            fakeAuthenticationService {
+                hasPermission { permission ->
+                    // (String) -> Boolean (exact type!)
+                    assertTrue(permission is String) // No Any? casting needed!
+                    permission.length > 0
+                }
             }
-        }
 
         // Test that exact types work perfectly
         assertEquals("test", testService.getValue())
@@ -198,11 +210,12 @@ class RealWorldValidationTest {
         val startTime = System.currentTimeMillis()
 
         // Create many instances
-        val fakes = (1..50).map {
-            fakeTestService {
-                getValue { "value_$it" }
+        val fakes =
+            (1..50).map {
+                fakeTestService {
+                    getValue { "value_$it" }
+                }
             }
-        }
 
         val creationTime = System.currentTimeMillis() - startTime
 

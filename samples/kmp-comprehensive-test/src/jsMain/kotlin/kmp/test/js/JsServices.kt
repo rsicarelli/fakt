@@ -16,9 +16,18 @@ interface JsBrowserService {
     val url: String
 
     fun navigate(url: String)
-    suspend fun fetch(url: String, options: Map<String, Any>): String
+
+    suspend fun fetch(
+        url: String,
+        options: Map<String, Any>,
+    ): String
+
     fun <T> evaluateScript(script: String): T?
-    fun addEventListener(event: String, handler: (Any) -> Unit)
+
+    fun addEventListener(
+        event: String,
+        handler: (Any) -> Unit,
+    )
 }
 
 @Fake
@@ -26,9 +35,15 @@ interface JsLocalStorageService<T> {
     val storageType: String
     val maxSize: Long
 
-    fun store(key: String, value: T): Boolean
+    fun store(
+        key: String,
+        value: T,
+    ): Boolean
+
     fun retrieve(key: String): T?
+
     fun remove(key: String): Boolean
+
     fun <R> withStorage(action: () -> R): R
 }
 
@@ -38,9 +53,13 @@ interface JsWebSocketService {
     val url: String
 
     suspend fun connect(url: String): Boolean
+
     suspend fun send(message: String): Boolean
+
     fun disconnect()
+
     fun <T> onMessage(handler: (String) -> T)
+
     suspend fun <R> withConnection(action: suspend () -> R): R?
 }
 
@@ -49,18 +68,18 @@ data class JsBrowserInfo(
     val name: String,
     val version: String,
     val platform: String,
-    val cookiesEnabled: Boolean
+    val cookiesEnabled: Boolean,
 )
 
 data class JsFetchOptions(
     val method: String,
     val headers: Map<String, String>,
     val body: String?,
-    val credentials: String?
+    val credentials: String?,
 )
 
 data class JsWebSocketMessage(
     val type: String,
     val data: String,
-    val timestamp: Long
+    val timestamp: Long,
 )

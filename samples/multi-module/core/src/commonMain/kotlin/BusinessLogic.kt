@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 package core.business
 
-import com.rsicarelli.fakt.Fake
+import api.shared.LoggingService
 import api.shared.NetworkService
 import api.shared.StorageService
-import api.shared.LoggingService
+import com.rsicarelli.fakt.Fake
 
 // ============================================================================
 // BUSINESS LOGIC INTERFACES - Core domain interfaces using API dependencies
@@ -16,18 +16,22 @@ data class User(
     val id: String,
     val name: String,
     val email: String,
-    val isActive: Boolean = true
+    val isActive: Boolean = true,
 )
 
 data class Order(
     val id: String,
     val userId: String,
     val totalAmount: Double,
-    val status: String = "PENDING"
+    val status: String = "PENDING",
 )
 
 enum class OrderStatus {
-    PENDING, CONFIRMED, SHIPPED, DELIVERED, CANCELLED
+    PENDING,
+    CONFIRMED,
+    SHIPPED,
+    DELIVERED,
+    CANCELLED,
 }
 
 @Fake
@@ -37,10 +41,17 @@ interface UserService {
     val storageService: StorageService
     val loggingService: LoggingService
 
-    suspend fun createUser(name: String, email: String): User?
+    suspend fun createUser(
+        name: String,
+        email: String,
+    ): User?
+
     suspend fun getUserById(id: String): User?
+
     suspend fun updateUser(user: User): User?
+
     suspend fun deleteUser(id: String): Boolean
+
     suspend fun isUserActive(id: String): Boolean
 }
 
@@ -50,17 +61,36 @@ interface OrderService {
     val networkService: NetworkService
     val storageService: StorageService
 
-    suspend fun createOrder(userId: String, amount: Double): Order?
+    suspend fun createOrder(
+        userId: String,
+        amount: Double,
+    ): Order?
+
     suspend fun getOrderById(id: String): Order?
-    suspend fun updateOrderStatus(orderId: String, status: String): Order?
+
+    suspend fun updateOrderStatus(
+        orderId: String,
+        status: String,
+    ): Order?
+
     suspend fun cancelOrder(orderId: String): Boolean
-    suspend fun calculateTotal(amount: Double, tax: Double): Double
+
+    suspend fun calculateTotal(
+        amount: Double,
+        tax: Double,
+    ): Double
 }
 
 @Fake
 interface PaymentService {
-    suspend fun processPayment(orderId: String, amount: Double): String?
+    suspend fun processPayment(
+        orderId: String,
+        amount: Double,
+    ): String?
+
     suspend fun refundPayment(paymentId: String): String?
+
     suspend fun getPaymentStatus(paymentId: String): String?
+
     val isProcessing: Boolean
 }

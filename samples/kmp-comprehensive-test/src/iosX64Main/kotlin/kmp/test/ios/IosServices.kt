@@ -17,7 +17,9 @@ interface IosDeviceService {
     val isSimulator: Boolean
 
     fun getBatteryLevel(): Float
+
     suspend fun requestPermissions(permissions: List<String>): Map<String, Boolean>
+
     fun <T> onMainQueue(action: () -> T): T
 }
 
@@ -27,8 +29,11 @@ interface IosLocationService<TCoordinate> {
     val accuracy: Double
 
     suspend fun getCurrentLocation(): TCoordinate?
+
     suspend fun startTracking(accuracy: Double): Boolean
+
     fun stopTracking()
+
     fun <R> withLocationPermission(action: () -> R): R?
 }
 
@@ -38,9 +43,19 @@ interface IosNotificationService {
     val badgeCount: Int
 
     suspend fun requestAuthorization(): Boolean
-    suspend fun scheduleNotification(title: String, body: String, delay: Long): String
+
+    suspend fun scheduleNotification(
+        title: String,
+        body: String,
+        delay: Long,
+    ): String
+
     fun cancelNotification(id: String)
-    fun <T> handleNotificationResponse(response: Any, handler: (Any) -> T): T
+
+    fun <T> handleNotificationResponse(
+        response: Any,
+        handler: (Any) -> T,
+    ): T
 }
 
 // iOS-specific data classes
@@ -48,7 +63,7 @@ data class IosDeviceInfo(
     val model: String,
     val systemName: String,
     val systemVersion: String,
-    val identifierForVendor: String?
+    val identifierForVendor: String?,
 )
 
 data class IosLocation(
@@ -56,7 +71,7 @@ data class IosLocation(
     val longitude: Double,
     val altitude: Double,
     val accuracy: Double,
-    val timestamp: Long
+    val timestamp: Long,
 )
 
 data class IosNotification(
@@ -65,5 +80,5 @@ data class IosNotification(
     val body: String,
     val badge: Int?,
     val sound: String?,
-    val userInfo: Map<String, Any>
+    val userInfo: Map<String, Any>,
 )

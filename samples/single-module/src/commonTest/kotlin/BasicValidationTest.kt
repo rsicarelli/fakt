@@ -9,7 +9,6 @@ import kotlin.test.*
  * This tests what we can validate about our implementation without the classpath issues.
  */
 class BasicValidationTest {
-
     @Test
     fun `GIVEN basic interfaces WHEN defined THEN should have correct structure`() {
         // Test that our interfaces are properly defined - without reflection
