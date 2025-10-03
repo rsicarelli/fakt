@@ -66,7 +66,7 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
                 "-Xplugin=${compilerJar.absolutePath}",
                 "-P", "plugin:com.rsicarelli.fakt:enabled=true",
                 "-P", "plugin:com.rsicarelli.fakt:debug=true",
-                "-P", "plugin:com.rsicarelli.fakt:outputDir=${project.buildDir.absolutePath}/generated/ktfake"
+                "-P", "plugin:com.rsicarelli.fakt:outputDir=${project.layout.buildDirectory.get().asFile.absolutePath}/generated/ktfake"
             ))
         }
     }

@@ -7,7 +7,6 @@ import org.gradle.api.provider.Provider
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
-import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import java.io.File
@@ -21,6 +20,7 @@ import java.io.File
  * 3. Automatically adds runtime dependency to test configurations
  * 4. Configures the plugin for test-only code generation
  */
+@Suppress("unused") // used by reflection
 class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
     companion object {
         const val PLUGIN_ID = "com.rsicarelli.fakt"
@@ -98,7 +98,8 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
      */
     private fun configureSourceSets(project: Project) {
         // Check if this is a multiplatform project
-        val kotlinExtension = project.extensions.findByType(KotlinMultiplatformExtension::class.java)
+        val kotlinExtension =
+            project.extensions.findByType(KotlinMultiplatformExtension::class.java)
         if (kotlinExtension != null) {
             configureMultiplatformSourceSets(project, kotlinExtension)
         } else {
@@ -131,7 +132,13 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         // For JVM-only projects, add generated sources to test source sets
         project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class.java) { task ->
             if (task.name.contains("Test", ignoreCase = true)) {
-                val generatedDir = File(project.buildDir, "generated/ktfake/test/kotlin")
+                val generatedDir =
+                    File(
+                        project.layout.buildDirectory
+                            .get()
+                            .asFile,
+                        "generated/ktfake/test/kotlin",
+                    )
                 task.source(generatedDir)
 
                 project.logger.info("KtFakes: Configured test compilation task '${task.name}' to include generated sources")
@@ -154,18 +161,29 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
 
         // For KMP projects, check if this is processing commonMain or metadata
         if (compilationName.equals("commonMain", ignoreCase = true) || targetName == "metadata") {
-            return File(project.buildDir, "generated/ktfake/common/test/kotlin").absolutePath
+            return File(
+                project.layout.buildDirectory
+                    .get()
+                    .asFile,
+                "generated/ktfake/common/test/kotlin",
+            ).absolutePath
         }
 
         // Check if this is a KMP project with commonTest source set
         // If so, generate to common/test for all targets to share
-        val kotlinExtension = project.extensions.findByType(KotlinMultiplatformExtension::class.java)
+        val kotlinExtension =
+            project.extensions.findByType(KotlinMultiplatformExtension::class.java)
         if (kotlinExtension != null) {
             // This is a KMP project - check if commonTest exists
             val hasCommonTest = kotlinExtension.sourceSets.findByName("commonTest") != null
             if (hasCommonTest) {
                 // Generate to common/test so all platform tests can access
-                return File(project.buildDir, "generated/ktfake/common/test/kotlin").absolutePath
+                return File(
+                    project.layout.buildDirectory
+                        .get()
+                        .asFile,
+                    "generated/ktfake/common/test/kotlin",
+                ).absolutePath
             }
         }
 
@@ -176,12 +194,19 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 compilationName.equals("main", ignoreCase = true) -> "test"
                 compilationName.endsWith("Main", ignoreCase = true) ->
                     compilationName.removeSuffix("Main").removeSuffix("main") + "Test"
+
                 else -> compilationName
             }
 
         // For specific platform targets in KMP: build/generated/ktfake/{targetName}/test/kotlin
         // For single-platform JVM: build/generated/ktfake/test/kotlin (targetName="jvm", compilationName="main")
-        val directory = File(project.buildDir, "generated/ktfake/$targetName/$testDirName/kotlin")
+        val directory =
+            File(
+                project.layout.buildDirectory
+                    .get()
+                    .asFile,
+                "generated/ktfake/$targetName/$testDirName/kotlin",
+            )
 
         return directory.absolutePath
     }
@@ -194,12 +219,31 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         sourceSetName: String,
     ): File =
         when {
-            sourceSetName == "commonTest" -> File(project.buildDir, "generated/ktfake/common/test/kotlin")
+            sourceSetName == "commonTest" ->
+                File(
+                    project.layout.buildDirectory
+                        .get()
+                        .asFile,
+                    "generated/ktfake/common/test/kotlin",
+                )
+
             sourceSetName.endsWith("Test") -> {
                 val target = sourceSetName.removeSuffix("Test")
-                File(project.buildDir, "generated/ktfake/$target/test/kotlin")
+                File(
+                    project.layout.buildDirectory
+                        .get()
+                        .asFile,
+                    "generated/ktfake/$target/test/kotlin",
+                )
             }
-            else -> File(project.buildDir, "generated/ktfake/common/test/kotlin")
+
+            else ->
+                File(
+                    project.layout.buildDirectory
+                        .get()
+                        .asFile,
+                    "generated/ktfake/common/test/kotlin",
+                )
         }
 
     /**

@@ -8,9 +8,22 @@ import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
-import org.jetbrains.kotlin.ir.types.classOrNull
-import org.jetbrains.kotlin.ir.types.impl.IrSimpleTypeImpl
-import org.jetbrains.kotlin.ir.types.isNullable
+import org.jetbrains.kotlin.ir.types.IrTypeProjection
+import org.jetbrains.kotlin.ir.types.getClass
+import org.jetbrains.kotlin.ir.types.isAny
+import org.jetbrains.kotlin.ir.types.isBoolean
+import org.jetbrains.kotlin.ir.types.isByte
+import org.jetbrains.kotlin.ir.types.isChar
+import org.jetbrains.kotlin.ir.types.isDouble
+import org.jetbrains.kotlin.ir.types.isFloat
+import org.jetbrains.kotlin.ir.types.isInt
+import org.jetbrains.kotlin.ir.types.isLong
+import org.jetbrains.kotlin.ir.types.isMarkedNullable
+import org.jetbrains.kotlin.ir.types.isNothing
+import org.jetbrains.kotlin.ir.types.isShort
+import org.jetbrains.kotlin.ir.types.isString
+import org.jetbrains.kotlin.ir.types.isUnit
+import org.jetbrains.kotlin.ir.types.makeNotNull
 import org.jetbrains.kotlin.ir.util.kotlinFqName
 
 /**
@@ -215,7 +228,12 @@ internal class TypeResolver {
             val typeArgs =
                 irType.arguments.map { arg ->
                     when (arg) {
-                        is IrTypeProjection -> irTypeToKotlinString(arg.type, preserveTypeParameters)
+                        is IrTypeProjection ->
+                            irTypeToKotlinString(
+                                arg.type,
+                                preserveTypeParameters,
+                            )
+
                         else -> "Any"
                     }
                 }
@@ -223,9 +241,27 @@ internal class TypeResolver {
         } else {
             // NoGenerics pattern: Use specific type erasure rules for common types
             return when {
-                packageName == "kotlin.collections" && className in listOf("List", "MutableList") -> "List<Any>"
-                packageName == "kotlin.collections" && className in listOf("Set", "MutableSet") -> "Set<Any>"
-                packageName == "kotlin.collections" && className in listOf("Map", "MutableMap") -> "Map<Any, Any>"
+                packageName == "kotlin.collections" && className in
+                    listOf(
+                        "List",
+                        "MutableList",
+                    )
+                -> "List<Any>"
+
+                packageName == "kotlin.collections" && className in
+                    listOf(
+                        "Set",
+                        "MutableSet",
+                    )
+                -> "Set<Any>"
+
+                packageName == "kotlin.collections" && className in
+                    listOf(
+                        "Map",
+                        "MutableMap",
+                    )
+                -> "Map<Any, Any>"
+
                 packageName == "kotlin.collections" && className == "Collection" -> "Collection<Any>"
                 packageName == "kotlin" && className == "Result" -> "Result<Any>"
                 packageName == "kotlin" && className == "Array" -> "Array<Any>"
@@ -265,9 +301,27 @@ internal class TypeResolver {
 
             when {
                 // Handle collections with proper defaults
-                packageName == "kotlin.collections" && className in listOf("List", "MutableList") -> "emptyList<Any>()"
-                packageName == "kotlin.collections" && className in listOf("Set", "MutableSet") -> "emptySet<Any>()"
-                packageName == "kotlin.collections" && className in listOf("Map", "MutableMap") -> "emptyMap<Any, Any>()"
+                packageName == "kotlin.collections" && className in
+                    listOf(
+                        "List",
+                        "MutableList",
+                    )
+                -> "emptyList<Any>()"
+
+                packageName == "kotlin.collections" && className in
+                    listOf(
+                        "Set",
+                        "MutableSet",
+                    )
+                -> "emptySet<Any>()"
+
+                packageName == "kotlin.collections" && className in
+                    listOf(
+                        "Map",
+                        "MutableMap",
+                    )
+                -> "emptyMap<Any, Any>()"
+
                 packageName == "kotlin.collections" && className == "Collection" -> "emptyList<Any>()"
 
                 // Handle Result<T> - use success with default value for T

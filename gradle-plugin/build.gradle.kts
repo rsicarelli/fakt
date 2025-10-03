@@ -7,7 +7,7 @@ plugins {
 }
 
 dependencies {
-    implementation(projects.compiler)
+    implementation(project(":compiler"))
 
     implementation(libs.kotlin.gradlePlugin)
     implementation(libs.kotlin.gradlePlugin.api)
