@@ -8,6 +8,7 @@ import org.gradle.api.tasks.Exec
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.register
 import org.jetbrains.dokka.gradle.DokkaExtension
+import java.io.File
 
 /**
  * Dokka documentation convention.
@@ -79,99 +80,90 @@ fun Project.applyDokkaConvention() {
                 return@doLast
             }
 
-            // Get all HTML docs (excluding index.html)
-            val docFiles = docsDir.listFiles()?.filter {
+            // Get all markdown source files to extract titles
+            val sourceDocsDir = File(projectDir, "docs")
+            val mdFiles = sourceDocsDir.listFiles()?.filter {
+                it.extension == "md"
+            } ?: emptyList()
+
+            // Helper function to extract H1 title from markdown
+            fun extractH1Title(mdFile: File): String {
+                val firstLine = mdFile.readLines().firstOrNull { it.trim().startsWith("# ") }
+                return firstLine?.substring(2)?.trim()
+                    ?: mdFile.nameWithoutExtension.replace('_', ' ').replace('-', ' ')
+            }
+
+            // Get all HTML docs (for file references)
+            val htmlFiles = docsDir.listFiles()?.filter {
                 it.extension == "html" && it.name != "index.html"
             }?.sortedBy { it.nameWithoutExtension } ?: emptyList()
 
-            if (docFiles.isEmpty()) {
+            if (htmlFiles.isEmpty()) {
                 println("⚠️  No documentation files found")
                 return@doLast
             }
 
-            // Map categories to their index files
-            val categoryIndexFiles = mapOf(
-                "Getting Started" to "getting-started",
-                "Architecture" to "architecture",
-                "Specifications" to "specifications",
-                "Testing" to "testing",
-                "Implementation" to "implementation"
-            )
-
-            // Group docs by category
-            val categories = mapOf(
-                "Getting Started" to listOf("README"),
-                "Architecture" to listOf("ARCHITECTURE", "METRO_FIR_IR_SPECIFICATIONS", "IR_NATIVE_DEMO", "IR_NATIVE_DEMONSTRATION"),
-                "Specifications" to listOf("API_SPECIFICATIONS", "COMPILE_TIME_GENERIC_SOLUTIONS", "CODE_GENERATION_STRATEGIES"),
-                "Testing" to listOf("TESTING_GUIDELINES", "TESTING_STATUS_REPORT", "TEST_COVERAGE_ANALYSIS"),
-                "Implementation" to listOf(
-                    "CURRENT_STATUS",
-                    "IMPLEMENTATION_ROADMAP",
-                    "IMPLEMENTATION_DECISION",
-                    "GENERIC_IMPLEMENTATION_PROGRESS",
-                    "GENERIC_TYPE_SCOPING_ANALYSIS",
-                    "KOTLIN_COMPILER_IR_API_GUIDE",
-                    "FINAL_COMPILE_TIME_SOLUTION",
-                    "COMPILE_TIME_EXAMPLES"
-                )
-            )
-
-            // Build navigation HTML
+            // Build simple flat navigation HTML - all docs listed alphabetically by title
             val navHtml = buildString {
-                appendLine("""<div class="toc--part" id="Documentation-nav-submenu" pageid="docs/getting-started" data-nesting-level="0">""")
+                appendLine("""<div class="toc--part" id="Documentation-nav-submenu" pageid="docs/README" data-nesting-level="0">""")
                 appendLine("""  <div class="toc--row">""")
                 appendLine("""    <button class="toc--button" aria-expanded="false" aria-label="Documentation" onclick="window.handleTocButtonClick(event, 'Documentation-nav-submenu')"></button>""")
-                appendLine("""    <a href="docs/getting-started.html" class="toc--link"><span>📚 Documentation</span></a>""")
+                appendLine("""    <a href="docs/README.html" class="toc--link"><span>📚 Documentation</span></a>""")
                 appendLine("""  </div>""")
 
-                var categoryIndex = 0
-                categories.forEach { (category, files) ->
-                    val categoryFiles = docFiles.filter { it.nameWithoutExtension in files }
-                    if (categoryFiles.isNotEmpty()) {
-                        // Use category index file as the category link
-                        val categoryIndexFile = categoryIndexFiles[category] ?: "getting-started"
-                        val categoryLink = "$categoryIndexFile.html"
-                        val categoryPageId = "docs/$categoryIndexFile"
-                        appendLine("""  <div class="toc--part" id="Documentation-nav-submenu-$categoryIndex" pageid="$categoryPageId" data-nesting-level="1">""")
-                        appendLine("""    <div class="toc--row">""")
-                        appendLine("""      <button class="toc--button" aria-expanded="false" aria-label="$category" onclick="window.handleTocButtonClick(event, 'Documentation-nav-submenu-$categoryIndex')"></button>""")
-                        appendLine("""      <a href="docs/$categoryLink" class="toc--link"><span>$category</span></a>""")
-                        appendLine("""    </div>""")
-
-                        categoryFiles.forEachIndexed { fileIndex, file ->
-                            val title = file.nameWithoutExtension.replace('_', ' ').replace('-', ' ')
-                            val pageId = "docs/${file.nameWithoutExtension}"
-                            appendLine("""    <div class="toc--part" id="Documentation-nav-submenu-$categoryIndex-$fileIndex" pageid="$pageId" data-nesting-level="2">""")
-                            appendLine("""      <div class="toc--row">""")
-                            appendLine("""        <a href="docs/${file.name}" class="toc--link"><span>$title</span></a>""")
-                            appendLine("""      </div>""")
-                            appendLine("""    </div>""")
-                        }
-
-                        appendLine("""  </div>""")
-                        categoryIndex++
+                // List all docs alphabetically by H1 title under Documentation
+                htmlFiles
+                    .mapNotNull { htmlFile ->
+                        val mdFile = mdFiles.find { it.nameWithoutExtension == htmlFile.nameWithoutExtension }
+                        mdFile?.let { htmlFile to extractH1Title(it) }
                     }
-                }
+                    .sortedBy { (_, title) -> title }
+                    .forEachIndexed { index, (file, title) ->
+                        val pageId = "docs/${file.nameWithoutExtension}"
+                        appendLine("""  <div class="toc--part" id="Documentation-nav-submenu-$index" pageid="$pageId" data-nesting-level="1">""")
+                        appendLine("""    <div class="toc--row">""")
+                        appendLine("""      <a href="docs/${file.name}" class="toc--link"><span>$title</span></a>""")
+                        appendLine("""    </div>""")
+                        appendLine("""  </div>""")
+                    }
 
                 appendLine("""</div>""")
             }
 
-            // Inject navigation at the beginning
+            // Inject navigation at the beginning (only if not already injected)
             val navContent = navFile.readText()
-            val modifiedNav = navContent.replace(
-                """<div class="sideMenu">""",
-                """<div class="sideMenu">
+            val modifiedNav = if (navContent.contains("📚 Documentation")) {
+                // Already injected, remove old injection first
+                val startMarker = """<div class="sideMenu">"""
+                val endMarker = """<div class="toc--part" id="Compiler-nav-submenu"""" // First Dokka-generated item
+                val startIndex = navContent.indexOf(startMarker) + startMarker.length
+                val endIndex = navContent.indexOf(endMarker)
+                if (startIndex > 0 && endIndex > startIndex) {
+                    val before = navContent.substring(0, startIndex)
+                    val after = navContent.substring(endIndex)
+                    "$before\n$navHtml\n $after"
+                } else {
+                    navContent.replace(startMarker, "$startMarker\n$navHtml")
+                }
+            } else {
+                // First time injecting
+                navContent.replace(
+                    """<div class="sideMenu">""",
+                    """<div class="sideMenu">
 $navHtml"""
-            )
+                )
+            }
             navFile.writeText(modifiedNav)
 
-            // Update pages.json
+            // Update pages.json with H1 titles
             val pagesContent = pagesFile.readText()
             val pages = buildString {
-                docFiles.forEach { file ->
-                    val title = file.nameWithoutExtension.replace('_', ' ').replace('-', ' ')
+                htmlFiles.forEach { htmlFile ->
+                    val mdFile = mdFiles.find { it.nameWithoutExtension == htmlFile.nameWithoutExtension }
+                    val title = mdFile?.let { extractH1Title(it) }
+                        ?: htmlFile.nameWithoutExtension.replace('_', ' ').replace('-', ' ')
                     val searchKeys = title.split(" ").filter { it.isNotBlank() }
-                    append(""",{"name":"$title","description":"Fakt Documentation: $title","location":"docs/${file.name}","searchKeys":["$title",""")
+                    append(""",{"name":"$title","description":"Fakt Documentation: $title","location":"docs/${htmlFile.name}","searchKeys":["$title",""")
                     append(searchKeys.joinToString("\",\""))
                     append("""","Documentation"]}""")
                 }
@@ -179,7 +171,7 @@ $navHtml"""
             val modifiedPages = pagesContent.replace("]", "$pages]")
             pagesFile.writeText(modifiedPages)
 
-            println("✅ Injected ${docFiles.size} documentation files into navigation")
+            println("✅ Injected ${htmlFiles.size} documentation files into navigation")
         }
     }
 

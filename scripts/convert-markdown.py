@@ -92,7 +92,6 @@ DOKKA_TEMPLATE = """<!doctype html>
             <div class="main-content" id="content" pageIds="{page_id}">
                 {breadcrumbs}
                 <div class="cover">
-                    <h1 class="cover"><span>{title}</span></h1>
                     {content}
                 </div>
             </div>
@@ -177,6 +176,17 @@ def generate_breadcrumbs(filename: str, title: str) -> str:
     return f'{base}<a href="getting-started.html">Documentation</a><span class="delimiter">/</span><a href="{category_index_file}.html">{category_name}</a><span class="delimiter">/</span><span class="current">{title}</span></div>'
 
 
+def extract_h1_title(md_content: str, fallback_filename: str) -> str:
+    """Extract H1 title from markdown content."""
+    lines = md_content.split('\n')
+    for line in lines:
+        line = line.strip()
+        if line.startswith('# '):
+            return line[2:].strip()
+    # Fallback to filename if no H1 found
+    return fallback_filename.replace('_', ' ').replace('-', ' ').title()
+
+
 def convert_markdown_to_html(md_file: Path, output_dir: Path):
     """Convert a markdown file to Dokka-compliant HTML."""
     with open(md_file, 'r', encoding='utf-8') as f:
@@ -200,14 +210,14 @@ def convert_markdown_to_html(md_file: Path, output_dir: Path):
         }
     )
 
-    # Generate title from filename
-    title = md_file.stem.replace('_', ' ').replace('-', ' ').title()
+    # Extract title from H1 in markdown content
+    title = extract_h1_title(md_content, md_file.stem)
 
     # Generate page ID for navigation matching
     page_id = f"docs/{md_file.stem}"
 
-    # Generate breadcrumbs
-    breadcrumbs = generate_breadcrumbs(md_file.stem, title)
+    # Generate breadcrumbs - simplified (no categories)
+    breadcrumbs = f'<div class="breadcrumbs"><a href="../index.html">Fakt</a><span class="delimiter">/</span><a href="README.html">Documentation</a><span class="delimiter">/</span><span class="current">{title}</span></div>'
 
     # Generate final HTML using Dokka template
     final_html = DOKKA_TEMPLATE.format(
