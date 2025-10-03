@@ -71,7 +71,8 @@ internal class InterfaceDiscovery(
                         )
                         optimizations.indexType(typeInfo)
 
-                        val annotationName = matchingAnnotation.type.classFqName?.asString() ?: "unknown"
+                        val annotationName =
+                            matchingAnnotation.type.classFqName?.asString() ?: "unknown"
                         messageCollector?.reportInfo("KtFakes: Discovered interface with $annotationName: ${declaration.name}")
                     }
                 }
@@ -97,8 +98,8 @@ internal class InterfaceDiscovery(
         signature.append("interface ${irClass.kotlinFqName}")
 
         // Add basic member count for change detection
-        val propertyCount = irClass.declarations.filterIsInstance<org.jetbrains.kotlin.ir.declarations.IrProperty>().size
-        val functionCount = irClass.declarations.filterIsInstance<org.jetbrains.kotlin.ir.declarations.IrSimpleFunction>().size
+        val propertyCount = irClass.declarations.filterIsInstance<IrProperty>().size
+        val functionCount = irClass.declarations.filterIsInstance<IrSimpleFunction>().size
         signature.append("|props:$propertyCount|funs:$functionCount")
 
         return signature.toString()

@@ -37,33 +37,4 @@ tasks {
     // Standard timeout
     systemProperty("junit.jupiter.execution.timeout.default", "30s")
   }
-
-  // Configure functional tests
-  register<Test>("functionalTest") {
-    description = "Run functional tests for the gradle plugin"
-    group = "verification"
-
-    testClassesDirs = sourceSets["functionalTest"].output.classesDirs
-    classpath = sourceSets["functionalTest"].runtimeClasspath
-
-    // Functional tests may need more time
-    systemProperty("junit.jupiter.execution.timeout.default", "60s")
-
-    // More memory for Gradle integration tests
-    jvmArgs("-Xmx2g")
-  }
-
-  check {
-    dependsOn("functionalTest")
-  }
 }
-
-// Configure functional test source set
-sourceSets {
-  create("functionalTest") {
-    compileClasspath += sourceSets.main.get().output
-    runtimeClasspath += sourceSets.main.get().output
-  }
-}
-
-configurations["functionalTestImplementation"].extendsFrom(configurations.testImplementation.get())

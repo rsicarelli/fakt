@@ -15,12 +15,12 @@ class GenericPatternAnalyzerTest {
     private val analyzer = GenericPatternAnalyzer()
 
     @Test
-    fun `should_create_analyzer_instance`() {
+    fun `GIVEN GenericPatternAnalyzer WHEN creating instance THEN should initialize successfully`() {
         assertNotNull(analyzer)
     }
 
     @Test
-    fun `should_detect_common_transformation_patterns`() {
+    fun `GIVEN GenericPatternAnalyzer WHEN detecting transformation patterns THEN should identify common transformations`() {
         val patterns = analyzer.detectCommonTransformations()
 
         assertTrue(patterns.isNotEmpty(), "Should detect common transformation patterns")
@@ -33,7 +33,7 @@ class GenericPatternAnalyzerTest {
     }
 
     @Test
-    fun `should_detect_contextual_types_from_interface_names`() {
+    fun `GIVEN GenericPatternAnalyzer WHEN detecting contextual types from interface THEN should access detection method`() {
         // Test contextual type detection using reflection
         val analyzerClass = analyzer::class.java
         val detectContextualTypesMethod = analyzerClass.getDeclaredMethod("detectContextualTypes",
@@ -45,7 +45,7 @@ class GenericPatternAnalyzerTest {
     }
 
     @Test
-    fun `should_detect_common_types`() {
+    fun `GIVEN GenericPatternAnalyzer WHEN detecting common types THEN should identify standard Kotlin types`() {
         val commonTypes = analyzer.detectCommonTypes()
 
         assertTrue(commonTypes.isNotEmpty(), "Should detect common types")
@@ -57,7 +57,7 @@ class GenericPatternAnalyzerTest {
     }
 
     @Test
-    fun `should_provide_meaningful_analysis_summary`() {
+    fun `GIVEN NoGenerics pattern WHEN getting analysis summary THEN should provide meaningful description`() {
         val noGenericsPattern = GenericPattern.NoGenerics
         val summary = analyzer.getAnalysisSummary(noGenericsPattern)
 
@@ -66,7 +66,7 @@ class GenericPatternAnalyzerTest {
     }
 
     @Test
-    fun `should_handle_class_level_generics_summary`() {
+    fun `GIVEN ClassLevelGenerics pattern WHEN getting analysis summary THEN should describe generic type parameters`() {
         val classLevelPattern = GenericPattern.ClassLevelGenerics(
             typeParameters = emptyList(), // In real usage, would have actual IrTypeParameters
             constraints = emptyList()
@@ -78,7 +78,7 @@ class GenericPatternAnalyzerTest {
     }
 
     @Test
-    fun `should_handle_method_level_generics_summary`() {
+    fun `GIVEN MethodLevelGenerics pattern WHEN getting analysis summary THEN should include detected types and patterns`() {
         val methodLevelPattern = GenericPattern.MethodLevelGenerics(
             genericMethods = emptyList(),
             detectedTypes = setOf("User", "Order"),
@@ -92,7 +92,7 @@ class GenericPatternAnalyzerTest {
     }
 
     @Test
-    fun `should_handle_mixed_generics_summary`() {
+    fun `GIVEN MixedGenerics pattern WHEN getting analysis summary THEN should describe both class and method generics`() {
         val mixedPattern = GenericPattern.MixedGenerics(
             classTypeParameters = emptyList(),
             classConstraints = emptyList(),

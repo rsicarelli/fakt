@@ -1,16 +1,85 @@
-**/build
+# ================================
+# Fakt Project .gitignore
+# ================================
+
+# ================================
+# Build Directories
+# ================================
+**/build/
+.gradle/
+.kotlin/
+
+# ================================
+# IDE Files
+# ================================
 **/.idea/*
 !.idea/externalDependencies.xml
 !.idea/kotlinTestDataPluginTestDataPaths.xml
-.gradle
-.kotlin/
 .iml
 .project
 .classpath
 *.iml
-local.properties
-.DS_Store
+out/
 
+# ================================
+# macOS
+# ================================
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ================================
+# Local Configuration
+# ================================
+local.properties
+gradle.properties.local
+secrets.properties
+
+# ================================
+# Generated Code (Fakt Plugin)
+# ================================
+**/generated/ktfake/**
+**/generated/fakt/**
+**/ktfakes-report.json
+**/ktfakes-signatures.cache
+
+# ================================
+# Build Artifacts
+# ================================
+**/build/classes/**
+**/build/libs/**
+**/build/tmp/**
+**/build/kotlin/**
+**/build/generated/**
+*.class
+
+# Keep gradle wrapper
+!gradle/wrapper/*.jar
+!gradle/wrapper/*.properties
+
+# ================================
+# Node.js / JavaScript (KMP)
+# ================================
+**/node_modules/**
+kotlin-js-store/
+**/build/js/**
+package-lock.json
+yarn.lock
+
+# ================================
+# Temporary Files
+# ================================
+**/*.tmp
+.gradle/**/classloaderscopes*.tmp
+*.swp
+*.swo
+*~
+*.log
+
+# ================================
+# Documentation (Generated/Temp)
+# ================================
 gradle-plugin/docs/
 docs/code-of-conduct.md
 docs/contributing.md
@@ -19,5 +88,16 @@ docs/samples.md
 docs/api/
 site/
 temp-clone/
+
+# ================================
+# Analysis & Debug Files
+# ================================
+gradle-plugin-analysis.md
+PUBLISHED_PLUGIN_DEBUGGING.md
 /benchmark/
 .cache/
+
+# ================================
+# Spotless
+# ================================
+spotless/

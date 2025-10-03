@@ -35,13 +35,6 @@ internal class InterfaceAnalyzer {
     private val patternAnalyzer = GenericPatternAnalyzer()
 
     /**
-     * Performs comprehensive analysis of an interface to extract all metadata
-     * needed for fake generation.
-     *
-     * @param sourceInterface The interface IR node to analyze
-     * @return Complete analysis with properties, functions, and type parameters
-     */
-    /**
      * Checks if interface has generics and should be skipped.
      * Provides helpful error messages for unsupported generic interfaces.
      *
@@ -53,8 +46,8 @@ internal class InterfaceAnalyzer {
         if (irClass.typeParameters.isNotEmpty()) {
             val typeParams = irClass.typeParameters.joinToString(", ") { it.name.asString() }
             return "Generic interfaces not supported: ${irClass.name.asString()}<$typeParams>. " +
-                   "Consider creating a non-generic interface that extends this one: " +
-                   "interface User${irClass.name.asString()} : ${irClass.name.asString()}<User>"
+                    "Consider creating a non-generic interface that extends this one: " +
+                    "interface User${irClass.name.asString()} : ${irClass.name.asString()}<User>"
         }
 
         // Check method-level type parameters
@@ -64,9 +57,10 @@ internal class InterfaceAnalyzer {
 
         if (functionsWithGenerics.isNotEmpty()) {
             val methodName = functionsWithGenerics.first().name.asString()
-            val typeParams = functionsWithGenerics.first().typeParameters.joinToString(", ") { it.name.asString() }
+            val typeParams =
+                functionsWithGenerics.first().typeParameters.joinToString(", ") { it.name.asString() }
             return "Generic methods not supported: $methodName<$typeParams>. " +
-                   "Consider creating methods with specific types instead of generics."
+                    "Consider creating methods with specific types instead of generics."
         }
 
         // TODO: Add varargs detection (skip for now)
@@ -90,6 +84,7 @@ internal class InterfaceAnalyzer {
                         properties.add(analyzeProperty(declaration))
                     }
                 }
+
                 is IrSimpleFunction -> {
                     // Skip special functions (equals, hashCode, toString) and compiler-generated
                     if (!isSpecialFunction(declaration)) {
@@ -121,7 +116,7 @@ internal class InterfaceAnalyzer {
      */
     private fun analyzeProperty(property: IrProperty): PropertyAnalysis {
         val propertyType = property.getter?.returnType ?: property.backingField?.type
-            ?: throw IllegalStateException("Property ${property.name} has no determinable type")
+        ?: throw IllegalStateException("Property ${property.name} has no determinable type")
 
         return PropertyAnalysis(
             name = property.name.asString(),
@@ -155,7 +150,6 @@ internal class InterfaceAnalyzer {
         // Extract type parameter bounds (e.g., R : TValue)
         val typeParameterBounds = function.typeParameters.associate { typeParam ->
             val paramName = typeParam.name.asString()
-
 
             val bounds = if (typeParam.superTypes.isNotEmpty()) {
                 // Check all supertypes and find the first one that's not "Any"
