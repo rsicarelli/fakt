@@ -1,10 +1,10 @@
-# KtFakes - Unified IR-Native Fake Generation
+# Fakt - Unified IR-Native Fake Generation
 
 > **Status**: Production-Ready MAP (Minimum Awesome Product) ✅  
 > **Architecture**: Unified IR-Native Compiler Plugin  
 > **Philosophy**: Build awesome tools that compete on developer experience, not just functionality
 
-**KtFakes** is a Kotlin compiler plugin that generates type-safe fake implementations for interfaces marked with `@Fake`. Built with a unified IR-native architecture, it provides professional-quality code generation with excellent developer experience.
+**Fakt** is a Kotlin compiler plugin that generates type-safe fake implementations for interfaces marked with `@Fake`. Built with a unified IR-native architecture, it provides professional-quality code generation with excellent developer experience.
 
 ## 🚀 **Key Features**
 
@@ -33,7 +33,7 @@
 ```kotlin
 // build.gradle.kts
 dependencies {
-    testImplementation("dev.rsicarelli:ktfake-runtime:1.0.0")
+    testImplementation("dev.rsicarelli:fakt-runtime:1.0.0")
 }
 
 // Apply compiler plugin
@@ -75,7 +75,7 @@ assertTrue(fake.updateUser("123", "Jane"))
 
 ### **Unified IR-Native Compiler Plugin**
 ```
-KtFakes Compiler Plugin
+Fakt Compiler Plugin
 ├── FIR Phase: @Fake annotation detection
 ├── IR Phase: Unified code generation
 │   ├── Interface Analysis: Dynamic IR-based discovery
@@ -86,7 +86,7 @@ KtFakes Compiler Plugin
 ```
 
 ### **Generated Code Structure**
-For each `@Fake` interface, KtFakes generates:
+For each `@Fake` interface, Fakt generates:
 
 1. **Implementation Class**: `FakeUserServiceImpl`
 2. **Factory Function**: `fakeUserService(configure: ...)`
@@ -108,7 +108,7 @@ For each `@Fake` interface, KtFakes generates:
 
 ## 🧪 **Testing**
 
-KtFakes is designed for testing scenarios:
+Fakt is designed for testing scenarios:
 
 ```kotlin
 @Test
@@ -172,7 +172,7 @@ cd test-sample && rm -rf build/generated && ../gradlew compileKotlinJvm --no-bui
 
 ## 🤝 **Contributing**
 
-KtFakes follows MAP (Minimum Awesome Product) principles:
+Fakt follows MAP (Minimum Awesome Product) principles:
 - Every feature must be production-quality and delightful
 - Comprehensive testing with BDD approach
 - Professional code generation standards

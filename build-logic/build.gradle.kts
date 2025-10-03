@@ -12,6 +12,7 @@ dependencies {
     compileOnly("com.vanniktech.maven.publish:com.vanniktech.maven.publish.gradle.plugin:${libs.versions.mavenPublish.get()}")
     implementation("com.diffplug.spotless:spotless-plugin-gradle:${libs.versions.spotless.get()}")
     implementation(libs.ktlint.gradle.plugin)
+    implementation("io.gitlab.arturbosch.detekt:detekt-gradle-plugin:${libs.versions.detekt.get()}")
     // Root plugin dependencies
     implementation("org.jetbrains.dokka:dokka-gradle-plugin:2.1.0-Beta")
     implementation("org.jetbrains.kotlinx.binary-compatibility-validator:org.jetbrains.kotlinx.binary-compatibility-validator.gradle.plugin:${libs.versions.binaryCompatibilityValidator.get()}")

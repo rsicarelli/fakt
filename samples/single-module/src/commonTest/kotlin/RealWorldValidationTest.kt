@@ -2,10 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 package test.sample
 
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
- * Real-world validation tests for KtFakes type-safe generation.
+ * Real-world validation tests for Fakt type-safe generation.
  * This validates our type-safe API with the actual generated fakes.
  */
 class RealWorldValidationTest {

@@ -739,25 +739,25 @@ Issues:
 ### **🎯 PROPOSED MODULAR ARCHITECTURE**
 
 ```
-ktfake/
-├── ktfake-analysis/          # Pure interface analysis logic
-├── ktfake-type-system/       # Type handling and mapping  
-├── ktfake-codegen-core/      # Core code generation engine
-├── ktfake-codegen-ir/        # IR-specific generation
-├── ktfake-diagnostics/       # Error handling and validation
-├── ktfake-config/           # Configuration and options
-├── ktfake-compiler/         # Compiler plugin integration
-├── ktfake-gradle-plugin/    # Gradle integration (existing)
-├── ktfake-runtime/          # Runtime annotations (existing)
-├── ktfake-testing-utils/    # Shared testing infrastructure
-└── ktfake-ide-support/      # IDE integration utilities
+fakt/
+├── fakt-analysis/          # Pure interface analysis logic
+├── fakt-type-system/       # Type handling and mapping  
+├── fakt-codegen-core/      # Core code generation engine
+├── fakt-codegen-ir/        # IR-specific generation
+├── fakt-diagnostics/       # Error handling and validation
+├── fakt-config/           # Configuration and options
+├── fakt-compiler/         # Compiler plugin integration
+├── fakt-gradle-plugin/    # Gradle integration (existing)
+├── fakt-runtime/          # Runtime annotations (existing)
+├── fakt-testing-utils/    # Shared testing infrastructure
+└── fakt-ide-support/      # IDE integration utilities
 ```
 
 ---
 
 ## 📦 **MODULE RESPONSIBILITIES & APIs**
 
-### **🔍 Module 1: `ktfake-analysis`**
+### **🔍 Module 1: `fakt-analysis`**
 **Responsibility**: Pure interface analysis and discovery logic
 
 ```kotlin
@@ -786,7 +786,7 @@ class ReflectionInterfaceAnalyzer : InterfaceAnalyzer  // For testing/tools
 class SourceInterfaceAnalyzer : InterfaceAnalyzer      // For IDE support
 ```
 
-### **🎨 Module 2: `ktfake-type-system`** 
+### **🎨 Module 2: `fakt-type-system`** 
 **Responsibility**: Type handling, mapping, and default value generation
 
 ```kotlin
@@ -823,7 +823,7 @@ class KotlinTypeSystem : TypeMapper {
 }
 ```
 
-### **⚙️ Module 3: `ktfake-codegen-core`**
+### **⚙️ Module 3: `fakt-codegen-core`**
 **Responsibility**: Pure code generation logic (target-agnostic)
 
 ```kotlin
@@ -868,7 +868,7 @@ sealed class CodeNode {
 }
 ```
 
-### **🔧 Module 4: `ktfake-codegen-ir`**
+### **🔧 Module 4: `fakt-codegen-ir`**
 **Responsibility**: IR-specific code generation implementation
 
 ```kotlin
@@ -916,7 +916,7 @@ class IrClassBuilder(private val context: IrPluginContext) {
 }
 ```
 
-### **🚨 Module 5: `ktfake-diagnostics`**
+### **🚨 Module 5: `fakt-diagnostics`**
 **Responsibility**: Error handling, validation, and diagnostics
 
 ```kotlin
@@ -964,7 +964,7 @@ class IdeDiagnosticsReporter : DiagnosticsReporter {
 }
 ```
 
-### **⚙️ Module 6: `ktfake-config`**
+### **⚙️ Module 6: `fakt-config`**
 **Responsibility**: Configuration management and user options
 
 ```kotlin
@@ -978,7 +978,7 @@ data class KtFakeConfiguration(
     val generateBuilderPatterns: Boolean = true,
     val strictMode: Boolean = false,
     val customTypeHandlers: Map<String, TypeHandler> = emptyMap(),
-    val outputDirectory: String = "build/generated/ktfake",
+    val outputDirectory: String = "build/generated/fakt",
     val packagePrefix: String = "",
     val excludePatterns: List<String> = emptyList()
 )
@@ -1001,7 +1001,7 @@ class GradleConfigurationLoader : ConfigurationLoader {
 }
 ```
 
-### **🔌 Module 7: `ktfake-compiler`** 
+### **🔌 Module 7: `fakt-compiler`** 
 **Responsibility**: Minimal compiler plugin integration (orchestration only)
 
 ```kotlin
@@ -1021,19 +1021,19 @@ class KtFakeCompilerPlugin(
         
         // Register FIR extensions
         FirExtensionRegistrarAdapter.registerExtension(
-            KtFakesFirExtensionRegistrar(analyzer, diagnostics)
+            FaktFirExtensionRegistrar(analyzer, diagnostics)
         )
         
         // Register IR extensions  
         IrGenerationExtension.registerExtension(
-            KtFakesIrGenerationExtension(
+            FaktIrGenerationExtension(
                 analyzer, typeMapper, codeGenerator, diagnostics, configuration
             )
         )
     }
 }
 
-class KtFakesIrGenerationExtension(
+class FaktIrGenerationExtension(
     private val analyzer: InterfaceAnalyzer,
     private val typeMapper: TypeMapper,
     private val codeGenerator: CodeGenerator<IrClass>,
@@ -1064,7 +1064,7 @@ class KtFakesIrGenerationExtension(
 }
 ```
 
-### **🧪 Module 8: `ktfake-testing-utils`**
+### **🧪 Module 8: `fakt-testing-utils`**
 **Responsibility**: Shared testing infrastructure and utilities
 
 ```kotlin
@@ -1190,38 +1190,38 @@ class MavenIntegration {
 ### **Dependency Graph:**
 ```mermaid
 graph TD
-    A[ktfake-compiler] --> B[ktfake-analysis]
-    A --> C[ktfake-codegen-ir]
-    A --> D[ktfake-diagnostics]
-    A --> E[ktfake-config]
+    A[fakt-compiler] --> B[fakt-analysis]
+    A --> C[fakt-codegen-ir]
+    A --> D[fakt-diagnostics]
+    A --> E[fakt-config]
     
-    C --> F[ktfake-codegen-core]
-    C --> G[ktfake-type-system]
+    C --> F[fakt-codegen-core]
+    C --> G[fakt-type-system]
     
     F --> B
     F --> G
     
-    H[ktfake-gradle-plugin] --> A
+    H[fakt-gradle-plugin] --> A
     H --> E
     
-    I[ktfake-testing-utils] --> B
+    I[fakt-testing-utils] --> B
     I --> F
     
-    J[ktfake-ide-support] --> B
+    J[fakt-ide-support] --> B
     J --> G
 ```
 
 ### **Module Size Estimation:**
 ```yaml
-ktfake-analysis:      ~500 LOC  (pure logic)
-ktfake-type-system:   ~800 LOC  (type mapping) 
-ktfake-codegen-core:  ~600 LOC  (abstract generation)
-ktfake-codegen-ir:    ~1200 LOC (IR implementation)
-ktfake-diagnostics:   ~400 LOC  (error handling)
-ktfake-config:        ~200 LOC  (configuration)
-ktfake-compiler:      ~300 LOC  (thin orchestration)
-ktfake-testing-utils: ~300 LOC  (test utilities)
-ktfake-ide-support:   ~400 LOC  (IDE integration)
+fakt-analysis:      ~500 LOC  (pure logic)
+fakt-type-system:   ~800 LOC  (type mapping) 
+fakt-codegen-core:  ~600 LOC  (abstract generation)
+fakt-codegen-ir:    ~1200 LOC (IR implementation)
+fakt-diagnostics:   ~400 LOC  (error handling)
+fakt-config:        ~200 LOC  (configuration)
+fakt-compiler:      ~300 LOC  (thin orchestration)
+fakt-testing-utils: ~300 LOC  (test utilities)
+fakt-ide-support:   ~400 LOC  (IDE integration)
 
 Total: ~4,700 LOC (vs ~2,000 LOC monolithic)
 ```
@@ -1286,9 +1286,9 @@ Total: ~4,700 LOC (vs ~2,000 LOC monolithic)
 ```yaml
 Priority: HIGH
 Modules to extract:
-  - ktfake-analysis (pure logic)
-  - ktfake-type-system (reusable)
-  - ktfake-codegen-core (abstract)
+  - fakt-analysis (pure logic)
+  - fakt-type-system (reusable)
+  - fakt-codegen-core (abstract)
 
 Benefits: 
   - Immediate testability improvement
@@ -1300,9 +1300,9 @@ Benefits:
 ```yaml
 Priority: MEDIUM  
 Modules to add:
-  - ktfake-codegen-ir (IR-specific)
-  - ktfake-diagnostics (error handling)
-  - ktfake-config (configuration)
+  - fakt-codegen-ir (IR-specific)
+  - fakt-diagnostics (error handling)
+  - fakt-config (configuration)
 
 Benefits:
   - Specialized implementations
@@ -1314,9 +1314,9 @@ Benefits:
 ```yaml
 Priority: LOW
 Modules to consider:
-  - ktfake-ide-support (IDE integration)
-  - ktfake-testing-utils (testing support)
-  - ktfake-gradle-dsl (enhanced DSL)
+  - fakt-ide-support (IDE integration)
+  - fakt-testing-utils (testing support)
+  - fakt-gradle-dsl (enhanced DSL)
 
 Benefits:
   - Rich ecosystem
@@ -1383,16 +1383,16 @@ Combine core-first extraction with strangler fig pattern for lowest risk and fas
 ### **Week 1-2: Foundation Setup**
 ```kotlin
 // Step 1: Create module structure
-ktfake/
-├── ktfake-analysis/
+fakt/
+├── fakt-analysis/
 │   ├── build.gradle.kts
-│   └── src/main/kotlin/dev/rsicarelli/ktfake/analysis/
-├── ktfake-type-system/
+│   └── src/main/kotlin/dev/rsicarelli/fakt/analysis/
+├── fakt-type-system/
 │   ├── build.gradle.kts  
-│   └── src/main/kotlin/dev/rsicarelli/ktfake/types/
-└── ktfake-codegen-core/
+│   └── src/main/kotlin/dev/rsicarelli/fakt/types/
+└── fakt-codegen-core/
     ├── build.gradle.kts
-    └── src/main/kotlin/dev/rsicarelli/ktfake/codegen/
+    └── src/main/kotlin/dev/rsicarelli/fakt/codegen/
 
 // Step 2: Define core interfaces
 interface InterfaceAnalyzer {

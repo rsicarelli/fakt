@@ -1,11 +1,11 @@
-# KtFakes Samples 🚀
+# Fakt Samples 🚀
 
-This directory contains comprehensive samples demonstrating KtFakes capabilities across different project architectures and use cases.
+This directory contains comprehensive samples demonstrating Fakt capabilities across different project architectures and use cases.
 
 ## Available Samples
 
 ### 📦 **single-module**
-A single KMP module demonstrating core KtFakes features:
+A single KMP module demonstrating core Fakt features:
 - **Basic Interfaces**: Simple property and method faking
 - **Suspend Functions**: Async/coroutine support with proper handling
 - **Data Classes**: Value object faking with copy semantics
@@ -27,7 +27,7 @@ A complex multi-module KMP project showcasing:
 
 ## 🎯 **Testing Philosophy**
 
-Each sample serves as a **battle test** for the KtFakes compiler plugin:
+Each sample serves as a **battle test** for the Fakt compiler plugin:
 
 1. **Compilation Success**: All generated code must compile without errors
 2. **Type Safety**: No `Any` casts, proper generic handling throughout
@@ -37,7 +37,7 @@ Each sample serves as a **battle test** for the KtFakes compiler plugin:
 
 ## 🔧 **Source Set Mapping Strategy**
 
-KtFakes generates fakes at the appropriate test source set level:
+Fakt generates fakes at the appropriate test source set level:
 
 | Source Location | Generated Location | Description |
 |----------------|-------------------|-------------|
@@ -80,7 +80,7 @@ Each sample must pass:
 
 ## 🛠️ **Development Workflow**
 
-When adding new features to KtFakes:
+When adding new features to Fakt:
 
 1. **Add Test Cases**: Create complex interfaces in samples
 2. **Verify Generation**: Check generated code quality and compilation
@@ -88,4 +88,4 @@ When adding new features to KtFakes:
 4. **Platform Testing**: Test across all KMP targets
 5. **Edge Cases**: Add increasingly complex type scenarios
 
-These samples ensure KtFakes maintains **MAP (Minimum Awesome Product)** quality standards! 🎯
+These samples ensure Fakt maintains **MAP (Minimum Awesome Product)** quality standards! 🎯

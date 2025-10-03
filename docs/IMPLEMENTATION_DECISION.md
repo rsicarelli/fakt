@@ -1,4 +1,4 @@
-# KtFakes - Implementation Decision Summary
+# Fakt - Implementation Decision Summary
 
 > **Status**: FINAL DECISION MADE  
 > **Chosen Strategy**: Smart Pattern-Based Generation with Specialized Handlers  
@@ -7,7 +7,7 @@
 
 ## 🎯 **THE FINAL DECISION**
 
-After comprehensive analysis of multiple approaches, we have selected the **optimal solution** that will make KtFakes the first truly type-safe Kotlin mocking framework.
+After comprehensive analysis of multiple approaches, we have selected the **optimal solution** that will make Fakt the first truly type-safe Kotlin mocking framework.
 
 ### **CHOSEN STRATEGY: Smart Pattern-Based Generation**
 
@@ -151,9 +151,9 @@ class FakeService {
 
 ## 🏆 **COMPETITIVE ADVANTAGE**
 
-This implementation will make KtFakes the **ONLY** Kotlin mocking framework with:
+This implementation will make Fakt the **ONLY** Kotlin mocking framework with:
 
-| Advantage | KtFakes | MockK | Mockito |
+| Advantage | Fakt | MockK | Mockito |
 |-----------|---------|-------|---------|
 | **100% Type Safety** | ✅ Compile-time | ❌ Runtime | ❌ Runtime |
 | **Zero Casting** | ✅ Never needed | ❌ Always `as T` | ❌ Always casting |
@@ -210,7 +210,7 @@ val service = fakeAsyncDataService {
 // And it all just works - compile-time safe, IDE-perfect, performance-optimal
 ```
 
-**KtFakes becomes the gold standard** that every other Kotlin mocking framework will aspire to match. 🌟
+**Fakt becomes the gold standard** that every other Kotlin mocking framework will aspire to match. 🌟
 
 ---
 

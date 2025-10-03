@@ -8,7 +8,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
- * Unit tests for KtFakes Gradle plugin.
+ * Unit tests for Fakt Gradle plugin.
  */
 class FaktGradleSubpluginTest {
     @Test
@@ -16,7 +16,7 @@ class FaktGradleSubpluginTest {
         // Given: A test project
         val project = ProjectBuilder.builder().build()
 
-        // When: Applying the KtFakes plugin
+        // When: Applying the Fakt plugin
         project.pluginManager.apply("com.rsicarelli.fakt")
 
         // Then: Plugin should be applied successfully
@@ -24,13 +24,13 @@ class FaktGradleSubpluginTest {
     }
 
     @Test
-    fun `plugin creates ktfake extension`() {
-        // Given: A project with KtFakes plugin applied
+    fun `plugin creates fakt extension`() {
+        // Given: A project with Fakt plugin applied
         val project = ProjectBuilder.builder().build()
         project.pluginManager.apply("com.rsicarelli.fakt")
 
-        // When: Accessing the ktfake extension
-        val extension = project.extensions.findByName("ktfake")
+        // When: Accessing the fakt extension
+        val extension = project.extensions.findByName("fakt")
 
         // Then: Extension should exist and be the correct type
         assertNotNull(extension)
@@ -39,7 +39,7 @@ class FaktGradleSubpluginTest {
 
     @Test
     fun `extension has correct default values`() {
-        // Given: A project with KtFakes plugin applied
+        // Given: A project with Fakt plugin applied
         val project = ProjectBuilder.builder().build()
         project.pluginManager.apply("com.rsicarelli.fakt")
 

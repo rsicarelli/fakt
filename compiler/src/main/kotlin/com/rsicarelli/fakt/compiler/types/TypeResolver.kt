@@ -8,6 +8,7 @@ import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
+import org.jetbrains.kotlin.ir.types.IrTypeArgument
 import org.jetbrains.kotlin.ir.types.IrTypeProjection
 import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.types.isAny
@@ -67,23 +68,43 @@ internal class TypeResolver {
             }
 
             // Handle primitive types
-            irType.isString() -> "String"
-            irType.isInt() -> "Int"
-            irType.isBoolean() -> "Boolean"
-            irType.isUnit() -> "Unit"
-            irType.isLong() -> "Long"
-            irType.isFloat() -> "Float"
-            irType.isDouble() -> "Double"
-            irType.isChar() -> "Char"
-            irType.isByte() -> "Byte"
-            irType.isShort() -> "Short"
-            irType.isNothing() -> "Nothing"
-            irType.isAny() -> "Any"
+            else ->
+                irType.asPrimitiveName()
+                    ?: handleComplexType(irType, preserveTypeParameters)
+        }
 
+    /**
+     * Returns primitive type name or null if not primitive.
+     * Extracted to reduce complexity of irTypeToKotlinString().
+     */
+    private fun IrType.asPrimitiveName(): String? =
+        when {
+            isString() -> "String"
+            isInt() -> "Int"
+            isBoolean() -> "Boolean"
+            isUnit() -> "Unit"
+            isLong() -> "Long"
+            isFloat() -> "Float"
+            isDouble() -> "Double"
+            isChar() -> "Char"
+            isByte() -> "Byte"
+            isShort() -> "Short"
+            isNothing() -> "Nothing"
+            isAny() -> "Any"
+            else -> null
+        }
+
+    /**
+     * Handles complex (non-primitive) type conversion.
+     * Extracted to reduce complexity of irTypeToKotlinString().
+     */
+    private fun handleComplexType(
+        irType: IrType,
+        preserveTypeParameters: Boolean,
+    ): String =
+        when {
             // Handle function types - check by class name pattern
-            isFunction(irType) -> {
-                handleFunctionType(irType, preserveTypeParameters)
-            }
+            isFunction(irType) -> handleFunctionType(irType, preserveTypeParameters)
 
             // Handle suspending function types
             isSuspendFunction(irType) -> {
@@ -125,9 +146,36 @@ internal class TypeResolver {
      * @param irType The type to generate a default value for
      * @return String representation of the default value
      */
-    fun getDefaultValue(irType: IrType): String =
+    fun getDefaultValue(irType: IrType): String {
+        // Try primitive defaults first
+        getPrimitiveDefault(irType)?.let { return it }
+
+        // Handle nullable types - always use null as default
+        if (irType.isMarkedNullable()) return "null"
+
+        // Handle type parameters (T, K, V, etc.)
+        if (irType is IrSimpleType && irType.classifier.owner is IrTypeParameter) {
+            return "Any()"
+        }
+
+        // Handle function types
+        if (isFunction(irType) || isSuspendFunction(irType)) {
+            return generateFunctionDefault(irType)
+        }
+
+        // Handle non-nullable class types
+        return handleClassDefault(irType)
+    }
+
+    /**
+     * Returns default value for primitive types, or null if not a primitive.
+     * Extracted to reduce complexity of getDefaultValue().
+     *
+     * @param irType The type to check
+     * @return Default value string for primitives, or null for non-primitives
+     */
+    private fun getPrimitiveDefault(irType: IrType): String? =
         when {
-            // Handle primitive types first
             irType.isString() -> "\"\""
             irType.isInt() -> "0"
             irType.isBoolean() -> "false"
@@ -140,25 +188,7 @@ internal class TypeResolver {
             irType.isShort() -> "0"
             irType.isNothing() -> "TODO(\"Nothing type has no values\")"
             irType.isAny() -> "Any()"
-
-            // Handle nullable types - always use null as default
-            irType.isMarkedNullable() -> "null"
-
-            // Handle type parameters (T, K, V, etc.)
-            irType is IrSimpleType && irType.classifier.owner is IrTypeParameter -> {
-                // Type parameters are unknown at compile time, use Any() as safe default
-                "Any()"
-            }
-
-            // Handle function types
-            isFunction(irType) || isSuspendFunction(irType) -> {
-                generateFunctionDefault(irType)
-            }
-
-            // Handle non-nullable class types
-            else -> {
-                handleClassDefault(irType)
-            }
+            else -> null
         }
 
     /**
@@ -225,19 +255,8 @@ internal class TypeResolver {
         val packageName = irClass.kotlinFqName.parent().asString()
 
         if (preserveTypeParameters && irType.arguments.isNotEmpty()) {
-            val typeArgs =
-                irType.arguments.map { arg ->
-                    when (arg) {
-                        is IrTypeProjection ->
-                            irTypeToKotlinString(
-                                arg.type,
-                                preserveTypeParameters,
-                            )
-
-                        else -> "Any"
-                    }
-                }
-            return "$className<${typeArgs.joinToString(", ")}>"
+            val typeArgsString = typeArgumentsToString(irType.arguments, preserveTypeParameters)
+            return "$className$typeArgsString"
         } else {
             // NoGenerics pattern: Use specific type erasure rules for common types
             return when {
@@ -268,6 +287,30 @@ internal class TypeResolver {
                 else -> className
             }
         }
+    }
+
+    /**
+     * Converts type arguments to string representation.
+     * Extracted to reduce complexity of handleGenericType().
+     *
+     * @param arguments List of type arguments to convert
+     * @param preserveTypeParameters Whether to preserve generic type parameters
+     * @return String representation like "<T, R>" or empty string
+     */
+    private fun typeArgumentsToString(
+        arguments: List<IrTypeArgument>,
+        preserveTypeParameters: Boolean,
+    ): String {
+        if (arguments.isEmpty()) return ""
+
+        val typeArgs =
+            arguments.map { arg ->
+                when (arg) {
+                    is IrTypeProjection -> irTypeToKotlinString(arg.type, preserveTypeParameters)
+                    else -> "Any"
+                }
+            }
+        return "<${typeArgs.joinToString(", ")}>"
     }
 
     /**

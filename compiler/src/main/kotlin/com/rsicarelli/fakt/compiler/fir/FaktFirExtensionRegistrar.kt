@@ -5,7 +5,7 @@ package com.rsicarelli.fakt.compiler.fir
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
 
 /**
- * FIR extension registrar for KtFakes compiler plugin.
+ * FIR extension registrar for Fakt compiler plugin.
  *
  * This registrar follows Metro's two-phase approach:
  * 1. Analysis phase: Detect @Fake annotations and validate declarations
@@ -33,8 +33,8 @@ class FaktFirExtensionRegistrar : FirExtensionRegistrar() {
         // For now, just mark that the FIR extension registrar is being called
         // Using println because MessageCollector is not available in FirExtensionRegistrar context
         println("============================================")
-        println("KtFakes: FIR extension registrar configured")
-        println("KtFakes: Ready to detect @Fake annotations")
+        println("Fakt: FIR extension registrar configured")
+        println("Fakt: Ready to detect @Fake annotations")
         println("============================================")
     }
 }

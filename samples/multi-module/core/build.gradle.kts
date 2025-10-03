@@ -37,23 +37,6 @@ kotlin {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-test")
             }
-            // Add generated sources directory for commonTest
-            kotlin.srcDir("build/generated/ktfake/commonTest/kotlin")
-        }
-
-        jvmTest {
-            // Add generated sources directory for jvmTest
-            kotlin.srcDir("build/generated/ktfake/jvmTest/kotlin")
-        }
-
-        jsTest {
-            // Add generated sources directory for jsTest
-            kotlin.srcDir("build/generated/ktfake/jsTest/kotlin")
-        }
-
-        nativeTest {
-            // Add generated sources directory for nativeTest
-            kotlin.srcDir("build/generated/ktfake/nativeTest/kotlin")
         }
     }
 }

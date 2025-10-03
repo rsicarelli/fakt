@@ -12,11 +12,11 @@ import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import java.io.File
 
 /**
- * Gradle plugin for KtFakes compiler plugin.
+ * Gradle plugin for Fakt compiler plugin.
  *
  * This plugin:
- * 1. Registers the KtFakes compiler plugin with Kotlin compilation
- * 2. Provides the `ktfake { }` DSL for configuration
+ * 1. Registers the Fakt compiler plugin with Kotlin compilation
+ * 2. Provides the `fakt { }` DSL for configuration
  * 3. Automatically adds runtime dependency to test configurations
  * 4. Configures the plugin for test-only code generation
  */
@@ -30,8 +30,8 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
     }
 
     override fun apply(target: Project) {
-        // Create the ktfake extension for configuration
-        val extension = target.extensions.create("ktfake", FaktPluginExtension::class.java)
+        // Create the fakt extension for configuration
+        val extension = target.extensions.create("fakt", FaktPluginExtension::class.java)
 
         // Configure source sets automatically after project evaluation
         target.afterEvaluate {
@@ -41,7 +41,7 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         // Add runtime dependency to test configurations
         addRuntimeDependencies(target)
 
-        target.logger.info("KtFakes: Applied Gradle plugin to project ${target.name}")
+        target.logger.info("Fakt: Applied Gradle plugin to project ${target.name}")
     }
 
     override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean {
@@ -55,7 +55,7 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 compilationName.endsWith("main")
 
         kotlinCompilation.project.logger.info(
-            "KtFakes: Checking compilation '${kotlinCompilation.name}' - applicable: $isMainCompilation",
+            "Fakt: Checking compilation '${kotlinCompilation.name}' - applicable: $isMainCompilation",
         )
 
         return isMainCompilation
@@ -74,7 +74,7 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         val project = kotlinCompilation.project
         val extension = project.extensions.getByType(FaktPluginExtension::class.java)
 
-        project.logger.info("KtFakes: Applying compiler plugin to compilation ${kotlinCompilation.name}")
+        project.logger.info("Fakt: Applying compiler plugin to compilation ${kotlinCompilation.name}")
 
         return project.provider {
             buildList {
@@ -87,7 +87,7 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 val outputDir = getGeneratedSourcesDirectory(project, kotlinCompilation)
                 add(SubpluginOption(key = "outputDir", value = outputDir))
 
-                project.logger.info("KtFakes: Configured compiler plugin with $size options")
+                project.logger.info("Fakt: Configured compiler plugin with $size options")
             }
         }
     }
@@ -120,7 +120,7 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 val generatedDir = getGeneratedSourcesDirectoryForSourceSet(project, sourceSet.name)
                 sourceSet.kotlin.srcDir(generatedDir)
 
-                project.logger.info("KtFakes: Configured source set '${sourceSet.name}' to include generated sources from: $generatedDir")
+                project.logger.info("Fakt: Configured source set '${sourceSet.name}' to include generated sources from: $generatedDir")
             }
         }
     }
@@ -137,11 +137,11 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                         project.layout.buildDirectory
                             .get()
                             .asFile,
-                        "generated/ktfake/test/kotlin",
+                        "generated/fakt/test/kotlin",
                     )
                 task.source(generatedDir)
 
-                project.logger.info("KtFakes: Configured test compilation task '${task.name}' to include generated sources")
+                project.logger.info("Fakt: Configured test compilation task '${task.name}' to include generated sources")
             }
         }
     }
@@ -165,7 +165,7 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 project.layout.buildDirectory
                     .get()
                     .asFile,
-                "generated/ktfake/common/test/kotlin",
+                "generated/fakt/common/test/kotlin",
             ).absolutePath
         }
 
@@ -182,7 +182,7 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                     project.layout.buildDirectory
                         .get()
                         .asFile,
-                    "generated/ktfake/common/test/kotlin",
+                    "generated/fakt/common/test/kotlin",
                 ).absolutePath
             }
         }
@@ -198,14 +198,14 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 else -> compilationName
             }
 
-        // For specific platform targets in KMP: build/generated/ktfake/{targetName}/test/kotlin
-        // For single-platform JVM: build/generated/ktfake/test/kotlin (targetName="jvm", compilationName="main")
+        // For specific platform targets in KMP: build/generated/fakt/{targetName}/test/kotlin
+        // For single-platform JVM: build/generated/fakt/test/kotlin (targetName="jvm", compilationName="main")
         val directory =
             File(
                 project.layout.buildDirectory
                     .get()
                     .asFile,
-                "generated/ktfake/$targetName/$testDirName/kotlin",
+                "generated/fakt/$targetName/$testDirName/kotlin",
             )
 
         return directory.absolutePath
@@ -224,7 +224,7 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                     project.layout.buildDirectory
                         .get()
                         .asFile,
-                    "generated/ktfake/common/test/kotlin",
+                    "generated/fakt/common/test/kotlin",
                 )
 
             sourceSetName.endsWith("Test") -> {
@@ -233,7 +233,7 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                     project.layout.buildDirectory
                         .get()
                         .asFile,
-                    "generated/ktfake/$target/test/kotlin",
+                    "generated/fakt/$target/test/kotlin",
                 )
             }
 
@@ -242,7 +242,7 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                     project.layout.buildDirectory
                         .get()
                         .asFile,
-                    "generated/ktfake/common/test/kotlin",
+                    "generated/fakt/common/test/kotlin",
                 )
         }
 
@@ -262,7 +262,7 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                     "${PLUGIN_GROUP_ID}:runtime:${PLUGIN_VERSION}",
                 )
 
-                project.logger.info("KtFakes: Added runtime dependency to configuration ${configuration.name}")
+                project.logger.info("Fakt: Added runtime dependency to configuration ${configuration.name}")
             }
         }
     }

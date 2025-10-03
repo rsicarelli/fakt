@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler
 
+import com.rsicarelli.fakt.compiler.config.FaktOptions
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
@@ -29,7 +30,7 @@ class FaktCompilerPluginRegistrarSimpleTest {
             val supportsK2 = registrar.supportsK2
 
             // Then - should support K2 compiler
-            assertTrue(supportsK2, "KtFake plugin should support K2 compiler")
+            assertTrue(supportsK2, "Fakt plugin should support K2 compiler")
         }
 
     @Test

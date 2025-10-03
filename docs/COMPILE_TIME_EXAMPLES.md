@@ -1,4 +1,4 @@
-# KtFakes - Compile-Time Type Safety: Real Examples
+# Fakt - Compile-Time Type Safety: Real Examples
 
 > **Goal**: Show concrete examples of how compile-time safe generation would work  
 > **Focus**: Practical implementation that developers will love
@@ -494,4 +494,4 @@ This approach provides:
 - ✅ **Performance** - Minimal overhead, no reflection
 - ✅ **Maintainability** - Generated code is readable and debuggable
 
-KtFakes becomes the **only** Kotlin mocking framework with true compile-time type safety!
+Fakt becomes the **only** Kotlin mocking framework with true compile-time type safety!

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.types
 
-import com.rsicarelli.fakt.compiler.analysis.InterfaceAnalysis
+import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType

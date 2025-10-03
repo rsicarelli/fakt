@@ -8,15 +8,15 @@ import org.gradle.api.provider.Property
 import javax.inject.Inject
 
 /**
- * DSL extension for configuring KtFakes plugin.
+ * DSL extension for configuring Fakt plugin.
  *
- * Provides the `ktfake { }` configuration block in build.gradle files:
+ * Provides the `fakt { }` configuration block in build.gradle files:
  *
  * ```kotlin
- * ktfake {
+ * fakt {
  *     enabled = true
  *     debug = false
- *     reportsDestination = layout.buildDirectory.dir("ktfake/reports")
+ *     reportsDestination = layout.buildDirectory.dir("fakt/reports")
  *
  *     generateCallTracking = true
  *     generateBuilderPatterns = true
@@ -30,7 +30,7 @@ open class FaktPluginExtension
         objects: ObjectFactory,
     ) {
         /**
-         * Enable or disable the KtFakes plugin.
+         * Enable or disable the Fakt plugin.
          * When false, no fake generation occurs.
          *
          * Default: true
@@ -48,7 +48,7 @@ open class FaktPluginExtension
         /**
          * Destination directory for compilation reports and generated metadata.
          *
-         * Default: build/ktfake/reports
+         * Default: build/fakt/reports
          */
         val reportsDestination: DirectoryProperty = objects.directoryProperty()
 

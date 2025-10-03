@@ -1,4 +1,4 @@
-# KtFakes Testing Status Report - Unified Architecture
+# Fakt Testing Status Report - Unified Architecture
 
 > **Status**: Testing Infrastructure Restored ✅  
 > **Architecture**: Unified IR-Native Implementation ✅  
@@ -12,7 +12,7 @@
 
 ### **Current Test Status**
 - ✅ **Integration Tests**: 4/4 passing (`FakeGenerationTest.kt`)
-- ✅ **Unit Tests**: 9/9 passing (`UnifiedKtFakesIrGenerationExtensionTest.kt`)  
+- ✅ **Unit Tests**: 9/9 passing (`UnifiedFaktIrGenerationExtensionTest.kt`)  
 - ✅ **End-to-End**: Full compilation pipeline working
 - 🔄 **Legacy Tests**: 38+ tests disabled (requires migration)
 
@@ -45,8 +45,8 @@ class FakeGenerationTest {
 
 ### **Unit Test Coverage: Core Functions** ✅
 ```kotlin
-// compiler/src/test/kotlin/.../UnifiedKtFakesIrGenerationExtensionTest.kt  
-class UnifiedKtFakesIrGenerationExtensionTest {
+// compiler/src/test/kotlin/.../UnifiedFaktIrGenerationExtensionTest.kt  
+class UnifiedFaktIrGenerationExtensionTest {
     @Test fun `should create extension instance successfully`()              // ✅ PASSING
     @Test fun `should have required public methods for IR generation`()      // ✅ PASSING
     @Test fun `should detect test source sets correctly`()                   // ✅ PASSING
@@ -78,7 +78,7 @@ class UnifiedKtFakesIrGenerationExtensionTest {
 └── ... (30+ more test files)
 ```
 
-**Migration Required**: These tests were written for the old modular string-based architecture and reference classes that no longer exist after unification. They need to be updated to test the unified `UnifiedKtFakesIrGenerationExtension` class.
+**Migration Required**: These tests were written for the old modular string-based architecture and reference classes that no longer exist after unification. They need to be updated to test the unified `UnifiedFaktIrGenerationExtension` class.
 
 ## 🏗️ **Testing Strategy Decisions**
 
@@ -96,7 +96,7 @@ class UnifiedKtFakesIrGenerationExtensionTest {
 - **Real Functionality**: Tests validate actual code generation, not mocked behavior
 
 ### **Testing Architecture Alignment**
-- **Unified Implementation**: Tests now match the single `UnifiedKtFakesIrGenerationExtension` class
+- **Unified Implementation**: Tests now match the single `UnifiedFaktIrGenerationExtension` class
 - **IR-Native Focus**: Tests validate IR-based analysis and generation
 - **Simplified Mocking**: Avoided complex IR type mocking in favor of accessible method testing
 - **Message Collection**: Proper error handling and reporting validation
@@ -148,7 +148,7 @@ fun fakeAsyncUserService(configure: FakeAsyncUserServiceConfig.() -> Unit = {}):
 ### **Immediate Priority (Next Session)**
 1. **Legacy Test Migration**: Systematically update the 38+ disabled tests
    - Start with core generators (ImplementationClassGeneratorTest, FactoryFunctionGeneratorTest)  
-   - Update class references to use `UnifiedKtFakesIrGenerationExtension`
+   - Update class references to use `UnifiedFaktIrGenerationExtension`
    - Maintain BDD naming conventions and comprehensive coverage
 
 2. **Advanced Feature Testing**: Add tests for future features

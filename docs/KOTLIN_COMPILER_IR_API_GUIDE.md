@@ -71,7 +71,7 @@ class KtFakeCompilerPlugin : CompilerPluginRegistrar() {
     override val supportsK2: Boolean = true
     
     override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
-        IrGenerationExtension.registerExtension(KtFakesIrGenerationExtension())
+        IrGenerationExtension.registerExtension(FaktIrGenerationExtension())
     }
 }
 ```
@@ -102,7 +102,7 @@ interface IrGenerationExtension {
 
 **Implementation Pattern**:
 ```kotlin
-class KtFakesIrGenerationExtension : IrGenerationExtension {
+class FaktIrGenerationExtension : IrGenerationExtension {
     override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
         // 1. Find @Fake annotated interfaces
         val annotatedInterfaces = moduleFragment.findAnnotatedInterfaces("@Fake")

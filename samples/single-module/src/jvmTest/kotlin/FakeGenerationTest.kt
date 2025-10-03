@@ -7,7 +7,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
- * Integration test to verify that KtFakes generates working fake implementations.
+ * Integration test to verify that Fakt generates working fake implementations.
  *
  * This test validates the entire end-to-end pipeline:
  * 1. @Fake annotations are detected

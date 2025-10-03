@@ -17,7 +17,7 @@
 
 ### **✅ COVERED - Unit Tests (9/9 passing)**
 ```kotlin
-// compiler/src/test/kotlin/.../UnifiedKtFakesIrGenerationExtensionTest.kt
+// compiler/src/test/kotlin/.../UnifiedFaktIrGenerationExtensionTest.kt
 @Test fun `should create extension instance successfully`()              // Basic instantiation
 @Test fun `should have required public methods for IR generation`()     // Method availability
 @Test fun `should handle interface name processing correctly`()          // String utilities
@@ -139,7 +139,7 @@ Based on analysis of 19 disabled test files, here are the missing coverage areas
 
 #### **Diagnostics and Validation**
 ```kotlin
-// From: KtFakesErrorsTest.kt.disabled
+// From: FaktErrorsTest.kt.disabled
 // MISSING TESTS for error scenarios:
 
 @Test fun `should report clear error for invalid interface types`()
@@ -205,10 +205,10 @@ Based on analysis of 19 disabled test files, here are the missing coverage areas
 ## 🎯 **Recommended Test Implementation Strategy**
 
 ### **Phase 1: Core Generation Validation**
-Focus on testing the three main generation methods in `UnifiedKtFakesIrGenerationExtension`:
+Focus on testing the three main generation methods in `UnifiedFaktIrGenerationExtension`:
 
 ```kotlin
-class UnifiedKtFakesIrGenerationExtensionTest {
+class UnifiedFaktIrGenerationExtensionTest {
     // Current tests (9/9 passing) ✅
     
     // ADD - Implementation Class Generation Tests
@@ -268,7 +268,7 @@ All tests must validate real functionality:
 - ❌ Don't use placeholder assertions like `assertTrue(true)`
 
 ### **Integration with Current Architecture**
-All new tests should work with the existing `UnifiedKtFakesIrGenerationExtension` class:
+All new tests should work with the existing `UnifiedFaktIrGenerationExtension` class:
 - Use the existing `internal` methods we exposed for testing
 - Follow the established pattern from current working tests
 - Maintain the same test utilities and mock helpers

@@ -25,7 +25,6 @@ fun Project.applyApiValidationConvention() {
             listOf(
                 "single-module",
                 "kmp-comprehensive-test",
-                "published-modules-test",
                 "api",
                 "core",
                 "app",

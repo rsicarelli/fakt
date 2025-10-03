@@ -11,3 +11,10 @@ plugins {
 // Pass version catalog versions to FaktRootPlugin for Spotless configuration
 ext["ktfmtVersion"] = libs.versions.ktfmt.get()
 ext["gjfVersion"] = libs.versions.gjf.get()
+
+// Dokka 2.x multi-module aggregation
+dependencies {
+    dokka(project(":runtime"))
+    dokka(project(":compiler"))
+    dokka(project(":gradle-plugin"))
+}

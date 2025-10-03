@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 package test.sample
 
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Basic validation test for type-safe API without relying on generated fakes.

@@ -39,10 +39,9 @@ secrets.properties
 # ================================
 # Generated Code (Fakt Plugin)
 # ================================
-**/generated/ktfake/**
 **/generated/fakt/**
-**/ktfakes-report.json
-**/ktfakes-signatures.cache
+**/fakt-report.json
+**/fakt-signatures.cache
 
 # ================================
 # Build Artifacts

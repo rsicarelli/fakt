@@ -1,13 +1,13 @@
-# KtFakes - Compile-Time Safe Generic Solutions Analysis
+# Fakt - Compile-Time Safe Generic Solutions Analysis
 
 > **Status**: Advanced Architectural Design Exploration  
 > **Goal**: Achieve 100% compile-time type safety for generic fake generation  
-> **Philosophy**: Zero runtime casting - KtFakes as the type-safe leader in Kotlin mocking  
+> **Philosophy**: Zero runtime casting - Fakt as the type-safe leader in Kotlin mocking  
 > **Date**: September 2025
 
 ## 🎯 **EXECUTIVE SUMMARY**
 
-This document explores sophisticated compile-time safe solutions for the generic type parameter scoping challenge. By avoiding runtime casting entirely, KtFakes can position itself as the **premier type-safe mocking solution** in the Kotlin ecosystem - a significant differentiator from MockK and Mockito.
+This document explores sophisticated compile-time safe solutions for the generic type parameter scoping challenge. By avoiding runtime casting entirely, Fakt can position itself as the **premier type-safe mocking solution** in the Kotlin ecosystem - a significant differentiator from MockK and Mockito.
 
 **Core Principle**: Every generic type must be known and verified at compile-time, with zero runtime type erasure compromises.
 
@@ -584,14 +584,14 @@ val service = fakeAsyncDataService {
 
 ## 🎯 **CONCLUSION**
 
-By implementing compile-time safe generic solutions, KtFakes will achieve what no other Kotlin mocking framework has accomplished: **100% type safety with zero runtime compromises**. The recommended hybrid approach combining:
+By implementing compile-time safe generic solutions, Fakt will achieve what no other Kotlin mocking framework has accomplished: **100% type safety with zero runtime compromises**. The recommended hybrid approach combining:
 
 1. **Smart Generation Patterns** - Different strategies for different generic patterns
 2. **Reified Type Builders** - Capture types at configuration time
 3. **Type Registry System** - Efficient type-based dispatch
 4. **Beautiful DSL** - Developer experience that rivals hand-written code
 
-This positions KtFakes as the **gold standard** for type-safe mocking in Kotlin, setting it apart from MockK, Mockito, and all other alternatives.
+This positions Fakt as the **gold standard** for type-safe mocking in Kotlin, setting it apart from MockK, Mockito, and all other alternatives.
 
 **Next Steps**:
 1. Prototype the reified type builder pattern (1 week)
@@ -601,7 +601,7 @@ This positions KtFakes as the **gold standard** for type-safe mocking in Kotlin,
 
 **Estimated Timeline**: 6-8 weeks for full implementation
 **Complexity**: High, but achievable with structured approach
-**Impact**: Revolutionary - KtFakes becomes the type-safety leader
+**Impact**: Revolutionary - Fakt becomes the type-safety leader
 
 ---
 

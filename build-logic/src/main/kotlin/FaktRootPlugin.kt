@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import com.rsicarelli.fakt.conventions.applyApiValidationConvention
+import com.rsicarelli.fakt.conventions.applyDetektToAllProjects
 import com.rsicarelli.fakt.conventions.applyDokkaConvention
 import com.rsicarelli.fakt.conventions.applyKtlintToAllProjects
 import com.rsicarelli.fakt.conventions.applySpotlessPredeclare
@@ -17,6 +18,7 @@ import org.gradle.api.Project
  * - Dokka documentation
  * - Spotless formatting (predeclareDeps + allprojects)
  * - Ktlint linting (allprojects)
+ * - Detekt static analysis (allprojects)
  *
  * Note: This plugin should ONLY be applied to the root project.
  *
@@ -40,6 +42,7 @@ class FaktRootPlugin : Plugin<Project> {
             applySpotlessPredeclare()
             applySpotlessToAllProjects()
             applyKtlintToAllProjects()
+            applyDetektToAllProjects()
         }
     }
 }

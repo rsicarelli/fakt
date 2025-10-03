@@ -25,7 +25,6 @@ include(
     ":runtime",
     ":samples:single-module",
     ":samples:kmp-comprehensive-test",
-    ":samples:published-modules-test",
     ":samples:multi-module:api",
     ":samples:multi-module:core",
     ":samples:multi-module:app",

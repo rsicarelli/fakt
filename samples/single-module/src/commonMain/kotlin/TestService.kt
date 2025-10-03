@@ -100,7 +100,7 @@ interface ProductService {
 // HIGHER-ORDER FUNCTIONS - Function types and lambdas
 // ============================================================================
 
-// Generic interface - NOT supported by KtFakes (will be skipped)
+// Generic interface - NOT supported by Fakt (will be skipped)
 interface GenericEventProcessor<T> {
     fun process(
         item: T,
@@ -113,7 +113,7 @@ interface GenericEventProcessor<T> {
     ): List<R>
 }
 
-// Type-safe alternative - SUPPORTED by KtFakes
+// Type-safe alternative - SUPPORTED by Fakt
 @Fake
 interface EventProcessor {
     fun processString(

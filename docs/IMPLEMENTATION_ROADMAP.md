@@ -1,4 +1,4 @@
-# KtFakes Implementation Roadmap - Phase 1 Breakthrough
+# Fakt Implementation Roadmap - Phase 1 Breakthrough
 
 > **Status**: MAJOR BREAKTHROUGH - 75% of Critical Issues Resolved! 🎉  
 > **Current Version**: 1.0.0-PHASE1-COMPLETE  
@@ -131,7 +131,7 @@ class FakeGenericRepositoryImpl<T> : GenericRepository<T> {
 
 **Current Problem**:
 ```kotlin
-// Generated code in core/build/generated/ktfake/commonTest/kotlin/
+// Generated code in core/build/generated/fakt/commonTest/kotlin/
 class FakeUserServiceImpl : UserService {
     // ERROR: NetworkService not imported!
     private var networkServiceBehavior: () -> NetworkService = { ... }

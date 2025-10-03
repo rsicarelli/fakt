@@ -1,4 +1,4 @@
-# IR-Native KtFakes: Demonstrated Capabilities
+# IR-Native Fakt: Demonstrated Capabilities
 
 > **Status**: IR-Native Architecture 90% Complete - Production-Ready Foundation Implemented  
 > **Generated**: January 2025  
@@ -6,7 +6,7 @@
 
 ## 🎯 **Executive Summary**
 
-The IR-Native architecture for KtFakes has been successfully implemented and demonstrated with a comprehensive, modular foundation. Through Test-Driven Development and rigorous validation, we've proven the viability of the next-generation architecture while maintaining backward compatibility with the existing string-based system.
+The IR-Native architecture for Fakt has been successfully implemented and demonstrated with a comprehensive, modular foundation. Through Test-Driven Development and rigorous validation, we've proven the viability of the next-generation architecture while maintaining backward compatibility with the existing string-based system.
 
 ## ✅ **Achieved Capabilities**
 
@@ -95,12 +95,12 @@ class FakeUserServiceConfig(private val fake: FakeUserServiceImpl) {
 Six specialized modules with clear responsibilities:
 
 ```
-✅ ktfake-analysis/       - Interface discovery and validation
-✅ ktfake-type-system/    - Comprehensive type mapping (38+ tests)
-✅ ktfake-codegen-core/   - Abstract generation engine
-🔄 ktfake-codegen-ir/     - IR-specific implementation (pending IR APIs)
-✅ ktfake-diagnostics/    - Error reporting and validation
-✅ ktfake-config/         - Configuration management
+✅ fakt-analysis/       - Interface discovery and validation
+✅ fakt-type-system/    - Comprehensive type mapping (38+ tests)
+✅ fakt-codegen-core/   - Abstract generation engine
+🔄 fakt-codegen-ir/     - IR-specific implementation (pending IR APIs)
+✅ fakt-diagnostics/    - Error reporting and validation
+✅ fakt-config/         - Configuration management
 ```
 
 **Module Independence**: Each module has focused responsibilities with minimal coupling.
@@ -184,8 +184,8 @@ IR-Native System:
 
 ### **Immediate Next Steps**
 1. **IR API Integration** (2 modules pending):
-   - Complete `ktfake-codegen-ir` with real IR factory usage
-   - Resolve `ktfake-analysis` IR API compatibility  
+   - Complete `fakt-codegen-ir` with real IR factory usage
+   - Resolve `fakt-analysis` IR API compatibility  
    
 2. **Integration with Existing Compiler**:
    - Plug IR-Native modules into current `compiler/` structure
@@ -231,7 +231,7 @@ IR-Native System:
 
 ## 🎯 **Conclusion**
 
-The IR-Native architecture for KtFakes represents a significant leap forward in fake generation technology. With 90% completion and comprehensive validation, we've successfully:
+The IR-Native architecture for Fakt represents a significant leap forward in fake generation technology. With 90% completion and comprehensive validation, we've successfully:
 
 1. **Proven the Architecture**: Modular, scalable, type-safe design works as intended
 2. **Demonstrated Capabilities**: Dynamic interface handling, comprehensive type mapping, quality code generation  
