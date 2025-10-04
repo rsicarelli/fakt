@@ -12,31 +12,9 @@ import com.rsicarelli.fakt.Fake
  */
 @Fake
 interface KeyValueStore<K, V> {
-    /**
-     * Store a key-value pair.
-     */
-    fun put(
-        key: K,
-        value: V,
-    )
-
-    /**
-     * Retrieve a value by key.
-     */
+    fun put(key: K, value: V)
     fun get(key: K): V?
-
-    /**
-     * Get all entries as a map.
-     */
     fun getAll(): Map<K, V>
-
-    /**
-     * Remove a key and return its value.
-     */
     fun remove(key: K): V?
-
-    /**
-     * Check if key exists.
-     */
     fun containsKey(key: K): Boolean
 }

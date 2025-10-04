@@ -12,33 +12,10 @@ import com.rsicarelli.fakt.Fake
  */
 @Fake
 interface DataCache<T> {
-    /**
-     * Store a batch of items.
-     */
     fun storeBatch(items: List<T>)
-
-    /**
-     * Get all batches stored.
-     */
     fun getAllBatches(): List<List<T>>
-
-    /**
-     * Store grouped data.
-     */
     fun storeGroups(groups: Map<String, List<T>>)
-
-    /**
-     * Get a specific group.
-     */
     fun getGroup(name: String): List<T>?
-
-    /**
-     * Store nested structure (list of lists).
-     */
     fun storeNested(data: List<List<T>>)
-
-    /**
-     * Get matrix-like data structure.
-     */
     fun getMatrix(): List<List<T>>
 }
