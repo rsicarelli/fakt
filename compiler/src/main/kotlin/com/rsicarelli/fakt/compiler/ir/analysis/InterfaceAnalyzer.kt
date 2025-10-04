@@ -85,9 +85,10 @@ internal class InterfaceAnalyzer {
         val functions = mutableListOf<FunctionAnalysis>()
 
         // Extract type parameters from the interface with constraints
-        val typeParameters = sourceInterface.typeParameters.map { typeParam ->
-            formatTypeParameterWithConstraints(typeParam)
-        }
+        val typeParameters =
+            sourceInterface.typeParameters.map { typeParam ->
+                formatTypeParameterWithConstraints(typeParam)
+            }
 
         // Analyze all declarations in the interface
         sourceInterface.declarations.forEach { declaration ->
@@ -189,9 +190,10 @@ internal class InterfaceAnalyzer {
             returnType = function.returnType,
             isSuspend = function.isSuspend,
             isInline = function.isInline,
-            typeParameters = function.typeParameters.map { typeParam ->
-                formatTypeParameterWithConstraints(typeParam)
-            },
+            typeParameters =
+                function.typeParameters.map { typeParam ->
+                    formatTypeParameterWithConstraints(typeParam)
+                },
             typeParameterBounds = typeParameterBounds,
             irFunction = function,
         )
@@ -239,19 +241,20 @@ internal class InterfaceAnalyzer {
     private fun formatTypeParameterWithConstraints(typeParam: IrTypeParameter): String {
         val name = typeParam.name.asString()
 
-        // Get upper bounds (constraints) excluding Any
-        val bounds = typeParam.superTypes.filter { !it.isAny() }
+        // Get all upper bounds from IR
+        val allBounds = typeParam.superTypes
 
-        if (bounds.isEmpty()) {
+        // Format each bound
+        val formattedBounds =
+            allBounds
+                .map { bound -> formatIrTypeWithTypeArguments(bound) }
+                .filter { it != "Any" && it != "Any?" } // Filter out implicit Any bounds
+
+        if (formattedBounds.isEmpty()) {
             return name
         }
 
-        // Format each bound - convert IrType to string representation
-        val formattedBounds = bounds.joinToString(", ") { bound ->
-            formatIrTypeWithTypeArguments(bound)
-        }
-
-        return "$name : $formattedBounds"
+        return "$name : ${formattedBounds.joinToString(", ")}"
     }
 
     /**
@@ -263,11 +266,12 @@ internal class InterfaceAnalyzer {
             return convertIrTypeToString(irType)
         }
 
-        val baseName = when (val owner = irType.classifier.owner) {
-            is IrClass -> owner.name.asString()
-            is IrTypeParameter -> owner.name.asString()
-            else -> "Any"
-        }
+        val baseName =
+            when (val owner = irType.classifier.owner) {
+                is IrClass -> owner.name.asString()
+                is IrTypeParameter -> owner.name.asString()
+                else -> "Any"
+            }
 
         // If no type arguments, return base name
         if (irType.arguments.isEmpty()) {
@@ -275,13 +279,14 @@ internal class InterfaceAnalyzer {
         }
 
         // Format type arguments
-        val typeArgs = irType.arguments.joinToString(", ") { arg ->
-            when (arg) {
-                is IrTypeProjection -> formatIrTypeWithTypeArguments(arg.type)
-                is IrStarProjection -> "*"
-                else -> "Any"
+        val typeArgs =
+            irType.arguments.joinToString(", ") { arg ->
+                when (arg) {
+                    is IrTypeProjection -> formatIrTypeWithTypeArguments(arg.type)
+                    is IrStarProjection -> "*"
+                    else -> "Any"
+                }
             }
-        }
 
         return "$baseName<$typeArgs>"
     }

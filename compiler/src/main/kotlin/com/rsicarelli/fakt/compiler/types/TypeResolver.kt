@@ -63,7 +63,7 @@ internal class TypeResolver {
      */
     fun irTypeToKotlinStringWithSubstitution(
         irType: IrType,
-        substitutor: IrTypeSubstitutor
+        substitutor: IrTypeSubstitutor,
     ): String {
         // First apply the substitution, then convert to string
         val substitutedType = substitutor.substitute(irType)

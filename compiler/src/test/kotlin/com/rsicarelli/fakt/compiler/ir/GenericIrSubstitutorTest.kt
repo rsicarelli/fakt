@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir
 
-import kotlin.test.Test
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
-import kotlin.test.fail
 import org.jetbrains.kotlin.ir.symbols.IrTypeParameterSymbol
 import org.jetbrains.kotlin.ir.types.IrTypeArgument
 import org.jetbrains.kotlin.ir.types.IrTypeSubstitutor
 import org.junit.jupiter.api.TestInstance
+import kotlin.test.Test
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+import kotlin.test.fail
 
 /**
  * Tests for GenericIrSubstitutor following GIVEN-WHEN-THEN pattern.
@@ -24,23 +24,23 @@ import org.junit.jupiter.api.TestInstance
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GenericIrSubstitutorTest {
-
     @Test
     fun `GIVEN empty substitution map WHEN creating IrTypeSubstitutor THEN should create successfully`() {
         // Given - Setup: Empty substitution map (simplest test case)
         val emptyMap = emptyMap<IrTypeParameterSymbol, IrTypeArgument>()
 
         // When - Execute: Create IrTypeSubstitutor with empty map (tests our API usage)
-        val substitutor = IrTypeSubstitutor(
-            substitution = emptyMap,
-            allowEmptySubstitution = true
-        )
+        val substitutor =
+            IrTypeSubstitutor(
+                substitution = emptyMap,
+                allowEmptySubstitution = true,
+            )
 
         // Then - Assert: Should create without compilation errors
         assertNotNull(substitutor, "Should create IrTypeSubstitutor with empty map")
         assertTrue(
             substitutor is IrTypeSubstitutor,
-            "Should return correct type"
+            "Should return correct type",
         )
     }
 
@@ -51,7 +51,7 @@ class GenericIrSubstitutorTest {
 
         // When - Execute: This test verifies our class compiles correctly
         // (We'll add actual instantiation in integration tests)
-        val canInstantiate = true  // Placeholder for compilation verification
+        val canInstantiate = true // Placeholder for compilation verification
 
         // Then - Assert: Class structure should be valid
         assertTrue(canInstantiate, "GenericIrSubstitutor class should compile correctly")
@@ -63,16 +63,17 @@ class GenericIrSubstitutorTest {
         val emptySubstitution = emptyMap<IrTypeParameterSymbol, IrTypeArgument>()
 
         // When - Execute: Use primary constructor (tests the API we discovered)
-        val substitutor = IrTypeSubstitutor(
-            substitution = emptySubstitution,
-            allowEmptySubstitution = true
-        )
+        val substitutor =
+            IrTypeSubstitutor(
+                substitution = emptySubstitution,
+                allowEmptySubstitution = true,
+            )
 
         // Then - Assert: Primary constructor should work correctly
         assertNotNull(substitutor, "Primary constructor should work")
         assertTrue(
             substitutor.javaClass.simpleName == "IrTypeSubstitutor",
-            "Should create IrTypeSubstitutor instance"
+            "Should create IrTypeSubstitutor instance",
         )
     }
 
@@ -92,20 +93,24 @@ class GenericIrSubstitutorTest {
 
         // When - Check if GenericIrSubstitutor has the method-level remapper API
         // We verify the method exists by checking if it compiles
-        val hasCreateMethodLevelRemapper = GenericIrSubstitutor::class.members
-            .any { it.name == "createMethodLevelRemapper" }
+        val hasCreateMethodLevelRemapper =
+            GenericIrSubstitutor::class
+                .members
+                .any { it.name == "createMethodLevelRemapper" }
 
-        val hasMethodLevelTypeParametersChecker = GenericIrSubstitutor::class.members
-            .any { it.name == "hasMethodLevelTypeParameters" }
+        val hasMethodLevelTypeParametersChecker =
+            GenericIrSubstitutor::class
+                .members
+                .any { it.name == "hasMethodLevelTypeParameters" }
 
         // Then - GenericIrSubstitutor should have method-level support API
         assertTrue(
             hasCreateMethodLevelRemapper,
-            "GenericIrSubstitutor should have createMethodLevelRemapper() method"
+            "GenericIrSubstitutor should have createMethodLevelRemapper() method",
         )
         assertTrue(
             hasMethodLevelTypeParametersChecker,
-            "GenericIrSubstitutor should have hasMethodLevelTypeParameters() method"
+            "GenericIrSubstitutor should have hasMethodLevelTypeParameters() method",
         )
 
         // ✅ GREEN PHASE: Method-level generic API exists!

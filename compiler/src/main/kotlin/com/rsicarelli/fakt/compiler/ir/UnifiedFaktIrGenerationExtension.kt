@@ -179,7 +179,10 @@ class UnifiedFaktIrGenerationExtension(
             val typeInfo = createTypeInfo(fakeInterface)
 
             // Phase 2: Detect generic pattern
-            val genericPattern = com.rsicarelli.fakt.compiler.ir.analysis.GenericPatternAnalyzer().analyzeInterface(fakeInterface)
+            val genericPattern =
+                com.rsicarelli.fakt.compiler.ir.analysis
+                    .GenericPatternAnalyzer()
+                    .analyzeInterface(fakeInterface)
 
             when {
                 !optimizations.needsRegeneration(typeInfo) -> {

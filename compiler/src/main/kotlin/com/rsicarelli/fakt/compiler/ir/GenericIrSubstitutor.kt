@@ -32,8 +32,9 @@ import org.jetbrains.kotlin.ir.util.IrTypeParameterRemapper
  * @param pluginContext The IR plugin context providing access to IR factories and built-ins
  */
 @OptIn(UnsafeDuringIrConstructionAPI::class)
-class GenericIrSubstitutor(private val pluginContext: IrPluginContext) {
-
+class GenericIrSubstitutor(
+    private val pluginContext: IrPluginContext,
+) {
     /**
      * Creates a substitution map from original interface to its instantiated supertype.
      *
@@ -62,12 +63,12 @@ class GenericIrSubstitutor(private val pluginContext: IrPluginContext) {
      */
     fun createSubstitutionMap(
         originalInterface: IrClass,
-        superType: IrSimpleType
+        superType: IrSimpleType,
     ): Map<IrTypeParameterSymbol, IrTypeArgument> {
         require(originalInterface.typeParameters.size == superType.arguments.size) {
             "Type parameter count mismatch: " +
-                    "${originalInterface.name.asString()} has ${originalInterface.typeParameters.size} " +
-                    "type parameters but superType has ${superType.arguments.size} arguments"
+                "${originalInterface.name.asString()} has ${originalInterface.typeParameters.size} " +
+                "type parameters but superType has ${superType.arguments.size} arguments"
         }
 
         // Zip type parameters with their corresponding arguments and create the map
@@ -97,14 +98,11 @@ class GenericIrSubstitutor(private val pluginContext: IrPluginContext) {
      * @param substitutionMap Map from createSubstitutionMap()
      * @return IrTypeSubstitutor that can substitute types throughout IR tree
      */
-    fun createClassLevelSubstitutor(
-        substitutionMap: Map<IrTypeParameterSymbol, IrTypeArgument>
-    ): IrTypeSubstitutor {
-        return IrTypeSubstitutor(
+    fun createClassLevelSubstitutor(substitutionMap: Map<IrTypeParameterSymbol, IrTypeArgument>): IrTypeSubstitutor =
+        IrTypeSubstitutor(
             substitution = substitutionMap,
-            allowEmptySubstitution = true
+            allowEmptySubstitution = true,
         )
-    }
 
     /**
      * Creates an IrTypeParameterRemapper for method-level type parameters.
@@ -131,9 +129,7 @@ class GenericIrSubstitutor(private val pluginContext: IrPluginContext) {
      * @param typeParameterMap Map from old type parameters to new type parameters
      * @return IrTypeParameterRemapper that can remap method-level type parameters
      */
-    fun createMethodLevelRemapper(
-        typeParameterMap: Map<IrTypeParameter, IrTypeParameter>
-    ): IrTypeParameterRemapper {
+    fun createMethodLevelRemapper(typeParameterMap: Map<IrTypeParameter, IrTypeParameter>): IrTypeParameterRemapper {
         // Create remapper with type parameter mapping
         // The remapper will be used to preserve method-level generics in generated code
         return IrTypeParameterRemapper(typeParameterMap)
@@ -149,9 +145,7 @@ class GenericIrSubstitutor(private val pluginContext: IrPluginContext) {
      * @param function The function to check
      * @return true if function declares its own type parameters
      */
-    fun hasMethodLevelTypeParameters(function: IrSimpleFunction): Boolean {
-        return function.typeParameters.isNotEmpty()
-    }
+    fun hasMethodLevelTypeParameters(function: IrSimpleFunction): Boolean = function.typeParameters.isNotEmpty()
 
     /**
      * Substitutes a function signature with class-level and method-level generics.
@@ -178,7 +172,7 @@ class GenericIrSubstitutor(private val pluginContext: IrPluginContext) {
      */
     fun substituteFunction(
         originalFunction: IrSimpleFunction,
-        classLevelSubstitutor: IrTypeSubstitutor
+        classLevelSubstitutor: IrTypeSubstitutor,
     ): IrSimpleFunction {
         // For now, we'll implement a simplified version
         // Full implementation will come in Phase 2 when we actually generate code

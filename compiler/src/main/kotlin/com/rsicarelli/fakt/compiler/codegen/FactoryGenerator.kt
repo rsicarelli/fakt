@@ -29,6 +29,14 @@ internal class FactoryGenerator {
         // Phase 2: Generate reified generic factory function
         val hasGenerics = analysis.typeParameters.isNotEmpty()
 
+        // Extract type parameter names (without constraints) for use as type arguments
+        val typeParameterNames =
+            if (hasGenerics) {
+                analysis.typeParameters.map { it.substringBefore(" :").trim() }
+            } else {
+                emptyList()
+            }
+
         val typeParameters =
             if (hasGenerics) {
                 "<${analysis.typeParameters.joinToString(", ") { "reified $it" }}>"
@@ -38,16 +46,14 @@ internal class FactoryGenerator {
 
         val interfaceWithGenerics =
             if (hasGenerics) {
-                val genericParams = analysis.typeParameters.joinToString(", ")
-                "$interfaceName<$genericParams>"
+                "$interfaceName<${typeParameterNames.joinToString(", ")}>"
             } else {
                 interfaceName
             }
 
         val configWithGenerics =
             if (hasGenerics) {
-                val genericParams = analysis.typeParameters.joinToString(", ")
-                "$configClassName<$genericParams>"
+                "$configClassName<${typeParameterNames.joinToString(", ")}>"
             } else {
                 configClassName
             }
@@ -67,10 +73,10 @@ internal class FactoryGenerator {
                 "$functionSignature(configure: $configWithGenerics.() -> Unit = {}): $interfaceWithGenerics {",
             )
 
-            // Phase 2: Use simple type parameters for constructor (not reified)
+            // Phase 2: Use simple type parameter names for constructor (not reified, no constraints)
             val constructorTypeParams =
                 if (hasGenerics) {
-                    "<${analysis.typeParameters.joinToString(", ")}>"
+                    "<${typeParameterNames.joinToString(", ")}>"
                 } else {
                     ""
                 }

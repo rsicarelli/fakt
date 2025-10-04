@@ -698,6 +698,93 @@ val result: Boolean? = boolStore.get(42, "test")  // Type-safe!
 
 ---
 
+### 2025-10-04 - P1.1: Type Constraint Support ✅ **COMPLETE!**
+
+**Goal**: Implement support for type parameter constraints (`<T : Comparable<T>>`)
+
+**TDD RED-GREEN Cycle**:
+- ❌ **RED**: Created SortedRepository<T : Comparable<T>> interface and P1ConstraintSupportTest.kt
+  - Test failed with "Type argument is not within its bounds" error
+  - Generated code was missing constraints: `class FakeSortedRepositoryImpl<T>` instead of `<T : Comparable<T>>`
+- ✅ **GREEN**: Implemented constraint preservation in all generators
+  - Enhanced InterfaceAnalyzer.formatTypeParameterWithConstraints() to extract and format constraints
+  - Fixed ImplementationGenerator to separate type parameter declarations (with constraints) from type arguments (without)
+  - Fixed FactoryGenerator to include constraints in reified type parameters
+  - Fixed ConfigurationDslGenerator to preserve constraints in class declaration
+  - All 6 P1 constraint tests passing (0 failures, 0 errors)
+
+**What I Completed**:
+- ✅ Created formatTypeParameterWithConstraints() function to extract IR type bounds
+- ✅ Created formatIrTypeWithTypeArguments() to handle complex constraints like Comparable<T>
+- ✅ Updated all generators to use typeParameterNames (without constraints) for type arguments
+- ✅ Fixed method-level type parameter detection to work with constraints
+- ✅ Filtered out implicit "Any" bounds that Kotlin IR adds automatically
+
+**Generated Code Example** (FakeSortedRepositoryImpl.kt):
+```kotlin
+class FakeSortedRepositoryImpl<T : Comparable<T>> : SortedRepository<T> { ... }
+
+inline fun <reified T : Comparable<T>> fakeSortedRepository(
+    configure: FakeSortedRepositoryConfig<T>.() -> Unit = {}
+): SortedRepository<T>
+
+class FakeSortedRepositoryConfig<T : Comparable<T>>(
+    private val fake: FakeSortedRepositoryImpl<T>
+)
+```
+
+**Test Results**: 6/6 P1.1 constraint tests passing ✅
+```xml
+<testsuite tests="6" failures="0" errors="0">
+  ✅ GIVEN sorted repository with Int type WHEN configured THEN should maintain type safety
+  ✅ GIVEN sorted repository with String type WHEN configured THEN should maintain type safety
+  ✅ GIVEN sorted repository WHEN using default behaviors THEN should have sensible defaults
+  ✅ GIVEN sorted repository with custom comparable THEN should work with any Comparable type
+  ✅ GIVEN sorted repository WHEN partially configured THEN should use configured and defaults
+  ✅ GIVEN sorted repository WHEN insert called THEN should execute configured behavior
+</testsuite>
+```
+
+**Files Modified**:
+1. `compiler/src/main/kotlin/.../ir/analysis/InterfaceAnalyzer.kt` (major enhancements)
+   - Added formatTypeParameterWithConstraints() with IR bound extraction
+   - Added formatIrTypeWithTypeArguments() for recursive type formatting
+   - Filters out implicit "Any" bounds from Kotlin IR
+2. `compiler/src/main/kotlin/.../codegen/ImplementationGenerator.kt`
+   - Extract typeParameterNames separately from typeParameters
+   - Use names for type arguments, full constraints for declarations
+3. `compiler/src/main/kotlin/.../codegen/FactoryGenerator.kt`
+   - Extract typeParameterNames for type arguments
+   - Preserve constraints in reified type parameter declarations
+4. `compiler/src/main/kotlin/.../codegen/ConfigurationDslGenerator.kt`
+   - Use typeParameterNames for constructor type arguments
+   - Preserve constraints in class type parameter declarations
+
+**Files Created**:
+1. `samples/single-module/src/commonMain/kotlin/SortedRepository.kt` - Test interface with constraints
+2. `samples/single-module/src/commonTest/kotlin/P1ConstraintSupportTest.kt` - 6 comprehensive GIVEN-WHEN-THEN tests
+
+**Critical Bugs Fixed**:
+1. **Implicit Any Bound**: Kotlin IR adds implicit `Any` bounds to all type parameters - filtered these out
+2. **Constraint in Type Arguments**: Initially put constraints everywhere (`SortedRepository<T : Comparable<T>>`), fixed to only use in declarations
+3. **Method-Level Type Param Detection**: Constraints broke the regex detection - fixed by extracting names first
+
+**Lessons Learned**:
+1. **IR Implicit Bounds**: Kotlin IR adds `Any` as supertype to all type params - must filter explicitly
+2. **Type Params vs Type Arguments**: Declarations need constraints (`<T : Comparable<T>>`), usage doesn't (`<T>`)
+3. **String Extraction Pattern**: `substringBefore(" :").trim()` is simpler than complex IR filtering
+4. **Recursive Type Formatting**: Need to handle nested type arguments (`Comparable<T>`) recursively
+
+**Status**: ✅ **P1.1 COMPLETE!** Type constraint support fully working with production-quality code generation!
+
+**Next Steps**: P1.2 - Variance support (out T, in T)
+
+**Time Spent**: ~2 hours (TDD RED-GREEN cycle, multiple iterations on constraint extraction)
+
+**Celebration Note**: 🎉 **CONSTRAINT SUPPORT ACHIEVED!** This was one of the most complex generic features and it's now fully working end-to-end with all tests passing!
+
+---
+
 ## 🗓️ Week 1: Phase 1 - Core Infrastructure (Planned)
 
 ### Day 1-2: GenericIrSubstitutor Creation

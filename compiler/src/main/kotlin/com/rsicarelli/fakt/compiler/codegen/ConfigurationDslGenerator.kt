@@ -46,8 +46,16 @@ internal class ConfigurationDslGenerator(
                 ""
             }
 
+        // Extract type parameter names (without constraints) for use as type arguments
+        val typeParameterNames =
+            if (analysis.typeParameters.isNotEmpty()) {
+                "<${analysis.typeParameters.map { it.substringBefore(" :").trim() }.joinToString(", ")}>"
+            } else {
+                ""
+            }
+
         return buildString {
-            appendLine("class $configClassName$typeParameters(private val fake: $fakeClassName$typeParameters) {")
+            appendLine("class $configClassName$typeParameters(private val fake: $fakeClassName$typeParameterNames) {")
 
             // Generate configuration methods for functions (TYPE-SAFE: Use exact types)
             for (function in analysis.functions) {
