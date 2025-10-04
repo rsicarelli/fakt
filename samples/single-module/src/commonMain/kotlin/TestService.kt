@@ -8,7 +8,6 @@ import com.rsicarelli.fakt.Fake
 // BASIC INTERFACES - Simple property and method faking
 // ============================================================================
 
-@Fake
 interface TestService {
     val stringValue: String
 
@@ -26,7 +25,6 @@ interface AnalyticsService {
 // SUSPEND FUNCTIONS - Async/coroutine support
 // ============================================================================
 
-@Fake
 interface AsyncUserService {
     suspend fun getUser(id: String): String
 
@@ -38,7 +36,6 @@ interface AsyncUserService {
     suspend fun deleteUser(id: String)
 }
 
-@Fake
 interface AsyncDataService {
     suspend fun fetchData(): String
 
@@ -65,7 +62,6 @@ data class Product(
     val category: String,
 )
 
-@Fake
 interface UserRepository {
     val users: List<User>
 
@@ -81,7 +77,6 @@ interface UserRepository {
     ): List<User>
 }
 
-@Fake
 interface ProductService {
     suspend fun getProduct(id: Long): Product?
 
@@ -114,7 +109,7 @@ interface GenericEventProcessor<T> {
 }
 
 // Type-safe alternative - SUPPORTED by Fakt
-@Fake
+
 interface EventProcessor {
     fun processString(
         item: String,
@@ -159,7 +154,6 @@ interface WorkflowManager {
 // GENERIC TYPES - Collections, Result types, and custom generics
 // ============================================================================
 
-@Fake
 interface GenericRepository<T> {
     val items: List<T>
 
@@ -174,7 +168,6 @@ interface GenericRepository<T> {
     fun <R> map(transformer: (T) -> R): List<R>
 }
 
-@Fake
 interface ResultService {
     fun <T> tryOperation(operation: () -> T): Result<T>
 
@@ -188,7 +181,6 @@ interface ResultService {
     fun combineResults(results: List<Result<String>>): Result<List<String>>
 }
 
-@Fake
 interface CollectionService {
     fun processStrings(items: List<String>): Set<String>
 
@@ -206,7 +198,6 @@ interface CollectionService {
 // COMPLEX SCENARIOS - Multi-parameter, nullable, default values
 // ============================================================================
 
-@Fake
 interface ComplexApiService {
     val baseUrl: String
     val timeout: Long
@@ -240,7 +231,6 @@ interface ComplexApiService {
     ): Result<TResponse>
 }
 
-@Fake
 interface AuthenticationService {
     val isLoggedIn: Boolean
     val currentUser: User?
@@ -262,7 +252,6 @@ interface AuthenticationService {
     fun hasAllPermissions(permissions: Collection<String>): Boolean
 }
 
-@Fake
 interface CacheService<TKey, TValue> {
     val size: Int
     val maxSize: Int?

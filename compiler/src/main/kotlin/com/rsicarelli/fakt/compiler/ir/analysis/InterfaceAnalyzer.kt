@@ -9,7 +9,9 @@ import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrSimpleType
+import org.jetbrains.kotlin.ir.types.IrStarProjection
 import org.jetbrains.kotlin.ir.types.IrType
+import org.jetbrains.kotlin.ir.types.IrTypeProjection
 import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.types.isAny
 import org.jetbrains.kotlin.ir.types.isMarkedNullable
@@ -82,8 +84,10 @@ internal class InterfaceAnalyzer {
         val properties = mutableListOf<PropertyAnalysis>()
         val functions = mutableListOf<FunctionAnalysis>()
 
-        // Extract type parameters from the interface
-        val typeParameters = sourceInterface.typeParameters.map { it.name.asString() }
+        // Extract type parameters from the interface with constraints
+        val typeParameters = sourceInterface.typeParameters.map { typeParam ->
+            formatTypeParameterWithConstraints(typeParam)
+        }
 
         // Analyze all declarations in the interface
         sourceInterface.declarations.forEach { declaration ->
@@ -185,7 +189,9 @@ internal class InterfaceAnalyzer {
             returnType = function.returnType,
             isSuspend = function.isSuspend,
             isInline = function.isInline,
-            typeParameters = function.typeParameters.map { it.name.asString() },
+            typeParameters = function.typeParameters.map { typeParam ->
+                formatTypeParameterWithConstraints(typeParam)
+            },
             typeParameterBounds = typeParameterBounds,
             irFunction = function,
         )
@@ -222,6 +228,63 @@ internal class InterfaceAnalyzer {
                 irClass?.name?.asString() ?: "Any"
             }
         }
+
+    /**
+     * Formats a type parameter with its constraints (bounds).
+     * Examples:
+     * - T -> "T"
+     * - T with Comparable<T> bound -> "T : Comparable<T>"
+     * - T with multiple bounds -> "T : Comparable<T>, Serializable"
+     */
+    private fun formatTypeParameterWithConstraints(typeParam: IrTypeParameter): String {
+        val name = typeParam.name.asString()
+
+        // Get upper bounds (constraints) excluding Any
+        val bounds = typeParam.superTypes.filter { !it.isAny() }
+
+        if (bounds.isEmpty()) {
+            return name
+        }
+
+        // Format each bound - convert IrType to string representation
+        val formattedBounds = bounds.joinToString(", ") { bound ->
+            formatIrTypeWithTypeArguments(bound)
+        }
+
+        return "$name : $formattedBounds"
+    }
+
+    /**
+     * Formats an IrType with its type arguments (e.g., Comparable<T>).
+     * This is used for formatting type parameter constraints.
+     */
+    private fun formatIrTypeWithTypeArguments(irType: IrType): String {
+        if (irType !is IrSimpleType) {
+            return convertIrTypeToString(irType)
+        }
+
+        val baseName = when (val owner = irType.classifier.owner) {
+            is IrClass -> owner.name.asString()
+            is IrTypeParameter -> owner.name.asString()
+            else -> "Any"
+        }
+
+        // If no type arguments, return base name
+        if (irType.arguments.isEmpty()) {
+            return baseName
+        }
+
+        // Format type arguments
+        val typeArgs = irType.arguments.joinToString(", ") { arg ->
+            when (arg) {
+                is IrTypeProjection -> formatIrTypeWithTypeArguments(arg.type)
+                is IrStarProjection -> "*"
+                else -> "Any"
+            }
+        }
+
+        return "$baseName<$typeArgs>"
+    }
 }
 
 /**

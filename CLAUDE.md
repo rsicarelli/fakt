@@ -258,6 +258,175 @@ class UnifiedFaktIrGenerationExtensionTest {
 ❌ Mocks (use fakes)
 ❌ @BeforeEach/@AfterEach (use isolated instances)
 
+## 🚀 Generic Type Support Implementation (In Progress)
+
+> **Status**: Planning Complete ✅ - Ready for Phase 1 Implementation
+> **Strategy**: Full IR Substitution with IrTypeSubstitutor
+> **Timeline**: 2-3 weeks (3 phases)
+> **Documentation**: `.claude/docs/implementation/generics/`
+> **Last Updated**: January 2025
+
+### 🎯 Objective
+
+Transform Fakt from skipping generic interfaces to full type-safe generic support:
+
+```kotlin
+// TODAY (❌ Skipped):
+@Fake interface Repository<T> { fun save(item: T): T }
+// "Generic interfaces not supported"
+
+// TOMORROW (✅ Working):
+@Fake interface Repository<T> { fun save(item: T): T }
+
+// Generated code:
+class FakeRepositoryImpl<T> : Repository<T> {
+    private var saveBehavior: (T) -> T = { it }
+    override fun save(item: T): T = saveBehavior(item)
+}
+
+inline fun <reified T> fakeRepository(
+    configure: FakeRepositoryConfig<T>.() -> Unit = {}
+): Repository<T>
+
+// Usage (type-safe!):
+val userRepo = fakeRepository<User> {
+    save { user -> user }
+}
+val user: User = userRepo.save(User("123", "Test")) // ✅ TYPE SAFE!
+```
+
+### 📚 Documentation Index
+
+**Start Here**:
+- **[QUICK-START.md](./.claude/docs/implementation/generics/QUICK-START.md)** ⭐ - Passo a passo para começar
+- **[ROADMAP.md](./.claude/docs/implementation/generics/ROADMAP.md)** - Visão geral e estratégia completa
+- **[CHEAT-SHEET.md](./.claude/docs/implementation/generics/CHEAT-SHEET.md)** - Quick reference durante desenvolvimento
+
+**Phase Guides**:
+- **[Phase 1: Core Infrastructure](./.claude/docs/implementation/generics/phase1-core-infrastructure.md)** - Week 1
+- **[Phase 2: Code Generation](./.claude/docs/implementation/generics/phase2-code-generation.md)** - Week 2
+- **[Phase 3: Testing & Integration](./.claude/docs/implementation/generics/phase3-testing-integration.md)** - Week 3
+
+**Technical References**:
+- **[Test Matrix](./.claude/docs/implementation/generics/test-matrix.md)** - 50+ test scenarios (P0-P3)
+- **[Technical Reference](./.claude/docs/implementation/generics/technical-reference.md)** - Kotlin IR APIs deep dive
+- **[CHANGELOG.md](./.claude/docs/implementation/generics/CHANGELOG.md)** - Track daily progress
+
+### 📅 Implementation Phases
+
+#### **Phase 1: Core Infrastructure** (Week 1 - Days 1-5)
+**Goal**: Remove generic filter, create GenericIrSubstitutor, enhance TypeResolver
+
+**Key Deliverables**:
+- ✅ GenericIrSubstitutor.kt created with IrTypeSubstitutor integration
+- ✅ TypeResolver enhanced to preserve type parameters
+- ✅ Generic filter removed (line 189 in UnifiedFaktIrGenerationExtension)
+- ✅ Integration test: `Repository<T>` compiles without errors
+
+**Files Modified**:
+- `compiler/src/main/kotlin/.../ir/GenericIrSubstitutor.kt` (NEW)
+- `compiler/src/main/kotlin/.../types/TypeResolver.kt`
+- `compiler/src/main/kotlin/.../ir/UnifiedFaktIrGenerationExtension.kt`
+- `compiler/src/main/kotlin/.../ir/analysis/InterfaceAnalyzer.kt`
+
+---
+
+#### **Phase 2: Code Generation** (Week 2 - Days 6-10)
+**Goal**: Update all generators to produce generic code
+
+**Key Deliverables**:
+- ✅ ImplementationGenerator generates `class Fake<T> : Interface<T>`
+- ✅ FactoryGenerator generates `inline fun <reified T> fakeFoo()`
+- ✅ ConfigurationDslGenerator generates `class FakeConfig<T>`
+- ✅ Integration test: Generated code compiles and is type-safe at use-site
+
+**Files Modified**:
+- `compiler/src/main/kotlin/.../codegen/ImplementationGenerator.kt`
+- `compiler/src/main/kotlin/.../codegen/FactoryGenerator.kt`
+- `compiler/src/main/kotlin/.../codegen/ConfigurationDslGenerator.kt`
+- `compiler/src/main/kotlin/.../codegen/CodeGenerator.kt`
+
+---
+
+#### **Phase 3: Testing & Integration** (Week 3 - Days 11-15)
+**Goal**: Comprehensive test coverage, edge cases, production validation
+
+**Key Deliverables**:
+- ✅ P0 tests passing (100% - basic generics)
+- ✅ P1 tests passing (95% - method-level & mixed)
+- ✅ P2 tests passing (90% - constraints & variance)
+- ✅ Edge cases handled (star projections, recursive generics)
+- ✅ Performance benchmarks (<10% overhead)
+- ✅ Documentation updated
+- ✅ Production validation with publishToMavenLocal
+
+**Files Created**:
+- `compiler/src/test/kotlin/.../GenericFakeGenerationTest.kt`
+- `compiler/src/main/kotlin/.../ir/GenericEdgeCaseHandler.kt`
+- Updated samples with generic examples
+
+---
+
+### 🎯 Strategy: Full IR Substitution
+
+**Why Full IR Instead of Type Erasure?**
+
+1. **Type Safety**: Preserves complete type information at compile time
+2. **Metro Alignment**: Uses proven patterns from production DI framework
+3. **Developer Experience**: `fakeRepository<User> {}` is intuitive and type-safe
+4. **Future-Proof**: Supports all generic scenarios (class, method, mixed, constraints)
+5. **MAP Quality**: Minimum Awesome Product demands excellence
+
+**Core APIs Used**:
+- `IrTypeSubstitutor` - Class-level generic substitution
+- `IrTypeParameterRemapper` - Method-level generic remapping
+- `GenericPatternAnalyzer` - Already exists! Detects patterns
+- `kotlin-compile-testing` - Multi-stage validation (generation → structure → use-site type safety)
+
+### 📊 Progress Tracking
+
+| Phase | Status | Completion | Tests Passing |
+|-------|--------|------------|---------------|
+| Planning | ✅ Done | 100% | N/A |
+| Phase 1 | ⏳ Pending | 0% | - |
+| Phase 2 | ⏳ Pending | 0% | - |
+| Phase 3 | ⏳ Pending | 0% | - |
+
+**Test Matrix Progress**:
+- P0 (Basic): 0/15 passing (Target: 100%)
+- P1 (Method/Mixed): 0/10 passing (Target: 95%)
+- P2 (Constraints): 0/8 passing (Target: 90%)
+- P3 (Edge Cases): 0/12 passing (Target: 80%)
+
+**Track Progress**: See [CHANGELOG.md](./.claude/docs/implementation/generics/CHANGELOG.md) for daily updates
+
+### 🚨 Critical Success Factors
+
+1. **TDD Absolutely**: GIVEN-WHEN-THEN tests written BEFORE implementation
+2. **Metro Patterns**: Check alignment before major architectural decisions
+3. **Multi-Stage Validation**: Test generation → structure → **use-site type safety** (most critical!)
+4. **Incremental Progress**: Complete one phase before starting next
+5. **Performance Monitoring**: Track compilation time overhead (<10% target)
+
+### 🔗 Quick Commands
+
+```bash
+# Read planning documentation
+cat .claude/docs/implementation/generics/QUICK-START.md
+cat .claude/docs/implementation/generics/ROADMAP.md
+
+# Validate Kotlin APIs
+/consult-kotlin-api IrTypeSubstitutor
+
+# Check Metro alignment
+/validate-metro-alignment
+
+# Start Phase 1
+# Follow: .claude/docs/implementation/generics/phase1-core-infrastructure.md
+```
+
+---
+
 ## 📊 Status Atual do Projeto
 
 ### **✅ Funcionando (Production-Ready)**
@@ -294,12 +463,6 @@ class UnifiedFaktIrGenerationExtensionTest {
 
 ### **❌ Não Funcionando (Conhecido)**
 
-#### **Generic Type Handling**
-- ❌ Interface-level generics (`interface Repo<T>`)
-- ❌ Method-level generics (`fun <T> process()`)
-- ❌ Generic constraints (`<T : Comparable<T>>`)
-- ❌ Variance annotations (`out T`, `in T`)
-
 #### **Advanced Features**
 - ❌ Inline functions
 - ❌ Operator overloading
@@ -315,11 +478,21 @@ class UnifiedFaktIrGenerationExtensionTest {
 
 ---
 
-### **🔧 Em Progresso (Phase 2 Focus)**
+### **🔧 Em Progresso**
+
+#### **Generic Type Support** (Active Development - See section above ⬆️)
+- 🔧 Interface-level generics (`interface Repo<T>`) - **Phase 1**
+- 🔧 Method-level generics (`fun <T> process()`) - **Phase 1**
+- 🔧 Generic constraints (`<T : Comparable<T>>`) - **Phase 2**
+- 🔧 Variance annotations (`out T`, `in T`) - **Phase 2**
+- 🔧 Star projections (`List<*>`) - **Phase 3**
+- 🔧 Recursive generics (`Node<T : Node<T>>`) - **Phase 3**
+
+> **Full Implementation Plan**: See "Generic Type Support Implementation" section above
+> **Documentation**: `.claude/docs/implementation/generics/`
+> **Timeline**: 2-3 weeks
 
 #### **Type System Improvements**
-- 🔧 Generic type scoping resolution (class-level vs method-level)
-- 🔧 Smart default values for generic types
 - 🔧 Cross-module type imports
 - 🔧 Function type resolution (`(T) -> R` syntax)
 

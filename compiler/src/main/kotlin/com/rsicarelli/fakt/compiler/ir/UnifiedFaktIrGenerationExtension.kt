@@ -21,7 +21,6 @@ import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
-import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.util.kotlinFqName
 import org.jetbrains.kotlin.ir.util.packageFqName
@@ -37,7 +36,6 @@ import org.jetbrains.kotlin.ir.util.packageFqName
  *
  * Based on the IR-Native demonstration architecture.
  */
-@OptIn(UnsafeDuringIrConstructionAPI::class)
 class UnifiedFaktIrGenerationExtension(
     private val messageCollector: MessageCollector? = null,
     private val outputDir: String? = null,
@@ -180,18 +178,19 @@ class UnifiedFaktIrGenerationExtension(
             val interfaceName = fakeInterface.name.asString()
             val typeInfo = createTypeInfo(fakeInterface)
 
+            // Phase 2: Detect generic pattern
+            val genericPattern = com.rsicarelli.fakt.compiler.ir.analysis.GenericPatternAnalyzer().analyzeInterface(fakeInterface)
+
             when {
                 !optimizations.needsRegeneration(typeInfo) -> {
                     messageCollector?.reportInfo("Fakt: Skipping unchanged interface: $interfaceName")
                     null
                 }
 
-                interfaceAnalyzer.checkGenericSupport(fakeInterface) != null -> {
-                    val genericError = interfaceAnalyzer.checkGenericSupport(fakeInterface)
-                    messageCollector?.reportInfo("Fakt: Skipping generic interface: $genericError")
-                    null
-                }
-
+                // ✅ PHASE 2: Class-level generics supported!
+                // ✅ PHASE 3: Method-level generics supported!
+                // ✅ PHASE 3: Mixed generics (class + method) now enabled!
+                // All patterns (NoGenerics, ClassLevelGenerics, MethodLevelGenerics, MixedGenerics) will be processed
                 else -> fakeInterface to typeInfo
             }
         }

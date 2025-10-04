@@ -38,15 +38,23 @@ internal class ImplementationGenerator(
         fakeClassName: String,
     ): String =
         buildString {
-            // Handle interface-level generics (Option 1: Use Any for type erasure)
+            // Phase 2: Generate generic class declaration with type parameters
+            val typeParameters =
+                if (analysis.typeParameters.isNotEmpty()) {
+                    "<${analysis.typeParameters.joinToString(", ")}>"
+                } else {
+                    ""
+                }
+
+            // Generate interface name with type parameters
             val interfaceWithGenerics =
                 if (analysis.typeParameters.isNotEmpty()) {
-                    val genericParams = analysis.typeParameters.joinToString(", ") { "Any" }
-                    "${analysis.interfaceName}<$genericParams>"
+                    "${analysis.interfaceName}$typeParameters"
                 } else {
                     analysis.interfaceName
                 }
-            appendLine("class $fakeClassName : $interfaceWithGenerics {")
+
+            appendLine("class $fakeClassName$typeParameters : $interfaceWithGenerics {")
 
             // Generate behavior fields for functions and properties
             append(generateBehaviorProperties(analysis))
@@ -75,6 +83,15 @@ internal class ImplementationGenerator(
             // Generate configuration methods for functions (TYPE-SAFE: Use exact types)
             for (function in analysis.functions) {
                 val functionName = function.name
+                val hasMethodGenerics = function.typeParameters.isNotEmpty()
+
+                // Phase 3: Add method-level type parameters to configure function
+                val methodTypeParams =
+                    if (hasMethodGenerics) {
+                        "<${function.typeParameters.joinToString(", ")}>"
+                    } else {
+                        ""
+                    }
 
                 // Use EXACT parameter types for type-safe configuration
                 val parameterTypes =
@@ -102,11 +119,30 @@ internal class ImplementationGenerator(
                         preserveTypeParameters = true,
                     )
                 val suspendModifier = if (function.isSuspend) "suspend " else ""
-                appendLine(
-                    "    internal fun configure${functionName.capitalize()}(" +
-                        "behavior: $suspendModifier($parameterTypes) -> $returnType" +
-                        ") { ${functionName}Behavior = behavior }",
-                )
+
+                // Phase 3: For method-level generics, add generic configure method with cast
+                if (hasMethodGenerics) {
+                    // Build the cast signature with correct parameter arity
+                    val castParamTypes = if (function.parameters.isEmpty()) {
+                        ""
+                    } else {
+                        List(function.parameters.size) { "Any?" }.joinToString(", ")
+                    }
+
+                    appendLine(
+                        "    internal fun $methodTypeParams configure${functionName.capitalize()}(" +
+                            "behavior: $suspendModifier($parameterTypes) -> $returnType) {",
+                    )
+                    appendLine("        @Suppress(\"UNCHECKED_CAST\")")
+                    appendLine("        ${functionName}Behavior = behavior as $suspendModifier($castParamTypes) -> Any?")
+                    appendLine("    }")
+                } else {
+                    appendLine(
+                        "    internal fun configure${functionName.capitalize()}(" +
+                            "behavior: $suspendModifier($parameterTypes) -> $returnType" +
+                            ") { ${functionName}Behavior = behavior }",
+                    )
+                }
             }
 
             // Generate configuration methods for properties (TYPE-SAFE: Use exact types)
@@ -132,6 +168,14 @@ internal class ImplementationGenerator(
             // Generate method implementations (TYPE-SAFE: No casting needed!)
             for (function in analysis.functions) {
                 val functionName = function.name
+
+                // Phase 3: Preserve method-level type parameters
+                val methodTypeParams =
+                    if (function.typeParameters.isNotEmpty()) {
+                        "<${function.typeParameters.joinToString(", ")}>"
+                    } else {
+                        ""
+                    }
 
                 // Preserve EXACT method signature from interface
                 val returnTypeString =
@@ -160,8 +204,16 @@ internal class ImplementationGenerator(
                 val suspendModifier = if (function.isSuspend) "suspend " else ""
 
                 // Generate method with NO CASTING - types match exactly!
-                appendLine("    override ${suspendModifier}fun $functionName($parameters): $returnTypeString {")
-                appendLine("        return ${functionName}Behavior($parameterNames)")
+                // Phase 3: Include method-level type parameters
+                appendLine("    override ${suspendModifier}fun $methodTypeParams $functionName($parameters): $returnTypeString {")
+
+                // Phase 3: For method-level generics, add @Suppress and cast
+                if (function.typeParameters.isNotEmpty()) {
+                    appendLine("        @Suppress(\"UNCHECKED_CAST\")")
+                    appendLine("        return ${functionName}Behavior($parameterNames) as $returnTypeString")
+                } else {
+                    appendLine("        return ${functionName}Behavior($parameterNames)")
+                }
                 appendLine("    }")
             }
 
@@ -189,7 +241,22 @@ internal class ImplementationGenerator(
             for (function in analysis.functions) {
                 val functionName = function.name
 
-                // Use EXACT parameter types for type safety
+                // Phase 3: Handle method-level generics specially
+                // Method-level type parameters cannot be used in instance fields
+                // So we use Any? for those and cast at the method level
+                val hasMethodGenerics = function.typeParameters.isNotEmpty()
+                val methodTypeParamNames = function.typeParameters.toSet()
+
+                // Helper function to check if a type string contains method-level type parameters
+                fun containsMethodTypeParam(typeString: String): Boolean {
+                    return methodTypeParamNames.any { typeParam ->
+                        // Check if type parameter appears as a standalone word in the type string
+                        // This handles cases like "T", "List<T>", "() -> T", etc.
+                        typeString.contains(Regex("\\b$typeParam\\b"))
+                    }
+                }
+
+                // Use EXACT parameter types for type safety (or Any? for method generics)
                 val parameterTypes =
                     if (function.parameters.isEmpty()) {
                         ""
@@ -200,21 +267,35 @@ internal class ImplementationGenerator(
                                 if (param.isVararg) {
                                     unwrapVarargsType(param)
                                 } else {
-                                    typeResolver.irTypeToKotlinString(
-                                        param.type,
-                                        preserveTypeParameters = true,
-                                    )
+                                    val typeString =
+                                        typeResolver.irTypeToKotlinString(
+                                            param.type,
+                                            preserveTypeParameters = true,
+                                        )
+                                    // If this type contains a method-level type parameter, use Any?
+                                    if (hasMethodGenerics && containsMethodTypeParam(typeString)) {
+                                        "Any?"
+                                    } else {
+                                        typeString
+                                    }
                                 }
                             varargsPrefix + paramType
                         }
                     }
 
-                // Use EXACT return type for type safety
-                val returnType =
+                // Use EXACT return type for type safety (or Any? for method generics)
+                val returnTypeString =
                     typeResolver.irTypeToKotlinString(
                         function.returnType,
                         preserveTypeParameters = true,
                     )
+                val returnType =
+                    if (hasMethodGenerics && containsMethodTypeParam(returnTypeString)) {
+                        "Any?"
+                    } else {
+                        returnTypeString
+                    }
+
                 val defaultLambda = generateTypeSafeDefault(function)
 
                 val suspendModifier = if (function.isSuspend) "suspend " else ""
@@ -239,10 +320,76 @@ internal class ImplementationGenerator(
     /**
      * Generate type-safe default for functions.
      * Uses broad Kotlin stdlib support with exact types - no casting!
+     *
+     * For method-level generics like fun <T> executeStep(step: () -> T): T,
+     * generates identity behavior that executes the function parameter.
+     *
+     * For identity functions like fun process(item: T): T (class-level T),
+     * generates identity behavior { it }.
      */
     private fun generateTypeSafeDefault(function: FunctionAnalysis): String {
         val returnType =
             typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+
+        // Check if this is a method-level generic function
+        val hasMethodGenerics = function.typeParameters.isNotEmpty()
+        val methodTypeParamNames = function.typeParameters.toSet()
+
+        // For method-level generics, check if first param is function returning T
+        if (hasMethodGenerics && function.parameters.isNotEmpty()) {
+            val firstParamType = typeResolver.irTypeToKotlinString(
+                function.parameters[0].type,
+                preserveTypeParameters = true
+            )
+
+            // If first parameter is a function type returning a type parameter (e.g., () -> T)
+            // Generate identity behavior: execute the function
+            val isExecutableParam = methodTypeParamNames.any { typeParam ->
+                firstParamType.matches(Regex(".*\\(.*\\)\\s*->\\s*$typeParam\\b.*"))
+            }
+
+            if (isExecutableParam) {
+                // Generate identity lambda that executes the function parameter
+                val paramName = function.parameters[0].name
+                return if (function.isSuspend) {
+                    if (function.parameters.size == 1) {
+                        "{ $paramName -> ($paramName as suspend () -> Any?)() }"
+                    } else {
+                        // Multiple params: execute first one, ignore others
+                        val params = function.parameters.mapIndexed { idx, p ->
+                            if (idx == 0) p.name else "_"
+                        }.joinToString(", ")
+                        "{ $params -> ($paramName as suspend () -> Any?)() }"
+                    }
+                } else {
+                    if (function.parameters.size == 1) {
+                        "{ $paramName -> ($paramName as () -> Any?)() }"
+                    } else {
+                        // Multiple params: execute first one, ignore others
+                        val params = function.parameters.mapIndexed { idx, p ->
+                            if (idx == 0) p.name else "_"
+                        }.joinToString(", ")
+                        "{ $params -> ($paramName as () -> Any?)() }"
+                    }
+                }
+            }
+        }
+
+        // Check for identity function pattern: fun process(item: T): T
+        // Single parameter with same type as return type → identity function
+        if (function.parameters.size == 1 && !hasMethodGenerics) {
+            val paramType = typeResolver.irTypeToKotlinString(
+                function.parameters[0].type,
+                preserveTypeParameters = true
+            )
+
+            // If param type matches return type exactly, it's an identity function
+            if (paramType == returnType) {
+                return "{ it }"
+            }
+        }
+
+        // Fallback to stdlib defaults
         val defaultValue = generateKotlinStdlibDefault(returnType)
 
         return if (function.parameters.isEmpty()) {
@@ -270,10 +417,15 @@ internal class ImplementationGenerator(
      * Orchestrates primitive, collection, and stdlib default generation.
      */
     private fun generateKotlinStdlibDefault(typeString: String): String =
-        getPrimitiveDefaults(typeString)
-            ?: getCollectionDefaults(typeString)
-            ?: getKotlinStdlibDefaults(typeString)
-            ?: handleDomainType(typeString)
+        // Check nullable types FIRST - they always default to null
+        if (typeString.endsWith("?")) {
+            "null"
+        } else {
+            getPrimitiveDefaults(typeString)
+                ?: getCollectionDefaults(typeString)
+                ?: getKotlinStdlibDefaults(typeString)
+                ?: handleDomainType(typeString)
+        }
 
     /**
      * Returns default values for Kotlin primitive types.
@@ -375,16 +527,16 @@ internal class ImplementationGenerator(
         typeString: String,
         constructor: String,
     ): String {
-        val typeParam = extractFirstTypeParameter(typeString)
-        return "$constructor<$typeParam>()"
+        // Type inference handles nested generics correctly (e.g., List<List<T>>)
+        return "$constructor()"
     }
 
     private fun extractAndCreateMap(
         typeString: String,
         constructor: String,
     ): String {
-        val typeParams = extractMapTypeParameters(typeString)
-        return "$constructor<${typeParams.first}, ${typeParams.second}>()"
+        // Type inference handles nested generics correctly (e.g., Map<K, List<V>>)
+        return "$constructor()"
     }
 
     private fun extractAndCreateArray(typeString: String): String {

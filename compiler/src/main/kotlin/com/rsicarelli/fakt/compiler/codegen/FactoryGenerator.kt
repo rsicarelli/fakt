@@ -26,21 +26,56 @@ internal class FactoryGenerator {
         val factoryFunctionName = "fake$interfaceName"
         val configClassName = "Fake${interfaceName}Config"
 
-        // Handle interface-level generics for NoGenerics pattern
+        // Phase 2: Generate reified generic factory function
+        val hasGenerics = analysis.typeParameters.isNotEmpty()
+
+        val typeParameters =
+            if (hasGenerics) {
+                "<${analysis.typeParameters.joinToString(", ") { "reified $it" }}>"
+            } else {
+                ""
+            }
+
         val interfaceWithGenerics =
-            if (analysis.typeParameters.isNotEmpty()) {
-                val genericParams = analysis.typeParameters.joinToString(", ") { "Any" }
+            if (hasGenerics) {
+                val genericParams = analysis.typeParameters.joinToString(", ")
                 "$interfaceName<$genericParams>"
             } else {
                 interfaceName
             }
 
+        val configWithGenerics =
+            if (hasGenerics) {
+                val genericParams = analysis.typeParameters.joinToString(", ")
+                "$configClassName<$genericParams>"
+            } else {
+                configClassName
+            }
+
+        val inlineModifier = if (hasGenerics) "inline " else ""
+
         return buildString {
+            // Format: inline fun <reified T> fakeFoo(...) or fun fakeFoo(...)
+            val functionSignature =
+                if (hasGenerics) {
+                    "inline fun $typeParameters $factoryFunctionName"
+                } else {
+                    "fun $factoryFunctionName"
+                }
+
             appendLine(
-                "fun $factoryFunctionName(configure: $configClassName.() -> Unit = {}): " +
-                    "$interfaceWithGenerics {",
+                "$functionSignature(configure: $configWithGenerics.() -> Unit = {}): $interfaceWithGenerics {",
             )
-            appendLine("    return $fakeClassName().apply { $configClassName(this).configure() }")
+
+            // Phase 2: Use simple type parameters for constructor (not reified)
+            val constructorTypeParams =
+                if (hasGenerics) {
+                    "<${analysis.typeParameters.joinToString(", ")}>"
+                } else {
+                    ""
+                }
+
+            appendLine("    return $fakeClassName$constructorTypeParams().apply { $configWithGenerics(this).configure() }")
             appendLine("}")
         }
     }

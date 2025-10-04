@@ -10,6 +10,7 @@ import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.IrTypeArgument
 import org.jetbrains.kotlin.ir.types.IrTypeProjection
+import org.jetbrains.kotlin.ir.types.IrTypeSubstitutor
 import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.types.isAny
 import org.jetbrains.kotlin.ir.types.isBoolean
@@ -41,6 +42,35 @@ internal class TypeResolver {
      * @return String representation of the type
      */
     fun irTypeToKotlinString(irType: IrType): String = irTypeToKotlinString(irType, preserveTypeParameters = false)
+
+    /**
+     * Converts IR type to readable Kotlin string representation with type substitution.
+     *
+     * This method applies type parameter substitution (e.g., T -> String) before converting
+     * to string representation. Essential for generic fake generation.
+     *
+     * Example:
+     * ```
+     * interface Repository<T> { fun save(item: T): T }
+     *
+     * // With substitutor mapping T -> String:
+     * irTypeToKotlinStringWithSubstitution(TType, substitutor) // "String"
+     * ```
+     *
+     * @param irType The IR type to convert
+     * @param substitutor The type substitutor to apply
+     * @return String representation with substitutions applied
+     */
+    fun irTypeToKotlinStringWithSubstitution(
+        irType: IrType,
+        substitutor: IrTypeSubstitutor
+    ): String {
+        // First apply the substitution, then convert to string
+        val substitutedType = substitutor.substitute(irType)
+
+        // Convert the substituted type to string, preserving any remaining type parameters
+        return irTypeToKotlinString(substitutedType, preserveTypeParameters = true)
+    }
 
     /**
      * Converts IR type to readable Kotlin string representation with optional type parameter preservation.
@@ -350,7 +380,7 @@ internal class TypeResolver {
 
         return when {
             className == "Result" -> "Result.success(Any())"
-            className == "Array" -> "emptyArray<Any>()"
+            className == "Array" -> "emptyArray()"
             className == "Pair" -> "Pair(null, null)"
             className == "Triple" -> "Triple(null, null, null)"
             className.startsWith("Function") -> "{ TODO(\"Function not implemented\") }"
@@ -372,10 +402,10 @@ internal class TypeResolver {
         if (packageName != "kotlin.collections") return null
 
         return when (className) {
-            "List", "MutableList" -> "emptyList<Any>()"
-            "Set", "MutableSet" -> "emptySet<Any>()"
-            "Map", "MutableMap" -> "emptyMap<Any, Any>()"
-            "Collection" -> "emptyList<Any>()"
+            "List", "MutableList" -> "emptyList()"
+            "Set", "MutableSet" -> "emptySet()"
+            "Map", "MutableMap" -> "emptyMap()"
+            "Collection" -> "emptyList()"
             else -> null
         }
     }

@@ -38,12 +38,30 @@ internal class ConfigurationDslGenerator(
         val interfaceName = analysis.interfaceName
         val configClassName = "Fake${interfaceName}Config"
 
+        // Phase 2: Add type parameters to config class
+        val typeParameters =
+            if (analysis.typeParameters.isNotEmpty()) {
+                "<${analysis.typeParameters.joinToString(", ")}>"
+            } else {
+                ""
+            }
+
         return buildString {
-            appendLine("class $configClassName(private val fake: $fakeClassName) {")
+            appendLine("class $configClassName$typeParameters(private val fake: $fakeClassName$typeParameters) {")
 
             // Generate configuration methods for functions (TYPE-SAFE: Use exact types)
             for (function in analysis.functions) {
                 val functionName = function.name
+                val hasMethodGenerics = function.typeParameters.isNotEmpty()
+
+                // Phase 3: Add method-level type parameters to DSL methods
+                val methodTypeParams =
+                    if (hasMethodGenerics) {
+                        "<${function.typeParameters.joinToString(", ")}>"
+                    } else {
+                        ""
+                    }
+
                 val parameterTypes = buildParameterTypeString(function.parameters)
 
                 val returnType =
@@ -53,7 +71,7 @@ internal class ConfigurationDslGenerator(
                     )
                 val suspendModifier = if (function.isSuspend) "suspend " else ""
                 appendLine(
-                    "    fun $functionName(behavior: $suspendModifier($parameterTypes) -> $returnType) " +
+                    "    fun $methodTypeParams $functionName(behavior: $suspendModifier($parameterTypes) -> $returnType) " +
                         "{ fake.configure${functionName.capitalize()}(behavior) }",
                 )
             }
