@@ -39,9 +39,12 @@ internal class ImplementationGenerator(
     ): String =
         buildString {
             // Phase 2: Generate generic class declaration with type parameters
+            // Handle where clause for multiple constraints on the same type parameter
+            val (typeParamsForHeader, whereClause) = formatTypeParametersWithWhereClause(analysis.typeParameters)
+
             val typeParameters =
-                if (analysis.typeParameters.isNotEmpty()) {
-                    "<${analysis.typeParameters.joinToString(", ")}>"
+                if (typeParamsForHeader.isNotEmpty()) {
+                    "<${typeParamsForHeader.joinToString(", ")}>"
                 } else {
                     ""
                 }
@@ -62,7 +65,12 @@ internal class ImplementationGenerator(
                     analysis.interfaceName
                 }
 
-            appendLine("class $fakeClassName$typeParameters : $interfaceWithGenerics {")
+            // Generate class header with optional where clause
+            if (whereClause.isNotEmpty()) {
+                appendLine("class $fakeClassName$typeParameters where $whereClause : $interfaceWithGenerics {")
+            } else {
+                appendLine("class $fakeClassName$typeParameters : $interfaceWithGenerics {")
+            }
 
             // Generate behavior fields for functions and properties
             append(generateBehaviorProperties(analysis))
@@ -759,4 +767,54 @@ internal class ImplementationGenerator(
      * Capitalize first letter of string.
      */
     private fun String.capitalize(): String = replaceFirstChar { it.uppercase() }
+
+    /**
+     * Formats type parameters for class headers, handling where clauses for multiple constraints.
+     *
+     * Examples:
+     * - ["T"] → (["T"], "")
+     * - ["T : Comparable<T>"] → (["T : Comparable<T>"], "")
+     * - ["T : CharSequence, Comparable<T>"] → (["T"], "T : CharSequence, T : Comparable<T>")
+     *
+     * @param typeParameters List of type parameter strings from InterfaceAnalysis
+     * @return Pair of (type parameters for header, where clause content)
+     */
+    private fun formatTypeParametersWithWhereClause(typeParameters: List<String>): Pair<List<String>, String> {
+        if (typeParameters.isEmpty()) {
+            return emptyList<String>() to ""
+        }
+
+        val paramsForHeader = mutableListOf<String>()
+        val whereClauses = mutableListOf<String>()
+
+        for (typeParam in typeParameters) {
+            // Check if this type parameter has multiple constraints (contains comma after colon)
+            val colonIndex = typeParam.indexOf(" :")
+            if (colonIndex == -1) {
+                // No constraints - just the name
+                paramsForHeader.add(typeParam)
+                continue
+            }
+
+            val name = typeParam.substring(0, colonIndex).trim()
+            val constraints = typeParam.substring(colonIndex + 2).trim() // +2 to skip " :"
+
+            // Split constraints by comma
+            val constraintList = constraints.split(",").map { it.trim() }
+
+            if (constraintList.size == 1) {
+                // Single constraint - can stay in header
+                paramsForHeader.add(typeParam)
+            } else {
+                // Multiple constraints - need where clause
+                paramsForHeader.add(name)
+                // Add each constraint as a separate where clause: T : CharSequence, T : Comparable<T>
+                constraintList.forEach { constraint ->
+                    whereClauses.add("$name : $constraint")
+                }
+            }
+        }
+
+        return paramsForHeader to whereClauses.joinToString(", ")
+    }
 }

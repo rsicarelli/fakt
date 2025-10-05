@@ -37,9 +37,12 @@ internal class FactoryGenerator {
                 emptyList()
             }
 
+        // Handle where clause for multiple constraints
+        val (typeParamsForHeader, whereClause) = formatTypeParametersWithWhereClause(analysis.typeParameters)
+
         val typeParameters =
             if (hasGenerics) {
-                "<${analysis.typeParameters.joinToString(", ") { "reified $it" }}>"
+                "<${typeParamsForHeader.joinToString(", ") { "reified $it" }}>"
             } else {
                 ""
             }
@@ -69,8 +72,11 @@ internal class FactoryGenerator {
                     "fun $factoryFunctionName"
                 }
 
+            // Add where clause if needed (after return type for functions!)
+            val whereClausePart = if (whereClause.isNotEmpty()) " where $whereClause" else ""
+
             appendLine(
-                "$functionSignature(configure: $configWithGenerics.() -> Unit = {}): $interfaceWithGenerics {",
+                "$functionSignature(configure: $configWithGenerics.() -> Unit = {}): $interfaceWithGenerics$whereClausePart {",
             )
 
             // Phase 2: Use simple type parameter names for constructor (not reified, no constraints)
@@ -84,5 +90,41 @@ internal class FactoryGenerator {
             appendLine("    return $fakeClassName$constructorTypeParams().apply { $configWithGenerics(this).configure() }")
             appendLine("}")
         }
+    }
+
+    /**
+     * Formats type parameters for factory function headers, handling where clauses for multiple constraints.
+     * Same logic as ImplementationGenerator's formatTypeParametersWithWhereClause.
+     */
+    private fun formatTypeParametersWithWhereClause(typeParameters: List<String>): Pair<List<String>, String> {
+        if (typeParameters.isEmpty()) {
+            return emptyList<String>() to ""
+        }
+
+        val paramsForHeader = mutableListOf<String>()
+        val whereClauses = mutableListOf<String>()
+
+        for (typeParam in typeParameters) {
+            val colonIndex = typeParam.indexOf(" :")
+            if (colonIndex == -1) {
+                paramsForHeader.add(typeParam)
+                continue
+            }
+
+            val name = typeParam.substring(0, colonIndex).trim()
+            val constraints = typeParam.substring(colonIndex + 2).trim()
+            val constraintList = constraints.split(",").map { it.trim() }
+
+            if (constraintList.size == 1) {
+                paramsForHeader.add(typeParam)
+            } else {
+                paramsForHeader.add(name)
+                constraintList.forEach { constraint ->
+                    whereClauses.add("$name : $constraint")
+                }
+            }
+        }
+
+        return paramsForHeader to whereClauses.joinToString(", ")
     }
 }

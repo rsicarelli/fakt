@@ -15,3 +15,8 @@ import com.rsicarelli.fakt.Fake
 interface AnalyticsService {
     fun track(event: String)
 }
+
+@Fake
+interface AnalyticsServiceExtended : AnalyticsService {
+    fun identify(userId: String)
+}

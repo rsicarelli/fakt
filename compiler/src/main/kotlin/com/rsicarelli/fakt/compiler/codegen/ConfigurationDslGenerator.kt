@@ -38,10 +38,13 @@ internal class ConfigurationDslGenerator(
         val interfaceName = analysis.interfaceName
         val configClassName = "Fake${interfaceName}Config"
 
+        // Handle where clause for multiple constraints
+        val (typeParamsForHeader, whereClause) = formatTypeParametersWithWhereClause(analysis.typeParameters)
+
         // Phase 2: Add type parameters to config class
         val typeParameters =
-            if (analysis.typeParameters.isNotEmpty()) {
-                "<${analysis.typeParameters.joinToString(", ")}>"
+            if (typeParamsForHeader.isNotEmpty()) {
+                "<${typeParamsForHeader.joinToString(", ")}>"
             } else {
                 ""
             }
@@ -55,7 +58,12 @@ internal class ConfigurationDslGenerator(
             }
 
         return buildString {
-            appendLine("class $configClassName$typeParameters(private val fake: $fakeClassName$typeParameterNames) {")
+            // Generate class header with optional where clause (after constructor for classes!)
+            if (whereClause.isNotEmpty()) {
+                appendLine("class $configClassName$typeParameters(private val fake: $fakeClassName$typeParameterNames) where $whereClause {")
+            } else {
+                appendLine("class $configClassName$typeParameters(private val fake: $fakeClassName$typeParameterNames) {")
+            }
 
             // Generate configuration methods for functions (TYPE-SAFE: Use exact types)
             for (function in analysis.functions) {
@@ -147,5 +155,41 @@ internal class ConfigurationDslGenerator(
         } else {
             "String" // Safe fallback for varargs
         }
+    }
+
+    /**
+     * Formats type parameters for config class headers, handling where clauses for multiple constraints.
+     * Same logic as ImplementationGenerator's formatTypeParametersWithWhereClause.
+     */
+    private fun formatTypeParametersWithWhereClause(typeParameters: List<String>): Pair<List<String>, String> {
+        if (typeParameters.isEmpty()) {
+            return emptyList<String>() to ""
+        }
+
+        val paramsForHeader = mutableListOf<String>()
+        val whereClauses = mutableListOf<String>()
+
+        for (typeParam in typeParameters) {
+            val colonIndex = typeParam.indexOf(" :")
+            if (colonIndex == -1) {
+                paramsForHeader.add(typeParam)
+                continue
+            }
+
+            val name = typeParam.substring(0, colonIndex).trim()
+            val constraints = typeParam.substring(colonIndex + 2).trim()
+            val constraintList = constraints.split(",").map { it.trim() }
+
+            if (constraintList.size == 1) {
+                paramsForHeader.add(typeParam)
+            } else {
+                paramsForHeader.add(name)
+                constraintList.forEach { constraint ->
+                    whereClauses.add("$name : $constraint")
+                }
+            }
+        }
+
+        return paramsForHeader to whereClauses.joinToString(", ")
     }
 }

@@ -1,9 +1,12 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
 
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
     id("fakt-kotlin-jvm")
     alias(libs.plugins.mavenPublish)
+    alias(libs.plugins.shadow)
 }
 
 dependencies {
@@ -29,6 +32,26 @@ tasks {
                 "Implementation-Version" to project.version
             )
         }
+    }
+
+    shadowJar {
+        archiveClassifier.set("")
+
+        // Don't relocate Kotlin compiler classes - they're provided by the compiler
+        // Just include all dependencies as-is
+        configurations = listOf(project.configurations.runtimeClasspath.get())
+
+        manifest {
+            attributes(
+                "Implementation-Title" to project.name,
+                "Implementation-Version" to project.version
+            )
+        }
+    }
+
+    // Make the shadow jar the main artifact
+    named("build") {
+        dependsOn(shadowJar)
     }
 
     test {

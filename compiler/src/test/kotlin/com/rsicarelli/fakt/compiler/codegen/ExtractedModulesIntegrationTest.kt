@@ -26,7 +26,7 @@ class ExtractedModulesIntegrationTest {
     private fun compilationSucceeded(): Boolean = findGeneratedKotlinFiles().isNotEmpty()
 
     private fun findGeneratedKotlinFiles(): List<File> {
-        val generatedDir = File("../samples/single-module/build/generated/fakt/common/test/kotlin")
+        val generatedDir = File("../samples/kmp-comprehensive-test/build/generated/fakt/common/test/kotlin")
 
         if (!generatedDir.exists()) return emptyList()
 
