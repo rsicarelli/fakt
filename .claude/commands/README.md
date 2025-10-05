@@ -6,6 +6,56 @@
 
 ## 🎯 Available Commands
 
+### 🚀 Roadmap Execution
+
+#### `/execute-roadmap [phase] [feature]`
+**Execute Fakt extended roadmap with TDD RED-GREEN cycle**
+
+- Analyzes current progress across all phases (Phase 1, 2, 3)
+- Detects which feature you're working on
+- Creates detailed TDD todo list (RED → GREEN cycle)
+- Updates phase-specific CHANGELOGs
+- Updates overall current-status.md
+- Validates alignment with Metro patterns and testing standards
+
+**Use Cases**:
+- Starting work on roadmap features (final classes, singleton objects, data builders, etc.)
+- Resuming after breaks
+- Checking current phase and next steps
+- Getting detailed TDD todo list for active feature
+- Tracking progress across the entire roadmap
+
+**Examples**:
+```bash
+# Auto-detect current phase and feature
+/execute-roadmap
+
+# Start/resume specific phase
+/execute-roadmap phase1           # Performance Dominance
+/execute-roadmap phase2           # Idiomatic Kotlin
+/execute-roadmap phase3           # KMP Support
+
+# Work on specific feature
+/execute-roadmap phase1 final-classes
+/execute-roadmap phase1 singleton-objects
+/execute-roadmap phase1 top-level-functions
+/execute-roadmap phase2 data-classes
+/execute-roadmap phase2 sealed-hierarchies
+/execute-roadmap phase2 flow-producers
+/execute-roadmap phase3 kmp
+
+# Reset a feature and start fresh
+/execute-roadmap phase1 singleton-objects --reset
+```
+
+**Related Docs**:
+- [Main Roadmap](../docs/implementation/roadmap.md)
+- [Phase 1: Performance](../docs/implementation/phase1-performance-dominance/README.md)
+- [Phase 2: Idiomatic Kotlin](../docs/implementation/phase2-idiomatic-kotlin/README.md)
+- [Phase 3: KMP](../docs/implementation/phase3-kmp-dominance/README.md)
+
+---
+
 ### 🚀 Generic Type Implementation
 
 #### `/resume-and-update-generics [phase]`
@@ -413,4 +463,4 @@ Commands are markdown files in `.claude/commands/` with this structure:
 ---
 
 Last Updated: January 2025
-Total Commands: 14
+Total Commands: 15

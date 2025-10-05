@@ -67,7 +67,7 @@ internal class ImplementationGenerator(
 
             // Generate class header with optional where clause
             if (whereClause.isNotEmpty()) {
-                appendLine("class $fakeClassName$typeParameters where $whereClause : $interfaceWithGenerics {")
+                appendLine("class $fakeClassName$typeParameters : $interfaceWithGenerics where $whereClause {")
             } else {
                 appendLine("class $fakeClassName$typeParameters : $interfaceWithGenerics {")
             }
@@ -110,22 +110,25 @@ internal class ImplementationGenerator(
                     }
 
                 // Use EXACT parameter types for type-safe configuration
+                // NOTE: Configure methods use function types, which CANNOT have vararg modifiers
+                // Varargs are converted to Array<out T> for function type signatures
                 val parameterTypes =
                     if (function.parameters.isEmpty()) {
                         ""
                     } else {
                         function.parameters.joinToString(", ") { param ->
-                            val varargsPrefix = if (param.isVararg) "vararg " else ""
                             val paramType =
                                 if (param.isVararg) {
-                                    unwrapVarargsType(param)
+                                    // For varargs, use Array<out T> in function type (NOT vararg keyword)
+                                    val elementType = unwrapVarargsType(param)
+                                    "Array<out $elementType>"
                                 } else {
                                     typeResolver.irTypeToKotlinString(
                                         param.type,
                                         preserveTypeParameters = true,
                                     )
                                 }
-                            varargsPrefix + paramType
+                            paramType
                         }
                     }
 
@@ -305,15 +308,19 @@ internal class ImplementationGenerator(
                         .toSet()
 
                 // Use EXACT parameter types for type safety (or Any? for method generics)
+                // NOTE: Behavior properties use function types, which CANNOT have vararg modifiers
+                // Varargs are converted to Array<out T> for function type signatures
                 val parameterTypes =
                     if (function.parameters.isEmpty()) {
                         ""
                     } else {
                         function.parameters.joinToString(", ") { param ->
-                            val varargsPrefix = if (param.isVararg) "vararg " else ""
                             val paramType =
                                 if (param.isVararg) {
-                                    unwrapVarargsType(param)
+                                    // For varargs, use Array<out T> in function type (NOT vararg keyword)
+                                    // unwrapVarargsType returns element type T, wrap it in Array<out T>
+                                    val elementType = unwrapVarargsType(param)
+                                    "Array<out $elementType>"
                                 } else {
                                     val typeString =
                                         typeResolver.irTypeToKotlinString(
@@ -328,7 +335,7 @@ internal class ImplementationGenerator(
                                         typeString
                                     }
                                 }
-                            varargsPrefix + paramType
+                            paramType
                         }
                     }
 

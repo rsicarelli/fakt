@@ -1,248 +1,252 @@
-# KtFakes Implementation Roadmap - September 2025 Update
+# 🚀 Fakt Extended Roadmap: Beyond Interfaces
 
-> **Status**: VALIDATED - 85% MAP Complete! 🎉
-> **Build Status**: ✅ PASSING (6 runtime tests, clean compilation)
-> **Current Achievement**: Phase 1 EXCEEDED targets (75% → 85%)
-> **Next Milestone**: Phase 2A Generic Type Scoping (1-2 weeks)
-> **Philosophy**: MAP (Minimum Awesome Product) - Always Production Quality
-> **Testing Standard**: [📋 Testing Guidelines](.claude/docs/validation/testing-guidelines.md)
+> **Strategic Vision**: From interface faking to comprehensive Kotlin testing solution
+> **Timeline**: Q1-Q3 2025
+> **Last Updated**: January 2025
 
-## 🎉 **Phase 1: FOUNDATION & CRITICAL FIXES - EXCEEDED TARGETS ✅**
+## Executive Summary
 
-**Target**: 75% completion | **Achieved**: 85% completion | **Status**: ✅ EXCEEDED
+Based on comprehensive research of the Kotlin testing ecosystem, Fakt is uniquely positioned to solve critical pain points that existing tools (MockK, Mockito, KSP-based libraries) fail to address effectively. The testing landscape is undergoing a paradigm shift from mock-heavy to fake-based testing, and developers face severe performance and reliability issues with current tooling.
 
-### **✅ Validated Achievements (September 2025 Status Check)**
+**Key Research Findings:**
 
-#### **Core Infrastructure - COMPLETE ✅**
-- **Build System**: ✅ Shadow JAR, Gradle 8.0+, multi-module support
-- **Testing Framework**: ✅ 6 runtime tests passing, 4 BDD test files
-- **Architecture**: ✅ Unified IR-native implementation with GenericPatternAnalyzer
-- **Code Generation**: ✅ Professional quality output (95% standard)
+1. **Performance Crisis**: MockK's `mockkObject` is **1300x slower** than injected fakes. Mockito-inline causes 3x slower test suites.
+2. **KMP Market Gap**: KSP-based tools (Mockative, Mokkery) are unstable, breaking with Kotlin updates. Runtime mocking is impossible on Native/Wasm.
+3. **Paradigm Shift**: Industry moving to "Fakes over Mocks" (see Google's Now in Android app - zero mocking frameworks).
+4. **Boilerplate Pain**: Manual test data builders, sealed state instantiation, and Flow testing require significant setup.
 
-#### **Critical Fixes - RESOLVED ✅**
-- **Generic Type Parameter Detection**: `<T>` parameters preserved in method signatures
-- **Smart Default Value System**: Zero TODO compilation blockers
-- **Function Type Resolution**: Perfect `(T) -> R` lambda syntax
-- **Suspend Function Support**: Full coroutines integration
-- **Factory Functions**: `fakeService {}` DSL working
+**Fakt's Strategic Advantage:**
 
-#### **Quality Metrics Achieved ✅**
-- **Build Success Rate**: 100% (Shadow JAR builds, tests pass)
-- **Infrastructure Readiness**: 100% (Gradle, multi-module, testing)
-- **Code Generation Quality**: 95% (Professional output confirmed)
-- **TODO Compilation Blockers**: 0% (Completely eliminated)
-- **Function Type Generation**: 100% (Perfect syntax)
-
-### **✅ Working Feature Set (Validated)**
-- **Basic interfaces**: Methods and properties ✅
-- **Suspend functions**: `suspend fun getData(): String` ✅
-- **Properties**: `val name: String` ✅
-- **Factory functions**: `fakeService {}` ✅
-- **Configuration DSL**: Type-safe behavior setup ✅
-- **Multi-interface support**: Confirmed in samples/ ✅
-
-## 🔍 **Phase 2: GENERIC TYPE SCOPING ARCHITECTURE (CURRENT PRIORITY)**
-
-> **STATUS**: Architectural Enhancement - Not a Bug, but a Design Improvement
-> **PROGRESS**: Core issue identified with clear solution paths
-> **IMPACT**: Final step to achieve full real-world compatibility
-
-### **The Core Challenge Identified**
-
-Our Phase 1 success revealed an architectural opportunity: the current approach creates a type system mismatch between class-level behavior properties and method-level generic implementations:
-
-```kotlin
-class FakeAsyncDataServiceImpl : AsyncDataService {
-    // ❌ Class-level: Type parameters not in scope, must use Any
-    private var processBehavior: suspend (Any) -> Any = { _ -> "" as Any }
-
-    // ✅ Method-level: Type parameters in scope, correct signature
-    override suspend fun <T>processData(data: T): T = processBehavior(data)
-    //                                             ^^^^^^^^^^^^^^^^^^
-    //                                   Cannot bridge Any -> Any to T -> T
-}
-```
-
-### **🎯 Phase 2A: Dynamic Type Casting Solution (Recommended - 2-3 weeks)**
-
-**Approach**: Implement safe type casting with identity functions as defaults
-
-```kotlin
-class FakeAsyncDataServiceImpl : AsyncDataService {
-    // Use Any? for maximum flexibility, identity function as default
-    private var processBehavior: suspend (Any?) -> Any? = { it }
-
-    override suspend fun <T>processData(data: T): T {
-        @Suppress("UNCHECKED_CAST")
-        return processBehavior(data) as T
-    }
-
-    // Configuration remains type-safe for developer
-    fun configureProcessData(behavior: suspend (Any?) -> Any?) {
-        processBehavior = behavior
-    }
-}
-```
-
-**Benefits**:
-- ✅ Minimal changes to current architecture
-- ✅ Maintains backward compatibility
-- ✅ Safe defaults with identity functions
-- ✅ Proper type casting with suppressed warnings
-- ✅ Works with all existing infrastructure
-
-**Implementation Tasks**:
-1. **Week 1**: Update `irTypeToKotlinString()` for Any? casting
-2. **Week 2**: Implement identity function defaults
-3. **Week 3**: Add @Suppress annotations and testing
-
-### **🔮 Phase 2B: Advanced Generic Class Generation (Future - 2-3 months)**
-
-**Approach**: Generate generic fake classes when interfaces have class-level generics
-
-```kotlin
-class FakeGenericRepositoryImpl<T> : GenericRepository<T> {
-    private var findByIdBehavior: (String) -> T? = { null }
-    private var saveBehavior: (T) -> T = { it }
-
-    override fun findById(id: String): T? = findByIdBehavior(id)
-    override fun save(item: T): T = saveBehavior(item)
-
-    // Type-safe configuration
-    fun configureFindById(behavior: (String) -> T?) { findByIdBehavior = behavior }
-    fun configureSave(behavior: (T) -> T) { saveBehavior = behavior }
-}
-
-// Factory function handles generic instantiation
-fun <T> fakeGenericRepository(): GenericRepository<T> = FakeGenericRepositoryImpl<T>()
-```
-
-**Benefits**:
-- ✅ Full type safety for class-level generics
-- ✅ Optimal developer experience
-- ✅ No runtime overhead
-- ✅ Perfect IntelliJ auto-completion
-
-**Implementation Tasks**:
-1. **Month 1**: Interface analysis system (detect class vs method generics)
-2. **Month 2**: Generic class generation strategy
-3. **Month 3**: Hybrid approach integration with Phase 2A
-
-## 🧪 **Phase 3: PRODUCTION POLISH (Future - 1-2 months)**
-
-### **3.1: Technical Debt Cleanup**
-- **FIR Implementation Upgrade**: Replace "For MVP" placeholders
-- **ThreadSafetyChecker**: Real implementation with analysis
-- **Error Diagnostics**: Meaningful messages and IDE integration
-- **Parameter Extraction**: Real annotation parameter parsing
-
-### **3.2: Advanced Features**
-- **Call Tracking**: `@Fake(trackCalls = true)` implementation
-- **Import Generation**: Cross-module type resolution
-- **Advanced Constraints**: `where R : TValue` support
-- **Varargs Support**: Proper `vararg` parameter handling
-
-### **3.3: Performance & Scale**
-- **Incremental Compilation**: Optimize build times
-- **Memory Optimization**: Reduce compiler plugin overhead
-- **Large Project Support**: Handle 100+ interfaces
-- **Parallel Generation**: Multi-threaded processing
-
-## 📊 **Success Criteria by Phase**
-
-### **Phase 1 - EXCEEDED TARGETS ✅**
-- **Overall Completion**: 75% → 85% (exceeded target by 10%)
-- **Build Success**: 100% (Shadow JAR, tests passing)
-- **Infrastructure**: 100% (Gradle, multi-module, testing complete)
-- **Code Quality**: 95% (Professional generation confirmed)
-- **Type Safety**: 85% (Method-level generics preserved)
-- **TODO Elimination**: 0% (Completely eliminated)
-
-### **Phase 2A - Ready for Implementation**
-**Target**: 95% MAP completion | **Duration**: 1-2 weeks
-- **Real-world Compatibility**: 85% → 95%
-- **Generic Coverage**: Method-level generics fully working
-- **Safety**: Identity functions minimize casting risks
-- **Implementation**: Dynamic casting with @Suppress annotations
-
-### **Phase 2B - Future Enhancement**
-**Target**: 99% MAP completion | **Duration**: 2-3 months
-- **Type Safety**: Full safety where architecturally possible
-- **Performance**: Zero runtime overhead for class-level generics
-- **Approach**: Hybrid strategy combining Phase 2A + generic classes
-
-### **Phase 3 - Post-MVP Polish**
-**Target**: Production release | **Duration**: 2-4 weeks
-- **Technical Debt**: Clean up MVP placeholders
-- **Advanced Features**: Call tracking, enhanced diagnostics
-- **Performance**: Build time optimization
-
-## 🎯 **Immediate Action Plan (Next 4 weeks)**
-
-### **Week 1-2: Phase 2A Implementation**
-1. **Priority**: Implement dynamic type casting solution
-2. **Target**: Handle method-level generics with safe defaults
-3. **Test**: All sample interfaces compile and run
-4. **Validation**: 95% compilation success rate
-
-### **Week 3-4: Testing & Documentation**
-1. **Priority**: Comprehensive testing of Phase 2A
-2. **Target**: Document casting patterns and best practices
-3. **Test**: Real-world interfaces from sample projects
-4. **Validation**: Developer experience meets MAP standards
-
-### **Week 5-8: Phase 2B Planning**
-1. **Priority**: Design generic class generation system
-2. **Target**: Architecture for hybrid approach
-3. **Test**: Proof of concept implementation
-4. **Validation**: Technical feasibility confirmed
-
-## 🔗 **Implementation Dependencies**
-
-### **Critical Path**
-1. **Generic Scoping Analysis** → [📋 Analysis Complete](.claude/docs/analysis/generic-scoping-analysis.md)
-2. **Phase 2A Implementation** → Dynamic casting solution
-3. **Testing & Validation** → Comprehensive test coverage
-4. **Phase 2B Design** → Generic class generation
-
-### **Supporting Work**
-- **Metro Alignment**: [📋 Context Patterns](.claude/docs/development/metro-alignment.md)
-- **Type Safety Testing**: [📋 Validation Strategy](.claude/docs/validation/type-safety-validation.md)
-- **Compilation Validation**: [📋 Testing Approach](.claude/docs/validation/compilation-validation.md)
-
-## 🔧 **Development Workflow**
-
-### **For Phase 2A Changes**
-1. **Edit generators** in `ktfake/compiler/src/main/kotlin/.../ir/`
-2. **Rebuild**: `./gradlew :compiler:shadowJar`
-3. **Test**: `cd test-sample && ../gradlew clean compileKotlinJvm --no-build-cache`
-4. **Verify**: Check generated code quality in `test-sample/build/generated/`
-
-### **Quality Gates**
-- ✅ Zero compilation errors in generated code
-- ✅ Type-safe DSL (controlled Any? casting)
-- ✅ All tests pass with GIVEN-WHEN-THEN patterns
-- ✅ Professional code formatting
-- ✅ Clear error messages
+- **Compiler Plugin Architecture**: More stable than KSP, immune to API breakages
+- **Compile-time Generation**: Zero runtime overhead, eliminates bytecode manipulation costs
+- **Type Safety**: Full generic support, no `Any` casting, professional DX
+- **KMP Native**: First-class multiplatform support from day one
 
 ---
 
-## 🎯 **September 2025 Roadmap Summary**
+## Strategic Positioning
 
-**VALIDATED STATUS: 85% MAP Complete - Ready for Final Push**
+### Why Not Another Mocking Library?
 
-### **Key Validated Findings**
-1. **Infrastructure Excellence**: Build system, testing, and architecture are production-ready
-2. **Quality Achievement**: Professional code generation with sophisticated type analysis
-3. **Clear Path Forward**: Phase 2A has architected solution for remaining challenge
-4. **Exceeded Expectations**: Phase 1 target 75% → actual achievement 85%
+Fakt **IS NOT** competing with MockK/Mockito in behavior verification. Instead, we're solving:
 
-### **Immediate Priority: Phase 2A (1-2 weeks)**
-- Implement dynamic type casting with identity functions
-- Achieve 95% real-world compatibility
-- Complete the generic type parameter scoping challenge
+1. **Performance**: Eliminate slow runtime workarounds for Kotlin constructs
+2. **Stability**: Reliable KMP support where KSP tools fail
+3. **Automation**: Generate high-quality fakes that would be written manually
+4. **Best Practices**: Enable "Fakes over Mocks" without the manual effort
 
-### **Success Confidence: Very High**
-The validated status check confirms excellent project foundation with clear implementation paths for remaining work.
+### Market Differentiation
 
-**Phase 1 exceeded all targets. Phase 2A will complete the journey to production-ready fake generation.**
+| Pain Point | Current Solutions | Fakt's Approach | Advantage |
+|------------|------------------|-----------------|-----------|
+| Final classes | MockK bytecode magic, Mockito-inline | Compile-time generation | 3x+ faster |
+| Singleton objects | mockkObject (1300x slower!) | Call-site replacement | 1000x+ faster |
+| Top-level functions | mockkStatic (brittle strings) | Type-safe call replacement | Fast + safe |
+| KMP testing | KSP tools (unstable) | Compiler plugin (stable) | Reliability |
+| Data class setup | Manual builders | Auto-generated builders | DX win |
+| Flow testing | Manual fake producers | Controllable generators | Productivity |
+
+---
+
+## Roadmap Overview
+
+### **Phase 1: Performance Dominance (Q1 2025)** 🎯
+**Goal**: Solve critical JVM performance bottlenecks
+
+**Target**: Become the **fastest** Kotlin testing tool for core scenarios
+
+**Features**:
+- ✅ Final class faking (compile-time, zero overhead)
+- ✅ Singleton object call-site replacement (1000x+ faster than mockkObject)
+- ✅ Top-level/extension function replacement (no mockkStatic)
+- ✅ First-class suspend function support
+
+**Success Metric**: 10x+ performance improvement over MockK for objects/statics
+
+**Detailed Docs**: [Phase 1: Performance Dominance](./phase1-performance-dominance/README.md)
+
+---
+
+### **Phase 2: Idiomatic Kotlin DX (Q2 2025)** 🎨
+**Goal**: Automate boilerplate for common Kotlin patterns
+
+**Target**: Reduce test setup effort by 50%+
+
+**Features**:
+- ✅ Test data builders for data classes (smart defaults)
+- ✅ Sealed hierarchy factory generators
+- ✅ Controllable Flow fake producers (MutableSharedFlow-backed)
+- ✅ Abstract class concrete implementations
+
+**Success Metric**: Eliminate manual test helpers, improve readability
+
+**Detailed Docs**: [Phase 2: Idiomatic Kotlin](./phase2-idiomatic-kotlin/README.md)
+
+---
+
+### **Phase 3: KMP Market Leadership (Q3 2025)** 🌍
+**Goal**: Become THE testing solution for Kotlin Multiplatform
+
+**Target**: Capture the underserved KMP market (greenfield opportunity)
+
+**Features**:
+- ✅ Full commonTest support (all Phase 1-2 features)
+- ✅ Platform-specific generation (iOS Native, Wasm, JS)
+- ✅ Stable across Kotlin updates (vs. unstable KSP tools)
+- ✅ Feature parity across all targets
+
+**Success Metric**: Recommended solution for KMP projects, replace unstable KSP tools
+
+**Detailed Docs**: [Phase 3: KMP Dominance](./phase3-kmp-dominance/README.md)
+
+---
+
+## Implementation Strategy
+
+### Quick Wins (1-2 weeks each)
+Priority for early momentum:
+
+1. **Test Data Builders** (Phase 2.1)
+   - High impact, straightforward implementation
+   - Addresses common developer pain point
+   - Clear value proposition
+
+2. **Sealed Hierarchy Helpers** (Phase 2.2)
+   - Very common Kotlin pattern
+   - Easy to generate, big DX improvement
+
+### Medium Complexity (2-4 weeks each)
+Core differentiators:
+
+1. **Final Classes** (Phase 1.1)
+   - Extends existing IR generation
+   - Critical for Kotlin-first approach
+
+2. **Flow Producers** (Phase 2.3)
+   - Async pattern analysis required
+   - High value for modern Kotlin apps
+
+### High Complexity (4-6 weeks each)
+Strategic game-changers:
+
+1. **Singleton/Object Call-site Replacement** (Phase 1.2)
+   - New compilation technique
+   - Massive performance win (1000x+)
+   - Requires IR transformation expertise
+
+2. **Top-level Function Replacement** (Phase 1.3)
+   - Similar to singletons, static scope
+   - Eliminates mockkStatic brittleness
+
+3. **KMP Support** (Phase 3)
+   - Platform-specific challenges
+   - Strategic market capture
+
+---
+
+## What NOT to Support
+
+Based on research consensus and technical constraints:
+
+### Anti-Patterns (Community Consensus)
+- ❌ **Mocking data classes** - Use real instances or builders
+- ❌ **Private function mocking** - Test public API
+- ❌ **Spies** - Code smell, poor design indicator
+
+### Technical Limitations
+- ❌ **Inline functions** - Compiler inlining prevents interception
+- ❌ **Value classes** - Use real instances (lightweight)
+- ❌ **Operator overloading** - Limited use cases
+
+### Out of Scope
+- ❌ **Behavior verification** - Use MockK/Mockito for `verify()`
+- ❌ **Argument matchers** - Not aligned with fake-based testing
+- ❌ **Call ordering** - Use integration tests instead
+
+---
+
+## Success Metrics
+
+### Technical Excellence
+- ✅ **Performance**: 10x+ faster than MockK for objects/statics
+- ✅ **Compilation Time**: <10% overhead for fake generation
+- ✅ **Type Safety**: Zero `Any` casting, full generic support
+- ✅ **Stability**: No breakages across Kotlin 2.x updates
+
+### Market Impact
+- 📈 **Adoption**: 25% of new Kotlin projects choose Fakt
+- 🏆 **KMP Standard**: Recommended solution for commonTest
+- 💡 **Developer Satisfaction**: 4.5+ stars, positive sentiment
+- 📚 **Community**: Active contributors, documented patterns
+
+### Developer Experience
+- ⚡ **Setup Reduction**: 50%+ less boilerplate
+- 📖 **Documentation**: Comprehensive guides, examples
+- 🔧 **IDE Integration**: IntelliJ plugin, code insights
+- 🎯 **Error Messages**: Clear, actionable diagnostics
+
+---
+
+## Timeline & Milestones
+
+### Q1 2025: Foundation
+- ✅ Interfaces + Generics complete
+- ✅ SAM interfaces support (80% complete)
+- 🎯 Final classes implementation
+- 🎯 Singleton object call-site replacement
+- 🎯 Public beta release
+
+### Q2 2025: Expansion
+- 🎯 Test data builders
+- 🎯 Sealed hierarchy helpers
+- 🎯 Flow producers
+- 🎯 1.0 stable release
+
+### Q3 2025: Market Leadership
+- 🎯 Full KMP support
+- 🎯 Cross-platform feature parity
+- 🎯 Community engagement push
+- 🎯 Conference talks (KotlinConf)
+
+---
+
+## Research Foundation
+
+This roadmap is based on comprehensive research including:
+
+- **30+ Academic/Industry Sources**: Testing best practices, Kotlin patterns
+- **Real-world Projects**: Google's Now in Android, popular KMP apps
+- **Performance Benchmarks**: MockK/Mockito overhead measurements
+- **Community Feedback**: Stack Overflow, Reddit, Kotlin Slack
+- **Competitive Analysis**: MockK, Mockito, Mockative, Mokkery limitations
+
+**Key Insights**:
+1. Fakes over Mocks is the modern standard (Google, industry leaders)
+2. Performance pain is severe and measurable (1300x slowdown!)
+3. KMP market is underserved and unstable (KSP tool failures)
+4. Automation of manual patterns has high demand (builders, helpers)
+
+---
+
+## Next Steps
+
+1. **Validate Priorities**: Gather community feedback on roadmap
+2. **Start Quick Wins**: Test data builders for early momentum
+3. **Prototype Call-site Replacement**: Prove singleton performance claim
+4. **Build KMP Test Suite**: Early validation for Phase 3
+5. **Document Publicly**: Share roadmap, gather contributors
+
+---
+
+## References
+
+- **Main Research Document**: `Kotlin Test Fake Research Roadmap.md`
+- **Phase 1 Details**: [Performance Dominance](./phase1-performance-dominance/README.md)
+- **Phase 2 Details**: [Idiomatic Kotlin](./phase2-idiomatic-kotlin/README.md)
+- **Phase 3 Details**: [KMP Dominance](./phase3-kmp-dominance/README.md)
+- **Testing Guidelines**: [GIVEN-WHEN-THEN Standard](../validation/testing-guidelines.md)
+- **Metro Alignment**: [Architecture Patterns](../development/metro-alignment.md)
+
+---
+
+**Remember**: We build MAPs (Minimum Awesome Products), not MVPs. Every feature must be production-quality, type-safe, and delightful. 🚀

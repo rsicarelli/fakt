@@ -114,18 +114,24 @@ internal class ConfigurationDslGenerator(
 
     /**
      * Builds parameter type string for configuration DSL methods.
+     * NOTE: DSL methods use function types, which CANNOT have vararg modifiers
+     * Varargs are converted to Array<out T> for function type signatures
      *
      * @param parameters List of parameters to process
-     * @return Comma-separated parameter type string with varargs support
+     * @return Comma-separated parameter type string with Array<out T> for varargs
      */
     private fun buildParameterTypeString(parameters: List<ParameterAnalysis>): String =
         if (parameters.isEmpty()) {
             ""
         } else {
             parameters.joinToString(", ") { param ->
-                val varargsPrefix = if (param.isVararg) "vararg " else ""
-                val paramType = resolveParameterType(param)
-                varargsPrefix + paramType
+                if (param.isVararg) {
+                    // For varargs, use Array<out T> in function type (NOT vararg keyword)
+                    val elementType = unwrapVarargsType(param)
+                    "Array<out $elementType>"
+                } else {
+                    typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                }
             }
         }
 

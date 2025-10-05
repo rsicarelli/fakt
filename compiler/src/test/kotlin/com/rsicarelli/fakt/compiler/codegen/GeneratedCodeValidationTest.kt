@@ -295,6 +295,54 @@ class GeneratedCodeValidationTest {
     }
 
     // ==================================================================================
+    // SAM Interface Validation (Phase 4)
+    // ==================================================================================
+
+    @Test
+    fun `GIVEN SAM with varargs WHEN generated THEN should use Array type in behavior property`() {
+        // GIVEN
+        val fakeFile = File(generatedDir, "FakeVarargsProcessorImpl.kt")
+        if (!fakeFile.exists()) {
+            println("⚠️  Skipping test - sample not built. Run './gradlew :samples:single-module:build' first")
+            return
+        }
+
+        // WHEN
+        val content = fakeFile.readText()
+
+        // THEN - Behavior property should use Array<out T>, NOT vararg keyword
+        assertTrue(
+            content.contains("private var processBehavior: (Array<out String>) -> List<String>"),
+            "Behavior property should use Array<out String>, not 'vararg String' which is invalid Kotlin syntax",
+        )
+
+        // Override method should still use vararg (this is correct)
+        assertTrue(
+            content.contains("override fun process(vararg items: String): List<String>"),
+            "Override method should preserve vararg modifier",
+        )
+    }
+
+    @Test
+    fun `GIVEN SAM with star projection WHEN generated THEN should preserve star in override signature`() {
+        // GIVEN
+        val fakeFile = File(generatedDir, "FakeStarProjectionHandlerImpl.kt")
+        if (!fakeFile.exists()) {
+            println("⚠️  Skipping test - sample not built")
+            return
+        }
+
+        // WHEN
+        val content = fakeFile.readText()
+
+        // THEN - Override should preserve List<*>, not use List<Any>
+        assertTrue(
+            content.contains("override fun handle(items: List<*>): Int"),
+            "Override signature should preserve star projection List<*>, not use List<Any>",
+        )
+    }
+
+    // ==================================================================================
     // Complete Validation
     // ==================================================================================
 

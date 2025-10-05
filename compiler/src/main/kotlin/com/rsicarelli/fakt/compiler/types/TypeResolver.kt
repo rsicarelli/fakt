@@ -7,6 +7,7 @@ import org.jetbrains.kotlin.ir.declarations.IrEnumEntry
 import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrSimpleType
+import org.jetbrains.kotlin.ir.types.IrStarProjection
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.IrTypeArgument
 import org.jetbrains.kotlin.ir.types.IrTypeProjection
@@ -307,10 +308,11 @@ internal class TypeResolver {
     /**
      * Converts type arguments to string representation.
      * Extracted to reduce complexity of handleGenericType().
+     * Preserves star projections (*) for type-safe override signatures.
      *
      * @param arguments List of type arguments to convert
      * @param preserveTypeParameters Whether to preserve generic type parameters
-     * @return String representation like "<T, R>" or empty string
+     * @return String representation like "<T, R>" or "<*>" for star projections
      */
     private fun typeArgumentsToString(
         arguments: List<IrTypeArgument>,
@@ -321,6 +323,7 @@ internal class TypeResolver {
         val typeArgs =
             arguments.map { arg ->
                 when (arg) {
+                    is IrStarProjection -> "*"  // Preserve star projections
                     is IrTypeProjection -> irTypeToKotlinString(arg.type, preserveTypeParameters)
                     else -> "Any"
                 }
