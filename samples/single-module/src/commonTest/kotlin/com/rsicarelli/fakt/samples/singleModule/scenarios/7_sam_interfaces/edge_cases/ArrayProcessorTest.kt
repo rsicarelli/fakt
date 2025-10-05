@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-package com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.edge_cases
+package com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.edgeCases
 
-import com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.edge_cases.ArrayProcessor
-import com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.edge_cases.fakeArrayProcessor
+import com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.edgeCases.ArrayProcessor
+import com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.edgeCases.fakeArrayProcessor
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

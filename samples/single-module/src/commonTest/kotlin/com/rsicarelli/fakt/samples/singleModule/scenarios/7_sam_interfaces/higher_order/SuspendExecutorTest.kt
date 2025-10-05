@@ -1,6 +1,6 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-package com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.higher_order
+package com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.higherOrder
 
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test

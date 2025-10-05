@@ -1,6 +1,6 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-package com.rsicarelli.fakt.samples.singleModule.scenarios.generics_constraints
+package com.rsicarelli.fakt.samples.singleModule.scenarios.genericsConstraints
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull

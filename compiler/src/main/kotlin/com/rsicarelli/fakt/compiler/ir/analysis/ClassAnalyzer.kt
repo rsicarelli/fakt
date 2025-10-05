@@ -33,7 +33,6 @@ internal object ClassAnalyzer {
      * 3. It has @Fake annotation
      * 4. It has at least one open/abstract method or property
      *
-     * @param irClass The class to check
      * @return true if the class can be faked, false otherwise
      */
     fun IrClass.isFakableClass(): Boolean {
@@ -94,6 +93,12 @@ internal object ClassAnalyzer {
         val abstractProperties = mutableListOf<PropertyAnalysis>()
         val openProperties = mutableListOf<PropertyAnalysis>()
 
+        // Extract type parameters from the class with constraints
+        val typeParameters =
+            sourceClass.typeParameters.map { typeParam ->
+                IrAnalysisHelper.formatTypeParameterWithConstraints(typeParam)
+            }
+
         // Analyze all declarations in the class
         sourceClass.declarations.forEach { declaration ->
             when (declaration) {
@@ -101,7 +106,10 @@ internal object ClassAnalyzer {
                     // Skip compiler-generated properties
                     if (declaration.origin == IrDeclarationOrigin.FAKE_OVERRIDE) return@forEach
 
-                    when (declaration.modality) {
+                    // For properties with custom getters, check the getter's modality
+                    val effectiveModality = declaration.getter?.modality ?: declaration.modality
+
+                    when (effectiveModality) {
                         Modality.ABSTRACT -> {
                             abstractProperties.add(IrAnalysisHelper.analyzeProperty(declaration))
                         }
@@ -117,11 +125,22 @@ internal object ClassAnalyzer {
                     if (IrAnalysisHelper.isSpecialFunction(declaration)) return@forEach
                     if (declaration.origin == IrDeclarationOrigin.FAKE_OVERRIDE) return@forEach
 
-                    when (declaration.modality) {
-                        Modality.ABSTRACT -> {
+                    // Check if this method overrides an abstract method from superclass
+                    val isOverridingAbstract = declaration.overriddenSymbols.any { overriddenSymbol ->
+                        overriddenSymbol.owner.modality == Modality.ABSTRACT
+                    }
+
+                    when {
+                        // Priority 1: Methods overriding abstract methods → error() defaults
+                        isOverridingAbstract -> {
                             abstractMethods.add(IrAnalysisHelper.analyzeFunction(declaration))
                         }
-                        Modality.OPEN -> {
+                        // Priority 2: Methods declared as abstract in this class → error() defaults
+                        declaration.modality == Modality.ABSTRACT -> {
+                            abstractMethods.add(IrAnalysisHelper.analyzeFunction(declaration))
+                        }
+                        // Priority 3: Open methods without abstract override → super call defaults
+                        declaration.modality == Modality.OPEN -> {
                             openMethods.add(IrAnalysisHelper.analyzeFunction(declaration))
                         }
                         else -> { /* Skip final methods */ }
@@ -132,6 +151,7 @@ internal object ClassAnalyzer {
 
         return ClassAnalysis(
             className = sourceClass.name.asString(),
+            typeParameters = typeParameters,
             abstractMethods = abstractMethods,
             openMethods = openMethods,
             abstractProperties = abstractProperties,
@@ -149,6 +169,7 @@ internal object ClassAnalyzer {
  */
 data class ClassAnalysis(
     val className: String,
+    val typeParameters: List<String>, // Class-level type parameters like <T>, <K, V>
     val abstractMethods: List<FunctionAnalysis>, // Abstract methods (must be overridden)
     val openMethods: List<FunctionAnalysis>, // Open methods (can be overridden, default to super)
     val abstractProperties: List<PropertyAnalysis>, // Abstract properties (must be overridden)

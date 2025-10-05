@@ -3,11 +3,11 @@
 package com.rsicarelli.fakt.samples.singleModule.scenarios.finalClasses
 
 import com.rsicarelli.fakt.samples.singleModule.models.User
+import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for final class fake generation - basic scenarios.
@@ -17,14 +17,14 @@ import org.junit.jupiter.api.TestInstance
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FinalClassBasicTest {
-
     @Test
     fun `GIVEN final class fake WHEN configuring open method THEN should use configured behavior`() {
         // Given - create fake with configured behavior
         val testUser = User("test-123", "Test User", "test@example.com")
-        val fake = fakeUserService {
-            getUser { id -> testUser }
-        }
+        val fake =
+            fakeUserService {
+                getUser { id -> testUser }
+            }
 
         // When
         val result = fake.getUser("any-id")
@@ -53,11 +53,15 @@ class FinalClassBasicTest {
         var saveCalled = false
         var deleteCalled = false
 
-        val fake = fakeUserService {
-            getUser { id -> User(id, "Configured User", "configured@test.com") }
-            saveUser { user -> saveCalled = true }
-            deleteUser { id -> deleteCalled = true; false }
-        }
+        val fake =
+            fakeUserService {
+                getUser { id -> User(id, "Configured User", "configured@test.com") }
+                saveUser { user -> saveCalled = true }
+                deleteUser { id ->
+                    deleteCalled = true
+                    false
+                }
+            }
 
         // When
         val user = fake.getUser("123")

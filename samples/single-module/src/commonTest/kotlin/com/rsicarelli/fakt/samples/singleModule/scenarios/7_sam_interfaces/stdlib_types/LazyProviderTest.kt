@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-package com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.stdlib_types
+package com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.stdlibTypes
 
-import com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.stdlib_types.LazyProvider
-import com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.stdlib_types.fakeLazyProvider
+import com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.stdlibTypes.LazyProvider
+import com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.stdlibTypes.fakeLazyProvider
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

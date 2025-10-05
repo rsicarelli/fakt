@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-package com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.stdlib_types
+package com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.stdlibTypes
 
-import com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.stdlib_types.SequenceMapper
-import com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.stdlib_types.fakeSequenceMapper
+import com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.stdlibTypes.SequenceMapper
+import com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.stdlibTypes.fakeSequenceMapper
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

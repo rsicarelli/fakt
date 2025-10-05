@@ -1,6 +1,6 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-package com.rsicarelli.fakt.samples.singleModule.scenarios.generics_method_level
+package com.rsicarelli.fakt.samples.singleModule.scenarios.genericsMethodLevel
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals

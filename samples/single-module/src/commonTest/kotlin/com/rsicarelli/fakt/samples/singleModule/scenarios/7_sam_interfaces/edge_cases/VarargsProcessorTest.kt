@@ -1,6 +1,6 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-package com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.edge_cases
+package com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.edgeCases
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

@@ -6,6 +6,7 @@ import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.FunctionAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.ParameterAnalysis
+import com.rsicarelli.fakt.compiler.ir.analysis.PropertyAnalysis
 import com.rsicarelli.fakt.compiler.types.TypeResolver
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 
@@ -217,11 +218,38 @@ internal class ConfigurationDslGenerator(
         val className = analysis.className
         val configClassName = "Fake${className}Config"
 
-        // Classes don't have type parameters yet (future enhancement)
-        // For now, generate simple config DSL without generics
+        // Format type parameters with where clause for multiple constraints
+        val (typeParamsForHeader, whereClause) = formatTypeParametersWithWhereClause(analysis.typeParameters)
+
+        val typeParameters =
+            if (typeParamsForHeader.isNotEmpty()) {
+                "<${typeParamsForHeader.joinToString(", ")}>"
+            } else {
+                ""
+            }
+
+        // Type arguments for usage (just names, no constraints)
+        val typeParameterNames =
+            if (analysis.typeParameters.isNotEmpty()) {
+                analysis.typeParameters.map { it.substringBefore(" :").trim() }
+            } else {
+                emptyList()
+            }
+
+        val typeArguments =
+            if (typeParameterNames.isNotEmpty()) {
+                "<${typeParameterNames.joinToString(", ")}>"
+            } else {
+                ""
+            }
 
         return buildString {
-            appendLine("class $configClassName(private val fake: $fakeClassName) {")
+            // Generate config class header with type parameters and where clause
+            if (whereClause.isNotEmpty()) {
+                appendLine("class $configClassName$typeParameters(private val fake: $fakeClassName$typeArguments) where $whereClause {")
+            } else {
+                appendLine("class $configClassName$typeParameters(private val fake: $fakeClassName$typeArguments) {")
+            }
 
             // Generate configuration methods for abstract methods
             for (function in analysis.abstractMethods) {
@@ -233,8 +261,38 @@ internal class ConfigurationDslGenerator(
                 appendLine(generateConfigMethodForFunction(function))
             }
 
+            // Generate configuration methods for abstract properties
+            for (property in analysis.abstractProperties) {
+                appendLine(generateConfigMethodForProperty(property))
+            }
+
+            // Generate configuration methods for open properties
+            for (property in analysis.openProperties) {
+                appendLine(generateConfigMethodForProperty(property))
+            }
+
             appendLine("}")
         }
+    }
+
+    /**
+     * Generates a single configuration method for a property (abstract or open).
+     * Used for class DSL generation.
+     */
+    private fun generateConfigMethodForProperty(property: PropertyAnalysis): String {
+        val propertyName = property.name
+        val returnTypeString = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
+        val capitalizedName = propertyName.replaceFirstChar { it.titlecase() }
+
+        return buildString {
+            // Getter configuration
+            appendLine("    fun $propertyName(behavior: () -> $returnTypeString) { fake.configure$capitalizedName(behavior) }")
+
+            // Setter configuration for mutable properties
+            if (property.isMutable) {
+                appendLine("    fun set$capitalizedName(behavior: ($returnTypeString) -> Unit) { fake.configureSet$capitalizedName(behavior) }")
+            }
+        }.trimEnd() // Remove trailing newline so caller can control formatting
     }
 
     /**
@@ -251,12 +309,12 @@ internal class ConfigurationDslGenerator(
                 ""
             } else {
                 function.parameters.joinToString(", ") { param ->
-                    typeResolver.irTypeToKotlinString(param.type)
+                    typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
                 }
             }
 
         // Build return type
-        val returnTypeString = typeResolver.irTypeToKotlinString(function.returnType)
+        val returnTypeString = typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
 
         // Build behavior signature
         val behaviorSignature =

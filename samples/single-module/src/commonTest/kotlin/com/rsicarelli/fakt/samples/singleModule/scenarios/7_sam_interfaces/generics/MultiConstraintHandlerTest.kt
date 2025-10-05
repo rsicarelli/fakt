@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-package com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.generics
+package com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.generics
 
-import com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.generics.MultiConstraintHandler
-import com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.generics.fakeMultiConstraintHandler
+import com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.generics.MultiConstraintHandler
+import com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.generics.fakeMultiConstraintHandler
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

@@ -27,7 +27,5 @@ open class UserService {
     }
 
     // Final method - cannot be overridden, not included in fake
-    fun validateUserId(id: String): Boolean {
-        return id.isNotEmpty() && id.length <= 100
-    }
+    fun validateUserId(id: String): Boolean = id.isNotEmpty() && id.length <= 100
 }

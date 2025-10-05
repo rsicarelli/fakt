@@ -108,14 +108,59 @@ internal class FactoryGenerator {
         val factoryFunctionName = "fake$className"
         val configClassName = "Fake${className}Config"
 
-        // Classes don't have type parameters yet (future enhancement)
-        // For now, generate simple factory without generics
+        // Format type parameters with where clause for multiple constraints
+        val (typeParamsForHeader, whereClause) = formatTypeParametersWithWhereClause(analysis.typeParameters)
+
+        val typeParameters =
+            if (typeParamsForHeader.isNotEmpty()) {
+                "<${typeParamsForHeader.joinToString(", ")}>"
+            } else {
+                ""
+            }
+
+        // Extract type parameter names (without constraints) for return type
+        val typeParameterNames =
+            if (analysis.typeParameters.isNotEmpty()) {
+                analysis.typeParameters.map { it.substringBefore(" :").trim() }
+            } else {
+                emptyList()
+            }
+
+        val classWithGenerics =
+            if (typeParameterNames.isNotEmpty()) {
+                "$className<${typeParameterNames.joinToString(", ")}>"
+            } else {
+                className
+            }
+
+        // Type arguments for usage (just names, no constraints)
+        val typeArguments =
+            if (typeParameterNames.isNotEmpty()) {
+                "<${typeParameterNames.joinToString(", ")}>"
+            } else {
+                ""
+            }
 
         return buildString {
-            appendLine(
-                "fun $factoryFunctionName(configure: $configClassName.() -> Unit = {}): $className {",
-            )
-            appendLine("    return $fakeClassName().apply { $configClassName(this).configure() }")
+            // For generic classes, use inline fun <reified T> pattern
+            if (typeParameters.isNotEmpty()) {
+                append("inline fun $typeParameters ")
+            } else {
+                append("fun ")
+            }
+
+            // Generate factory function signature with where clause if needed
+            if (whereClause.isNotEmpty()) {
+                appendLine(
+                    "$factoryFunctionName(configure: $configClassName$typeArguments.() -> Unit = {}): $classWithGenerics where $whereClause {",
+                )
+            } else {
+                appendLine(
+                    "$factoryFunctionName(configure: $configClassName$typeArguments.() -> Unit = {}): $classWithGenerics {",
+                )
+            }
+
+            appendLine("    return $fakeClassName$typeArguments().apply { $configClassName$typeArguments(this).configure() }")
             appendLine("}")
         }
     }

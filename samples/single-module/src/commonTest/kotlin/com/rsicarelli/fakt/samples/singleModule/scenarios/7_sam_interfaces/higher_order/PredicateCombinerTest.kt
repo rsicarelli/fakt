@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-package com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.higher_order
+package com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.higherOrder
 
-import com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.higher_order.PredicateCombiner
-import com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.higher_order.fakePredicateCombiner
+import com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.higherOrder.PredicateCombiner
+import com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.higherOrder.fakePredicateCombiner
 import kotlin.test.Test
 import kotlin.test.assertTrue
 

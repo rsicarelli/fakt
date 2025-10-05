@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-package com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.basic
+package com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.basic
 
-import com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.basic.IntValidator
-import com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.basic.fakeIntValidator
+import com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.basic.IntValidator
+import com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.basic.fakeIntValidator
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

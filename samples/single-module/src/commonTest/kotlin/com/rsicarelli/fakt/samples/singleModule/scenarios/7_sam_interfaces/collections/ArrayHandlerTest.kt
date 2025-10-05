@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-package com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.collections
+package com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.collections
 
-import com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.collections.ArrayHandler
-import com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.collections.fakeArrayHandler
+import com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.collections.ArrayHandler
+import com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.collections.fakeArrayHandler
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals

@@ -44,8 +44,38 @@ internal class ImplementationGenerator(
         fakeClassName: String,
     ): String =
         buildString {
-            // Generate subclass header (extends parent class)
-            appendLine("class $fakeClassName : ${analysis.className}() {")
+            // Format type parameters with where clause for multiple constraints
+            val (typeParamsForHeader, whereClause) = formatTypeParametersWithWhereClause(analysis.typeParameters)
+
+            val typeParameters =
+                if (typeParamsForHeader.isNotEmpty()) {
+                    "<${typeParamsForHeader.joinToString(", ")}>"
+                } else {
+                    ""
+                }
+
+            // Extract type parameter names (without constraints) for parent class reference
+            val typeParameterNames =
+                if (analysis.typeParameters.isNotEmpty()) {
+                    analysis.typeParameters.map { it.substringBefore(" :").trim() }
+                } else {
+                    emptyList()
+                }
+
+            // Generate parent class with type parameters
+            val parentClassWithGenerics =
+                if (typeParameterNames.isNotEmpty()) {
+                    "${analysis.className}<${typeParameterNames.joinToString(", ")}>"
+                } else {
+                    analysis.className
+                }
+
+            // Generate subclass header (extends parent class) with type parameters
+            if (whereClause.isNotEmpty()) {
+                appendLine("class $fakeClassName$typeParameters : $parentClassWithGenerics() where $whereClause {")
+            } else {
+                appendLine("class $fakeClassName$typeParameters : $parentClassWithGenerics() {")
+            }
 
             // Generate behavior properties for abstract and open members
             append(generateClassBehaviorProperties(analysis))
@@ -935,7 +965,41 @@ internal class ImplementationGenerator(
                 )
             }
 
-            // TODO: Properties (similar pattern, abstract vs open)
+            // Generate behavior properties for abstract properties (must be configured)
+            for (property in analysis.abstractProperties) {
+                val propertyName = property.name
+                val returnTypeString = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
+
+                // Abstract properties MUST be configured - error default (getter)
+                appendLine(
+                    "    private var ${propertyName}Behavior: () -> $returnTypeString = { error(\"Configure $propertyName behavior\") }",
+                )
+
+                // If mutable, also generate setter behavior
+                if (property.isMutable) {
+                    appendLine(
+                        "    private var set${propertyName.capitalize()}Behavior: ($returnTypeString) -> Unit = { _ -> error(\"Configure $propertyName setter\") }",
+                    )
+                }
+            }
+
+            // Generate behavior properties for open properties (optional override, default to super)
+            for (property in analysis.openProperties) {
+                val propertyName = property.name
+                val returnTypeString = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
+
+                // Open properties default to calling super (getter)
+                appendLine(
+                    "    private var ${propertyName}Behavior: () -> $returnTypeString = { super.$propertyName }",
+                )
+
+                // If mutable, also generate setter behavior
+                if (property.isMutable) {
+                    appendLine(
+                        "    private var set${propertyName.capitalize()}Behavior: ($returnTypeString) -> Unit = { value -> super.$propertyName = value }",
+                    )
+                }
+            }
         }
 
     /**
@@ -979,6 +1043,44 @@ internal class ImplementationGenerator(
                 appendLine("    override ${suspendModifier}fun $functionName($parameters): $returnTypeString {")
                 appendLine("        return ${functionName}Behavior($parameterNames)")
                 appendLine("    }")
+            }
+
+            // Generate overrides for abstract properties
+            for (property in analysis.abstractProperties) {
+                val propertyName = property.name
+                val returnTypeString = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
+                val varOrVal = if (property.isMutable) "var" else "val"
+
+                if (property.isMutable) {
+                    // Mutable property with getter and setter
+                    appendLine("    override $varOrVal $propertyName: $returnTypeString")
+                    appendLine("        get() = ${propertyName}Behavior()")
+                    appendLine("        set(value) { set${propertyName.capitalize()}Behavior(value) }")
+                } else {
+                    // Immutable property with only getter
+                    appendLine("    override $varOrVal $propertyName: $returnTypeString get() {")
+                    appendLine("        return ${propertyName}Behavior()")
+                    appendLine("    }")
+                }
+            }
+
+            // Generate overrides for open properties
+            for (property in analysis.openProperties) {
+                val propertyName = property.name
+                val returnTypeString = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
+                val varOrVal = if (property.isMutable) "var" else "val"
+
+                if (property.isMutable) {
+                    // Mutable property with getter and setter
+                    appendLine("    override $varOrVal $propertyName: $returnTypeString")
+                    appendLine("        get() = ${propertyName}Behavior()")
+                    appendLine("        set(value) { set${propertyName.capitalize()}Behavior(value) }")
+                } else {
+                    // Immutable property with only getter
+                    appendLine("    override $varOrVal $propertyName: $returnTypeString get() {")
+                    appendLine("        return ${propertyName}Behavior()")
+                    appendLine("    }")
+                }
             }
         }
 
@@ -1031,6 +1133,50 @@ internal class ImplementationGenerator(
                         "behavior: $suspendModifier($parameterTypes) -> $returnTypeString" +
                         ") { ${functionName}Behavior = behavior }",
                 )
+            }
+
+            // Generate configuration methods for abstract properties
+            for (property in analysis.abstractProperties) {
+                val propertyName = property.name
+                val returnTypeString = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
+
+                // Getter configuration
+                appendLine(
+                    "    internal fun configure${propertyName.capitalize()}(" +
+                        "behavior: () -> $returnTypeString" +
+                        ") { ${propertyName}Behavior = behavior }",
+                )
+
+                // Setter configuration for mutable properties
+                if (property.isMutable) {
+                    appendLine(
+                        "    internal fun configureSet${propertyName.capitalize()}(" +
+                            "behavior: ($returnTypeString) -> Unit" +
+                            ") { set${propertyName.capitalize()}Behavior = behavior }",
+                    )
+                }
+            }
+
+            // Generate configuration methods for open properties
+            for (property in analysis.openProperties) {
+                val propertyName = property.name
+                val returnTypeString = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
+
+                // Getter configuration
+                appendLine(
+                    "    internal fun configure${propertyName.capitalize()}(" +
+                        "behavior: () -> $returnTypeString" +
+                        ") { ${propertyName}Behavior = behavior }",
+                )
+
+                // Setter configuration for mutable properties
+                if (property.isMutable) {
+                    appendLine(
+                        "    internal fun configureSet${propertyName.capitalize()}(" +
+                            "behavior: ($returnTypeString) -> Unit" +
+                            ") { set${propertyName.capitalize()}Behavior = behavior }",
+                    )
+                }
             }
         }
 }

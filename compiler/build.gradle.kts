@@ -1,6 +1,5 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
@@ -29,7 +28,7 @@ tasks {
         manifest {
             attributes(
                 "Implementation-Title" to project.name,
-                "Implementation-Version" to project.version
+                "Implementation-Version" to project.version,
             )
         }
     }
@@ -44,7 +43,7 @@ tasks {
         manifest {
             attributes(
                 "Implementation-Title" to project.name,
-                "Implementation-Version" to project.version
+                "Implementation-Version" to project.version,
             )
         }
     }

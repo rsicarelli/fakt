@@ -11,15 +11,19 @@ import com.rsicarelli.fakt.Fake
 @Fake
 abstract class NotificationService {
     // Abstract method - must be overridden
-    abstract fun sendNotification(userId: String, message: String)
+    abstract fun sendNotification(
+        userId: String,
+        message: String,
+    )
 
     // Open method with default implementation
-    open fun formatMessage(message: String): String {
-        return "[NOTIFICATION] $message"
-    }
+    open fun formatMessage(message: String): String = "[NOTIFICATION] $message"
 
     // Final method - cannot be overridden
-    fun logNotification(userId: String, message: String) {
+    fun logNotification(
+        userId: String,
+        message: String,
+    ) {
         println("Notification sent to $userId: $message")
     }
 }

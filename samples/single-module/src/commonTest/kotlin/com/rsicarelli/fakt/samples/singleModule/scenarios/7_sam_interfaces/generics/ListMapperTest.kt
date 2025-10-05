@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-package com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.generics
+package com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.generics
 
-import com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.generics.ListMapper
-import com.rsicarelli.fakt.samples.singleModule.scenarios.sam_interfaces.generics.fakeListMapper
+import com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.generics.ListMapper
+import com.rsicarelli.fakt.samples.singleModule.scenarios.samInterfaces.generics.fakeListMapper
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

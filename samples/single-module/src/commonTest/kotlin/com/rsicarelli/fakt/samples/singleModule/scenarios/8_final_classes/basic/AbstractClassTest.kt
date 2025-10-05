@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.singleModule.scenarios.finalClasses
 
+import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for abstract class fake generation.
@@ -14,16 +14,16 @@ import org.junit.jupiter.api.TestInstance
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AbstractClassTest {
-
     @Test
     fun `GIVEN abstract class fake WHEN configuring abstract method THEN should use configured behavior`() {
         // Given
         var notificationSent = false
-        val fake = fakeNotificationService {
-            sendNotification { userId, message ->
-                notificationSent = true
+        val fake =
+            fakeNotificationService {
+                sendNotification { userId, message ->
+                    notificationSent = true
+                }
             }
-        }
 
         // When
         fake.sendNotification("user-123", "Hello!")
@@ -35,9 +35,10 @@ class AbstractClassTest {
     @Test
     fun `GIVEN abstract class fake WHEN using open method THEN should use super implementation by default`() {
         // Given - fake without configuring formatMessage
-        val fake = fakeNotificationService {
-            sendNotification { _, _ -> /* no-op */ }
-        }
+        val fake =
+            fakeNotificationService {
+                sendNotification { _, _ -> /* no-op */ }
+            }
 
         // When
         val formatted = fake.formatMessage("Test message")
@@ -49,10 +50,11 @@ class AbstractClassTest {
     @Test
     fun `GIVEN abstract class fake WHEN overriding open method THEN should use configured behavior`() {
         // Given - override the open method
-        val fake = fakeNotificationService {
-            sendNotification { _, _ -> /* no-op */ }
-            formatMessage { message -> "[CUSTOM] $message" }
-        }
+        val fake =
+            fakeNotificationService {
+                sendNotification { _, _ -> /* no-op */ }
+                formatMessage { message -> "[CUSTOM] $message" }
+            }
 
         // When
         val formatted = fake.formatMessage("Test")
@@ -64,9 +66,10 @@ class AbstractClassTest {
     @Test
     fun `GIVEN abstract class fake WHEN calling final method THEN should use original implementation`() {
         // Given
-        val fake = fakeNotificationService {
-            sendNotification { _, _ -> /* no-op */ }
-        }
+        val fake =
+            fakeNotificationService {
+                sendNotification { _, _ -> /* no-op */ }
+            }
 
         // When - call final method (not overridable)
         // This will print to console, but we're just verifying it doesn't throw
