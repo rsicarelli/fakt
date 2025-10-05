@@ -37,6 +37,20 @@ import org.jetbrains.kotlin.ir.util.packageFqName
  * - Handle complex types (generics, suspend functions, collections) automatically
  *
  * Based on the IR-Native demonstration architecture.
+ *
+ * ## Safety: UnsafeDuringIrConstructionAPI Usage
+ *
+ * This extension uses APIs marked with `@UnsafeDuringIrConstructionAPI`:
+ * - `IrClass.declarations` - For analyzing interface/class members
+ * - `IrSymbol.owner` - For type hierarchy traversal
+ *
+ * **Why it's safe:**
+ * - `IrGenerationExtension.generate()` is called **AFTER** IR construction is complete
+ * - All IR symbols are bound at the post-linkage phase
+ * - The "unsafe during construction" warning doesn't apply to the generation phase
+ * - Metro compiler plugin (production-quality) uses the exact same approach
+ *
+ * See: `compiler/build.gradle.kts` for module-level opt-in configuration
  */
 class UnifiedFaktIrGenerationExtension(
     private val messageCollector: MessageCollector? = null,

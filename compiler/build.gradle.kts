@@ -8,6 +8,24 @@ plugins {
     alias(libs.plugins.shadow)
 }
 
+// Kotlin compiler API opt-ins
+// Following Metro compiler plugin pattern (https://github.com/slackhq/metro)
+kotlin {
+    compilerOptions {
+        optIn.addAll(
+            // UnsafeDuringIrConstructionAPI: Safe in our context because:
+            // - We use IrClass.declarations and IrSymbol.owner in IrGenerationExtension.generate()
+            // - This method is called AFTER IR construction is complete (post-linkage phase)
+            // - All symbols are bound at this point, making the APIs safe to use
+            // - Metro (production compiler plugin) uses the same approach
+            "org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
+
+            // ExperimentalCompilerApi: We're building a compiler plugin
+            "org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
+        )
+    }
+}
+
 dependencies {
     // compileOnly - provided by Gradle/Kotlin at runtime
     compileOnly(libs.kotlin.compilerEmbeddable)

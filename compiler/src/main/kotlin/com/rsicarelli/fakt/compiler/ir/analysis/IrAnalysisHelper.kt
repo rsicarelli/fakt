@@ -52,7 +52,6 @@ internal object IrAnalysisHelper {
      * @return Function analysis with complete signature information
      */
     fun analyzeFunction(function: IrSimpleFunction): FunctionAnalysis {
-        // Use modern API: function.parameters instead of deprecated valueParameters
         // Filter for regular parameters only (excludes receiver parameters, etc.)
         val parameters =
             function.parameters

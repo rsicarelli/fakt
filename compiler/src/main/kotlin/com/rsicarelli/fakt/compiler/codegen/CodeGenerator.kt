@@ -60,7 +60,6 @@ internal data class WriteContext(
  */
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 internal class CodeGenerator(
-    @Suppress("UnusedPrivateProperty") // Used by importResolver dependency injection
     private val typeResolver: TypeResolver,
     private val importResolver: ImportResolver,
     private val sourceSetMapper: SourceSetMapper,

@@ -84,12 +84,17 @@ internal class InterfaceDiscovery(
     /**
      * Checks if a declaration is a valid interface for fake generation.
      *
+     * Sealed interfaces are excluded because Kotlin prohibits extending sealed
+     * classes/interfaces from different modules. Generated fakes would be in
+     * build/generated/ which is a different module than the source interface.
+     *
      * @param declaration The declaration to check
      * @return true if it's a valid interface, false otherwise
      */
     private fun isValidFakeInterface(declaration: org.jetbrains.kotlin.ir.declarations.IrDeclaration): Boolean =
         declaration is IrClass &&
             declaration.kind == ClassKind.INTERFACE &&
+            declaration.modality != org.jetbrains.kotlin.descriptors.Modality.SEALED &&
             declaration.origin != IrDeclarationOrigin.IR_EXTERNAL_DECLARATION_STUB
 
     /**
@@ -137,7 +142,6 @@ internal class InterfaceDiscovery(
      * @return Signature string for change detection
      */
     private fun computeInterfaceSignature(irClass: IrClass): String {
-        // Simplified signature computation to avoid deprecated API issues
         val signature = StringBuilder()
         signature.append("interface ${irClass.kotlinFqName}")
 

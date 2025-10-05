@@ -8,7 +8,6 @@ import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
-import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.util.hasAnnotation
 import org.jetbrains.kotlin.name.FqName
 
@@ -21,8 +20,6 @@ import org.jetbrains.kotlin.name.FqName
  *
  * @since 1.0.0
  */
-@OptIn(UnsafeDuringIrConstructionAPI::class)
-@Suppress("DEPRECATION")
 internal object ClassAnalyzer {
     /**
      * Checks if a class can be faked (final or abstract classes with overridable members).
