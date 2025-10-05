@@ -9,120 +9,125 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.TestInstance
 
-/**
- * Tests for P1 Scenario: MultiLevelInheritance
- *
- * TESTING STANDARD: GIVEN-WHEN-THEN pattern (uppercase)
- * Framework: Vanilla JUnit5 + kotlin-test
- *
- * Validates deep inheritance hierarchy (3 levels) with mixed abstract/open methods.
- */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class S3StorageTest {
 
     @Test
-    fun `GIVEN S3Storage fake WHEN calling connect THEN should use inherited abstract behavior with error default`() {
-        // Given - connect() is abstract in BaseStorage (grandparent)
+    fun `GIVEN unconfigured connect WHEN called THEN throws error`() {
         val storage: S3Storage = fakeS3Storage {}
 
-        // When/Then - Should error because it's inherited abstract
         assertFailsWith<IllegalStateException> {
             storage.connect()
         }
     }
 
     @Test
-    fun `GIVEN S3Storage fake WHEN calling upload THEN should use inherited abstract behavior with error default`() {
-        // Given - upload() is abstract in CloudStorage (parent)
+    fun `GIVEN configured connect WHEN called THEN uses custom behavior`() {
+        var called = false
+
+        val storage: S3Storage = fakeS3Storage {
+            connect {
+                called = true
+                false
+            }
+        }
+
+        val result = storage.connect()
+
+        assertTrue(called)
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun `GIVEN unconfigured upload WHEN called THEN throws error`() {
         val storage: S3Storage = fakeS3Storage {}
 
-        // When/Then - Should error because it's inherited abstract from parent
         assertFailsWith<IllegalStateException> {
             storage.upload(byteArrayOf(1, 2, 3))
         }
     }
 
     @Test
-    fun `GIVEN S3Storage fake WHEN calling download THEN should use parent open default with super call`() {
-        // Given - download() is open in CloudStorage (parent)
+    fun `GIVEN configured upload WHEN called THEN uses custom behavior`() {
+        val storage: S3Storage = fakeS3Storage {
+            upload { data -> "s3://bucket/${data.size}" }
+        }
+
+        val result = storage.upload(byteArrayOf(1, 2, 3))
+
+        assertEquals("s3://bucket/3", result)
+    }
+
+    @Test
+    fun `GIVEN unconfigured download WHEN called THEN uses super implementation`() {
         val storage: S3Storage = fakeS3Storage {}
 
-        // When
-        val result = storage.download("test-id")
+        val result = storage.download("key1")
 
-        // Then - Should use super.download() default (returns null)
         assertNull(result)
     }
 
     @Test
-    fun `GIVEN S3Storage fake WHEN calling disconnect THEN should use grandparent open default`() {
-        // Given - disconnect() is open in BaseStorage (grandparent)
-        var disconnectCalled = false
+    fun `GIVEN configured download WHEN called THEN uses custom behavior`() {
+        val mockData = byteArrayOf(10, 20, 30)
 
         val storage: S3Storage = fakeS3Storage {
-            disconnect {
-                disconnectCalled = true
-            }
+            download { mockData }
         }
 
-        // When
-        storage.disconnect()
+        val result = storage.download("key1")
 
-        // Then - Custom behavior executed (overriding grandparent default)
-        assertTrue(disconnectCalled)
+        assertEquals(mockData.toList(), result?.toList())
     }
 
     @Test
-    fun `GIVEN configured all methods WHEN calling THEN should use custom behaviors from any level`() {
-        // Given - Configure methods from all 3 levels
+    fun `GIVEN unconfigured listBuckets WHEN called THEN uses super implementation`() {
+        val storage: S3Storage = fakeS3Storage {}
+
+        val result = storage.listBuckets()
+
+        assertEquals(emptyList(), result)
+    }
+
+    @Test
+    fun `GIVEN configured listBuckets WHEN called THEN uses custom behavior`() {
+        val storage: S3Storage = fakeS3Storage {
+            listBuckets { listOf("bucket1", "bucket2") }
+        }
+
+        val result = storage.listBuckets()
+
+        assertEquals(listOf("bucket1", "bucket2"), result)
+    }
+
+    @Test
+    fun `GIVEN all methods configured WHEN called THEN all use custom behaviors`() {
         var connectCalled = false
-        var uploadResult: String? = null
-        var downloadResult: ByteArray? = null
-        var listBucketsResult: List<String>? = null
+        val uploadedData = mutableListOf<Int>()
 
         val storage: S3Storage = fakeS3Storage {
-            // Grandparent abstract
             connect {
                 connectCalled = true
                 true
             }
-
-            // Parent abstract
             upload { data ->
-                val id = "s3://bucket/${data.size}"
-                uploadResult = id
-                id
+                uploadedData.add(data.size)
+                "custom-id"
             }
-
-            // Parent open
-            download { id ->
-                val mockData = byteArrayOf(1, 2, 3, 4, 5)
-                downloadResult = mockData
-                mockData
-            }
-
-            // Own open
-            listBuckets {
-                val buckets = listOf("bucket1", "bucket2")
-                listBucketsResult = buckets
-                buckets
-            }
+            download { byteArrayOf(1, 2) }
+            listBuckets { listOf("b1") }
         }
 
-        // When
         val connected = storage.connect()
         val uploaded = storage.upload(byteArrayOf(10, 20, 30))
-        val downloaded = storage.download("key1")
+        val downloaded = storage.download("key")
         val buckets = storage.listBuckets()
 
-        // Then - All custom behaviors work across 3-level hierarchy
         assertTrue(connectCalled)
         assertTrue(connected)
-        assertEquals("s3://bucket/3", uploadResult)
-        assertEquals("s3://bucket/3", uploaded)
-        assertEquals(byteArrayOf(1, 2, 3, 4, 5).toList(), downloadResult?.toList())
-        assertEquals(byteArrayOf(1, 2, 3, 4, 5).toList(), downloaded?.toList())
-        assertEquals(listOf("bucket1", "bucket2"), listBucketsResult)
-        assertEquals(listOf("bucket1", "bucket2"), buckets)
+        assertEquals(listOf(3), uploadedData)
+        assertEquals("custom-id", uploaded)
+        assertEquals(byteArrayOf(1, 2).toList(), downloaded?.toList())
+        assertEquals(listOf("b1"), buckets)
     }
 }
