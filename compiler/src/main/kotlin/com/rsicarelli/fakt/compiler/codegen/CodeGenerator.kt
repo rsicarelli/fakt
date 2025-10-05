@@ -201,11 +201,9 @@ internal class CodeGenerator(
                 // Add implementation class
                 append(code.implementation)
                 appendLine()
-                appendLine()
 
                 // Add factory function
                 append(code.factory)
-                appendLine()
                 appendLine()
 
                 // Add configuration DSL
@@ -260,11 +258,9 @@ internal class CodeGenerator(
                 // Add implementation class
                 append(code.implementation)
                 appendLine()
-                appendLine()
 
                 // Add factory function
                 append(code.factory)
-                appendLine()
                 appendLine()
 
                 // Add configuration DSL

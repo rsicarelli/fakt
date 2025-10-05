@@ -32,7 +32,6 @@ import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
 public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
     override val supportsK2: Boolean = true
 
-    @OptIn(ExperimentalCompilerApi::class)
     override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
         val messageCollector =
             configuration.get(

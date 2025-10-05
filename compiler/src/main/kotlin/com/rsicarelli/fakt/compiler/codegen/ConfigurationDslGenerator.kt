@@ -309,7 +309,14 @@ internal class ConfigurationDslGenerator(
                 ""
             } else {
                 function.parameters.joinToString(", ") { param ->
-                    typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                    val paramType =
+                        if (param.isVararg) {
+                            val elementType = unwrapVarargsType(param)
+                            "Array<out $elementType>"
+                        } else {
+                            typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                        }
+                    paramType
                 }
             }
 

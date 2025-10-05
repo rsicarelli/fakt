@@ -6,7 +6,6 @@ import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.declarations.FirRegularClass
 import org.jetbrains.kotlin.fir.declarations.hasAnnotation
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
-import org.jetbrains.kotlin.fir.types.FirResolvedTypeRef
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 
@@ -68,7 +67,6 @@ class FakeAnnotationDetector {
         }
     }
 
-    @Suppress("UnusedParameter") // Parameters reserved for future FIR API usage
     private fun extractParametersFromAnnotation(
         annotation: FirAnnotation,
         session: FirSession,
@@ -94,7 +92,6 @@ class FakeAnnotationDetector {
      * @param session The FIR session (reserved for future use)
      * @return ClassId of the annotation, currently always null
      */
-    @Suppress("UnusedParameter", "FunctionOnlyReturningConstant")
     private fun FirAnnotation.toAnnotationClassId(session: FirSession): ClassId? = null
 }
 

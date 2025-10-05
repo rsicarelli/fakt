@@ -20,53 +20,6 @@ import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 internal class InterfaceAnalyzer {
     private val patternAnalyzer = GenericPatternAnalyzer()
 
-    /**
-     * Checks if interface has generics and should be skipped.
-     * Provides helpful error messages for unsupported generic interfaces.
-     *
-     * @param irClass The interface class to check
-     * @return null if supported, error message if has generics
-     */
-    fun checkGenericSupport(irClass: IrClass): String? =
-        checkInterfaceLevelGenerics(irClass)
-            ?: checkMethodLevelGenerics(irClass)
-
-    /**
-     * Checks for interface-level type parameters (e.g., interface Repo<T>).
-     *
-     * @param irClass The interface class to check
-     * @return Error message if generics found, null otherwise
-     */
-    private fun checkInterfaceLevelGenerics(irClass: IrClass): String? {
-        if (irClass.typeParameters.isEmpty()) return null
-
-        val typeParams = irClass.typeParameters.joinToString(", ") { it.name.asString() }
-        return "Generic interfaces not supported: ${irClass.name.asString()}<$typeParams>. " +
-            "Consider creating a non-generic interface that extends this one: " +
-            "interface User${irClass.name.asString()} : ${irClass.name.asString()}<User>"
-    }
-
-    /**
-     * Checks for method-level type parameters (e.g., fun <T> process()).
-     *
-     * @param irClass The interface class to check
-     * @return Error message if generics found, null otherwise
-     */
-    private fun checkMethodLevelGenerics(irClass: IrClass): String? {
-        val functionsWithGenerics =
-            irClass.declarations
-                .filterIsInstance<IrSimpleFunction>()
-                .filter { it.typeParameters.isNotEmpty() }
-
-        if (functionsWithGenerics.isEmpty()) return null
-
-        val methodName = functionsWithGenerics.first().name.asString()
-        val typeParams =
-            functionsWithGenerics.first().typeParameters.joinToString(", ") { it.name.asString() }
-        return "Generic methods not supported: $methodName<$typeParams>. " +
-            "Consider creating methods with specific types instead of generics."
-    }
-
     fun analyzeInterfaceDynamically(sourceInterface: IrClass): InterfaceAnalysis {
         val properties = mutableListOf<PropertyAnalysis>()
         val functions = mutableListOf<FunctionAnalysis>()

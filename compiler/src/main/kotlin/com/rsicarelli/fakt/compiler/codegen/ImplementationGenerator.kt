@@ -300,7 +300,10 @@ internal class ImplementationGenerator(
                         // Override methods cannot have default values - interface already defines them
                         "$varargsPrefix${param.name}: $paramType"
                     }
-                val parameterNames = function.parameters.joinToString(", ") { it.name }
+                val parameterNames = function.parameters.joinToString(", ") { param ->
+                    // NO spread operator for interface methods - calling behavior lambda, not super
+                    param.name
+                }
 
                 val suspendModifier = if (function.isSuspend) "suspend " else ""
 
@@ -910,7 +913,14 @@ internal class ImplementationGenerator(
                         ""
                     } else {
                         function.parameters.joinToString(", ") { param ->
-                            typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                            val paramType =
+                                if (param.isVararg) {
+                                    val elementType = unwrapVarargsType(param)
+                                    "Array<out $elementType>"
+                                } else {
+                                    typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                                }
+                            paramType
                         }
                     }
 
@@ -942,7 +952,14 @@ internal class ImplementationGenerator(
                         ""
                     } else {
                         function.parameters.joinToString(", ") { param ->
-                            typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                            val paramType =
+                                if (param.isVararg) {
+                                    val elementType = unwrapVarargsType(param)
+                                    "Array<out $elementType>"
+                                } else {
+                                    typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                                }
+                            paramType
                         }
                     }
 
@@ -951,7 +968,20 @@ internal class ImplementationGenerator(
                 val suspendModifier = if (function.isSuspend) "suspend " else ""
 
                 // Open methods default to calling super
-                val parameterNames = function.parameters.joinToString(", ") { it.name }
+                // Parameters after varargs must use named syntax
+                val hasVarargs = function.parameters.any { it.isVararg }
+                val varargsIndex = if (hasVarargs) function.parameters.indexOfFirst { it.isVararg } else -1
+
+                val parameterNames = function.parameters.mapIndexed { index, param ->
+                    val spread = if (param.isVararg) "*" else ""
+                    val needsNamed = hasVarargs && index > varargsIndex
+                    if (needsNamed) {
+                        "${param.name} = ${param.name}"
+                    } else {
+                        "$spread${param.name}"
+                    }
+                }.joinToString(", ")
+
                 val defaultLambda =
                     if (function.parameters.isEmpty()) {
                         "{ super.$functionName() }"
@@ -1014,9 +1044,14 @@ internal class ImplementationGenerator(
                     typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
                 val parameters =
                     function.parameters.joinToString(", ") { param ->
+                        val varargsPrefix = if (param.isVararg) "vararg " else ""
                         val paramType =
-                            typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
-                        "${param.name}: $paramType"
+                            if (param.isVararg) {
+                                unwrapVarargsType(param)
+                            } else {
+                                typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                            }
+                        "$varargsPrefix${param.name}: $paramType"
                     }
                 val parameterNames = function.parameters.joinToString(", ") { it.name }
                 val suspendModifier = if (function.isSuspend) "suspend " else ""
@@ -1033,9 +1068,14 @@ internal class ImplementationGenerator(
                     typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
                 val parameters =
                     function.parameters.joinToString(", ") { param ->
+                        val varargsPrefix = if (param.isVararg) "vararg " else ""
                         val paramType =
-                            typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
-                        "${param.name}: $paramType"
+                            if (param.isVararg) {
+                                unwrapVarargsType(param)
+                            } else {
+                                typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                            }
+                        "$varargsPrefix${param.name}: $paramType"
                     }
                 val parameterNames = function.parameters.joinToString(", ") { it.name }
                 val suspendModifier = if (function.isSuspend) "suspend " else ""
@@ -1097,7 +1137,14 @@ internal class ImplementationGenerator(
                         ""
                     } else {
                         function.parameters.joinToString(", ") { param ->
-                            typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                            val paramType =
+                                if (param.isVararg) {
+                                    val elementType = unwrapVarargsType(param)
+                                    "Array<out $elementType>"
+                                } else {
+                                    typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                                }
+                            paramType
                         }
                     }
 
@@ -1120,7 +1167,14 @@ internal class ImplementationGenerator(
                         ""
                     } else {
                         function.parameters.joinToString(", ") { param ->
-                            typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                            val paramType =
+                                if (param.isVararg) {
+                                    val elementType = unwrapVarargsType(param)
+                                    "Array<out $elementType>"
+                                } else {
+                                    typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                                }
+                            paramType
                         }
                     }
 

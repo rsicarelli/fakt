@@ -10,7 +10,6 @@ import org.jetbrains.kotlin.ir.symbols.IrTypeParameterSymbol
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.isMarkedNullable
-import kotlin.reflect.KClass
 
 /**
  * Core pattern analyzer for Fakt compile-time type safety.
@@ -21,7 +20,6 @@ import kotlin.reflect.KClass
  * - Mixed generics → Generate hybrid approach
  * - No generics → Use existing simple generation
  */
-@OptIn(org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI::class)
 class GenericPatternAnalyzer {
     /**
      * Analyze an interface to determine its generic pattern and optimal generation strategy.

@@ -7,7 +7,6 @@ import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
-import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrStarProjection
 import org.jetbrains.kotlin.ir.types.IrType
@@ -25,8 +24,6 @@ import org.jetbrains.kotlin.ir.util.isVararg
  *
  * @since 1.0.0
  */
-@OptIn(UnsafeDuringIrConstructionAPI::class)
-@Suppress("DEPRECATION")
 internal object IrAnalysisHelper {
     /**
      * Analyzes a property declaration to extract type and nullability information.
