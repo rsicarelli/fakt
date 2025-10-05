@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.types
 
+import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrSimpleType
@@ -44,6 +45,49 @@ internal class ImportResolver(
 
         // Collect imports from property types
         for (property in analysis.properties) {
+            collectImportsFromType(property.type, currentPackage, imports)
+        }
+
+        return imports
+    }
+
+    /**
+     * Collect all required import statements for types used in the class.
+     * Similar to collectRequiredImports but for class analysis (abstract/final classes).
+     *
+     * @param analysis The class analysis containing all types to resolve
+     * @param currentPackage The package of the generated fake class
+     * @return Set of fully qualified type names that need to be imported
+     */
+    fun collectRequiredImportsForClass(
+        analysis: ClassAnalysis,
+        currentPackage: String,
+    ): Set<String> {
+        val imports = mutableSetOf<String>()
+
+        // Collect imports from abstract methods
+        for (function in analysis.abstractMethods) {
+            collectImportsFromType(function.returnType, currentPackage, imports)
+            for (parameter in function.parameters) {
+                collectImportsFromType(parameter.type, currentPackage, imports)
+            }
+        }
+
+        // Collect imports from open methods
+        for (function in analysis.openMethods) {
+            collectImportsFromType(function.returnType, currentPackage, imports)
+            for (parameter in function.parameters) {
+                collectImportsFromType(parameter.type, currentPackage, imports)
+            }
+        }
+
+        // Collect imports from abstract properties
+        for (property in analysis.abstractProperties) {
+            collectImportsFromType(property.type, currentPackage, imports)
+        }
+
+        // Collect imports from open properties
+        for (property in analysis.openProperties) {
             collectImportsFromType(property.type, currentPackage, imports)
         }
 

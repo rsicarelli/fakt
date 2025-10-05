@@ -323,7 +323,7 @@ internal class TypeResolver {
         val typeArgs =
             arguments.map { arg ->
                 when (arg) {
-                    is IrStarProjection -> "*"  // Preserve star projections
+                    is IrStarProjection -> "*" // Preserve star projections
                     is IrTypeProjection -> irTypeToKotlinString(arg.type, preserveTypeParameters)
                     else -> "Any"
                 }

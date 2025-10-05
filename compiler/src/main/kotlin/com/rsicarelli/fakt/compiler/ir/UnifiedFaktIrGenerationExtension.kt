@@ -7,6 +7,8 @@ import com.rsicarelli.fakt.compiler.codegen.CodeGenerators
 import com.rsicarelli.fakt.compiler.codegen.ConfigurationDslGenerator
 import com.rsicarelli.fakt.compiler.codegen.FactoryGenerator
 import com.rsicarelli.fakt.compiler.codegen.ImplementationGenerator
+import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalyzer
+import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalyzer.isFakableClass
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalyzer
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceDiscovery
 import com.rsicarelli.fakt.compiler.optimization.CompilerOptimizations
@@ -81,13 +83,17 @@ class UnifiedFaktIrGenerationExtension(
         // We don't skip non-test modules anymore - we generate FROM main TO test
 
         try {
-            // Phase 1: Dynamic Interface Discovery
-            messageCollector?.reportInfo("Fakt: Phase 1 - Starting interface discovery")
+            // Phase 1: Dynamic Interface & Class Discovery
+            messageCollector?.reportInfo("Fakt: Phase 1 - Starting interface & class discovery")
             val fakeInterfaces = interfaceDiscovery.discoverFakeInterfaces(moduleFragment)
             messageCollector?.reportInfo("Fakt: Discovered ${fakeInterfaces.size} @Fake annotated interfaces")
 
-            if (fakeInterfaces.isEmpty()) {
-                messageCollector?.reportInfo("Fakt: No @Fake interfaces found in module ${moduleFragment.name}")
+            // Discover fakable classes (final/abstract with open/abstract members)
+            val fakeClasses = discoverFakeClasses(moduleFragment)
+            messageCollector?.reportInfo("Fakt: Discovered ${fakeClasses.size} @Fake annotated classes")
+
+            if (fakeInterfaces.isEmpty() && fakeClasses.isEmpty()) {
+                messageCollector?.reportInfo("Fakt: No @Fake interfaces or classes found in module ${moduleFragment.name}")
                 messageCollector?.reportInfo("Fakt: Checked ${moduleFragment.files.size} files")
                 messageCollector?.reportInfo("============================================")
                 return
@@ -95,6 +101,7 @@ class UnifiedFaktIrGenerationExtension(
 
             // Phase 2: IR-Native Code Generation with Incremental Compilation
             val interfacesToProcess = filterInterfacesToProcess(fakeInterfaces)
+            val classesToProcess = filterClassesToProcess(fakeClasses)
 
             for ((fakeInterface, typeInfo) in interfacesToProcess) {
                 val interfaceName = fakeInterface.name.asString()
@@ -118,7 +125,29 @@ class UnifiedFaktIrGenerationExtension(
                 messageCollector?.reportInfo("Fakt: Generated IR-native fake for $interfaceName")
             }
 
-            messageCollector?.reportInfo("Fakt: IR-native generation completed successfully")
+            // Process classes
+            for ((fakeClass, typeInfo) in classesToProcess) {
+                val className = fakeClass.name.asString()
+                messageCollector?.reportInfo("Fakt: Processing class: $className")
+
+                // Analyze class using ClassAnalyzer
+                val classAnalysis = ClassAnalyzer.analyzeClass(fakeClass)
+
+                // Generate class fake implementation
+                codeGenerator.generateWorkingClassFake(
+                    sourceClass = fakeClass,
+                    analysis = classAnalysis,
+                    moduleFragment = moduleFragment,
+                )
+
+                // Record successful generation for incremental compilation
+                optimizations.recordGeneration(typeInfo)
+                messageCollector?.reportInfo("Fakt: Generated fake for class $className")
+            }
+
+            messageCollector?.reportInfo(
+                "Fakt: IR-native generation completed successfully (${interfacesToProcess.size} interfaces, ${classesToProcess.size} classes)",
+            )
 
             // Generate simple compilation report and save signatures for incremental compilation
             (optimizations as? com.rsicarelli.fakt.compiler.optimization.IncrementalCompiler)?.generateReport(
@@ -195,6 +224,48 @@ class UnifiedFaktIrGenerationExtension(
                 // ✅ PHASE 3: Mixed generics (class + method) now enabled!
                 // All patterns (NoGenerics, ClassLevelGenerics, MethodLevelGenerics, MixedGenerics) will be processed
                 else -> fakeInterface to typeInfo
+            }
+        }
+
+    /**
+     * Discovers all @Fake annotated classes in the module.
+     *
+     * @param moduleFragment The IR module to search
+     * @return List of fakable classes
+     */
+    private fun discoverFakeClasses(moduleFragment: IrModuleFragment): List<IrClass> {
+        val discoveredClasses = mutableListOf<IrClass>()
+
+        moduleFragment.files.forEach { file ->
+            file.declarations.forEach { declaration ->
+                if (declaration is IrClass && declaration.isFakableClass()) {
+                    discoveredClasses.add(declaration)
+                    messageCollector?.reportInfo("Fakt: Discovered fakable class: ${declaration.name}")
+                }
+            }
+        }
+
+        return discoveredClasses
+    }
+
+    /**
+     * Filters classes to determine which need fake generation.
+     * Skips unchanged classes (incremental compilation).
+     *
+     * @param fakeClasses All discovered @Fake classes
+     * @return List of classes paired with their TypeInfo that need processing
+     */
+    private fun filterClassesToProcess(fakeClasses: List<IrClass>): List<Pair<IrClass, TypeInfo>> =
+        fakeClasses.mapNotNull { fakeClass ->
+            val className = fakeClass.name.asString()
+            val typeInfo = createTypeInfo(fakeClass)
+
+            when {
+                !optimizations.needsRegeneration(typeInfo) -> {
+                    messageCollector?.reportInfo("Fakt: Skipping unchanged class: $className")
+                    null
+                }
+                else -> fakeClass to typeInfo
             }
         }
 

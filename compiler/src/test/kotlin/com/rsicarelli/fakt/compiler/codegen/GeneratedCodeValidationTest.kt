@@ -196,12 +196,12 @@ class GeneratedCodeValidationTest {
         // THEN
         assertTrue(
             content.contains("private var fetchDataBehavior: suspend () -> String") ||
-            content.contains("private var processDataBehavior: suspend"),
+                content.contains("private var processDataBehavior: suspend"),
             "Should preserve suspend modifier in behavior property",
         )
         assertTrue(
             content.contains("override suspend fun fetchData(): String") ||
-            content.contains("override suspend fun"),
+                content.contains("override suspend fun"),
             "Should preserve suspend modifier in override",
         )
     }
@@ -270,7 +270,9 @@ class GeneratedCodeValidationTest {
 
         // THEN
         assertTrue(
-            content.contains("fun fakePropertyAndMethodInterface(configure: FakePropertyAndMethodInterfaceConfig.() -> Unit = {}): PropertyAndMethodInterface"),
+            content.contains(
+                "fun fakePropertyAndMethodInterface(configure: FakePropertyAndMethodInterfaceConfig.() -> Unit = {}): PropertyAndMethodInterface",
+            ),
             "Should generate factory function with DSL parameter",
         )
     }

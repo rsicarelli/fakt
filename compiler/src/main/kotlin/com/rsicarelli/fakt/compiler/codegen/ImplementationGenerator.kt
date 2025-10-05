@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.codegen
 
+import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.FunctionAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.ParameterAnalysis
@@ -25,6 +26,42 @@ internal class ImplementationGenerator(
          */
         private const val ARRAY_PREFIX_LENGTH = 6
     }
+
+    /**
+     * Generates a fake implementation for a class (abstract or final with open members).
+     *
+     * Key differences from interface generation:
+     * - Extends the class with () constructor call
+     * - Abstract methods get error() defaults
+     * - Open methods get super.methodName() defaults
+     *
+     * @param analysis The analyzed class metadata
+     * @param fakeClassName The name of the fake implementation class
+     * @return The generated fake class code
+     */
+    fun generateClassFake(
+        analysis: ClassAnalysis,
+        fakeClassName: String,
+    ): String =
+        buildString {
+            // Generate subclass header (extends parent class)
+            appendLine("class $fakeClassName : ${analysis.className}() {")
+
+            // Generate behavior properties for abstract and open members
+            append(generateClassBehaviorProperties(analysis))
+
+            appendLine()
+
+            // Generate method and property overrides
+            append(generateClassMethodOverrides(analysis))
+
+            appendLine()
+
+            // Generate configuration methods
+            append(generateClassConfigMethods(analysis))
+
+            append("}")
+        }
 
     /**
      * Generates the complete implementation class code.
@@ -250,20 +287,21 @@ internal class ImplementationGenerator(
                             .toSet()
 
                     // Build parameter list with casts for types containing method-level generics
-                    val castedParamNames = function.parameters.joinToString(", ") { param ->
-                        val paramTypeString =
-                            typeResolver.irTypeToKotlinString(
-                                param.type,
-                                preserveTypeParameters = true,
-                            )
-                        // If parameter type contains method-level type parameters, cast to converted type
-                        if (containsMethodTypeParam(paramTypeString, methodTypeParamNames)) {
-                            val convertedType = convertMethodTypeParamsToAny(paramTypeString, methodTypeParamNames)
-                            "${param.name} as $convertedType"
-                        } else {
-                            param.name
+                    val castedParamNames =
+                        function.parameters.joinToString(", ") { param ->
+                            val paramTypeString =
+                                typeResolver.irTypeToKotlinString(
+                                    param.type,
+                                    preserveTypeParameters = true,
+                                )
+                            // If parameter type contains method-level type parameters, cast to converted type
+                            if (containsMethodTypeParam(paramTypeString, methodTypeParamNames)) {
+                                val convertedType = convertMethodTypeParamsToAny(paramTypeString, methodTypeParamNames)
+                                "${param.name} as $convertedType"
+                            } else {
+                                param.name
+                            }
                         }
-                    }
 
                     appendLine("        @Suppress(\"UNCHECKED_CAST\")")
                     appendLine("        return ${functionName}Behavior($castedParamNames) as $returnTypeString")
@@ -427,18 +465,20 @@ internal class ImplementationGenerator(
                 val paramName = function.parameters[0].name
 
                 // Determine the identity call based on suspend modifier
-                val identityCall = if (function.isSuspend) {
-                    "($paramName as suspend () -> Any?)()"
-                } else {
-                    "($paramName as () -> Any?)()"
-                }
+                val identityCall =
+                    if (function.isSuspend) {
+                        "($paramName as suspend () -> Any?)()"
+                    } else {
+                        "($paramName as () -> Any?)()"
+                    }
 
                 // Check if return type is Result<T> and wrap accordingly
-                val wrappedCall = if (typeForDefaultDetection.startsWith("Result<")) {
-                    "Result.success($identityCall)"
-                } else {
-                    identityCall
-                }
+                val wrappedCall =
+                    if (typeForDefaultDetection.startsWith("Result<")) {
+                        "Result.success($identityCall)"
+                    } else {
+                        identityCall
+                    }
 
                 // Generate lambda with proper parameter list
                 return if (function.parameters.size == 1) {
@@ -503,7 +543,7 @@ internal class ImplementationGenerator(
      */
     private fun generateKotlinStdlibDefault(
         originalType: String,
-        convertedType: String = originalType
+        convertedType: String = originalType,
     ): String =
         // Check nullable types FIRST - they always default to null
         if (originalType.endsWith("?")) {
@@ -545,7 +585,7 @@ internal class ImplementationGenerator(
      */
     private fun getCollectionDefaults(
         originalType: String,
-        convertedType: String = originalType
+        convertedType: String = originalType,
     ): String? =
         getPrimitiveArrayDefault(originalType)
             ?: when {
@@ -597,7 +637,7 @@ internal class ImplementationGenerator(
      */
     private fun getKotlinStdlibDefaults(
         originalType: String,
-        convertedType: String = originalType
+        convertedType: String = originalType,
     ): String? =
         when {
             originalType.startsWith("Result<") -> extractAndCreateResult(originalType, convertedType)
@@ -653,7 +693,7 @@ internal class ImplementationGenerator(
 
     private fun extractAndCreateResult(
         originalType: String,
-        convertedType: String = originalType
+        convertedType: String = originalType,
     ): String {
         val typeParam = extractFirstTypeParameter(originalType)
         val innerDefault = generateKotlinStdlibDefault(typeParam, convertedType)
@@ -716,7 +756,7 @@ internal class ImplementationGenerator(
      */
     private fun containsMethodTypeParam(
         typeString: String,
-        methodTypeParamNames: Set<String>
+        methodTypeParamNames: Set<String>,
     ): Boolean =
         methodTypeParamNames.any { typeParam ->
             // Check if type parameter appears as a standalone word in the type string
@@ -734,16 +774,17 @@ internal class ImplementationGenerator(
      */
     private fun convertMethodTypeParamsToAny(
         typeString: String,
-        methodTypeParamNames: Set<String>
+        methodTypeParamNames: Set<String>,
     ): String {
         // Handle Result<T> -> Result<Any?>
         if (typeString.startsWith("Result<")) {
             val innerType = extractFirstTypeParameter(typeString)
-            val convertedInner = if (containsMethodTypeParam(innerType, methodTypeParamNames)) {
-                convertMethodTypeParamsToAny(innerType, methodTypeParamNames)
-            } else {
-                innerType
-            }
+            val convertedInner =
+                if (containsMethodTypeParam(innerType, methodTypeParamNames)) {
+                    convertMethodTypeParamsToAny(innerType, methodTypeParamNames)
+                } else {
+                    innerType
+                }
             return "Result<$convertedInner>"
         }
 
@@ -824,4 +865,172 @@ internal class ImplementationGenerator(
 
         return paramsForHeader to whereClauses.joinToString(", ")
     }
+
+    /**
+     * Generates behavior properties for class members.
+     * Abstract members get error() defaults, open members get super call defaults.
+     */
+    private fun generateClassBehaviorProperties(analysis: ClassAnalysis): String =
+        buildString {
+            // Generate behavior properties for abstract methods (must be configured)
+            for (function in analysis.abstractMethods) {
+                val functionName = function.name
+                val parameterTypes =
+                    if (function.parameters.isEmpty()) {
+                        ""
+                    } else {
+                        function.parameters.joinToString(", ") { param ->
+                            typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                        }
+                    }
+
+                val returnTypeString =
+                    typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+                val suspendModifier = if (function.isSuspend) "suspend " else ""
+
+                // Abstract methods MUST be configured - error default
+                val defaultLambda =
+                    if (function.parameters.isEmpty()) {
+                        "{ error(\"Configure $functionName behavior\") }"
+                    } else if (function.parameters.size == 1) {
+                        "{ _ -> error(\"Configure $functionName behavior\") }"
+                    } else {
+                        "{ ${function.parameters.joinToString(", ") { "_" }} -> error(\"Configure $functionName behavior\") }"
+                    }
+
+                appendLine(
+                    "    private var ${functionName}Behavior: " +
+                        "$suspendModifier($parameterTypes) -> $returnTypeString = $defaultLambda",
+                )
+            }
+
+            // Generate behavior properties for open methods (optional override, default to super)
+            for (function in analysis.openMethods) {
+                val functionName = function.name
+                val parameterTypes =
+                    if (function.parameters.isEmpty()) {
+                        ""
+                    } else {
+                        function.parameters.joinToString(", ") { param ->
+                            typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                        }
+                    }
+
+                val returnTypeString =
+                    typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+                val suspendModifier = if (function.isSuspend) "suspend " else ""
+
+                // Open methods default to calling super
+                val parameterNames = function.parameters.joinToString(", ") { it.name }
+                val defaultLambda =
+                    if (function.parameters.isEmpty()) {
+                        "{ super.$functionName() }"
+                    } else {
+                        "{ ${function.parameters.joinToString(", ") { it.name }} -> super.$functionName($parameterNames) }"
+                    }
+
+                appendLine(
+                    "    private var ${functionName}Behavior: " +
+                        "$suspendModifier($parameterTypes) -> $returnTypeString = $defaultLambda",
+                )
+            }
+
+            // TODO: Properties (similar pattern, abstract vs open)
+        }
+
+    /**
+     * Generates method overrides for class members.
+     */
+    private fun generateClassMethodOverrides(analysis: ClassAnalysis): String =
+        buildString {
+            // Generate overrides for abstract methods
+            for (function in analysis.abstractMethods) {
+                val functionName = function.name
+                val returnTypeString =
+                    typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+                val parameters =
+                    function.parameters.joinToString(", ") { param ->
+                        val paramType =
+                            typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                        "${param.name}: $paramType"
+                    }
+                val parameterNames = function.parameters.joinToString(", ") { it.name }
+                val suspendModifier = if (function.isSuspend) "suspend " else ""
+
+                appendLine("    override ${suspendModifier}fun $functionName($parameters): $returnTypeString {")
+                appendLine("        return ${functionName}Behavior($parameterNames)")
+                appendLine("    }")
+            }
+
+            // Generate overrides for open methods
+            for (function in analysis.openMethods) {
+                val functionName = function.name
+                val returnTypeString =
+                    typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+                val parameters =
+                    function.parameters.joinToString(", ") { param ->
+                        val paramType =
+                            typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                        "${param.name}: $paramType"
+                    }
+                val parameterNames = function.parameters.joinToString(", ") { it.name }
+                val suspendModifier = if (function.isSuspend) "suspend " else ""
+
+                appendLine("    override ${suspendModifier}fun $functionName($parameters): $returnTypeString {")
+                appendLine("        return ${functionName}Behavior($parameterNames)")
+                appendLine("    }")
+            }
+        }
+
+    /**
+     * Generates configuration methods for class members.
+     */
+    private fun generateClassConfigMethods(analysis: ClassAnalysis): String =
+        buildString {
+            // Generate configuration methods for abstract methods
+            for (function in analysis.abstractMethods) {
+                val functionName = function.name
+                val parameterTypes =
+                    if (function.parameters.isEmpty()) {
+                        ""
+                    } else {
+                        function.parameters.joinToString(", ") { param ->
+                            typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                        }
+                    }
+
+                val returnTypeString =
+                    typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+                val suspendModifier = if (function.isSuspend) "suspend " else ""
+
+                appendLine(
+                    "    internal fun configure${functionName.capitalize()}(" +
+                        "behavior: $suspendModifier($parameterTypes) -> $returnTypeString" +
+                        ") { ${functionName}Behavior = behavior }",
+                )
+            }
+
+            // Generate configuration methods for open methods
+            for (function in analysis.openMethods) {
+                val functionName = function.name
+                val parameterTypes =
+                    if (function.parameters.isEmpty()) {
+                        ""
+                    } else {
+                        function.parameters.joinToString(", ") { param ->
+                            typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                        }
+                    }
+
+                val returnTypeString =
+                    typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+                val suspendModifier = if (function.isSuspend) "suspend " else ""
+
+                appendLine(
+                    "    internal fun configure${functionName.capitalize()}(" +
+                        "behavior: $suspendModifier($parameterTypes) -> $returnTypeString" +
+                        ") { ${functionName}Behavior = behavior }",
+                )
+            }
+        }
 }

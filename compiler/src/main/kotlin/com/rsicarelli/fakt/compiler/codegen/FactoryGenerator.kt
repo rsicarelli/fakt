@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.codegen
 
+import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
 
 /**
@@ -88,6 +89,33 @@ internal class FactoryGenerator {
                 }
 
             appendLine("    return $fakeClassName$constructorTypeParams().apply { $configWithGenerics(this).configure() }")
+            appendLine("}")
+        }
+    }
+
+    /**
+     * Generates a factory function for the fake class implementation.
+     *
+     * @param analysis The analyzed class metadata
+     * @param fakeClassName The name of the fake implementation class
+     * @return The generated factory function code
+     */
+    fun generateFactoryFunction(
+        analysis: ClassAnalysis,
+        fakeClassName: String,
+    ): String {
+        val className = analysis.className
+        val factoryFunctionName = "fake$className"
+        val configClassName = "Fake${className}Config"
+
+        // Classes don't have type parameters yet (future enhancement)
+        // For now, generate simple factory without generics
+
+        return buildString {
+            appendLine(
+                "fun $factoryFunctionName(configure: $configClassName.() -> Unit = {}): $className {",
+            )
+            appendLine("    return $fakeClassName().apply { $configClassName(this).configure() }")
             appendLine("}")
         }
     }

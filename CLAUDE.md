@@ -160,9 +160,8 @@ make help
 ### 📚 Documentation Index
 
 **Start Here**:
-- **[QUICK-START.md](./.claude/docs/implementation/generics/QUICK-START.md)** ⭐ - Passo a passo para começar
-- **[ROADMAP.md](./.claude/docs/implementation/generics/ROADMAP.md)** - Visão geral e estratégia completa
-- **[CHEAT-SHEET.md](./.claude/docs/implementation/generics/CHEAT-SHEET.md)** - Quick reference durante desenvolvimento
+- **[QUICK-START.md](./.claude/docs/implementation/QUICK-START.md)** ⭐ - Passo a passo para começar
+- **[ROADMAP.md](./.claude/docs/implementation/ROADMAP.md)** - Visão geral e estratégia completa
 
 **Phase Guides**:
 - **[Phase 1: Core Infrastructure](./.claude/docs/implementation/generics/phase1-core-infrastructure.md)** - Week 1

@@ -6,11 +6,11 @@ import com.rsicarelli.fakt.Fake
 import com.rsicarelli.fakt.samples.singleModule.models.User
 
 /**
- * Example: Final class with open methods
+ * Example: Open class with open methods
  * This is the most common scenario - a concrete class with some overridable behavior.
  */
 @Fake
-class UserService {
+open class UserService {
     open fun getUser(id: String): User {
         // Real implementation would query database
         return User(id, "John Doe", "john@example.com")

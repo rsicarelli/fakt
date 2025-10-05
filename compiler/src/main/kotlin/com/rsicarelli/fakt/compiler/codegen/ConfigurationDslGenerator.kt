@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.codegen
 
+import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
+import com.rsicarelli.fakt.compiler.ir.analysis.FunctionAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.ParameterAnalysis
 import com.rsicarelli.fakt.compiler.types.TypeResolver
@@ -60,7 +62,9 @@ internal class ConfigurationDslGenerator(
         return buildString {
             // Generate class header with optional where clause (after constructor for classes!)
             if (whereClause.isNotEmpty()) {
-                appendLine("class $configClassName$typeParameters(private val fake: $fakeClassName$typeParameterNames) where $whereClause {")
+                appendLine(
+                    "class $configClassName$typeParameters(private val fake: $fakeClassName$typeParameterNames) where $whereClause {",
+                )
             } else {
                 appendLine("class $configClassName$typeParameters(private val fake: $fakeClassName$typeParameterNames) {")
             }
@@ -197,5 +201,73 @@ internal class ConfigurationDslGenerator(
         }
 
         return paramsForHeader to whereClauses.joinToString(", ")
+    }
+
+    /**
+     * Generates a configuration DSL class for the fake class implementation.
+     *
+     * @param analysis The analyzed class metadata
+     * @param fakeClassName The name of the fake implementation class
+     * @return The generated configuration DSL class code
+     */
+    fun generateConfigurationDsl(
+        analysis: ClassAnalysis,
+        fakeClassName: String,
+    ): String {
+        val className = analysis.className
+        val configClassName = "Fake${className}Config"
+
+        // Classes don't have type parameters yet (future enhancement)
+        // For now, generate simple config DSL without generics
+
+        return buildString {
+            appendLine("class $configClassName(private val fake: $fakeClassName) {")
+
+            // Generate configuration methods for abstract methods
+            for (function in analysis.abstractMethods) {
+                appendLine(generateConfigMethodForFunction(function))
+            }
+
+            // Generate configuration methods for open methods
+            for (function in analysis.openMethods) {
+                appendLine(generateConfigMethodForFunction(function))
+            }
+
+            appendLine("}")
+        }
+    }
+
+    /**
+     * Generates a single configuration method for a function (abstract or open).
+     * Shared logic between interface and class DSL generation.
+     */
+    private fun generateConfigMethodForFunction(function: FunctionAnalysis): String {
+        val functionName = function.name
+        val suspendModifier = if (function.isSuspend) "suspend " else ""
+
+        // Build parameter types list
+        val parameterTypes =
+            if (function.parameters.isEmpty()) {
+                ""
+            } else {
+                function.parameters.joinToString(", ") { param ->
+                    typeResolver.irTypeToKotlinString(param.type)
+                }
+            }
+
+        // Build return type
+        val returnTypeString = typeResolver.irTypeToKotlinString(function.returnType)
+
+        // Build behavior signature
+        val behaviorSignature =
+            if (function.parameters.isEmpty()) {
+                "$suspendModifier() -> $returnTypeString"
+            } else {
+                "$suspendModifier($parameterTypes) -> $returnTypeString"
+            }
+
+        return "    fun $functionName(behavior: $behaviorSignature) { fake.configure${functionName.replaceFirstChar {
+            it.uppercase()
+        }}(behavior) }"
     }
 }
