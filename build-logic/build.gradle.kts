@@ -16,6 +16,11 @@ dependencies {
     // Root plugin dependencies
     implementation("org.jetbrains.dokka:dokka-gradle-plugin:2.1.0-Beta")
     implementation("org.jetbrains.kotlinx.binary-compatibility-validator:org.jetbrains.kotlinx.binary-compatibility-validator.gradle.plugin:${libs.versions.binaryCompatibilityValidator.get()}")
+
+    // Test dependencies for convention plugin testing
+    testImplementation(gradleTestKit())
+    testImplementation(kotlin("test"))
+    testImplementation(kotlin("test-junit5"))
 }
 
 gradlePlugin {
@@ -31,6 +36,10 @@ gradlePlugin {
         register("fakt-multiplatform") {
             id = "fakt-multiplatform"
             implementationClass = "FaktMultiplatformPlugin"
+        }
+        register("fakt-convention") {
+            id = "fakt-convention"
+            implementationClass = "FaktConventionPlugin"
         }
     }
 }

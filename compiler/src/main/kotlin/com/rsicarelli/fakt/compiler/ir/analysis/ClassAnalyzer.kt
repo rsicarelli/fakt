@@ -8,6 +8,8 @@ import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
+import org.jetbrains.kotlin.ir.types.classFqName
+import org.jetbrains.kotlin.ir.types.classifierOrNull
 import org.jetbrains.kotlin.ir.util.hasAnnotation
 import org.jetbrains.kotlin.name.FqName
 
@@ -27,7 +29,7 @@ internal object ClassAnalyzer {
      * A class is fakable if:
      * 1. It's a CLASS (not interface, object, enum)
      * 2. It's NOT sealed
-     * 3. It has @Fake annotation
+     * 3. It has @Fake annotation OR an annotation marked with @GeneratesFake
      * 4. It has at least one open/abstract method or property
      *
      * @return true if the class can be faked, false otherwise
@@ -39,13 +41,61 @@ internal object ClassAnalyzer {
         // Check 2: Must not be sealed (use sealed hierarchy support later)
         if (modality == Modality.SEALED) return false
 
-        // Check 3: Must have @Fake annotation
-        if (!hasAnnotation(FqName("com.rsicarelli.fakt.Fake"))) return false
+        // Check 3: Must have @Fake annotation OR annotation with @GeneratesFake meta-annotation
+        if (!hasFakeAnnotation()) return false
 
         // Check 4: Must have at least one open/abstract method or property
         if (!hasOverridableMembers()) return false
 
         return true
+    }
+
+    /**
+     * Checks if a class has a fake generation annotation.
+     *
+     * This method checks for annotations in two ways:
+     * 1. Direct @Fake annotation (backward compatibility)
+     * 2. Any annotation marked with @GeneratesFake meta-annotation
+     *
+     * @return true if class has a fake annotation, false otherwise
+     */
+    private fun IrClass.hasFakeAnnotation(): Boolean {
+        // Direct @Fake check
+        if (hasAnnotation(FqName("com.rsicarelli.fakt.Fake"))) return true
+
+        // Check for @GeneratesFake meta-annotation
+        return annotations.any { annotation ->
+            hasGeneratesFakeMetaAnnotation(annotation)
+        }
+    }
+
+    /**
+     * Checks if an annotation is annotated with @GeneratesFake meta-annotation.
+     *
+     * This enables companies to define their own annotations (like @TestDouble)
+     * by marking them with @GeneratesFake, without being locked into @Fake.
+     *
+     * Pattern inspired by Kotlin's @HidesFromObjC meta-annotation.
+     *
+     * @param annotation The annotation to check
+     * @return true if the annotation has @GeneratesFake meta-annotation, false otherwise
+     */
+    private fun hasGeneratesFakeMetaAnnotation(annotation: org.jetbrains.kotlin.ir.expressions.IrConstructorCall): Boolean {
+        try {
+            // Get the annotation class from the type
+            val annotationType = annotation.type
+            val annotationClassSymbol = annotationType.classifierOrNull ?: return false
+            val annotationClass = annotationClassSymbol.owner as? IrClass ?: return false
+
+            // Check if the annotation class itself has @GeneratesFake annotation
+            return annotationClass.annotations.any { metaAnnotation ->
+                metaAnnotation.type.classFqName?.asString() == "com.rsicarelli.fakt.GeneratesFake"
+            }
+        } catch (e: Exception) {
+            // Safely handle any IR traversal errors
+            // This is expected for some annotation patterns
+            return false
+        }
     }
 
     /**

@@ -7,8 +7,6 @@ plugins {
 
 kotlin {
     jvmToolchain(21)
-
-    // Use KMP default hierarchy template
     applyDefaultHierarchyTemplate()
 
     // Targets
@@ -17,14 +15,6 @@ kotlin {
         browser()
         nodejs()
     }
-
-    // Native targets
-    linuxX64()
-    macosX64()
-    macosArm64()
-    iosX64()
-    iosArm64()
-    iosSimulatorArm64()
 
     sourceSets {
         commonMain {
@@ -36,6 +26,7 @@ kotlin {
         commonTest {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-test")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
             }
         }
     }

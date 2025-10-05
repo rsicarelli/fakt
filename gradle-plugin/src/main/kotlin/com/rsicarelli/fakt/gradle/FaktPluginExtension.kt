@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.gradle
 
+import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
@@ -44,6 +45,35 @@ open class FaktPluginExtension
          * Default: false
          */
         val debug: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
+
+        /**
+         * Source project to collect fakes from (collector mode).
+         * When set, this module will collect generated fakes from the specified project
+         * instead of generating its own fakes.
+         *
+         * This enables the dedicated fake module pattern:
+         * - foundation (generates fakes)
+         * - foundation-fakes (collects fakes from foundation)
+         * - domain (uses foundation-fakes via standard testImplementation)
+         *
+         * Example:
+         * ```kotlin
+         * fakt {
+         *     collectFakesFrom(project(":foundation"))
+         * }
+         * ```
+         */
+        val collectFrom: Property<Project> = objects.property(Project::class.java)
+
+        /**
+         * Configure this module to collect fakes from another project.
+         * This enables the dedicated fake module pattern (e.g., foundation-fakes).
+         *
+         * @param project The source project that generates fakes
+         */
+        fun collectFakesFrom(project: Project) {
+            collectFrom.set(project)
+        }
 
         /**
          * Destination directory for compilation reports and generated metadata.

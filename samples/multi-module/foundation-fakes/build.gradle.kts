@@ -7,42 +7,37 @@ plugins {
 
 kotlin {
     jvmToolchain(21)
-
-    // Use KMP default hierarchy template
     applyDefaultHierarchyTemplate()
 
-    // Targets
+    // Targets (must match foundation module)
     jvm()
     js(IR) {
         browser()
         nodejs()
     }
 
-    // Native targets
-    linuxX64()
-    macosX64()
-    macosArm64()
-    iosX64()
-    iosArm64()
-    iosSimulatorArm64()
-
     sourceSets {
         commonMain {
             dependencies {
-                implementation(project(":runtime"))
+                // Depend on foundation module so we can access original interfaces
+                api(project(":samples:multi-module:foundation"))
             }
         }
 
         commonTest {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-test")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
             }
         }
     }
 }
 
-// Configure Fakt plugin
+// Configure Fakt plugin in COLLECTOR MODE
 fakt {
     enabled.set(true)
     debug.set(true)
+
+    // This is the key: collect fakes from foundation module
+    collectFakesFrom(project(":samples:multi-module:foundation"))
 }
