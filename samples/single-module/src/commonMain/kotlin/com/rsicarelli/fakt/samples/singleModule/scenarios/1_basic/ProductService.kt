@@ -3,7 +3,6 @@
 package com.rsicarelli.fakt.samples.singleModule.scenarios.basic
 
 import com.rsicarelli.fakt.Fake
-
 import com.rsicarelli.fakt.samples.singleModule.models.Product
 
 /**

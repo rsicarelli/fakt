@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.singleModule.scenarios.basic
+import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for AnalyticsServiceExtended - Interface extending another interface.
@@ -15,14 +15,14 @@ import org.junit.jupiter.api.TestInstance
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AnalyticsServiceExtendedTest {
-
     @Test
     fun `GIVEN extended analytics service WHEN tracking event THEN should execute configured behavior`() {
         // Given
         var trackedEvent = ""
-        val service = fakeAnalyticsServiceExtended {
-            track { event -> trackedEvent = event }
-        }
+        val service =
+            fakeAnalyticsServiceExtended {
+                track { event -> trackedEvent = event }
+            }
 
         // When
         service.track("user_click")
@@ -35,9 +35,10 @@ class AnalyticsServiceExtendedTest {
     fun `GIVEN extended analytics service WHEN identifying user THEN should execute configured behavior`() {
         // Given
         var identifiedUser = ""
-        val service = fakeAnalyticsServiceExtended {
-            identify { userId -> identifiedUser = userId }
-        }
+        val service =
+            fakeAnalyticsServiceExtended {
+                identify { userId -> identifiedUser = userId }
+            }
 
         // When
         service.identify("user-123")
@@ -52,10 +53,11 @@ class AnalyticsServiceExtendedTest {
         var events = mutableListOf<String>()
         var users = mutableListOf<String>()
 
-        val service = fakeAnalyticsServiceExtended {
-            track { event -> events.add(event) }
-            identify { userId -> users.add(userId) }
-        }
+        val service =
+            fakeAnalyticsServiceExtended {
+                track { event -> events.add(event) }
+                identify { userId -> users.add(userId) }
+            }
 
         // When
         service.track("page_view")

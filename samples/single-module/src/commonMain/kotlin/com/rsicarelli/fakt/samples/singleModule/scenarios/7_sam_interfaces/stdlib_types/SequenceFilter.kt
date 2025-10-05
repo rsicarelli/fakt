@@ -9,5 +9,8 @@ import com.rsicarelli.fakt.Fake
  */
 @Fake
 fun interface SequenceFilter<T> {
-    fun filter(sequence: Sequence<T>, predicate: (T) -> Boolean): Sequence<T>
+    fun filter(
+        sequence: Sequence<T>,
+        predicate: (T) -> Boolean,
+    ): Sequence<T>
 }

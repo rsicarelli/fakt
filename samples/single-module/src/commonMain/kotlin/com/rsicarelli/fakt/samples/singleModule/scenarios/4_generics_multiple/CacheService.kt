@@ -19,11 +19,20 @@ interface CacheService<TKey, TValue> {
     val maxSize: Int?
 
     fun get(key: TKey): TValue?
-    fun put(key: TKey, value: TValue): TValue?
+
+    fun put(
+        key: TKey,
+        value: TValue,
+    ): TValue?
+
     fun remove(key: TKey): TValue?
+
     fun clear()
+
     fun containsKey(key: TKey): Boolean
+
     fun keys(): Set<TKey>
+
     fun values(): Collection<TValue>
 
     fun <R> computeIfAbsent(

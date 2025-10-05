@@ -9,5 +9,8 @@ import com.rsicarelli.fakt.Fake
  */
 @Fake
 fun interface CollectionFilter<T> {
-    fun filter(items: Collection<T>, predicate: (T) -> Boolean): Collection<T>
+    fun filter(
+        items: Collection<T>,
+        predicate: (T) -> Boolean,
+    ): Collection<T>
 }

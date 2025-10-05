@@ -9,5 +9,8 @@ import com.rsicarelli.fakt.Fake
  */
 @Fake
 fun interface FunctionExecutor<T, R> {
-    fun execute(fn: (T) -> R, input: T): R
+    fun execute(
+        fn: (T) -> R,
+        input: T,
+    ): R
 }

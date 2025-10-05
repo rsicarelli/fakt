@@ -9,5 +9,8 @@ import com.rsicarelli.fakt.Fake
  */
 @Fake
 fun interface PredicateCombiner<T> {
-    fun combine(p1: (T) -> Boolean, p2: (T) -> Boolean): (T) -> Boolean
+    fun combine(
+        p1: (T) -> Boolean,
+        p2: (T) -> Boolean,
+    ): (T) -> Boolean
 }

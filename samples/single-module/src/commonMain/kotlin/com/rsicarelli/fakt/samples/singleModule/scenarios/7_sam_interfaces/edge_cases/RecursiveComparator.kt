@@ -9,5 +9,8 @@ import com.rsicarelli.fakt.Fake
  */
 @Fake
 fun interface RecursiveComparator<T : Comparable<T>> {
-    fun compare(a: T, b: T): Int
+    fun compare(
+        a: T,
+        b: T,
+    ): Int
 }

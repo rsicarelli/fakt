@@ -9,5 +9,8 @@ import com.rsicarelli.fakt.Fake
  */
 @Fake
 fun interface BiFunction {
-    fun apply(a: Int, b: Int): Int
+    fun apply(
+        a: Int,
+        b: Int,
+    ): Int
 }

@@ -9,5 +9,8 @@ import com.rsicarelli.fakt.Fake
  */
 @Fake
 fun interface SuspendExecutor<T, R> {
-    suspend fun execute(fn: suspend (T) -> R, input: T): R
+    suspend fun execute(
+        fn: suspend (T) -> R,
+        input: T,
+    ): R
 }

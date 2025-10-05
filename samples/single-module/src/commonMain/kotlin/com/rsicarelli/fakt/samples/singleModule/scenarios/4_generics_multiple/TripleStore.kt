@@ -12,8 +12,24 @@ import com.rsicarelli.fakt.Fake
  */
 @Fake
 interface TripleStore<K1, K2, V> {
-    fun get(key1: K1, key2: K2): V?
-    fun put(key1: K1, key2: K2, value: V): V?
-    fun contains(key1: K1, key2: K2): Boolean
-    fun remove(key1: K1, key2: K2): V?
+    fun get(
+        key1: K1,
+        key2: K2,
+    ): V?
+
+    fun put(
+        key1: K1,
+        key2: K2,
+        value: V,
+    ): V?
+
+    fun contains(
+        key1: K1,
+        key2: K2,
+    ): Boolean
+
+    fun remove(
+        key1: K1,
+        key2: K2,
+    ): V?
 }

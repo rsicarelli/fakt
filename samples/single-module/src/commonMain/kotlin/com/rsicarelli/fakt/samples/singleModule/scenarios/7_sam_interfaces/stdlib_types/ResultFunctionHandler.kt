@@ -9,5 +9,8 @@ import com.rsicarelli.fakt.Fake
  */
 @Fake
 fun interface ResultFunctionHandler<T, R> {
-    fun handle(result: Result<T>, mapper: (T) -> R): Result<R>
+    fun handle(
+        result: Result<T>,
+        mapper: (T) -> R,
+    ): Result<R>
 }

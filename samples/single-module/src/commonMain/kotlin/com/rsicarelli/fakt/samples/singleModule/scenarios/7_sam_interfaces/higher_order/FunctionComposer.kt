@@ -9,5 +9,9 @@ import com.rsicarelli.fakt.Fake
  */
 @Fake
 fun interface FunctionComposer<T, U, R> {
-    fun compose(fn1: (T) -> U, fn2: (U) -> R, input: T): R
+    fun compose(
+        fn1: (T) -> U,
+        fn2: (U) -> R,
+        input: T,
+    ): R
 }

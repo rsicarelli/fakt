@@ -9,5 +9,8 @@ import com.rsicarelli.fakt.Fake
  */
 @Fake
 fun interface MapWithFunction<T, R> {
-    fun transform(items: List<T>, mapper: (T) -> R): List<R>
+    fun transform(
+        items: List<T>,
+        mapper: (T) -> R,
+    ): List<R>
 }

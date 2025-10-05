@@ -9,5 +9,9 @@ import com.rsicarelli.fakt.Fake
  */
 @Fake
 fun interface TransformChain<T, U, R> {
-    fun chain(input: T, first: (T) -> U, second: (U) -> R): R
+    fun chain(
+        input: T,
+        first: (T) -> U,
+        second: (U) -> R,
+    ): R
 }

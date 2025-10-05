@@ -9,5 +9,9 @@ import com.rsicarelli.fakt.Fake
  */
 @Fake
 fun interface CallbackHandler<T> {
-    fun handle(value: T, onSuccess: (String) -> Unit, onError: (Throwable) -> Unit)
+    fun handle(
+        value: T,
+        onSuccess: (String) -> Unit,
+        onError: (Throwable) -> Unit,
+    )
 }

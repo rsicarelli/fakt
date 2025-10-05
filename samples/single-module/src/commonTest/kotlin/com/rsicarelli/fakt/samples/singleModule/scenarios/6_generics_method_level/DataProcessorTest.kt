@@ -15,13 +15,13 @@ import kotlin.test.assertEquals
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DataProcessorTest {
-
     @Test
     fun `GIVEN data processor WHEN processing string THEN should return processed string`() {
         // Given
-        val processor = fakeDataProcessor {
-            process { item: String -> item }
-        }
+        val processor =
+            fakeDataProcessor {
+                process { item: String -> item }
+            }
 
         // When
         val result: String = processor.process("test")
@@ -33,9 +33,10 @@ class DataProcessorTest {
     @Test
     fun `GIVEN data processor WHEN processing int THEN should return processed int`() {
         // Given
-        val processor = fakeDataProcessor {
-            process { item: Int -> item }
-        }
+        val processor =
+            fakeDataProcessor {
+                process { item: Int -> item }
+            }
 
         // When
         val result: Int = processor.process(42)
@@ -47,9 +48,10 @@ class DataProcessorTest {
     @Test
     fun `GIVEN data processor WHEN transforming to int THEN should return int`() {
         // Given
-        val processor = fakeDataProcessor {
-            transform { input -> input.length }
-        }
+        val processor =
+            fakeDataProcessor {
+                transform { input -> input.length }
+            }
 
         // When
         val result: Int = processor.transform("hello")
@@ -61,9 +63,10 @@ class DataProcessorTest {
     @Test
     fun `GIVEN data processor WHEN transforming to list THEN should return list`() {
         // Given
-        val processor = fakeDataProcessor {
-            transform { input -> input.split(",") }
-        }
+        val processor =
+            fakeDataProcessor {
+                transform { input -> input.split(",") }
+            }
 
         // When
         val result: List<String> = processor.transform("a,b,c")
@@ -75,9 +78,10 @@ class DataProcessorTest {
     @Test
     fun `GIVEN data processor WHEN getting data THEN should return configured data`() {
         // Given
-        val processor = fakeDataProcessor {
-            getData { "configured-data" }
-        }
+        val processor =
+            fakeDataProcessor {
+                getData { "configured-data" }
+            }
 
         // When
         val result = processor.getData()
@@ -89,11 +93,12 @@ class DataProcessorTest {
     @Test
     fun `GIVEN data processor WHEN using all methods THEN should work correctly`() {
         // Given
-        val processor = fakeDataProcessor {
-            process { item: Any? -> item }  // Identity works for any type
-            transform { input -> input.uppercase() }
-            getData { "base-data" }
-        }
+        val processor =
+            fakeDataProcessor {
+                process { item: Any? -> item } // Identity works for any type
+                transform { input -> input.uppercase() }
+                getData { "base-data" }
+            }
 
         // When & Then
         assertEquals("test", processor.process<String>("test"))

@@ -9,5 +9,8 @@ import com.rsicarelli.fakt.Fake
  */
 @Fake
 fun interface PredicateFilter<T> {
-    fun filter(items: List<T>, predicate: (T) -> Boolean): List<T>
+    fun filter(
+        items: List<T>,
+        predicate: (T) -> Boolean,
+    ): List<T>
 }
