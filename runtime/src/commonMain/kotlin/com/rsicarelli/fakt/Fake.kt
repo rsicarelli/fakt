@@ -28,6 +28,10 @@ import kotlin.reflect.KClass
  * Generated fakes are thread-safe by default through instance-based design.
  * Each call to the factory function creates a new isolated instance.
  *
+ * ## Custom Annotations
+ * Companies can define their own annotations instead of using `@Fake` by annotating
+ * them with `@GeneratesFake`. See [GeneratesFake] for details.
+ *
  * @param trackCalls Enables call tracking and verification methods.
  * When true, generates data classes for capturing method calls and verification methods.
  * Performance impact: ~5-10% overhead for call storage.
@@ -48,7 +52,10 @@ import kotlin.reflect.KClass
  *
  * @param scope Scope configuration for fake lifetime management.
  * Supported values: "test" (default), "class", "global".
+ *
+ * @see GeneratesFake
  */
+@GeneratesFake
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
 public annotation class Fake(

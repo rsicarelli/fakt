@@ -7,8 +7,6 @@ plugins {
 
 kotlin {
     jvmToolchain(21)
-
-    // Use KMP default hierarchy template
     applyDefaultHierarchyTemplate()
 
     // Targets
@@ -18,17 +16,11 @@ kotlin {
         nodejs()
     }
 
-    // Native targets
-    linuxX64()
-    macosX64()
-    macosArm64()
-    iosX64()
-    iosArm64()
-    iosSimulatorArm64()
-
     sourceSets {
         commonMain {
             dependencies {
+                // Domain depends on foundation - critical cross-module test
+                implementation(project(":samples:multi-module:foundation"))
                 implementation(project(":runtime"))
             }
         }
@@ -36,6 +28,12 @@ kotlin {
         commonTest {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-test")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+
+                // CRITICAL: Cross-module fake consumption
+                // This validates our consumable configurations work!
+                // Domain tests should be able to import fakeLogger(), fakeConfigService() from foundation
+                implementation(project(":samples:multi-module:foundation-fakes"))
             }
         }
     }

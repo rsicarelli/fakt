@@ -689,7 +689,9 @@ internal class ImplementationGenerator(
         if (typeString.endsWith("?")) {
             "null" // Nullable types can safely default to null
         } else {
-            "error(\"Provide default for non-nullable type '$typeString' via factory configuration\")"
+            // Explicit 'as Nothing' cast required for proper lambda type inference
+            // Without it, Kotlin infers { error(...) } as () -> Unit instead of () -> T
+            "error(\"Provide default for non-nullable type '$typeString' via factory configuration\") as Nothing"
         }
 
     private fun extractAndCreateCollection(

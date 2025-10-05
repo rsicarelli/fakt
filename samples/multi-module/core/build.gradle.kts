@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 plugins {
     kotlin("multiplatform")
+    id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
 }
 
 kotlin {
@@ -41,28 +42,8 @@ kotlin {
     }
 }
 
-// Configure compiler plugin for main compilation tasks only
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    if (!name.contains("Test")) {
-        compilerOptions {
-            val compilerJar =
-                project.rootProject
-                    .project(":compiler")
-                    .tasks
-                    .named("jar")
-                    .get()
-                    .outputs.files.singleFile
-            freeCompilerArgs.addAll(
-                listOf(
-                    "-Xplugin=${compilerJar.absolutePath}",
-                    "-P",
-                    "plugin:com.rsicarelli.fakt:enabled=true",
-                    "-P",
-                    "plugin:com.rsicarelli.fakt:debug=true",
-                    "-P",
-                    "plugin:com.rsicarelli.fakt:outputDir=${project.layout.buildDirectory.get().asFile.absolutePath}/generated/ktfake",
-                ),
-            )
-        }
-    }
+// Configure Fakt plugin
+fakt {
+    enabled.set(true)
+    debug.set(true)
 }

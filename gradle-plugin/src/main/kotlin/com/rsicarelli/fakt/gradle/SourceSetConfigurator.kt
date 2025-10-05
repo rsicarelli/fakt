@@ -22,6 +22,7 @@ internal class SourceSetConfigurator(
         val kotlinExtension =
             project.extensions.findByType(KotlinMultiplatformExtension::class.java)
         if (kotlinExtension != null) {
+            // Configure generated sources directories in EXISTING test source sets
             configureMultiplatformSourceSets(kotlinExtension)
         } else {
             // For single-platform projects, configure based on applied plugins
@@ -31,17 +32,56 @@ internal class SourceSetConfigurator(
 
     /**
      * Configure multiplatform source sets to include generated fakes.
+     *
+     * This adds generated directories to EXISTING test source sets.
+     * We work WITH KMP's default hierarchy template, not against it.
      */
     private fun configureMultiplatformSourceSets(kotlin: KotlinMultiplatformExtension) {
-        kotlin.sourceSets.configureEach { sourceSet ->
-            if (sourceSet.name.endsWith("Test")) {
-                val generatedDir = getGeneratedSourcesDirectoryForSourceSet(sourceSet.name)
-                sourceSet.kotlin.srcDir(generatedDir)
+        val buildDir = project.layout.buildDirectory.get().asFile
 
-                project.logger.info(
-                    "Fakt: Configured source set '${sourceSet.name}' " +
-                        "to include generated sources from: $generatedDir",
-                )
+        kotlin.sourceSets.configureEach { sourceSet ->
+            when (sourceSet.name) {
+                "commonTest" -> {
+                    val generatedDir = java.io.File(buildDir, "generated/fakt/fakes/kotlin")
+                    sourceSet.kotlin.srcDir(generatedDir)
+                    project.logger.info("Fakt: Added generated dir to commonTest: $generatedDir")
+                }
+                "jvmTest" -> {
+                    val generatedDir = java.io.File(buildDir, "generated/fakt/jvmFakes/kotlin")
+                    sourceSet.kotlin.srcDir(generatedDir)
+                    project.logger.info("Fakt: Added generated dir to jvmTest: $generatedDir")
+                }
+                "jsTest" -> {
+                    val generatedDir = java.io.File(buildDir, "generated/fakt/jsFakes/kotlin")
+                    sourceSet.kotlin.srcDir(generatedDir)
+                    project.logger.info("Fakt: Added generated dir to jsTest: $generatedDir")
+                }
+                // Handle all iOS variants
+                "iosArm64Test" -> {
+                    val generatedDir = java.io.File(buildDir, "generated/fakt/iosArm64Fakes/kotlin")
+                    sourceSet.kotlin.srcDir(generatedDir)
+                    project.logger.info("Fakt: Added generated dir to iosArm64Test: $generatedDir")
+                }
+                "iosX64Test" -> {
+                    val generatedDir = java.io.File(buildDir, "generated/fakt/iosX64Fakes/kotlin")
+                    sourceSet.kotlin.srcDir(generatedDir)
+                    project.logger.info("Fakt: Added generated dir to iosX64Test: $generatedDir")
+                }
+                "iosSimulatorArm64Test" -> {
+                    val generatedDir = java.io.File(buildDir, "generated/fakt/iosSimulatorArm64Fakes/kotlin")
+                    sourceSet.kotlin.srcDir(generatedDir)
+                    project.logger.info("Fakt: Added generated dir to iosSimulatorArm64Test: $generatedDir")
+                }
+                // Add other platforms as needed (watchOS, tvOS, macOS, linux, mingw, etc.)
+                else -> {
+                    // For any other *Test source sets, use pattern matching
+                    if (sourceSet.name.endsWith("Test") && sourceSet.name != "commonTest") {
+                        val targetName = sourceSet.name.removeSuffix("Test")
+                        val generatedDir = java.io.File(buildDir, "generated/fakt/${targetName}Fakes/kotlin")
+                        sourceSet.kotlin.srcDir(generatedDir)
+                        project.logger.info("Fakt: Added generated dir to ${sourceSet.name}: $generatedDir")
+                    }
+                }
             }
         }
     }
@@ -70,11 +110,12 @@ internal class SourceSetConfigurator(
         }
     }
 
+
     /**
      * Get the appropriate generated sources directory for a compilation.
      *
-     * Since we generate fakes FROM main sources FOR test usage, we always output to test directories.
-     * For KMP projects with shared code, we generate to common/test/kotlin for maximum compatibility.
+     * Since we generate fakes FROM main sources FOR fakes source sets, we output to fakes directories.
+     * For KMP projects with shared code, we generate to fakes/kotlin for maximum compatibility.
      */
     fun getGeneratedSourcesDirectory(compilation: KotlinCompilation<*>): String {
         val compilationName = compilation.name
@@ -84,52 +125,46 @@ internal class SourceSetConfigurator(
                 .get()
                 .asFile
 
-        // Determine if we should use common/test directory
-        val shouldUseCommonTest = shouldUseCommonTestDirectory(compilationName, targetName)
-        if (shouldUseCommonTest) {
-            return File(buildDir, "generated/fakt/common/test/kotlin").absolutePath
+        // Determine if we should use common fakes directory
+        val shouldUseCommonFakes = shouldUseCommonFakesDirectory(compilationName, targetName)
+        if (shouldUseCommonFakes) {
+            return File(buildDir, "generated/fakt/fakes/kotlin").absolutePath
         }
 
-        // Map main compilation names to test directories
-        val testDirName = mapCompilationNameToTestDir(compilationName)
+        // Map target names to fakes directories
+        // For JVM target: jvm → jvmFakes
+        // For JS target: js → jsFakes
+        val fakesDirName = "${targetName}Fakes"
 
-        // For specific platform targets in KMP: build/generated/fakt/{targetName}/test/kotlin
-        // For single-platform JVM: build/generated/fakt/test/kotlin
-        return File(buildDir, "generated/fakt/$targetName/$testDirName/kotlin").absolutePath
+        // For specific platform targets in KMP: build/generated/fakt/{targetName}Fakes/kotlin
+        return File(buildDir, "generated/fakt/$fakesDirName/kotlin").absolutePath
     }
 
     /**
-     * Determine if we should generate to common/test directory.
+     * Determine if we should generate to common fakes directory.
+     *
+     * We generate to 'fakes/kotlin' (common directory) when:
+     * 1. Target is 'metadata' (represents commonMain compilation)
+     * 2. Project has commonTest source set (tests need shared fakes)
+     *
+     * This ensures fakes are accessible from commonTest source set.
      */
-    private fun shouldUseCommonTestDirectory(
+    private fun shouldUseCommonFakesDirectory(
         compilationName: String,
         targetName: String,
     ): Boolean {
-        // For KMP projects, check if this is processing commonMain or metadata
-        val isCommonOrMetadata = compilationName.equals("commonMain", ignoreCase = true) || targetName == "metadata"
-
-        // Check if this is a KMP project with commonTest source set
-        val hasCommonTest =
-            project.extensions
-                .findByType(KotlinMultiplatformExtension::class.java)
-                ?.sourceSets
-                ?.findByName("commonTest") != null
-
-        return isCommonOrMetadata || hasCommonTest
-    }
-
-    /**
-     * Map main compilation names to test directory names.
-     * Examples: main → test, jvmMain → jvmTest, iosMain → iosTest
-     */
-    private fun mapCompilationNameToTestDir(compilationName: String): String =
-        when {
-            compilationName.equals("main", ignoreCase = true) -> "test"
-            compilationName.endsWith("Main", ignoreCase = true) ->
-                compilationName.removeSuffix("Main").removeSuffix("main") + "Test"
-
-            else -> compilationName
+        // Check if metadata target (commonMain compilation)
+        if (targetName == "metadata") {
+            return true
         }
+
+        // Check if project has commonTest source set
+        // If yes, generate to common directory so commonTest can access fakes
+        val kotlinExtension =
+            project.extensions.findByType(KotlinMultiplatformExtension::class.java)
+
+        return kotlinExtension?.sourceSets?.any { it.name == "commonTest" } ?: false
+    }
 
     /**
      * Get generated sources directory for a specific source set.

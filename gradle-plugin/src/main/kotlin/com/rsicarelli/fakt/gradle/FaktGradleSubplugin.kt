@@ -31,19 +31,47 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         // Create the fakt extension for configuration
         val extension = target.extensions.create("fakt", FaktPluginExtension::class.java)
 
-        // Configure source sets automatically after project evaluation
+        // Determine mode after project evaluation
         target.afterEvaluate {
-            val configurator = SourceSetConfigurator(target)
-            configurator.configureSourceSets()
+            val isCollectorMode = extension.collectFrom.isPresent
+
+            if (isCollectorMode) {
+                // COLLECTOR MODE: Collect fakes from another project
+                val sourceProject = extension.collectFrom.get()
+                target.logger.lifecycle(
+                    "Fakt: Collector mode enabled - collecting fakes from ${sourceProject.name}"
+                )
+
+                // Register collector tasks (handles KMP automatically)
+                FakeCollectorTask.registerForKmpProject(target, extension)
+            } else {
+                // GENERATOR MODE: Generate fakes from @Fake annotations
+                target.logger.lifecycle("Fakt: Generator mode enabled - generating fakes")
+
+                // Configure source sets for generated code
+                val configurator = SourceSetConfigurator(target)
+                configurator.configureSourceSets()
+            }
         }
 
-        // Add runtime dependency to test configurations
+        // Add runtime dependency to test configurations (both modes need this)
         addRuntimeDependencies(target)
 
         target.logger.info("Fakt: Applied Gradle plugin to project ${target.name}")
     }
 
     override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean {
+        val project = kotlinCompilation.project
+        val extension = project.extensions.findByType(FaktPluginExtension::class.java)
+
+        // Skip compiler plugin in collector mode
+        if (extension?.collectFrom?.isPresent == true) {
+            project.logger.info(
+                "Fakt: Skipping compiler plugin for '${kotlinCompilation.name}' (collector mode)"
+            )
+            return false
+        }
+
         // Apply to main compilations where @Fake annotations are defined
         // - JVM/Android projects: "main" compilation
         // - KMP projects: "jvmMain", "jsMain", "iosMain", "commonMain", etc.
@@ -53,7 +81,7 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             compilationName == "main" ||
                 compilationName.endsWith("main")
 
-        kotlinCompilation.project.logger.info(
+        project.logger.info(
             "Fakt: Checking compilation '${kotlinCompilation.name}' - applicable: $isMainCompilation",
         )
 

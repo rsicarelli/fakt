@@ -13,6 +13,7 @@ import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.classFqName
+import org.jetbrains.kotlin.ir.types.classifierOrNull
 import org.jetbrains.kotlin.ir.util.kotlinFqName
 import org.jetbrains.kotlin.ir.util.packageFqName
 
@@ -100,6 +101,10 @@ internal class InterfaceDiscovery(
     /**
      * Finds a matching fake annotation on the interface.
      *
+     * This method checks for annotations in two ways:
+     * 1. Direct match: Annotation FQN is in the configured list (backward compatibility)
+     * 2. Meta-annotation match: Annotation is annotated with @GeneratesFake
+     *
      * @param declaration The interface to check
      * @return The fully qualified name of the matching annotation, or null if none found
      */
@@ -107,9 +112,46 @@ internal class InterfaceDiscovery(
         val matchingAnnotation =
             declaration.annotations.find { annotation ->
                 val annotationFqName = annotation.type.classFqName?.asString()
-                annotationFqName != null && optimizations.isConfiguredFor(annotationFqName)
+
+                // Check both direct match and meta-annotation match
+                annotationFqName != null && (
+                    optimizations.isConfiguredFor(annotationFqName) ||
+                    hasGeneratesFakeMetaAnnotation(annotation)
+                )
             }
         return matchingAnnotation?.type?.classFqName?.asString()
+    }
+
+    /**
+     * Checks if an annotation is annotated with @GeneratesFake meta-annotation.
+     *
+     * This enables companies to define their own annotations (like @TestDouble)
+     * by marking them with @GeneratesFake, without being locked into @Fake.
+     *
+     * Pattern inspired by Kotlin's @HidesFromObjC meta-annotation.
+     *
+     * @param annotation The annotation to check
+     * @return true if the annotation has @GeneratesFake meta-annotation, false otherwise
+     */
+    private fun hasGeneratesFakeMetaAnnotation(annotation: org.jetbrains.kotlin.ir.expressions.IrConstructorCall): Boolean {
+        try {
+            // Get the annotation class from the type
+            val annotationType = annotation.type
+            val annotationClassSymbol = annotationType.classifierOrNull ?: return false
+            val annotationClass = annotationClassSymbol.owner as? IrClass ?: return false
+
+            // Check if the annotation class itself has @GeneratesFake annotation
+            return annotationClass.annotations.any { metaAnnotation ->
+                metaAnnotation.type.classFqName?.asString() == "com.rsicarelli.fakt.GeneratesFake"
+            }
+        } catch (e: Exception) {
+            // Safely handle any IR traversal errors
+            // Log at debug level since this is expected for some annotation patterns
+            messageCollector?.reportInfo(
+                "Fakt: Could not check meta-annotation for ${annotation.type.classFqName}: ${e.message}",
+            )
+            return false
+        }
     }
 
     /**
