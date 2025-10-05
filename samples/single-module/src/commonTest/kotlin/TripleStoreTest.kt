@@ -16,7 +16,7 @@ import kotlin.test.assertTrue
  * - Type parameter order preservation
  * - Type safety at use-site with complex parameter combinations
  */
-class P0ThreeTypeParametersTest {
+class TripleStoreTest {
     @Test
     fun `GIVEN TripleStore with three type parameters WHEN using String-Int-User combination THEN should maintain type safety`() {
         // Given

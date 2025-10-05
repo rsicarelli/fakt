@@ -14,5 +14,6 @@ import com.rsicarelli.fakt.Fake
 @Fake
 interface SimpleRepository<T> {
     fun save(item: T): T
+
     fun findAll(): List<T>
 }

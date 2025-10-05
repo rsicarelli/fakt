@@ -7,27 +7,29 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 /**
- * Phase 3 RED TEST: Method-level generic fake generation.
+ * P2.2: Method-level generics fake generation ✅
  *
- * ❌ This test will FAIL until we implement method-level generic support.
+ * Tests that method-level type parameters are preserved in generated fakes.
+ * WorkflowManager has no class-level generics, only method-level type parameters.
  *
- * Currently, WorkflowManager is filtered out by GenericPatternAnalyzer
- * as MethodLevelGenerics pattern.
- *
- * After implementation, fakeWorkflowManager should be generated with:
+ * Generated code pattern:
  * ```kotlin
  * class FakeWorkflowManagerImpl : WorkflowManager {
  *     override fun <T> executeStep(step: () -> T): T = executeStepBehavior(step)
  * }
+ *
+ * fun fakeWorkflowManager(
+ *     configure: FakeWorkflowManagerConfig.() -> Unit = {}
+ * ): WorkflowManager
  * ```
  */
-class MethodLevelGenericsTest {
+class WorkflowManagerTest {
     @Test
     fun `GIVEN WorkflowManager with method-level generics WHEN generating fake THEN should preserve type parameters`() {
         // Given - Interface with method-level generics: fun <T> executeStep(...)
-        // ✅ GREEN: fakeWorkflowManager IS generated with method-level generics preserved!
+        // fakeWorkflowManager is generated with method-level generics preserved
 
-        // When - Try to create fake without configuration (uses default identity behavior)
+        // When - Create fake without configuration (uses default identity behavior)
         val workflow = fakeWorkflowManager()
 
         // Then - Should preserve type safety at usage with any type
@@ -91,10 +93,10 @@ class MethodLevelGenericsTest {
 
     @Test
     fun `GIVEN WorkflowManager WHEN generated THEN fake should exist`() {
-        // This is the most basic test - just check the fake was generated
-        // ❌ RED: This will fail because fakeWorkflowManager doesn't exist
+        // Given - WorkflowManager with method-level generics
         val workflow = fakeWorkflowManager()
 
+        // Then - Should be successfully generated
         assertNotNull(workflow, "Fake should be generated for WorkflowManager")
     }
 }

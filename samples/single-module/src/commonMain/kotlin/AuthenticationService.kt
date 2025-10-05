@@ -19,10 +19,18 @@ interface AuthenticationService {
     val currentUser: User?
     val permissions: Set<String>
 
-    suspend fun login(username: String, password: String): Result<User>
+    suspend fun login(
+        username: String,
+        password: String,
+    ): Result<User>
+
     suspend fun logout(): Result<Unit>
+
     suspend fun refreshToken(): Result<String>
+
     fun hasPermission(permission: String): Boolean
+
     fun hasAnyPermissions(permissions: List<String>): Boolean
+
     fun hasAllPermissions(permissions: Collection<String>): Boolean
 }

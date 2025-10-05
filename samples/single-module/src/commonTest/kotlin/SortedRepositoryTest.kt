@@ -13,7 +13,7 @@ import kotlin.test.assertTrue
  * Validates that generic type constraints are preserved in generated code.
  * Tests `<T : Comparable<T>>` constraint on SortedRepository<T>.
  */
-class P1ConstraintSupportTest {
+class SortedRepositoryTest {
     @Test
     fun `GIVEN sorted repository with Int type WHEN configured THEN should maintain type safety with Comparable constraint`() {
         // Given

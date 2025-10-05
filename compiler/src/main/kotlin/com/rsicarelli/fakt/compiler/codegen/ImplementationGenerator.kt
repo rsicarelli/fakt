@@ -121,7 +121,7 @@ internal class ImplementationGenerator(
                         }
                     }
 
-                val returnType =
+                val returnTypeString =
                     typeResolver.irTypeToKotlinString(
                         function.returnType,
                         preserveTypeParameters = true,
@@ -130,6 +130,12 @@ internal class ImplementationGenerator(
 
                 // Phase 3: For method-level generics, add generic configure method with cast
                 if (hasMethodGenerics) {
+                    // Extract method type parameter names for conversion
+                    val methodTypeParamNames =
+                        function.typeParameters
+                            .map { it.substringBefore(" :").trim() }
+                            .toSet()
+
                     // Build the cast signature with correct parameter arity
                     val castParamTypes =
                         if (function.parameters.isEmpty()) {
@@ -138,17 +144,25 @@ internal class ImplementationGenerator(
                             List(function.parameters.size) { "Any?" }.joinToString(", ")
                         }
 
+                    // Calculate converted return type (preserves wrappers like Result<T>, List<T>)
+                    val convertedReturnType =
+                        if (containsMethodTypeParam(returnTypeString, methodTypeParamNames)) {
+                            convertMethodTypeParamsToAny(returnTypeString, methodTypeParamNames)
+                        } else {
+                            returnTypeString
+                        }
+
                     appendLine(
                         "    internal fun $methodTypeParams configure${functionName.capitalize()}(" +
-                            "behavior: $suspendModifier($parameterTypes) -> $returnType) {",
+                            "behavior: $suspendModifier($parameterTypes) -> $returnTypeString) {",
                     )
                     appendLine("        @Suppress(\"UNCHECKED_CAST\")")
-                    appendLine("        ${functionName}Behavior = behavior as $suspendModifier($castParamTypes) -> Any?")
+                    appendLine("        ${functionName}Behavior = behavior as $suspendModifier($castParamTypes) -> $convertedReturnType")
                     appendLine("    }")
                 } else {
                     appendLine(
                         "    internal fun configure${functionName.capitalize()}(" +
-                            "behavior: $suspendModifier($parameterTypes) -> $returnType" +
+                            "behavior: $suspendModifier($parameterTypes) -> $returnTypeString" +
                             ") { ${functionName}Behavior = behavior }",
                     )
                 }
@@ -181,7 +195,7 @@ internal class ImplementationGenerator(
                 // Phase 3: Preserve method-level type parameters
                 val methodTypeParams =
                     if (function.typeParameters.isNotEmpty()) {
-                        "<${function.typeParameters.joinToString(", ")}>"
+                        "<${function.typeParameters.joinToString(", ")}> "
                     } else {
                         ""
                     }
@@ -214,12 +228,34 @@ internal class ImplementationGenerator(
 
                 // Generate method with NO CASTING - types match exactly!
                 // Phase 3: Include method-level type parameters
-                appendLine("    override ${suspendModifier}fun $methodTypeParams $functionName($parameters): $returnTypeString {")
+                appendLine("    override ${suspendModifier}fun $methodTypeParams$functionName($parameters): $returnTypeString {")
 
                 // Phase 3: For method-level generics, add @Suppress and cast
                 if (function.typeParameters.isNotEmpty()) {
+                    // Extract method type parameter names for conversion checking
+                    val methodTypeParamNames =
+                        function.typeParameters
+                            .map { it.substringBefore(" :").trim() }
+                            .toSet()
+
+                    // Build parameter list with casts for types containing method-level generics
+                    val castedParamNames = function.parameters.joinToString(", ") { param ->
+                        val paramTypeString =
+                            typeResolver.irTypeToKotlinString(
+                                param.type,
+                                preserveTypeParameters = true,
+                            )
+                        // If parameter type contains method-level type parameters, cast to converted type
+                        if (containsMethodTypeParam(paramTypeString, methodTypeParamNames)) {
+                            val convertedType = convertMethodTypeParamsToAny(paramTypeString, methodTypeParamNames)
+                            "${param.name} as $convertedType"
+                        } else {
+                            param.name
+                        }
+                    }
+
                     appendLine("        @Suppress(\"UNCHECKED_CAST\")")
-                    appendLine("        return ${functionName}Behavior($parameterNames) as $returnTypeString")
+                    appendLine("        return ${functionName}Behavior($castedParamNames) as $returnTypeString")
                 } else {
                     appendLine("        return ${functionName}Behavior($parameterNames)")
                 }
@@ -260,14 +296,6 @@ internal class ImplementationGenerator(
                         .map { it.substringBefore(" :").trim() }
                         .toSet()
 
-                // Helper function to check if a type string contains method-level type parameters
-                fun containsMethodTypeParam(typeString: String): Boolean =
-                    methodTypeParamNames.any { typeParam ->
-                        // Check if type parameter appears as a standalone word in the type string
-                        // This handles cases like "T", "List<T>", "() -> T", etc.
-                        typeString.contains(Regex("\\b$typeParam\\b"))
-                    }
-
                 // Use EXACT parameter types for type safety (or Any? for method generics)
                 val parameterTypes =
                     if (function.parameters.isEmpty()) {
@@ -284,9 +312,10 @@ internal class ImplementationGenerator(
                                             param.type,
                                             preserveTypeParameters = true,
                                         )
-                                    // If this type contains a method-level type parameter, use Any?
-                                    if (hasMethodGenerics && containsMethodTypeParam(typeString)) {
-                                        "Any?"
+                                    // If this type contains a method-level type parameter, recursively convert
+                                    // This preserves wrappers like Result<T>, List<T> while converting type params to Any?
+                                    if (hasMethodGenerics && containsMethodTypeParam(typeString, methodTypeParamNames)) {
+                                        convertMethodTypeParamsToAny(typeString, methodTypeParamNames)
                                     } else {
                                         typeString
                                     }
@@ -295,20 +324,23 @@ internal class ImplementationGenerator(
                         }
                     }
 
-                // Use EXACT return type for type safety (or Any? for method generics)
+                // Use EXACT return type for type safety (or recursively convert method generics)
+                // This preserves wrappers like Result<T>, List<T> while converting type params to Any?
                 val returnTypeString =
                     typeResolver.irTypeToKotlinString(
                         function.returnType,
                         preserveTypeParameters = true,
                     )
                 val returnType =
-                    if (hasMethodGenerics && containsMethodTypeParam(returnTypeString)) {
-                        "Any?"
+                    if (hasMethodGenerics && containsMethodTypeParam(returnTypeString, methodTypeParamNames)) {
+                        convertMethodTypeParamsToAny(returnTypeString, methodTypeParamNames)
                     } else {
                         returnTypeString
                     }
 
-                val defaultLambda = generateTypeSafeDefault(function)
+                // Generate default based on BOTH converted and original types
+                // Pass original type to enable smart defaults even when stored as Any?
+                val defaultLambda = generateTypeSafeDefault(function, returnType, returnTypeString)
 
                 val suspendModifier = if (function.isSuspend) "suspend " else ""
                 appendLine(
@@ -338,10 +370,20 @@ internal class ImplementationGenerator(
      *
      * For identity functions like fun process(item: T): T (class-level T),
      * generates identity behavior { it }.
+     *
+     * @param function The function analysis
+     * @param convertedType The CONVERTED return type (may be Any? for method-level generics)
+     * @param originalType The ORIGINAL return type before conversion (preserves generic info)
      */
-    private fun generateTypeSafeDefault(function: FunctionAnalysis): String {
-        val returnType =
-            typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+    private fun generateTypeSafeDefault(
+        function: FunctionAnalysis,
+        convertedType: String,
+        originalType: String = convertedType,
+    ): String {
+        // Use original type for pattern matching, converted type for storage
+        // This allows smart defaults even when method-level generics are stored as Any?
+        val returnType = convertedType
+        val typeForDefaultDetection = originalType
 
         // Check if this is a method-level generic function
         val hasMethodGenerics = function.typeParameters.isNotEmpty()
@@ -356,39 +398,44 @@ internal class ImplementationGenerator(
                 )
 
             // If first parameter is a function type returning a type parameter (e.g., () -> T)
+            // AND the method returns that same type parameter directly,
             // Generate identity behavior: execute the function
             val isExecutableParam =
                 methodTypeParamNames.any { typeParam ->
-                    firstParamType.matches(Regex(".*\\(.*\\)\\s*->\\s*$typeParam\\b.*"))
+                    firstParamType.matches(Regex(".*\\(.*\\)\\s*->\\s*$typeParam\\b.*")) &&
+                        // Return type must be exactly that type parameter (not wrapped like List<T>)
+                        typeForDefaultDetection.trim() == typeParam
                 }
 
             if (isExecutableParam) {
                 // Generate identity lambda that executes the function parameter
                 val paramName = function.parameters[0].name
-                return if (function.isSuspend) {
-                    if (function.parameters.size == 1) {
-                        "{ $paramName -> ($paramName as suspend () -> Any?)() }"
-                    } else {
-                        // Multiple params: execute first one, ignore others
-                        val params =
-                            function.parameters
-                                .mapIndexed { idx, p ->
-                                    if (idx == 0) p.name else "_"
-                                }.joinToString(", ")
-                        "{ $params -> ($paramName as suspend () -> Any?)() }"
-                    }
+
+                // Determine the identity call based on suspend modifier
+                val identityCall = if (function.isSuspend) {
+                    "($paramName as suspend () -> Any?)()"
                 } else {
-                    if (function.parameters.size == 1) {
-                        "{ $paramName -> ($paramName as () -> Any?)() }"
-                    } else {
-                        // Multiple params: execute first one, ignore others
-                        val params =
-                            function.parameters
-                                .mapIndexed { idx, p ->
-                                    if (idx == 0) p.name else "_"
-                                }.joinToString(", ")
-                        "{ $params -> ($paramName as () -> Any?)() }"
-                    }
+                    "($paramName as () -> Any?)()"
+                }
+
+                // Check if return type is Result<T> and wrap accordingly
+                val wrappedCall = if (typeForDefaultDetection.startsWith("Result<")) {
+                    "Result.success($identityCall)"
+                } else {
+                    identityCall
+                }
+
+                // Generate lambda with proper parameter list
+                return if (function.parameters.size == 1) {
+                    "{ $paramName -> $wrappedCall }"
+                } else {
+                    // Multiple params: execute first one, ignore others
+                    val params =
+                        function.parameters
+                            .mapIndexed { idx, p ->
+                                if (idx == 0) p.name else "_"
+                            }.joinToString(", ")
+                    "{ $params -> $wrappedCall }"
                 }
             }
         }
@@ -408,8 +455,9 @@ internal class ImplementationGenerator(
             }
         }
 
-        // Fallback to stdlib defaults
-        val defaultValue = generateKotlinStdlibDefault(returnType)
+        // Fallback to stdlib defaults using ORIGINAL type for smart detection
+        // Pass BOTH types: original for pattern matching, converted for type arguments
+        val defaultValue = generateKotlinStdlibDefault(typeForDefaultDetection, returnType)
 
         return if (function.parameters.isEmpty()) {
             "{ $defaultValue }"
@@ -434,16 +482,22 @@ internal class ImplementationGenerator(
     /**
      * Generate defaults for Kotlin stdlib types using category-based delegation.
      * Orchestrates primitive, collection, and stdlib default generation.
+     *
+     * @param originalType The original type for pattern matching (e.g., "Map<K, String>")
+     * @param convertedType The converted storage type (e.g., "Any?" for method-level generics)
      */
-    private fun generateKotlinStdlibDefault(typeString: String): String =
+    private fun generateKotlinStdlibDefault(
+        originalType: String,
+        convertedType: String = originalType
+    ): String =
         // Check nullable types FIRST - they always default to null
-        if (typeString.endsWith("?")) {
+        if (originalType.endsWith("?")) {
             "null"
         } else {
-            getPrimitiveDefaults(typeString)
-                ?: getCollectionDefaults(typeString)
-                ?: getKotlinStdlibDefaults(typeString)
-                ?: handleDomainType(typeString)
+            getPrimitiveDefaults(originalType)
+                ?: getCollectionDefaults(originalType, convertedType)
+                ?: getKotlinStdlibDefaults(originalType, convertedType)
+                ?: handleDomainType(originalType)
         }
 
     /**
@@ -470,28 +524,32 @@ internal class ImplementationGenerator(
     /**
      * Returns default values for Kotlin collection types (List, Set, Map, Array).
      *
-     * @param typeString The type name to check
+     * @param originalType The original type for pattern matching
+     * @param convertedType The converted storage type
      * @return Default value or null if not a collection
      */
-    private fun getCollectionDefaults(typeString: String): String? =
-        getPrimitiveArrayDefault(typeString)
+    private fun getCollectionDefaults(
+        originalType: String,
+        convertedType: String = originalType
+    ): String? =
+        getPrimitiveArrayDefault(originalType)
             ?: when {
                 // Lists
-                typeString.startsWith("List<") -> extractAndCreateCollection(typeString, "emptyList")
-                typeString.startsWith("MutableList<") -> extractAndCreateCollection(typeString, "mutableListOf")
-                typeString.startsWith("Collection<") -> extractAndCreateCollection(typeString, "emptyList")
-                typeString.startsWith("Iterable<") -> extractAndCreateCollection(typeString, "emptyList")
+                originalType.startsWith("List<") -> extractAndCreateCollection(convertedType, "emptyList")
+                originalType.startsWith("MutableList<") -> extractAndCreateCollection(convertedType, "mutableListOf")
+                originalType.startsWith("Collection<") -> extractAndCreateCollection(convertedType, "emptyList")
+                originalType.startsWith("Iterable<") -> extractAndCreateCollection(convertedType, "emptyList")
 
                 // Sets
-                typeString.startsWith("Set<") -> extractAndCreateCollection(typeString, "emptySet")
-                typeString.startsWith("MutableSet<") -> extractAndCreateCollection(typeString, "mutableSetOf")
+                originalType.startsWith("Set<") -> extractAndCreateCollection(convertedType, "emptySet")
+                originalType.startsWith("MutableSet<") -> extractAndCreateCollection(convertedType, "mutableSetOf")
 
                 // Maps
-                typeString.startsWith("Map<") -> extractAndCreateMap(typeString, "emptyMap")
-                typeString.startsWith("MutableMap<") -> extractAndCreateMap(typeString, "mutableMapOf")
+                originalType.startsWith("Map<") -> extractAndCreateMap(convertedType, "emptyMap")
+                originalType.startsWith("MutableMap<") -> extractAndCreateMap(convertedType, "mutableMapOf")
 
                 // Arrays
-                typeString.startsWith("Array<") -> extractAndCreateArray(typeString)
+                originalType.startsWith("Array<") -> extractAndCreateArray(originalType)
 
                 else -> null
             }
@@ -518,14 +576,18 @@ internal class ImplementationGenerator(
     /**
      * Returns default values for Kotlin stdlib types (Result, Sequence, nullable).
      *
-     * @param typeString The type name to check
+     * @param originalType The original type for pattern matching
+     * @param convertedType The converted storage type
      * @return Default value or null if not a stdlib type
      */
-    private fun getKotlinStdlibDefaults(typeString: String): String? =
+    private fun getKotlinStdlibDefaults(
+        originalType: String,
+        convertedType: String = originalType
+    ): String? =
         when {
-            typeString.startsWith("Result<") -> extractAndCreateResult(typeString)
-            typeString.startsWith("Sequence<") -> extractAndCreateCollection(typeString, "emptySequence")
-            typeString.endsWith("?") -> "null"
+            originalType.startsWith("Result<") -> extractAndCreateResult(originalType, convertedType)
+            originalType.startsWith("Sequence<") -> extractAndCreateCollection(convertedType, "emptySequence")
+            originalType.endsWith("?") -> "null"
             else -> null
         }
 
@@ -546,16 +608,27 @@ internal class ImplementationGenerator(
         typeString: String,
         constructor: String,
     ): String {
-        // Type inference handles nested generics correctly (e.g., List<List<T>>)
-        return "$constructor()"
+        // For Any? (method-level generics), need explicit type argument
+        // Otherwise type inference fails: emptyList() -> cannot infer type
+        return if (typeString == "Any?") {
+            "$constructor<Any?>()"
+        } else {
+            // Type inference handles nested generics correctly (e.g., List<List<T>>)
+            "$constructor()"
+        }
     }
 
     private fun extractAndCreateMap(
         typeString: String,
         constructor: String,
     ): String {
-        // Type inference handles nested generics correctly (e.g., Map<K, List<V>>)
-        return "$constructor()"
+        // For Any? (method-level generics), need explicit type argument
+        return if (typeString == "Any?") {
+            "$constructor<Any?, Any?>()"
+        } else {
+            // Type inference handles nested generics correctly (e.g., Map<K, List<V>>)
+            "$constructor()"
+        }
     }
 
     private fun extractAndCreateArray(typeString: String): String {
@@ -563,9 +636,12 @@ internal class ImplementationGenerator(
         return "emptyArray<$typeParam>()"
     }
 
-    private fun extractAndCreateResult(typeString: String): String {
-        val typeParam = extractFirstTypeParameter(typeString)
-        val innerDefault = generateKotlinStdlibDefault(typeParam)
+    private fun extractAndCreateResult(
+        originalType: String,
+        convertedType: String = originalType
+    ): String {
+        val typeParam = extractFirstTypeParameter(originalType)
+        val innerDefault = generateKotlinStdlibDefault(typeParam, convertedType)
         return "Result.success($innerDefault)"
     }
 
@@ -614,6 +690,69 @@ internal class ImplementationGenerator(
         } else {
             "String" // Safe fallback for varargs
         }
+    }
+
+    /**
+     * Checks if a type string contains method-level type parameters.
+     *
+     * @param typeString The type string to check
+     * @param methodTypeParamNames Set of method-level type parameter names
+     * @return true if the type string contains any method-level type parameters
+     */
+    private fun containsMethodTypeParam(
+        typeString: String,
+        methodTypeParamNames: Set<String>
+    ): Boolean =
+        methodTypeParamNames.any { typeParam ->
+            // Check if type parameter appears as a standalone word in the type string
+            // This handles cases like "T", "List<T>", "() -> T", etc.
+            typeString.contains(Regex("\\b$typeParam\\b"))
+        }
+
+    /**
+     * Recursively converts method-level type params to Any? while preserving wrapper types.
+     * E.g., Result<T> -> Result<Any?>, List<T> -> List<Any?>, T -> Any?
+     *
+     * @param typeString The type string to convert
+     * @param methodTypeParamNames Set of method-level type parameter names
+     * @return The converted type string
+     */
+    private fun convertMethodTypeParamsToAny(
+        typeString: String,
+        methodTypeParamNames: Set<String>
+    ): String {
+        // Handle Result<T> -> Result<Any?>
+        if (typeString.startsWith("Result<")) {
+            val innerType = extractFirstTypeParameter(typeString)
+            val convertedInner = if (containsMethodTypeParam(innerType, methodTypeParamNames)) {
+                convertMethodTypeParamsToAny(innerType, methodTypeParamNames)
+            } else {
+                innerType
+            }
+            return "Result<$convertedInner>"
+        }
+
+        // Handle List/Set/Collection<T> -> List/Set/Collection<Any?>
+        val collectionPrefixes = listOf("List<", "MutableList<", "Set<", "MutableSet<", "Collection<", "Iterable<")
+        for (prefix in collectionPrefixes) {
+            if (typeString.startsWith(prefix)) {
+                val innerType = extractFirstTypeParameter(typeString)
+                val convertedInner = if (containsMethodTypeParam(innerType, methodTypeParamNames)) "Any?" else innerType
+                return "$prefix$convertedInner>"
+            }
+        }
+
+        // Handle Map<K, V> -> Map<Any?, Any?>
+        if (typeString.startsWith("Map<") || typeString.startsWith("MutableMap<")) {
+            val prefix = if (typeString.startsWith("MutableMap<")) "MutableMap<" else "Map<"
+            val (key, value) = extractMapTypeParameters(typeString)
+            val convertedKey = if (containsMethodTypeParam(key, methodTypeParamNames)) "Any?" else key
+            val convertedValue = if (containsMethodTypeParam(value, methodTypeParamNames)) "Any?" else value
+            return "$prefix$convertedKey, $convertedValue>"
+        }
+
+        // Pure type parameter -> Any?
+        return if (containsMethodTypeParam(typeString, methodTypeParamNames)) "Any?" else typeString
     }
 
     /**

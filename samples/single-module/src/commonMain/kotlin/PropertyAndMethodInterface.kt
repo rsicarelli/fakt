@@ -16,6 +16,8 @@ import com.rsicarelli.fakt.Fake
 @Fake
 interface PropertyAndMethodInterface {
     val stringValue: String
+
     fun getValue(): String
+
     fun setValue(value: String)
 }

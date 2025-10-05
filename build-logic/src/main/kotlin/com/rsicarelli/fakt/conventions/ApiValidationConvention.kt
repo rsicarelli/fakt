@@ -23,8 +23,8 @@ fun Project.applyApiValidationConvention() {
         // Ignore all sample modules (not part of public API)
         ignoredProjects +=
             listOf(
-                "single-module",
-                "kmp-comprehensive-test",
+//                "single-module",
+//                "kmp-comprehensive-test",
                 "api",
                 "core",
                 "app",

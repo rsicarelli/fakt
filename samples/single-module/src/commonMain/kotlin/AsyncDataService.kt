@@ -14,6 +14,8 @@ import com.rsicarelli.fakt.Fake
 @Fake
 interface AsyncDataService {
     suspend fun fetchData(): String
+
     suspend fun <T> processData(data: T): T
+
     suspend fun batchProcess(items: List<String>): List<String>
 }

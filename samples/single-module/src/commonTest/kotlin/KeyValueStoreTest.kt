@@ -10,19 +10,16 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
- * P0.1: Multiple type parameters test.
- *
- * ❌ RED TEST: This will fail if KeyValueStore<K, V> doesn't generate correctly.
- * ✅ GREEN: Should pass once multi-param generic support is verified.
+ * P0.1: Multiple type parameters test ✅
  *
  * Tests that interfaces with multiple type parameters (K, V) generate correctly
- * with full type safety preserved.
+ * with full type safety preserved. Validates KeyValueStore<K, V> pattern which is
+ * common in real-world code (Map, Cache, etc.).
  */
-class P0MultipleTypeParametersTest {
+class KeyValueStoreTest {
     @Test
     fun `GIVEN KeyValueStore with multiple type params WHEN generating fake THEN should preserve both K and V`() {
         // Given - Interface with two type parameters: K and V
-        // ❌ RED: Will fail if fakeKeyValueStore doesn't exist or has wrong signature
 
         // When - Create fake with String keys and Int values
         val store = fakeKeyValueStore<String, Int>()

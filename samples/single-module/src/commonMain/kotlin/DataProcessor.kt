@@ -14,6 +14,8 @@ import com.rsicarelli.fakt.Fake
 @Fake
 interface DataProcessor {
     fun <T> process(item: T): T
+
     fun <R> transform(input: String): R
+
     fun getData(): String
 }

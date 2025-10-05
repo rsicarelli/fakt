@@ -7,14 +7,12 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 /**
- * Phase 3 RED TEST: Mixed generics (class-level + method-level) fake generation.
+ * P2.1: Mixed generics (class-level + method-level) fake generation ✅
  *
- * ❌ This test will FAIL until we implement mixed generics support.
+ * Tests that both class-level and method-level type parameters work together.
+ * MixedProcessor<T> combines class-level type parameter T with method-level type parameter R.
  *
- * Currently, MixedProcessor<T> is filtered out by GenericPatternAnalyzer
- * as MixedGenerics pattern.
- *
- * After implementation, fakeMixedProcessor should be generated with:
+ * Generated code pattern:
  * ```kotlin
  * class FakeMixedProcessor<T> : MixedProcessor<T> {
  *     override fun process(item: T): T = processBehavior(item)
@@ -27,11 +25,10 @@ import kotlin.test.assertNotNull
  * ): MixedProcessor<T>
  * ```
  */
-class MixedGenericsTest {
+class MixedProcessorTest {
     @Test
     fun `GIVEN MixedProcessor with class and method generics WHEN generating fake THEN should preserve both type parameters`() {
         // Given - Interface with both class-level T and method-level R
-        // ❌ RED: fakeMixedProcessor doesn't exist yet (filtered out)
 
         // When - Create fake with class-level type parameter
         val processor = fakeMixedProcessor<String>()
@@ -76,10 +73,10 @@ class MixedGenericsTest {
 
     @Test
     fun `GIVEN MixedProcessor WHEN generated THEN fake should exist`() {
-        // This is the most basic test - just check the fake was generated
-        // ❌ RED: This will fail because fakeMixedProcessor doesn't exist
+        // Given - MixedProcessor with class-level and method-level generics
         val processor = fakeMixedProcessor<String>()
 
+        // Then - Should be successfully generated
         assertNotNull(processor, "Fake should be generated for MixedProcessor")
     }
 }

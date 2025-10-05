@@ -65,7 +65,7 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
                 project.rootProject
                     .project(":compiler")
                     .tasks
-                    .named("shadowJar")
+                    .named("jar")
                     .get()
                     .outputs.files.singleFile
             freeCompilerArgs.addAll(

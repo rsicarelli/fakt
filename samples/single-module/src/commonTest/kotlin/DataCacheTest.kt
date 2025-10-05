@@ -12,7 +12,7 @@ import kotlin.test.assertNotNull
  * Tests that nested generic types (List<List<T>>, Map<K, List<V>>) work correctly.
  * This is a common pattern in real-world code for batch operations and grouped data.
  */
-class P0NestedGenericsTest {
+class DataCacheTest {
     @Test
     fun `GIVEN DataCache with nested generics WHEN generating fake THEN should preserve nested types`() {
         // Given - Interface with nested generics: List<List<T>>, Map<String, List<T>>

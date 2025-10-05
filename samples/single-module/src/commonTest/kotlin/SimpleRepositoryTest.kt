@@ -6,14 +6,15 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * Phase 2 validation: Class-level generic fake generation.
+ * P0.0: Class-level generic fake generation ✅
  *
  * Validates that:
- * 1. Generated factory function accepts type parameter
+ * 1. Generated factory function accepts type parameter (inline fun <reified T>)
  * 2. Type safety is preserved at use-site
  * 3. Configuration DSL works with generic types
+ * 4. Different type instantiations maintain separate type safety
  */
-class GenericRepositoryTest {
+class SimpleRepositoryTest {
     data class User(
         val id: String,
         val name: String,

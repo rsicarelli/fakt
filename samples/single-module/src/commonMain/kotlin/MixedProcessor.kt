@@ -26,6 +26,8 @@ import com.rsicarelli.fakt.Fake
 @Fake
 interface MixedProcessor<T> {
     fun process(item: T): T
+
     fun <R> transform(item: T): R
+
     fun reset()
 }

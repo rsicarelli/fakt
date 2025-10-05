@@ -13,9 +13,14 @@ import com.rsicarelli.fakt.Fake
 @Fake
 interface DataCache<T> {
     fun storeBatch(items: List<T>)
+
     fun getAllBatches(): List<List<T>>
+
     fun storeGroups(groups: Map<String, List<T>>)
+
     fun getGroup(name: String): List<T>?
+
     fun storeNested(data: List<List<T>>)
+
     fun getMatrix(): List<List<T>>
 }

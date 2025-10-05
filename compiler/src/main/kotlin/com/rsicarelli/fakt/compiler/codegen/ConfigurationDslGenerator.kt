@@ -49,7 +49,7 @@ internal class ConfigurationDslGenerator(
         // Extract type parameter names (without constraints) for use as type arguments
         val typeParameterNames =
             if (analysis.typeParameters.isNotEmpty()) {
-                "<${analysis.typeParameters.map { it.substringBefore(" :").trim() }.joinToString(", ")}>"
+                "<${analysis.typeParameters.joinToString(", ") { it.substringBefore(" :").trim() }}>"
             } else {
                 ""
             }
@@ -65,7 +65,7 @@ internal class ConfigurationDslGenerator(
                 // Phase 3: Add method-level type parameters to DSL methods
                 val methodTypeParams =
                     if (hasMethodGenerics) {
-                        "<${function.typeParameters.joinToString(", ")}>"
+                        "<${function.typeParameters.joinToString(", ")}> "
                     } else {
                         ""
                     }
@@ -79,7 +79,7 @@ internal class ConfigurationDslGenerator(
                     )
                 val suspendModifier = if (function.isSuspend) "suspend " else ""
                 appendLine(
-                    "    fun $methodTypeParams $functionName(behavior: $suspendModifier($parameterTypes) -> $returnType) " +
+                    "    fun $methodTypeParams$functionName(behavior: $suspendModifier($parameterTypes) -> $returnType) " +
                         "{ fake.configure${functionName.capitalize()}(behavior) }",
                 )
             }
