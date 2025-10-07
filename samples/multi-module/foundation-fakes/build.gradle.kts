@@ -22,7 +22,7 @@ kotlin {
             dependencies {
                 // CRITICAL: Collector modules MUST depend on source module
                 // Generated fakes reference original types (ConfigService, Logger, etc.)
-                api(project(":foundation"))
+                api(projects.foundation)
                 implementation("com.rsicarelli.fakt:runtime:1.0.0-SNAPSHOT")
             }
         }

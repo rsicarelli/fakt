@@ -29,13 +29,13 @@ kotlin {
         commonMain {
             dependencies {
                 // Depend on core module so we can access original interfaces
-                api(project(":core"))
+                api(projects.core)
             }
         }
 
         commonTest {
             dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-test")
+                implementation(libs.kotlin.test)
             }
         }
     }

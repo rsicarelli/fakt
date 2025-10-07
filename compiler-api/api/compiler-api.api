@@ -1,0 +1,68 @@
+public final class com/rsicarelli/fakt/compiler/api/SourceSetContext {
+	public static final field Companion Lcom/rsicarelli/fakt/compiler/api/SourceSetContext$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLcom/rsicarelli/fakt/compiler/api/SourceSetInfo;Ljava/util/List;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Z
+	public final fun component5 ()Lcom/rsicarelli/fakt/compiler/api/SourceSetInfo;
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLcom/rsicarelli/fakt/compiler/api/SourceSetInfo;Ljava/util/List;Ljava/lang/String;)Lcom/rsicarelli/fakt/compiler/api/SourceSetContext;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/api/SourceSetContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLcom/rsicarelli/fakt/compiler/api/SourceSetInfo;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/api/SourceSetContext;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAllSourceSets ()Ljava/util/List;
+	public final fun getCompilationName ()Ljava/lang/String;
+	public final fun getDefaultSourceSet ()Lcom/rsicarelli/fakt/compiler/api/SourceSetInfo;
+	public final fun getOutputDirectory ()Ljava/lang/String;
+	public final fun getPlatformType ()Ljava/lang/String;
+	public final fun getTargetName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isTest ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/rsicarelli/fakt/compiler/api/SourceSetContext$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/rsicarelli/fakt/compiler/api/SourceSetContext$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/rsicarelli/fakt/compiler/api/SourceSetContext;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/rsicarelli/fakt/compiler/api/SourceSetContext;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/rsicarelli/fakt/compiler/api/SourceSetContext$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/rsicarelli/fakt/compiler/api/SourceSetInfo {
+	public static final field Companion Lcom/rsicarelli/fakt/compiler/api/SourceSetInfo$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;)Lcom/rsicarelli/fakt/compiler/api/SourceSetInfo;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/api/SourceSetInfo;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/api/SourceSetInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun getParents ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/rsicarelli/fakt/compiler/api/SourceSetInfo$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/rsicarelli/fakt/compiler/api/SourceSetInfo$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/rsicarelli/fakt/compiler/api/SourceSetInfo;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/rsicarelli/fakt/compiler/api/SourceSetInfo;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/rsicarelli/fakt/compiler/api/SourceSetInfo$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+

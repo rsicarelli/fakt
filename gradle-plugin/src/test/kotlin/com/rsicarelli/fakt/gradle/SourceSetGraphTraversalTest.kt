@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.gradle
 
-import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
+import com.rsicarelli.fakt.gradle.fakes.FakeKotlinSourceSet
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -15,7 +15,7 @@ class SourceSetGraphTraversalTest {
     @Test
     fun `GIVEN single source set WHEN traversing THEN should return only itself`() {
         // GIVEN
-        val commonMain = MockKotlinSourceSet(mockName = "commonMain")
+        val commonMain = FakeKotlinSourceSet(name = "commonMain")
 
         // WHEN
         val result = SourceSetGraphTraversal.getAllParentSourceSets(commonMain)
@@ -28,11 +28,11 @@ class SourceSetGraphTraversalTest {
     @Test
     fun `GIVEN simple hierarchy WHEN traversing THEN should find all parents`() {
         // GIVEN: jvmMain → commonMain
-        val commonMain = MockKotlinSourceSet(mockName = "commonMain")
+        val commonMain = FakeKotlinSourceSet(name = "commonMain")
         val jvmMain =
-            MockKotlinSourceSet(
-                mockName = "jvmMain",
-                mockDependsOn = setOf(commonMain),
+            FakeKotlinSourceSet(
+                name = "jvmMain",
+                parents = setOf(commonMain),
             )
 
         // WHEN
@@ -47,11 +47,11 @@ class SourceSetGraphTraversalTest {
     @Test
     fun `GIVEN deep hierarchy WHEN traversing THEN should find all levels`() {
         // GIVEN: iosX64Main → iosMain → appleMain → nativeMain → commonMain
-        val commonMain = MockKotlinSourceSet(mockName = "commonMain")
-        val nativeMain = MockKotlinSourceSet(mockName = "nativeMain", mockDependsOn = setOf(commonMain))
-        val appleMain = MockKotlinSourceSet(mockName = "appleMain", mockDependsOn = setOf(nativeMain))
-        val iosMain = MockKotlinSourceSet(mockName = "iosMain", mockDependsOn = setOf(appleMain))
-        val iosX64Main = MockKotlinSourceSet(mockName = "iosX64Main", mockDependsOn = setOf(iosMain))
+        val commonMain = FakeKotlinSourceSet(name = "commonMain")
+        val nativeMain = FakeKotlinSourceSet(name = "nativeMain", parents = setOf(commonMain))
+        val appleMain = FakeKotlinSourceSet(name = "appleMain", parents = setOf(nativeMain))
+        val iosMain = FakeKotlinSourceSet(name = "iosMain", parents = setOf(appleMain))
+        val iosX64Main = FakeKotlinSourceSet(name = "iosX64Main", parents = setOf(iosMain))
 
         // WHEN
         val result = SourceSetGraphTraversal.getAllParentSourceSets(iosX64Main)
@@ -73,13 +73,13 @@ class SourceSetGraphTraversalTest {
         //   nativeMain   appleMain
         //        \        /
         //         iosMain
-        val commonMain = MockKotlinSourceSet(mockName = "commonMain")
-        val nativeMain = MockKotlinSourceSet(mockName = "nativeMain", mockDependsOn = setOf(commonMain))
-        val appleMain = MockKotlinSourceSet(mockName = "appleMain", mockDependsOn = setOf(commonMain))
+        val commonMain = FakeKotlinSourceSet(name = "commonMain")
+        val nativeMain = FakeKotlinSourceSet(name = "nativeMain", parents = setOf(commonMain))
+        val appleMain = FakeKotlinSourceSet(name = "appleMain", parents = setOf(commonMain))
         val iosMain =
-            MockKotlinSourceSet(
-                mockName = "iosMain",
-                mockDependsOn = setOf(nativeMain, appleMain),
+            FakeKotlinSourceSet(
+                name = "iosMain",
+                parents = setOf(nativeMain, appleMain),
             )
 
         // WHEN
@@ -103,12 +103,12 @@ class SourceSetGraphTraversalTest {
         //   commonMain    utilsMain
         //        \        /
         //         jvmMain
-        val commonMain = MockKotlinSourceSet(mockName = "commonMain")
-        val utilsMain = MockKotlinSourceSet(mockName = "utilsMain")
+        val commonMain = FakeKotlinSourceSet(name = "commonMain")
+        val utilsMain = FakeKotlinSourceSet(name = "utilsMain")
         val jvmMain =
-            MockKotlinSourceSet(
-                mockName = "jvmMain",
-                mockDependsOn = setOf(commonMain, utilsMain),
+            FakeKotlinSourceSet(
+                name = "jvmMain",
+                parents = setOf(commonMain, utilsMain),
             )
 
         // WHEN
@@ -124,8 +124,8 @@ class SourceSetGraphTraversalTest {
     @Test
     fun `GIVEN hierarchy map builder WHEN building THEN should create correct structure`() {
         // GIVEN
-        val commonMain = MockKotlinSourceSet(mockName = "commonMain")
-        val jvmMain = MockKotlinSourceSet(mockName = "jvmMain", mockDependsOn = setOf(commonMain))
+        val commonMain = FakeKotlinSourceSet(name = "commonMain")
+        val jvmMain = FakeKotlinSourceSet(name = "jvmMain", parents = setOf(commonMain))
 
         // WHEN
         val map = SourceSetGraphTraversal.buildHierarchyMap(jvmMain)
@@ -139,10 +139,10 @@ class SourceSetGraphTraversalTest {
     @Test
     fun `GIVEN complex hierarchy map WHEN building THEN should preserve parent relationships`() {
         // GIVEN: iOS hierarchy
-        val commonMain = MockKotlinSourceSet(mockName = "commonMain")
-        val nativeMain = MockKotlinSourceSet(mockName = "nativeMain", mockDependsOn = setOf(commonMain))
-        val appleMain = MockKotlinSourceSet(mockName = "appleMain", mockDependsOn = setOf(nativeMain))
-        val iosMain = MockKotlinSourceSet(mockName = "iosMain", mockDependsOn = setOf(appleMain))
+        val commonMain = FakeKotlinSourceSet(name = "commonMain")
+        val nativeMain = FakeKotlinSourceSet(name = "nativeMain", parents = setOf(commonMain))
+        val appleMain = FakeKotlinSourceSet(name = "appleMain", parents = setOf(nativeMain))
+        val iosMain = FakeKotlinSourceSet(name = "iosMain", parents = setOf(appleMain))
 
         // WHEN
         val map = SourceSetGraphTraversal.buildHierarchyMap(iosMain)
@@ -158,13 +158,13 @@ class SourceSetGraphTraversalTest {
     @Test
     fun `GIVEN diamond hierarchy map WHEN building THEN should list all direct parents`() {
         // GIVEN: Diamond pattern
-        val commonMain = MockKotlinSourceSet(mockName = "commonMain")
-        val nativeMain = MockKotlinSourceSet(mockName = "nativeMain", mockDependsOn = setOf(commonMain))
-        val appleMain = MockKotlinSourceSet(mockName = "appleMain", mockDependsOn = setOf(commonMain))
+        val commonMain = FakeKotlinSourceSet(name = "commonMain")
+        val nativeMain = FakeKotlinSourceSet(name = "nativeMain", parents = setOf(commonMain))
+        val appleMain = FakeKotlinSourceSet(name = "appleMain", parents = setOf(commonMain))
         val iosMain =
-            MockKotlinSourceSet(
-                mockName = "iosMain",
-                mockDependsOn = setOf(nativeMain, appleMain),
+            FakeKotlinSourceSet(
+                name = "iosMain",
+                parents = setOf(nativeMain, appleMain),
             )
 
         // WHEN
@@ -181,101 +181,4 @@ class SourceSetGraphTraversalTest {
         assertEquals(listOf("commonMain"), map["nativeMain"])
         assertEquals(listOf("commonMain"), map["appleMain"])
     }
-}
-
-/**
- * Mock implementation of KotlinSourceSet for testing.
- * Simulates the dependsOn relationship graph without requiring full Gradle setup.
- *
- * Only implements the properties/methods needed for graph traversal tests.
- * All other methods throw errors to catch misuse.
- */
-@Suppress("DEPRECATION")
-private class MockKotlinSourceSet(
-    private val mockName: String,
-    private val mockDependsOn: Set<KotlinSourceSet> = emptySet(),
-) : KotlinSourceSet {
-    override fun getName(): String = mockName
-
-    override val dependsOn: Set<KotlinSourceSet> = mockDependsOn
-
-    override fun dependsOn(other: KotlinSourceSet) {
-        error("Not supported in mock - set via constructor")
-    }
-
-    // Required properties from interfaces - all unused in graph traversal
-    override val kotlin: org.gradle.api.file.SourceDirectorySet
-        get() = error("Not used in graph traversal tests")
-
-    override fun kotlin(configure: org.gradle.api.file.SourceDirectorySet.() -> Unit) = error("Not used in graph traversal tests")
-
-    override fun kotlin(configure: org.gradle.api.Action<org.gradle.api.file.SourceDirectorySet>) =
-        error("Not used in graph traversal tests")
-
-    override val resources: org.gradle.api.file.SourceDirectorySet
-        get() = error("Not used in graph traversal tests")
-
-    override val languageSettings: org.jetbrains.kotlin.gradle.plugin.LanguageSettingsBuilder
-        get() = error("Not used in graph traversal tests")
-
-    override fun languageSettings(configure: org.jetbrains.kotlin.gradle.plugin.LanguageSettingsBuilder.() -> Unit) =
-        error("Not used in graph traversal tests")
-
-    override fun languageSettings(configure: org.gradle.api.Action<org.jetbrains.kotlin.gradle.plugin.LanguageSettingsBuilder>) =
-        error("Not used in graph traversal tests")
-
-    override fun dependencies(configure: org.jetbrains.kotlin.gradle.plugin.KotlinDependencyHandler.() -> Unit) {
-        error("Not used in graph traversal tests")
-    }
-
-    override fun dependencies(configure: org.gradle.api.Action<org.jetbrains.kotlin.gradle.plugin.KotlinDependencyHandler>) {
-        error("Not used in graph traversal tests")
-    }
-
-    override val customSourceFilesExtensions: Iterable<String>
-        get() = error("Not used in graph traversal tests")
-
-    // From HasProject
-    override val project: org.gradle.api.Project
-        get() = error("Not used in graph traversal tests")
-
-    // From HasMutableExtras
-    override val extras: org.jetbrains.kotlin.tooling.core.MutableExtras
-        get() = error("Not used in graph traversal tests")
-
-    // From HasKotlinDependencies
-    override val apiConfigurationName: String
-        get() = error("Not used in graph traversal tests")
-
-    override val compileOnlyConfigurationName: String
-        get() = error("Not used in graph traversal tests")
-
-    override val implementationConfigurationName: String
-        get() = error("Not used in graph traversal tests")
-
-    override val runtimeOnlyConfigurationName: String
-        get() = error("Not used in graph traversal tests")
-
-    // Deprecated properties
-    override val apiMetadataConfigurationName: String
-        get() = error("Deprecated - not used")
-
-    override val implementationMetadataConfigurationName: String
-        get() = error("Deprecated - not used")
-
-    override val compileOnlyMetadataConfigurationName: String
-        get() = error("Deprecated - not used")
-
-    override val runtimeOnlyMetadataConfigurationName: String
-        get() = error("Deprecated - not used")
-
-    override fun toString(): String = "MockKotlinSourceSet(name=$mockName)"
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is MockKotlinSourceSet) return false
-        return mockName == other.mockName
-    }
-
-    override fun hashCode(): Int = mockName.hashCode()
 }

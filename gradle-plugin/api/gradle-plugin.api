@@ -1,3 +1,16 @@
+public abstract class com/rsicarelli/fakt/gradle/FakeCollectorTask : org/gradle/api/DefaultTask {
+	public static final field Companion Lcom/rsicarelli/fakt/gradle/FakeCollectorTask$Companion;
+	public fun <init> ()V
+	public final fun collectFakes ()V
+	public abstract fun getDestinationDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getSourceGeneratedDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getSourceProjectPath ()Lorg/gradle/api/provider/Property;
+}
+
+public final class com/rsicarelli/fakt/gradle/FakeCollectorTask$Companion {
+	public final fun registerForKmpProject (Lorg/gradle/api/Project;Lcom/rsicarelli/fakt/gradle/FaktPluginExtension;)V
+}
+
 public final class com/rsicarelli/fakt/gradle/FaktGradleSubplugin : org/jetbrains/kotlin/gradle/plugin/KotlinCompilerPluginSupportPlugin {
 	public static final field Companion Lcom/rsicarelli/fakt/gradle/FaktGradleSubplugin$Companion;
 	public static final field PLUGIN_ARTIFACT_NAME Ljava/lang/String;
@@ -19,7 +32,9 @@ public final class com/rsicarelli/fakt/gradle/FaktGradleSubplugin$Companion {
 
 public class com/rsicarelli/fakt/gradle/FaktPluginExtension {
 	public fun <init> (Lorg/gradle/api/model/ObjectFactory;)V
+	public final fun collectFakesFrom (Lorg/gradle/api/Project;)V
 	public final fun generation (Lkotlin/jvm/functions/Function1;)V
+	public final fun getCollectFrom ()Lorg/gradle/api/provider/Property;
 	public final fun getDebug ()Lorg/gradle/api/provider/Property;
 	public final fun getEnabled ()Lorg/gradle/api/provider/Property;
 	public final fun getGenerateBuilderPatterns ()Lorg/gradle/api/provider/Property;

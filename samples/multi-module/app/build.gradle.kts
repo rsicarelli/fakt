@@ -22,24 +22,24 @@ kotlin {
             dependencies {
                 // App depends on all layers - validates complete dependency chain
                 // foundation → domain → features → app
-                implementation(project(":foundation"))
-                implementation(project(":domain"))
-                implementation(project(":features"))
+                implementation(projects.foundation)
+                implementation(projects.domain)
+                implementation(projects.features)
                 implementation("com.rsicarelli.fakt:runtime:1.0.0-SNAPSHOT")
             }
         }
 
         commonTest {
             dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-test")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+                implementation(libs.kotlin.test)
+                implementation(libs.coroutines.test)
 
                 // App depends on entire chain: foundation → domain → features
                 // Tests need all fakes modules from the dependency tree
-                implementation(project(":foundation-fakes"))
-                implementation(project(":domain-fakes"))
-                implementation(project(":features-fakes"))
-                implementation(project(":app-fakes"))
+                implementation(projects.foundationFakes)
+                implementation(projects.domainFakes)
+                implementation(projects.featuresFakes)
+                implementation(projects.appFakes)
             }
         }
 

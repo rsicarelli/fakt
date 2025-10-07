@@ -23,3 +23,6 @@ public abstract interface annotation class com/rsicarelli/fakt/FakeConfig : java
 	public abstract fun strictMode ()Z
 }
 
+public abstract interface annotation class com/rsicarelli/fakt/GeneratesFake : java/lang/annotation/Annotation {
+}
+

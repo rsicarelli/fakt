@@ -21,19 +21,19 @@ kotlin {
         commonMain {
             dependencies {
                 // Depend on domain module so we can access original interfaces
-                api(project(":domain"))
+                api(projects.domain)
 
                 // CRITICAL: Also need foundation because generated domain fakes
                 // reference foundation types (Logger, ConfigService)
                 // This is necessary because domain uses implementation(), not api()
-                api(project(":foundation"))
+                api(projects.foundation)
             }
         }
 
         commonTest {
             dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-test")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+                implementation(libs.kotlin.test)
+                implementation(libs.coroutines.test)
             }
         }
     }

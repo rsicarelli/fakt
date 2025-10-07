@@ -20,7 +20,7 @@ ext["gjfVersion"] = libs.versions.gjf.get()
 
 // Dokka 2.x multi-module aggregation
 dependencies {
-    dokka(project(":runtime"))
-    dokka(project(":compiler"))
-    dokka(project(":gradle-plugin"))
+    dokka(projects.runtime)
+    dokka(projects.compiler)
+    dokka(projects.gradlePlugin)
 }

@@ -1,9 +1,16 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
+@file:OptIn(ExperimentalKotlinGradlePluginApi::class)
+
 package com.rsicarelli.fakt.gradle
 
+import org.gradle.api.Action
+import org.gradle.api.attributes.AttributeContainer
+import org.gradle.api.file.FileCollection
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
-import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
+import org.jetbrains.kotlin.gradle.plugin.KotlinDependencyHandler
+import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -18,6 +25,7 @@ import kotlin.test.assertTrue
  * 3. Associated with main compilation (test suite pattern)
  */
 class CompilationClassifierTest {
+    @OptIn(ExperimentalKotlinGradlePluginApi::class)
     @Test
     fun `GIVEN standard test compilation WHEN classifying THEN should return true`() {
         // GIVEN
@@ -57,7 +65,10 @@ class CompilationClassifierTest {
         val result = CompilationClassifier.isTestCompilation(compilation)
 
         // THEN
-        assertTrue(result, "Custom 'integrationTest' should be classified as test (ends with 'Test')")
+        assertTrue(
+            result,
+            "Custom 'integrationTest' should be classified as test (ends with 'Test')"
+        )
     }
 
     @Test
@@ -129,7 +140,10 @@ class CompilationClassifierTest {
         val result = CompilationClassifier.isTestCompilation(compilation)
 
         // THEN
-        assertFalse(result, "Custom compilation without Test suffix should not be classified as test")
+        assertFalse(
+            result,
+            "Custom compilation without Test suffix should not be classified as test"
+        )
     }
 
     @Test
@@ -209,11 +223,10 @@ class CompilationClassifierTest {
  * Minimal fake implementation for testing.
  * Only implements the properties that CompilationClassifier actually uses.
  */
-@org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 @Suppress("DEPRECATION_ERROR")
 private class FakeKotlinCompilation(
     name: String,
-    private val associatedWith: Set<KotlinCompilation<*>> = emptySet(),
+    associatedWith: Set<KotlinCompilation<*>> = emptySet(),
 ) : KotlinCompilation<Any> {
     override fun getName(): String = compilationName
 
@@ -221,18 +234,19 @@ private class FakeKotlinCompilation(
     override val allAssociatedCompilations: Set<KotlinCompilation<*>> = associatedWith
 
     // Everything else throws errors to catch misuse
+    override val implementationConfigurationName get() = error("Not used")
+    override val apiConfigurationName get() = error("Not used")
+    override val compileOnlyConfigurationName get() = error("Not used")
+    override val runtimeOnlyConfigurationName get() = error("Not used")
     override val associatedCompilations get() = error("Not used")
     override val target get() = error("Not used")
     override val kotlinSourceSets get() = error("Not used")
     override val allKotlinSourceSets get() = error("Not used")
     override val defaultSourceSet get() = error("Not used")
-
-    override fun defaultSourceSet(configure: org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet.() -> Unit) = error("Not used")
-
-    override fun defaultSourceSet(configure: org.gradle.api.Action<org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet>) = error("Not used")
-
+    override val extras get() = error("Not used")
+    override val project get() = error("Not used")
     override val compileDependencyConfigurationName get() = error("Not used")
-    override var compileDependencyFiles: org.gradle.api.file.FileCollection
+    override var compileDependencyFiles: FileCollection
         get() = error("Not used")
         set(_) = error("Not used")
     override val runtimeDependencyConfigurationName get() = error("Not used")
@@ -240,37 +254,38 @@ private class FakeKotlinCompilation(
     override val output get() = error("Not used")
     override val compileKotlinTaskName get() = error("Not used")
     override val compileTaskProvider get() = error("Not used")
-    override val compilerOptions get() = error("Not used")
-    override val compileKotlinTask get() = error("Not used")
-    override val compileKotlinTaskProvider get() = error("Not used")
-    override val kotlinOptions get() = error("Not used")
-
-    override fun kotlinOptions(configure: org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions.() -> Unit) = error("Not used")
-
-    override fun kotlinOptions(configure: org.gradle.api.Action<org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions>) = error("Not used")
-
-    override fun getAttributes(): org.gradle.api.attributes.AttributeContainer = error("Not used")
-
-    override fun attributes(configure: org.gradle.api.attributes.AttributeContainer.() -> Unit) = error("Not used")
-
-    override fun attributes(configure: org.gradle.api.Action<org.gradle.api.attributes.AttributeContainer>) = error("Not used")
-
     override val compileAllTaskName get() = error("Not used")
 
+    @Suppress("OVERRIDE_DEPRECATION")
+    override val compilerOptions get() = error("Not used")
+
+    @Suppress("OVERRIDE_DEPRECATION")
+    override val compileKotlinTask get() = error("Not used")
+
+    @Suppress("OVERRIDE_DEPRECATION")
+    override val compileKotlinTaskProvider get() = error("Not used")
+
+    @Suppress("OVERRIDE_DEPRECATION")
+    override val kotlinOptions get() = error("Not used")
+
+    override fun defaultSourceSet(configure: KotlinSourceSet.() -> Unit) = error("Not used")
+    override fun defaultSourceSet(configure: Action<KotlinSourceSet>) = error("Not used")
+    override fun getAttributes(): AttributeContainer = error("Not used")
+    override fun attributes(configure: AttributeContainer.() -> Unit) = error("Not used")
+    override fun attributes(configure: Action<AttributeContainer>) = error("Not used")
     override fun associateWith(other: KotlinCompilation<*>) = error("Not used")
+    override fun dependencies(configure: KotlinDependencyHandler.() -> Unit) = error("Not used")
+    override fun dependencies(configure: Action<KotlinDependencyHandler>) = error("Not used")
 
-    override fun source(sourceSet: org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet) = error("Not used")
+    @Suppress("OVERRIDE_DEPRECATION")
+    override fun source(sourceSet: KotlinSourceSet) = error("Not used")
 
-    override val implementationConfigurationName get() = error("Not used")
-    override val apiConfigurationName get() = error("Not used")
-    override val compileOnlyConfigurationName get() = error("Not used")
-    override val runtimeOnlyConfigurationName get() = error("Not used")
-
-    override fun dependencies(configure: org.jetbrains.kotlin.gradle.plugin.KotlinDependencyHandler.() -> Unit) = error("Not used")
-
-    override fun dependencies(configure: org.gradle.api.Action<org.jetbrains.kotlin.gradle.plugin.KotlinDependencyHandler>) =
+    @Suppress("OVERRIDE_DEPRECATION")
+    override fun kotlinOptions(configure: org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions.() -> Unit) =
         error("Not used")
 
-    override val extras get() = error("Not used")
-    override val project get() = error("Not used")
+    @Suppress("OVERRIDE_DEPRECATION")
+    override fun kotlinOptions(configure: Action<org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions>) =
+        error("Not used")
+
 }

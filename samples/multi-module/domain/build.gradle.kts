@@ -21,20 +21,20 @@ kotlin {
         commonMain {
             dependencies {
                 // Domain depends on foundation - critical cross-module test
-                implementation(project(":foundation"))
+                implementation(projects.foundation)
                 implementation("com.rsicarelli.fakt:runtime:1.0.0-SNAPSHOT")
             }
         }
 
         commonTest {
             dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-test")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+                implementation(libs.kotlin.test)
+                implementation(libs.coroutines.test)
 
                 // CRITICAL: Cross-module fake consumption
                 // Domain depends on foundation, so tests need both fakes modules
-                implementation(project(":foundation-fakes"))
-                implementation(project(":domain-fakes"))
+                implementation(projects.foundationFakes)
+                implementation(projects.domainFakes)
             }
         }
     }

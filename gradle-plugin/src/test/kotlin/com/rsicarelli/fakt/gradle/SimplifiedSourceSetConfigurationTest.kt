@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.gradle
 
+import com.rsicarelli.fakt.gradle.helpers.createKmpProject
+import com.rsicarelli.fakt.gradle.helpers.evaluate
+import com.rsicarelli.fakt.gradle.helpers.getKotlinExtension
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.assertNotNull
 import kotlin.test.Test
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -16,9 +18,6 @@ import kotlin.test.assertTrue
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SimplifiedSourceSetConfigurationTest {
-    // ========================================
-    // RED Phase: Tests for NO Custom Source Sets
-    // ========================================
 
     @Test
     fun `GIVEN KMP project WHEN plugin applied THEN should NOT create fakes source set`() {
@@ -75,10 +74,6 @@ class SimplifiedSourceSetConfigurationTest {
         // Then - Should NOT create custom 'iosArm64Fakes' source set
         assertNull(kotlin.sourceSets.findByName("iosArm64Fakes"))
     }
-
-    // ========================================
-    // RED Phase: Generated Dirs in EXISTING Test Source Sets
-    // ========================================
 
     @Test
     fun `GIVEN commonTest source set WHEN configured THEN should include build generated fakt fakes kotlin`() {
