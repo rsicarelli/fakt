@@ -1,6 +1,6 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-package com.rsicarelli.fakt.gradle
+package com.rsicarelli.fakt.gradle.helpers
 
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.api.SourceSetInfo

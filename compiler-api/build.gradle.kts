@@ -7,7 +7,7 @@ plugins {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+    implementation(libs.kotlinx.serialization.json)
 
     testImplementation(kotlin("test"))
     testImplementation(libs.coroutines.test)

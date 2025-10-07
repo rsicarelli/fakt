@@ -72,20 +72,20 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
     ) {
         messageCollector.report(
             CompilerMessageSeverity.INFO,
-            "============================================"
+            "============================================",
         )
         messageCollector.report(
             CompilerMessageSeverity.INFO,
-            "Fakt: Compiler Plugin Registrar Invoked"
+            "Fakt: Compiler Plugin Registrar Invoked",
         )
         messageCollector.report(
             CompilerMessageSeverity.INFO,
-            "Fakt: Plugin enabled: ${options.enabled}"
+            "Fakt: Plugin enabled: ${options.enabled}",
         )
         if (options.debug) {
             messageCollector.report(
                 CompilerMessageSeverity.INFO,
-                "Fakt compiler plugin enabled with options: $options"
+                "Fakt compiler plugin enabled with options: $options",
             )
         }
     }
@@ -98,11 +98,11 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
     private fun reportPluginDisabled(messageCollector: MessageCollector) {
         messageCollector.report(
             CompilerMessageSeverity.INFO,
-            "Fakt: Plugin disabled, skipping registration"
+            "Fakt: Plugin disabled, skipping registration",
         )
         messageCollector.report(
             CompilerMessageSeverity.INFO,
-            "============================================"
+            "============================================",
         )
     }
 
@@ -129,7 +129,7 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
         val customAnnotations = listOf("com.rsicarelli.fakt.Fake")
         messageCollector.report(
             CompilerMessageSeverity.INFO,
-            "Fakt: Registering IR generation extension"
+            "Fakt: Registering IR generation extension",
         )
 
         // Log source set context availability

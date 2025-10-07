@@ -36,10 +36,10 @@ kotlin {
 
         commonTest {
             dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-test")
+                implementation(libs.kotlin.test)
 
                 // API has no dependencies, only needs its own fakes
-                implementation(project(":api-fakes"))
+                implementation(projects.apiFakes)
             }
         }
     }

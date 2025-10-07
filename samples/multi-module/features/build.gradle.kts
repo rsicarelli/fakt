@@ -22,22 +22,22 @@ kotlin {
             dependencies {
                 // Features depends on both foundation and domain
                 // Foundation must be direct dependency because features imports foundation types
-                implementation(project(":foundation"))
-                implementation(project(":domain"))
+                implementation(projects.foundation)
+                implementation(projects.domain)
                 implementation("com.rsicarelli.fakt:runtime:1.0.0-SNAPSHOT")
             }
         }
 
         commonTest {
             dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-test")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+                implementation(libs.kotlin.test)
+                implementation(libs.coroutines.test)
 
                 // Features depends on domain → foundation chain
                 // Tests need all fakes modules in the dependency tree
-                implementation(project(":foundation-fakes"))
-                implementation(project(":domain-fakes"))
-                implementation(project(":features-fakes"))
+                implementation(projects.foundationFakes)
+                implementation(projects.domainFakes)
+                implementation(projects.featuresFakes)
             }
         }
 

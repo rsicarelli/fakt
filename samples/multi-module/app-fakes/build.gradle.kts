@@ -21,21 +21,21 @@ kotlin {
         commonMain {
             dependencies {
                 // Depend on app module so we can access original interfaces
-                api(project(":app"))
+                api(projects.app)
 
                 // CRITICAL: App uses all modules, so app-fakes needs them all
                 // Generated app fakes reference types from all modules
-                api(project(":features"))
-                api(project(":domain"))
-                api(project(":foundation"))
-                api(project(":core"))
+                api(projects.features)
+                api(projects.domain)
+                api(projects.foundation)
+                api(projects.core)
             }
         }
 
         commonTest {
             dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-test")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+                implementation(libs.kotlin.test)
+                implementation(libs.coroutines.test)
             }
         }
     }

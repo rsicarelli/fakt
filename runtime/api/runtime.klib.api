@@ -5,7 +5,7 @@
 // - Show manifest properties: true
 // - Show declarations: true
 
-// Library unique name: <fakt:runtime>
+// Library unique name: <com.rsicarelli.fakt:runtime>
 open annotation class com.rsicarelli.fakt/CallTracking : kotlin/Annotation { // com.rsicarelli.fakt/CallTracking|null[0]
     constructor <init>(kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/Int = ..., kotlin/Boolean = ..., kotlin/Boolean = ...) // com.rsicarelli.fakt/CallTracking.<init>|<init>(kotlin.Boolean;kotlin.Boolean;kotlin.Int;kotlin.Boolean;kotlin.Boolean){}[0]
 
@@ -51,4 +51,8 @@ open annotation class com.rsicarelli.fakt/FakeConfig : kotlin/Annotation { // co
         final fun <get-generateDsl>(): kotlin/Boolean // com.rsicarelli.fakt/FakeConfig.generateDsl.<get-generateDsl>|<get-generateDsl>(){}[0]
     final val strictMode // com.rsicarelli.fakt/FakeConfig.strictMode|{}strictMode[0]
         final fun <get-strictMode>(): kotlin/Boolean // com.rsicarelli.fakt/FakeConfig.strictMode.<get-strictMode>|<get-strictMode>(){}[0]
+}
+
+open annotation class com.rsicarelli.fakt/GeneratesFake : kotlin/Annotation { // com.rsicarelli.fakt/GeneratesFake|null[0]
+    constructor <init>() // com.rsicarelli.fakt/GeneratesFake.<init>|<init>(){}[0]
 }

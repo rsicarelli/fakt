@@ -1,16 +1,11 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-package com.rsicarelli.fakt.gradle
+package com.rsicarelli.fakt.gradle.helpers
 
 import org.gradle.api.Project
+import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.testfixtures.ProjectBuilder
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
-
-/**
- * Test helpers for Fakt Gradle plugin tests.
- *
- * Provides reusable utilities for creating test projects with KMP setup.
- */
 
 /**
  * Creates a test project with Kotlin Multiplatform and Fakt plugins applied.
@@ -43,5 +38,5 @@ internal fun Project.getKotlinExtension(): KotlinMultiplatformExtension = extens
 internal fun Project.evaluate() {
     // Gradle's ProjectBuilder doesn't automatically run afterEvaluate blocks
     // We need to manually trigger them for testing
-    (this as org.gradle.api.internal.project.ProjectInternal).evaluate()
+    (this as ProjectInternal).evaluate()
 }

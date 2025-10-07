@@ -21,20 +21,20 @@ kotlin {
         commonMain {
             dependencies {
                 // Depend on features module so we can access original interfaces
-                api(project(":features"))
+                api(projects.features)
 
                 // CRITICAL: Also need domain and foundation because generated features fakes
                 // reference their types (UserRepository, OrderService, Logger, etc.)
                 // This is necessary because features uses implementation(), not api()
-                api(project(":domain"))
-                api(project(":foundation"))
+                api(projects.domain)
+                api(projects.foundation)
             }
         }
 
         commonTest {
             dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-test")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+                implementation(libs.kotlin.test)
+                implementation(libs.coroutines.test)
             }
         }
     }

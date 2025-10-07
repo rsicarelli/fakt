@@ -8,14 +8,14 @@ plugins {
 
 dependencies {
     // Compiler API for SourceSetContext serialization
-    implementation(project(":compiler-api"))
+    implementation(projects.compilerApi)
 
     // Kotlin Gradle Plugin APIs (compileOnly like Metro)
     compileOnly(libs.kotlin.gradlePlugin)
     compileOnly(libs.kotlin.gradlePlugin.api)
 
     // Serialization for SourceSetContext
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+    implementation(libs.kotlinx.serialization.json)
 
     // Test dependencies
     testImplementation(libs.kotlin.test)

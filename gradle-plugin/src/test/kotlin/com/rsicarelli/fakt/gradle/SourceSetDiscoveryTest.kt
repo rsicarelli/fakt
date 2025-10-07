@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.gradle
 
-import com.rsicarelli.fakt.compiler.api.SourceSetContext
-import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
+import com.rsicarelli.fakt.gradle.fakes.FakeKotlinCompilation
+import com.rsicarelli.fakt.gradle.fakes.FakeKotlinSourceSet
+import com.rsicarelli.fakt.gradle.fakes.FakeKotlinTarget
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
-import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
-import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -23,16 +23,23 @@ import kotlin.test.assertTrue
  * 3. Verify source set hierarchy is captured correctly
  * 4. Validate output directory generation
  */
+@OptIn(ExperimentalKotlinGradlePluginApi::class)
 class SourceSetDiscoveryTest {
     @Test
     fun `GIVEN simple JVM test compilation WHEN building context THEN should capture test metadata`() {
         // GIVEN: JVM test compilation with commonMain as parent
-        val commonMain = FakeSourceSet(name = "commonMain")
-        val jvmTest = FakeSourceSet(name = "jvmTest", parents = setOf(commonMain))
+        val commonMain = FakeKotlinSourceSet(name = "commonMain")
+        val jvmTest = FakeKotlinSourceSet(
+            name = "jvmTest",
+            parents = setOf(commonMain)
+        )
 
-        val target = FakeTarget(name = "jvm", platformType = KotlinPlatformType.jvm)
+        val target = FakeKotlinTarget(
+            name = "jvm",
+            platformType = KotlinPlatformType.jvm
+        )
         val compilation =
-            FakeCompilation(
+            FakeKotlinCompilation(
                 name = "test",
                 defaultSourceSet = jvmTest,
                 target = target,
@@ -40,7 +47,10 @@ class SourceSetDiscoveryTest {
             )
 
         // WHEN
-        val context = SourceSetDiscovery.buildContext(compilation, "/project/build")
+        val context = SourceSetDiscovery.buildContext(
+            compilation = compilation,
+            buildDir = "/project/build"
+        )
 
         // THEN
         assertEquals("test", context.compilationName)
@@ -50,18 +60,27 @@ class SourceSetDiscoveryTest {
         assertEquals("jvmTest", context.defaultSourceSet.name)
         assertEquals(2, context.allSourceSets.size, "Should include jvmTest and commonMain")
         assertTrue(context.outputDirectory.contains("/project/build/generated/fakt"))
-        assertTrue(context.outputDirectory.contains("test"), "Test output should go to test directory")
+        assertTrue(
+            context.outputDirectory.contains("test"),
+            "Test output should go to test directory"
+        )
     }
 
     @Test
     fun `GIVEN simple JVM main compilation WHEN building context THEN should capture main metadata`() {
         // GIVEN: JVM main compilation
-        val commonMain = FakeSourceSet(name = "commonMain")
-        val jvmMain = FakeSourceSet(name = "jvmMain", parents = setOf(commonMain))
+        val commonMain = FakeKotlinSourceSet(name = "commonMain")
+        val jvmMain = FakeKotlinSourceSet(
+            name = "jvmMain",
+            parents = setOf(commonMain)
+        )
 
-        val target = FakeTarget(name = "jvm", platformType = KotlinPlatformType.jvm)
+        val target = FakeKotlinTarget(
+            name = "jvm",
+            platformType = KotlinPlatformType.jvm
+        )
         val compilation =
-            FakeCompilation(
+            FakeKotlinCompilation(
                 name = "main",
                 defaultSourceSet = jvmMain,
                 target = target,
@@ -69,7 +88,10 @@ class SourceSetDiscoveryTest {
             )
 
         // WHEN
-        val context = SourceSetDiscovery.buildContext(compilation, "/project/build")
+        val context = SourceSetDiscovery.buildContext(
+            compilation = compilation,
+            buildDir = "/project/build"
+        )
 
         // THEN
         assertEquals("main", context.compilationName)
@@ -77,21 +99,39 @@ class SourceSetDiscoveryTest {
         assertEquals("jvm", context.platformType)
         assertFalse(context.isTest, "Should be classified as main compilation")
         assertEquals("jvmMain", context.defaultSourceSet.name)
-        assertTrue(context.outputDirectory.contains("main"), "Main output should go to main directory")
+        assertTrue(
+            context.outputDirectory.contains("main"),
+            "Main output should go to main directory"
+        )
     }
 
     @Test
     fun `GIVEN KMP iOS compilation WHEN building context THEN should capture full hierarchy`() {
         // GIVEN: iOS hierarchy - iosX64Main → iosMain → appleMain → nativeMain → commonMain
-        val commonMain = FakeSourceSet(name = "commonMain")
-        val nativeMain = FakeSourceSet(name = "nativeMain", parents = setOf(commonMain))
-        val appleMain = FakeSourceSet(name = "appleMain", parents = setOf(nativeMain))
-        val iosMain = FakeSourceSet(name = "iosMain", parents = setOf(appleMain))
-        val iosX64Main = FakeSourceSet(name = "iosX64Main", parents = setOf(iosMain))
+        val commonMain = FakeKotlinSourceSet(name = "commonMain")
+        val nativeMain = FakeKotlinSourceSet(
+            name = "nativeMain",
+            parents = setOf(commonMain)
+        )
+        val appleMain = FakeKotlinSourceSet(
+            name = "appleMain",
+            parents = setOf(nativeMain)
+        )
+        val iosMain = FakeKotlinSourceSet(
+            name = "iosMain",
+            parents = setOf(appleMain)
+        )
+        val iosX64Main = FakeKotlinSourceSet(
+            name = "iosX64Main",
+            parents = setOf(iosMain)
+        )
 
-        val target = FakeTarget(name = "iosX64", platformType = KotlinPlatformType.native)
+        val target = FakeKotlinTarget(
+            name = "iosX64",
+            platformType = KotlinPlatformType.native
+        )
         val compilation =
-            FakeCompilation(
+            FakeKotlinCompilation(
                 name = "main",
                 defaultSourceSet = iosX64Main,
                 target = target,
@@ -99,13 +139,20 @@ class SourceSetDiscoveryTest {
             )
 
         // WHEN
-        val context = SourceSetDiscovery.buildContext(compilation, "/project/build")
+        val context = SourceSetDiscovery.buildContext(
+            compilation = compilation,
+            buildDir = "/project/build"
+        )
 
         // THEN
         assertEquals("iosX64", context.targetName)
         assertEquals("native", context.platformType)
         assertEquals("iosX64Main", context.defaultSourceSet.name)
-        assertEquals(5, context.allSourceSets.size, "Should include all 5 source sets in hierarchy")
+        assertEquals(
+            expected = 5,
+            actual = context.allSourceSets.size,
+            message = "Should include all 5 source sets in hierarchy"
+        )
 
         // Verify hierarchy is preserved
         val sourceSetNames = context.allSourceSets.map { it.name }.toSet()
@@ -126,12 +173,18 @@ class SourceSetDiscoveryTest {
     @Test
     fun `GIVEN custom test suite WHEN building context THEN should classify as test`() {
         // GIVEN: integrationTest custom compilation
-        val commonMain = FakeSourceSet(name = "commonMain")
-        val integrationTest = FakeSourceSet(name = "integrationTest", parents = setOf(commonMain))
+        val commonMain = FakeKotlinSourceSet(name = "commonMain")
+        val integrationTest = FakeKotlinSourceSet(
+            name = "integrationTest",
+            parents = setOf(commonMain)
+        )
 
-        val target = FakeTarget(name = "jvm", platformType = KotlinPlatformType.jvm)
+        val target = FakeKotlinTarget(
+            name = "jvm",
+            platformType = KotlinPlatformType.jvm
+        )
         val compilation =
-            FakeCompilation(
+            FakeKotlinCompilation(
                 name = "integrationTest",
                 defaultSourceSet = integrationTest,
                 target = target,
@@ -139,7 +192,10 @@ class SourceSetDiscoveryTest {
             )
 
         // WHEN
-        val context = SourceSetDiscovery.buildContext(compilation, "/project/build")
+        val context = SourceSetDiscovery.buildContext(
+            compilation = compilation,
+            buildDir = "/project/build"
+        )
 
         // THEN
         assertEquals("integrationTest", context.compilationName)
@@ -155,14 +211,26 @@ class SourceSetDiscoveryTest {
         //   nativeMain   appleMain
         //        \        /
         //         iosMain
-        val commonMain = FakeSourceSet(name = "commonMain")
-        val nativeMain = FakeSourceSet(name = "nativeMain", parents = setOf(commonMain))
-        val appleMain = FakeSourceSet(name = "appleMain", parents = setOf(commonMain))
-        val iosMain = FakeSourceSet(name = "iosMain", parents = setOf(nativeMain, appleMain))
+        val commonMain = FakeKotlinSourceSet(name = "commonMain")
+        val nativeMain = FakeKotlinSourceSet(
+            name = "nativeMain",
+            parents = setOf(commonMain)
+        )
+        val appleMain = FakeKotlinSourceSet(
+            name = "appleMain",
+            parents = setOf(commonMain)
+        )
+        val iosMain = FakeKotlinSourceSet(
+            name = "iosMain",
+            parents = setOf(nativeMain, appleMain)
+        )
 
-        val target = FakeTarget(name = "ios", platformType = KotlinPlatformType.native)
+        val target = FakeKotlinTarget(
+            name = "ios",
+            platformType = KotlinPlatformType.native
+        )
         val compilation =
-            FakeCompilation(
+            FakeKotlinCompilation(
                 name = "main",
                 defaultSourceSet = iosMain,
                 target = target,
@@ -170,25 +238,42 @@ class SourceSetDiscoveryTest {
             )
 
         // WHEN
-        val context = SourceSetDiscovery.buildContext(compilation, "/project/build")
+        val context = SourceSetDiscovery.buildContext(
+            compilation = compilation,
+            buildDir = "/project/build"
+        )
 
         // THEN
-        assertEquals(4, context.allSourceSets.size, "Should not duplicate commonMain")
+        assertEquals(
+            expected = 4,
+            actual = context.allSourceSets.size,
+            message = "Should not duplicate commonMain"
+        )
 
         // Verify commonMain appears exactly once
         val commonMainCount = context.allSourceSets.count { it.name == "commonMain" }
-        assertEquals(1, commonMainCount, "commonMain should appear exactly once")
+        assertEquals(
+            expected = 1,
+            actual = commonMainCount,
+            message = "commonMain should appear exactly once"
+        )
     }
 
     @Test
     fun `GIVEN JS platform WHEN building context THEN should capture JS platform type`() {
         // GIVEN: JS compilation
-        val commonMain = FakeSourceSet(name = "commonMain")
-        val jsMain = FakeSourceSet(name = "jsMain", parents = setOf(commonMain))
+        val commonMain = FakeKotlinSourceSet(name = "commonMain")
+        val jsMain = FakeKotlinSourceSet(
+            name = "jsMain",
+            parents = setOf(commonMain)
+        )
 
-        val target = FakeTarget(name = "js", platformType = KotlinPlatformType.js)
+        val target = FakeKotlinTarget(
+            name = "js",
+            platformType = KotlinPlatformType.js
+        )
         val compilation =
-            FakeCompilation(
+            FakeKotlinCompilation(
                 name = "main",
                 defaultSourceSet = jsMain,
                 target = target,
@@ -196,7 +281,10 @@ class SourceSetDiscoveryTest {
             )
 
         // WHEN
-        val context = SourceSetDiscovery.buildContext(compilation, "/project/build")
+        val context = SourceSetDiscovery.buildContext(
+            compilation = compilation,
+            buildDir = "/project/build"
+        )
 
         // THEN
         assertEquals("js", context.platformType)
@@ -206,12 +294,15 @@ class SourceSetDiscoveryTest {
     @Test
     fun `GIVEN Android JVM target WHEN building context THEN should capture androidJvm platform`() {
         // GIVEN: Android JVM compilation
-        val commonMain = FakeSourceSet(name = "commonMain")
-        val androidMain = FakeSourceSet(name = "androidMain", parents = setOf(commonMain))
+        val commonMain = FakeKotlinSourceSet(name = "commonMain")
+        val androidMain = FakeKotlinSourceSet(name = "androidMain", parents = setOf(commonMain))
 
-        val target = FakeTarget(name = "android", platformType = KotlinPlatformType.androidJvm)
+        val target = FakeKotlinTarget(
+            name = "android",
+            platformType = KotlinPlatformType.androidJvm
+        )
         val compilation =
-            FakeCompilation(
+            FakeKotlinCompilation(
                 name = "main",
                 defaultSourceSet = androidMain,
                 target = target,
@@ -219,7 +310,10 @@ class SourceSetDiscoveryTest {
             )
 
         // WHEN
-        val context = SourceSetDiscovery.buildContext(compilation, "/project/build")
+        val context = SourceSetDiscovery.buildContext(
+            compilation = compilation,
+            buildDir = "/project/build"
+        )
 
         // THEN
         assertEquals("androidJvm", context.platformType)
@@ -229,12 +323,18 @@ class SourceSetDiscoveryTest {
     @Test
     fun `GIVEN output directory path WHEN building context THEN should use conventional structure`() {
         // GIVEN
-        val commonMain = FakeSourceSet(name = "commonMain")
-        val jvmTest = FakeSourceSet(name = "jvmTest", parents = setOf(commonMain))
+        val commonMain = FakeKotlinSourceSet(name = "commonMain")
+        val jvmTest = FakeKotlinSourceSet(
+            name = "jvmTest",
+            parents = setOf(commonMain)
+        )
 
-        val target = FakeTarget(name = "jvm", platformType = KotlinPlatformType.jvm)
+        val target = FakeKotlinTarget(
+            name = "jvm",
+            platformType = KotlinPlatformType.jvm
+        )
         val compilation =
-            FakeCompilation(
+            FakeKotlinCompilation(
                 name = "test",
                 defaultSourceSet = jvmTest,
                 target = target,
@@ -242,7 +342,10 @@ class SourceSetDiscoveryTest {
             )
 
         // WHEN
-        val context = SourceSetDiscovery.buildContext(compilation, "/Users/dev/project/build")
+        val context = SourceSetDiscovery.buildContext(
+            compilation = compilation,
+            buildDir = "/Users/dev/project/build"
+        )
 
         // THEN
         // Should follow pattern: {buildDir}/generated/fakt/{test|main}/kotlin
@@ -252,155 +355,3 @@ class SourceSetDiscoveryTest {
     }
 }
 
-/**
- * Fake KotlinSourceSet for testing discovery.
- */
-@Suppress("DEPRECATION")
-private class FakeSourceSet(
-    private val name: String,
-    private val parents: Set<KotlinSourceSet> = emptySet(),
-) : KotlinSourceSet {
-    override fun getName(): String = name
-
-    override val dependsOn: Set<KotlinSourceSet> = parents
-
-    override fun dependsOn(other: KotlinSourceSet) = error("Not used in discovery tests")
-
-    override val kotlin get() = error("Not used")
-
-    override fun kotlin(configure: org.gradle.api.file.SourceDirectorySet.() -> Unit) = error("Not used")
-
-    override fun kotlin(configure: org.gradle.api.Action<org.gradle.api.file.SourceDirectorySet>) = error("Not used")
-
-    override val resources get() = error("Not used")
-    override val languageSettings get() = error("Not used")
-
-    override fun languageSettings(configure: org.jetbrains.kotlin.gradle.plugin.LanguageSettingsBuilder.() -> Unit) = error("Not used")
-
-    override fun languageSettings(configure: org.gradle.api.Action<org.jetbrains.kotlin.gradle.plugin.LanguageSettingsBuilder>) =
-        error("Not used")
-
-    override fun dependencies(configure: org.jetbrains.kotlin.gradle.plugin.KotlinDependencyHandler.() -> Unit) = error("Not used")
-
-    override fun dependencies(configure: org.gradle.api.Action<org.jetbrains.kotlin.gradle.plugin.KotlinDependencyHandler>) =
-        error("Not used")
-
-    override val customSourceFilesExtensions get() = error("Not used")
-    override val project get() = error("Not used")
-    override val extras get() = error("Not used")
-    override val apiConfigurationName get() = error("Not used")
-    override val compileOnlyConfigurationName get() = error("Not used")
-    override val implementationConfigurationName get() = error("Not used")
-    override val runtimeOnlyConfigurationName get() = error("Not used")
-    override val apiMetadataConfigurationName get() = error("Deprecated")
-    override val implementationMetadataConfigurationName get() = error("Deprecated")
-    override val compileOnlyMetadataConfigurationName get() = error("Deprecated")
-    override val runtimeOnlyMetadataConfigurationName get() = error("Deprecated")
-}
-
-/**
- * Fake KotlinTarget for testing discovery.
- */
-private class FakeTarget(
-    private val name: String,
-    override val platformType: KotlinPlatformType,
-) : KotlinTarget {
-    override fun getName(): String = name
-
-    override val targetName: String = name
-    override val disambiguationClassifier: String? = name
-
-    override val compilations get() = error("Not used")
-    override val publishable get() = error("Not used")
-    override val sourceSets get() = error("Not used")
-    override val artifactsTaskName get() = error("Not used")
-    override val apiElementsConfigurationName get() = error("Not used")
-    override val runtimeElementsConfigurationName get() = error("Not used")
-    override val sourcesElementsConfigurationName get() = error("Not used")
-
-    override fun mavenPublication(action: org.gradle.api.Action<org.gradle.api.publish.maven.MavenPublication>) = error("Not used")
-
-    override fun withSourcesJar(publish: Boolean) = error("Not used")
-
-    override fun getAttributes() = error("Not used")
-
-    override val project get() = error("Not used")
-    override val extras get() = error("Not used")
-    override val components get() = error("Not used")
-}
-
-/**
- * Fake KotlinCompilation for testing discovery.
- * Simulates minimal compilation metadata needed for context building.
- */
-@org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-@Suppress("DEPRECATION_ERROR")
-private class FakeCompilation(
-    name: String,
-    override val defaultSourceSet: KotlinSourceSet,
-    override val target: KotlinTarget,
-    private val isTest: Boolean = false,
-) : KotlinCompilation<Any> {
-    override fun getName(): String = compilationName
-
-    override val compilationName: String = name
-
-    // For testing classification
-    override val allAssociatedCompilations: Set<KotlinCompilation<*>> =
-        if (isTest && name != "test") {
-            setOf(FakeCompilation("main", defaultSourceSet, target, false))
-        } else {
-            emptySet()
-        }
-
-    override val associatedCompilations get() = error("Not used")
-    override val kotlinSourceSets get() = error("Not used")
-    override val allKotlinSourceSets get() = error("Not used")
-
-    override fun defaultSourceSet(configure: KotlinSourceSet.() -> Unit) = error("Not used")
-
-    override fun defaultSourceSet(configure: org.gradle.api.Action<KotlinSourceSet>) = error("Not used")
-
-    override val compileDependencyConfigurationName get() = error("Not used")
-    override var compileDependencyFiles: org.gradle.api.file.FileCollection
-        get() = error("Not used")
-        set(_) = error("Not used")
-    override val runtimeDependencyConfigurationName get() = error("Not used")
-    override val runtimeDependencyFiles get() = error("Not used")
-    override val output get() = error("Not used")
-    override val compileKotlinTaskName get() = error("Not used")
-    override val compileTaskProvider get() = error("Not used")
-    override val compilerOptions get() = error("Not used")
-    override val compileKotlinTask get() = error("Not used")
-    override val compileKotlinTaskProvider get() = error("Not used")
-    override val kotlinOptions get() = error("Not used")
-
-    override fun kotlinOptions(configure: org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions.() -> Unit) = error("Not used")
-
-    override fun kotlinOptions(configure: org.gradle.api.Action<org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions>) = error("Not used")
-
-    override fun getAttributes() = error("Not used")
-
-    override fun attributes(configure: org.gradle.api.attributes.AttributeContainer.() -> Unit) = error("Not used")
-
-    override fun attributes(configure: org.gradle.api.Action<org.gradle.api.attributes.AttributeContainer>) = error("Not used")
-
-    override val compileAllTaskName get() = error("Not used")
-
-    override fun associateWith(other: KotlinCompilation<*>) = error("Not used")
-
-    override fun source(sourceSet: KotlinSourceSet) = error("Not used")
-
-    override val implementationConfigurationName get() = error("Not used")
-    override val apiConfigurationName get() = error("Not used")
-    override val compileOnlyConfigurationName get() = error("Not used")
-    override val runtimeOnlyConfigurationName get() = error("Not used")
-
-    override fun dependencies(configure: org.jetbrains.kotlin.gradle.plugin.KotlinDependencyHandler.() -> Unit) = error("Not used")
-
-    override fun dependencies(configure: org.gradle.api.Action<org.jetbrains.kotlin.gradle.plugin.KotlinDependencyHandler>) =
-        error("Not used")
-
-    override val extras get() = error("Not used")
-    override val project get() = error("Not used")
-}

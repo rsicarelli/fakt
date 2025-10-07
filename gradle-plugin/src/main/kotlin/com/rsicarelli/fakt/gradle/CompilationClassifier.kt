@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.gradle
 
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 
 /**
@@ -25,6 +26,7 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
  *
  * @since 1.1.0
  */
+
 internal object CompilationClassifier {
     /**
      * Determine if a compilation is for test code.
@@ -45,12 +47,10 @@ internal object CompilationClassifier {
 
         // Heuristic 3: Associated with main compilation (test suite pattern)
         // Check if this compilation is associated with the main compilation
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
         val associatedCompilations = compilation.allAssociatedCompilations
-        if (associatedCompilations.any { it.name == KotlinCompilation.MAIN_COMPILATION_NAME }) {
-            return true
-        }
-
         // Default: Not a test compilation
-        return false
+        return associatedCompilations.any { it.name == KotlinCompilation.MAIN_COMPILATION_NAME }
+
     }
 }

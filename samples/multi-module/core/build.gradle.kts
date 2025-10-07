@@ -30,19 +30,19 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":api"))
+                api(projects.api)
                 implementation("com.rsicarelli.fakt:runtime:1.0.0-SNAPSHOT")
             }
         }
 
         commonTest {
             dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-test")
+                implementation(libs.kotlin.test)
 
                 // Core depends on api
                 // Tests need both api-fakes and core-fakes
-                implementation(project(":api-fakes"))
-                implementation(project(":core-fakes"))
+                implementation(projects.apiFakes)
+                implementation(projects.coreFakes)
             }
         }
     }

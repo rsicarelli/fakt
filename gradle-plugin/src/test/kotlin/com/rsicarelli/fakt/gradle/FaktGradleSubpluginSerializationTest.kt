@@ -3,6 +3,7 @@
 package com.rsicarelli.fakt.gradle
 
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
+import com.rsicarelli.fakt.gradle.helpers.SourceSetTestHelper
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 import java.util.Base64
@@ -15,7 +16,7 @@ import kotlin.test.assertTrue
  *
  * **Test Strategy**:
  * 1. Verify SubpluginOptions contain all required keys
- * 2. Verify SourceSetContext can be serialized to Base64+JSON
+ * 2. Verify [SourceSetContext] can be serialized to Base64+JSON
  * 3. Verify deserialization roundtrip (serialize → deserialize → verify)
  * 4. Verify context completeness (all source sets included)
  */
@@ -140,7 +141,10 @@ class FaktGradleSubpluginSerializationTest {
 
         // THEN: Should be single line (no newlines)
         assertTrue(!jsonString.contains("\n"), "JSON should not contain newlines")
-        assertTrue(jsonString.contains("\"compilationName\":\"test\""), "Should contain compilationName")
+        assertTrue(
+            jsonString.contains("\"compilationName\":\"test\""),
+            "Should contain compilationName"
+        )
         assertTrue(jsonString.contains("\"targetName\":\"jvm\""), "Should contain targetName")
     }
 

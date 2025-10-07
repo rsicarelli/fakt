@@ -27,10 +27,10 @@ kotlin {
 
 dependencies {
     // Compiler API data models
-    implementation(project(":compiler-api"))
+    implementation(projects.compilerApi)
 
     // Serialization for SourceSetContext deserialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+    implementation(libs.kotlinx.serialization.json)
 
     // compileOnly - provided by Gradle/Kotlin at runtime
     compileOnly(libs.kotlin.compilerEmbeddable)
