@@ -173,9 +173,10 @@ internal object ClassAnalyzer {
                     if (declaration.origin == IrDeclarationOrigin.FAKE_OVERRIDE) return@forEach
 
                     // Check if this method overrides an abstract method from superclass
-                    val isOverridingAbstract = declaration.overriddenSymbols.any { overriddenSymbol ->
-                        overriddenSymbol.owner.modality == Modality.ABSTRACT
-                    }
+                    val isOverridingAbstract =
+                        declaration.overriddenSymbols.any { overriddenSymbol ->
+                            overriddenSymbol.owner.modality == Modality.ABSTRACT
+                        }
 
                     when {
                         // Priority 1: Methods overriding abstract methods → error() defaults

@@ -183,8 +183,8 @@ class FeatureModelsTest {
                         Result.success(
                             User(
                                 id = id,
-                                name = username.removePrefix("user-"),
-                                email = "${username.removePrefix("user-")}@example.com",
+                                name = id.removePrefix("user-"),
+                                email = "${id.removePrefix("user-")}@example.com",
                                 roles = listOf("user"),
                             ),
                         )

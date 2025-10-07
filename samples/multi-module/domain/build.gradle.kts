@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 plugins {
     kotlin("multiplatform")
-    id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
+    id("com.rsicarelli.fakt")
 }
 
 kotlin {
@@ -21,8 +21,8 @@ kotlin {
         commonMain {
             dependencies {
                 // Domain depends on foundation - critical cross-module test
-                implementation(project(":samples:multi-module:foundation"))
-                implementation(project(":runtime"))
+                implementation(project(":foundation"))
+                implementation("com.rsicarelli.fakt:runtime:1.0.0-SNAPSHOT")
             }
         }
 
@@ -33,8 +33,8 @@ kotlin {
 
                 // CRITICAL: Cross-module fake consumption
                 // Domain depends on foundation, so tests need both fakes modules
-                implementation(project(":samples:multi-module:foundation-fakes"))
-                implementation(project(":samples:multi-module:domain-fakes"))
+                implementation(project(":foundation-fakes"))
+                implementation(project(":domain-fakes"))
             }
         }
     }

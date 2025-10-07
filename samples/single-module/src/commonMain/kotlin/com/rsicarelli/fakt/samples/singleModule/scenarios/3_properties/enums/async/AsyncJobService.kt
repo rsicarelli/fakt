@@ -28,7 +28,10 @@ interface AsyncJobService {
     /**
      * Wait for job to reach specific status.
      */
-    suspend fun waitForStatus(jobId: String, targetStatus: JobStatus): Boolean
+    suspend fun waitForStatus(
+        jobId: String,
+        targetStatus: JobStatus,
+    ): Boolean
 
     /**
      * Execute job and return final status.
@@ -43,5 +46,8 @@ interface AsyncJobService {
     /**
      * Update job status asynchronously.
      */
-    suspend fun updateStatus(jobId: String, newStatus: JobStatus): Unit
+    suspend fun updateStatus(
+        jobId: String,
+        newStatus: JobStatus,
+    ): Unit
 }

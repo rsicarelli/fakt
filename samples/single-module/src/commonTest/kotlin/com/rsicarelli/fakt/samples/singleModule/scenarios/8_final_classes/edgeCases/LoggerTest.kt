@@ -2,14 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.singleModule.scenarios.finalClasses.edgeCases
 
+import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class LoggerTest {
-
     @Test
     fun `GIVEN unconfigured log WHEN called with varargs THEN uses super implementation`() {
         val logger: Logger = fakeLogger {}
@@ -23,11 +22,12 @@ class LoggerTest {
     fun `GIVEN configured log WHEN called with varargs THEN uses custom behavior`() {
         val logged = mutableListOf<String>()
 
-        val logger: Logger = fakeLogger {
-            log { messages ->
-                logged.addAll(messages)
+        val logger: Logger =
+            fakeLogger {
+                log { messages ->
+                    logged.addAll(messages)
+                }
             }
-        }
 
         logger.log("msg1", "msg2", "msg3")
 
@@ -48,12 +48,13 @@ class LoggerTest {
         var capturedLevel = ""
         val capturedMessages = mutableListOf<String>()
 
-        val logger: Logger = fakeLogger {
-            logWithLevel { level, messages ->
-                capturedLevel = level
-                capturedMessages.addAll(messages)
+        val logger: Logger =
+            fakeLogger {
+                logWithLevel { level, messages ->
+                    capturedLevel = level
+                    capturedMessages.addAll(messages)
+                }
             }
-        }
 
         logger.logWithLevel("ERROR", "msg1", "msg2")
 
@@ -72,15 +73,16 @@ class LoggerTest {
 
     @Test
     fun `GIVEN configured format WHEN called THEN uses custom behavior`() {
-        val logger: Logger = fakeLogger {
-            format { template, args ->
-                var result = template
-                args.forEach { arg ->
-                    result = result.replaceFirst("%s", arg.toString())
+        val logger: Logger =
+            fakeLogger {
+                format { template, args ->
+                    var result = template
+                    args.forEach { arg ->
+                        result = result.replaceFirst("%s", arg.toString())
+                    }
+                    result
                 }
-                result
             }
-        }
 
         val result = logger.format("Hello %s %s", "Beautiful", "World")
 
@@ -98,11 +100,12 @@ class LoggerTest {
 
     @Test
     fun `GIVEN configured combine WHEN called THEN uses custom behavior`() {
-        val logger: Logger = fakeLogger {
-            combine { prefix, parts, suffix ->
-                "$prefix[${parts.joinToString(",")}]$suffix"
+        val logger: Logger =
+            fakeLogger {
+                combine { prefix, parts, suffix ->
+                    "$prefix[${parts.joinToString(",")}]$suffix"
+                }
             }
-        }
 
         val result = logger.combine("START-", "a", "b", "c", suffix = "-END")
 
@@ -113,20 +116,21 @@ class LoggerTest {
     fun `GIVEN all methods configured WHEN called THEN all use custom behaviors`() {
         val allLogs = mutableListOf<String>()
 
-        val logger: Logger = fakeLogger {
-            log { messages ->
-                allLogs.add("log: ${messages.joinToString("")}")
+        val logger: Logger =
+            fakeLogger {
+                log { messages ->
+                    allLogs.add("log: ${messages.joinToString("")}")
+                }
+                logWithLevel { level, messages ->
+                    allLogs.add("$level: ${messages.joinToString("")}")
+                }
+                format { template, args ->
+                    "formatted: $template"
+                }
+                combine { prefix, parts, suffix ->
+                    "$prefix-combined-$suffix"
+                }
             }
-            logWithLevel { level, messages ->
-                allLogs.add("$level: ${messages.joinToString("")}")
-            }
-            format { template, args ->
-                "formatted: $template"
-            }
-            combine { prefix, parts, suffix ->
-                "$prefix-combined-$suffix"
-            }
-        }
 
         logger.log("a", "b")
         logger.logWithLevel("INFO", "c", "d")

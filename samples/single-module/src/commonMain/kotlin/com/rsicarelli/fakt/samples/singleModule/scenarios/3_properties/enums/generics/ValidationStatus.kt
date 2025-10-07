@@ -9,5 +9,5 @@ enum class ValidationStatus {
     PENDING,
     VALID,
     INVALID,
-    EXPIRED
+    EXPIRED,
 }

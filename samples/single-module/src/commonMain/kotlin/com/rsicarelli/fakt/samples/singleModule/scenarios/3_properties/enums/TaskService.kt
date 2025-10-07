@@ -32,7 +32,10 @@ interface TaskService {
     /**
      * Create a task with specified priority.
      */
-    fun createTask(name: String, priority: Priority): Task
+    fun createTask(
+        name: String,
+        priority: Priority,
+    ): Task
 
     /**
      * Get tasks filtered by priority.
@@ -45,5 +48,5 @@ interface TaskService {
  */
 data class Task(
     val name: String,
-    val priority: Priority
+    val priority: Priority,
 )

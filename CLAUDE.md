@@ -157,22 +157,6 @@ make help
 ❌ Mocks (use fakes)
 ❌ @BeforeEach/@AfterEach (use isolated instances)
 
-### 📚 Documentation Index
-
-**Start Here**:
-- **[QUICK-START.md](./.claude/docs/implementation/QUICK-START.md)** ⭐ - Passo a passo para começar
-- **[ROADMAP.md](./.claude/docs/implementation/ROADMAP.md)** - Visão geral e estratégia completa
-
-**Phase Guides**:
-- **[Phase 1: Core Infrastructure](./.claude/docs/implementation/generics/phase1-core-infrastructure.md)** - Week 1
-- **[Phase 2: Code Generation](./.claude/docs/implementation/generics/phase2-code-generation.md)** - Week 2
-- **[Phase 3: Testing & Integration](./.claude/docs/implementation/generics/phase3-testing-integration.md)** - Week 3
-
-**Technical References**:
-- **[Test Matrix](./.claude/docs/implementation/generics/test-matrix.md)** - 50+ test scenarios (P0-P3)
-- **[Technical Reference](./.claude/docs/implementation/generics/technical-reference.md)** - Kotlin IR APIs deep dive
-- **[CHANGELOG.md](./.claude/docs/implementation/generics/CHANGELOG.md)** - Track daily progress
-
 ### **✅ SEMPRE FAZER:**
 
 1. **🏆 Consultar Metro patterns primeiro**

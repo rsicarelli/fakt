@@ -62,7 +62,5 @@ open class BaseFragment {
         get() = true
 
     // Public method using protected member
-    open fun checkInitialized(): Boolean {
-        return isInitialized
-    }
+    open fun checkInitialized(): Boolean = isInitialized
 }

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 plugins {
     kotlin("multiplatform")
-    id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
+    id("com.rsicarelli.fakt")
 }
 
 kotlin {
@@ -21,7 +21,14 @@ kotlin {
         commonMain {
             dependencies {
                 // Depend on app module so we can access original interfaces
-                api(project(":samples:multi-module:app"))
+                api(project(":app"))
+
+                // CRITICAL: App uses all modules, so app-fakes needs them all
+                // Generated app fakes reference types from all modules
+                api(project(":features"))
+                api(project(":domain"))
+                api(project(":foundation"))
+                api(project(":core"))
             }
         }
 
@@ -40,5 +47,5 @@ fakt {
     debug.set(true)
 
     // Collect fakes from app module
-    collectFakesFrom(project(":samples:multi-module:app"))
+    collectFakesFrom(project(":app"))
 }

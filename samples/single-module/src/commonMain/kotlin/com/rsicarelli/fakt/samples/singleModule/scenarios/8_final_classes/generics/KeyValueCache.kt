@@ -52,30 +52,27 @@ open class KeyValueCache<K, V> {
     /**
      * Stores a key-value pair in the cache.
      */
-    open fun put(key: K, value: V) {
+    open fun put(
+        key: K,
+        value: V,
+    ) {
         // Simulate cache storage
     }
 
     /**
      * Retrieves the value associated with the key.
      */
-    open fun get(key: K): V? {
-        return null
-    }
+    open fun get(key: K): V? = null
 
     /**
      * Removes and returns the value associated with the key.
      */
-    open fun remove(key: K): V? {
-        return null
-    }
+    open fun remove(key: K): V? = null
 
     /**
      * Checks if the cache contains the given key.
      */
-    open fun containsKey(key: K): Boolean {
-        return false
-    }
+    open fun containsKey(key: K): Boolean = false
 
     /**
      * Returns the number of entries in the cache.

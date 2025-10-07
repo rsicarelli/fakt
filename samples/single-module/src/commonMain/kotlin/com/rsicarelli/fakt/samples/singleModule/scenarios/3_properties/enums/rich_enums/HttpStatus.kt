@@ -9,14 +9,15 @@ package com.rsicarelli.fakt.samples.singleModule.scenarios.`3_properties`.enums.
 enum class HttpStatus(
     val code: Int,
     val message: String,
-    val isSuccess: Boolean
+    val isSuccess: Boolean,
 ) {
     OK(200, "OK", true),
     CREATED(201, "Created", true),
     BAD_REQUEST(400, "Bad Request", false),
     UNAUTHORIZED(401, "Unauthorized", false),
     NOT_FOUND(404, "Not Found", false),
-    INTERNAL_SERVER_ERROR(500, "Internal Server Error", false);
+    INTERNAL_SERVER_ERROR(500, "Internal Server Error", false),
+    ;
 
     /**
      * Check if this status represents a client error (4xx).

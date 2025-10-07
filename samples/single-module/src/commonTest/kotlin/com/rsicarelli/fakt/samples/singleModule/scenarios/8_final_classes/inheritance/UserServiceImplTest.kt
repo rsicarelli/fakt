@@ -3,12 +3,12 @@
 package com.rsicarelli.fakt.samples.singleModule.scenarios.finalClasses.inheritance
 
 import com.rsicarelli.fakt.samples.singleModule.models.User
+import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for P1 Scenario: ClassImplementingInterface
@@ -18,13 +18,13 @@ import org.junit.jupiter.api.TestInstance
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UserServiceImplTest {
-
     @Test
     fun `GIVEN class implementing interface WHEN interface methods not configured THEN should throw error`() {
         // Given
-        val service = fakeUserServiceImpl {
-            // Not configuring interface methods
-        }
+        val service =
+            fakeUserServiceImpl {
+                // Not configuring interface methods
+            }
 
         // When/Then - interface methods require configuration
         assertFailsWith<IllegalStateException> {
@@ -39,10 +39,11 @@ class UserServiceImplTest {
     fun `GIVEN class implementing interface WHEN interface methods configured THEN should use configured behavior`() {
         // Given
         val testUser = User("test-id", "Test User", "test@example.com")
-        val service = fakeUserServiceImpl {
-            getUser { id -> testUser }
-            saveUser { user -> Unit }
-        }
+        val service =
+            fakeUserServiceImpl {
+                getUser { id -> testUser }
+                saveUser { user -> Unit }
+            }
 
         // When
         val result = service.getUser("any-id")
@@ -57,11 +58,12 @@ class UserServiceImplTest {
         val validUser = User("1", "Valid", "valid@test.com")
         val invalidUser = User("", "", "")
 
-        val service = fakeUserServiceImpl {
-            getUser { User("1", "Test") }
-            saveUser { }
-            // Not configuring own methods
-        }
+        val service =
+            fakeUserServiceImpl {
+                getUser { User("1", "Test") }
+                saveUser { }
+                // Not configuring own methods
+            }
 
         // When
         val isValid = service.validateUser(validUser)
@@ -77,12 +79,13 @@ class UserServiceImplTest {
     fun `GIVEN class implementing interface WHEN own methods configured THEN should use configured behavior`() {
         // Given
         var logCalled = false
-        val service = fakeUserServiceImpl {
-            getUser { User("1", "Test") }
-            saveUser { }
-            validateUser { user -> user.id == "special" }
-            logOperation { op -> logCalled = true }
-        }
+        val service =
+            fakeUserServiceImpl {
+                getUser { User("1", "Test") }
+                saveUser { }
+                validateUser { user -> user.id == "special" }
+                logOperation { op -> logCalled = true }
+            }
 
         // When
         val isSpecial = service.validateUser(User("special", "User"))
@@ -98,14 +101,15 @@ class UserServiceImplTest {
     @Test
     fun `GIVEN class implementing interface WHEN mixing interface and class methods THEN should distinguish correctly`() {
         // Given
-        val service = fakeUserServiceImpl {
-            // Configure interface methods (required)
-            getUser { id -> User(id, "User-$id") }
-            saveUser { }
-            // Configure one own method
-            validateUser { true } // Always valid
-            // logOperation uses super
-        }
+        val service =
+            fakeUserServiceImpl {
+                // Configure interface methods (required)
+                getUser { id -> User(id, "User-$id") }
+                saveUser { }
+                // Configure one own method
+                validateUser { true } // Always valid
+                // logOperation uses super
+            }
 
         // When
         val user = service.getUser("123")

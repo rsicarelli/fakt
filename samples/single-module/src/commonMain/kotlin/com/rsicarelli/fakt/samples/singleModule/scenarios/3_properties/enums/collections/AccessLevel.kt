@@ -10,5 +10,5 @@ enum class AccessLevel {
     READ,
     WRITE,
     EXECUTE,
-    ADMIN
+    ADMIN,
 }

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 plugins {
     kotlin("multiplatform")
-    id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
+    id("com.rsicarelli.fakt")
 }
 
 kotlin {
@@ -29,7 +29,7 @@ kotlin {
         commonMain {
             dependencies {
                 // Depend on core module so we can access original interfaces
-                api(project(":samples:multi-module:core"))
+                api(project(":core"))
             }
         }
 
@@ -47,5 +47,5 @@ fakt {
     debug.set(true)
 
     // Collect fakes from core module
-    collectFakesFrom(project(":samples:multi-module:core"))
+    collectFakesFrom(project(":core"))
 }

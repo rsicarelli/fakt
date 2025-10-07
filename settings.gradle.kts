@@ -21,16 +21,15 @@ dependencyResolutionManagement {
 
 include(
     ":compiler",
+    ":compiler-api",
     ":gradle-plugin",
     ":runtime",
-    ":samples:single-module",
-    ":samples:multi-module:foundation",
-    ":samples:multi-module:foundation-fakes",
-    ":samples:multi-module:domain",
-    ":samples:multi-module:features",
-    ":samples:multi-module:api",
-    ":samples:multi-module:core",
-    ":samples:multi-module:app",
 )
+
+// Optional: Include samples for unified IDE workspace view
+// Note: Samples are independent composite builds with their own settings.gradle.kts
+// Dependency substitution happens in sample settings.gradle.kts via includeBuild("../..")
+includeBuild("samples/single-module")
+includeBuild("samples/multi-module")
 
 rootProject.name = "fakt"

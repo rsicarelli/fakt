@@ -19,7 +19,6 @@ dependencies {
 
     // Test dependencies for convention plugin testing
     testImplementation(gradleTestKit())
-    testImplementation(kotlin("test"))
     testImplementation(kotlin("test-junit5"))
 }
 

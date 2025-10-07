@@ -70,11 +70,23 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
         messageCollector: MessageCollector,
         options: FaktOptions,
     ) {
-        messageCollector.report(CompilerMessageSeverity.INFO, "============================================")
-        messageCollector.report(CompilerMessageSeverity.INFO, "Fakt: Compiler Plugin Registrar Invoked")
-        messageCollector.report(CompilerMessageSeverity.INFO, "Fakt: Plugin enabled: ${options.enabled}")
+        messageCollector.report(
+            CompilerMessageSeverity.INFO,
+            "============================================"
+        )
+        messageCollector.report(
+            CompilerMessageSeverity.INFO,
+            "Fakt: Compiler Plugin Registrar Invoked"
+        )
+        messageCollector.report(
+            CompilerMessageSeverity.INFO,
+            "Fakt: Plugin enabled: ${options.enabled}"
+        )
         if (options.debug) {
-            messageCollector.report(CompilerMessageSeverity.INFO, "Fakt compiler plugin enabled with options: $options")
+            messageCollector.report(
+                CompilerMessageSeverity.INFO,
+                "Fakt compiler plugin enabled with options: $options"
+            )
         }
     }
 
@@ -84,8 +96,14 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
      * @param messageCollector The message collector for compiler output
      */
     private fun reportPluginDisabled(messageCollector: MessageCollector) {
-        messageCollector.report(CompilerMessageSeverity.INFO, "Fakt: Plugin disabled, skipping registration")
-        messageCollector.report(CompilerMessageSeverity.INFO, "============================================")
+        messageCollector.report(
+            CompilerMessageSeverity.INFO,
+            "Fakt: Plugin disabled, skipping registration"
+        )
+        messageCollector.report(
+            CompilerMessageSeverity.INFO,
+            "============================================"
+        )
     }
 
     /**
@@ -108,17 +126,31 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
         messageCollector: MessageCollector,
         options: FaktOptions,
     ) {
-        val customAnnotations =
-            listOf(
-                "com.rsicarelli.fakt.Fake",
-                "test.sample.CompanyTestDouble",
+        val customAnnotations = listOf("com.rsicarelli.fakt.Fake")
+        messageCollector.report(
+            CompilerMessageSeverity.INFO,
+            "Fakt: Registering IR generation extension"
+        )
+
+        // Log source set context availability
+        if (options.sourceSetContext != null) {
+            messageCollector.report(
+                CompilerMessageSeverity.INFO,
+                "Fakt: Using SourceSetContext (${options.sourceSetContext.compilationName}/${options.sourceSetContext.targetName})",
             )
-        messageCollector.report(CompilerMessageSeverity.INFO, "Fakt: Registering IR generation extension")
+        } else {
+            messageCollector.report(
+                CompilerMessageSeverity.INFO,
+                "Fakt: No SourceSetContext available, using legacy source set mapping",
+            )
+        }
+
         IrGenerationExtension.registerExtension(
             UnifiedFaktIrGenerationExtension(
                 messageCollector = messageCollector,
                 outputDir = options.outputDir,
                 fakeAnnotations = customAnnotations,
+                sourceSetContext = options.sourceSetContext,
             ),
         )
     }

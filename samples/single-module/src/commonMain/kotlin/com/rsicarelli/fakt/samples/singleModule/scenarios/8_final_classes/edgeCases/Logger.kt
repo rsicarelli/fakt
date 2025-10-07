@@ -14,15 +14,21 @@ open class Logger {
         // Default implementation
     }
 
-    open fun logWithLevel(level: String, vararg messages: String) {
+    open fun logWithLevel(
+        level: String,
+        vararg messages: String,
+    ) {
         // Default implementation
     }
 
-    open fun format(template: String, vararg args: Any?): String {
-        return template
-    }
+    open fun format(
+        template: String,
+        vararg args: Any?,
+    ): String = template
 
-    open fun combine(prefix: String, vararg parts: String, suffix: String): String {
-        return "$prefix${parts.joinToString()}$suffix"
-    }
+    open fun combine(
+        prefix: String,
+        vararg parts: String,
+        suffix: String,
+    ): String = "$prefix${parts.joinToString()}$suffix"
 }

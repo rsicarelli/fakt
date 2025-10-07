@@ -50,12 +50,18 @@ interface PermissionService {
     /**
      * Check if user has all required permissions.
      */
-    fun hasAllPermissions(userId: String, required: Set<AccessLevel>): Boolean
+    fun hasAllPermissions(
+        userId: String,
+        required: Set<AccessLevel>,
+    ): Boolean
 
     /**
      * Grant permissions to a user.
      */
-    fun grantPermissions(userId: String, permissions: List<AccessLevel>): Boolean
+    fun grantPermissions(
+        userId: String,
+        permissions: List<AccessLevel>,
+    ): Boolean
 
     /**
      * Get permission levels grouped by category.

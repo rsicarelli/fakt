@@ -29,38 +29,38 @@ shadowJar:
 	@echo "📦 Building compiler plugin JAR..."
 	cd ktfake && ./gradlew :compiler:shadowJar
 
-# Test the working example
+# Test samples (now composite builds - auto-rebuild plugin!)
 test-sample:
-	@echo "🎯 Testing sample project..."
-	cd ktfake && ./gradlew :samples:single-module:build
+	@echo "🎯 Testing single-module sample (composite build)..."
+	cd ktfake/samples/single-module && ./gradlew build
 
 # Multi-module sample
 test-multi-module:
-	@echo "🏢 Testing multi-module sample..."
-	cd ktfake && ./gradlew :samples:multi-module:app:build
+	@echo "🏢 Testing multi-module sample (composite build)..."
+	cd ktfake/samples/multi-module && ./gradlew :app:build
 
 # Comprehensive validation workflow
 validate: shadowJar test-sample test
 	@echo "✅ Full validation complete!"
 
-# Quick development cycle
-quick-test: shadowJar
-	@echo "⚡ Quick test cycle..."
-	cd ktfake && rm -rf samples/single-module/build/generated
-	cd ktfake && ./gradlew :samples:single-module:compileKotlinJvm --no-build-cache
+# Quick development cycle (composite build auto-rebuilds plugin!)
+quick-test:
+	@echo "⚡ Quick test cycle (composite builds)..."
+	cd ktfake/samples/single-module && rm -rf build/generated
+	cd ktfake/samples/single-module && ./gradlew compileKotlinJvm --no-build-cache
 
 # Full rebuild (nuclear option)
 full-rebuild:
 	@echo "💥 Full rebuild with clean slate..."
 	cd ktfake && ./gradlew clean --no-build-cache
 	cd ktfake && ./gradlew :compiler:shadowJar
-	cd ktfake && rm -rf samples/single-module/build/generated
-	cd ktfake && ./gradlew :samples:single-module:build
+	cd ktfake/samples/single-module && rm -rf build/generated
+	cd ktfake/samples/single-module && ./gradlew build
 
 # Debug compiler plugin
 debug:
-	@echo "🐛 Debugging compiler plugin..."
-	cd ktfake && ./gradlew :samples:single-module:compileKotlinJvm -i | grep -E "(Fakt|Generated|ERROR)"
+	@echo "🐛 Debugging compiler plugin (composite build)..."
+	cd ktfake/samples/single-module && ./gradlew compileKotlinJvm -i | grep -E "(Fakt|Generated|ERROR)"
 
 # Documentation
 docs:
@@ -97,18 +97,18 @@ docs-stop:
 help:
 	@echo "📚 Fakt Development Commands:"
 	@echo ""
-	@echo "  build           - Build entire project"
+	@echo "  build           - Build entire project (plugin only, no samples)"
 	@echo "  test            - Run all tests"
 	@echo "  compile         - Compile Kotlin sources"
 	@echo "  clean           - Clean build artifacts"
 	@echo "  format          - Format code with Spotless"
 	@echo ""
 	@echo "  shadowJar       - Build compiler plugin JAR"
-	@echo "  test-sample     - Test single-module sample"
-	@echo "  test-multi-module - Test multi-module sample"
+	@echo "  test-sample     - Test single-module sample (composite build)"
+	@echo "  test-multi-module - Test multi-module sample (composite build)"
 	@echo ""
 	@echo "  validate        - Full validation workflow"
-	@echo "  quick-test      - Quick development cycle"
+	@echo "  quick-test      - Quick development cycle (auto-rebuilds plugin!)"
 	@echo "  full-rebuild    - Nuclear rebuild option"
 	@echo "  debug           - Debug compiler plugin output"
 	@echo ""
@@ -118,3 +118,5 @@ help:
 	@echo "  docs-stop       - Stop documentation server"
 	@echo ""
 	@echo "  help            - Show this help"
+	@echo ""
+	@echo "🎯 Note: Samples are now composite builds! Plugin changes auto-rebuild."

@@ -116,7 +116,7 @@ internal class InterfaceDiscovery(
                 // Check both direct match and meta-annotation match
                 annotationFqName != null && (
                     optimizations.isConfiguredFor(annotationFqName) ||
-                    hasGeneratesFakeMetaAnnotation(annotation)
+                        hasGeneratesFakeMetaAnnotation(annotation)
                 )
             }
         return matchingAnnotation?.type?.classFqName?.asString()

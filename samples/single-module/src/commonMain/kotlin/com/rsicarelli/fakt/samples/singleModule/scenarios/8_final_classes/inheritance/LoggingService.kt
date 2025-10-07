@@ -84,13 +84,13 @@ abstract class BaseService {
  * Demonstrates class implementing both abstract class and interface.
  */
 @Fake
-open class LoggingService : BaseService(), Loggable {
+open class LoggingService :
+    BaseService(),
+    Loggable {
     /**
      * Implements abstract start() from BaseService.
      */
-    override fun start(): Boolean {
-        return true
-    }
+    override fun start(): Boolean = true
 
     /**
      * Implements abstract log() from Loggable interface.
@@ -102,7 +102,5 @@ open class LoggingService : BaseService(), Loggable {
     /**
      * Own open method - gets the current log level.
      */
-    open fun getLogLevel(): String {
-        return "INFO"
-    }
+    open fun getLogLevel(): String = "INFO"
 }

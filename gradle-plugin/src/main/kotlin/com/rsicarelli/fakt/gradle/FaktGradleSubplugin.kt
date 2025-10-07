@@ -2,12 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.gradle
 
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
+import java.util.Base64
 
 /**
  * Gradle plugin for Fakt compiler plugin.
@@ -39,7 +42,7 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 // COLLECTOR MODE: Collect fakes from another project
                 val sourceProject = extension.collectFrom.get()
                 target.logger.lifecycle(
-                    "Fakt: Collector mode enabled - collecting fakes from ${sourceProject.name}"
+                    "Fakt: Collector mode enabled - collecting fakes from ${sourceProject.name}",
                 )
 
                 // Register collector tasks (handles KMP automatically)
@@ -67,7 +70,7 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         // Skip compiler plugin in collector mode
         if (extension?.collectFrom?.isPresent == true) {
             project.logger.info(
-                "Fakt: Skipping compiler plugin for '${kotlinCompilation.name}' (collector mode)"
+                "Fakt: Skipping compiler plugin for '${kotlinCompilation.name}' (collector mode)",
             )
             return false
         }
@@ -106,14 +109,37 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         return project.provider {
             buildList {
                 // Pass configuration options to the compiler plugin
-                // Only pass options that the compiler plugin actually supports
                 add(SubpluginOption(key = "enabled", value = extension.enabled.get().toString()))
                 add(SubpluginOption(key = "debug", value = extension.debug.get().toString()))
 
-                // Automatically configure output directory based on compilation type
-                val configurator = SourceSetConfigurator(project)
-                val outputDir = configurator.getGeneratedSourcesDirectory(kotlinCompilation)
-                add(SubpluginOption(key = "outputDir", value = outputDir))
+                // Build complete source set context using modern API
+                val buildDir =
+                    project.layout.buildDirectory
+                        .get()
+                        .asFile.absolutePath
+                val context = SourceSetDiscovery.buildContext(kotlinCompilation, buildDir)
+
+                // Serialize context to Base64-encoded JSON for compiler plugin
+                val json = Json { prettyPrint = false }
+                val jsonString = json.encodeToString(context)
+                val base64Encoded = Base64.getEncoder().encodeToString(jsonString.toByteArray())
+                add(SubpluginOption(key = "sourceSetContext", value = base64Encoded))
+
+                // Also pass output directory for backwards compatibility
+                add(SubpluginOption(key = "outputDir", value = context.outputDirectory))
+
+                if (extension.debug.get()) {
+                    project.logger.lifecycle(
+                        """
+                        |Fakt: Source Set Context for ${kotlinCompilation.name}:
+                        |  Target: ${context.targetName} (${context.platformType})
+                        |  Default Source Set: ${context.defaultSourceSet.name}
+                        |  All Source Sets: ${context.allSourceSets.joinToString { it.name }}
+                        |  Is Test: ${context.isTest}
+                        |  Output: ${context.outputDirectory}
+                        """.trimMargin(),
+                    )
+                }
 
                 project.logger.info("Fakt: Configured compiler plugin with $size options")
             }

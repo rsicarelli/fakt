@@ -39,14 +39,14 @@ Each sample serves as a **battle test** for the Fakt compiler plugin:
 
 Fakt generates fakes at the appropriate test source set level:
 
-| Source Location | Generated Location | Description |
-|----------------|-------------------|-------------|
-| `commonMain/` | `commonTest/` | Shared multiplatform fakes |
-| `jvmMain/` | `jvmTest/` | JVM-specific fakes |
-| `androidMain/` | `androidTest/` | Android-specific fakes |
-| `iosMain/` | `iosTest/` | iOS-specific fakes |
-| `jsMain/` | `jsTest/` | JavaScript-specific fakes |
-| `main/` (JVM-only) | `test/` | Non-KMP JVM projects |
+| Source Location    | Generated Location | Description                |
+|--------------------|--------------------|----------------------------|
+| `commonMain/`      | `commonTest/`      | Shared multiplatform fakes |
+| `jvmMain/`         | `jvmTest/`         | JVM-specific fakes         |
+| `androidMain/`     | `androidTest/`     | Android-specific fakes     |
+| `iosMain/`         | `iosTest/`         | iOS-specific fakes         |
+| `jsMain/`          | `jsTest/`          | JavaScript-specific fakes  |
+| `main/` (JVM-only) | `test/`            | Non-KMP JVM projects       |
 
 ## 🚀 **Running the Samples**
 

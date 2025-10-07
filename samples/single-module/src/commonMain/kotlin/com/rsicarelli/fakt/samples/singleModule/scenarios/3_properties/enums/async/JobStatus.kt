@@ -10,5 +10,5 @@ enum class JobStatus {
     RUNNING,
     COMPLETED,
     FAILED,
-    CANCELLED
+    CANCELLED,
 }
