@@ -28,12 +28,19 @@ interface CurrencyService {
     /**
      * Get exchange rate between two currencies.
      */
-    fun getExchangeRate(from: Currency, to: Currency): Double
+    fun getExchangeRate(
+        from: Currency,
+        to: Currency,
+    ): Double
 
     /**
      * Convert amount from one currency to another.
      */
-    fun convert(amount: Double, from: Currency, to: Currency): Double
+    fun convert(
+        amount: Double,
+        from: Currency,
+        to: Currency,
+    ): Double
 
     /**
      * Get all supported currencies.
@@ -48,5 +55,8 @@ interface CurrencyService {
     /**
      * Format amount with currency.
      */
-    fun formatAmount(amount: Double, currency: Currency): String
+    fun formatAmount(
+        amount: Double,
+        currency: Currency,
+    ): String
 }

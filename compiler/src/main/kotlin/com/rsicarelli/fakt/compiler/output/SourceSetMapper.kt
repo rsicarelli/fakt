@@ -10,11 +10,19 @@ import java.io.File
  * Handles source set mapping and output directory resolution for Kotlin Multiplatform projects.
  * Provides intelligent fallback strategies for different KMP target configurations.
  *
+ * **Modernization (v1.1.0)**:
+ * - Added SourceSetResolver for data-driven source set resolution
+ * - Maintains backward compatibility with legacy fallback when resolver is null
+ *
+ * @param outputDir Gradle-provided output directory (if available)
+ * @param messageCollector Compiler message collector for logging
+ * @param sourceSetResolver Modern source set resolver (null for legacy fallback)
  * @since 1.0.0
  */
 internal class SourceSetMapper(
     private val outputDir: String?,
     private val messageCollector: MessageCollector?,
+    private val sourceSetResolver: com.rsicarelli.fakt.compiler.SourceSetResolver? = null,
 ) {
     /**
      * Get generated sources directory with intelligent source set mapping and fallback strategy.

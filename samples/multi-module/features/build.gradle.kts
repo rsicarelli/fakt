@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 plugins {
     kotlin("multiplatform")
-    id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
+    id("com.rsicarelli.fakt")
 }
 
 kotlin {
@@ -20,10 +20,11 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                // Features depends on domain (which depends on foundation)
-                // Critical: Transitive dependency validation
-                implementation(project(":samples:multi-module:domain"))
-                implementation(project(":runtime"))
+                // Features depends on both foundation and domain
+                // Foundation must be direct dependency because features imports foundation types
+                implementation(project(":foundation"))
+                implementation(project(":domain"))
+                implementation("com.rsicarelli.fakt:runtime:1.0.0-SNAPSHOT")
             }
         }
 
@@ -34,9 +35,15 @@ kotlin {
 
                 // Features depends on domain → foundation chain
                 // Tests need all fakes modules in the dependency tree
-                implementation(project(":samples:multi-module:foundation-fakes"))
-                implementation(project(":samples:multi-module:domain-fakes"))
-                implementation(project(":samples:multi-module:features-fakes"))
+                implementation(project(":foundation-fakes"))
+                implementation(project(":domain-fakes"))
+                implementation(project(":features-fakes"))
+            }
+        }
+
+        jvmTest {
+            dependencies {
+                implementation("org.junit.jupiter:junit-jupiter:5.10.2")
             }
         }
     }

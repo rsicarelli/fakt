@@ -3,12 +3,12 @@
 package com.rsicarelli.fakt.samples.singleModule.scenarios.finalClasses.generics
 
 import com.rsicarelli.fakt.samples.singleModule.models.User
+import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for P1 Scenario: MultiParameterGenericClass
@@ -20,15 +20,15 @@ import org.junit.jupiter.api.TestInstance
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class KeyValueCacheTest {
-
     @Test
     fun `GIVEN cache with String User types WHEN using typed operations THEN should maintain type safety`() {
         // Given
-        val cache: KeyValueCache<String, User> = fakeKeyValueCache {
-            put { key, value -> /* Store: $key -> $value */ }
-            get { key -> if (key == "user1") User("user1", "Alice") else null }
-            containsKey { key -> key == "user1" }
-        }
+        val cache: KeyValueCache<String, User> =
+            fakeKeyValueCache {
+                put { key, value -> /* Store: $key -> $value */ }
+                get { key -> if (key == "user1") User("user1", "Alice") else null }
+                containsKey { key -> key == "user1" }
+            }
 
         // When
         cache.put("user1", User("user1", "Alice"))
@@ -65,13 +65,14 @@ class KeyValueCacheTest {
         var lastKey: String? = null
         var lastValue: Int? = null
 
-        val cache: KeyValueCache<String, Int> = fakeKeyValueCache {
-            put { key, value ->
-                putCalled = true
-                lastKey = key
-                lastValue = value
+        val cache: KeyValueCache<String, Int> =
+            fakeKeyValueCache {
+                put { key, value ->
+                    putCalled = true
+                    lastKey = key
+                    lastValue = value
+                }
             }
-        }
 
         // When
         cache.put("count", 42)
@@ -86,10 +87,11 @@ class KeyValueCacheTest {
     fun `GIVEN configured containsKey and size WHEN checking THEN should use custom logic`() {
         // Given
         val knownKeys = setOf("key1", "key2", "key3")
-        val cache: KeyValueCache<String, String> = fakeKeyValueCache {
-            containsKey { key -> key in knownKeys }
-            size { knownKeys.size }
-        }
+        val cache: KeyValueCache<String, String> =
+            fakeKeyValueCache {
+                containsKey { key -> key in knownKeys }
+                size { knownKeys.size }
+            }
 
         // When
         val hasKey1 = cache.containsKey("key1")
@@ -105,13 +107,15 @@ class KeyValueCacheTest {
     @Test
     fun `GIVEN cache with Int String types WHEN mixed with String User cache THEN should not interfere`() {
         // Given - Two caches with different type parameters
-        val intCache: KeyValueCache<Int, String> = fakeKeyValueCache {
-            get { id -> "Value-$id" }
-        }
+        val intCache: KeyValueCache<Int, String> =
+            fakeKeyValueCache {
+                get { id -> "Value-$id" }
+            }
 
-        val stringCache: KeyValueCache<String, User> = fakeKeyValueCache {
-            get { key -> User(key, "User-$key") }
-        }
+        val stringCache: KeyValueCache<String, User> =
+            fakeKeyValueCache {
+                get { key -> User(key, "User-$key") }
+            }
 
         // When
         val intValue = intCache.get(1)

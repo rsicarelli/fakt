@@ -16,7 +16,6 @@ import kotlin.test.assertTrue
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SimplifiedSourceSetConfigurationTest {
-
     // ========================================
     // RED Phase: Tests for NO Custom Source Sets
     // ========================================
@@ -177,7 +176,11 @@ class SimplifiedSourceSetConfigurationTest {
         kotlin.jvm()
         project.evaluate()
 
-        val mainCompilation = kotlin.targets.getByName("jvm").compilations.getByName("main")
+        val mainCompilation =
+            kotlin.targets
+                .getByName("jvm")
+                .compilations
+                .getByName("main")
         val configurator = SourceSetConfigurator(project)
 
         // When
@@ -186,5 +189,4 @@ class SimplifiedSourceSetConfigurationTest {
         // Then - Should output to common directory (not jvmFakes) because commonTest exists
         assertTrue(outputDir.contains("build/generated/fakt/fakes/kotlin"))
     }
-
 }

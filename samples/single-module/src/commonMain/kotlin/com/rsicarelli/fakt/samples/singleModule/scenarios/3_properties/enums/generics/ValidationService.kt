@@ -29,7 +29,10 @@ interface ValidationService {
      * Check if any of the provided statuses match.
      * Tests vararg with enums.
      */
-    fun hasAnyStatus(current: ValidationStatus, vararg allowed: ValidationStatus): Boolean
+    fun hasAnyStatus(
+        current: ValidationStatus,
+        vararg allowed: ValidationStatus,
+    ): Boolean
 
     /**
      * Get validation status with timestamp.

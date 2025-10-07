@@ -10,17 +10,14 @@ import com.rsicarelli.fakt.Fake
  */
 @Fake
 open class UserService {
-    open fun findById(id: String?): User? {
-        return null
-    }
+    open fun findById(id: String?): User? = null
 
-    open fun update(user: User?): Boolean {
-        return false
-    }
+    open fun update(user: User?): Boolean = false
 
-    open fun merge(primary: User?, secondary: User?): User? {
-        return primary
-    }
+    open fun merge(
+        primary: User?,
+        secondary: User?,
+    ): User? = primary
 
     open val currentUser: User?
         get() = null
@@ -28,4 +25,7 @@ open class UserService {
     open var cachedUser: User? = null
 }
 
-data class User(val id: String, val name: String)
+data class User(
+    val id: String,
+    val name: String,
+)

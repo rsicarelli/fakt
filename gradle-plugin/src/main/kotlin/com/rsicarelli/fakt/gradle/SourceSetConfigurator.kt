@@ -34,54 +34,23 @@ internal class SourceSetConfigurator(
      * Configure multiplatform source sets to include generated fakes.
      *
      * This adds generated directories to EXISTING test source sets.
-     * We work WITH KMP's default hierarchy template, not against it.
+     * Generated fakes are placed in directories matching the test source set names:
+     * - commonTest → build/generated/fakt/commonTest/kotlin
+     * - jvmTest → build/generated/fakt/jvmTest/kotlin
+     * - etc.
      */
     private fun configureMultiplatformSourceSets(kotlin: KotlinMultiplatformExtension) {
-        val buildDir = project.layout.buildDirectory.get().asFile
+        val buildDir =
+            project.layout.buildDirectory
+                .get()
+                .asFile
 
         kotlin.sourceSets.configureEach { sourceSet ->
-            when (sourceSet.name) {
-                "commonTest" -> {
-                    val generatedDir = java.io.File(buildDir, "generated/fakt/fakes/kotlin")
-                    sourceSet.kotlin.srcDir(generatedDir)
-                    project.logger.info("Fakt: Added generated dir to commonTest: $generatedDir")
-                }
-                "jvmTest" -> {
-                    val generatedDir = java.io.File(buildDir, "generated/fakt/jvmFakes/kotlin")
-                    sourceSet.kotlin.srcDir(generatedDir)
-                    project.logger.info("Fakt: Added generated dir to jvmTest: $generatedDir")
-                }
-                "jsTest" -> {
-                    val generatedDir = java.io.File(buildDir, "generated/fakt/jsFakes/kotlin")
-                    sourceSet.kotlin.srcDir(generatedDir)
-                    project.logger.info("Fakt: Added generated dir to jsTest: $generatedDir")
-                }
-                // Handle all iOS variants
-                "iosArm64Test" -> {
-                    val generatedDir = java.io.File(buildDir, "generated/fakt/iosArm64Fakes/kotlin")
-                    sourceSet.kotlin.srcDir(generatedDir)
-                    project.logger.info("Fakt: Added generated dir to iosArm64Test: $generatedDir")
-                }
-                "iosX64Test" -> {
-                    val generatedDir = java.io.File(buildDir, "generated/fakt/iosX64Fakes/kotlin")
-                    sourceSet.kotlin.srcDir(generatedDir)
-                    project.logger.info("Fakt: Added generated dir to iosX64Test: $generatedDir")
-                }
-                "iosSimulatorArm64Test" -> {
-                    val generatedDir = java.io.File(buildDir, "generated/fakt/iosSimulatorArm64Fakes/kotlin")
-                    sourceSet.kotlin.srcDir(generatedDir)
-                    project.logger.info("Fakt: Added generated dir to iosSimulatorArm64Test: $generatedDir")
-                }
-                // Add other platforms as needed (watchOS, tvOS, macOS, linux, mingw, etc.)
-                else -> {
-                    // For any other *Test source sets, use pattern matching
-                    if (sourceSet.name.endsWith("Test") && sourceSet.name != "commonTest") {
-                        val targetName = sourceSet.name.removeSuffix("Test")
-                        val generatedDir = java.io.File(buildDir, "generated/fakt/${targetName}Fakes/kotlin")
-                        sourceSet.kotlin.srcDir(generatedDir)
-                        project.logger.info("Fakt: Added generated dir to ${sourceSet.name}: $generatedDir")
-                    }
-                }
+            // Add generated directory to ALL test source sets using consistent naming
+            if (sourceSet.name.endsWith("Test")) {
+                val generatedDir = java.io.File(buildDir, "generated/fakt/${sourceSet.name}/kotlin")
+                sourceSet.kotlin.srcDir(generatedDir)
+                project.logger.info("Fakt: Added generated dir to ${sourceSet.name}: $generatedDir")
             }
         }
     }
@@ -109,7 +78,6 @@ internal class SourceSetConfigurator(
             }
         }
     }
-
 
     /**
      * Get the appropriate generated sources directory for a compilation.

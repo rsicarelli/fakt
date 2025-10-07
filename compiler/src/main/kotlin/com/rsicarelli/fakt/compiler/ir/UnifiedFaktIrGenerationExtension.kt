@@ -38,6 +38,11 @@ import org.jetbrains.kotlin.ir.util.packageFqName
  *
  * Based on the IR-Native demonstration architecture.
  *
+ * **Modernization (v1.1.0)**:
+ * - Added sourceSetContext for data-driven source set resolution
+ * - Uses SourceSetResolver for hierarchy traversal instead of hardcoded patterns
+ * - Maintains backward compatibility with legacy mapping when context is null
+ *
  * ## Safety: UnsafeDuringIrConstructionAPI Usage
  *
  * This extension uses APIs marked with `@UnsafeDuringIrConstructionAPI`:
@@ -56,13 +61,27 @@ class UnifiedFaktIrGenerationExtension(
     private val messageCollector: MessageCollector? = null,
     private val outputDir: String? = null,
     private val fakeAnnotations: List<String> = listOf("com.rsicarelli.fakt.Fake"),
+    private val sourceSetContext: com.rsicarelli.fakt.compiler.api.SourceSetContext? = null,
 ) : IrGenerationExtension {
     private val optimizations = CompilerOptimizations(fakeAnnotations, outputDir)
 
     // Extracted modules following DRY principles
     private val typeResolver = TypeResolver()
     private val importResolver = ImportResolver(typeResolver)
-    private val sourceSetMapper = SourceSetMapper(outputDir, messageCollector)
+
+    // Create SourceSetResolver if context is available (modernized approach)
+    private val sourceSetResolver =
+        sourceSetContext?.let {
+            com.rsicarelli.fakt.compiler
+                .SourceSetResolver(it)
+        }
+
+    private val sourceSetMapper =
+        SourceSetMapper(
+            outputDir = outputDir,
+            messageCollector = messageCollector,
+            sourceSetResolver = sourceSetResolver,
+        )
     private val interfaceDiscovery = InterfaceDiscovery(optimizations, messageCollector)
     private val interfaceAnalyzer = InterfaceAnalyzer()
 

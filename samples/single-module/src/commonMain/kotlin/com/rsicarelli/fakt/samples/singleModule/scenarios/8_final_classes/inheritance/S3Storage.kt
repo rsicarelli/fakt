@@ -86,9 +86,7 @@ abstract class CloudStorage : BaseStorage() {
     /**
      * Download data from cloud - has default implementation.
      */
-    open fun download(id: String): ByteArray? {
-        return null
-    }
+    open fun download(id: String): ByteArray? = null
 }
 
 // Level 3: Child - Concrete implementation for S3
@@ -97,28 +95,20 @@ open class S3Storage : CloudStorage() {
     /**
      * S3-specific connection implementation.
      */
-    override fun connect(): Boolean {
-        return true
-    }
+    override fun connect(): Boolean = true
 
     /**
      * S3-specific upload implementation.
      */
-    override fun upload(data: ByteArray): String {
-        return "upload-id"
-    }
+    override fun upload(data: ByteArray): String = "upload-id"
 
     /**
      * Inherits default download from CloudStorage.
      */
-    override fun download(id: String): ByteArray? {
-        return super.download(id)
-    }
+    override fun download(id: String): ByteArray? = super.download(id)
 
     /**
      * S3-specific method - list S3 buckets.
      */
-    open fun listBuckets(): List<String> {
-        return emptyList()
-    }
+    open fun listBuckets(): List<String> = emptyList()
 }

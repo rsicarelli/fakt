@@ -65,9 +65,7 @@ open class UserServiceImpl : UserService {
     }
 
     // Own open methods - have default implementation
-    open fun validateUser(user: User): Boolean {
-        return user.id.isNotEmpty() && user.name.isNotEmpty()
-    }
+    open fun validateUser(user: User): Boolean = user.id.isNotEmpty() && user.name.isNotEmpty()
 
     open fun logOperation(operation: String) {
         println("Operation: $operation")

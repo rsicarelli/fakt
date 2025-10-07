@@ -16,20 +16,20 @@ import kotlin.test.assertTrue
  * Pair, Triple, and as vararg parameters.
  */
 class ValidationServiceTest {
-
     @Test
     fun `GIVEN ValidationService fake WHEN configuring validate THEN should return Result with enum status`() {
         // Given
-        val validationService = fakeValidationService {
-            validate { input ->
-                when {
-                    input.isBlank() -> Result.failure(IllegalArgumentException("Empty input"))
-                    input.length < 3 -> Result.success(ValidationStatus.INVALID)
-                    input.all { it.isLetterOrDigit() } -> Result.success(ValidationStatus.VALID)
-                    else -> Result.success(ValidationStatus.INVALID)
+        val validationService =
+            fakeValidationService {
+                validate { input ->
+                    when {
+                        input.isBlank() -> Result.failure(IllegalArgumentException("Empty input"))
+                        input.length < 3 -> Result.success(ValidationStatus.INVALID)
+                        input.all { it.isLetterOrDigit() } -> Result.success(ValidationStatus.VALID)
+                        else -> Result.success(ValidationStatus.INVALID)
+                    }
                 }
             }
-        }
 
         // When
         val validResult = validationService.validate("abc123")
@@ -49,15 +49,16 @@ class ValidationServiceTest {
     @Test
     fun `GIVEN ValidationService fake WHEN configuring validateBatch THEN should return Result with nullable enum`() {
         // Given
-        val validationService = fakeValidationService {
-            validateBatch { inputs ->
-                when {
-                    inputs.isEmpty() -> Result.success(null)
-                    inputs.all { it.isNotBlank() } -> Result.success(ValidationStatus.VALID)
-                    else -> Result.success(ValidationStatus.INVALID)
+        val validationService =
+            fakeValidationService {
+                validateBatch { inputs ->
+                    when {
+                        inputs.isEmpty() -> Result.success(null)
+                        inputs.all { it.isNotBlank() } -> Result.success(ValidationStatus.VALID)
+                        else -> Result.success(ValidationStatus.INVALID)
+                    }
                 }
             }
-        }
 
         // When
         val emptyResult = validationService.validateBatch(emptyList())
@@ -78,45 +79,47 @@ class ValidationServiceTest {
     @Test
     fun `GIVEN ValidationService fake WHEN configuring hasAnyStatus THEN should check vararg enum parameters`() {
         // Given
-        val validationService = fakeValidationService {
-            hasAnyStatus { current, allowed ->
-                allowed.contains(current)
+        val validationService =
+            fakeValidationService {
+                hasAnyStatus { current, allowed ->
+                    allowed.contains(current)
+                }
             }
-        }
 
         // When & Then
         assertTrue(
             validationService.hasAnyStatus(
                 ValidationStatus.VALID,
                 ValidationStatus.VALID,
-                ValidationStatus.PENDING
-            )
+                ValidationStatus.PENDING,
+            ),
         )
         assertTrue(
             validationService.hasAnyStatus(
                 ValidationStatus.INVALID,
-                ValidationStatus.INVALID
-            )
+                ValidationStatus.INVALID,
+            ),
         )
         assertFalse(
             validationService.hasAnyStatus(
                 ValidationStatus.EXPIRED,
                 ValidationStatus.VALID,
-                ValidationStatus.PENDING
-            )
+                ValidationStatus.PENDING,
+            ),
         )
     }
 
     @Test
     fun `GIVEN ValidationService fake WHEN configuring getStatusWithTimestamp THEN should return Pair with enum`() {
         // Given
-        val validationService = fakeValidationService {
-            getStatusWithTimestamp { input ->
-                val status = if (input.isNotBlank()) ValidationStatus.VALID else ValidationStatus.INVALID
-                val timestamp = System.currentTimeMillis()
-                status to timestamp
+        val validationService =
+            fakeValidationService {
+                getStatusWithTimestamp { input ->
+                    val status = if (input.isNotBlank()) ValidationStatus.VALID else ValidationStatus.INVALID
+                    val timestamp = System.currentTimeMillis()
+                    status to timestamp
+                }
             }
-        }
 
         // When
         val (status, timestamp) = validationService.getStatusWithTimestamp("test")
@@ -129,15 +132,16 @@ class ValidationServiceTest {
     @Test
     fun `GIVEN ValidationService fake WHEN configuring getValidationDetails THEN should return Triple with enum`() {
         // Given
-        val validationService = fakeValidationService {
-            getValidationDetails { input ->
-                when {
-                    input.isBlank() -> Triple(ValidationStatus.INVALID, "Input is blank", 400)
-                    input.length < 3 -> Triple(ValidationStatus.INVALID, "Too short", 400)
-                    else -> Triple(ValidationStatus.VALID, "OK", 200)
+        val validationService =
+            fakeValidationService {
+                getValidationDetails { input ->
+                    when {
+                        input.isBlank() -> Triple(ValidationStatus.INVALID, "Input is blank", 400)
+                        input.length < 3 -> Triple(ValidationStatus.INVALID, "Too short", 400)
+                        else -> Triple(ValidationStatus.VALID, "OK", 200)
+                    }
                 }
             }
-        }
 
         // When
         val (status1, message1, code1) = validationService.getValidationDetails("")
@@ -161,32 +165,36 @@ class ValidationServiceTest {
     @Test
     fun `GIVEN ValidationService fake WHEN configuring combineStatuses THEN should combine vararg enums into Result`() {
         // Given
-        val validationService = fakeValidationService {
-            combineStatuses { statuses ->
-                when {
-                    statuses.isEmpty() -> Result.failure(IllegalArgumentException("No statuses"))
-                    statuses.all { it == ValidationStatus.VALID } -> Result.success(ValidationStatus.VALID)
-                    statuses.any { it == ValidationStatus.INVALID } -> Result.success(ValidationStatus.INVALID)
-                    else -> Result.success(ValidationStatus.PENDING)
+        val validationService =
+            fakeValidationService {
+                combineStatuses { statuses ->
+                    when {
+                        statuses.isEmpty() -> Result.failure(IllegalArgumentException("No statuses"))
+                        statuses.all { it == ValidationStatus.VALID } -> Result.success(ValidationStatus.VALID)
+                        statuses.any { it == ValidationStatus.INVALID } -> Result.success(ValidationStatus.INVALID)
+                        else -> Result.success(ValidationStatus.PENDING)
+                    }
                 }
             }
-        }
 
         // When
-        val allValid = validationService.combineStatuses(
-            ValidationStatus.VALID,
-            ValidationStatus.VALID,
-            ValidationStatus.VALID
-        )
-        val hasInvalid = validationService.combineStatuses(
-            ValidationStatus.VALID,
-            ValidationStatus.INVALID,
-            ValidationStatus.VALID
-        )
-        val pending = validationService.combineStatuses(
-            ValidationStatus.PENDING,
-            ValidationStatus.PENDING
-        )
+        val allValid =
+            validationService.combineStatuses(
+                ValidationStatus.VALID,
+                ValidationStatus.VALID,
+                ValidationStatus.VALID,
+            )
+        val hasInvalid =
+            validationService.combineStatuses(
+                ValidationStatus.VALID,
+                ValidationStatus.INVALID,
+                ValidationStatus.VALID,
+            )
+        val pending =
+            validationService.combineStatuses(
+                ValidationStatus.PENDING,
+                ValidationStatus.PENDING,
+            )
 
         // Then
         assertTrue(allValid.isSuccess)
@@ -202,15 +210,16 @@ class ValidationServiceTest {
     @Test
     fun `GIVEN ValidationService fake WHEN configuring getOptionalStatus THEN should return nullable enum`() {
         // Given
-        val validationService = fakeValidationService {
-            getOptionalStatus { input ->
-                when {
-                    input.isBlank() -> null
-                    input.length < 3 -> ValidationStatus.INVALID
-                    else -> ValidationStatus.VALID
+        val validationService =
+            fakeValidationService {
+                getOptionalStatus { input ->
+                    when {
+                        input.isBlank() -> null
+                        input.length < 3 -> ValidationStatus.INVALID
+                        else -> ValidationStatus.VALID
+                    }
                 }
             }
-        }
 
         // When & Then
         assertNull(validationService.getOptionalStatus(""))

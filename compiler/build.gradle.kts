@@ -19,7 +19,6 @@ kotlin {
             // - All symbols are bound at this point, making the APIs safe to use
             // - Metro (production compiler plugin) uses the same approach
             "org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI",
-
             // ExperimentalCompilerApi: We're building a compiler plugin
             "org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
         )
@@ -27,6 +26,12 @@ kotlin {
 }
 
 dependencies {
+    // Compiler API data models
+    implementation(project(":compiler-api"))
+
+    // Serialization for SourceSetContext deserialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+
     // compileOnly - provided by Gradle/Kotlin at runtime
     compileOnly(libs.kotlin.compilerEmbeddable)
 
@@ -38,34 +43,45 @@ dependencies {
     testImplementation(libs.kotlin.compilerEmbeddable)
 }
 
+// Disable regular jar task - Metro pattern
+// The shadowJar will be the main artifact
+tasks.jar.configure { enabled = false }
+
+val shadowJar =
+    tasks.shadowJar.apply {
+        configure {
+            // Include main source set output (Metro pattern)
+            from(sourceSets.main.map { it.output })
+
+            archiveClassifier.set("")
+
+            // Include runtime dependencies
+            configurations = listOf(project.configurations.runtimeClasspath.get())
+
+            // CRITICAL: Merge service loader files from all JARs
+            // Without this, service files from dependencies overwrite plugin's service files
+            // This ensures ServiceLoader can discover both plugin classes and dependency classes
+            mergeServiceFiles()
+
+            manifest {
+                attributes(
+                    "Implementation-Title" to project.name,
+                    "Implementation-Version" to project.version,
+                )
+            }
+        }
+    }
+
+// Replace artifacts with shadowJar - Metro pattern
+// CRITICAL: This ensures maven-publish uses shadowJar instead of regular jar
+for (c in arrayOf("apiElements", "runtimeElements")) {
+    configurations.named(c) {
+        artifacts.removeIf { true }
+    }
+    artifacts.add(c, shadowJar)
+}
+
 tasks {
-    jar {
-        // Include service loader files from resources
-        from(sourceSets.main.map { it.output })
-
-        manifest {
-            attributes(
-                "Implementation-Title" to project.name,
-                "Implementation-Version" to project.version,
-            )
-        }
-    }
-
-    shadowJar {
-        archiveClassifier.set("")
-
-        // Don't relocate Kotlin compiler classes - they're provided by the compiler
-        // Just include all dependencies as-is
-        configurations = listOf(project.configurations.runtimeClasspath.get())
-
-        manifest {
-            attributes(
-                "Implementation-Title" to project.name,
-                "Implementation-Version" to project.version,
-            )
-        }
-    }
-
     // Make the shadow jar the main artifact
     named("build") {
         dependsOn(shadowJar)

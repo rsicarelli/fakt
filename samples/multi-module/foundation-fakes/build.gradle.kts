@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 plugins {
     kotlin("multiplatform")
-    id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
+    id("com.rsicarelli.fakt")
 }
 
 kotlin {
@@ -17,6 +17,16 @@ kotlin {
     //     nodejs()
     // }
 
+    sourceSets {
+        commonMain {
+            dependencies {
+                // CRITICAL: Collector modules MUST depend on source module
+                // Generated fakes reference original types (ConfigService, Logger, etc.)
+                api(project(":foundation"))
+                implementation("com.rsicarelli.fakt:runtime:1.0.0-SNAPSHOT")
+            }
+        }
+    }
 }
 
 // Configure Fakt plugin in COLLECTOR MODE
@@ -25,5 +35,5 @@ fakt {
     debug.set(true)
 
     // This is the key: collect fakes from foundation module
-    collectFakesFrom(project(":samples:multi-module:foundation"))
+    collectFakesFrom(project(":foundation"))
 }

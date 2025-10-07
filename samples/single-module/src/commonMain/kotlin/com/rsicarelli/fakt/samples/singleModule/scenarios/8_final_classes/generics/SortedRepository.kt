@@ -60,21 +60,15 @@ open class SortedRepository<T : Comparable<T>> {
     /**
      * Finds the minimum item in the repository.
      */
-    open fun findMin(): T? {
-        return null
-    }
+    open fun findMin(): T? = null
 
     /**
      * Finds the maximum item in the repository.
      */
-    open fun findMax(): T? {
-        return null
-    }
+    open fun findMax(): T? = null
 
     /**
      * Returns all items in sorted order.
      */
-    open fun getSorted(): List<T> {
-        return emptyList()
-    }
+    open fun getSorted(): List<T> = emptyList()
 }

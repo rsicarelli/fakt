@@ -39,7 +39,10 @@ interface NetworkService {
     /**
      * Map network result to different type.
      */
-    fun <T, R> mapResult(result: NetworkResult<T>, transform: (T) -> R): NetworkResult<R>
+    fun <T, R> mapResult(
+        result: NetworkResult<T>,
+        transform: (T) -> R,
+    ): NetworkResult<R>
 
     /**
      * Check if result is successful.

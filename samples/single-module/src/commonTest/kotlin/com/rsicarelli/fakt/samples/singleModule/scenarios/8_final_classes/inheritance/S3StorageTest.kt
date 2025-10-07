@@ -2,16 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.singleModule.scenarios.finalClasses.inheritance
 
+import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class S3StorageTest {
-
     @Test
     fun `GIVEN unconfigured connect WHEN called THEN throws error`() {
         val storage: S3Storage = fakeS3Storage {}
@@ -25,12 +24,13 @@ class S3StorageTest {
     fun `GIVEN configured connect WHEN called THEN uses custom behavior`() {
         var called = false
 
-        val storage: S3Storage = fakeS3Storage {
-            connect {
-                called = true
-                false
+        val storage: S3Storage =
+            fakeS3Storage {
+                connect {
+                    called = true
+                    false
+                }
             }
-        }
 
         val result = storage.connect()
 
@@ -49,9 +49,10 @@ class S3StorageTest {
 
     @Test
     fun `GIVEN configured upload WHEN called THEN uses custom behavior`() {
-        val storage: S3Storage = fakeS3Storage {
-            upload { data -> "s3://bucket/${data.size}" }
-        }
+        val storage: S3Storage =
+            fakeS3Storage {
+                upload { data -> "s3://bucket/${data.size}" }
+            }
 
         val result = storage.upload(byteArrayOf(1, 2, 3))
 
@@ -71,9 +72,10 @@ class S3StorageTest {
     fun `GIVEN configured download WHEN called THEN uses custom behavior`() {
         val mockData = byteArrayOf(10, 20, 30)
 
-        val storage: S3Storage = fakeS3Storage {
-            download { mockData }
-        }
+        val storage: S3Storage =
+            fakeS3Storage {
+                download { mockData }
+            }
 
         val result = storage.download("key1")
 
@@ -91,9 +93,10 @@ class S3StorageTest {
 
     @Test
     fun `GIVEN configured listBuckets WHEN called THEN uses custom behavior`() {
-        val storage: S3Storage = fakeS3Storage {
-            listBuckets { listOf("bucket1", "bucket2") }
-        }
+        val storage: S3Storage =
+            fakeS3Storage {
+                listBuckets { listOf("bucket1", "bucket2") }
+            }
 
         val result = storage.listBuckets()
 
@@ -105,18 +108,19 @@ class S3StorageTest {
         var connectCalled = false
         val uploadedData = mutableListOf<Int>()
 
-        val storage: S3Storage = fakeS3Storage {
-            connect {
-                connectCalled = true
-                true
+        val storage: S3Storage =
+            fakeS3Storage {
+                connect {
+                    connectCalled = true
+                    true
+                }
+                upload { data ->
+                    uploadedData.add(data.size)
+                    "custom-id"
+                }
+                download { byteArrayOf(1, 2) }
+                listBuckets { listOf("b1") }
             }
-            upload { data ->
-                uploadedData.add(data.size)
-                "custom-id"
-            }
-            download { byteArrayOf(1, 2) }
-            listBuckets { listOf("b1") }
-        }
 
         val connected = storage.connect()
         val uploaded = storage.upload(byteArrayOf(10, 20, 30))

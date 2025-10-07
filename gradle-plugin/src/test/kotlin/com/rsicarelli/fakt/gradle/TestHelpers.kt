@@ -33,8 +33,7 @@ internal fun createKmpProject(): Project {
  * @return KotlinMultiplatformExtension instance
  * @throws IllegalStateException if extension not found
  */
-internal fun Project.getKotlinExtension(): KotlinMultiplatformExtension =
-    extensions.getByType(KotlinMultiplatformExtension::class.java)
+internal fun Project.getKotlinExtension(): KotlinMultiplatformExtension = extensions.getByType(KotlinMultiplatformExtension::class.java)
 
 /**
  * Evaluates the project to trigger afterEvaluate blocks.

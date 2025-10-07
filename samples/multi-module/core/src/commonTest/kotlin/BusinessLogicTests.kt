@@ -5,6 +5,9 @@ package core.business
 import api.shared.LoggingService
 import api.shared.NetworkService
 import api.shared.StorageService
+import api.shared.fakeLoggingService
+import api.shared.fakeNetworkService
+import api.shared.fakeStorageService
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -16,9 +19,17 @@ import kotlin.test.assertTrue
 class BusinessLogicTests {
     @Test
     fun `UserService fake can be created with cross-module dependencies`() {
+        // Create cross-module dependency fakes
+        val fakeNetworkService = fakeNetworkService()
+        val fakeStorageService = fakeStorageService()
+        val fakeLoggingService = fakeLoggingService()
+
         val fakeUserService =
             fakeUserService {
-                // Should have access to cross-module dependency configuration
+                // Configure cross-module dependencies
+                networkService { fakeNetworkService }
+                storageService { fakeStorageService }
+                loggingService { fakeLoggingService }
             }
 
         assertNotNull(fakeUserService)
@@ -37,8 +48,23 @@ class BusinessLogicTests {
 
     @Test
     fun `OrderService fake can be created with nested dependencies`() {
+        // Create nested dependency fakes
+        val fakeNetworkService = fakeNetworkService()
+        val fakeStorageService = fakeStorageService()
+        val fakeLoggingService = fakeLoggingService()
+
+        val fakeUserService =
+            fakeUserService {
+                networkService { fakeNetworkService }
+                storageService { fakeStorageService }
+                loggingService { fakeLoggingService }
+            }
+
         val fakeOrderService =
             fakeOrderService {
+                userService { fakeUserService }
+                networkService { fakeNetworkService }
+                storageService { fakeStorageService }
             }
 
         assertNotNull(fakeOrderService)

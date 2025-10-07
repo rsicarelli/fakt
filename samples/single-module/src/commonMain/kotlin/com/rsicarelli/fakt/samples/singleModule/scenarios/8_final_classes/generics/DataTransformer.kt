@@ -58,14 +58,10 @@ open class DataTransformer<In, Out> {
      * Transforms a batch of input values.
      * Default implementation uses transform() for each input.
      */
-    open fun transformBatch(inputs: List<In>): List<Out> {
-        return emptyList()
-    }
+    open fun transformBatch(inputs: List<In>): List<Out> = emptyList()
 
     /**
      * Checks if the input can be transformed.
      */
-    open fun canTransform(input: In): Boolean {
-        return false
-    }
+    open fun canTransform(input: In): Boolean = false
 }

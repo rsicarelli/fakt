@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 plugins {
     kotlin("multiplatform")
-    id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
+    id("com.rsicarelli.fakt")
 }
 
 kotlin {
@@ -20,7 +20,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(project(":runtime"))
+                implementation("com.rsicarelli.fakt:runtime:1.0.0-SNAPSHOT")
             }
         }
 

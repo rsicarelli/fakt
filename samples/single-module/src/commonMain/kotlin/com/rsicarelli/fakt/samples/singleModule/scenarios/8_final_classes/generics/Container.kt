@@ -51,9 +51,7 @@ import com.rsicarelli.fakt.Fake
 @Fake
 open class Container<T> {
     // Generic type in return type
-    open fun get(): T? {
-        return null
-    }
+    open fun get(): T? = null
 
     // Generic type in parameter
     open fun set(value: T) {
@@ -65,7 +63,5 @@ open class Container<T> {
         get() = emptyList()
 
     // Multiple generics in signature
-    open fun contains(value: T): Boolean {
-        return false
-    }
+    open fun contains(value: T): Boolean = false
 }

@@ -3,17 +3,20 @@
 package com.rsicarelli.fakt.samples.singleModule.scenarios.finalClasses.generics
 
 import com.rsicarelli.fakt.samples.singleModule.models.User
+import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import org.junit.jupiter.api.TestInstance
 
 /**
  * Simple DTO for transformation tests
  */
-data class UserDto(val id: String, val displayName: String)
+data class UserDto(
+    val id: String,
+    val displayName: String,
+)
 
 /**
  * Tests for P1 Scenario: GenericTransformationClass
@@ -25,13 +28,13 @@ data class UserDto(val id: String, val displayName: String)
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DataTransformerTest {
-
     @Test
     fun `GIVEN transformer String to Int WHEN transforming THEN should use custom logic`() {
         // Given
-        val transformer: DataTransformer<String, Int> = fakeDataTransformer {
-            transform { input -> input.toIntOrNull() ?: 0 }
-        }
+        val transformer: DataTransformer<String, Int> =
+            fakeDataTransformer {
+                transform { input -> input.toIntOrNull() ?: 0 }
+            }
 
         // When
         val result1 = transformer.transform("42")
@@ -45,15 +48,17 @@ class DataTransformerTest {
     @Test
     fun `GIVEN transformer User to UserDto WHEN batch transforming THEN should map all items`() {
         // Given
-        val transformer: DataTransformer<User, UserDto> = fakeDataTransformer {
-            transform { user -> UserDto(user.id, user.name) }
-            transformBatch { users -> users.map { UserDto(it.id, it.name.uppercase()) } }
-        }
+        val transformer: DataTransformer<User, UserDto> =
+            fakeDataTransformer {
+                transform { user -> UserDto(user.id, user.name) }
+                transformBatch { users -> users.map { UserDto(it.id, it.name.uppercase()) } }
+            }
 
-        val users = listOf(
-            User("1", "Alice"),
-            User("2", "Bob"),
-        )
+        val users =
+            listOf(
+                User("1", "Alice"),
+                User("2", "Bob"),
+            )
 
         // When
         val dtos = transformer.transformBatch(users)
@@ -67,10 +72,11 @@ class DataTransformerTest {
     @Test
     fun `GIVEN configured canTransform WHEN checking THEN should use predicate`() {
         // Given
-        val transformer: DataTransformer<String, Int> = fakeDataTransformer {
-            transform { input -> input.length }
-            canTransform { input -> input.isNotBlank() }
-        }
+        val transformer: DataTransformer<String, Int> =
+            fakeDataTransformer {
+                transform { input -> input.length }
+                canTransform { input -> input.isNotBlank() }
+            }
 
         // When
         val canTransformValid = transformer.canTransform("hello")
@@ -95,10 +101,11 @@ class DataTransformerTest {
     @Test
     fun `GIVEN transformer with same In Out types WHEN using THEN should work with identity pattern`() {
         // Given - Both type parameters are same type
-        val transformer: DataTransformer<String, String> = fakeDataTransformer {
-            transform { input -> input.uppercase() }
-            canTransform { input -> input.length > 3 }
-        }
+        val transformer: DataTransformer<String, String> =
+            fakeDataTransformer {
+                transform { input -> input.uppercase() }
+                canTransform { input -> input.length > 3 }
+            }
 
         // When
         val result = transformer.transform("hello")

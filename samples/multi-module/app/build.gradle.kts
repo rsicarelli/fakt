@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 plugins {
     kotlin("multiplatform")
-    id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
+    id("com.rsicarelli.fakt")
 }
 
 kotlin {
@@ -22,10 +22,10 @@ kotlin {
             dependencies {
                 // App depends on all layers - validates complete dependency chain
                 // foundation → domain → features → app
-                implementation(project(":samples:multi-module:foundation"))
-                implementation(project(":samples:multi-module:domain"))
-                implementation(project(":samples:multi-module:features"))
-                implementation(project(":runtime"))
+                implementation(project(":foundation"))
+                implementation(project(":domain"))
+                implementation(project(":features"))
+                implementation("com.rsicarelli.fakt:runtime:1.0.0-SNAPSHOT")
             }
         }
 
@@ -36,10 +36,16 @@ kotlin {
 
                 // App depends on entire chain: foundation → domain → features
                 // Tests need all fakes modules from the dependency tree
-                implementation(project(":samples:multi-module:foundation-fakes"))
-                implementation(project(":samples:multi-module:domain-fakes"))
-                implementation(project(":samples:multi-module:features-fakes"))
-                implementation(project(":samples:multi-module:app-fakes"))
+                implementation(project(":foundation-fakes"))
+                implementation(project(":domain-fakes"))
+                implementation(project(":features-fakes"))
+                implementation(project(":app-fakes"))
+            }
+        }
+
+        jvmTest {
+            dependencies {
+                implementation("org.junit.jupiter:junit-jupiter:5.10.2")
             }
         }
     }

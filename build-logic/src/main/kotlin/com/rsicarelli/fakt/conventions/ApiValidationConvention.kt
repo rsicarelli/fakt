@@ -20,17 +20,6 @@ fun Project.applyApiValidationConvention() {
         // Ignore internal implementation modules
         ignoredProjects += listOf("compiler")
 
-        // Ignore all sample modules (not part of public API)
-        ignoredProjects +=
-            listOf(
-//                "single-module",
-//                "kmp-comprehensive-test",
-                "api",
-                "core",
-                "app",
-            )
-
-        ignoredPackages += listOf("com.rsicarelli.fakt.internal")
         @OptIn(ExperimentalBCVApi::class)
         klib {
             enabled = true

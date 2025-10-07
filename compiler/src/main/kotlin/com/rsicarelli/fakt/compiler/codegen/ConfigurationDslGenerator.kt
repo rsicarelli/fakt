@@ -290,7 +290,9 @@ internal class ConfigurationDslGenerator(
 
             // Setter configuration for mutable properties
             if (property.isMutable) {
-                appendLine("    fun set$capitalizedName(behavior: ($returnTypeString) -> Unit) { fake.configureSet$capitalizedName(behavior) }")
+                appendLine(
+                    "    fun set$capitalizedName(behavior: ($returnTypeString) -> Unit) { fake.configureSet$capitalizedName(behavior) }",
+                )
             }
         }.trimEnd() // Remove trailing newline so caller can control formatting
     }

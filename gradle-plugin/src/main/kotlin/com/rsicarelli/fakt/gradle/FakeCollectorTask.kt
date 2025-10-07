@@ -8,11 +8,12 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.TaskAction
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 /**
@@ -30,7 +31,6 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
  * ```
  */
 abstract class FakeCollectorTask : DefaultTask() {
-
     /**
      * The path to the source project that generates fakes.
      * Configuration cache compatible (stores path, not Project object).
@@ -42,9 +42,9 @@ abstract class FakeCollectorTask : DefaultTask() {
     /**
      * The directory where the source project generates fakes.
      * Typically: build/generated/fakt/
+     * Optional because not all source sets may have generated fakes.
      */
-    @get:InputDirectory
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Internal // Not using @InputDirectory to allow missing directories
     abstract val sourceGeneratedDir: DirectoryProperty
 
     /**
@@ -64,37 +64,49 @@ abstract class FakeCollectorTask : DefaultTask() {
 
     @TaskAction
     fun collectFakes() {
-        val srcDir = sourceGeneratedDir.asFile.get()
+        val faktRootDir = sourceGeneratedDir.asFile.get()
         val destDir = destinationDir.asFile.get()
 
-        if (!srcDir.exists()) {
+        if (!faktRootDir.exists()) {
             logger.warn(
-                "Fakt: Source directory does not exist: $srcDir. " +
-                    "Make sure the source project generates fakes first."
+                "Fakt: Source directory does not exist: $faktRootDir. " +
+                    "Make sure the source project generates fakes first.",
             )
+            return
+        }
+
+        // Auto-discover all source set directories (commonTest, jvmTest, etc.)
+        // This avoids hardcoded mappings and works with any KMP configuration
+        val sourceSetDirs = faktRootDir.listFiles()?.filter { it.isDirectory } ?: emptyList()
+
+        if (sourceSetDirs.isEmpty()) {
+            logger.warn("Fakt: No generated fakes found in $faktRootDir")
             return
         }
 
         // Create destination directory if it doesn't exist
         destDir.mkdirs()
 
-        // Copy all generated fake files
+        // Collect from all discovered source set directories
         var copiedCount = 0
-        srcDir.walkTopDown()
-            .filter { it.isFile && it.extension == "kt" }
-            .forEach { sourceFile ->
-                val relativePath = sourceFile.relativeTo(srcDir)
-                val destFile = destDir.resolve(relativePath)
+        sourceSetDirs.forEach { sourceSetDir ->
+            sourceSetDir
+                .walkTopDown()
+                .filter { it.isFile && it.extension == "kt" }
+                .forEach { sourceFile ->
+                    val relativePath = sourceFile.relativeTo(sourceSetDir)
+                    val destFile = destDir.resolve(relativePath)
 
-                // Create parent directories
-                destFile.parentFile.mkdirs()
+                    // Create parent directories
+                    destFile.parentFile.mkdirs()
 
-                // Copy file
-                sourceFile.copyTo(destFile, overwrite = true)
-                copiedCount++
+                    // Copy file
+                    sourceFile.copyTo(destFile, overwrite = true)
+                    copiedCount++
 
-                logger.info("Fakt: Collected fake: ${relativePath.path}")
-            }
+                    logger.info("Fakt: Collected fake: ${relativePath.path} from ${sourceSetDir.name}")
+                }
+        }
 
         val srcProjectName = sourceProjectPath.orNull?.substringAfterLast(":") ?: "unknown"
         logger.lifecycle("Fakt: Collected $copiedCount fake(s) from $srcProjectName")
@@ -102,17 +114,22 @@ abstract class FakeCollectorTask : DefaultTask() {
 
     companion object {
         /**
-         * Register collector tasks for a KMP project.
+         * Register collector task for a KMP project.
          *
-         * This creates tasks for each source set in the target project,
-         * mapping them to corresponding source sets in the source project.
+         * This creates a single task that auto-discovers all generated fakes
+         * from the source project's build/generated/fakt directory, avoiding
+         * hardcoded source set mappings.
+         *
+         * The task scans all subdirectories (commonTest, jvmTest, etc.) and
+         * collects all generated fakes into the collector module's commonMain,
+         * making them available to all platforms.
          *
          * @param project The target project (collector module)
          * @param extension The Fakt plugin extension
          */
         fun registerForKmpProject(
             project: Project,
-            extension: FaktPluginExtension
+            extension: FaktPluginExtension,
         ) {
             val srcProject = extension.collectFrom.orNull ?: return
 
@@ -123,69 +140,78 @@ abstract class FakeCollectorTask : DefaultTask() {
                 return
             }
 
-            // For KMP projects, map source sets
-            val sourceSetMappings = mapOf(
-                "commonMain" to "fakes",
-                "jvmMain" to "jvmFakes",
-                "jsMain" to "jsFakes",
-                "iosArm64Main" to "iosArm64Fakes"
-                // Add more as needed
-            )
-
-            sourceSetMappings.forEach { (targetSourceSet, generatedSubdir) ->
-                // Check if this source set exists in the project
-                val sourceSet = kotlinExtension.sourceSets.findByName(targetSourceSet) ?: return@forEach
-
-                val taskName = "collect${targetSourceSet.replaceFirstChar { it.uppercase() }}Fakes"
-                val task = project.tasks.register(taskName, FakeCollectorTask::class.java) {
+            // Create single collector task that auto-discovers all generated fakes
+            // No hardcoded source set mappings - works with any KMP configuration
+            val taskName = "collectCommonMainFakes"
+            val task =
+                project.tasks.register(taskName, FakeCollectorTask::class.java) {
                     it.sourceProjectPath.set(srcProject.path)
+
+                    // Point to root fakt directory - task will auto-discover subdirectories
                     it.sourceGeneratedDir.set(
-                        srcProject.layout.buildDirectory.dir("generated/fakt/$generatedSubdir/kotlin")
-                    )
-                    it.destinationDir.set(
-                        project.layout.buildDirectory.dir("generated/collected-fakes/$targetSourceSet/kotlin")
+                        srcProject.layout.buildDirectory.dir("generated/fakt"),
                     )
 
-                    // Add dependency on source project's compilation tasks
-                    it.dependsOn(srcProject.tasks.matching { task ->
-                        task.name.contains("compile", ignoreCase = true)
-                    })
+                    // Collect to commonMain so all platforms can access the fakes
+                    it.destinationDir.set(
+                        project.layout.buildDirectory.dir("generated/collected-fakes/commonMain/kotlin"),
+                    )
+
+                    // Add dependency on source project's MAIN compilation tasks only
+                    // Avoid test compilations to prevent circular dependencies
+                    // (test compilations may depend on -fakes modules)
+                    it.dependsOn(
+                        srcProject.tasks.matching { task ->
+                            task.name.contains("compile", ignoreCase = true) &&
+                                !task.name.contains("test", ignoreCase = true)
+                        },
+                    )
                 }
 
-                // Add collected directory to source set
-                sourceSet.kotlin.srcDir(task.map { it.destinationDir })
+            // Add collected directory to commonMain source set
+            val commonMain = kotlinExtension.sourceSets.getByName("commonMain")
+            commonMain.kotlin.srcDir(task.map { it.destinationDir })
 
-                project.logger.info(
-                    "Fakt: Registered collector task '$taskName' for source set '$targetSourceSet'"
-                )
-            }
+            project.logger.info(
+                "Fakt: Registered dynamic collector task '$taskName' (auto-discovers all generated fakes)",
+            )
         }
 
         /**
          * Register a single collector task for non-KMP projects.
+         *
+         * Uses the same auto-discovery approach as KMP projects for consistency.
          */
         private fun registerSingleCollectorTask(
             project: Project,
-            extension: FaktPluginExtension
+            extension: FaktPluginExtension,
         ) {
             val srcProject = extension.collectFrom.orNull ?: return
 
             project.tasks.register("collectFakes", FakeCollectorTask::class.java) {
                 it.sourceProjectPath.set(srcProject.path)
+
+                // Point to root fakt directory - task will auto-discover subdirectories
                 it.sourceGeneratedDir.set(
-                    srcProject.layout.buildDirectory.dir("generated/fakt/test/kotlin")
-                )
-                it.destinationDir.set(
-                    project.layout.buildDirectory.dir("generated/collected-fakes/kotlin")
+                    srcProject.layout.buildDirectory.dir("generated/fakt"),
                 )
 
-                // Add dependency on source project's compilation tasks
-                it.dependsOn(srcProject.tasks.matching { task ->
-                    task.name.contains("compile", ignoreCase = true)
-                })
+                it.destinationDir.set(
+                    project.layout.buildDirectory.dir("generated/collected-fakes/kotlin"),
+                )
+
+                // Add dependency on source project's MAIN compilation tasks only
+                // Avoid test compilations to prevent circular dependencies
+                // (test compilations may depend on -fakes modules)
+                it.dependsOn(
+                    srcProject.tasks.matching { task ->
+                        task.name.contains("compile", ignoreCase = true) &&
+                            !task.name.contains("test", ignoreCase = true)
+                    },
+                )
             }
 
-            project.logger.info("Fakt: Registered single collector task 'collectFakes'")
+            project.logger.info("Fakt: Registered dynamic collector task 'collectFakes' (auto-discovers all generated fakes)")
         }
     }
 }

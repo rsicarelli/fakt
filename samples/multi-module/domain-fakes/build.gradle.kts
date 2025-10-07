@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 plugins {
     kotlin("multiplatform")
-    id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
+    id("com.rsicarelli.fakt")
 }
 
 kotlin {
@@ -21,7 +21,12 @@ kotlin {
         commonMain {
             dependencies {
                 // Depend on domain module so we can access original interfaces
-                api(project(":samples:multi-module:domain"))
+                api(project(":domain"))
+
+                // CRITICAL: Also need foundation because generated domain fakes
+                // reference foundation types (Logger, ConfigService)
+                // This is necessary because domain uses implementation(), not api()
+                api(project(":foundation"))
             }
         }
 
@@ -40,5 +45,5 @@ fakt {
     debug.set(true)
 
     // Collect fakes from domain module
-    collectFakesFrom(project(":samples:multi-module:domain"))
+    collectFakesFrom(project(":domain"))
 }

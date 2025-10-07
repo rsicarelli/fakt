@@ -300,10 +300,11 @@ internal class ImplementationGenerator(
                         // Override methods cannot have default values - interface already defines them
                         "$varargsPrefix${param.name}: $paramType"
                     }
-                val parameterNames = function.parameters.joinToString(", ") { param ->
-                    // NO spread operator for interface methods - calling behavior lambda, not super
-                    param.name
-                }
+                val parameterNames =
+                    function.parameters.joinToString(", ") { param ->
+                        // NO spread operator for interface methods - calling behavior lambda, not super
+                        param.name
+                    }
 
                 val suspendModifier = if (function.isSuspend) "suspend " else ""
 
@@ -974,15 +975,17 @@ internal class ImplementationGenerator(
                 val hasVarargs = function.parameters.any { it.isVararg }
                 val varargsIndex = if (hasVarargs) function.parameters.indexOfFirst { it.isVararg } else -1
 
-                val parameterNames = function.parameters.mapIndexed { index, param ->
-                    val spread = if (param.isVararg) "*" else ""
-                    val needsNamed = hasVarargs && index > varargsIndex
-                    if (needsNamed) {
-                        "${param.name} = ${param.name}"
-                    } else {
-                        "$spread${param.name}"
-                    }
-                }.joinToString(", ")
+                val parameterNames =
+                    function.parameters
+                        .mapIndexed { index, param ->
+                            val spread = if (param.isVararg) "*" else ""
+                            val needsNamed = hasVarargs && index > varargsIndex
+                            if (needsNamed) {
+                                "${param.name} = ${param.name}"
+                            } else {
+                                "$spread${param.name}"
+                            }
+                        }.joinToString(", ")
 
                 val defaultLambda =
                     if (function.parameters.isEmpty()) {

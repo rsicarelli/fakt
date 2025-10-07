@@ -44,5 +44,8 @@ interface HttpService {
     /**
      * Map status to response message.
      */
-    fun formatResponse(status: HttpStatus, body: String): String
+    fun formatResponse(
+        status: HttpStatus,
+        body: String,
+    ): String
 }
