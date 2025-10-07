@@ -4,6 +4,8 @@ package domain
 
 import foundation.LogLevel
 import foundation.NetworkResponse
+import foundation.fakeConfigService
+import foundation.fakeLogger
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

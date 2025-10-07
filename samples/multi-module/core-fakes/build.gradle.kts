@@ -9,7 +9,7 @@ kotlin {
     jvmToolchain(21)
     applyDefaultHierarchyTemplate()
 
-    // Targets
+    // Targets (must match core module)
     jvm()
     // TODO: Re-enable JS when foundation module JS is fixed
     // js(IR) {
@@ -17,31 +17,35 @@ kotlin {
     //     nodejs()
     // }
 
+    // Native targets (match core module)
+    linuxX64()
+    macosX64()
+    macosArm64()
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
+
     sourceSets {
         commonMain {
             dependencies {
-                // Domain depends on foundation - critical cross-module test
-                implementation(project(":samples:multi-module:foundation"))
-                implementation(project(":runtime"))
+                // Depend on core module so we can access original interfaces
+                api(project(":samples:multi-module:core"))
             }
         }
 
         commonTest {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-test")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
-
-                // CRITICAL: Cross-module fake consumption
-                // Domain depends on foundation, so tests need both fakes modules
-                implementation(project(":samples:multi-module:foundation-fakes"))
-                implementation(project(":samples:multi-module:domain-fakes"))
             }
         }
     }
 }
 
-// Configure Fakt plugin
+// Configure Fakt plugin in COLLECTOR MODE
 fakt {
     enabled.set(true)
     debug.set(true)
+
+    // Collect fakes from core module
+    collectFakesFrom(project(":samples:multi-module:core"))
 }
