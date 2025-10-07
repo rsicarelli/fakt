@@ -13,10 +13,11 @@ kotlin {
 
     // Targets matching api module
     jvm()
-    js(IR) {
-        browser()
-        nodejs()
-    }
+    // TODO: Re-enable JS when foundation module JS is fixed
+    // js(IR) {
+    //     browser()
+    //     nodejs()
+    // }
 
     // Native targets
     linuxX64()
@@ -37,6 +38,11 @@ kotlin {
         commonTest {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-test")
+
+                // Core depends on api
+                // Tests need both api-fakes and core-fakes
+                implementation(project(":samples:multi-module:api-fakes"))
+                implementation(project(":samples:multi-module:core-fakes"))
             }
         }
     }

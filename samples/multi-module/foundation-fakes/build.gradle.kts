@@ -11,26 +11,12 @@ kotlin {
 
     // Targets (must match foundation module)
     jvm()
-    js(IR) {
-        browser()
-        nodejs()
-    }
+    // TODO: Re-enable JS when foundation module JS is fixed
+    // js(IR) {
+    //     browser()
+    //     nodejs()
+    // }
 
-    sourceSets {
-        commonMain {
-            dependencies {
-                // Depend on foundation module so we can access original interfaces
-                api(project(":samples:multi-module:foundation"))
-            }
-        }
-
-        commonTest {
-            dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-test")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
-            }
-        }
-    }
 }
 
 // Configure Fakt plugin in COLLECTOR MODE

@@ -9,9 +9,9 @@ kotlin {
     jvmToolchain(21)
     applyDefaultHierarchyTemplate()
 
-    // Targets
+    // Targets (must match domain module)
     jvm()
-    // TODO: Re-enable JS after fixing KLIB duplicate unique_name issue
+    // TODO: Re-enable JS when foundation module JS is fixed
     // js(IR) {
     //     browser()
     //     nodejs()
@@ -20,7 +20,8 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(project(":runtime"))
+                // Depend on domain module so we can access original interfaces
+                api(project(":samples:multi-module:domain"))
             }
         }
 
@@ -31,22 +32,13 @@ kotlin {
             }
         }
     }
-
-    // Fix for KLIB duplicate unique_name error with mavenLocal
-    // Allows runtime dependency to be resolved from both mavenLocal and project
-    targets.all {
-        compilations.all {
-            compileTaskProvider.configure {
-                compilerOptions {
-                    freeCompilerArgs.add("-Xklib-duplicated-unique-name-strategy=allow-first-with-warning")
-                }
-            }
-        }
-    }
 }
 
-// Configure Fakt plugin
+// Configure Fakt plugin in COLLECTOR MODE
 fakt {
     enabled.set(true)
     debug.set(true)
+
+    // Collect fakes from domain module
+    collectFakesFrom(project(":samples:multi-module:domain"))
 }

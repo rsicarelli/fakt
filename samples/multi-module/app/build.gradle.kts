@@ -11,10 +11,11 @@ kotlin {
 
     // Targets
     jvm()
-    js(IR) {
-        browser()
-        nodejs()
-    }
+    // TODO: Re-enable JS when foundation module JS is fixed
+    // js(IR) {
+    //     browser()
+    //     nodejs()
+    // }
 
     sourceSets {
         commonMain {
@@ -32,6 +33,13 @@ kotlin {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-test")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+
+                // App depends on entire chain: foundation → domain → features
+                // Tests need all fakes modules from the dependency tree
+                implementation(project(":samples:multi-module:foundation-fakes"))
+                implementation(project(":samples:multi-module:domain-fakes"))
+                implementation(project(":samples:multi-module:features-fakes"))
+                implementation(project(":samples:multi-module:app-fakes"))
             }
         }
     }
