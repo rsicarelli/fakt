@@ -41,7 +41,7 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             if (isCollectorMode) {
                 // COLLECTOR MODE: Collect fakes from another project
                 val sourceProject = extension.collectFrom.get()
-                target.logger.lifecycle(
+                target.logger.info(
                     "Fakt: Collector mode enabled - collecting fakes from ${sourceProject.name}",
                 )
 
@@ -49,7 +49,7 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 FakeCollectorTask.registerForKmpProject(target, extension)
             } else {
                 // GENERATOR MODE: Generate fakes from @Fake annotations
-                target.logger.lifecycle("Fakt: Generator mode enabled - generating fakes")
+                target.logger.info("Fakt: Generator mode enabled - generating fakes")
 
                 // Configure source sets for generated code
                 val configurator = SourceSetConfigurator(target)
@@ -129,7 +129,7 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 add(SubpluginOption(key = "outputDir", value = context.outputDirectory))
 
                 if (extension.debug.get()) {
-                    project.logger.lifecycle(
+                    project.logger.info(
                         """
                         |Fakt: Source Set Context for ${kotlinCompilation.name}:
                         |  Target: ${context.targetName} (${context.platformType})

@@ -17,18 +17,18 @@ internal class FakeKotlinCompilation(
     override val defaultSourceSet: KotlinSourceSet,
     override val target: KotlinTarget,
     private val isTest: Boolean = false,
+    associatedWith: Set<KotlinCompilation<*>> = if (isTest && name != "test") {
+        setOf(FakeKotlinCompilation("main", defaultSourceSet, target, false))
+    } else {
+        emptySet()
+    },
 ) : KotlinCompilation<Any> {
     override fun getName(): String = compilationName
 
     override val compilationName: String = name
 
     // For testing classification
-    override val allAssociatedCompilations: Set<KotlinCompilation<*>> =
-        if (isTest && name != "test") {
-            setOf(FakeKotlinCompilation("main", defaultSourceSet, target, false))
-        } else {
-            emptySet()
-        }
+    override val allAssociatedCompilations: Set<KotlinCompilation<*>> = associatedWith
 
     override val associatedCompilations get() = error("Not used")
     override val kotlinSourceSets get() = error("Not used")

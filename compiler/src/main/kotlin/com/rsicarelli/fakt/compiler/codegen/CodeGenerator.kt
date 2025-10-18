@@ -4,6 +4,7 @@ package com.rsicarelli.fakt.compiler.codegen
 
 import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
+import com.rsicarelli.fakt.compiler.ir.analysis.SourceSetExtractor
 import com.rsicarelli.fakt.compiler.output.SourceSetMapper
 import com.rsicarelli.fakt.compiler.types.ImportResolver
 import com.rsicarelli.fakt.compiler.types.TypeResolver
@@ -93,6 +94,7 @@ internal class CodeGenerator(
                 )
 
             writeGeneratedCode(
+                sourceInterface = sourceInterface,
                 moduleFragment = moduleFragment,
                 context =
                     WriteContext(
@@ -141,6 +143,7 @@ internal class CodeGenerator(
                 )
 
             writeGeneratedCodeForClass(
+                sourceClass = sourceClass,
                 moduleFragment = moduleFragment,
                 context =
                     WriteContext(
@@ -163,6 +166,7 @@ internal class CodeGenerator(
      * Writes the generated code to the appropriate output file.
      */
     private fun writeGeneratedCode(
+        sourceInterface: IrClass,
         moduleFragment: IrModuleFragment,
         context: WriteContext,
         analysis: InterfaceAnalysis,
@@ -171,7 +175,10 @@ internal class CodeGenerator(
         val packageName = context.packageName
         val fakeClassName = context.fakeClassName
         val interfaceName = context.interfaceName
-        val outputDir = sourceSetMapper.getGeneratedSourcesDir(moduleFragment)
+
+        // Extract source set from IrClass file path (source of truth approach)
+        val sourceSetName = SourceSetExtractor.extractSourceSet(sourceInterface)
+        val outputDir = sourceSetMapper.getGeneratedSourcesDir(moduleFragment, sourceSetName)
 
         // Create subdirectories matching the package structure
         val packagePath = packageName.replace('.', '/')
@@ -219,6 +226,7 @@ internal class CodeGenerator(
      * Writes the generated code for a class fake to the appropriate output file.
      */
     private fun writeGeneratedCodeForClass(
+        sourceClass: IrClass,
         moduleFragment: IrModuleFragment,
         context: WriteContext,
         analysis: ClassAnalysis,
@@ -227,7 +235,10 @@ internal class CodeGenerator(
         val packageName = context.packageName
         val fakeClassName = context.fakeClassName
         val className = context.interfaceName // Reused field name
-        val outputDir = sourceSetMapper.getGeneratedSourcesDir(moduleFragment)
+
+        // Extract source set from IrClass file path (source of truth approach)
+        val sourceSetName = SourceSetExtractor.extractSourceSet(sourceClass)
+        val outputDir = sourceSetMapper.getGeneratedSourcesDir(moduleFragment, sourceSetName)
 
         // Create subdirectories matching the package structure
         val packagePath = packageName.replace('.', '/')
