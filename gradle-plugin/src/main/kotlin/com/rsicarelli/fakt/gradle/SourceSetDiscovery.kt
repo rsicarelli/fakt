@@ -37,6 +37,7 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
  * @since 1.1.0
  */
 internal object SourceSetDiscovery {
+    private const val MAIN_SUFFIX_LENGTH = 4 // Length of "Main" suffix
     /**
      * Maps a main compilation name to its corresponding test source set.
      *
@@ -64,7 +65,7 @@ internal object SourceSetDiscovery {
         return when {
             compilationName.equals("main", ignoreCase = true) -> "test"
             compilationName.endsWith("Main", ignoreCase = true) -> {
-                val prefix = compilationName.dropLast(4) // Remove "Main"
+                val prefix = compilationName.dropLast(MAIN_SUFFIX_LENGTH)
                 "${prefix}Test"
             }
             else -> "test" // Default fallback

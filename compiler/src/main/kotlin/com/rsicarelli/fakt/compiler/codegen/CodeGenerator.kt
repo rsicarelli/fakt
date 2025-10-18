@@ -61,7 +61,6 @@ internal data class WriteContext(
  */
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 internal class CodeGenerator(
-    private val typeResolver: TypeResolver,
     private val importResolver: ImportResolver,
     private val sourceSetMapper: SourceSetMapper,
     private val generators: CodeGenerators,

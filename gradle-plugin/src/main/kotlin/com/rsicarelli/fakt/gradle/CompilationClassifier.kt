@@ -41,16 +41,10 @@ internal object CompilationClassifier {
         }
 
         // Heuristic 2: Convention - name ends with "Test" (case-insensitive)
-        if (compilation.name.endsWith("Test", ignoreCase = true)) {
-            return true
-        }
-
         // Heuristic 3: Associated with main compilation (test suite pattern)
-        // Check if this compilation is associated with the main compilation
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         val associatedCompilations = compilation.allAssociatedCompilations
-        // Default: Not a test compilation
-        return associatedCompilations.any { it.name == KotlinCompilation.MAIN_COMPILATION_NAME }
-
+        return compilation.name.endsWith("Test", ignoreCase = true) ||
+            associatedCompilations.any { it.name == KotlinCompilation.MAIN_COMPILATION_NAME }
     }
 }

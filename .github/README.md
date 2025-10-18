@@ -27,6 +27,7 @@ Fakt uses a **modular GitHub Actions architecture** with reusable composite acti
 │  • validate-spotless          → Format validation           │
 │  • validate-licenses          → License audit               │
 │  • run-tests                  → Test execution              │
+│  • test-samples               → End-to-end sample tests     │
 │  • publish-maven-central      → Artifact publication        │
 │  • create-github-release      → Release creation            │
 └─────────────────────────────────────────────────────────────┘
@@ -64,7 +65,21 @@ All validation and publication steps are isolated as **reusable composite action
 
 ### Test Execution
 **Location:** `.github/actions/run-tests/action.yml`
-**Purpose:** Execute all test suites with result publishing
+**Purpose:** Execute all test suites from all source sets with result publishing
+**Features:**
+- **KMP modules (runtime)**: Runs `allTests` to test ALL targets (jvmTest, jsTest, iosTest, macosTest, linuxTest, etc.)
+- **JVM modules (compiler, gradle-plugin, compiler-api)**: Runs `test` for each module
+- **All modules**: Runs `check` for additional validations (apiCheck, binary compatibility, compilation validation)
+- Guarantees comprehensive test coverage across all platforms
+
+**Location:** `.github/actions/test-samples/action.yml`
+**Purpose:** End-to-end validation using sample projects
+**Features:**
+- Tests samples via composite build (automatic shadowJar usage)
+- Validates plugin functionality in real-world scenarios
+- Runs `allTests` to test ALL KMP targets in samples
+- Runs `check` for additional validations (apiCheck, compilation validation)
+- **MANDATORY** - Releases blocked if samples fail
 
 ### Publication Actions
 **Location:** `.github/actions/publish-maven-central/action.yml`
@@ -97,7 +112,7 @@ All validation and publication steps are isolated as **reusable composite action
 3. ✅ **validate-spotless** - Code formatting check
 4. ✅ **validate-licenses** - Dependency license audit
 5. ✅ **run-tests** - Execute all tests
-6. ✅ **build-samples** - Verify sample projects compile
+6. ✅ **test-samples** - End-to-end sample project tests (REQUIRED)
 
 **Purpose:** Ensure code quality before merge
 **Branch Protection:** All checks must pass before merge is allowed
@@ -268,14 +283,14 @@ Configure in **GitHub Repository Settings → Secrets and variables → Actions*
 ### Maven Central Credentials
 | Secret Name | Description | How to Obtain |
 |-------------|-------------|---------------|
-| `ORG_GRADLE_PROJECT_mavenCentralUsername` | Token ID | Generate User Token at [central.sonatype.com](https://central.sonatype.com) |
-| `ORG_GRADLE_PROJECT_mavenCentralPassword` | Token Secret | From User Token generation |
+| `MAVEN_CENTRAL_USERNAME` | Token ID | Generate User Token at [central.sonatype.com](https://central.sonatype.com) |
+| `MAVEN_CENTRAL_PASSWORD` | Token Secret | From User Token generation |
 
 ### GPG Signing
 | Secret Name | Description | How to Obtain |
 |-------------|-------------|---------------|
-| `ORG_GRADLE_PROJECT_signingInMemoryKey` | GPG private key (Base64) | `gpg --export-secret-keys --armor KEY_ID \| base64` |
-| `ORG_GRADLE_PROJECT_signingInMemoryKeyPassword` | GPG key passphrase | From GPG key generation |
+| `GPG_SIGNING_KEY` | GPG private key (Base64) | `gpg --export-secret-keys --armor KEY_ID \| base64` |
+| `GPG_SIGNING_PASSWORD` | GPG key passphrase | From GPG key generation |
 
 **GPG Key Generation:**
 ```bash
@@ -295,7 +310,7 @@ gpg --keyserver keyserver.ubuntu.com --send-keys KEY_ID
 | Secret Name | Description | How to Obtain |
 |-------------|-------------|---------------|
 | `GH_APP_ID` | GitHub App ID | Create GitHub App in repo settings |
-| `GH_PRIVATE_KEY` | App's private key | Generate in App settings |
+| `GH_APP_PRIVATE_KEY` | App's private key | Generate in App settings |
 
 **Why GitHub App?**
 - Bypasses branch protection rules for auto-commits
@@ -307,6 +322,16 @@ gpg --keyserver keyserver.ubuntu.com --send-keys KEY_ID
 ## Developer Guide
 
 ### Running Workflows Locally
+
+**Important:** For Kotlin Multiplatform, use `allTests` + `check`:
+- `./gradlew test` - Only runs HOST target tests (usually JVM) - ❌ INCOMPLETE
+- `./gradlew allTests` - Runs tests for ALL KMP targets - ✅ COMPLETE
+- `./gradlew check` - Runs validation tasks (apiCheck, etc.) - ✅ VALIDATIONS
+
+**For complete coverage:**
+1. `./gradlew :runtime:allTests` - Test ALL targets (jvmTest, jsTest, iosTest, etc.)
+2. `./gradlew :compiler:test :compiler-api:test :gradle-plugin:test` - Test JVM modules
+3. `./gradlew check` - Run all validations (apiCheck, binary compatibility)
 
 **Test validation steps:**
 ```bash
@@ -322,12 +347,18 @@ gpg --keyserver keyserver.ubuntu.com --send-keys KEY_ID
 # License check
 ./gradlew checkLicense
 
-# Tests
-./gradlew test
+# Run ALL tests for ALL targets (KMP)
+./gradlew :runtime:allTests
 
-# Build samples
-./gradlew publishToMavenLocal
-./gradlew :samples:single-module:build
+# Run tests for JVM modules
+./gradlew :compiler:test :compiler-api:test :gradle-plugin:test
+
+# Run all validations (apiCheck, compilation validation)
+./gradlew check
+
+# Test samples (all targets + validations)
+./gradlew -p samples/single-module allTests check
+./gradlew -p samples/multi-module allTests check
 ```
 
 ### Version Bump Script
@@ -367,7 +398,7 @@ TAG=v1.3.0
   - `validate-spotless`
   - `validate-licenses`
   - `run-tests`
-  - `build-samples`
+  - `test-samples`
 - ✅ Require conversation resolution before merging
 - ✅ Require linear history
 

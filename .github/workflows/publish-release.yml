@@ -52,6 +52,9 @@ jobs:
       - name: Run Tests
         uses: ./.github/actions/run-tests
 
+      - name: Test Samples
+        uses: ./.github/actions/test-samples
+
   publish:
     name: Publish to Maven Central
     runs-on: ubuntu-latest
@@ -62,7 +65,7 @@ jobs:
         id: app-token
         with:
           app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_PRIVATE_KEY }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -86,10 +89,10 @@ jobs:
         uses: ./.github/actions/publish-maven-central
         with:
           version: ${{ steps.bump.outputs.version_new }}
-          maven-central-username: ${{ secrets.ORG_GRADLE_PROJECT_mavenCentralUsername }}
-          maven-central-password: ${{ secrets.ORG_GRADLE_PROJECT_mavenCentralPassword }}
-          signing-key: ${{ secrets.ORG_GRADLE_PROJECT_signingInMemoryKey }}
-          signing-password: ${{ secrets.ORG_GRADLE_PROJECT_signingInMemoryKeyPassword }}
+          maven-central-username: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          maven-central-password: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          signing-key: ${{ secrets.GPG_SIGNING_KEY }}
+          signing-password: ${{ secrets.GPG_SIGNING_PASSWORD }}
 
       - name: Commit Version Bump
         run: |
@@ -122,4 +125,4 @@ jobs:
         run: |
           git add gradle.properties
           git commit -m "chore: bump to ${{ steps.bump-snapshot.outputs.next_snapshot }} [skip ci]"
-          git push origin main
+          git push origin HEAD

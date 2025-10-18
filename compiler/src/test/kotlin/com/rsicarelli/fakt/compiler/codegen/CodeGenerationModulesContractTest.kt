@@ -126,7 +126,6 @@ class CodeGenerationModulesContractTest {
 
         val codeGenerator =
             CodeGenerator(
-                typeResolver = typeResolver,
                 importResolver = importResolver,
                 sourceSetMapper = sourceSetMapper,
                 generators = generators,

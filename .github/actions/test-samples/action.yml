@@ -1,0 +1,36 @@
+name: Test Samples
+description: Test all sample projects to validate end-to-end functionality
+
+runs:
+  using: composite
+  steps:
+    # Note: Samples use includeBuild("../..") which automatically builds
+    # the compiler module (including shadowJar) before running tests.
+    # The shadowJar is configured as the main artifact in compiler/build.gradle.kts,
+    # so composite build automatically uses it.
+    #
+    # Using 'allTests' to ensure ALL KMP targets are tested (jvmTest, jsTest, etc.)
+    # Then 'check' for additional validations (apiCheck, compilation validation).
+
+    - name: Test single-module sample (all targets)
+      shell: bash
+      run: ./gradlew -p samples/single-module allTests --continue --no-daemon
+
+    - name: Check single-module sample (validations)
+      shell: bash
+      run: ./gradlew -p samples/single-module check --no-daemon
+
+    - name: Test multi-module sample (all targets)
+      shell: bash
+      run: ./gradlew -p samples/multi-module allTests --continue --no-daemon
+
+    - name: Check multi-module sample (validations)
+      shell: bash
+      run: ./gradlew -p samples/multi-module check --no-daemon
+
+    - name: Publish sample test results
+      if: success() || failure()
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      with:
+        files: 'samples/**/build/test-results/**/*.xml'
+        check_name: Sample Test Results

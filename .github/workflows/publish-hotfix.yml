@@ -43,6 +43,9 @@ jobs:
       - name: Run Tests
         uses: ./.github/actions/run-tests
 
+      - name: Test Samples
+        uses: ./.github/actions/test-samples
+
   publish:
     name: Publish Hotfix to Maven Central
     runs-on: ubuntu-latest
@@ -68,10 +71,10 @@ jobs:
         uses: ./.github/actions/publish-maven-central
         with:
           version: ${{ steps.bump.outputs.version_new }}
-          maven-central-username: ${{ secrets.ORG_GRADLE_PROJECT_mavenCentralUsername }}
-          maven-central-password: ${{ secrets.ORG_GRADLE_PROJECT_mavenCentralPassword }}
-          signing-key: ${{ secrets.ORG_GRADLE_PROJECT_signingInMemoryKey }}
-          signing-password: ${{ secrets.ORG_GRADLE_PROJECT_signingInMemoryKeyPassword }}
+          maven-central-username: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          maven-central-password: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          signing-key: ${{ secrets.GPG_SIGNING_KEY }}
+          signing-password: ${{ secrets.GPG_SIGNING_PASSWORD }}
 
       - name: Commit Version Bump
         run: |

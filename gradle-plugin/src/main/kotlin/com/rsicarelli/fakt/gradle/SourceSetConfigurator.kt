@@ -86,7 +86,6 @@ internal class SourceSetConfigurator(
      * For KMP projects with shared code, we generate to fakes/kotlin for maximum compatibility.
      */
     fun getGeneratedSourcesDirectory(compilation: KotlinCompilation<*>): String {
-        val compilationName = compilation.name
         val targetName = compilation.target.name
         val buildDir =
             project.layout.buildDirectory
@@ -94,7 +93,7 @@ internal class SourceSetConfigurator(
                 .asFile
 
         // Determine if we should use common fakes directory
-        val shouldUseCommonFakes = shouldUseCommonFakesDirectory(compilationName, targetName)
+        val shouldUseCommonFakes = shouldUseCommonFakesDirectory(targetName)
         if (shouldUseCommonFakes) {
             return File(buildDir, "generated/fakt/fakes/kotlin").absolutePath
         }
@@ -117,10 +116,7 @@ internal class SourceSetConfigurator(
      *
      * This ensures fakes are accessible from commonTest source set.
      */
-    private fun shouldUseCommonFakesDirectory(
-        compilationName: String,
-        targetName: String,
-    ): Boolean {
+    private fun shouldUseCommonFakesDirectory(targetName: String): Boolean {
         // Check if metadata target (commonMain compilation)
         if (targetName == "metadata") {
             return true
@@ -132,28 +128,5 @@ internal class SourceSetConfigurator(
             project.extensions.findByType(KotlinMultiplatformExtension::class.java)
 
         return kotlinExtension?.sourceSets?.any { it.name == "commonTest" } ?: false
-    }
-
-    /**
-     * Get generated sources directory for a specific source set.
-     */
-    private fun getGeneratedSourcesDirectoryForSourceSet(sourceSetName: String): File {
-        val buildDir =
-            project.layout.buildDirectory
-                .get()
-                .asFile
-
-        return when {
-            sourceSetName == "commonTest" ->
-                File(buildDir, "generated/fakt/common/test/kotlin")
-
-            sourceSetName.endsWith("Test") -> {
-                val target = sourceSetName.removeSuffix("Test")
-                File(buildDir, "generated/fakt/$target/test/kotlin")
-            }
-
-            else ->
-                File(buildDir, "generated/fakt/common/test/kotlin")
-        }
     }
 }

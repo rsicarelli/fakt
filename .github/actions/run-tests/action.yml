@@ -1,12 +1,24 @@
 name: Run Tests
-description: Execute all test suites
+description: Execute all test suites from all source sets
 
 runs:
   using: 'composite'
   steps:
-    - name: Run all tests
+    # Run allTests for KMP modules (runtime) - tests ALL targets
+    # Using --continue to proceed even if task doesn't exist in some modules
+    - name: Run all KMP tests (all targets)
       shell: bash
-      run: ./gradlew test --no-daemon
+      run: ./gradlew :runtime:allTests --continue --no-daemon
+
+    # Run test for JVM-only modules (compiler, compiler-api, gradle-plugin)
+    - name: Run JVM module tests
+      shell: bash
+      run: ./gradlew :compiler:test :compiler-api:test :gradle-plugin:test --no-daemon
+
+    # Run check for additional validations (apiCheck, binary compatibility, etc.)
+    - name: Run all checks (apiCheck, compilation validation)
+      shell: bash
+      run: ./gradlew check --no-daemon
 
     - name: Publish test results
       if: success() || failure()

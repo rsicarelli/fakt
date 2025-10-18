@@ -8,7 +8,22 @@ public abstract class com/rsicarelli/fakt/gradle/FakeCollectorTask : org/gradle/
 }
 
 public final class com/rsicarelli/fakt/gradle/FakeCollectorTask$Companion {
+	public final fun collectWithPlatformDetection (Ljava/io/File;Ljava/io/File;)Lcom/rsicarelli/fakt/gradle/FakeCollectorTask$Companion$CollectionResult;
+	public final fun determinePlatformSourceSet (Ljava/lang/String;)Ljava/lang/String;
 	public final fun registerForKmpProject (Lorg/gradle/api/Project;Lcom/rsicarelli/fakt/gradle/FaktPluginExtension;)V
+}
+
+public final class com/rsicarelli/fakt/gradle/FakeCollectorTask$Companion$CollectionResult {
+	public fun <init> (ILjava/util/Map;)V
+	public final fun component1 ()I
+	public final fun component2 ()Ljava/util/Map;
+	public final fun copy (ILjava/util/Map;)Lcom/rsicarelli/fakt/gradle/FakeCollectorTask$Companion$CollectionResult;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/gradle/FakeCollectorTask$Companion$CollectionResult;ILjava/util/Map;ILjava/lang/Object;)Lcom/rsicarelli/fakt/gradle/FakeCollectorTask$Companion$CollectionResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCollectedCount ()I
+	public final fun getPlatformDistribution ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/rsicarelli/fakt/gradle/FaktGradleSubplugin : org/jetbrains/kotlin/gradle/plugin/KotlinCompilerPluginSupportPlugin {
