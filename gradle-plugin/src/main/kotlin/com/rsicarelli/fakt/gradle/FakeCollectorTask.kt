@@ -111,10 +111,11 @@ abstract class FakeCollectorTask : DefaultTask() {
             }
 
             // Use platform detection for this source set
-            val result = collectWithPlatformDetection(
-                sourceDir = kotlinDir,
-                destinationBaseDir = destinationBaseDir,
-            )
+            val result =
+                collectWithPlatformDetection(
+                    sourceDir = kotlinDir,
+                    destinationBaseDir = destinationBaseDir,
+                )
 
             totalCollected += result.collectedCount
             result.platformDistribution.forEach { (platform, count) ->
@@ -151,13 +152,14 @@ abstract class FakeCollectorTask : DefaultTask() {
          */
         fun determinePlatformSourceSet(fileContent: String): String {
             // Extract package declaration (first N lines for performance)
-            val packageDeclaration = fileContent
-                .lines()
-                .take(PACKAGE_SCAN_LINES)
-                .firstOrNull { it.trim().startsWith("package ") }
-                ?.removePrefix("package ")
-                ?.trim()
-                ?: return "commonMain" // No package → commonMain
+            val packageDeclaration =
+                fileContent
+                    .lines()
+                    .take(PACKAGE_SCAN_LINES)
+                    .firstOrNull { it.trim().startsWith("package ") }
+                    ?.removePrefix("package ")
+                    ?.trim()
+                    ?: return "commonMain" // No package → commonMain
 
             // Split package into segments for analysis
             val packageSegments = packageDeclaration.split(".")
@@ -204,7 +206,8 @@ abstract class FakeCollectorTask : DefaultTask() {
             var collectedCount = 0
 
             // Walk through all Kotlin files in source directory
-            sourceDir.walkTopDown()
+            sourceDir
+                .walkTopDown()
                 .filter { it.isFile && it.extension == "kt" }
                 .forEach { sourceFile ->
                     // Read file content and detect platform
@@ -215,9 +218,10 @@ abstract class FakeCollectorTask : DefaultTask() {
                     val relativePath = sourceFile.relativeTo(sourceDir)
 
                     // Determine destination: {platform}/kotlin/{relativePath}
-                    val destFile = destinationBaseDir
-                        .resolve("$platform/kotlin")
-                        .resolve(relativePath)
+                    val destFile =
+                        destinationBaseDir
+                            .resolve("$platform/kotlin")
+                            .resolve(relativePath)
 
                     // Create parent directories and copy file
                     destFile.parentFile.mkdirs()
@@ -287,19 +291,22 @@ abstract class FakeCollectorTask : DefaultTask() {
                 }
 
             // Register ALL *Main source sets (commonMain, jvmMain, iosMain, etc.)
-            kotlinExtension.sourceSets.matching { sourceSet ->
-                sourceSet.name.endsWith("Main")
-            }.configureEach { sourceSet ->
-                val platformDir = task.map {
-                    it.destinationDir.asFile.get()
-                        .parentFile // up from _placeholder
-                        .resolve("${sourceSet.name}/kotlin")
+            kotlinExtension.sourceSets
+                .matching { sourceSet ->
+                    sourceSet.name.endsWith("Main")
+                }.configureEach { sourceSet ->
+                    val platformDir =
+                        task.map {
+                            it.destinationDir.asFile
+                                .get()
+                                .parentFile // up from _placeholder
+                                .resolve("${sourceSet.name}/kotlin")
+                        }
+                    sourceSet.kotlin.srcDir(platformDir)
+                    project.logger.info(
+                        "Fakt: Registered ${sourceSet.name} for platform-specific collected fakes",
+                    )
                 }
-                sourceSet.kotlin.srcDir(platformDir)
-                project.logger.info(
-                    "Fakt: Registered ${sourceSet.name} for platform-specific collected fakes",
-                )
-            }
 
             project.logger.info(
                 "Fakt: Registered collector task '$taskName' with platform detection",

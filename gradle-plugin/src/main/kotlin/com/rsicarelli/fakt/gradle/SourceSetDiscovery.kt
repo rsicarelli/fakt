@@ -38,6 +38,7 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
  */
 internal object SourceSetDiscovery {
     private const val MAIN_SUFFIX_LENGTH = 4 // Length of "Main" suffix
+
     /**
      * Maps a main compilation name to its corresponding test source set.
      *

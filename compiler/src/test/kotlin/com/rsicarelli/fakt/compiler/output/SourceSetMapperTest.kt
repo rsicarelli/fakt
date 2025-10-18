@@ -223,120 +223,117 @@ class SourceSetMapperTest {
     @Test
     fun `GIVEN jvmMain source set WHEN getting output directory THEN should route to jvmTest`(
         @TempDir tempDir: File,
-    ) =
-        runTest {
-            // GIVEN: Output dir for jvmMain and source set name
-            val baseOutputDir = tempDir.resolve("build/generated/fakt").absolutePath
-            val sourceSetMapper = SourceSetMapper(baseOutputDir, messageCollector)
+    ) = runTest {
+        // GIVEN: Output dir for jvmMain and source set name
+        val baseOutputDir = tempDir.resolve("build/generated/fakt").absolutePath
+        val sourceSetMapper = SourceSetMapper(baseOutputDir, messageCollector)
 
-            // Mock module fragment (module name doesn't matter when source set provided)
-            val moduleFragment = createMockModuleFragment("api")
+        // Mock module fragment (module name doesn't matter when source set provided)
+        val moduleFragment = createMockModuleFragment("api")
 
-            // WHEN: Getting generated dir with jvmMain source set
-            val outputDir =
-                sourceSetMapper.getGeneratedSourcesDir(
-                    moduleFragment = moduleFragment,
-                    sourceSetName = "jvmMain",
-                )
-
-            // THEN: Should route to jvmTest
-            assertTrue(
-                outputDir.path.contains("jvmTest") || outputDir.path.contains("/jvmMain/"),
-                "jvmMain source set should route to jvmTest, got: ${outputDir.path}",
+        // WHEN: Getting generated dir with jvmMain source set
+        val outputDir =
+            sourceSetMapper.getGeneratedSourcesDir(
+                moduleFragment = moduleFragment,
+                sourceSetName = "jvmMain",
             )
-        }
+
+        // THEN: Should route to jvmTest
+        assertTrue(
+            outputDir.path.contains("jvmTest") || outputDir.path.contains("/jvmMain/"),
+            "jvmMain source set should route to jvmTest, got: ${outputDir.path}",
+        )
+    }
 
     @Test
     fun `GIVEN commonMain source set in jvmMain compilation WHEN getting output directory THEN should route to commonTest not jvmTest`(
         @TempDir tempDir: File,
-    ) =
-        runTest {
-            // GIVEN: jvmMain compilation but file from commonMain
-            val baseOutputDir = tempDir.resolve("build/generated/fakt/jvmTest").absolutePath
-            val sourceSetMapper = SourceSetMapper(baseOutputDir, messageCollector)
+    ) = runTest {
+        // GIVEN: jvmMain compilation but file from commonMain
+        val baseOutputDir = tempDir.resolve("build/generated/fakt/jvmTest").absolutePath
+        val sourceSetMapper = SourceSetMapper(baseOutputDir, messageCollector)
 
-            val moduleFragment = createMockModuleFragment("api_jvmMain")
+        val moduleFragment = createMockModuleFragment("api_jvmMain")
 
-            // WHEN: Getting generated dir with commonMain source set (file from commonMain visible in jvmMain)
-            val outputDir =
-                sourceSetMapper.getGeneratedSourcesDir(
-                    moduleFragment = moduleFragment,
-                    sourceSetName = "commonMain",
-                )
-
-            // THEN: Should route to commonTest NOT jvmTest
-            assertTrue(
-                outputDir.path.contains("commonTest") || outputDir.path.contains("/commonMain/"),
-                "commonMain source set should route to commonTest even in jvmMain compilation, got: ${outputDir.path}",
+        // WHEN: Getting generated dir with commonMain source set (file from commonMain visible in jvmMain)
+        val outputDir =
+            sourceSetMapper.getGeneratedSourcesDir(
+                moduleFragment = moduleFragment,
+                sourceSetName = "commonMain",
             )
-        }
+
+        // THEN: Should route to commonTest NOT jvmTest
+        assertTrue(
+            outputDir.path.contains("commonTest") || outputDir.path.contains("/commonMain/"),
+            "commonMain source set should route to commonTest even in jvmMain compilation, got: ${outputDir.path}",
+        )
+    }
 
     @Test
     fun `GIVEN iosMain source set WHEN getting output directory THEN should route to iosTest`(
         @TempDir tempDir: File,
-    ) =
-        runTest {
-            // GIVEN: Output dir and iosMain source set
-            val baseOutputDir = tempDir.resolve("build/generated/fakt").absolutePath
-            val sourceSetMapper = SourceSetMapper(baseOutputDir, messageCollector)
+    ) = runTest {
+        // GIVEN: Output dir and iosMain source set
+        val baseOutputDir = tempDir.resolve("build/generated/fakt").absolutePath
+        val sourceSetMapper = SourceSetMapper(baseOutputDir, messageCollector)
 
-            val moduleFragment = createMockModuleFragment("api")
+        val moduleFragment = createMockModuleFragment("api")
 
-            // WHEN: Getting generated dir with iosMain source set
-            val outputDir =
-                sourceSetMapper.getGeneratedSourcesDir(
-                    moduleFragment = moduleFragment,
-                    sourceSetName = "iosMain",
-                )
-
-            // THEN: Should route to iosTest
-            assertTrue(
-                outputDir.path.contains("iosTest") || outputDir.path.contains("/iosMain/"),
-                "iosMain source set should route to iosTest, got: ${outputDir.path}",
+        // WHEN: Getting generated dir with iosMain source set
+        val outputDir =
+            sourceSetMapper.getGeneratedSourcesDir(
+                moduleFragment = moduleFragment,
+                sourceSetName = "iosMain",
             )
-        }
+
+        // THEN: Should route to iosTest
+        assertTrue(
+            outputDir.path.contains("iosTest") || outputDir.path.contains("/iosMain/"),
+            "iosMain source set should route to iosTest, got: ${outputDir.path}",
+        )
+    }
 
     @Test
     fun `GIVEN null source set WHEN getting output directory THEN should fall back to module name mapping`(
         @TempDir tempDir: File,
-    ) =
-        runTest {
-            // GIVEN: No Gradle-provided output dir (null), forcing module name fallback
-            // Create a temp project structure to simulate the fallback scenario
-            val projectDir = tempDir.resolve("project").also { it.mkdirs() }
-            projectDir.resolve("build.gradle.kts").writeText("// mock build file")
+    ) = runTest {
+        // GIVEN: No Gradle-provided output dir (null), forcing module name fallback
+        // Create a temp project structure to simulate the fallback scenario
+        val projectDir = tempDir.resolve("project").also { it.mkdirs() }
+        projectDir.resolve("build.gradle.kts").writeText("// mock build file")
 
-            // Change working directory temporarily for this test
-            val originalDir = System.getProperty("user.dir")
-            try {
-                System.setProperty("user.dir", projectDir.absolutePath)
+        // Change working directory temporarily for this test
+        val originalDir = System.getProperty("user.dir")
+        try {
+            System.setProperty("user.dir", projectDir.absolutePath)
 
-                val sourceSetMapper = SourceSetMapper(null, messageCollector)
-                val moduleFragment = createMockModuleFragment("api_jvmMain")
+            val sourceSetMapper = SourceSetMapper(null, messageCollector)
+            val moduleFragment = createMockModuleFragment("api_jvmMain")
 
-                // WHEN: Getting generated dir without source set (null)
-                val outputDir =
-                    sourceSetMapper.getGeneratedSourcesDir(
-                        moduleFragment = moduleFragment,
-                        sourceSetName = null,
-                    )
-
-                // THEN: Should fall back to module name mapping (jvmMain → jvmTest)
-                assertTrue(
-                    outputDir.path.contains("jvmTest"),
-                    "Null source set should fall back to module name mapping, got: ${outputDir.path}",
+            // WHEN: Getting generated dir without source set (null)
+            val outputDir =
+                sourceSetMapper.getGeneratedSourcesDir(
+                    moduleFragment = moduleFragment,
+                    sourceSetName = null,
                 )
-            } finally {
-                // Restore original working directory
-                System.setProperty("user.dir", originalDir)
-            }
+
+            // THEN: Should fall back to module name mapping (jvmMain → jvmTest)
+            assertTrue(
+                outputDir.path.contains("jvmTest"),
+                "Null source set should fall back to module name mapping, got: ${outputDir.path}",
+            )
+        } finally {
+            // Restore original working directory
+            System.setProperty("user.dir", originalDir)
         }
+    }
 
     // Helper to create mock module fragment
-    private fun createMockModuleFragment(moduleName: String): org.jetbrains.kotlin.ir.declarations.IrModuleFragment {
-        return object : org.jetbrains.kotlin.ir.declarations.IrModuleFragment() {
+    private fun createMockModuleFragment(moduleName: String): org.jetbrains.kotlin.ir.declarations.IrModuleFragment =
+        object : org.jetbrains.kotlin.ir.declarations.IrModuleFragment() {
             override val name: org.jetbrains.kotlin.name.Name =
-                org.jetbrains.kotlin.name.Name.identifier(moduleName)
+                org.jetbrains.kotlin.name.Name
+                    .identifier(moduleName)
             override val files: MutableList<org.jetbrains.kotlin.ir.declarations.IrFile> = mutableListOf()
 
             // Required abstract members from IrElement
@@ -348,5 +345,4 @@ class SourceSetMapperTest {
             override val descriptor: org.jetbrains.kotlin.descriptors.ModuleDescriptor
                 get() = throw UnsupportedOperationException("Mock descriptor not needed for test")
         }
-    }
 }

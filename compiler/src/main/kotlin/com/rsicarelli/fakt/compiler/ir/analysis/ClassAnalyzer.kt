@@ -80,9 +80,7 @@ internal object ClassAnalyzer {
      * @param annotation The annotation to check
      * @return true if the annotation has @GeneratesFake meta-annotation, false otherwise
      */
-    private fun hasGeneratesFakeMetaAnnotation(
-        annotation: org.jetbrains.kotlin.ir.expressions.IrConstructorCall,
-    ): Boolean {
+    private fun hasGeneratesFakeMetaAnnotation(annotation: org.jetbrains.kotlin.ir.expressions.IrConstructorCall): Boolean {
         try {
             // Get the annotation class from the type
             val annotationType = annotation.type
@@ -151,16 +149,18 @@ internal object ClassAnalyzer {
         // Analyze all declarations in the class
         sourceClass.declarations.forEach { declaration ->
             when (declaration) {
-                is IrProperty -> analyzePropertyDeclaration(
-                    declaration,
-                    abstractProperties,
-                    openProperties,
-                )
-                is IrSimpleFunction -> analyzeFunctionDeclaration(
-                    declaration,
-                    abstractMethods,
-                    openMethods,
-                )
+                is IrProperty ->
+                    analyzePropertyDeclaration(
+                        declaration,
+                        abstractProperties,
+                        openProperties,
+                    )
+                is IrSimpleFunction ->
+                    analyzeFunctionDeclaration(
+                        declaration,
+                        abstractMethods,
+                        openMethods,
+                    )
             }
         }
 

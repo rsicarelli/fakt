@@ -67,7 +67,7 @@ class CompilationClassifierTest {
         // THEN
         assertTrue(
             result,
-            "Custom 'integrationTest' should be classified as test (ends with 'Test')"
+            "Custom 'integrationTest' should be classified as test (ends with 'Test')",
         )
     }
 
@@ -142,7 +142,7 @@ class CompilationClassifierTest {
         // THEN
         assertFalse(
             result,
-            "Custom compilation without Test suffix should not be classified as test"
+            "Custom compilation without Test suffix should not be classified as test",
         )
     }
 
@@ -269,23 +269,27 @@ private class FakeKotlinCompilation(
     override val kotlinOptions get() = error("Not used")
 
     override fun defaultSourceSet(configure: KotlinSourceSet.() -> Unit) = error("Not used")
+
     override fun defaultSourceSet(configure: Action<KotlinSourceSet>) = error("Not used")
+
     override fun getAttributes(): AttributeContainer = error("Not used")
+
     override fun attributes(configure: AttributeContainer.() -> Unit) = error("Not used")
+
     override fun attributes(configure: Action<AttributeContainer>) = error("Not used")
+
     override fun associateWith(other: KotlinCompilation<*>) = error("Not used")
+
     override fun dependencies(configure: KotlinDependencyHandler.() -> Unit) = error("Not used")
+
     override fun dependencies(configure: Action<KotlinDependencyHandler>) = error("Not used")
 
     @Suppress("OVERRIDE_DEPRECATION")
     override fun source(sourceSet: KotlinSourceSet) = error("Not used")
 
     @Suppress("OVERRIDE_DEPRECATION")
-    override fun kotlinOptions(configure: org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions.() -> Unit) =
-        error("Not used")
+    override fun kotlinOptions(configure: org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions.() -> Unit) = error("Not used")
 
     @Suppress("OVERRIDE_DEPRECATION")
-    override fun kotlinOptions(configure: Action<org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions>) =
-        error("Not used")
-
+    override fun kotlinOptions(configure: Action<org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions>) = error("Not used")
 }

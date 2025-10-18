@@ -419,9 +419,7 @@ class UnifiedFaktIrGenerationExtension(
      * @param annotation The annotation to check for @GeneratesFake meta-annotation
      * @return true if the annotation has @GeneratesFake meta-annotation, false otherwise
      */
-    private fun hasGeneratesFakeMetaAnnotation(
-        annotation: org.jetbrains.kotlin.ir.expressions.IrConstructorCall,
-    ): Boolean {
+    private fun hasGeneratesFakeMetaAnnotation(annotation: org.jetbrains.kotlin.ir.expressions.IrConstructorCall): Boolean {
         try {
             val annotationType = annotation.type as? org.jetbrains.kotlin.ir.types.IrSimpleType ?: return false
             val annotationClass = annotationType.classifier.owner as? IrClass ?: return false

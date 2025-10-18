@@ -86,8 +86,7 @@ interface CompilerOptimizations {
                 private val indexedTypes = mutableListOf<TypeInfo>()
                 private val generatedSignatures = mutableSetOf<String>()
 
-                override fun isConfiguredFor(annotation: String): Boolean =
-                    annotation in fakeAnnotations
+                override fun isConfiguredFor(annotation: String): Boolean = annotation in fakeAnnotations
 
                 override fun indexType(type: TypeInfo) {
                     indexedTypes.add(type)

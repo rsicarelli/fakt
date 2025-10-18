@@ -18,7 +18,6 @@ import kotlin.test.assertTrue
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SimplifiedSourceSetConfigurationTest {
-
     @Test
     fun `GIVEN KMP project WHEN plugin applied THEN should NOT create fakes source set`() {
         // Given
