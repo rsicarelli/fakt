@@ -46,6 +46,9 @@ object SourceSetExtractor {
     fun extractSourceSet(irClass: IrClass): String? {
         // Navigate to IrFile in parent hierarchy
         var current = irClass.parent
+        // Suppress "Condition is always 'true'" - false positive from flow analysis
+        // The condition is correct: current starts non-null but can become null via current.parent
+        @Suppress("ControlFlowWithEmptyBody")
         while (current != null) {
             when (current) {
                 is IrFile -> return extractSourceSetFromPath(current.fileEntry.name)

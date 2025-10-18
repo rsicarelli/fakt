@@ -325,7 +325,6 @@ internal class TypeResolver {
                 when (arg) {
                     is IrStarProjection -> "*" // Preserve star projections
                     is IrTypeProjection -> irTypeToKotlinString(arg.type, preserveTypeParameters)
-                    else -> "Any"
                 }
             }
         return "<${typeArgs.joinToString(", ")}>"

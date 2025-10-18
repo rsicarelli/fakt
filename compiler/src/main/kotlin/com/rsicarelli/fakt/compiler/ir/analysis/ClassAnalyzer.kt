@@ -69,8 +69,12 @@ internal object ClassAnalyzer {
      *
      * @param annotation The annotation to check
      * @return true if the annotation has @GeneratesFake meta-annotation, false otherwise
+     *
+     * ## Suppress Justification
+     * - **TooGenericExceptionCaught/SwallowedException**: Safe catch-all for IR traversal errors (expected for some annotation patterns)
+     * - **MaxLineLength**: ktlint prefers single-line function signature, but parameter type is long
      */
-    @Suppress("TooGenericExceptionCaught", "SwallowedException")
+    @Suppress("TooGenericExceptionCaught", "SwallowedException", "MaxLineLength")
     internal fun hasGeneratesFakeMetaAnnotation(annotation: org.jetbrains.kotlin.ir.expressions.IrConstructorCall): Boolean =
         try {
             // Get the annotation class from the type, returning false if null

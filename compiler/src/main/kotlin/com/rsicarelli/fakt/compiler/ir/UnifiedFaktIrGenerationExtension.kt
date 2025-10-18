@@ -56,12 +56,16 @@ import org.jetbrains.kotlin.ir.util.packageFqName
  * - Metro compiler plugin (production-quality) uses the exact same approach
  *
  * See: `compiler/build.gradle.kts` for module-level opt-in configuration
+ *
+ * ## Suppress Justification
+ * - **TooManyFunctions**: IR generation requires many small orchestrator functions for clarity.
+ *   Refactored from large methods (94 lines) to small helpers (10-20 lines each).
  */
+@Suppress("TooManyFunctions")
 class UnifiedFaktIrGenerationExtension(
     private val messageCollector: MessageCollector? = null,
     private val outputDir: String? = null,
     private val fakeAnnotations: List<String> = listOf("com.rsicarelli.fakt.Fake"),
-    private val sourceSetContext: com.rsicarelli.fakt.compiler.api.SourceSetContext? = null,
 ) : IrGenerationExtension {
     private val optimizations = CompilerOptimizations(fakeAnnotations, outputDir)
 
@@ -95,95 +99,111 @@ class UnifiedFaktIrGenerationExtension(
         moduleFragment: IrModuleFragment,
         pluginContext: IrPluginContext,
     ) {
+        logGenerationHeader(moduleFragment)
+
+        try {
+            val (fakeInterfaces, fakeClasses) = discoverAndLogFakes(moduleFragment) ?: return
+
+            val interfacesToProcess = filterInterfacesToProcess(fakeInterfaces)
+            val classesToProcess = filterClassesToProcess(fakeClasses)
+
+            processInterfaces(interfacesToProcess, moduleFragment)
+            processClasses(classesToProcess, moduleFragment)
+
+            logGenerationCompletion(interfacesToProcess.size, classesToProcess.size)
+        } catch (e: Exception) {
+            logGenerationError(e)
+        }
+    }
+
+    private fun logGenerationHeader(moduleFragment: IrModuleFragment) {
         messageCollector?.reportInfo("============================================")
         messageCollector?.reportInfo("Fakt: IR Generation Extension Invoked")
         messageCollector?.reportInfo("Fakt: Module: ${moduleFragment.name}")
         messageCollector?.reportInfo("Fakt: Output directory: ${outputDir ?: "auto-detect"}")
         messageCollector?.reportInfo("Fakt: Configured annotations: ${fakeAnnotations.joinToString()}")
         messageCollector?.reportInfo("============================================")
+    }
 
-        // Generate fakes from main source sets (they will be output to test source sets)
-        // We don't skip non-test modules anymore - we generate FROM main TO test
+    private fun discoverAndLogFakes(moduleFragment: IrModuleFragment): Pair<List<IrClass>, List<IrClass>>? {
+        messageCollector?.reportInfo("Fakt: Phase 1 - Starting interface & class discovery")
 
-        try {
-            // Phase 1: Dynamic Interface & Class Discovery
-            messageCollector?.reportInfo("Fakt: Phase 1 - Starting interface & class discovery")
-            val fakeInterfaces = discoverFakeInterfaces(moduleFragment)
-            messageCollector?.reportInfo("Fakt: Discovered ${fakeInterfaces.size} @Fake annotated interfaces")
+        val fakeInterfaces = discoverFakeInterfaces(moduleFragment)
+        messageCollector?.reportInfo("Fakt: Discovered ${fakeInterfaces.size} @Fake annotated interfaces")
 
-            // Discover fakable classes (final/abstract with open/abstract members)
-            val fakeClasses = discoverFakeClasses(moduleFragment)
-            messageCollector?.reportInfo("Fakt: Discovered ${fakeClasses.size} @Fake annotated classes")
+        val fakeClasses = discoverFakeClasses(moduleFragment)
+        messageCollector?.reportInfo("Fakt: Discovered ${fakeClasses.size} @Fake annotated classes")
 
-            if (fakeInterfaces.isEmpty() && fakeClasses.isEmpty()) {
-                messageCollector?.reportInfo(
-                    "Fakt: No @Fake interfaces or classes found in module ${moduleFragment.name}",
-                )
-                messageCollector?.reportInfo("Fakt: Checked ${moduleFragment.files.size} files")
-                messageCollector?.reportInfo("============================================")
-                return
-            }
-
-            // Phase 2: IR-Native Code Generation with Incremental Compilation
-            val interfacesToProcess = filterInterfacesToProcess(fakeInterfaces)
-            val classesToProcess = filterClassesToProcess(fakeClasses)
-
-            for ((fakeInterface, typeInfo) in interfacesToProcess) {
-                val interfaceName = fakeInterface.name.asString()
-                messageCollector?.reportInfo("Fakt: Processing interface: $interfaceName")
-
-                // Dynamic interface analysis using IR APIs (IR-native approach!)
-                val interfaceAnalysis = interfaceAnalyzer.analyzeInterfaceDynamically(fakeInterface)
-
-                // Validate pattern and log analysis summary
-                validateAndLogPattern(interfaceAnalysis, fakeInterface, interfaceName)
-
-                // Generate working fakes using IR-native analysis + modular generation
-                codeGenerator.generateWorkingFakeImplementation(
-                    sourceInterface = fakeInterface,
-                    analysis = interfaceAnalysis,
-                    moduleFragment = moduleFragment,
-                )
-
-                // Record successful generation for incremental compilation
-                optimizations.recordGeneration(typeInfo)
-                messageCollector?.reportInfo("Fakt: Generated IR-native fake for $interfaceName")
-            }
-
-            // Process classes
-            for ((fakeClass, typeInfo) in classesToProcess) {
-                val className = fakeClass.name.asString()
-                messageCollector?.reportInfo("Fakt: Processing class: $className")
-
-                // Analyze class using ClassAnalyzer
-                val classAnalysis = ClassAnalyzer.analyzeClass(fakeClass)
-
-                // Generate class fake implementation
-                codeGenerator.generateWorkingClassFake(
-                    sourceClass = fakeClass,
-                    analysis = classAnalysis,
-                    moduleFragment = moduleFragment,
-                )
-
-                // Record successful generation for incremental compilation
-                optimizations.recordGeneration(typeInfo)
-                messageCollector?.reportInfo("Fakt: Generated fake for class $className")
-            }
-
+        if (fakeInterfaces.isEmpty() && fakeClasses.isEmpty()) {
             messageCollector?.reportInfo(
-                "Fakt: IR-native generation completed successfully " +
-                    "(${interfacesToProcess.size} interfaces, ${classesToProcess.size} classes)",
+                "Fakt: No @Fake interfaces or classes found in module ${moduleFragment.name}",
             )
-        } catch (e: Exception) {
-            // Top-level error boundary: Catch all exceptions to prevent compiler crashes
-            // This is a legitimate use of generic exception handling at the plugin boundary
-            // We log the error and allow compilation to continue for other modules
-            messageCollector?.report(
-                org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.ERROR,
-                "Fakt: IR-native generation failed: ${e.message}",
-                null,
-            )
+            messageCollector?.reportInfo("Fakt: Checked ${moduleFragment.files.size} files")
+            messageCollector?.reportInfo("============================================")
+            return null
         }
+
+        return fakeInterfaces to fakeClasses
+    }
+
+    private fun processInterfaces(
+        interfacesToProcess: List<Pair<IrClass, TypeInfo>>,
+        moduleFragment: IrModuleFragment,
+    ) {
+        for ((fakeInterface, typeInfo) in interfacesToProcess) {
+            val interfaceName = fakeInterface.name.asString()
+            messageCollector?.reportInfo("Fakt: Processing interface: $interfaceName")
+
+            val interfaceAnalysis = interfaceAnalyzer.analyzeInterfaceDynamically(fakeInterface)
+            validateAndLogPattern(interfaceAnalysis, fakeInterface, interfaceName)
+
+            codeGenerator.generateWorkingFakeImplementation(
+                sourceInterface = fakeInterface,
+                analysis = interfaceAnalysis,
+                moduleFragment = moduleFragment,
+            )
+
+            optimizations.recordGeneration(typeInfo)
+            messageCollector?.reportInfo("Fakt: Generated IR-native fake for $interfaceName")
+        }
+    }
+
+    private fun processClasses(
+        classesToProcess: List<Pair<IrClass, TypeInfo>>,
+        moduleFragment: IrModuleFragment,
+    ) {
+        for ((fakeClass, typeInfo) in classesToProcess) {
+            val className = fakeClass.name.asString()
+            messageCollector?.reportInfo("Fakt: Processing class: $className")
+
+            val classAnalysis = ClassAnalyzer.analyzeClass(fakeClass)
+
+            codeGenerator.generateWorkingClassFake(
+                sourceClass = fakeClass,
+                analysis = classAnalysis,
+                moduleFragment = moduleFragment,
+            )
+
+            optimizations.recordGeneration(typeInfo)
+            messageCollector?.reportInfo("Fakt: Generated fake for class $className")
+        }
+    }
+
+    private fun logGenerationCompletion(
+        interfaceCount: Int,
+        classCount: Int,
+    ) {
+        messageCollector?.reportInfo(
+            "Fakt: IR-native generation completed successfully ($interfaceCount interfaces, $classCount classes)",
+        )
+    }
+
+    private fun logGenerationError(exception: Exception) {
+        messageCollector?.report(
+            org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.ERROR,
+            "Fakt: IR-native generation failed: ${exception.message}",
+            null,
+        )
     }
 
     private fun MessageCollector.reportInfo(message: String) {

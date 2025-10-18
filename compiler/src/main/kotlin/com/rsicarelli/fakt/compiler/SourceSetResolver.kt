@@ -29,7 +29,12 @@ class SourceSetResolver(
      *
      * @param sourceSetName The name of the source set to resolve
      * @return SourceSetInfo if found, null otherwise
+     *
+     * ## Suppress Justification
+     * - **MaxLineLength**: ktlint prefers single-line expression functions, but detekt enforces max line length.
+     *   Suppress to avoid conflict between the two linters.
      */
+    @Suppress("MaxLineLength")
     fun resolveSourceSet(sourceSetName: String): SourceSetInfo? = context.allSourceSets.firstOrNull { it.name == sourceSetName }
 
     /**

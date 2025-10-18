@@ -17,6 +17,9 @@ import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
  * @since 1.0.0
  */
 @OptIn(UnsafeDuringIrConstructionAPI::class)
+// TooManyFunctions: DSL generator requires many specialized builders for interfaces and classes
+// Functions handle both interface and class DSL generation with proper type parameter formatting
+@Suppress("TooManyFunctions")
 internal class ConfigurationDslGenerator(
     private val typeResolver: TypeResolver,
 ) {
@@ -38,85 +41,72 @@ internal class ConfigurationDslGenerator(
         analysis: InterfaceAnalysis,
         fakeClassName: String,
     ): String {
-        val interfaceName = analysis.interfaceName
-        val configClassName = "Fake${interfaceName}Config"
-
-        // Handle where clause for multiple constraints
+        val configClassName = "Fake${analysis.interfaceName}Config"
         val (typeParamsForHeader, whereClause) = formatTypeParametersWithWhereClause(analysis.typeParameters)
-
-        // Phase 2: Add type parameters to config class
-        val typeParameters =
-            if (typeParamsForHeader.isNotEmpty()) {
-                "<${typeParamsForHeader.joinToString(", ")}>"
-            } else {
-                ""
-            }
-
-        // Extract type parameter names (without constraints) for use as type arguments
-        val typeParameterNames =
-            if (analysis.typeParameters.isNotEmpty()) {
-                "<${analysis.typeParameters.joinToString(", ") { it.substringBefore(" :").trim() }}>"
-            } else {
-                ""
-            }
+        val typeParameters = formatTypeParameters(typeParamsForHeader)
+        val typeParameterNames = extractTypeParameterNames(analysis.typeParameters)
 
         return buildString {
-            // Generate class header with optional where clause (after constructor for classes!)
-            if (whereClause.isNotEmpty()) {
-                appendLine(
-                    "class $configClassName$typeParameters(" +
-                        "private val fake: $fakeClassName$typeParameterNames" +
-                        ") where $whereClause {",
-                )
-            } else {
-                appendLine(
-                    "class $configClassName$typeParameters(" +
-                        "private val fake: $fakeClassName$typeParameterNames) {",
-                )
-            }
-
-            // Generate configuration methods for functions (TYPE-SAFE: Use exact types)
-            for (function in analysis.functions) {
-                val functionName = function.name
-                val hasMethodGenerics = function.typeParameters.isNotEmpty()
-
-                // Phase 3: Add method-level type parameters to DSL methods
-                val methodTypeParams =
-                    if (hasMethodGenerics) {
-                        "<${function.typeParameters.joinToString(", ")}> "
-                    } else {
-                        ""
-                    }
-
-                val parameterTypes = buildParameterTypeString(function.parameters)
-
-                val returnType =
-                    typeResolver.irTypeToKotlinString(
-                        function.returnType,
-                        preserveTypeParameters = true,
-                    )
-                val suspendModifier = if (function.isSuspend) "suspend " else ""
-                appendLine(
-                    "    fun $methodTypeParams$functionName(" +
-                        "behavior: $suspendModifier($parameterTypes) -> $returnType) " +
-                        "{ fake.configure${functionName.capitalize()}(behavior) }",
-                )
-            }
-
-            // Generate configuration methods for properties (TYPE-SAFE: Use exact types)
-            for (property in analysis.properties) {
-                val propertyName = property.name
-                val propertyType =
-                    typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
-                appendLine(
-                    "    fun $propertyName(behavior: () -> $propertyType) " +
-                        "{ fake.configure${propertyName.capitalize()}(behavior) }",
-                )
-            }
-
+            appendLine(
+                generateClassHeader(configClassName, typeParameters, fakeClassName, typeParameterNames, whereClause),
+            )
+            append(generateFunctionConfigurators(analysis.functions))
+            append(generatePropertyConfigurators(analysis.properties))
             append("}")
         }
     }
+
+    private fun generateClassHeader(
+        configClassName: String,
+        typeParameters: String,
+        fakeClassName: String,
+        typeParameterNames: String,
+        whereClause: String,
+    ): String =
+        if (whereClause.isNotEmpty()) {
+            "class $configClassName$typeParameters(" +
+                "private val fake: $fakeClassName$typeParameterNames) where $whereClause {"
+        } else {
+            "class $configClassName$typeParameters(private val fake: $fakeClassName$typeParameterNames) {"
+        }
+
+    private fun generateFunctionConfigurators(functions: List<FunctionAnalysis>): String =
+        functions.joinToString("") { function ->
+            val methodTypeParams =
+                if (function.typeParameters.isNotEmpty()) {
+                    "<${function.typeParameters.joinToString(", ")}> "
+                } else {
+                    ""
+                }
+            val parameterTypes = buildParameterTypeString(function.parameters)
+            val returnType = typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+            val suspendModifier = if (function.isSuspend) "suspend " else ""
+
+            "    fun $methodTypeParams${function.name}(" +
+                "behavior: $suspendModifier($parameterTypes) -> $returnType) " +
+                "{ fake.configure${function.name.capitalize()}(behavior) }\n"
+        }
+
+    private fun generatePropertyConfigurators(properties: List<PropertyAnalysis>): String =
+        properties.joinToString("") { property ->
+            val propertyType = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
+            "    fun ${property.name}(behavior: () -> $propertyType) " +
+                "{ fake.configure${property.name.capitalize()}(behavior) }\n"
+        }
+
+    private fun formatTypeParameters(typeParamsForHeader: List<String>): String =
+        if (typeParamsForHeader.isNotEmpty()) {
+            "<${typeParamsForHeader.joinToString(", ")}>"
+        } else {
+            ""
+        }
+
+    private fun extractTypeParameterNames(typeParameters: List<String>): String =
+        if (typeParameters.isNotEmpty()) {
+            "<${typeParameters.joinToString(", ") { it.substringBefore(" :").trim() }}>"
+        } else {
+            ""
+        }
 
     /**
      * Capitalize first letter of string.

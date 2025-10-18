@@ -32,9 +32,11 @@ class FaktCommandLineProcessorSimpleTest {
     fun `GIVEN processor instance WHEN checking inheritance THEN should extend CommandLineProcessor`() =
         runTest {
             val processor = FaktCommandLineProcessor()
-            val isCommandLineProcessor = processor is CommandLineProcessor
 
-            assertTrue(isCommandLineProcessor, "Should extend CommandLineProcessor")
+            // Suppress "Check for instance is always 'true'" - intentional smoke test
+            // This documents the architectural requirement that FaktCommandLineProcessor extends CommandLineProcessor
+            @Suppress("USELESS_IS_CHECK")
+            assertTrue(processor is CommandLineProcessor, "Should extend CommandLineProcessor")
             assertNotNull(processor, "Processor instance should not be null")
         }
 

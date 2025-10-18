@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.mavenPublish)
 }
 
+@OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
 kotlin {
     applyDefaultHierarchyTemplate()
     jvm()
