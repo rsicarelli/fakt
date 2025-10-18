@@ -236,7 +236,8 @@ internal class ImplementationGenerator(
                     )
                     appendLine("        @Suppress(\"UNCHECKED_CAST\")")
                     appendLine(
-                        "        ${functionName}Behavior = behavior as $suspendModifier($castParamTypes) -> $convertedReturnType",
+                        "        ${functionName}Behavior = behavior as " +
+                            "$suspendModifier($castParamTypes) -> $convertedReturnType",
                     )
                     appendLine("    }")
                 } else {
@@ -475,95 +476,90 @@ internal class ImplementationGenerator(
         convertedType: String,
         originalType: String = convertedType,
     ): String {
-        // Use original type for pattern matching, converted type for storage
-        // This allows smart defaults even when method-level generics are stored as Any?
         val returnType = convertedType
         val typeForDefaultDetection = originalType
-
-        // Check if this is a method-level generic function
         val hasMethodGenerics = function.typeParameters.isNotEmpty()
+
+        val lambdaBody = when {
+            // Case 1: Method-level generic with executable parameter
+            hasMethodGenerics && function.parameters.isNotEmpty() &&
+                isExecutableParameter(function, typeForDefaultDetection) -> {
+                generateExecutableParameterCall(function, typeForDefaultDetection)
+            }
+            // Case 2: Identity function (single param, same type as return)
+            function.parameters.size == 1 && !hasMethodGenerics &&
+                isIdentityFunction(function, returnType) -> "it"
+            // Case 3: Default stdlib value
+            else -> generateKotlinStdlibDefault(typeForDefaultDetection, returnType)
+        }
+
+        return wrapInLambda(lambdaBody, function.parameters)
+    }
+
+    private fun isExecutableParameter(
+        function: FunctionAnalysis,
+        typeForDefaultDetection: String,
+    ): Boolean {
+        val firstParamType =
+            typeResolver.irTypeToKotlinString(
+                function.parameters[0].type,
+                preserveTypeParameters = true,
+            )
         val methodTypeParamNames = function.typeParameters.toSet()
 
-        // For method-level generics, check if first param is function returning T
-        if (hasMethodGenerics && function.parameters.isNotEmpty()) {
-            val firstParamType =
-                typeResolver.irTypeToKotlinString(
-                    function.parameters[0].type,
-                    preserveTypeParameters = true,
-                )
-
-            // If first parameter is a function type returning a type parameter (e.g., () -> T)
-            // AND the method returns that same type parameter directly,
-            // Generate identity behavior: execute the function
-            val isExecutableParam =
-                methodTypeParamNames.any { typeParam ->
-                    firstParamType.matches(Regex(".*\\(.*\\)\\s*->\\s*$typeParam\\b.*")) &&
-                        // Return type must be exactly that type parameter (not wrapped like List<T>)
-                        typeForDefaultDetection.trim() == typeParam
-                }
-
-            if (isExecutableParam) {
-                // Generate identity lambda that executes the function parameter
-                val paramName = function.parameters[0].name
-
-                // Determine the identity call based on suspend modifier
-                val identityCall =
-                    if (function.isSuspend) {
-                        "($paramName as suspend () -> Any?)()"
-                    } else {
-                        "($paramName as () -> Any?)()"
-                    }
-
-                // Check if return type is Result<T> and wrap accordingly
-                val wrappedCall =
-                    if (typeForDefaultDetection.startsWith("Result<")) {
-                        "Result.success($identityCall)"
-                    } else {
-                        identityCall
-                    }
-
-                // Generate lambda with proper parameter list
-                return if (function.parameters.size == 1) {
-                    "{ $paramName -> $wrappedCall }"
-                } else {
-                    // Multiple params: execute first one, ignore others
-                    val params =
-                        function.parameters
-                            .mapIndexed { idx, p ->
-                                if (idx == 0) p.name else "_"
-                            }.joinToString(", ")
-                    "{ $params -> $wrappedCall }"
-                }
-            }
-        }
-
-        // Check for identity function pattern: fun process(item: T): T
-        // Single parameter with same type as return type → identity function
-        if (function.parameters.size == 1 && !hasMethodGenerics) {
-            val paramType =
-                typeResolver.irTypeToKotlinString(
-                    function.parameters[0].type,
-                    preserveTypeParameters = true,
-                )
-
-            // If param type matches return type exactly, it's an identity function
-            if (paramType == returnType) {
-                return "{ it }"
-            }
-        }
-
-        // Fallback to stdlib defaults using ORIGINAL type for smart detection
-        // Pass BOTH types: original for pattern matching, converted for type arguments
-        val defaultValue = generateKotlinStdlibDefault(typeForDefaultDetection, returnType)
-
-        return if (function.parameters.isEmpty()) {
-            "{ $defaultValue }"
-        } else if (function.parameters.size == 1) {
-            "{ _ -> $defaultValue }"
-        } else {
-            "{ ${function.parameters.joinToString(", ") { "_" }} -> $defaultValue }"
+        return methodTypeParamNames.any { typeParam ->
+            firstParamType.matches(Regex(".*\\(.*\\)\\s*->\\s*$typeParam\\b.*")) &&
+                typeForDefaultDetection.trim() == typeParam
         }
     }
+
+    private fun generateExecutableParameterCall(
+        function: FunctionAnalysis,
+        typeForDefaultDetection: String,
+    ): String {
+        val paramName = function.parameters[0].name
+        val identityCall =
+            if (function.isSuspend) {
+                "($paramName as suspend () -> Any?)()"
+            } else {
+                "($paramName as () -> Any?)()"
+            }
+
+        return if (typeForDefaultDetection.startsWith("Result<")) {
+            "Result.success($identityCall)"
+        } else {
+            identityCall
+        }
+    }
+
+    private fun isIdentityFunction(function: FunctionAnalysis, returnType: String): Boolean {
+        val paramType =
+            typeResolver.irTypeToKotlinString(
+                function.parameters[0].type,
+                preserveTypeParameters = true,
+            )
+        return paramType == returnType
+    }
+
+    private fun wrapInLambda(body: String, parameters: List<ParameterAnalysis>): String =
+        when {
+            parameters.isEmpty() -> "{ $body }"
+            parameters.size == 1 -> {
+                if (body.contains(parameters[0].name)) {
+                    "{ ${parameters[0].name} -> $body }"
+                } else {
+                    "{ _ -> $body }"
+                }
+            }
+            else -> {
+                val params =
+                    parameters
+                        .mapIndexed { idx, p ->
+                            if (body.contains(p.name)) p.name else "_"
+                        }.joinToString(", ")
+                "{ $params -> $body }"
+            }
+        }
 
     /**
      * Generate type-safe default for properties.

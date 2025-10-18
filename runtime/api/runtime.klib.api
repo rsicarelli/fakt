@@ -5,7 +5,7 @@
 // - Show manifest properties: true
 // - Show declarations: true
 
-// Library unique name: <com.rsicarelli.fakt:runtime>
+// Library unique name: <fakt:runtime>
 open annotation class com.rsicarelli.fakt/Fake : kotlin/Annotation { // com.rsicarelli.fakt/Fake|null[0]
     constructor <init>(kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/Array<kotlin.reflect/KClass<*>> = ..., kotlin/Boolean = ..., kotlin/String = ...) // com.rsicarelli.fakt/Fake.<init>|<init>(kotlin.Boolean;kotlin.Boolean;kotlin.Array<kotlin.reflect.KClass<*>>;kotlin.Boolean;kotlin.String){}[0]
 

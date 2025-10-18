@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 plugins {
     id("fakt-kotlin-jvm")
+    id("fakt-spotless")
+    id("fakt-ktlint")
+    id("fakt-detekt")
     `java-gradle-plugin`
     alias(libs.plugins.mavenPublish)
 }

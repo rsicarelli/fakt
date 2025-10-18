@@ -4,6 +4,9 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     id("fakt-kotlin-jvm")
+    id("fakt-spotless")
+    id("fakt-ktlint")
+    id("fakt-detekt")
     alias(libs.plugins.mavenPublish)
     alias(libs.plugins.shadow)
 }

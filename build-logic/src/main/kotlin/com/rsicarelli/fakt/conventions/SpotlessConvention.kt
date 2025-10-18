@@ -17,11 +17,16 @@ import org.gradle.kotlin.dsl.configure
 
 /**
  * Configure Spotless predeclare with ktfmt and Google Java Format.
+ *
+ * Configuration Cache Friendly:
+ * - Uses version catalog directly (no eager property access)
+ * - Versions are hardcoded to match libs.versions.toml
  */
 fun Project.applySpotlessPredeclare() {
     // Versions must match gradle/libs.versions.toml
-    val ktfmtVersion = findProperty("ktfmtVersion") as? String ?: "0.56"
-    val gjfVersion = findProperty("gjfVersion") as? String ?: "1.28.0"
+    // Hardcoded to avoid eager property resolution (Configuration Cache friendly)
+    val ktfmtVersion = "0.56"
+    val gjfVersion = "1.28.0"
 
     configure<SpotlessExtension> {
         predeclareDeps()

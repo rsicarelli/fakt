@@ -34,21 +34,11 @@ internal object ClassAnalyzer {
      *
      * @return true if the class can be faked, false otherwise
      */
-    fun IrClass.isFakableClass(): Boolean {
-        // Check 1: Must be a class (not interface, object, enum)
-        if (kind != ClassKind.CLASS) return false
-
-        // Check 2: Must not be sealed (use sealed hierarchy support later)
-        if (modality == Modality.SEALED) return false
-
-        // Check 3: Must have @Fake annotation OR annotation with @GeneratesFake meta-annotation
-        if (!hasFakeAnnotation()) return false
-
-        // Check 4: Must have at least one open/abstract method or property
-        if (!hasOverridableMembers()) return false
-
-        return true
-    }
+    fun IrClass.isFakableClass(): Boolean =
+        kind == ClassKind.CLASS &&
+            modality != Modality.SEALED &&
+            hasFakeAnnotation() &&
+            hasOverridableMembers()
 
     /**
      * Checks if a class has a fake generation annotation.
@@ -80,23 +70,21 @@ internal object ClassAnalyzer {
      * @param annotation The annotation to check
      * @return true if the annotation has @GeneratesFake meta-annotation, false otherwise
      */
-    private fun hasGeneratesFakeMetaAnnotation(annotation: org.jetbrains.kotlin.ir.expressions.IrConstructorCall): Boolean {
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
+    internal fun hasGeneratesFakeMetaAnnotation(annotation: org.jetbrains.kotlin.ir.expressions.IrConstructorCall): Boolean =
         try {
-            // Get the annotation class from the type
-            val annotationType = annotation.type
-            val annotationClassSymbol = annotationType.classifierOrNull ?: return false
-            val annotationClass = annotationClassSymbol.owner as? IrClass ?: return false
+            // Get the annotation class from the type, returning false if null
+            val annotationClass = annotation.type.classifierOrNull?.owner as? IrClass
 
             // Check if the annotation class itself has @GeneratesFake annotation
-            return annotationClass.annotations.any { metaAnnotation ->
+            annotationClass?.annotations?.any { metaAnnotation ->
                 metaAnnotation.type.classFqName?.asString() == "com.rsicarelli.fakt.GeneratesFake"
-            }
+            } ?: false
         } catch (e: Exception) {
             // Safely handle any IR traversal errors
             // This is expected for some annotation patterns
-            return false
+            false
         }
-    }
 
     /**
      * Checks if a class has any overridable members (open or abstract methods/properties).

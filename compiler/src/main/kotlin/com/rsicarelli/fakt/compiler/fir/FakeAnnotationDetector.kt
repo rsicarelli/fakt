@@ -67,6 +67,7 @@ class FakeAnnotationDetector {
         }
     }
 
+    @Suppress("UnusedParameter")
     private fun extractParametersFromAnnotation(
         annotation: FirAnnotation,
         session: FirSession,
@@ -92,6 +93,7 @@ class FakeAnnotationDetector {
      * @param session The FIR session (reserved for future use)
      * @return ClassId of the annotation, currently always null
      */
+    @Suppress("FunctionOnlyReturningConstant", "UnusedParameter")
     private fun FirAnnotation.toAnnotationClassId(session: FirSession): ClassId? = null
 }
 

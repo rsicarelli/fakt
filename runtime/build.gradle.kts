@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 plugins {
     id("fakt-multiplatform")
+    id("fakt-spotless")
+    id("fakt-ktlint")
+    id("fakt-detekt")
     alias(libs.plugins.mavenPublish)
 }
 

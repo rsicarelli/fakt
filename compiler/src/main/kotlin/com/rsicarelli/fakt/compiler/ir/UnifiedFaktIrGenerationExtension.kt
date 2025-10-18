@@ -69,13 +69,6 @@ class UnifiedFaktIrGenerationExtension(
     private val typeResolver = TypeResolver()
     private val importResolver = ImportResolver(typeResolver)
 
-    // Create SourceSetResolver if context is available (modernized approach)
-    private val sourceSetResolver =
-        sourceSetContext?.let {
-            com.rsicarelli.fakt.compiler
-                .SourceSetResolver(it)
-        }
-
     private val sourceSetMapper =
         SourceSetMapper(
             outputDir = outputDir,
@@ -284,7 +277,7 @@ class UnifiedFaktIrGenerationExtension(
                 val annotationFqName = annotation.type.classFqName?.asString()
                 annotationFqName != null && (
                     optimizations.isConfiguredFor(annotationFqName) ||
-                        hasGeneratesFakeMetaAnnotation(annotation)
+                        ClassAnalyzer.hasGeneratesFakeMetaAnnotation(annotation)
                 )
             }
 
@@ -399,39 +392,5 @@ class UnifiedFaktIrGenerationExtension(
         signature.append("|props:$propertyCount|funs:$functionCount")
 
         return signature.toString()
-    }
-
-    /**
-     * Checks if an annotation is itself annotated with @GeneratesFake meta-annotation.
-     *
-     * This enables support for custom annotations that are marked with @GeneratesFake,
-     * allowing users to create domain-specific fake annotations.
-     *
-     * Example:
-     * ```kotlin
-     * @GeneratesFake
-     * annotation class DomainFake
-     *
-     * @DomainFake  // Will be detected even though it's not @Fake
-     * interface PaymentService
-     * ```
-     *
-     * @param annotation The annotation to check for @GeneratesFake meta-annotation
-     * @return true if the annotation has @GeneratesFake meta-annotation, false otherwise
-     */
-    private fun hasGeneratesFakeMetaAnnotation(annotation: org.jetbrains.kotlin.ir.expressions.IrConstructorCall): Boolean {
-        try {
-            val annotationType = annotation.type as? org.jetbrains.kotlin.ir.types.IrSimpleType ?: return false
-            val annotationClass = annotationType.classifier.owner as? IrClass ?: return false
-
-            return annotationClass.annotations.any { metaAnnotation ->
-                metaAnnotation.type.classFqName?.asString() == "com.rsicarelli.fakt.GeneratesFake"
-            }
-        } catch (e: Exception) {
-            messageCollector?.reportInfo(
-                "Fakt: Could not check meta-annotation for ${annotation.type.classFqName}: ${e.message}",
-            )
-            return false
-        }
     }
 }

@@ -48,14 +48,9 @@ object SourceSetExtractor {
         var current = irClass.parent
         while (current != null) {
             when (current) {
-                is IrFile -> {
-                    val filePath = current.fileEntry.name
-                    return extractSourceSetFromPath(filePath)
-                }
-                is IrDeclaration -> {
-                    current = current.parent
-                }
-                else -> return null
+                is IrFile -> return extractSourceSetFromPath(current.fileEntry.name)
+                is IrDeclaration -> current = current.parent
+                else -> break
             }
         }
         return null
@@ -78,32 +73,18 @@ object SourceSetExtractor {
      * @return Source set name or null if path doesn't match expected structure
      */
     fun extractSourceSetFromPath(filePath: String): String? {
-        // Normalize path separators (Windows support)
         val normalizedPath = filePath.replace('\\', '/')
-
-        // Find /src/ directory in path
         val srcIndex = normalizedPath.indexOf("/src/")
-        if (srcIndex == -1) {
-            // Try /build/ as fallback (for build output)
-            val buildIndex = normalizedPath.indexOf("/build/")
-            if (buildIndex == -1) return null
+        val buildIndex = normalizedPath.indexOf("/build/")
 
-            // Parse build path: /build/classes/kotlin/{sourceSet}/
-            return extractFromBuildPath(normalizedPath, buildIndex)
-        }
-
-        // Extract everything after /src/
-        val afterSrc = normalizedPath.substring(srcIndex + "/src/".length)
-
-        // Source set is the first directory component after /src/
-        // Example: "/src/jvmMain/kotlin/File.kt" → "jvmMain"
-        val sourceSet = afterSrc.substringBefore('/')
-
-        // Validate that we extracted something meaningful
-        return if (sourceSet.isNotBlank() && sourceSet != "kotlin" && sourceSet != "java") {
-            sourceSet
-        } else {
-            null
+        return when {
+            srcIndex != -1 -> {
+                val afterSrc = normalizedPath.substring(srcIndex + "/src/".length)
+                val sourceSet = afterSrc.substringBefore('/')
+                sourceSet.takeIf { it.isNotBlank() && it != "kotlin" && it != "java" }
+            }
+            buildIndex != -1 -> extractFromBuildPath(normalizedPath, buildIndex)
+            else -> null
         }
     }
 

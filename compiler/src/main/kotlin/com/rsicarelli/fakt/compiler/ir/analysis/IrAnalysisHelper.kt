@@ -162,34 +162,33 @@ internal object IrAnalysisHelper {
      * Formats an IrType with its type arguments (e.g., Comparable<T>).
      * This is used for formatting type parameter constraints.
      */
-    fun formatIrTypeWithTypeArguments(irType: IrType): String {
-        if (irType !is IrSimpleType) {
-            return convertIrTypeToString(irType)
-        }
-
-        val baseName =
-            when (val owner = irType.classifier.owner) {
-                is IrClass -> owner.name.asString()
-                is IrTypeParameter -> owner.name.asString()
-                else -> "Any"
-            }
-
-        // If no type arguments, return base name
-        if (irType.arguments.isEmpty()) {
-            return baseName
-        }
-
-        // Format type arguments
-        val typeArgs =
-            irType.arguments.joinToString(", ") { arg ->
-                when (arg) {
-                    is IrTypeProjection -> formatIrTypeWithTypeArguments(arg.type)
-                    is IrStarProjection -> "*"
+    fun formatIrTypeWithTypeArguments(irType: IrType): String =
+        when {
+            irType !is IrSimpleType -> convertIrTypeToString(irType)
+            irType.arguments.isEmpty() -> {
+                when (val owner = irType.classifier.owner) {
+                    is IrClass -> owner.name.asString()
+                    is IrTypeParameter -> owner.name.asString()
+                    else -> "Any"
                 }
             }
-
-        return "$baseName<$typeArgs>"
-    }
+            else -> {
+                val baseName =
+                    when (val owner = irType.classifier.owner) {
+                        is IrClass -> owner.name.asString()
+                        is IrTypeParameter -> owner.name.asString()
+                        else -> "Any"
+                    }
+                val typeArgs =
+                    irType.arguments.joinToString(", ") { arg ->
+                        when (arg) {
+                            is IrTypeProjection -> formatIrTypeWithTypeArguments(arg.type)
+                            is IrStarProjection -> "*"
+                        }
+                    }
+                "$baseName<$typeArgs>"
+            }
+        }
 }
 
 /**

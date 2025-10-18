@@ -2,12 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import com.rsicarelli.fakt.conventions.applyApiValidationConvention
-import com.rsicarelli.fakt.conventions.applyDetektToAllProjects
 import com.rsicarelli.fakt.conventions.applyDokkaConvention
-import com.rsicarelli.fakt.conventions.applyKtlintToAllProjects
 import com.rsicarelli.fakt.conventions.applyLicenseReportConvention
 import com.rsicarelli.fakt.conventions.applySpotlessPredeclare
-import com.rsicarelli.fakt.conventions.applySpotlessToAllProjects
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -18,13 +15,10 @@ import org.gradle.api.Project
  * - Binary Compatibility Validator (apiValidation)
  * - Dokka documentation
  * - License Report (dependency license auditing)
- * - Spotless formatting (predeclareDeps + allprojects)
- * - Ktlint linting (allprojects)
- * - Detekt static analysis (allprojects)
+ * - Spotless predeclareDeps
  *
  * Note: This plugin should ONLY be applied to the root project.
- *
- * All configuration logic is delegated to conventions/ for modularity.
+ * Individual projects apply fakt-spotless, fakt-ktlint, fakt-detekt as needed.
  */
 class FaktRootPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -33,19 +27,14 @@ class FaktRootPlugin : Plugin<Project> {
         }
 
         with(target) {
-            // Apply plugins
             pluginManager.apply("org.jetbrains.kotlinx.binary-compatibility-validator")
             pluginManager.apply("org.jetbrains.dokka")
             pluginManager.apply("com.diffplug.spotless")
 
-            // Apply conventions (all logic in conventions/ directory)
             applyApiValidationConvention()
             applyDokkaConvention()
             applyLicenseReportConvention()
             applySpotlessPredeclare()
-            applySpotlessToAllProjects()
-            applyKtlintToAllProjects()
-            applyDetektToAllProjects()
         }
     }
 }
