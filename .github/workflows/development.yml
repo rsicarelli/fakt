@@ -77,8 +77,8 @@ jobs:
       - name: Execute Tests
         uses: ./.github/actions/run-tests
 
-  build-samples:
-    name: Build Samples
+  test-samples:
+    name: Test Samples
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -87,11 +87,5 @@ jobs:
       - name: Setup Environment
         uses: ./.github/actions/setup-environment
 
-      - name: Publish to Maven Local
-        run: ./gradlew publishToMavenLocal --no-daemon
-
-      - name: Build single-module sample
-        run: ./gradlew :samples:single-module:build --no-daemon
-
-      - name: Build multi-module sample
-        run: ./gradlew :samples:multi-module:build --no-daemon
+      - name: Run Sample Tests
+        uses: ./.github/actions/test-samples

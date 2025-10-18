@@ -80,7 +80,9 @@ internal object ClassAnalyzer {
      * @param annotation The annotation to check
      * @return true if the annotation has @GeneratesFake meta-annotation, false otherwise
      */
-    private fun hasGeneratesFakeMetaAnnotation(annotation: org.jetbrains.kotlin.ir.expressions.IrConstructorCall): Boolean {
+    private fun hasGeneratesFakeMetaAnnotation(
+        annotation: org.jetbrains.kotlin.ir.expressions.IrConstructorCall,
+    ): Boolean {
         try {
             // Get the annotation class from the type
             val annotationType = annotation.type
@@ -149,51 +151,16 @@ internal object ClassAnalyzer {
         // Analyze all declarations in the class
         sourceClass.declarations.forEach { declaration ->
             when (declaration) {
-                is IrProperty -> {
-                    // Skip compiler-generated properties
-                    if (declaration.origin == IrDeclarationOrigin.FAKE_OVERRIDE) return@forEach
-
-                    // For properties with custom getters, check the getter's modality
-                    val effectiveModality = declaration.getter?.modality ?: declaration.modality
-
-                    when (effectiveModality) {
-                        Modality.ABSTRACT -> {
-                            abstractProperties.add(IrAnalysisHelper.analyzeProperty(declaration))
-                        }
-                        Modality.OPEN -> {
-                            openProperties.add(IrAnalysisHelper.analyzeProperty(declaration))
-                        }
-                        else -> { /* Skip final properties */ }
-                    }
-                }
-
-                is IrSimpleFunction -> {
-                    // Skip special functions and compiler-generated
-                    if (IrAnalysisHelper.isSpecialFunction(declaration)) return@forEach
-                    if (declaration.origin == IrDeclarationOrigin.FAKE_OVERRIDE) return@forEach
-
-                    // Check if this method overrides an abstract method from superclass
-                    val isOverridingAbstract =
-                        declaration.overriddenSymbols.any { overriddenSymbol ->
-                            overriddenSymbol.owner.modality == Modality.ABSTRACT
-                        }
-
-                    when {
-                        // Priority 1: Methods overriding abstract methods → error() defaults
-                        isOverridingAbstract -> {
-                            abstractMethods.add(IrAnalysisHelper.analyzeFunction(declaration))
-                        }
-                        // Priority 2: Methods declared as abstract in this class → error() defaults
-                        declaration.modality == Modality.ABSTRACT -> {
-                            abstractMethods.add(IrAnalysisHelper.analyzeFunction(declaration))
-                        }
-                        // Priority 3: Open methods without abstract override → super call defaults
-                        declaration.modality == Modality.OPEN -> {
-                            openMethods.add(IrAnalysisHelper.analyzeFunction(declaration))
-                        }
-                        else -> { /* Skip final methods */ }
-                    }
-                }
+                is IrProperty -> analyzePropertyDeclaration(
+                    declaration,
+                    abstractProperties,
+                    openProperties,
+                )
+                is IrSimpleFunction -> analyzeFunctionDeclaration(
+                    declaration,
+                    abstractMethods,
+                    openMethods,
+                )
             }
         }
 
@@ -206,6 +173,60 @@ internal object ClassAnalyzer {
             openProperties = openProperties,
             sourceClass = sourceClass,
         )
+    }
+
+    private fun analyzePropertyDeclaration(
+        declaration: IrProperty,
+        abstractProperties: MutableList<PropertyAnalysis>,
+        openProperties: MutableList<PropertyAnalysis>,
+    ) {
+        // Skip compiler-generated properties
+        if (declaration.origin == IrDeclarationOrigin.FAKE_OVERRIDE) return
+
+        // For properties with custom getters, check the getter's modality
+        val effectiveModality = declaration.getter?.modality ?: declaration.modality
+
+        when (effectiveModality) {
+            Modality.ABSTRACT -> {
+                abstractProperties.add(IrAnalysisHelper.analyzeProperty(declaration))
+            }
+            Modality.OPEN -> {
+                openProperties.add(IrAnalysisHelper.analyzeProperty(declaration))
+            }
+            else -> { /* Skip final properties */ }
+        }
+    }
+
+    private fun analyzeFunctionDeclaration(
+        declaration: IrSimpleFunction,
+        abstractMethods: MutableList<FunctionAnalysis>,
+        openMethods: MutableList<FunctionAnalysis>,
+    ) {
+        // Skip special functions and compiler-generated
+        if (IrAnalysisHelper.isSpecialFunction(declaration)) return
+        if (declaration.origin == IrDeclarationOrigin.FAKE_OVERRIDE) return
+
+        // Check if this method overrides an abstract method from superclass
+        val isOverridingAbstract =
+            declaration.overriddenSymbols.any { overriddenSymbol ->
+                overriddenSymbol.owner.modality == Modality.ABSTRACT
+            }
+
+        when {
+            // Priority 1: Methods overriding abstract methods → error() defaults
+            isOverridingAbstract -> {
+                abstractMethods.add(IrAnalysisHelper.analyzeFunction(declaration))
+            }
+            // Priority 2: Methods declared as abstract in this class → error() defaults
+            declaration.modality == Modality.ABSTRACT -> {
+                abstractMethods.add(IrAnalysisHelper.analyzeFunction(declaration))
+            }
+            // Priority 3: Open methods without abstract override → super call defaults
+            declaration.modality == Modality.OPEN -> {
+                openMethods.add(IrAnalysisHelper.analyzeFunction(declaration))
+            }
+            else -> { /* Skip final methods */ }
+        }
     }
 }
 

@@ -64,10 +64,15 @@ internal class ConfigurationDslGenerator(
             // Generate class header with optional where clause (after constructor for classes!)
             if (whereClause.isNotEmpty()) {
                 appendLine(
-                    "class $configClassName$typeParameters(private val fake: $fakeClassName$typeParameterNames) where $whereClause {",
+                    "class $configClassName$typeParameters(" +
+                        "private val fake: $fakeClassName$typeParameterNames" +
+                        ") where $whereClause {",
                 )
             } else {
-                appendLine("class $configClassName$typeParameters(private val fake: $fakeClassName$typeParameterNames) {")
+                appendLine(
+                    "class $configClassName$typeParameters(" +
+                        "private val fake: $fakeClassName$typeParameterNames) {",
+                )
             }
 
             // Generate configuration methods for functions (TYPE-SAFE: Use exact types)
@@ -92,7 +97,8 @@ internal class ConfigurationDslGenerator(
                     )
                 val suspendModifier = if (function.isSuspend) "suspend " else ""
                 appendLine(
-                    "    fun $methodTypeParams$functionName(behavior: $suspendModifier($parameterTypes) -> $returnType) " +
+                    "    fun $methodTypeParams$functionName(" +
+                        "behavior: $suspendModifier($parameterTypes) -> $returnType) " +
                         "{ fake.configure${functionName.capitalize()}(behavior) }",
                 )
             }
@@ -138,19 +144,6 @@ internal class ConfigurationDslGenerator(
                     typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
                 }
             }
-        }
-
-    /**
-     * Resolves the Kotlin type string for a parameter, unwrapping varargs if needed.
-     *
-     * @param param The parameter to resolve
-     * @return The Kotlin type string
-     */
-    private fun resolveParameterType(param: ParameterAnalysis): String =
-        if (param.isVararg) {
-            unwrapVarargsType(param)
-        } else {
-            typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
         }
 
     /**
@@ -246,9 +239,16 @@ internal class ConfigurationDslGenerator(
         return buildString {
             // Generate config class header with type parameters and where clause
             if (whereClause.isNotEmpty()) {
-                appendLine("class $configClassName$typeParameters(private val fake: $fakeClassName$typeArguments) where $whereClause {")
+                appendLine(
+                    "class $configClassName$typeParameters(" +
+                        "private val fake: $fakeClassName$typeArguments" +
+                        ") where $whereClause {",
+                )
             } else {
-                appendLine("class $configClassName$typeParameters(private val fake: $fakeClassName$typeArguments) {")
+                appendLine(
+                    "class $configClassName$typeParameters(" +
+                        "private val fake: $fakeClassName$typeArguments) {",
+                )
             }
 
             // Generate configuration methods for abstract methods
@@ -281,17 +281,22 @@ internal class ConfigurationDslGenerator(
      */
     private fun generateConfigMethodForProperty(property: PropertyAnalysis): String {
         val propertyName = property.name
-        val returnTypeString = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
+        val returnTypeString =
+            typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
         val capitalizedName = propertyName.replaceFirstChar { it.titlecase() }
 
         return buildString {
             // Getter configuration
-            appendLine("    fun $propertyName(behavior: () -> $returnTypeString) { fake.configure$capitalizedName(behavior) }")
+            appendLine(
+                "    fun $propertyName(behavior: () -> $returnTypeString) " +
+                    "{ fake.configure$capitalizedName(behavior) }",
+            )
 
             // Setter configuration for mutable properties
             if (property.isMutable) {
                 appendLine(
-                    "    fun set$capitalizedName(behavior: ($returnTypeString) -> Unit) { fake.configureSet$capitalizedName(behavior) }",
+                    "    fun set$capitalizedName(behavior: ($returnTypeString) -> Unit) " +
+                        "{ fake.configureSet$capitalizedName(behavior) }",
                 )
             }
         }.trimEnd() // Remove trailing newline so caller can control formatting

@@ -6,21 +6,6 @@
 // - Show declarations: true
 
 // Library unique name: <com.rsicarelli.fakt:runtime>
-open annotation class com.rsicarelli.fakt/CallTracking : kotlin/Annotation { // com.rsicarelli.fakt/CallTracking|null[0]
-    constructor <init>(kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/Int = ..., kotlin/Boolean = ..., kotlin/Boolean = ...) // com.rsicarelli.fakt/CallTracking.<init>|<init>(kotlin.Boolean;kotlin.Boolean;kotlin.Int;kotlin.Boolean;kotlin.Boolean){}[0]
-
-    final val autoVerify // com.rsicarelli.fakt/CallTracking.autoVerify|{}autoVerify[0]
-        final fun <get-autoVerify>(): kotlin/Boolean // com.rsicarelli.fakt/CallTracking.autoVerify.<get-autoVerify>|<get-autoVerify>(){}[0]
-    final val captureArguments // com.rsicarelli.fakt/CallTracking.captureArguments|{}captureArguments[0]
-        final fun <get-captureArguments>(): kotlin/Boolean // com.rsicarelli.fakt/CallTracking.captureArguments.<get-captureArguments>|<get-captureArguments>(){}[0]
-    final val captureReturnValues // com.rsicarelli.fakt/CallTracking.captureReturnValues|{}captureReturnValues[0]
-        final fun <get-captureReturnValues>(): kotlin/Boolean // com.rsicarelli.fakt/CallTracking.captureReturnValues.<get-captureReturnValues>|<get-captureReturnValues>(){}[0]
-    final val enableTimestamps // com.rsicarelli.fakt/CallTracking.enableTimestamps|{}enableTimestamps[0]
-        final fun <get-enableTimestamps>(): kotlin/Boolean // com.rsicarelli.fakt/CallTracking.enableTimestamps.<get-enableTimestamps>|<get-enableTimestamps>(){}[0]
-    final val maxCalls // com.rsicarelli.fakt/CallTracking.maxCalls|{}maxCalls[0]
-        final fun <get-maxCalls>(): kotlin/Int // com.rsicarelli.fakt/CallTracking.maxCalls.<get-maxCalls>|<get-maxCalls>(){}[0]
-}
-
 open annotation class com.rsicarelli.fakt/Fake : kotlin/Annotation { // com.rsicarelli.fakt/Fake|null[0]
     constructor <init>(kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/Array<kotlin.reflect/KClass<*>> = ..., kotlin/Boolean = ..., kotlin/String = ...) // com.rsicarelli.fakt/Fake.<init>|<init>(kotlin.Boolean;kotlin.Boolean;kotlin.Array<kotlin.reflect.KClass<*>>;kotlin.Boolean;kotlin.String){}[0]
 
@@ -34,23 +19,6 @@ open annotation class com.rsicarelli.fakt/Fake : kotlin/Annotation { // com.rsic
         final fun <get-scope>(): kotlin/String // com.rsicarelli.fakt/Fake.scope.<get-scope>|<get-scope>(){}[0]
     final val trackCalls // com.rsicarelli.fakt/Fake.trackCalls|{}trackCalls[0]
         final fun <get-trackCalls>(): kotlin/Boolean // com.rsicarelli.fakt/Fake.trackCalls.<get-trackCalls>|<get-trackCalls>(){}[0]
-}
-
-open annotation class com.rsicarelli.fakt/FakeConfig : kotlin/Annotation { // com.rsicarelli.fakt/FakeConfig|null[0]
-    constructor <init>(kotlin/String = ..., kotlin/Array<kotlin/String> = ..., kotlin/Array<kotlin/String> = ..., kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/String = ...) // com.rsicarelli.fakt/FakeConfig.<init>|<init>(kotlin.String;kotlin.Array<kotlin.String>;kotlin.Array<kotlin.String>;kotlin.Boolean;kotlin.Boolean;kotlin.String){}[0]
-
-    final val customScope // com.rsicarelli.fakt/FakeConfig.customScope|{}customScope[0]
-        final fun <get-customScope>(): kotlin/String // com.rsicarelli.fakt/FakeConfig.customScope.<get-customScope>|<get-customScope>(){}[0]
-    final val defaults // com.rsicarelli.fakt/FakeConfig.defaults|{}defaults[0]
-        final fun <get-defaults>(): kotlin/Array<kotlin/String> // com.rsicarelli.fakt/FakeConfig.defaults.<get-defaults>|<get-defaults>(){}[0]
-    final val excludeMethods // com.rsicarelli.fakt/FakeConfig.excludeMethods|{}excludeMethods[0]
-        final fun <get-excludeMethods>(): kotlin/Array<kotlin/String> // com.rsicarelli.fakt/FakeConfig.excludeMethods.<get-excludeMethods>|<get-excludeMethods>(){}[0]
-    final val factoryName // com.rsicarelli.fakt/FakeConfig.factoryName|{}factoryName[0]
-        final fun <get-factoryName>(): kotlin/String // com.rsicarelli.fakt/FakeConfig.factoryName.<get-factoryName>|<get-factoryName>(){}[0]
-    final val generateDsl // com.rsicarelli.fakt/FakeConfig.generateDsl|{}generateDsl[0]
-        final fun <get-generateDsl>(): kotlin/Boolean // com.rsicarelli.fakt/FakeConfig.generateDsl.<get-generateDsl>|<get-generateDsl>(){}[0]
-    final val strictMode // com.rsicarelli.fakt/FakeConfig.strictMode|{}strictMode[0]
-        final fun <get-strictMode>(): kotlin/Boolean // com.rsicarelli.fakt/FakeConfig.strictMode.<get-strictMode>|<get-strictMode>(){}[0]
 }
 
 open annotation class com.rsicarelli.fakt/GeneratesFake : kotlin/Annotation { // com.rsicarelli.fakt/GeneratesFake|null[0]

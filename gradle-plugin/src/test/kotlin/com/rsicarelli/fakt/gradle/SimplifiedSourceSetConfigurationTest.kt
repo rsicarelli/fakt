@@ -87,7 +87,7 @@ class SimplifiedSourceSetConfigurationTest {
         val commonTest = kotlin.sourceSets.getByName("commonTest")
 
         // Then - Should add generated dir to EXISTING commonTest
-        assertTrue(commonTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/fakes/kotlin") })
+        assertTrue(commonTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/commonTest/kotlin") })
     }
 
     @Test
@@ -102,7 +102,7 @@ class SimplifiedSourceSetConfigurationTest {
         val jvmTest = kotlin.sourceSets.getByName("jvmTest")
 
         // Then - Should add generated dir to EXISTING jvmTest
-        assertTrue(jvmTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/jvmFakes/kotlin") })
+        assertTrue(jvmTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/jvmTest/kotlin") })
     }
 
     @Test
@@ -117,7 +117,7 @@ class SimplifiedSourceSetConfigurationTest {
         val jsTest = kotlin.sourceSets.getByName("jsTest")
 
         // Then - Should add generated dir to EXISTING jsTest
-        assertTrue(jsTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/jsFakes/kotlin") })
+        assertTrue(jsTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/jsTest/kotlin") })
     }
 
     @Test
@@ -132,7 +132,7 @@ class SimplifiedSourceSetConfigurationTest {
         val iosTest = kotlin.sourceSets.getByName("iosArm64Test")
 
         // Then - Should add generated dir to EXISTING iosArm64Test
-        assertTrue(iosTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/iosArm64Fakes/kotlin") })
+        assertTrue(iosTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/iosArm64Test/kotlin") })
     }
 
     @Test
@@ -153,10 +153,10 @@ class SimplifiedSourceSetConfigurationTest {
         val iosTest = kotlin.sourceSets.getByName("iosArm64Test")
 
         // Then - All should have their respective generated directories
-        assertTrue(commonTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/fakes/kotlin") })
-        assertTrue(jvmTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/jvmFakes/kotlin") })
-        assertTrue(jsTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/jsFakes/kotlin") })
-        assertTrue(iosTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/iosArm64Fakes/kotlin") })
+        assertTrue(commonTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/commonTest/kotlin") })
+        assertTrue(jvmTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/jvmTest/kotlin") })
+        assertTrue(jsTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/jsTest/kotlin") })
+        assertTrue(iosTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/iosArm64Test/kotlin") })
     }
 
     // ========================================

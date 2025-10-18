@@ -135,6 +135,8 @@ abstract class FakeCollectorTask : DefaultTask() {
     }
 
     companion object {
+        private const val PACKAGE_SCAN_LINES = 10 // Number of lines to scan for package declaration
+
         /**
          * Determines the appropriate platform source set based on file content.
          * Analyzes the package declaration to detect platform-specific markers.
@@ -148,10 +150,10 @@ abstract class FakeCollectorTask : DefaultTask() {
          * @return The source set name (e.g., "jvmMain", "commonMain", "iosMain")
          */
         fun determinePlatformSourceSet(fileContent: String): String {
-            // Extract package declaration (first 10 lines for performance)
+            // Extract package declaration (first N lines for performance)
             val packageDeclaration = fileContent
                 .lines()
-                .take(10)
+                .take(PACKAGE_SCAN_LINES)
                 .firstOrNull { it.trim().startsWith("package ") }
                 ?.removePrefix("package ")
                 ?.trim()
@@ -338,7 +340,10 @@ abstract class FakeCollectorTask : DefaultTask() {
                 )
             }
 
-            project.logger.info("Fakt: Registered dynamic collector task 'collectFakes' (auto-discovers all generated fakes)")
+            project.logger.info(
+                "Fakt: Registered dynamic collector task 'collectFakes' " +
+                    "(auto-discovers all generated fakes)",
+            )
         }
     }
 }

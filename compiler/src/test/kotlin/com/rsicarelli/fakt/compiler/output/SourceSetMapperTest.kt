@@ -47,7 +47,7 @@ class SourceSetMapperTest {
         messageCollector: MessageCollector?,
     ) {
         // Store instance for method access via reflection
-        private val mapper = SourceSetMapper(outputDir, messageCollector, null)
+        private val mapper = SourceSetMapper(outputDir, messageCollector)
 
         // Expose mapToTestSourceSet for testing (it's currently private)
         @Suppress("UNCHECKED_CAST")
@@ -227,7 +227,7 @@ class SourceSetMapperTest {
         runTest {
             // GIVEN: Output dir for jvmMain and source set name
             val baseOutputDir = tempDir.resolve("build/generated/fakt").absolutePath
-            val sourceSetMapper = SourceSetMapper(baseOutputDir, messageCollector, null)
+            val sourceSetMapper = SourceSetMapper(baseOutputDir, messageCollector)
 
             // Mock module fragment (module name doesn't matter when source set provided)
             val moduleFragment = createMockModuleFragment("api")
@@ -253,7 +253,7 @@ class SourceSetMapperTest {
         runTest {
             // GIVEN: jvmMain compilation but file from commonMain
             val baseOutputDir = tempDir.resolve("build/generated/fakt/jvmTest").absolutePath
-            val sourceSetMapper = SourceSetMapper(baseOutputDir, messageCollector, null)
+            val sourceSetMapper = SourceSetMapper(baseOutputDir, messageCollector)
 
             val moduleFragment = createMockModuleFragment("api_jvmMain")
 
@@ -278,7 +278,7 @@ class SourceSetMapperTest {
         runTest {
             // GIVEN: Output dir and iosMain source set
             val baseOutputDir = tempDir.resolve("build/generated/fakt").absolutePath
-            val sourceSetMapper = SourceSetMapper(baseOutputDir, messageCollector, null)
+            val sourceSetMapper = SourceSetMapper(baseOutputDir, messageCollector)
 
             val moduleFragment = createMockModuleFragment("api")
 
@@ -311,7 +311,7 @@ class SourceSetMapperTest {
             try {
                 System.setProperty("user.dir", projectDir.absolutePath)
 
-                val sourceSetMapper = SourceSetMapper(null, messageCollector, null)
+                val sourceSetMapper = SourceSetMapper(null, messageCollector)
                 val moduleFragment = createMockModuleFragment("api_jvmMain")
 
                 // WHEN: Getting generated dir without source set (null)

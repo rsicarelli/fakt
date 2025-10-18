@@ -235,7 +235,9 @@ internal class ImplementationGenerator(
                             "behavior: $suspendModifier($parameterTypes) -> $returnTypeString) {",
                     )
                     appendLine("        @Suppress(\"UNCHECKED_CAST\")")
-                    appendLine("        ${functionName}Behavior = behavior as $suspendModifier($castParamTypes) -> $convertedReturnType")
+                    appendLine(
+                        "        ${functionName}Behavior = behavior as $suspendModifier($castParamTypes) -> $convertedReturnType",
+                    )
                     appendLine("    }")
                 } else {
                     appendLine(
@@ -310,7 +312,10 @@ internal class ImplementationGenerator(
 
                 // Generate method with NO CASTING - types match exactly!
                 // Phase 3: Include method-level type parameters
-                appendLine("    override ${suspendModifier}fun $methodTypeParams$functionName($parameters): $returnTypeString {")
+                appendLine(
+                    "    override ${suspendModifier}fun $methodTypeParams$functionName(" +
+                        "$parameters): $returnTypeString {",
+                )
 
                 // Phase 3: For method-level generics, add @Suppress and cast
                 if (function.typeParameters.isNotEmpty()) {
@@ -399,9 +404,12 @@ internal class ImplementationGenerator(
                                             param.type,
                                             preserveTypeParameters = true,
                                         )
-                                    // If this type contains a method-level type parameter, recursively convert
-                                    // This preserves wrappers like Result<T>, List<T> while converting type params to Any?
-                                    if (hasMethodGenerics && containsMethodTypeParam(typeString, methodTypeParamNames)) {
+                                    // If this type contains a method-level type parameter,
+                                    // recursively convert. This preserves wrappers like Result<T>,
+                                    // List<T> while converting type params to Any?
+                                    if (hasMethodGenerics &&
+                                        containsMethodTypeParam(typeString, methodTypeParamNames)
+                                    ) {
                                         convertMethodTypeParamsToAny(typeString, methodTypeParamNames)
                                     } else {
                                         typeString
@@ -938,7 +946,8 @@ internal class ImplementationGenerator(
                     } else if (function.parameters.size == 1) {
                         "{ _ -> error(\"Configure $functionName behavior\") }"
                     } else {
-                        "{ ${function.parameters.joinToString(", ") { "_" }} -> error(\"Configure $functionName behavior\") }"
+                        val params = function.parameters.joinToString(", ") { "_" }
+                        "{ $params -> error(\"Configure $functionName behavior\") }"
                     }
 
                 appendLine(
@@ -991,7 +1000,8 @@ internal class ImplementationGenerator(
                     if (function.parameters.isEmpty()) {
                         "{ super.$functionName() }"
                     } else {
-                        "{ ${function.parameters.joinToString(", ") { it.name }} -> super.$functionName($parameterNames) }"
+                        val params = function.parameters.joinToString(", ") { it.name }
+                        "{ $params -> super.$functionName($parameterNames) }"
                     }
 
                 appendLine(
@@ -1003,17 +1013,20 @@ internal class ImplementationGenerator(
             // Generate behavior properties for abstract properties (must be configured)
             for (property in analysis.abstractProperties) {
                 val propertyName = property.name
-                val returnTypeString = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
+                val returnTypeString =
+                    typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
 
                 // Abstract properties MUST be configured - error default (getter)
                 appendLine(
-                    "    private var ${propertyName}Behavior: () -> $returnTypeString = { error(\"Configure $propertyName behavior\") }",
+                    "    private var ${propertyName}Behavior: () -> $returnTypeString = " +
+                        "{ error(\"Configure $propertyName behavior\") }",
                 )
 
                 // If mutable, also generate setter behavior
                 if (property.isMutable) {
                     appendLine(
-                        "    private var set${propertyName.capitalize()}Behavior: ($returnTypeString) -> Unit = { _ -> error(\"Configure $propertyName setter\") }",
+                        "    private var set${propertyName.capitalize()}Behavior: " +
+                            "($returnTypeString) -> Unit = { _ -> error(\"Configure $propertyName setter\") }",
                     )
                 }
             }
@@ -1021,17 +1034,20 @@ internal class ImplementationGenerator(
             // Generate behavior properties for open properties (optional override, default to super)
             for (property in analysis.openProperties) {
                 val propertyName = property.name
-                val returnTypeString = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
+                val returnTypeString =
+                    typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
 
                 // Open properties default to calling super (getter)
                 appendLine(
-                    "    private var ${propertyName}Behavior: () -> $returnTypeString = { super.$propertyName }",
+                    "    private var ${propertyName}Behavior: () -> $returnTypeString = " +
+                        "{ super.$propertyName }",
                 )
 
                 // If mutable, also generate setter behavior
                 if (property.isMutable) {
                     appendLine(
-                        "    private var set${propertyName.capitalize()}Behavior: ($returnTypeString) -> Unit = { value -> super.$propertyName = value }",
+                        "    private var set${propertyName.capitalize()}Behavior: " +
+                            "($returnTypeString) -> Unit = { value -> super.$propertyName = value }",
                     )
                 }
             }

@@ -87,6 +87,24 @@ body:
       required: false
 
   - type: textarea
+    id: interface-structure
+    attributes:
+      label: Interface/Class Structure
+      description: Provide the structure of the interface or class that is causing the issue. This helps us understand what code generation scenario is failing.
+      placeholder: |
+        @Fake
+        interface UserRepository {
+            suspend fun getUser(id: String): User
+            fun observeUsers(): Flow<List<User>>
+            val currentUser: User?
+        }
+
+        data class User(val id: String, val name: String)
+      render: kotlin
+    validations:
+      required: false
+
+  - type: textarea
     id: logs
     attributes:
       label: Build Logs / Stack Trace

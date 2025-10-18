@@ -61,8 +61,8 @@ class SourceSetDiscoveryTest {
         assertEquals(2, context.allSourceSets.size, "Should include jvmTest and commonMain")
         assertTrue(context.outputDirectory.contains("/project/build/generated/fakt"))
         assertTrue(
-            context.outputDirectory.contains("test"),
-            "Test output should go to test directory"
+            context.outputDirectory.contains("Test"),
+            "Test output should go to test directory (jvmTest, commonTest, etc.)"
         )
     }
 
@@ -100,8 +100,8 @@ class SourceSetDiscoveryTest {
         assertFalse(context.isTest, "Should be classified as main compilation")
         assertEquals("jvmMain", context.defaultSourceSet.name)
         assertTrue(
-            context.outputDirectory.contains("main"),
-            "Main output should go to main directory"
+            context.outputDirectory.contains("Test"),
+            "Fakes always go to test directories, even when analyzing main compilation"
         )
     }
 
@@ -200,7 +200,7 @@ class SourceSetDiscoveryTest {
         // THEN
         assertEquals("integrationTest", context.compilationName)
         assertTrue(context.isTest, "Custom test suite should be classified as test")
-        assertTrue(context.outputDirectory.contains("test"))
+        assertTrue(context.outputDirectory.contains("Test"), "Should contain Test in source set name (e.g., integrationTest)")
     }
 
     @Test
@@ -348,9 +348,9 @@ class SourceSetDiscoveryTest {
         )
 
         // THEN
-        // Should follow pattern: {buildDir}/generated/fakt/{test|main}/kotlin
+        // Should follow pattern: {buildDir}/generated/fakt/{sourceSetName}/kotlin
         assertTrue(context.outputDirectory.startsWith("/Users/dev/project/build/generated/fakt"))
-        assertTrue(context.outputDirectory.contains("/test/"))
+        assertTrue(context.outputDirectory.contains("Test"), "Should contain Test in source set name")
         assertTrue(context.outputDirectory.endsWith("/kotlin"))
     }
 }

@@ -19,6 +19,7 @@ import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrDeclaration
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
@@ -79,7 +80,6 @@ class UnifiedFaktIrGenerationExtension(
         SourceSetMapper(
             outputDir = outputDir,
             messageCollector = messageCollector,
-            sourceSetResolver = sourceSetResolver,
         )
     private val interfaceAnalyzer = InterfaceAnalyzer()
 
@@ -92,7 +92,6 @@ class UnifiedFaktIrGenerationExtension(
         )
     private val codeGenerator =
         CodeGenerator(
-            typeResolver = typeResolver,
             importResolver = importResolver,
             sourceSetMapper = sourceSetMapper,
             generators = generators,
@@ -124,7 +123,9 @@ class UnifiedFaktIrGenerationExtension(
             messageCollector?.reportInfo("Fakt: Discovered ${fakeClasses.size} @Fake annotated classes")
 
             if (fakeInterfaces.isEmpty() && fakeClasses.isEmpty()) {
-                messageCollector?.reportInfo("Fakt: No @Fake interfaces or classes found in module ${moduleFragment.name}")
+                messageCollector?.reportInfo(
+                    "Fakt: No @Fake interfaces or classes found in module ${moduleFragment.name}",
+                )
                 messageCollector?.reportInfo("Fakt: Checked ${moduleFragment.files.size} files")
                 messageCollector?.reportInfo("============================================")
                 return
@@ -177,7 +178,8 @@ class UnifiedFaktIrGenerationExtension(
             }
 
             messageCollector?.reportInfo(
-                "Fakt: IR-native generation completed successfully (${interfacesToProcess.size} interfaces, ${classesToProcess.size} classes)",
+                "Fakt: IR-native generation completed successfully " +
+                    "(${interfacesToProcess.size} interfaces, ${classesToProcess.size} classes)",
             )
         } catch (e: Exception) {
             // Top-level error boundary: Catch all exceptions to prevent compiler crashes
@@ -263,37 +265,47 @@ class UnifiedFaktIrGenerationExtension(
 
         moduleFragment.files.forEach { file ->
             file.declarations.forEach { declaration ->
-                if (declaration is IrClass &&
-                    declaration.kind == org.jetbrains.kotlin.descriptors.ClassKind.INTERFACE &&
-                    declaration.modality != org.jetbrains.kotlin.descriptors.Modality.SEALED &&
-                    declaration.origin != org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin.IR_EXTERNAL_DECLARATION_STUB
-                ) {
-                    val matchingAnnotation =
-                        declaration.annotations.find { annotation ->
-                            val annotationFqName = annotation.type.classFqName?.asString()
-                            annotationFqName != null && (
-                                optimizations.isConfiguredFor(annotationFqName) ||
-                                    hasGeneratesFakeMetaAnnotation(annotation)
-                            )
-                        }
-
-                    if (matchingAnnotation != null) {
-                        discoveredInterfaces.add(declaration)
-
-                        // Index type for optimization tracking
-                        val typeInfo = createTypeInfo(declaration)
-                        optimizations.indexType(typeInfo)
-
-                        messageCollector?.reportInfo(
-                            "Fakt: Discovered interface with @Fake: ${declaration.name}",
-                        )
-                    }
-                }
+                processDeclarationForFake(declaration, discoveredInterfaces)
             }
         }
 
         return discoveredInterfaces
     }
+
+    private fun processDeclarationForFake(
+        declaration: IrDeclaration,
+        discoveredInterfaces: MutableList<IrClass>,
+    ) {
+        if (!isValidFakeInterface(declaration)) return
+
+        val irClass = declaration as IrClass
+        val matchingAnnotation =
+            irClass.annotations.find { annotation ->
+                val annotationFqName = annotation.type.classFqName?.asString()
+                annotationFqName != null && (
+                    optimizations.isConfiguredFor(annotationFqName) ||
+                        hasGeneratesFakeMetaAnnotation(annotation)
+                )
+            }
+
+        if (matchingAnnotation != null) {
+            discoveredInterfaces.add(irClass)
+
+            // Index type for optimization tracking
+            val typeInfo = createTypeInfo(irClass)
+            optimizations.indexType(typeInfo)
+
+            messageCollector?.reportInfo(
+                "Fakt: Discovered interface with @Fake: ${irClass.name}",
+            )
+        }
+    }
+
+    private fun isValidFakeInterface(declaration: IrDeclaration): Boolean =
+        declaration is IrClass &&
+            declaration.kind == org.jetbrains.kotlin.descriptors.ClassKind.INTERFACE &&
+            declaration.modality != org.jetbrains.kotlin.descriptors.Modality.SEALED &&
+            declaration.origin != org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin.IR_EXTERNAL_DECLARATION_STUB
 
     /**
      * Discovers all @Fake annotated classes in the module.

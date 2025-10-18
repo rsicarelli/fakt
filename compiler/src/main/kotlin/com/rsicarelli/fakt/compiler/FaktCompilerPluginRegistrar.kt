@@ -136,7 +136,8 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
         if (options.sourceSetContext != null) {
             messageCollector.report(
                 CompilerMessageSeverity.INFO,
-                "Fakt: Using SourceSetContext (${options.sourceSetContext.compilationName}/${options.sourceSetContext.targetName})",
+                "Fakt: Using SourceSetContext " +
+                    "(${options.sourceSetContext.compilationName}/${options.sourceSetContext.targetName})",
             )
         } else {
             messageCollector.report(

@@ -62,8 +62,6 @@ internal class FactoryGenerator {
                 configClassName
             }
 
-        val inlineModifier = if (hasGenerics) "inline " else ""
-
         return buildString {
             // Format: inline fun <reified T> fakeFoo(...) or fun fakeFoo(...)
             val functionSignature =
@@ -77,7 +75,9 @@ internal class FactoryGenerator {
             val whereClausePart = if (whereClause.isNotEmpty()) " where $whereClause" else ""
 
             appendLine(
-                "$functionSignature(configure: $configWithGenerics.() -> Unit = {}): $interfaceWithGenerics$whereClausePart {",
+                "$functionSignature(" +
+                    "configure: $configWithGenerics.() -> Unit = {}" +
+                    "): $interfaceWithGenerics$whereClausePart {",
             )
 
             // Phase 2: Use simple type parameter names for constructor (not reified, no constraints)
@@ -88,7 +88,10 @@ internal class FactoryGenerator {
                     ""
                 }
 
-            appendLine("    return $fakeClassName$constructorTypeParams().apply { $configWithGenerics(this).configure() }")
+            appendLine(
+                "    return $fakeClassName$constructorTypeParams().apply { " +
+                    "$configWithGenerics(this).configure() }",
+            )
             appendLine("}")
         }
     }
@@ -152,15 +155,22 @@ internal class FactoryGenerator {
             // Generate factory function signature with where clause if needed
             if (whereClause.isNotEmpty()) {
                 appendLine(
-                    "$factoryFunctionName(configure: $configClassName$typeArguments.() -> Unit = {}): $classWithGenerics where $whereClause {",
+                    "$factoryFunctionName(" +
+                        "configure: $configClassName$typeArguments.() -> Unit = {}" +
+                        "): $classWithGenerics where $whereClause {",
                 )
             } else {
                 appendLine(
-                    "$factoryFunctionName(configure: $configClassName$typeArguments.() -> Unit = {}): $classWithGenerics {",
+                    "$factoryFunctionName(" +
+                        "configure: $configClassName$typeArguments.() -> Unit = {}" +
+                        "): $classWithGenerics {",
                 )
             }
 
-            appendLine("    return $fakeClassName$typeArguments().apply { $configClassName$typeArguments(this).configure() }")
+            appendLine(
+                "    return $fakeClassName$typeArguments().apply { " +
+                    "$configClassName$typeArguments(this).configure() }",
+            )
             appendLine("}")
         }
     }
