@@ -33,9 +33,11 @@ class FaktCompilerPluginRegistrarSimpleTest {
     fun `GIVEN registrar instance WHEN checking plugin inheritance THEN should extend CompilerPluginRegistrar`() =
         runTest {
             val registrar = FaktCompilerPluginRegistrar()
-            val isPluginRegistrar = registrar is CompilerPluginRegistrar
 
-            assertTrue(isPluginRegistrar, "Should extend CompilerPluginRegistrar")
+            // Suppress "Check for instance is always 'true'" - intentional smoke test
+            // This documents the architectural requirement that FaktCompilerPluginRegistrar extends CompilerPluginRegistrar
+            @Suppress("USELESS_IS_CHECK")
+            assertTrue(registrar is CompilerPluginRegistrar, "Should extend CompilerPluginRegistrar")
             assertNotNull(registrar, "Registrar instance should not be null")
         }
 

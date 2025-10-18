@@ -30,7 +30,6 @@ public final synthetic class com/rsicarelli/fakt/compiler/api/SourceSetContext$$
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/rsicarelli/fakt/compiler/api/SourceSetContext;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/rsicarelli/fakt/compiler/api/SourceSetContext$Companion {
@@ -59,7 +58,6 @@ public final synthetic class com/rsicarelli/fakt/compiler/api/SourceSetInfo$$ser
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/rsicarelli/fakt/compiler/api/SourceSetInfo;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/rsicarelli/fakt/compiler/api/SourceSetInfo$Companion {

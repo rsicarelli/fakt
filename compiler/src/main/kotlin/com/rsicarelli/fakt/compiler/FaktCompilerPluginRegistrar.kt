@@ -151,7 +151,6 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
                 messageCollector = messageCollector,
                 outputDir = options.outputDir,
                 fakeAnnotations = customAnnotations,
-                sourceSetContext = options.sourceSetContext,
             ),
         )
     }
