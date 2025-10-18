@@ -1,0 +1,94 @@
+name: Publish Hotfix
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IS_CI: yes
+
+jobs:
+  validation:
+    name: Run Validations
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if branch is main
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        run: |
+          echo "Hotfix workflow should not be triggered from main/master branch"
+          echo "Please create a hotfix branch (e.g., hotfix/1.2.x) and run from there"
+          exit 1
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Run Ktlint
+        uses: ./.github/actions/validate-ktlint
+
+      - name: Run Detekt
+        uses: ./.github/actions/validate-detekt
+
+      - name: Run Spotless
+        uses: ./.github/actions/validate-spotless
+
+      - name: Run License Check
+        uses: ./.github/actions/validate-licenses
+
+      - name: Run Tests
+        uses: ./.github/actions/run-tests
+
+  publish:
+    name: Publish Hotfix to Maven Central
+    runs-on: ubuntu-latest
+    needs: validation
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Configure Git
+        run: |
+          git config --global user.name 'fakt-bot'
+          git config --global user.email 'bot@rsicarelli.dev'
+
+      - name: Bump Patch Version
+        id: bump
+        run: |
+          kotlin .github/scripts/bump-version.main.kts patch
+
+      - name: Publish to Maven Central
+        uses: ./.github/actions/publish-maven-central
+        with:
+          version: ${{ steps.bump.outputs.version_new }}
+          maven-central-username: ${{ secrets.ORG_GRADLE_PROJECT_mavenCentralUsername }}
+          maven-central-password: ${{ secrets.ORG_GRADLE_PROJECT_mavenCentralPassword }}
+          signing-key: ${{ secrets.ORG_GRADLE_PROJECT_signingInMemoryKey }}
+          signing-password: ${{ secrets.ORG_GRADLE_PROJECT_signingInMemoryKeyPassword }}
+
+      - name: Commit Version Bump
+        run: |
+          git add gradle.properties
+          git commit -m "chore: hotfix ${{ steps.bump.outputs.version_new }}"
+
+      - name: Create and Push Tag
+        run: |
+          git tag ${{ steps.bump.outputs.tag }}
+          git push origin ${{ steps.bump.outputs.tag }}
+
+      - name: Create GitHub Release
+        uses: ./.github/actions/create-github-release
+        with:
+          tag: ${{ steps.bump.outputs.tag }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push Hotfix Branch
+        run: |
+          git push origin HEAD

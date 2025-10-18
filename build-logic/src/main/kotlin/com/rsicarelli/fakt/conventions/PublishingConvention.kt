@@ -14,8 +14,10 @@ import org.gradle.api.Project
  * - GROUP=com.rsicarelli.fakt
  * - VERSION_NAME=1.0.0-SNAPSHOT
  *
- * **Note**: This convention should be applied before maven-publish plugin
- * to ensure correct artifact coordinates.
+ * **Note:** The vanniktech/gradle-maven-publish-plugin is configured via
+ * gradle.properties and automatically picks up POM metadata.
+ *
+ * See: https://vanniktech.github.io/gradle-maven-publish-plugin/
  */
 fun Project.applyPublishingConvention() {
     // Read from gradle.properties (inherited from root project)

@@ -1,0 +1,136 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in Fakt
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug! Please provide as much detail as possible to help us reproduce and fix the issue.
+
+  - type: input
+    id: fakt-version
+    attributes:
+      label: Fakt Version
+      description: Which version of Fakt are you using?
+      placeholder: e.g., 1.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: kotlin-version
+    attributes:
+      label: Kotlin Version
+      description: Which version of Kotlin are you using?
+      placeholder: e.g., 2.2.10
+    validations:
+      required: true
+
+  - type: input
+    id: gradle-version
+    attributes:
+      label: Gradle Version
+      description: Which version of Gradle are you using?
+      placeholder: e.g., 8.5
+    validations:
+      required: true
+
+  - type: dropdown
+    id: project-type
+    attributes:
+      label: Project Type
+      description: What type of project are you using?
+      options:
+        - Kotlin JVM
+        - Kotlin Multiplatform
+        - Other (please specify in description)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: When I annotate an interface with @Fake...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Step-by-step instructions to reproduce the issue.
+      placeholder: |
+        1. Create interface with annotation...
+        2. Run ./gradlew build...
+        3. Observe error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: The fake should be generated successfully...
+    validations:
+      required: false
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: Compilation fails with error...
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Build Logs / Stack Trace
+      description: Please provide relevant build output or stack traces.
+      placeholder: |
+        ./gradlew build --info
+
+        Paste output here...
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: sample-code
+    attributes:
+      label: Sample Code
+      description: Minimal code snippet that reproduces the issue.
+      placeholder: |
+        @Fake
+        interface MyInterface {
+            fun myMethod(): String
+        }
+      render: kotlin
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other context about the problem (dependencies, configurations, etc.)
+      placeholder: This happens when using with KSP...
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched existing issues to ensure this is not a duplicate
+          required: true
+        - label: I have provided all required information above
+          required: true
+        - label: I am using a supported version of Fakt (see SECURITY.md)
+          required: false

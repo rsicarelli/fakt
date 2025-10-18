@@ -1,0 +1,31 @@
+name: Publish to Maven Central
+description: Publish artifacts to Maven Central Portal
+
+inputs:
+  version:
+    description: 'Version to publish'
+    required: true
+  maven-central-username:
+    description: 'Maven Central username (token)'
+    required: true
+  maven-central-password:
+    description: 'Maven Central password (token)'
+    required: true
+  signing-key:
+    description: 'GPG signing key (Base64 encoded)'
+    required: true
+  signing-password:
+    description: 'GPG signing key passphrase'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Publish to Maven Central
+      shell: bash
+      run: ./gradlew publishAllPublicationsToMavenCentralRepository --no-daemon -Pversion=${{ inputs.version }}
+      env:
+        ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ inputs.maven-central-username }}
+        ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ inputs.maven-central-password }}
+        ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ inputs.signing-key }}
+        ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ inputs.signing-password }}

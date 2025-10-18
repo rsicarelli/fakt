@@ -1,0 +1,9 @@
+name: Validate Detekt
+description: Run Detekt static analysis
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run Detekt
+      shell: bash
+      run: ./gradlew detekt --no-daemon

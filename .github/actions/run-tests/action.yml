@@ -1,0 +1,17 @@
+name: Run Tests
+description: Execute all test suites
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run all tests
+      shell: bash
+      run: ./gradlew test --no-daemon
+
+    - name: Publish test results
+      if: success() || failure()
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      with:
+        files: '**/build/test-results/**/*.xml'
+        check_name: 'Test Results'
+        comment_mode: off

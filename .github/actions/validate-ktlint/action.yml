@@ -1,0 +1,9 @@
+name: Validate Ktlint
+description: Run ktlint formatting validation
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run ktlint
+      shell: bash
+      run: ./gradlew lintKotlin --no-daemon

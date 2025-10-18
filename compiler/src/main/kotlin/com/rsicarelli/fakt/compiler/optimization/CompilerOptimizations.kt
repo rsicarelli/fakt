@@ -71,16 +71,41 @@ interface CompilerOptimizations {
         /**
          * Creates a new [CompilerOptimizations] instance with the specified configuration.
          *
+         * Simple in-memory implementation without incremental compilation persistence.
+         *
          * @param fakeAnnotations List of fully qualified annotation names to process.
          *                       Defaults to `["com.rsicarelli.fakt.Fake"]`
-         * @param outputDir Optional output directory for cache files and incremental compilation
+         * @param outputDir Optional output directory (unused in simple implementation)
          * @return A new optimization instance configured for the specified annotations
          */
         operator fun invoke(
             fakeAnnotations: List<String> = listOf("com.rsicarelli.fakt.Fake"),
             outputDir: String? = null,
         ): CompilerOptimizations =
-            com.rsicarelli.fakt.compiler.optimization
-                .IncrementalCompiler(fakeAnnotations, outputDir)
+            object : CompilerOptimizations {
+                private val indexedTypes = mutableListOf<TypeInfo>()
+                private val generatedSignatures = mutableSetOf<String>()
+
+                override fun isConfiguredFor(annotation: String): Boolean =
+                    annotation in fakeAnnotations
+
+                override fun indexType(type: TypeInfo) {
+                    indexedTypes.add(type)
+                }
+
+                override fun findTypesWithAnnotation(annotation: String): List<TypeInfo> =
+                    indexedTypes.filter { type ->
+                        type.annotations.any { it == annotation }
+                    }
+
+                override fun needsRegeneration(type: TypeInfo): Boolean {
+                    // Always regenerate in simple mode (no incremental compilation)
+                    return true
+                }
+
+                override fun recordGeneration(type: TypeInfo) {
+                    generatedSignatures.add(type.signature)
+                }
+            }
     }
 }

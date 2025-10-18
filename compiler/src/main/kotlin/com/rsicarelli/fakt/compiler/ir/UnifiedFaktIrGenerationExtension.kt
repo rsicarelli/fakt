@@ -10,7 +10,6 @@ import com.rsicarelli.fakt.compiler.codegen.ImplementationGenerator
 import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalyzer
 import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalyzer.isFakableClass
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalyzer
-import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceDiscovery
 import com.rsicarelli.fakt.compiler.optimization.CompilerOptimizations
 import com.rsicarelli.fakt.compiler.output.SourceSetMapper
 import com.rsicarelli.fakt.compiler.types.ImportResolver
@@ -82,7 +81,6 @@ class UnifiedFaktIrGenerationExtension(
             messageCollector = messageCollector,
             sourceSetResolver = sourceSetResolver,
         )
-    private val interfaceDiscovery = InterfaceDiscovery(optimizations, messageCollector)
     private val interfaceAnalyzer = InterfaceAnalyzer()
 
     // Code generation modules following SOLID principles
@@ -118,7 +116,7 @@ class UnifiedFaktIrGenerationExtension(
         try {
             // Phase 1: Dynamic Interface & Class Discovery
             messageCollector?.reportInfo("Fakt: Phase 1 - Starting interface & class discovery")
-            val fakeInterfaces = interfaceDiscovery.discoverFakeInterfaces(moduleFragment)
+            val fakeInterfaces = discoverFakeInterfaces(moduleFragment)
             messageCollector?.reportInfo("Fakt: Discovered ${fakeInterfaces.size} @Fake annotated interfaces")
 
             // Discover fakable classes (final/abstract with open/abstract members)
@@ -181,12 +179,6 @@ class UnifiedFaktIrGenerationExtension(
             messageCollector?.reportInfo(
                 "Fakt: IR-native generation completed successfully (${interfacesToProcess.size} interfaces, ${classesToProcess.size} classes)",
             )
-
-            // Generate simple compilation report and save signatures for incremental compilation
-            (optimizations as? com.rsicarelli.fakt.compiler.optimization.IncrementalCompiler)?.generateReport(
-                outputDir,
-            )
-            (optimizations as? com.rsicarelli.fakt.compiler.optimization.IncrementalCompiler)?.saveSignatures()
         } catch (e: Exception) {
             // Top-level error boundary: Catch all exceptions to prevent compiler crashes
             // This is a legitimate use of generic exception handling at the plugin boundary
@@ -259,6 +251,49 @@ class UnifiedFaktIrGenerationExtension(
                 else -> fakeInterface to typeInfo
             }
         }
+
+    /**
+     * Discovers all @Fake annotated interfaces in the module.
+     *
+     * @param moduleFragment The IR module to search
+     * @return List of @Fake annotated interfaces
+     */
+    private fun discoverFakeInterfaces(moduleFragment: IrModuleFragment): List<IrClass> {
+        val discoveredInterfaces = mutableListOf<IrClass>()
+
+        moduleFragment.files.forEach { file ->
+            file.declarations.forEach { declaration ->
+                if (declaration is IrClass &&
+                    declaration.kind == org.jetbrains.kotlin.descriptors.ClassKind.INTERFACE &&
+                    declaration.modality != org.jetbrains.kotlin.descriptors.Modality.SEALED &&
+                    declaration.origin != org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin.IR_EXTERNAL_DECLARATION_STUB
+                ) {
+                    val matchingAnnotation =
+                        declaration.annotations.find { annotation ->
+                            val annotationFqName = annotation.type.classFqName?.asString()
+                            annotationFqName != null && (
+                                optimizations.isConfiguredFor(annotationFqName) ||
+                                    hasGeneratesFakeMetaAnnotation(annotation)
+                            )
+                        }
+
+                    if (matchingAnnotation != null) {
+                        discoveredInterfaces.add(declaration)
+
+                        // Index type for optimization tracking
+                        val typeInfo = createTypeInfo(declaration)
+                        optimizations.indexType(typeInfo)
+
+                        messageCollector?.reportInfo(
+                            "Fakt: Discovered interface with @Fake: ${declaration.name}",
+                        )
+                    }
+                }
+            }
+        }
+
+        return discoveredInterfaces
+    }
 
     /**
      * Discovers all @Fake annotated classes in the module.
@@ -352,5 +387,41 @@ class UnifiedFaktIrGenerationExtension(
         signature.append("|props:$propertyCount|funs:$functionCount")
 
         return signature.toString()
+    }
+
+    /**
+     * Checks if an annotation is itself annotated with @GeneratesFake meta-annotation.
+     *
+     * This enables support for custom annotations that are marked with @GeneratesFake,
+     * allowing users to create domain-specific fake annotations.
+     *
+     * Example:
+     * ```kotlin
+     * @GeneratesFake
+     * annotation class DomainFake
+     *
+     * @DomainFake  // Will be detected even though it's not @Fake
+     * interface PaymentService
+     * ```
+     *
+     * @param annotation The annotation to check for @GeneratesFake meta-annotation
+     * @return true if the annotation has @GeneratesFake meta-annotation, false otherwise
+     */
+    private fun hasGeneratesFakeMetaAnnotation(
+        annotation: org.jetbrains.kotlin.ir.expressions.IrConstructorCall,
+    ): Boolean {
+        try {
+            val annotationType = annotation.type as? org.jetbrains.kotlin.ir.types.IrSimpleType ?: return false
+            val annotationClass = annotationType.classifier.owner as? IrClass ?: return false
+
+            return annotationClass.annotations.any { metaAnnotation ->
+                metaAnnotation.type.classFqName?.asString() == "com.rsicarelli.fakt.GeneratesFake"
+            }
+        } catch (e: Exception) {
+            messageCollector?.reportInfo(
+                "Fakt: Could not check meta-annotation for ${annotation.type.classFqName}: ${e.message}",
+            )
+            return false
+        }
     }
 }
