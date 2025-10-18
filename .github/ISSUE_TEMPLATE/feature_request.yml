@@ -1,0 +1,110 @@
+name: Feature Request
+description: Suggest a new feature or enhancement for Fakt
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a new feature! Please provide detailed information to help us understand your request.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? Is your feature request related to a problem?
+      placeholder: I'm always frustrated when...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like to see.
+      placeholder: |
+        I would like Fakt to support...
+
+        Example usage:
+        ```kotlin
+        @Fake
+        interface MyInterface {
+            // Your proposed feature here
+        }
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Describe alternative solutions or features you've considered.
+      placeholder: |
+        Alternative 1: ...
+        Alternative 2: ...
+        Why the proposed solution is better: ...
+    validations:
+      required: false
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact
+      description: How important is this feature to you?
+      options:
+        - Critical - Blocking my adoption of Fakt
+        - High - Significantly improves my workflow
+        - Medium - Nice to have
+        - Low - Minor improvement
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      description: Which part of Fakt does this feature affect?
+      options:
+        - Compiler Plugin
+        - Gradle Plugin
+        - Runtime API
+        - Code Generation
+        - Documentation
+        - Build/CI
+        - Other (please specify in additional context)
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Describe a specific use case where this feature would be beneficial.
+      placeholder: |
+        In my project, I need to...
+        This feature would help by...
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or examples about the feature request.
+      placeholder: Similar features in other tools...
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched existing issues/discussions to ensure this is not a duplicate
+          required: true
+        - label: I have provided a clear problem statement and proposed solution
+          required: true
+        - label: I am willing to contribute a PR for this feature (optional)
+          required: false

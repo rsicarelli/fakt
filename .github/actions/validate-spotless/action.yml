@@ -1,0 +1,9 @@
+name: Validate Spotless
+description: Validate code formatting with Spotless
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run Spotless Check
+      shell: bash
+      run: ./gradlew spotlessCheck --no-daemon

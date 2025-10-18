@@ -1,0 +1,9 @@
+name: Validate Licenses
+description: Check dependency licenses for compatibility
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run License Check
+      shell: bash
+      run: ./gradlew checkLicense --no-daemon

@@ -1,0 +1,326 @@
+# Contributing to Fakt
+
+Thank you for your interest in contributing to Fakt! This document provides guidelines and instructions for contributing.
+
+## Table of Contents
+
+- [Code of Conduct](#code-of-conduct)
+- [Getting Started](#getting-started)
+- [Development Setup](#development-setup)
+- [Making Changes](#making-changes)
+- [Testing Guidelines](#testing-guidelines)
+- [Pull Request Process](#pull-request-process)
+- [Commit Convention](#commit-convention)
+- [Community](#community)
+
+---
+
+## Code of Conduct
+
+This project adheres to the Contributor Covenant [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- **JDK 21** (Temurin recommended)
+- **Kotlin 2.2.10+**
+- **Gradle 8.0+** (wrapper provided)
+- **Git**
+
+### Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/rsicarelli/fakt.git
+cd fakt/ktfake
+
+# Build the project
+make shadowJar
+# or: ./gradlew :compiler:shadowJar
+
+# Run tests
+make test
+# or: ./gradlew test
+
+# Test with samples
+make test-sample
+# or: ./gradlew :samples:single-module:build
+```
+
+---
+
+## Development Setup
+
+### 1. Fork and Clone
+
+```bash
+# Fork the repository on GitHub
+# Clone your fork
+git clone https://github.com/YOUR_USERNAME/fakt.git
+cd fakt/ktfake
+
+# Add upstream remote
+git remote add upstream https://github.com/rsicarelli/fakt.git
+```
+
+### 2. Create a Feature Branch
+
+```bash
+# Update main
+git checkout main
+git pull upstream main
+
+# Create feature branch
+git checkout -b feature/my-awesome-feature
+```
+
+### 3. Build and Test
+
+```bash
+# Full build (includes compiler plugin shadowJar)
+make shadowJar
+
+# Run all validations
+make test              # Tests
+./gradlew detekt       # Static analysis
+./gradlew spotlessCheck # Format check
+./gradlew checkLicense  # License audit
+
+# Test with samples
+make test-sample       # Single-module sample
+```
+
+### 4. IDE Setup
+
+**IntelliJ IDEA (Recommended):**
+1. Open `ktfake/` directory
+2. Import as Gradle project
+3. Wait for Gradle sync
+4. Enable Kotlin plugin
+5. Configure JDK 21
+
+**Code Style:**
+- Formatting: Spotless (ktfmt Google style)
+- Run `make format` or `./gradlew spotlessApply` before committing
+
+---
+
+## Making Changes
+
+### Project Structure
+
+```
+ktfake/
+├── compiler/           # Main compiler plugin (FIR + IR)
+├── compiler-api/       # Serialization models
+├── gradle-plugin/      # Gradle plugin
+├── runtime/            # @Fake annotation (KMP)
+├── samples/            # Integration test samples
+└── build-logic/        # Convention plugins
+```
+
+### Key Areas
+
+**Compiler Plugin (FIR + IR):**
+- FIR phase: `compiler/src/main/kotlin/.../fir/`
+- IR phase: `compiler/src/main/kotlin/.../codegen/`
+- Always check [Metro](https://github.com/ZacSweers/metro) for patterns
+
+**Code Generation:**
+- Implementation: `compiler/src/main/kotlin/.../generation/ImplementationGenerator.kt`
+- Factory: `compiler/src/main/kotlin/.../generation/FactoryGenerator.kt`
+- Config DSL: `compiler/src/main/kotlin/.../generation/ConfigurationDslGenerator.kt`
+
+**Testing:**
+- Location: `compiler/src/test/kotlin/`
+- **ABSOLUTE REQUIREMENT:** GIVEN-WHEN-THEN pattern
+- Framework: Vanilla JUnit5 + kotlin-test
+- See: `.claude/docs/validation/testing-guidelines.md`
+
+---
+
+## Testing Guidelines
+
+### The Absolute Standard: GIVEN-WHEN-THEN
+
+**✅ REQUIRED:**
+```kotlin
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class MyFeatureTest {
+    @Test
+    fun `GIVEN interface with suspending function WHEN generating fake THEN should compile successfully`() = runTest {
+        // GIVEN
+        val interface = createInterface()
+
+        // WHEN
+        val result = generateFake(interface)
+
+        // THEN
+        assertTrue(result.compiles)
+    }
+}
+```
+
+**❌ PROHIBITED:**
+```kotlin
+// "should" naming
+fun `should generate fake for interface`()
+
+// Custom BDD frameworks
+class `MyFeatureSpec` : StringSpec({ ... })
+
+// Mocks (use fakes instead)
+val mock = mockk<Service>()
+```
+
+**Rules:**
+- ✅ UPPERCASE GIVEN-WHEN-THEN in test names
+- ✅ `@TestInstance(TestInstance.Lifecycle.PER_CLASS)`
+- ✅ Isolated instances (no shared state)
+- ✅ Vanilla JUnit5 + kotlin-test assertions
+- ✅ Fakes instead of mocks
+- ❌ NO "should" pattern
+- ❌ NO custom BDD frameworks
+- ❌ NO custom matchers
+
+**Full Specification:** `.claude/docs/validation/testing-guidelines.md`
+
+---
+
+## Pull Request Process
+
+### 1. Before Submitting
+
+**Run all validations:**
+```bash
+./gradlew spotlessApply  # Format code
+./gradlew lintKotlin     # Ktlint
+./gradlew detekt         # Static analysis
+./gradlew test           # All tests
+./gradlew checkLicense   # License audit
+```
+
+### 2. Commit Your Changes
+
+**Use Developer Certificate of Origin (DCO):**
+```bash
+git add .
+git commit -s -m "feat: add support for generic types"
+```
+
+The `-s` flag adds `Signed-off-by: Your Name <your.email@example.com>` to your commit.
+
+**By signing off, you certify that:**
+- You have the right to submit the contribution under Apache 2.0
+- You agree to the [Developer Certificate of Origin](https://developercertificate.org/)
+
+### 3. Push and Create PR
+
+```bash
+git push origin feature/my-awesome-feature
+```
+
+**Create Pull Request on GitHub:**
+- Fill out the PR template
+- Link any related issues
+- Ensure all CI checks pass
+
+### 4. Review Process
+
+**What happens next:**
+1. Automated checks run (ktlint, detekt, tests, etc.)
+2. Maintainer reviews code
+3. Discussion/changes if needed
+4. Approval and merge
+
+**CI Checks (must all pass):**
+- ✅ validate-ktlint
+- ✅ validate-detekt
+- ✅ validate-spotless
+- ✅ validate-licenses
+- ✅ run-tests
+- ✅ build-samples
+
+---
+
+## Commit Convention
+
+While not strictly enforced, we encourage [Conventional Commits](https://www.conventionalcommits.org/) for clarity:
+
+**Format:** `<type>(<scope>): <description>`
+
+**Types:**
+- `feat:` - New feature
+- `fix:` - Bug fix
+- `docs:` - Documentation changes
+- `refactor:` - Code refactoring
+- `test:` - Test additions/changes
+- `chore:` - Build/tooling changes
+
+**Examples:**
+```bash
+feat(compiler): add support for generic return types
+fix(gradle-plugin): correct source set mapping
+docs(readme): update installation instructions
+refactor(ir): simplify IrTypeResolver logic
+test(codegen): add tests for nested interfaces
+chore(deps): update Kotlin to 2.2.11
+```
+
+**Breaking Changes:**
+```bash
+feat!: change @Fake annotation parameters
+
+BREAKING CHANGE: The @Fake annotation now requires explicit target specification
+```
+
+---
+
+## Community
+
+### Getting Help
+
+- **GitHub Discussions:** [Ask questions](https://github.com/rsicarelli/fakt/discussions)
+- **Issues:** [Report bugs](https://github.com/rsicarelli/fakt/issues/new?template=bug_report.yml)
+- **Slack:** [Join our channel](#) (coming soon)
+
+### Reporting Bugs
+
+**Use the bug report template:**
+1. Go to [Issues](https://github.com/rsicarelli/fakt/issues/new)
+2. Select "Bug Report"
+3. Fill out all sections:
+   - Kotlin version
+   - Gradle version
+   - Fakt version
+   - Steps to reproduce
+   - Expected vs actual behavior
+
+### Suggesting Features
+
+**Use the feature request template:**
+1. Go to [Issues](https://github.com/rsicarelli/fakt/issues/new)
+2. Select "Feature Request"
+3. Describe:
+   - Problem statement
+   - Proposed solution
+   - Alternatives considered
+
+---
+
+## License
+
+By contributing to Fakt, you agree that your contributions will be licensed under the [Apache License 2.0](LICENSE).
+
+---
+
+## Questions?
+
+If you have questions not covered here, feel free to:
+- Open a [Discussion](https://github.com/rsicarelli/fakt/discussions)
+- Reach out to [@rsicarelli](https://github.com/rsicarelli)
+
+Thank you for contributing! 🚀

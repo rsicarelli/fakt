@@ -6,18 +6,22 @@ plugins {
 }
 
 dependencies {
+    // Kotlin Gradle Plugins
     implementation(libs.kotlin.gradlePlugin)
     implementation(libs.kotlin.gradlePlugin.api)
-    // Plugins used in convention plugins - using versions from catalog
-    compileOnly("com.vanniktech.maven.publish:com.vanniktech.maven.publish.gradle.plugin:${libs.versions.mavenPublish.get()}")
-    implementation("com.diffplug.spotless:spotless-plugin-gradle:${libs.versions.spotless.get()}")
-    implementation(libs.ktlint.gradle.plugin)
-    implementation("io.gitlab.arturbosch.detekt:detekt-gradle-plugin:${libs.versions.detekt.get()}")
-    // Root plugin dependencies
-    implementation(libs.dokka.gradlePlugin)
-    implementation("org.jetbrains.kotlinx.binary-compatibility-validator:org.jetbrains.kotlinx.binary-compatibility-validator.gradle.plugin:${libs.versions.binaryCompatibilityValidator.get()}")
 
-    // Test dependencies for convention plugin testing
+    // Convention Plugins (for module conventions)
+    compileOnly(libs.mavenPublish.gradlePlugin)
+    implementation(libs.spotless.gradlePlugin)
+    implementation(libs.ktlint.gradlePlugin)
+    implementation(libs.detekt.gradlePlugin)
+
+    // Root Plugin Dependencies
+    implementation(libs.dokka.gradlePlugin)
+    implementation(libs.binaryCompatibilityValidator.gradlePlugin)
+    implementation(libs.licenseReport.gradlePlugin)
+
+    // Test Dependencies
     testImplementation(gradleTestKit())
     testImplementation(kotlin("test-junit5"))
 }
@@ -35,10 +39,6 @@ gradlePlugin {
         register("fakt-multiplatform") {
             id = "fakt-multiplatform"
             implementationClass = "FaktMultiplatformPlugin"
-        }
-        register("fakt-convention") {
-            id = "fakt-convention"
-            implementationClass = "FaktConventionPlugin"
         }
     }
 }

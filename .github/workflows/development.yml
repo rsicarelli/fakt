@@ -1,0 +1,97 @@
+name: Development
+
+on:
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IS_CI: yes
+
+jobs:
+  validate-ktlint:
+    name: Validate Ktlint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Run Ktlint
+        uses: ./.github/actions/validate-ktlint
+
+  validate-detekt:
+    name: Validate Detekt
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Run Detekt
+        uses: ./.github/actions/validate-detekt
+
+  validate-spotless:
+    name: Validate Spotless
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Run Spotless
+        uses: ./.github/actions/validate-spotless
+
+  validate-licenses:
+    name: Validate Licenses
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Run License Check
+        uses: ./.github/actions/validate-licenses
+
+  run-tests:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Execute Tests
+        uses: ./.github/actions/run-tests
+
+  build-samples:
+    name: Build Samples
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Publish to Maven Local
+        run: ./gradlew publishToMavenLocal --no-daemon
+
+      - name: Build single-module sample
+        run: ./gradlew :samples:single-module:build --no-daemon
+
+      - name: Build multi-module sample
+        run: ./gradlew :samples:multi-module:build --no-daemon

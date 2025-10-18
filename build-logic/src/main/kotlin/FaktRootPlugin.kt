@@ -5,6 +5,7 @@ import com.rsicarelli.fakt.conventions.applyApiValidationConvention
 import com.rsicarelli.fakt.conventions.applyDetektToAllProjects
 import com.rsicarelli.fakt.conventions.applyDokkaConvention
 import com.rsicarelli.fakt.conventions.applyKtlintToAllProjects
+import com.rsicarelli.fakt.conventions.applyLicenseReportConvention
 import com.rsicarelli.fakt.conventions.applySpotlessPredeclare
 import com.rsicarelli.fakt.conventions.applySpotlessToAllProjects
 import org.gradle.api.Plugin
@@ -16,6 +17,7 @@ import org.gradle.api.Project
  * Applies and configures:
  * - Binary Compatibility Validator (apiValidation)
  * - Dokka documentation
+ * - License Report (dependency license auditing)
  * - Spotless formatting (predeclareDeps + allprojects)
  * - Ktlint linting (allprojects)
  * - Detekt static analysis (allprojects)
@@ -39,6 +41,7 @@ class FaktRootPlugin : Plugin<Project> {
             // Apply conventions (all logic in conventions/ directory)
             applyApiValidationConvention()
             applyDokkaConvention()
+            applyLicenseReportConvention()
             applySpotlessPredeclare()
             applySpotlessToAllProjects()
             applyKtlintToAllProjects()

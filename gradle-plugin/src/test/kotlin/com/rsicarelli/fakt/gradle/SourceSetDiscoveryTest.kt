@@ -354,4 +354,3 @@ class SourceSetDiscoveryTest {
         assertTrue(context.outputDirectory.endsWith("/kotlin"))
     }
 }
-
