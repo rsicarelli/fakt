@@ -25,25 +25,99 @@ internal class SourceSetMapper(
     private val sourceSetResolver: com.rsicarelli.fakt.compiler.SourceSetResolver? = null,
 ) {
     /**
-     * Get generated sources directory with intelligent source set mapping and fallback strategy.
-     * Maps source locations to appropriate test source sets with hierarchical fallback:
-     * - commonMain -> commonTest
-     * - jvmMain -> jvmTest
-     * - androidMain -> androidUnitTest
-     * - iosMain -> iosTest (with fallback to appleTest -> nativeTest -> commonTest)
-     * - main (JVM-only) -> test
+     * Get generated sources directory with source set-based routing.
+     *
+     * **Strategy**:
+     * 1. Use provided source set name (extracted from IrFile path) as source of truth
+     * 2. Map source set to test source set (jvmMain → jvmTest)
+     * 3. Fall back to Gradle-provided output directory if no source set provided
+     * 4. Ultimate fallback: intelligent source set mapping from module name
+     *
+     * **Example**:
+     * - Source set: "jvmMain" → output: "build/generated/fakt/jvmTest/kotlin"
+     * - Source set: "commonMain" (in jvmMain compilation) → output: "build/generated/fakt/commonTest/kotlin"
+     * - Source set: null → fall back to Gradle-provided or module-based mapping
+     *
+     * This solves the cross-platform compilation problem where a single compilation
+     * (e.g., jvmMain) contains files from multiple source sets (jvmMain + commonMain via dependsOn).
      *
      * @param moduleFragment The IR module fragment to analyze
+     * @param sourceSetName The source set name extracted from IrFile path (optional)
      * @return File pointing to the appropriate generated sources directory
      */
-    fun getGeneratedSourcesDir(moduleFragment: IrModuleFragment): File {
+    fun getGeneratedSourcesDir(
+        moduleFragment: IrModuleFragment,
+        sourceSetName: String? = null,
+    ): File {
         val moduleName = moduleFragment.name.asString().lowercase()
 
-        // If outputDir is explicitly provided by Gradle plugin, use it directly
-        // The Gradle plugin already handles the source set mapping (main -> test)
+        // If source set provided, use it as source of truth
+        if (sourceSetName != null) {
+            return resolveOutputDirectoryForSourceSet(sourceSetName)
+        }
+
+        // Fall back to Gradle-provided directory (respects SourceSetContext from plugin)
         return tryGradleProvidedOutputDir()
             ?: tryIntelligentSourceSetMapping(moduleName)
     }
+
+    /**
+     * Resolves output directory for a specific source set.
+     *
+     * **Strategy**:
+     * 1. Map source set to test source set (jvmMain → jvmTest)
+     * 2. Build output path: build/generated/fakt/{testSourceSet}/kotlin
+     *
+     * **Important**: When source set is explicitly provided (via IrFile extraction),
+     * we bypass the Gradle-provided directory to avoid double nesting.
+     *
+     * @param sourceSet Source set name (e.g., "jvmMain", "commonMain")
+     * @return File pointing to the test source set directory
+     */
+    private fun resolveOutputDirectoryForSourceSet(sourceSet: String): File {
+        // Map to test source set
+        val testSourceSet = mapSourceSetToTestSourceSet(sourceSet)
+
+        // Build output path from project base, NOT Gradle-provided dir
+        // This avoids double nesting like: .../commonTest/kotlin/jvmTest/kotlin
+        val projectBase = resolveProjectBaseDirectory()
+        val outputPath = File(projectBase, "$testSourceSet/kotlin")
+
+        messageCollector?.reportInfo(
+            "Fakt: Source set routing - $sourceSet → $testSourceSet\n" +
+                "  Output: ${outputPath.absolutePath}",
+        )
+
+        return outputPath
+    }
+
+    /**
+     * Maps source set to corresponding test source set.
+     *
+     * **Mapping Rules**:
+     * - {platform}Main → {platform}Test
+     * - commonMain → commonTest
+     * - jvmMain → jvmTest
+     * - Already test → return as-is
+     *
+     * @param sourceSet Source set name
+     * @return Corresponding test source set name
+     */
+    private fun mapSourceSetToTestSourceSet(sourceSet: String): String =
+        when {
+            // Already a test source set
+            sourceSet.endsWith("Test") || sourceSet.endsWith("test") -> sourceSet
+
+            // Main source sets → test source sets
+            sourceSet.endsWith("Main") -> sourceSet.removeSuffix("Main") + "Test"
+            sourceSet.endsWith("main") -> sourceSet.removeSuffix("main") + "test"
+
+            // Special case: Android
+            sourceSet == "android" || sourceSet == "androidMain" -> ANDROID_UNIT_TEST_TARGET
+
+            // Fallback: append Test
+            else -> "${sourceSet}Test"
+        }
 
     /**
      * Attempts to use Gradle-provided output directory if available.
@@ -286,7 +360,39 @@ internal class SourceSetMapper(
         }
 
     /**
+     * Resolves the project base directory (build/generated/fakt) WITHOUT source set.
+     *
+     * **Purpose**: Used when source set is extracted from IrFile to avoid double nesting.
+     *
+     * @return The base directory: /project/build/generated/fakt
+     */
+    private fun resolveProjectBaseDirectory(): File {
+        // Try to extract project base from Gradle-provided outputDir
+        if (outputDir != null) {
+            val gradleDir = File(outputDir)
+            // outputDir might be: /project/build/generated/fakt/commonTest/kotlin
+            // We want: /project/build/generated/fakt
+            val faktIndex = gradleDir.absolutePath.indexOf("/build/generated/fakt")
+            if (faktIndex != -1) {
+                val projectRoot = gradleDir.absolutePath.substring(0, faktIndex)
+                return File(projectRoot, "build/generated/fakt")
+            }
+        }
+
+        // Fallback: find project directory
+        var dir = File(System.getProperty("user.dir"))
+        if (dir.absolutePath.contains("daemon")) {
+            dir = findProjectFromDaemon() ?: dir
+        }
+        dir = findProjectRoot(dir)
+        return File(dir, "build/generated/fakt")
+    }
+
+    /**
      * Resolves the base directory for generated sources.
+     *
+     * **Note**: This may include source set path from Gradle. Use `resolveProjectBaseDirectory()`
+     * when explicit source set is provided to avoid double nesting.
      *
      * @return The base directory for output
      */
