@@ -28,8 +28,7 @@ internal class FakeKotlinTarget(
     override val runtimeElementsConfigurationName get() = error("Not used")
     override val sourcesElementsConfigurationName get() = error("Not used")
 
-    override fun mavenPublication(action: Action<org.gradle.api.publish.maven.MavenPublication>) =
-        error("Not used")
+    override fun mavenPublication(action: Action<org.gradle.api.publish.maven.MavenPublication>) = error("Not used")
 
     override fun withSourcesJar(publish: Boolean) = error("Not used")
 

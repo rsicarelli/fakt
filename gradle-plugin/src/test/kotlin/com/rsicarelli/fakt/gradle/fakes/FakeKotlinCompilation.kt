@@ -19,11 +19,12 @@ internal class FakeKotlinCompilation(
     override val defaultSourceSet: KotlinSourceSet,
     override val target: KotlinTarget,
     private val isTest: Boolean = false,
-    associatedWith: Set<KotlinCompilation<*>> = if (isTest && name != "test") {
-        setOf(FakeKotlinCompilation("main", defaultSourceSet, target, false))
-    } else {
-        emptySet()
-    },
+    associatedWith: Set<KotlinCompilation<*>> =
+        if (isTest && name != "test") {
+            setOf(FakeKotlinCompilation("main", defaultSourceSet, target, false))
+        } else {
+            emptySet()
+        },
 ) : KotlinCompilation<Any> {
     override fun getName(): String = compilationName
 
@@ -38,8 +39,7 @@ internal class FakeKotlinCompilation(
 
     override fun defaultSourceSet(configure: KotlinSourceSet.() -> Unit) = error("Not used")
 
-    override fun defaultSourceSet(configure: Action<KotlinSourceSet>) =
-        error("Not used")
+    override fun defaultSourceSet(configure: Action<KotlinSourceSet>) = error("Not used")
 
     override val compileDependencyConfigurationName get() = error("Not used")
     override var compileDependencyFiles: org.gradle.api.file.FileCollection
@@ -65,11 +65,9 @@ internal class FakeKotlinCompilation(
 
     override fun getAttributes() = error("Not used")
 
-    override fun attributes(configure: org.gradle.api.attributes.AttributeContainer.() -> Unit) =
-        error("Not used")
+    override fun attributes(configure: org.gradle.api.attributes.AttributeContainer.() -> Unit) = error("Not used")
 
-    override fun attributes(configure: Action<org.gradle.api.attributes.AttributeContainer>) =
-        error("Not used")
+    override fun attributes(configure: Action<org.gradle.api.attributes.AttributeContainer>) = error("Not used")
 
     override val compileAllTaskName get() = error("Not used")
 
@@ -82,8 +80,11 @@ internal class FakeKotlinCompilation(
     override val apiConfigurationName get() = error("Not used")
     override val compileOnlyConfigurationName get() = error("Not used")
     override val runtimeOnlyConfigurationName get() = error("Not used")
+
     override fun dependencies(configure: KotlinDependencyHandler.() -> Unit) = error("Not used")
+
     override fun dependencies(configure: Action<KotlinDependencyHandler>) = error("Not used")
+
     override val extras get() = error("Not used")
     override val project get() = error("Not used")
 }

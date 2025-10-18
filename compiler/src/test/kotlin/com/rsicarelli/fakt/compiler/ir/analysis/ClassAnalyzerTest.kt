@@ -56,5 +56,4 @@ class ClassAnalyzerTest {
         //  ✅ Verified through: samples/single-module/ compilation
         assertTrue(true, "Implementation verified through integration tests")
     }
-
 }

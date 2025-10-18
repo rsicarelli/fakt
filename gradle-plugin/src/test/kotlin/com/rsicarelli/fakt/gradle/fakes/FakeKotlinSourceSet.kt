@@ -8,7 +8,6 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinDependencyHandler
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.plugin.LanguageSettingsBuilder
 
-
 /**
  * Fake KotlinSourceSet for testing discovery.
  */
@@ -23,15 +22,20 @@ internal class FakeKotlinSourceSet(
     override fun dependsOn(other: KotlinSourceSet) = error("Not used in discovery tests")
 
     override val kotlin get() = error("Not used")
+
     override fun kotlin(configure: SourceDirectorySet.() -> Unit) = error("Not used")
+
     override fun kotlin(configure: Action<SourceDirectorySet>) = error("Not used")
 
     override val resources get() = error("Not used")
     override val languageSettings get() = error("Not used")
 
     override fun languageSettings(configure: LanguageSettingsBuilder.() -> Unit) = error("Not used")
+
     override fun languageSettings(configure: Action<LanguageSettingsBuilder>) = error("Not used")
+
     override fun dependencies(configure: KotlinDependencyHandler.() -> Unit) = error("Not used")
+
     override fun dependencies(configure: Action<KotlinDependencyHandler>) = error("Not used")
 
     override val customSourceFilesExtensions get() = error("Not used")

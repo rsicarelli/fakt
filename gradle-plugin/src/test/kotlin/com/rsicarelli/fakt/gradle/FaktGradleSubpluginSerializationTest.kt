@@ -143,7 +143,7 @@ class FaktGradleSubpluginSerializationTest {
         assertTrue(!jsonString.contains("\n"), "JSON should not contain newlines")
         assertTrue(
             jsonString.contains("\"compilationName\":\"test\""),
-            "Should contain compilationName"
+            "Should contain compilationName",
         )
         assertTrue(jsonString.contains("\"targetName\":\"jvm\""), "Should contain targetName")
     }
