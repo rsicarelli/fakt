@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 plugins {
     id("fakt-kotlin-jvm")
+    id("fakt-spotless")
+    id("fakt-ktlint")
+    id("fakt-detekt")
     kotlin("plugin.serialization") version libs.versions.kotlin.get()
     alias(libs.plugins.mavenPublish)
 }
