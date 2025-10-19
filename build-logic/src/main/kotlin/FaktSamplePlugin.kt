@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import com.rsicarelli.fakt.conventions.applyJvmToolchain
+import com.rsicarelli.fakt.conventions.applyTestConventions
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies
@@ -28,6 +29,9 @@ class FaktSamplePlugin : Plugin<Project> {
             // Apply JVM toolchain
             applyJvmToolchain()
 
+            // Apply test conventions (JUnit Platform, etc.)
+            applyTestConventions()
+
             // Configure Kotlin Multiplatform using Kotlin DSL extension accessor
             the<KotlinMultiplatformExtension>().apply {
                 applyDefaultHierarchyTemplate()
@@ -53,24 +57,19 @@ class FaktSamplePlugin : Plugin<Project> {
                     }
                 }
 
-                // Configure source sets
-                sourceSets.apply {
-                    getByName("commonMain") {
-                        dependencies {
-                            implementation("com.rsicarelli.fakt:runtime:1.0.0-SNAPSHOT")
-                        }
-                    }
+                // NOTE: Dependencies are declared manually in each module's build.gradle.kts
+                // for clarity when examining the sample project structure.
+                // See individual modules for commonMain and commonTest dependencies.
 
-                    getByName("commonTest") {
-                        dependencies {
-                            implementation("org.jetbrains.kotlin:kotlin-test:2.2.20")
-                            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
-                        }
-                    }
-                }
-
-                // Fix KLIB duplicate unique_name error (centralized!)
-                targets.all {
+                // Fix KLIB duplicate unique_name error for KLIB targets (Native, JS, Wasm)
+                // JVM targets don't use KLIB format, so this flag doesn't apply
+                targets.matching {
+                    it.platformType in setOf(
+                        org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType.native,
+                        org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType.js,
+                        org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType.wasm
+                    )
+                }.all {
                     compilations.all {
                         compileTaskProvider.configure {
                             compilerOptions {

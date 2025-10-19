@@ -12,6 +12,9 @@ kotlin {
             dependencies {
                 // CRITICAL: Depend on source module to access original types
                 api(projects.core.network)
+
+                // Dependencies from source module
+                implementation(libs.coroutines)
             }
         }
     }

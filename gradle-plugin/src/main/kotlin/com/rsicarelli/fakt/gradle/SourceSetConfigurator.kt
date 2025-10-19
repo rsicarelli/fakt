@@ -48,7 +48,7 @@ internal class SourceSetConfigurator(
         kotlin.sourceSets.configureEach { sourceSet ->
             // Add generated directory to ALL test source sets using consistent naming
             if (sourceSet.name.endsWith("Test")) {
-                val generatedDir = java.io.File(buildDir, "generated/fakt/${sourceSet.name}/kotlin")
+                val generatedDir = File(buildDir, "generated/fakt/${sourceSet.name}/kotlin")
                 sourceSet.kotlin.srcDir(generatedDir)
                 project.logger.info("Fakt: Added generated dir to ${sourceSet.name}: $generatedDir")
             }

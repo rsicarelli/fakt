@@ -10,6 +10,9 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
+                implementation(libs.fakt.runtime)
+                implementation(libs.coroutines)
+
                 implementation(projects.core.auth)
                 implementation(projects.core.storage)
                 implementation(projects.core.logger)
@@ -18,6 +21,10 @@ kotlin {
 
         commonTest {
             dependencies {
+                implementation(kotlin("test"))
+                implementation(libs.coroutines.test)
+                implementation(libs.turbine)
+
                 // Use fakes from core modules for testing
                 implementation(projects.core.authFakes)
                 implementation(projects.core.storageFakes)

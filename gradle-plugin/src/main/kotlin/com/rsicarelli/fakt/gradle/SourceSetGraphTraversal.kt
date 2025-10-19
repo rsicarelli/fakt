@@ -6,9 +6,7 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 
 /**
  * Utilities for traversing the KotlinSourceSet dependsOn graph.
- *
- * **Purpose**: Replace hardcoded source set fallback chains with programmatic BFS traversal.
- *
+ **
  * **Key Concept**: In Kotlin Multiplatform, source sets form a Directed Acyclic Graph (DAG)
  * via the `dependsOn` relationship. For example:
  * ```

@@ -6,8 +6,6 @@ package com.rsicarelli.fakt.samples.kmpmultimodule.core.logger
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
-import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for Logger fake generation and configuration.
@@ -17,7 +15,6 @@ import org.junit.jupiter.api.TestInstance
  * - Configuration DSL works for all methods
  * - Structured logging captures data correctly
  */
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class LoggerTest {
 
     @Test

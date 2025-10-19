@@ -12,6 +12,12 @@ kotlin {
             dependencies {
                 // CRITICAL: Depend on source module to access original types
                 api(projects.features.notifications)
+
+                // Transitive dependencies required by generated code
+                implementation(projects.core.network)
+                implementation(projects.core.storage)
+                implementation(projects.core.logger)
+                implementation(libs.coroutines)
             }
         }
     }

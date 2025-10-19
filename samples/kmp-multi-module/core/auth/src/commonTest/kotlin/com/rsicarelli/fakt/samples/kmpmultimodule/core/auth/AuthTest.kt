@@ -10,12 +10,14 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import org.junit.jupiter.api.TestInstance
+
+// Test timestamp constants (KMP-compatible)
+private const val TEST_TIMESTAMP = 1_735_689_600_000L // 2025-01-01 00:00:00 UTC
+private const val TEST_EXPIRY = TEST_TIMESTAMP + 3_600_000L // +1 hour
 
 /**
  * Tests for AuthProvider fake generation and configuration.
  */
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AuthProviderTest {
 
     @Test
@@ -27,7 +29,7 @@ class AuthProviderTest {
                     userId = "user-123",
                     accessToken = "access-token",
                     refreshToken = "refresh-token",
-                    expiresAt = System.currentTimeMillis() + 3600000,
+                    expiresAt = TEST_EXPIRY,
                     userInfo = UserInfo("user-123", "user@example.com", "John Doe"),
                 )
 
@@ -78,7 +80,7 @@ class AuthProviderTest {
                     userId = "google-user-123",
                     accessToken = "google-access-token",
                     refreshToken = "google-refresh-token",
-                    expiresAt = System.currentTimeMillis() + 3600000,
+                    expiresAt = TEST_EXPIRY,
                     userInfo = UserInfo("google-user-123", "user@gmail.com", "John Doe"),
                 )
 
@@ -125,7 +127,7 @@ class AuthProviderTest {
                     userId = "user-123",
                     accessToken = "token",
                     refreshToken = "refresh",
-                    expiresAt = System.currentTimeMillis() + 3600000,
+                    expiresAt = TEST_EXPIRY,
                     userInfo = UserInfo("user-123", "user@example.com", "John Doe"),
                 )
 
@@ -146,7 +148,6 @@ class AuthProviderTest {
 /**
  * Tests for TokenStorage fake generation and configuration.
  */
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TokenStorageTest {
 
     @Test
@@ -192,7 +193,7 @@ class TokenStorageTest {
                     userId = "user-123",
                     accessToken = "token",
                     refreshToken = "refresh",
-                    expiresAt = System.currentTimeMillis(),
+                    expiresAt = TEST_TIMESTAMP,
                     userInfo = UserInfo("user-123", "user@example.com", "John"),
                 )
 
@@ -263,7 +264,6 @@ class TokenStorageTest {
 /**
  * Tests for Authorizer fake generation and configuration.
  */
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AuthorizerTest {
 
     @Test

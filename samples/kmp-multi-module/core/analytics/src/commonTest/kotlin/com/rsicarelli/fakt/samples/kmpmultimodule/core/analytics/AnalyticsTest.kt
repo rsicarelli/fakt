@@ -7,12 +7,10 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for Analytics fake generation and configuration.
  */
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AnalyticsTest {
 
     @Test
@@ -100,7 +98,6 @@ class AnalyticsTest {
 /**
  * Tests for PerformanceMonitor fake generation and configuration.
  */
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PerformanceMonitorTest {
 
     @Test

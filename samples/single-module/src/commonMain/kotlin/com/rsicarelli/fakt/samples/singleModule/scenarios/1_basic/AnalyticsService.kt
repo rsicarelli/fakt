@@ -5,13 +5,11 @@ package com.rsicarelli.fakt.samples.singleModule.scenarios.basic
 import com.rsicarelli.fakt.Fake
 
 /**
- * Advanced feature test: @Fake(trackCalls = true).
+ * Advanced analytics service interface.
  *
- * Tests advanced annotation parameter support for future features.
- * The trackCalls parameter would enable call tracking/verification in generated fakes.
- * Currently demonstrates annotation parameter parsing (feature not yet implemented).
+ * Demonstrates fake generation for services with simple tracking methods.
  */
-@Fake(trackCalls = true)
+@Fake
 interface AnalyticsService {
     fun track(event: String)
 }

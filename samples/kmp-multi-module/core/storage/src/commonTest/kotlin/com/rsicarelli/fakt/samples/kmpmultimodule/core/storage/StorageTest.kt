@@ -7,15 +7,12 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for KeyValueStorage fake generation and configuration.
  */
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class KeyValueStorageTest {
 
     @Test
@@ -176,7 +173,6 @@ class KeyValueStorageTest {
 /**
  * Tests for Cache fake generation and configuration.
  */
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CacheTest {
 
     @Test
@@ -278,7 +274,6 @@ class CacheTest {
 /**
  * Tests for SecureStorage fake generation and configuration.
  */
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SecureStorageTest {
 
     @Test
