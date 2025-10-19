@@ -10,6 +10,7 @@ pluginManagement {
     // CRITICAL: This enables local plugin development via composite builds
     // Plugin changes auto-rebuild when running this sample
     includeBuild("../..")
+    includeBuild("../../build-logic")
 
     repositories {
         mavenCentral()
@@ -42,4 +43,4 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "single-module-sample"
+rootProject.name = "kmp-single-module"
