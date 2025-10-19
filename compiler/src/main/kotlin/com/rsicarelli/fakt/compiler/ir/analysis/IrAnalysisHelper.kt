@@ -21,8 +21,6 @@ import org.jetbrains.kotlin.ir.util.isVararg
  *
  * This helper provides common analysis functions used by both InterfaceAnalyzer and ClassAnalyzer,
  * promoting code reuse and maintaining consistency in IR analysis across different declaration types.
- *
- * @since 1.0.0
  */
 internal object IrAnalysisHelper {
     /**

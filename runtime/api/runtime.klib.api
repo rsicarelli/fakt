@@ -1,24 +1,13 @@
 // Klib ABI Dump
-// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, linuxArm64, linuxX64, macosArm64, macosX64, mingwX64, wasmJs]
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, linuxArm64, linuxX64, macosArm64, macosX64, mingwX64, tvosArm64, tvosSimulatorArm64, tvosX64, wasmJs, watchosArm32, watchosArm64, watchosSimulatorArm64, watchosX64]
 // Rendering settings:
 // - Signature version: 2
 // - Show manifest properties: true
 // - Show declarations: true
 
-// Library unique name: <fakt:runtime>
+// Library unique name: <com.rsicarelli.fakt:runtime>
 open annotation class com.rsicarelli.fakt/Fake : kotlin/Annotation { // com.rsicarelli.fakt/Fake|null[0]
-    constructor <init>(kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/Array<kotlin.reflect/KClass<*>> = ..., kotlin/Boolean = ..., kotlin/String = ...) // com.rsicarelli.fakt/Fake.<init>|<init>(kotlin.Boolean;kotlin.Boolean;kotlin.Array<kotlin.reflect.KClass<*>>;kotlin.Boolean;kotlin.String){}[0]
-
-    final val builder // com.rsicarelli.fakt/Fake.builder|{}builder[0]
-        final fun <get-builder>(): kotlin/Boolean // com.rsicarelli.fakt/Fake.builder.<get-builder>|<get-builder>(){}[0]
-    final val concurrent // com.rsicarelli.fakt/Fake.concurrent|{}concurrent[0]
-        final fun <get-concurrent>(): kotlin/Boolean // com.rsicarelli.fakt/Fake.concurrent.<get-concurrent>|<get-concurrent>(){}[0]
-    final val dependencies // com.rsicarelli.fakt/Fake.dependencies|{}dependencies[0]
-        final fun <get-dependencies>(): kotlin/Array<kotlin.reflect/KClass<*>> // com.rsicarelli.fakt/Fake.dependencies.<get-dependencies>|<get-dependencies>(){}[0]
-    final val scope // com.rsicarelli.fakt/Fake.scope|{}scope[0]
-        final fun <get-scope>(): kotlin/String // com.rsicarelli.fakt/Fake.scope.<get-scope>|<get-scope>(){}[0]
-    final val trackCalls // com.rsicarelli.fakt/Fake.trackCalls|{}trackCalls[0]
-        final fun <get-trackCalls>(): kotlin/Boolean // com.rsicarelli.fakt/Fake.trackCalls.<get-trackCalls>|<get-trackCalls>(){}[0]
+    constructor <init>() // com.rsicarelli.fakt/Fake.<init>|<init>(){}[0]
 }
 
 open annotation class com.rsicarelli.fakt/GeneratesFake : kotlin/Annotation { // com.rsicarelli.fakt/GeneratesFake|null[0]

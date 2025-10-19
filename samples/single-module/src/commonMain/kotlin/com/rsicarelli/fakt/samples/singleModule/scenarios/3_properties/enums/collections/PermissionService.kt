@@ -75,3 +75,15 @@ interface PermissionService {
      */
     fun getPermissionPriorities(): Map<AccessLevel, Int>
 }
+
+/**
+ * Access levels for permission management.
+ * Used to test enum collections (List, Set, Map).
+ */
+enum class AccessLevel {
+    READ,
+    WRITE,
+    EXECUTE,
+    ADMIN,
+}
+

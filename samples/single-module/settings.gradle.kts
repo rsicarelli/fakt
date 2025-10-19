@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage")
+
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
 
@@ -10,7 +12,6 @@ pluginManagement {
     includeBuild("../..")
 
     repositories {
-        mavenLocal()
         mavenCentral()
         google()
         gradlePluginPortal()
@@ -18,22 +19,22 @@ pluginManagement {
 }
 
 // Separate includeBuild for dependency substitution (two planes!)
-// This substitutes the runtime artifact with the source project
+// This substitutes ALL fakt artifacts with source projects
 includeBuild("../..") {
     dependencySubstitution {
         substitute(module("com.rsicarelli.fakt:runtime:1.0.0-SNAPSHOT"))
             .using(project(":runtime"))
+        substitute(module("com.rsicarelli.fakt:compiler-api:1.0.0-SNAPSHOT"))
+            .using(project(":compiler-api"))
     }
 }
 
 dependencyResolutionManagement {
-    @Suppress("UnstableApiUsage")
     repositories {
         mavenCentral()
         google()
     }
 
-    @Suppress("UnstableApiUsage")
     versionCatalogs {
         create("libs") {
             from(files("../../gradle/libs.versions.toml"))

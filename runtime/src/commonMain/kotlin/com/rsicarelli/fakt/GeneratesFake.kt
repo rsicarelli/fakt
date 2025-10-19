@@ -50,7 +50,6 @@ package com.rsicarelli.fakt
  * continues to work without any changes. Companies can migrate to custom annotations
  * incrementally without breaking existing tests.
  *
- * @since 1.0.0
  * @see Fake
  */
 @Target(AnnotationTarget.ANNOTATION_CLASS)

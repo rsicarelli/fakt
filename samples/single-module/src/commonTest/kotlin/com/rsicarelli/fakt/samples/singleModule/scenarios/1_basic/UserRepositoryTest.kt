@@ -40,6 +40,8 @@ class UserRepositoryTest {
         assertEquals(2, result.size)
         assertEquals("Alice", result[0].name)
         assertEquals("Bob", result[1].name)
+        // Call tracking validation
+        assertEquals(1, fake.usersCallCount.value)
     }
 
     @Test
@@ -59,6 +61,8 @@ class UserRepositoryTest {
         // Then
         assertEquals("Found User", existingUser?.name)
         assertNull(missingUser)
+        // Call tracking validation
+        assertEquals(2, fake.findByIdCallCount.value) // Called twice
     }
 
     @Test
@@ -79,6 +83,8 @@ class UserRepositoryTest {
         assertEquals("saved-123", result.id)
         assertEquals("Test", result.name)
         assertEquals(25, result.age)
+        // Call tracking validation
+        assertEquals(1, fake.saveCallCount.value)
     }
 
     @Test
@@ -96,6 +102,8 @@ class UserRepositoryTest {
         // Then
         assertTrue(deletedExisting)
         assertFalse(deletedMissing)
+        // Call tracking validation
+        assertEquals(2, fake.deleteCallCount.value) // Called twice
     }
 
     @Test
@@ -121,6 +129,8 @@ class UserRepositoryTest {
         assertEquals(30, resultBoth[1].age)
         assertEquals(25, resultDefault[0].age)
         assertEquals(100, resultDefault[1].age)
+        // Call tracking validation
+        assertEquals(2, fake.findByAgeCallCount.value) // Called with and without defaults
     }
 
     @Test
@@ -141,5 +151,11 @@ class UserRepositoryTest {
         assertEquals("test", savedUser.id) // Default: identity
         assertFalse(deleted) // Default: false
         assertTrue(byAge.isEmpty()) // Default: empty list
+        // Call tracking validation - All methods called once
+        assertEquals(1, fake.usersCallCount.value)
+        assertEquals(1, fake.findByIdCallCount.value)
+        assertEquals(1, fake.saveCallCount.value)
+        assertEquals(1, fake.deleteCallCount.value)
+        assertEquals(1, fake.findByAgeCallCount.value)
     }
 }

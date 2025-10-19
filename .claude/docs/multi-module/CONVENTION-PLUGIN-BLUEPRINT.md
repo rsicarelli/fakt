@@ -273,8 +273,6 @@ kotlin.targets.configureEach { target ->
  *     id("fakt-convention")
  * }
  * ```
- *
- * @since 1.0.0
  */
 
 import org.gradle.api.attributes.Attribute

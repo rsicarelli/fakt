@@ -13,8 +13,6 @@ import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 /**
  * Generates fake implementation classes.
  * Handles the creation of implementation class code with behavior fields and method implementations.
- *
- * @since 1.0.0
  */
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 // LargeClass: Code generator with comprehensive type handling (interfaces, classes, generics, varargs)
@@ -85,6 +83,11 @@ internal class ImplementationGenerator(
 
             appendLine()
 
+            // Generate call tracking fields
+            append(generateClassCallTrackingFields(analysis))
+
+            appendLine()
+
             // Generate method and property overrides
             append(generateClassMethodOverrides(analysis))
 
@@ -144,6 +147,11 @@ internal class ImplementationGenerator(
 
             // Generate behavior fields for functions and properties
             append(generateBehaviorProperties(analysis))
+
+            appendLine()
+
+            // Generate call tracking fields
+            append(generateCallTrackingFields(analysis))
 
             appendLine()
 
@@ -251,8 +259,21 @@ internal class ImplementationGenerator(
 
     private fun generatePropertyConfigMethod(property: PropertyAnalysis): String {
         val propertyType = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
-        return "    internal fun configure${property.name.capitalize()}(" +
-            "behavior: () -> $propertyType) { ${property.name}Behavior = behavior }\n"
+
+        return buildString {
+            append(
+                "    internal fun configure${property.name.capitalize()}(" +
+                    "behavior: () -> $propertyType) { ${property.name}Behavior = behavior }\n",
+            )
+
+            // For mutable properties, add setter configuration
+            if (property.isMutable) {
+                append(
+                    "    internal fun configureSet${property.name.capitalize()}(" +
+                        "behavior: ($propertyType) -> Unit) { set${property.name.capitalize()}Behavior = behavior }\n",
+                )
+            }
+        }
     }
 
     /**
@@ -286,10 +307,13 @@ internal class ImplementationGenerator(
 
         val methodCall =
             if (function.typeParameters.isNotEmpty()) {
-                buildMethodCallWithCast(function, returnTypeString)
+                buildMethodCallWithCastAndTracking(function, returnTypeString)
             } else {
                 val parameterNames = function.parameters.joinToString(", ") { it.name }
-                "        return ${function.name}Behavior($parameterNames)\n"
+                buildString {
+                    appendLine("        _${function.name}CallCount.update { it + 1 }")
+                    appendLine("        return ${function.name}Behavior($parameterNames)")
+                }
             }
 
         return buildString {
@@ -314,7 +338,7 @@ internal class ImplementationGenerator(
             "$varargsPrefix${param.name}: $paramType"
         }
 
-    private fun buildMethodCallWithCast(
+    private fun buildMethodCallWithCastAndTracking(
         function: FunctionAnalysis,
         returnTypeString: String,
     ): String {
@@ -332,6 +356,7 @@ internal class ImplementationGenerator(
             }
 
         return buildString {
+            appendLine("        _${function.name}CallCount.update { it + 1 }")
             appendLine("        @Suppress(\"UNCHECKED_CAST\")")
             appendLine("        return ${function.name}Behavior($castedParamNames) as $returnTypeString")
         }.toString()
@@ -339,11 +364,27 @@ internal class ImplementationGenerator(
 
     private fun generatePropertyOverride(property: PropertyAnalysis): String {
         val returnTypeString = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
-        return buildString {
-            appendLine("    override val ${property.name}: $returnTypeString get() {")
-            appendLine("        return ${property.name}Behavior()")
-            appendLine("    }")
-        }.toString()
+
+        return if (property.isMutable) {
+            buildString {
+                appendLine("    override var ${property.name}: $returnTypeString")
+                appendLine("        get() {")
+                appendLine("            _${property.name}CallCount.update { it + 1 }")
+                appendLine("            return ${property.name}Behavior()")
+                appendLine("        }")
+                appendLine("        set(value) {")
+                appendLine("            _set${property.name.capitalize()}CallCount.update { it + 1 }")
+                appendLine("            set${property.name.capitalize()}Behavior(value)")
+                appendLine("        }")
+            }.toString()
+        } else {
+            buildString {
+                appendLine("    override val ${property.name}: $returnTypeString get() {")
+                appendLine("        _${property.name}CallCount.update { it + 1 }")
+                appendLine("        return ${property.name}Behavior()")
+                appendLine("    }")
+            }.toString()
+        }
     }
 
     /**
@@ -364,6 +405,39 @@ internal class ImplementationGenerator(
             }
         }
 
+    /**
+     * Generates call tracking fields using MutableStateFlow for thread-safe call counting.
+     * For each function and property, creates:
+     * - Private MutableStateFlow backing field
+     * - Public StateFlow getter for observation
+     *
+     * @param analysis The analyzed interface metadata
+     * @return Generated call tracking fields code
+     */
+    private fun generateCallTrackingFields(analysis: InterfaceAnalysis): String =
+        buildString {
+            analysis.functions.forEach { function ->
+                appendLine("    private val _${function.name}CallCount = MutableStateFlow(0)")
+                appendLine("    val ${function.name}CallCount: StateFlow<Int> get() = _${function.name}CallCount")
+            }
+
+            analysis.properties.forEach { property ->
+                appendLine("    private val _${property.name}CallCount = MutableStateFlow(0)")
+                appendLine("    val ${property.name}CallCount: StateFlow<Int> get() = _${property.name}CallCount")
+
+                // Separate tracking for mutable property setters
+                if (property.isMutable) {
+                    appendLine(
+                        "    private val _set${property.name.capitalize()}CallCount = MutableStateFlow(0)",
+                    )
+                    appendLine(
+                        "    val set${property.name.capitalize()}CallCount: StateFlow<Int> get() = " +
+                            "_set${property.name.capitalize()}CallCount",
+                    )
+                }
+            }
+        }
+
     private fun generateFunctionBehaviorProperty(function: FunctionAnalysis): String {
         val methodTypeContext = buildMethodTypeParamContext(function)
         val parameterTypes = buildFunctionParameterTypes(function, methodTypeContext)
@@ -378,7 +452,15 @@ internal class ImplementationGenerator(
     private fun generatePropertyBehaviorProperty(property: PropertyAnalysis): String {
         val propertyType = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
         val defaultLambda = generateTypeSafePropertyDefault(property)
-        return "    private var ${property.name}Behavior: () -> $propertyType = $defaultLambda\n"
+
+        return buildString {
+            append("    private var ${property.name}Behavior: () -> $propertyType = $defaultLambda\n")
+
+            // For mutable properties, add setter behavior
+            if (property.isMutable) {
+                append("    private var set${property.name.capitalize()}Behavior: ($propertyType) -> Unit = { _ -> }\n")
+            }
+        }
     }
 
     private data class MethodTypeContext(
@@ -536,10 +618,13 @@ internal class ImplementationGenerator(
         when {
             parameters.isEmpty() -> "{ $body }"
             parameters.size == 1 -> {
-                if (body.contains(parameters[0].name)) {
-                    "{ ${parameters[0].name} -> $body }"
-                } else {
-                    "{ _ -> $body }"
+                when {
+                    // Identity function: { it }
+                    body == "it" -> "{ it }"
+                    // Body uses parameter name: { paramName -> body }
+                    body.contains(parameters[0].name) -> "{ ${parameters[0].name} -> $body }"
+                    // Body doesn't use parameter: { _ -> body }
+                    else -> "{ _ -> $body }"
                 }
             }
             else -> {
@@ -910,6 +995,56 @@ internal class ImplementationGenerator(
     }
 
     /**
+     * Generates call tracking fields for class members using MutableStateFlow.
+     */
+    private fun generateClassCallTrackingFields(analysis: ClassAnalysis): String =
+        buildString {
+            // Track abstract methods
+            analysis.abstractMethods.forEach { function ->
+                appendLine("    private val _${function.name}CallCount = MutableStateFlow(0)")
+                appendLine("    val ${function.name}CallCount: StateFlow<Int> get() = _${function.name}CallCount")
+            }
+
+            // Track open methods
+            analysis.openMethods.forEach { function ->
+                appendLine("    private val _${function.name}CallCount = MutableStateFlow(0)")
+                appendLine("    val ${function.name}CallCount: StateFlow<Int> get() = _${function.name}CallCount")
+            }
+
+            // Track abstract properties
+            analysis.abstractProperties.forEach { property ->
+                appendLine("    private val _${property.name}CallCount = MutableStateFlow(0)")
+                appendLine("    val ${property.name}CallCount: StateFlow<Int> get() = _${property.name}CallCount")
+
+                if (property.isMutable) {
+                    appendLine(
+                        "    private val _set${property.name.capitalize()}CallCount = MutableStateFlow(0)",
+                    )
+                    appendLine(
+                        "    val set${property.name.capitalize()}CallCount: StateFlow<Int> get() = " +
+                            "_set${property.name.capitalize()}CallCount",
+                    )
+                }
+            }
+
+            // Track open properties
+            analysis.openProperties.forEach { property ->
+                appendLine("    private val _${property.name}CallCount = MutableStateFlow(0)")
+                appendLine("    val ${property.name}CallCount: StateFlow<Int> get() = _${property.name}CallCount")
+
+                if (property.isMutable) {
+                    appendLine(
+                        "    private val _set${property.name.capitalize()}CallCount = MutableStateFlow(0)",
+                    )
+                    appendLine(
+                        "    val set${property.name.capitalize()}CallCount: StateFlow<Int> get() = " +
+                            "_set${property.name.capitalize()}CallCount",
+                    )
+                }
+            }
+        }
+
+    /**
      * Generates behavior properties for class members.
      * Abstract members get error() defaults, open members get super call defaults.
      */
@@ -1041,6 +1176,7 @@ internal class ImplementationGenerator(
             val suspendModifier = if (function.isSuspend) "suspend " else ""
 
             "    override ${suspendModifier}fun ${function.name}($parameters): $returnTypeString {\n" +
+                "        _${function.name}CallCount.update { it + 1 }\n" +
                 "        return ${function.name}Behavior($parameterNames)\n" +
                 "    }\n"
         }
@@ -1052,10 +1188,17 @@ internal class ImplementationGenerator(
 
             if (property.isMutable) {
                 "    override $varOrVal ${property.name}: $returnTypeString\n" +
-                    "        get() = ${property.name}Behavior()\n" +
-                    "        set(value) { set${property.name.capitalize()}Behavior(value) }\n"
+                    "        get() {\n" +
+                    "            _${property.name}CallCount.update { it + 1 }\n" +
+                    "            return ${property.name}Behavior()\n" +
+                    "        }\n" +
+                    "        set(value) {\n" +
+                    "            _set${property.name.capitalize()}CallCount.update { it + 1 }\n" +
+                    "            set${property.name.capitalize()}Behavior(value)\n" +
+                    "        }\n"
             } else {
                 "    override $varOrVal ${property.name}: $returnTypeString get() {\n" +
+                    "        _${property.name}CallCount.update { it + 1 }\n" +
                     "        return ${property.name}Behavior()\n" +
                     "    }\n"
             }

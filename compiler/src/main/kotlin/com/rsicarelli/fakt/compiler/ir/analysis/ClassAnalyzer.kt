@@ -19,8 +19,6 @@ import org.jetbrains.kotlin.name.FqName
  * This analyzer handles final and abstract classes with overridable members (open/abstract).
  * It works similarly to InterfaceAnalyzer but specifically handles class-specific logic
  * like distinguishing between abstract and open methods.
- *
- * @since 1.0.0
  */
 internal object ClassAnalyzer {
     /**

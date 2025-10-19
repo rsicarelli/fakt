@@ -8,64 +8,43 @@ plugins {
     alias(libs.plugins.mavenPublish)
 }
 
-@OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
 kotlin {
     applyDefaultHierarchyTemplate()
+
+    /* Tier 1 */
     jvm()
-    js(IR) {
-        browser()
-        nodejs()
-    }
 
-    // Native targets
-    iosX64()
     iosArm64()
+    iosX64()
     iosSimulatorArm64()
-    macosX64()
-    macosArm64()
 
+    /* Tier 2 */
+    macosArm64()
+    macosX64()
     linuxX64()
     linuxArm64()
+
+    /* Tier 3 */
+    watchosArm64()
+    watchosArm32()
+    watchosX64()
+    watchosSimulatorArm64()
+
+    tvosArm64()
+    tvosX64()
+    tvosSimulatorArm64()
+
     mingwX64()
 
-    // WASM
+    js(IR) {
+        nodejs()
+        browser()
+        binaries.executable()
+    }
+
+    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
     wasmJs {
-        nodejs() // Choose nodejs environment to eliminate warning
+        nodejs()
+        binaries.executable()
     }
-
-    sourceSets {
-        commonMain {
-            dependencies {
-                implementation(libs.coroutines)
-            }
-        }
-
-        commonTest {
-            dependencies {
-                implementation(libs.kotlin.test)
-                implementation(libs.coroutines.test)
-                implementation(libs.kotlin.reflect)
-            }
-        }
-
-        jvmMain {
-            dependencies {
-                // JVM-specific runtime support
-            }
-        }
-
-        jvmTest {
-            dependencies {
-                implementation(libs.junit.jupiter)
-            }
-        }
-    }
-}
-
-// Configure JVM test task
-tasks.named<Test>("jvmTest") {
-    useJUnitPlatform()
-
-    // Standard timeout for runtime tests
-    systemProperty("junit.jupiter.execution.timeout.default", "30s")
 }

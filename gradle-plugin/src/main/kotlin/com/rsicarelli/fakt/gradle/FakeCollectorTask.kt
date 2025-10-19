@@ -22,9 +22,9 @@ import java.io.File
  *
  * This task intelligently analyzes package structure to determine target platform
  * and places fakes in appropriate source sets:
- * - `api.jvm.*` packages → `jvmMain/kotlin/`
- * - `api.ios.*` packages → `iosMain/kotlin/`
- * - `api.shared.*` or `api.common.*` packages → `commonMain/kotlin/`
+ * - `module.jvm.*` packages → `jvmMain/kotlin/`
+ * - `module.ios.*` packages → `iosMain/kotlin/`
+ * - `module.common.*` packages → `commonMain/kotlin/`
  *
  * This solves the cross-platform compilation problem where JVM-only interfaces
  * would fail to compile in commonMain.
@@ -42,7 +42,10 @@ import java.io.File
  * domain/                  # Uses fakes via implementation(foundation-fakes)
  *   └── Can access both JVM and common fakes correctly
  * ```
+ *
+ * @see ExperimentalFaktMultiModule
  */
+@ExperimentalFaktMultiModule
 abstract class FakeCollectorTask : DefaultTask() {
     /**
      * The path to the source project that generates fakes.
@@ -249,7 +252,9 @@ abstract class FakeCollectorTask : DefaultTask() {
          *
          * @param project The target project (collector module)
          * @param extension The Fakt plugin extension
+         * @see ExperimentalFaktMultiModule
          */
+        @ExperimentalFaktMultiModule
         fun registerForKmpProject(
             project: Project,
             extension: FaktPluginExtension,
@@ -317,7 +322,10 @@ abstract class FakeCollectorTask : DefaultTask() {
          * Register a single collector task for non-KMP projects.
          *
          * Uses the same auto-discovery approach as KMP projects for consistency.
+         *
+         * @see ExperimentalFaktMultiModule
          */
+        @ExperimentalFaktMultiModule
         private fun registerSingleCollectorTask(
             project: Project,
             extension: FaktPluginExtension,

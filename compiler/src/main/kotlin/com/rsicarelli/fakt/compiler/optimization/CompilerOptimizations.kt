@@ -16,7 +16,6 @@ import com.rsicarelli.fakt.compiler.types.TypeInfo
  * Companies can configure their own annotations instead of being limited to the default `@Fake` annotation,
  * providing better ownership and protection against breaking changes in the Fakt library.
  *
- * @since 1.0.0
  * @see TypeInfo
  */
 interface CompilerOptimizations {

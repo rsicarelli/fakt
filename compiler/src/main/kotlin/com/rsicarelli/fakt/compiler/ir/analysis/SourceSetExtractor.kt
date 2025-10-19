@@ -28,8 +28,6 @@ import org.jetbrains.kotlin.ir.declarations.IrFile
  * /project/api/src/commonMain/kotlin/Network.kt → "commonMain"
  * /project/api/src/iosArm64Main/kotlin/Service.kt → "iosArm64Main"
  * ```
- *
- * @since 1.0.0
  */
 object SourceSetExtractor {
     /**

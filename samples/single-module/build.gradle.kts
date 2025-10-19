@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
 plugins {
-    kotlin("multiplatform") version "2.2.10"
+    alias(libs.plugins.kotlin.multiplatform)
     id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
 }
 

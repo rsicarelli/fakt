@@ -1,5 +1,7 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
+@file:OptIn(ExperimentalFaktMultiModule::class)
+
 package com.rsicarelli.fakt.gradle
 
 import org.junit.jupiter.api.Test

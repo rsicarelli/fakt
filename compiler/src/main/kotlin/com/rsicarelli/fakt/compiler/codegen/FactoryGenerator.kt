@@ -8,8 +8,6 @@ import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
 /**
  * Generates factory functions for fake implementations.
  * Creates type-safe factory functions that provide convenient instantiation with configuration.
- *
- * @since 1.0.0
  */
 internal class FactoryGenerator {
     /**
@@ -48,13 +46,6 @@ internal class FactoryGenerator {
                 ""
             }
 
-        val interfaceWithGenerics =
-            if (hasGenerics) {
-                "$interfaceName<${typeParameterNames.joinToString(", ")}>"
-            } else {
-                interfaceName
-            }
-
         val configWithGenerics =
             if (hasGenerics) {
                 "$configClassName<${typeParameterNames.joinToString(", ")}>"
@@ -63,21 +54,14 @@ internal class FactoryGenerator {
             }
 
         return buildString {
-            // Format: inline fun <reified T> fakeFoo(...) or fun fakeFoo(...)
-            val functionSignature =
-                if (hasGenerics) {
-                    "inline fun $typeParameters $factoryFunctionName"
-                } else {
-                    "fun $factoryFunctionName"
-                }
-
-            // Add where clause if needed (after return type for functions!)
+            val functionSignature = buildFunctionSignature(hasGenerics, typeParameters, factoryFunctionName)
             val whereClausePart = if (whereClause.isNotEmpty()) " where $whereClause" else ""
+            val returnType = buildReturnType(fakeClassName, typeParameterNames)
 
             appendLine(
                 "$functionSignature(" +
                     "configure: $configWithGenerics.() -> Unit = {}" +
-                    "): $interfaceWithGenerics$whereClausePart {",
+                    "): $returnType$whereClausePart {",
             )
 
             // Phase 2: Use simple type parameter names for constructor (not reified, no constraints)
@@ -129,13 +113,6 @@ internal class FactoryGenerator {
                 emptyList()
             }
 
-        val classWithGenerics =
-            if (typeParameterNames.isNotEmpty()) {
-                "$className<${typeParameterNames.joinToString(", ")}>"
-            } else {
-                className
-            }
-
         // Type arguments for usage (just names, no constraints)
         val typeArguments =
             if (typeParameterNames.isNotEmpty()) {
@@ -145,25 +122,22 @@ internal class FactoryGenerator {
             }
 
         return buildString {
-            // For generic classes, use inline fun <reified T> pattern
-            if (typeParameters.isNotEmpty()) {
-                append("inline fun $typeParameters ")
-            } else {
-                append("fun ")
-            }
+            val hasGenerics = typeParameters.isNotEmpty()
+            val functionSignature = buildFunctionSignature(hasGenerics, typeParameters, factoryFunctionName)
+            val returnType = buildReturnType(fakeClassName, typeParameterNames)
 
             // Generate factory function signature with where clause if needed
             if (whereClause.isNotEmpty()) {
                 appendLine(
-                    "$factoryFunctionName(" +
+                    "$functionSignature(" +
                         "configure: $configClassName$typeArguments.() -> Unit = {}" +
-                        "): $classWithGenerics where $whereClause {",
+                        "): $returnType where $whereClause {",
                 )
             } else {
                 appendLine(
-                    "$factoryFunctionName(" +
+                    "$functionSignature(" +
                         "configure: $configClassName$typeArguments.() -> Unit = {}" +
-                        "): $classWithGenerics {",
+                        "): $returnType {",
                 )
             }
 
@@ -174,6 +148,34 @@ internal class FactoryGenerator {
             appendLine("}")
         }
     }
+
+    /**
+     * Builds the return type for the factory function.
+     * Returns the fake implementation class name with generic parameters if applicable.
+     */
+    private fun buildReturnType(
+        fakeClassName: String,
+        typeParameterNames: List<String>,
+    ): String =
+        if (typeParameterNames.isNotEmpty()) {
+            "$fakeClassName<${typeParameterNames.joinToString(", ")}>"
+        } else {
+            fakeClassName
+        }
+
+    /**
+     * Builds the function signature for the factory function.
+     */
+    private fun buildFunctionSignature(
+        hasGenerics: Boolean,
+        typeParameters: String,
+        factoryFunctionName: String,
+    ): String =
+        if (hasGenerics) {
+            "inline fun $typeParameters $factoryFunctionName"
+        } else {
+            "fun $factoryFunctionName"
+        }
 
     /**
      * Formats type parameters for factory function headers, handling where clauses for multiple constraints.

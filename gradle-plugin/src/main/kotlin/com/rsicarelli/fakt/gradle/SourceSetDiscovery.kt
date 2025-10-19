@@ -33,8 +33,6 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
  * )
  * // context contains all metadata needed by compiler plugin
  * ```
- *
- * @since 1.1.0
  */
 internal object SourceSetDiscovery {
     private const val MAIN_SUFFIX_LENGTH = 4 // Length of "Main" suffix

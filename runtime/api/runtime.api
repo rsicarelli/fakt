@@ -1,9 +1,4 @@
 public abstract interface annotation class com/rsicarelli/fakt/Fake : java/lang/annotation/Annotation {
-	public abstract fun builder ()Z
-	public abstract fun concurrent ()Z
-	public abstract fun dependencies ()[Ljava/lang/Class;
-	public abstract fun scope ()Ljava/lang/String;
-	public abstract fun trackCalls ()Z
 }
 
 public abstract interface annotation class com/rsicarelli/fakt/GeneratesFake : java/lang/annotation/Annotation {
