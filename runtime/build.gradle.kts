@@ -11,20 +11,20 @@ plugins {
 kotlin {
     applyDefaultHierarchyTemplate()
 
-    /* Tier 1 */
+    // Tier 1
     jvm()
 
     iosArm64()
     iosX64()
     iosSimulatorArm64()
 
-    /* Tier 2 */
+    // Tier 2
     macosArm64()
     macosX64()
     linuxX64()
     linuxArm64()
 
-    /* Tier 3 */
+    // Tier 3
     watchosArm64()
     watchosArm32()
     watchosX64()
