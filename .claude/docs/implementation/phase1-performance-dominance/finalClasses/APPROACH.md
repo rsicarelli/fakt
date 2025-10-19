@@ -447,11 +447,11 @@ fun `GIVEN 1000 final class fake instantiations WHEN compared to mockito-inline 
 
 ```bash
 # Before
-./gradlew :samples:single-module:build --info | grep "Execution time"
+./gradlew :samples:kmp-single-module:build --info | grep "Execution time"
 # Baseline: 5.2s
 
 # After adding 100 @Fake classes
-./gradlew :samples:single-module:build --info | grep "Execution time"
+./gradlew :samples:kmp-single-module:build --info | grep "Execution time"
 # Target: <5.5s (less than 5% increase)
 ```
 

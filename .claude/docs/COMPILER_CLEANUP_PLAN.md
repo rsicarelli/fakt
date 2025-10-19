@@ -485,7 +485,7 @@ else -> if (typeString.endsWith("?")) "null" else "error(\"Unknown type: $classN
 **Validação:**
 ```bash
 ./gradlew :compiler:compileKotlin  # Deve compilar sem erros
-./gradlew :samples:single-module:build  # Código gerado deve compilar
+./gradlew :samples:kmp-single-module:build  # Código gerado deve compilar
 ```
 
 ---
@@ -515,7 +515,7 @@ else -> if (typeString.endsWith("?")) "null" else "error(\"Unknown type: $classN
 **Validação:**
 ```bash
 ./gradlew :compiler:test  # Testes devem passar
-./gradlew :samples:single-module:compileKotlinJvm --info | grep "Fakt"  # Ver logs
+./gradlew :samples:kmp-single-module:compileKotlinJvm --info | grep "Fakt"  # Ver logs
 ```
 
 ---

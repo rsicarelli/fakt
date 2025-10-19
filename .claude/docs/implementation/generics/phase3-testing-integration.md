@@ -486,7 +486,7 @@ class GenericCompilationBenchmark {
 
 ### Task 3.4: Documentation & Examples (Day 5-6)
 
-**Update**: `ktfake/samples/single-module/src/commonMain/kotlin/TestService.kt`
+**Update**: `ktfake/samples/kmp-single-module/src/commonMain/kotlin/TestService.kt`
 
 Add working generic examples:
 

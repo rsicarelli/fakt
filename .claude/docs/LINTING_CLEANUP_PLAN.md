@@ -201,7 +201,7 @@ fun mapToTestSourceSet(moduleName: String): String {
 ```bash
 ./gradlew :compiler:test --tests "*SourceSetMapper*"
 ./gradlew :compiler:detekt | grep "SourceSetMapper"
-./gradlew :samples:single-module:build
+./gradlew :samples:kmp-single-module:build
 ```
 
 ---

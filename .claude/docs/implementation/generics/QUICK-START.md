@@ -337,7 +337,7 @@ Overhead: 8% ✅ PASS
 ### Day 5-7: Documentation & Examples
 
 **Atualizar**:
-- [ ] `samples/single-module/src/.../TestService.kt` - exemplos funcionando
+- [ ] `samples/kmp-single-module/src/.../TestService.kt` - exemplos funcionando
 - [ ] `CLAUDE.md` - mover generics para "Funcionando"
 - [ ] `README.md` - adicionar generic support
 - [ ] Current status docs
@@ -425,7 +425,7 @@ override fun handle(items: List<*>): Int  // ✅
 
 **Day 3: Run All 77 SAM Tests**
 ```bash
-./gradlew :samples:single-module:jvmTest --tests "*SAM*"
+./gradlew :samples:kmp-single-module:jvmTest --tests "*SAM*"
 ```
 
 **Target**: 73+/77 testes passando (95%+)

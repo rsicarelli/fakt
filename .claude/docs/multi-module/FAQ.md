@@ -106,7 +106,7 @@ dependencies {
 
 ### Q: Where are fakes generated?
 
-**Current (single-module)**: `build/generated/fakt/test/kotlin/`
+**Current (kmp-single-module)**: `build/generated/fakt/test/kotlin/`
 
 **Future (multi-module)**: `src/fakes/kotlin/` (and `src/jvmFakes/kotlin/`, `src/jsFakes/kotlin/`, etc.)
 
@@ -358,7 +358,7 @@ dependencies {
 
 ## Migration and Compatibility
 
-### Q: I already use Fakt in single-module projects. Will this break?
+### Q: I already use Fakt in kmp-single-module projects. Will this break?
 
 **No!** Multi-module support is backward compatible.
 

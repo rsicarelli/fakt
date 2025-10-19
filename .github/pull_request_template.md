@@ -42,7 +42,7 @@ Fixes #(issue)
 
 <!-- Describe any manual testing performed -->
 
-- [ ] Tested with single-module project
+- [ ] Tested with kmp-single-module project
 - [ ] Tested with Kotlin Multiplatform project
 - [ ] Tested with samples (if applicable)
 
