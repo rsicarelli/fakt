@@ -23,10 +23,8 @@ pluginManagement {
 // This substitutes ALL fakt artifacts with source projects
 includeBuild("../..") {
     dependencySubstitution {
-        substitute(module("com.rsicarelli.fakt:runtime:1.0.0-SNAPSHOT"))
+        substitute(module("com.rsicarelli.fakt:runtime:1.0.0-COMPOSITE-BUILD"))
             .using(project(":runtime"))
-        substitute(module("com.rsicarelli.fakt:compiler-api:1.0.0-SNAPSHOT"))
-            .using(project(":compiler-api"))
     }
 }
 
@@ -92,6 +90,3 @@ include(":features:profile-fakes")
 include(":features:dashboard-fakes")
 include(":features:notifications-fakes")
 include(":features:settings-fakes")
-
-// App fakes (coordination layer)
-include(":app-fakes")

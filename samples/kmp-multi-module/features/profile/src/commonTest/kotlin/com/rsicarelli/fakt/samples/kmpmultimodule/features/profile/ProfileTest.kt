@@ -10,15 +10,13 @@ import com.rsicarelli.fakt.samples.kmpmultimodule.core.storage.fakeKeyValueStora
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertNotNull
-import org.junit.jupiter.api.TestInstance
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ProfileUseCaseTest {
     @Test
     fun `GIVEN ProfileUseCase WHEN getting profile THEN should return user profile`() =
         runTest {
-            val storage = fakeKeyValueStorage {}
-            val logger = fakeLogger {}
+            val storage = fakeKeyValueStorage()
+            val logger = fakeLogger()
             val session = AuthSession("user-123", "token", "refresh", 0L, UserInfo("user-123", "user@example.com", "John"))
             val useCase =
                 fakeProfileUseCase {

@@ -95,9 +95,11 @@ abstract class FakeCollectorTask : DefaultTask() {
         val faktRootDir = sourceGeneratedDir.asFile.get()
 
         if (!faktRootDir.exists()) {
+            val srcProjectName = sourceProjectPath.orNull?.substringAfterLast(":") ?: "unknown"
             logger.warn(
-                "Fakt: Source directory does not exist: $faktRootDir. " +
-                    "Make sure the source project generates fakes first.",
+                "Fakt: No fakes found in source module '$srcProjectName'. " +
+                    "Verify that source module has @Fake annotated interfaces, " +
+                    "or remove this collector module if not needed.",
             )
             return
         }

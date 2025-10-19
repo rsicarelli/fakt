@@ -31,11 +31,16 @@ ktlint-gradle = "13.1.0"
 licenseReport = "2.9"
 mavenPublish = "0.34.0"
 spotless = "7.2.1"
+turbine = "1.2.0"
+fakt-composite = "1.0.0-COMPOSITE-BUILD"
 
 [libraries]
-autoService = { module = "com.google.auto.service:auto-service-annotations", version.ref = "autoService" }
 coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+
+# Fakt Internal Composite Build Resolution
+fakt-runtime = { module = "com.rsicarelli.fakt:runtime", version.ref = "fakt-composite"}
 
 # Gradle Plugins (for build-logic classpath)
 binaryCompatibilityValidator-gradlePlugin = { module = "org.jetbrains.kotlinx.binary-compatibility-validator:org.jetbrains.kotlinx.binary-compatibility-validator.gradle.plugin", version.ref = "binaryCompatibilityValidator" }
@@ -50,7 +55,6 @@ spotless-gradlePlugin = { module = "com.diffplug.spotless:spotless-plugin-gradle
 
 # Runtime Libraries
 kotlin-compilerEmbeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin" }
-kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-testJunit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5", version.ref = "kotlin" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
@@ -60,11 +64,5 @@ junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "jun
 atomicfu = { id = "org.jetbrains.kotlinx.atomicfu", version.ref = "atomicfu" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
-binaryCompatibilityValidator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binaryCompatibilityValidator" }
-dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint-gradle" }
-licenseReport = { id = "com.github.jk1.dependency-license-report", version.ref = "licenseReport" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
 shadow = { id = "com.gradleup.shadow", version = "9.1.0" }
-spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

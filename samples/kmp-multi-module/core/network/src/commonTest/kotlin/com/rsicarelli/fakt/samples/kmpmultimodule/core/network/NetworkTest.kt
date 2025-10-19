@@ -9,12 +9,10 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for HttpClient fake generation and configuration.
  */
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class HttpClientTest {
 
     @Test
@@ -146,7 +144,7 @@ class HttpClientTest {
 /**
  * Tests for ApiClient fake generation and configuration.
  */
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+
 class ApiClientTest {
 
     @Test
@@ -176,7 +174,7 @@ class ApiClientTest {
             val mockResult: ApiResult<String> = ApiResult.Success("created")
             val client =
                 fakeApiClient {
-                    post { _, _, _ ->
+                    post<Map<String, String>, String> { _, _, _ ->
                         mockResult
                     }
                 }
@@ -243,14 +241,13 @@ class ApiClientTest {
 /**
  * Tests for WebSocketClient fake generation and configuration.
  */
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class WebSocketClientTest {
 
     @Test
     fun `GIVEN WebSocketClient fake WHEN connecting THEN should return connection`() =
         runTest {
             // Given
-            val mockConnection = fakeWebSocketConnection {}
+            val mockConnection = fakeWebSocketConnection()
             val client =
                 fakeWebSocketClient {
                     connect { _ ->
@@ -284,7 +281,6 @@ class WebSocketClientTest {
 /**
  * Tests for WebSocketConnection fake generation and configuration.
  */
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class WebSocketConnectionTest {
 
     @Test

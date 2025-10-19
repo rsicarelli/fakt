@@ -6,6 +6,39 @@ plugins {
     id("com.rsicarelli.fakt")
 }
 
+kotlin {
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation(libs.fakt.runtime)
+            }
+        }
+        commonTest {
+            dependencies {
+                implementation(kotlin("test"))
+                implementation(libs.coroutines.test)
+            }
+        }
+    }
+}
+
+kotlin {
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation(libs.fakt.runtime)
+            }
+        }
+
+        commonTest {
+            dependencies {
+                implementation(kotlin("test"))
+                implementation(libs.coroutines.test)
+            }
+        }
+    }
+}
+
 fakt {
     debug.set(true)
 }

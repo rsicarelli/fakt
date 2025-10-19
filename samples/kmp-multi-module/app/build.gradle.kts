@@ -9,6 +9,8 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
+                implementation(libs.fakt.runtime)
+
                 // All feature dependencies
                 implementation(projects.features.login)
                 implementation(projects.features.order)
@@ -28,6 +30,9 @@ kotlin {
 
         commonTest {
             dependencies {
+                implementation(kotlin("test"))
+                implementation(libs.coroutines.test)
+
                 // Use fakes from all modules for integration testing
 
                 // Core fakes

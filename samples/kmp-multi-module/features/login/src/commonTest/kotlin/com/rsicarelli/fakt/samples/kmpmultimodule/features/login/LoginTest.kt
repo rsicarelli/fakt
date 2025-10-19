@@ -7,7 +7,6 @@ import com.rsicarelli.fakt.samples.kmpmultimodule.core.analytics.fakeAnalytics
 import com.rsicarelli.fakt.samples.kmpmultimodule.core.auth.AuthError
 import com.rsicarelli.fakt.samples.kmpmultimodule.core.auth.AuthResult
 import com.rsicarelli.fakt.samples.kmpmultimodule.core.auth.AuthSession
-import com.rsicarelli.fakt.samples.kmpmultimodule.core.auth.OAuthProvider
 import com.rsicarelli.fakt.samples.kmpmultimodule.core.auth.UserInfo
 import com.rsicarelli.fakt.samples.kmpmultimodule.core.auth.fakeAuthProvider
 import com.rsicarelli.fakt.samples.kmpmultimodule.core.auth.fakeTokenStorage
@@ -16,16 +15,16 @@ import com.rsicarelli.fakt.samples.kmpmultimodule.core.storage.fakeKeyValueStora
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import org.junit.jupiter.api.TestInstance
+
+// Test timestamp constants (KMP-compatible)
+private const val TEST_TIMESTAMP = 1_735_689_600_000L // 2025-01-01 00:00:00 UTC
+private const val TEST_EXPIRY = TEST_TIMESTAMP + 3_600_000L // +1 hour
 
 /**
  * Tests for LoginUseCase demonstrating cross-module fake usage.
  */
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class LoginUseCaseTest {
 
     @Test
@@ -37,7 +36,7 @@ class LoginUseCaseTest {
                     userId = "user-123",
                     accessToken = "token",
                     refreshToken = "refresh",
-                    expiresAt = System.currentTimeMillis() + 3600000,
+                    expiresAt = TEST_EXPIRY,
                     userInfo = UserInfo("user-123", "user@example.com", "John Doe"),
                 )
 
@@ -60,7 +59,7 @@ class LoginUseCaseTest {
                     }
                 }
 
-            var loggedMessages = mutableListOf<String>()
+            val loggedMessages = mutableListOf<String>()
             val logger =
                 fakeLogger {
                     info { message, _ ->
@@ -68,7 +67,7 @@ class LoginUseCaseTest {
                     }
                 }
 
-            var trackedEvents = mutableListOf<String>()
+            val trackedEvents = mutableListOf<String>()
             val analytics =
                 fakeAnalytics {
                     track { eventName, _ ->
@@ -105,7 +104,7 @@ class LoginUseCaseTest {
 
             // Then
             assertTrue(result is LoginResult.Success)
-            assertEquals("user-123", (result as LoginResult.Success).user.id)
+            assertEquals("user-123", result.user.id)
             assertNotNull(storedSession)
             assertTrue(loggedMessages.contains("Login successful"))
             assertTrue(trackedEvents.contains("user_login"))
@@ -122,9 +121,9 @@ class LoginUseCaseTest {
                     }
                 }
 
-            val tokenStorage = fakeTokenStorage {}
-            val logger = fakeLogger {}
-            val analytics = fakeAnalytics {}
+            val tokenStorage = fakeTokenStorage()
+            val logger = fakeLogger()
+            val analytics = fakeAnalytics()
 
             val useCase =
                 fakeLoginUseCase {
@@ -148,7 +147,7 @@ class LoginUseCaseTest {
 
             // Then
             assertTrue(result is LoginResult.Failure)
-            assertEquals(LoginFailureReason.INVALID_CREDENTIALS, (result as LoginResult.Failure).reason)
+            assertEquals(LoginFailureReason.INVALID_CREDENTIALS, result.reason)
         }
 
     @Test
@@ -171,7 +170,6 @@ class LoginUseCaseTest {
 /**
  * Tests for LoginRepository demonstrating data layer operations.
  */
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class LoginRepositoryTest {
 
     @Test
@@ -261,7 +259,6 @@ class LoginRepositoryTest {
 /**
  * Tests for LoginValidator.
  */
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class LoginValidatorTest {
 
     @Test
@@ -304,7 +301,7 @@ class LoginValidatorTest {
 
         // Then
         assertTrue(result is ValidationResult.Invalid)
-        assertEquals(1, (result as ValidationResult.Invalid).errors.size)
+        assertEquals(1, result.errors.size)
     }
 
     @Test

@@ -13,12 +13,13 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import org.junit.jupiter.api.TestInstance
+
+// Test timestamp constants (KMP-compatible)
+private const val TEST_TIMESTAMP = 1_735_689_600_000L // 2025-01-01 00:00:00 UTC
 
 /**
  * Tests for OrderUseCase demonstrating cross-module integration.
  */
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OrderUseCaseTest {
 
     @Test
@@ -35,13 +36,13 @@ class OrderUseCaseTest {
                         ),
                     status = OrderStatus.PENDING,
                     totalAmount = 39.98,
-                    createdAt = System.currentTimeMillis(),
-                    updatedAt = System.currentTimeMillis(),
+                    createdAt = TEST_TIMESTAMP,
+                    updatedAt = TEST_TIMESTAMP,
                 )
 
             val apiClient =
                 fakeApiClient {
-                    post { endpoint, body, _ ->
+                    post<CreateOrderRequest, Order> { endpoint, body, _ ->
                         if (endpoint == "/orders") {
                             ApiResult.Success(mockOrder)
                         } else {
@@ -50,7 +51,7 @@ class OrderUseCaseTest {
                     }
                 }
 
-            var trackedEvents = mutableListOf<String>()
+            val trackedEvents = mutableListOf<String>()
             val analytics =
                 fakeAnalytics {
                     track { eventName, _ ->
@@ -58,7 +59,7 @@ class OrderUseCaseTest {
                     }
                 }
 
-            val logger = fakeLogger {}
+            val logger = fakeLogger()
 
             val useCase =
                 fakeOrderUseCase {
@@ -78,7 +79,7 @@ class OrderUseCaseTest {
 
             // Then
             assertTrue(result is ApiResult.Success)
-            assertEquals("order-123", (result as ApiResult.Success).data.id)
+            assertEquals("order-123", result.data.id)
             assertTrue(trackedEvents.contains("order_created"))
         }
 
@@ -93,8 +94,8 @@ class OrderUseCaseTest {
                     items = emptyList(),
                     status = OrderStatus.DELIVERED,
                     totalAmount = 99.99,
-                    createdAt = System.currentTimeMillis(),
-                    updatedAt = System.currentTimeMillis(),
+                    createdAt = TEST_TIMESTAMP,
+                    updatedAt = TEST_TIMESTAMP,
                 )
 
             val cacheData = mutableMapOf<String, Any>()
@@ -111,8 +112,8 @@ class OrderUseCaseTest {
             // Pre-populate cache
             cacheData["order_order-123"] = cachedOrder
 
-            val apiClient = fakeApiClient {}
-            val logger = fakeLogger {}
+            val apiClient = fakeApiClient()
+            val logger = fakeLogger()
 
             val useCase =
                 fakeOrderUseCase {
@@ -131,14 +132,13 @@ class OrderUseCaseTest {
 
             // Then
             assertTrue(result is ApiResult.Success)
-            assertEquals(OrderStatus.DELIVERED, (result as ApiResult.Success).data.status)
+            assertEquals(OrderStatus.DELIVERED, result.data.status)
         }
 }
 
 /**
  * Tests for OrderValidator.
  */
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OrderValidatorTest {
 
     @Test
