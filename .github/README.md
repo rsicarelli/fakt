@@ -357,7 +357,7 @@ gpg --keyserver keyserver.ubuntu.com --send-keys KEY_ID
 ./gradlew check
 
 # Test samples (all targets + validations)
-./gradlew -p samples/single-module allTests check
+./gradlew -p samples/kmp-single-module allTests check
 ./gradlew -p samples/multi-module allTests check
 ```
 

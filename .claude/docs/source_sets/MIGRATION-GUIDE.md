@@ -37,7 +37,7 @@ Before starting migration:
 3. **Document current behavior**
    ```bash
    # Run with current implementation and save logs
-   cd samples/single-module
+   cd samples/kmp-single-module
    ../../gradlew clean build --info > /tmp/before-migration.log 2>&1
    ```
 
@@ -723,7 +723,7 @@ Test with actual projects:
 
 ```bash
 # Single-module project
-cd samples/single-module
+cd samples/kmp-single-module
 ../../gradlew clean build --info | tee /tmp/after-migration.log
 
 # Compare logs
@@ -753,7 +753,7 @@ cd samples/kmp-comprehensive-test
 ./gradlew build
 
 # Modify a single file
-echo "// Comment" >> samples/single-module/src/commonMain/kotlin/Example.kt
+echo "// Comment" >> samples/kmp-single-module/src/commonMain/kotlin/Example.kt
 
 # Should be incremental
 ./gradlew build --info | grep "Incremental"

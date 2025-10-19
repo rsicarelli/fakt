@@ -62,7 +62,7 @@
 
 3. ✅ **End-to-End Validation**:
    - Compiler plugin now executes: "Fakt: Compiler Plugin Registrar Invoked"
-   - Discovered 71 @Fake annotated interfaces in single-module
+   - Discovered 71 @Fake annotated interfaces in kmp-single-module
    - Fakes generated to `build/generated/fakt/common/test/kotlin/`
    - Where clause syntax verified in `FakeMultiConstraintHandlerImpl.kt`
 
@@ -605,10 +605,10 @@ private fun generateKotlinStdlibDefault(typeString: String): String =
 - **Lesson**: Minimal impact approach - only rebuild what's needed, avoid global cache clearing
 
 **Files Created**:
-1. `samples/single-module/src/commonMain/kotlin/KeyValueStore.kt`
-2. `samples/single-module/src/commonMain/kotlin/DataCache.kt`
-3. `samples/single-module/src/commonTest/kotlin/P0MultipleTypeParametersTest.kt`
-4. `samples/single-module/src/commonTest/kotlin/P0NestedGenericsTest.kt`
+1. `samples/kmp-single-module/src/commonMain/kotlin/KeyValueStore.kt`
+2. `samples/kmp-single-module/src/commonMain/kotlin/DataCache.kt`
+3. `samples/kmp-single-module/src/commonTest/kotlin/P0MultipleTypeParametersTest.kt`
+4. `samples/kmp-single-module/src/commonTest/kotlin/P0NestedGenericsTest.kt`
 
 **Files Modified**:
 1. `compiler/src/main/kotlin/.../codegen/ImplementationGenerator.kt` (2 critical fixes)
@@ -714,8 +714,8 @@ val result: Boolean? = boolStore.get(42, "test")  // Type-safe!
 ```
 
 **Files Created**:
-1. `samples/single-module/src/commonMain/kotlin/TripleStore.kt`
-2. `samples/single-module/src/commonTest/kotlin/P0ThreeTypeParametersTest.kt`
+1. `samples/kmp-single-module/src/commonMain/kotlin/TripleStore.kt`
+2. `samples/kmp-single-module/src/commonTest/kotlin/P0ThreeTypeParametersTest.kt`
 
 **Test Results**:
 - ✅ P0.3 tests: 6/6 passing

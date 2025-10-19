@@ -559,9 +559,9 @@ class GIVEN_test_context_WHEN_checking_isTest_THEN_should_return_true() = runTes
 
 #### Tasks
 
-1. **Test single-module project**
+1. **Test kmp-single-module project**
    ```bash
-   cd samples/single-module
+   cd samples/kmp-single-module
    ../../gradlew clean build --info | grep "Fakt:"
    ```
    - Verify context is passed correctly

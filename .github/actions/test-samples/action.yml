@@ -12,13 +12,13 @@ runs:
     # Using 'allTests' to ensure ALL KMP targets are tested (jvmTest, jsTest, etc.)
     # Then 'check' for additional validations (apiCheck, compilation validation).
 
-    - name: Test single-module sample (all targets)
+    - name: Test kmp-single-module sample (all targets)
       shell: bash
-      run: ./gradlew -p samples/single-module allTests --continue --no-daemon
+      run: ./gradlew -p samples/kmp-single-module allTests --continue --no-daemon
 
-    - name: Check single-module sample (validations)
+    - name: Check kmp-single-module sample (validations)
       shell: bash
-      run: ./gradlew -p samples/single-module check --no-daemon
+      run: ./gradlew -p samples/kmp-single-module check --no-daemon
 
     - name: Test multi-module sample (all targets)
       shell: bash

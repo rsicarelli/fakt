@@ -247,7 +247,7 @@ grep "inline fun <reified" build/generated/fakt/test/kotlin/FakeRepositoryImpl.k
 make debug
 
 # Or with Gradle:
-./gradlew :samples:single-module:build --info | grep Fakt
+./gradlew :samples:kmp-single-module:build --info | grep Fakt
 ```
 
 ### Validate with Commands

@@ -217,10 +217,10 @@ override fun handle(items: List<Any?>): Int = handleBehavior(items)  // ❌
 **RED Phase (Verify Failure)**:
 ```bash
 # 1. Compile and see error
-./gradlew :samples:single-module:compileTestKotlinJvm 2>&1 | grep -A 5 "vararg"
+./gradlew :samples:kmp-single-module:compileTestKotlinJvm 2>&1 | grep -A 5 "vararg"
 
 # 2. Check generated code
-cat samples/single-module/build/generated/fakt/.../FakeVarargsProcessorImpl.kt
+cat samples/kmp-single-module/build/generated/fakt/.../FakeVarargsProcessorImpl.kt
 
 # 3. Identify invalid syntax in behavior property
 ```
@@ -256,7 +256,7 @@ private fun generateBehaviorPropertyType(parameter: IrValueParameter): String {
 ./gradlew :compiler:publishToMavenLocal
 
 # Recompile tests
-./gradlew :samples:single-module:clean :samples:single-module:compileTestKotlinJvm
+./gradlew :samples:kmp-single-module:clean :samples:kmp-single-module:compileTestKotlinJvm
 
 # Should succeed!
 ```
@@ -306,10 +306,10 @@ Closes #[issue-number]
 **RED Phase (Verify Failure)**:
 ```bash
 # 1. Compile and see error
-./gradlew :samples:single-module:compileTestKotlinJvm 2>&1 | grep -A 5 "overrides nothing"
+./gradlew :samples:kmp-single-module:compileTestKotlinJvm 2>&1 | grep -A 5 "overrides nothing"
 
 # 2. Check generated override signature
-cat samples/single-module/build/generated/fakt/.../FakeStarProjectionHandlerImpl.kt
+cat samples/kmp-single-module/build/generated/fakt/.../FakeStarProjectionHandlerImpl.kt
 
 # 3. Identify signature mismatch (List<Any?> vs List<*>)
 ```
@@ -347,7 +347,7 @@ private fun formatTypeArguments(arguments: List<IrTypeArgument>): String {
 ./gradlew :compiler:publishToMavenLocal
 
 # Recompile tests
-./gradlew :samples:single-module:clean :samples:single-module:compileTestKotlinJvm
+./gradlew :samples:kmp-single-module:clean :samples:kmp-single-module:compileTestKotlinJvm
 
 # Should succeed!
 ```
@@ -398,49 +398,49 @@ Closes #[issue-number]
 
 **Step 1: Basic Tests (P0)**
 ```bash
-./gradlew :samples:single-module:jvmTest --tests "*SAMBasic*"
+./gradlew :samples:kmp-single-module:jvmTest --tests "*SAMBasic*"
 # Target: 8/8 passing
 ```
 
 **Step 2: Generic Class Tests (P0)**
 ```bash
-./gradlew :samples:single-module:jvmTest --tests "*SAMGenericClass*"
+./gradlew :samples:kmp-single-module:jvmTest --tests "*SAMGenericClass*"
 # Target: 10/10 passing
 ```
 
 **Step 3: Collections Tests (P1)**
 ```bash
-./gradlew :samples:single-module:jvmTest --tests "*SAMCollections*"
+./gradlew :samples:kmp-single-module:jvmTest --tests "*SAMCollections*"
 # Target: 10/10 passing
 ```
 
 **Step 4: Stdlib Types Tests (P1)**
 ```bash
-./gradlew :samples:single-module:jvmTest --tests "*SAMStdlibTypes*"
+./gradlew :samples:kmp-single-module:jvmTest --tests "*SAMStdlibTypes*"
 # Target: 12/12 passing
 ```
 
 **Step 5: Higher-Order Tests (P2)**
 ```bash
-./gradlew :samples:single-module:jvmTest --tests "*SAMHigherOrder*"
+./gradlew :samples:kmp-single-module:jvmTest --tests "*SAMHigherOrder*"
 # Target: 10/10 passing
 ```
 
 **Step 6: Variance Tests (P2)**
 ```bash
-./gradlew :samples:single-module:jvmTest --tests "*SAMVariance*"
+./gradlew :samples:kmp-single-module:jvmTest --tests "*SAMVariance*"
 # Target: 13/13 passing
 ```
 
 **Step 7: Edge Cases Tests (P3)**
 ```bash
-./gradlew :samples:single-module:jvmTest --tests "*SAMEdgeCases*"
+./gradlew :samples:kmp-single-module:jvmTest --tests "*SAMEdgeCases*"
 # Target: 14/14 passing (after fixes)
 ```
 
 **Step 8: Full Suite**
 ```bash
-./gradlew :samples:single-module:jvmTest --tests "*SAM*"
+./gradlew :samples:kmp-single-module:jvmTest --tests "*SAM*"
 # Target: 77/77 passing (100%)
 ```
 
@@ -513,10 +513,10 @@ Type safety confirmed at use-site.
 **1. Generated Code Structure**
 ```bash
 # View all generated SAM fakes
-ls -la samples/single-module/build/generated/fakt/common/test/kotlin/test/sample/Fake*Impl.kt
+ls -la samples/kmp-single-module/build/generated/fakt/common/test/kotlin/test/sample/Fake*Impl.kt
 
 # Count generated files (should be ~88 SAM interfaces)
-ls samples/single-module/build/generated/fakt/common/test/kotlin/test/sample/Fake*Impl.kt | wc -l
+ls samples/kmp-single-module/build/generated/fakt/common/test/kotlin/test/sample/Fake*Impl.kt | wc -l
 ```
 
 **2. Naming Conventions**
@@ -529,7 +529,7 @@ ls samples/single-module/build/generated/fakt/common/test/kotlin/test/sample/Fak
 **3. Code Formatting**
 ```bash
 # Run ktlint check
-./gradlew :samples:single-module:spotlessCheck
+./gradlew :samples:kmp-single-module:spotlessCheck
 
 # Should report: 0 violations
 ```
@@ -829,7 +829,7 @@ Phase 4 complete: SAM interfaces fully supported! 🎉
 
 ```bash
 # Check if compilation blockers exist
-./gradlew :samples:single-module:compileTestKotlinJvm 2>&1 | grep -E "(vararg|star projection|overrides nothing)"
+./gradlew :samples:kmp-single-module:compileTestKotlinJvm 2>&1 | grep -E "(vararg|star projection|overrides nothing)"
 
 # If errors appear: proceed with Task 4.1 and 4.2
 # If no errors: proceed with Task 4.3 (run tests)
@@ -852,10 +852,10 @@ Phase 4 complete: SAM interfaces fully supported! 🎉
 ./gradlew :compiler:clean :compiler:compileKotlin :compiler:publishToMavenLocal
 
 # 4. Test compilation
-./gradlew :samples:single-module:clean :samples:single-module:compileTestKotlinJvm
+./gradlew :samples:kmp-single-module:clean :samples:kmp-single-module:compileTestKotlinJvm
 
 # 5. Run tests
-./gradlew :samples:single-module:jvmTest --tests "*SAM*"
+./gradlew :samples:kmp-single-module:jvmTest --tests "*SAM*"
 
 # 6. Verify results
 # Target: 73+/77 tests passing (95%+)
@@ -865,11 +865,11 @@ Phase 4 complete: SAM interfaces fully supported! 🎉
 
 ```bash
 # Run one test file at a time
-./gradlew :samples:single-module:jvmTest --tests "*SAMBasic*" --info
-./gradlew :samples:single-module:jvmTest --tests "*SAMGenericClass*" --info
+./gradlew :samples:kmp-single-module:jvmTest --tests "*SAMBasic*" --info
+./gradlew :samples:kmp-single-module:jvmTest --tests "*SAMGenericClass*" --info
 
 # Debug specific test
-./gradlew :samples:single-module:jvmTest --tests "*SAMBasicTest.GIVEN SAM with Int param*" --info
+./gradlew :samples:kmp-single-module:jvmTest --tests "*SAMBasicTest.GIVEN SAM with Int param*" --info
 ```
 
 ---
@@ -882,7 +882,7 @@ Phase 4 complete: SAM interfaces fully supported! 🎉
 - [Phase 1](./phase1-core-infrastructure.md) - Generic infrastructure
 - [Phase 2](./phase2-code-generation.md) - Code generation updates
 - [Phase 3](./phase3-testing-integration.md) - Testing framework
-- [SAMInterfaces.kt](../../../samples/single-module/src/commonMain/kotlin/SAMInterfaces.kt) - All 88 SAM interface definitions
+- [SAMInterfaces.kt](../../../samples/kmp-single-module/src/commonMain/kotlin/SAMInterfaces.kt) - All 88 SAM interface definitions
 
 ---
 
