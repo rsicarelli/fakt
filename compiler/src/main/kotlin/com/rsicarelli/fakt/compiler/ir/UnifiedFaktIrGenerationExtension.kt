@@ -12,12 +12,14 @@ import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalyzer.isFakableClass
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalyzer
 import com.rsicarelli.fakt.compiler.optimization.CompilerOptimizations
 import com.rsicarelli.fakt.compiler.output.SourceSetMapper
+import com.rsicarelli.fakt.compiler.telemetry.CompilationReport
+import com.rsicarelli.fakt.compiler.telemetry.FaktLogger
+import com.rsicarelli.fakt.compiler.telemetry.FaktTelemetry
 import com.rsicarelli.fakt.compiler.types.ImportResolver
 import com.rsicarelli.fakt.compiler.types.TypeInfo
 import com.rsicarelli.fakt.compiler.types.TypeResolver
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
-import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclaration
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
@@ -63,11 +65,11 @@ import org.jetbrains.kotlin.ir.util.packageFqName
  */
 @Suppress("TooManyFunctions")
 class UnifiedFaktIrGenerationExtension(
-    private val messageCollector: MessageCollector? = null,
+    private val logger: FaktLogger,
     private val outputDir: String? = null,
     private val fakeAnnotations: List<String> = listOf("com.rsicarelli.fakt.Fake"),
 ) : IrGenerationExtension {
-    private val optimizations = CompilerOptimizations(fakeAnnotations, outputDir, messageCollector)
+    private val optimizations = CompilerOptimizations(fakeAnnotations, outputDir, logger)
 
     // Extracted modules following DRY principles
     private val typeResolver = TypeResolver()
@@ -76,7 +78,7 @@ class UnifiedFaktIrGenerationExtension(
     private val sourceSetMapper =
         SourceSetMapper(
             outputDir = outputDir,
-            messageCollector = messageCollector,
+            logger = logger,
         )
     private val interfaceAnalyzer = InterfaceAnalyzer()
 
@@ -92,8 +94,11 @@ class UnifiedFaktIrGenerationExtension(
             importResolver = importResolver,
             sourceSetMapper = sourceSetMapper,
             generators = generators,
-            messageCollector = messageCollector,
+            logger = logger,
         )
+
+    // Initialize telemetry
+    private val telemetry = FaktTelemetry.initialize(logger)
 
     override fun generate(
         moduleFragment: IrModuleFragment,
@@ -110,36 +115,41 @@ class UnifiedFaktIrGenerationExtension(
             processInterfaces(interfacesToProcess, moduleFragment)
             processClasses(classesToProcess, moduleFragment)
 
-            logGenerationCompletion(interfacesToProcess.size, classesToProcess.size)
+            logGenerationCompletion(interfacesToProcess.size, classesToProcess.size, moduleFragment)
         } catch (e: Exception) {
             logGenerationError(e)
         }
     }
 
     private fun logGenerationHeader(moduleFragment: IrModuleFragment) {
-        messageCollector?.reportInfo("============================================")
-        messageCollector?.reportInfo("Fakt: IR Generation Extension Invoked")
-        messageCollector?.reportInfo("Fakt: Module: ${moduleFragment.name}")
-        messageCollector?.reportInfo("Fakt: Output directory: ${outputDir ?: "auto-detect"}")
-        messageCollector?.reportInfo("Fakt: Configured annotations: ${fakeAnnotations.joinToString()}")
-        messageCollector?.reportInfo("============================================")
+        // TRACE only: Detailed IR generation invocation
+        logger.trace("════════════════════════════════════════")
+        logger.trace("IR Generation Extension Invoked")
+        logger.trace("Module: ${moduleFragment.name}")
+        logger.trace("Output directory: ${outputDir ?: "auto-detect"}")
+        logger.trace("Configured annotations: ${fakeAnnotations.joinToString()}")
+        logger.trace("════════════════════════════════════════")
     }
 
     private fun discoverAndLogFakes(moduleFragment: IrModuleFragment): Pair<List<IrClass>, List<IrClass>>? {
-        messageCollector?.reportInfo("Fakt: Phase 1 - Starting interface & class discovery")
+        val phaseId = telemetry.startPhase("DISCOVERY")
 
         val fakeInterfaces = discoverFakeInterfaces(moduleFragment)
-        messageCollector?.reportInfo("Fakt: Discovered ${fakeInterfaces.size} @Fake annotated interfaces")
-
         val fakeClasses = discoverFakeClasses(moduleFragment)
-        messageCollector?.reportInfo("Fakt: Discovered ${fakeClasses.size} @Fake annotated classes")
+
+        telemetry.metricsCollector.incrementInterfacesDiscovered(fakeInterfaces.size)
+        telemetry.metricsCollector.incrementClassesDiscovered(fakeClasses.size)
+
+        telemetry.endPhase(phaseId)
+
+        // TRACE only: Detailed discovery info
+        logger.trace("Discovered ${fakeInterfaces.size} @Fake annotated interfaces")
+        logger.trace("Discovered ${fakeClasses.size} @Fake annotated classes")
+        logger.trace("Checked ${moduleFragment.files.size} files in module ${moduleFragment.name}")
 
         if (fakeInterfaces.isEmpty() && fakeClasses.isEmpty()) {
-            messageCollector?.reportInfo(
-                "Fakt: No @Fake interfaces or classes found in module ${moduleFragment.name}",
-            )
-            messageCollector?.reportInfo("Fakt: Checked ${moduleFragment.files.size} files")
-            messageCollector?.reportInfo("============================================")
+            // Nothing to generate - silent in DEBUG/INFO
+            logger.trace("No @Fake interfaces or classes found")
             return null
         }
 
@@ -150,22 +160,52 @@ class UnifiedFaktIrGenerationExtension(
         interfacesToProcess: List<Pair<IrClass, TypeInfo>>,
         moduleFragment: IrModuleFragment,
     ) {
+        val phaseId = telemetry.startPhase("GENERATION")
+
         for ((fakeInterface, typeInfo) in interfacesToProcess) {
             val interfaceName = fakeInterface.name.asString()
-            messageCollector?.reportInfo("Fakt: Processing interface: $interfaceName")
 
+            // TRACE only: Per-interface processing
+            logger.trace("Processing interface: $interfaceName")
+
+            // Track analysis timing
+            val analysisStartTime = System.currentTimeMillis()
             val interfaceAnalysis = interfaceAnalyzer.analyzeInterfaceDynamically(fakeInterface)
+            val analysisEndTime = System.currentTimeMillis()
             validateAndLogPattern(interfaceAnalysis, fakeInterface, interfaceName)
 
-            codeGenerator.generateWorkingFakeImplementation(
-                sourceInterface = fakeInterface,
-                analysis = interfaceAnalysis,
-                moduleFragment = moduleFragment,
+            // Track generation timing and capture generated code
+            val generationStartTime = System.currentTimeMillis()
+            val generatedCode =
+                codeGenerator.generateWorkingFakeImplementation(
+                    sourceInterface = fakeInterface,
+                    analysis = interfaceAnalysis,
+                    moduleFragment = moduleFragment,
+                )
+            val generationEndTime = System.currentTimeMillis()
+
+            // Record fake metrics with timing and LOC
+            val memberCount = interfaceAnalysis.properties.size + interfaceAnalysis.functions.size
+            telemetry.recordFakeMetrics(
+                com.rsicarelli.fakt.compiler.telemetry.metrics.FakeMetrics(
+                    name = interfaceName,
+                    pattern = interfaceAnalysis.genericPattern,
+                    memberCount = memberCount,
+                    typeParamCount = interfaceAnalysis.typeParameters.size,
+                    analysisTimeMs = analysisEndTime - analysisStartTime,
+                    generationTimeMs = generationEndTime - generationStartTime,
+                    generatedLOC = generatedCode.calculateTotalLOC(),
+                    fileSizeBytes = generatedCode.calculateTotalBytes(),
+                    importCount = 0, // TODO: Track import count from ImportResolver
+                ),
             )
 
+            telemetry.metricsCollector.incrementInterfacesProcessed()
             optimizations.recordGeneration(typeInfo)
-            messageCollector?.reportInfo("Fakt: Generated IR-native fake for $interfaceName")
+            logger.trace("Generated IR-native fake for $interfaceName")
         }
+
+        telemetry.endPhase(phaseId)
     }
 
     private fun processClasses(
@@ -174,40 +214,80 @@ class UnifiedFaktIrGenerationExtension(
     ) {
         for ((fakeClass, typeInfo) in classesToProcess) {
             val className = fakeClass.name.asString()
-            messageCollector?.reportInfo("Fakt: Processing class: $className")
 
+            // TRACE only: Per-class processing
+            logger.trace("Processing class: $className")
+
+            // Track analysis timing
+            val analysisStartTime = System.currentTimeMillis()
             val classAnalysis = ClassAnalyzer.analyzeClass(fakeClass)
+            val analysisEndTime = System.currentTimeMillis()
 
-            codeGenerator.generateWorkingClassFake(
-                sourceClass = fakeClass,
-                analysis = classAnalysis,
-                moduleFragment = moduleFragment,
+            // Track generation timing and capture generated code
+            val generationStartTime = System.currentTimeMillis()
+            val generatedCode =
+                codeGenerator.generateWorkingClassFake(
+                    sourceClass = fakeClass,
+                    analysis = classAnalysis,
+                    moduleFragment = moduleFragment,
+                )
+            val generationEndTime = System.currentTimeMillis()
+
+            // Record class metrics with timing and LOC
+            val memberCount =
+                classAnalysis.abstractProperties.size +
+                    classAnalysis.openProperties.size +
+                    classAnalysis.abstractMethods.size +
+                    classAnalysis.openMethods.size
+            telemetry.recordFakeMetrics(
+                com.rsicarelli.fakt.compiler.telemetry.metrics.FakeMetrics(
+                    name = className,
+                    pattern = com.rsicarelli.fakt.compiler.ir.analysis.GenericPattern.NoGenerics, // Classes don't have generic patterns tracked
+                    memberCount = memberCount,
+                    typeParamCount = 0, // TODO: Track class type parameters
+                    analysisTimeMs = analysisEndTime - analysisStartTime,
+                    generationTimeMs = generationEndTime - generationStartTime,
+                    generatedLOC = generatedCode.calculateTotalLOC(),
+                    fileSizeBytes = generatedCode.calculateTotalBytes(),
+                    importCount = 0, // TODO: Track import count from ImportResolver
+                ),
             )
 
+            telemetry.metricsCollector.incrementClassesProcessed()
             optimizations.recordGeneration(typeInfo)
-            messageCollector?.reportInfo("Fakt: Generated fake for class $className")
+            logger.trace("Generated fake for class $className")
         }
     }
 
     private fun logGenerationCompletion(
         interfaceCount: Int,
         classCount: Int,
+        moduleFragment: IrModuleFragment,
     ) {
-        messageCollector?.reportInfo(
-            "Fakt: IR-native generation completed successfully ($interfaceCount interfaces, $classCount classes)",
-        )
+        // Calculate total time from all completed phases
+        val totalTime = telemetry.phaseTracker.getAllCompleted().values.sumOf { it.duration }
+
+        // Generate compilation report
+        val summary =
+            telemetry.metricsCollector.buildSummary(
+                totalTimeMs = totalTime,
+                phaseBreakdown = telemetry.phaseTracker.getAllCompleted().mapKeys { it.value.name },
+                outputDirectory = outputDir ?: "auto-detect",
+            )
+
+        // Log report based on level
+        val report = CompilationReport.generate(summary, logger.logLevel)
+        if (report.isNotEmpty()) {
+            report.lines()
+                .filter { it.isNotBlank() } // Skip empty lines
+                .forEach { line ->
+                    logger.info(line)
+                }
+        }
     }
 
     private fun logGenerationError(exception: Exception) {
-        messageCollector?.report(
-            org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.ERROR,
-            "Fakt: IR-native generation failed: ${exception.message}",
-            null,
-        )
-    }
-
-    private fun MessageCollector.reportInfo(message: String) {
-        this.report(org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.INFO, message)
+        logger.error("IR-native generation failed: ${exception.message}")
     }
 
     /**
@@ -255,7 +335,8 @@ class UnifiedFaktIrGenerationExtension(
 
             when {
                 !optimizations.needsRegeneration(typeInfo) -> {
-                    messageCollector?.reportInfo("Fakt: ✅ Skipping already generated: $interfaceName")
+                    telemetry.metricsCollector.incrementInterfacesCached()
+                    logger.trace("✅ Skipping already generated: $interfaceName")
                     null
                 }
 
@@ -308,9 +389,7 @@ class UnifiedFaktIrGenerationExtension(
             val typeInfo = createTypeInfo(irClass)
             optimizations.indexType(typeInfo)
 
-            messageCollector?.reportInfo(
-                "Fakt: Discovered interface with @Fake: ${irClass.name}",
-            )
+            logger.trace("Discovered interface with @Fake: ${irClass.name}")
         }
     }
 
@@ -333,7 +412,7 @@ class UnifiedFaktIrGenerationExtension(
             file.declarations.forEach { declaration ->
                 if (declaration is IrClass && declaration.isFakableClass()) {
                     discoveredClasses.add(declaration)
-                    messageCollector?.reportInfo("Fakt: Discovered fakable class: ${declaration.name}")
+                    logger.trace("Discovered fakable class: ${declaration.name}")
                 }
             }
         }
@@ -355,7 +434,8 @@ class UnifiedFaktIrGenerationExtension(
 
             when {
                 !optimizations.needsRegeneration(typeInfo) -> {
-                    messageCollector?.reportInfo("Fakt: ✅ Skipping already generated: $className")
+                    telemetry.metricsCollector.incrementClassesCached()
+                    logger.trace("✅ Skipping already generated: $className")
                     null
                 }
                 else -> fakeClass to typeInfo
@@ -385,7 +465,7 @@ class UnifiedFaktIrGenerationExtension(
         // Log warnings if any
         if (warnings.isNotEmpty()) {
             warnings.forEach { warning ->
-                messageCollector?.reportInfo("Fakt: WARNING - $warning in $interfaceName")
+                logger.warn("$warning in $interfaceName")
             }
         }
 
@@ -394,7 +474,7 @@ class UnifiedFaktIrGenerationExtension(
             com.rsicarelli.fakt.compiler.ir.analysis.GenericPatternAnalyzer.getAnalysisSummary(
                 interfaceAnalysis.genericPattern,
             )
-        messageCollector?.reportInfo("Fakt: Analysis - $summary")
+        logger.trace("Analysis - $summary")
     }
 
     /**

@@ -1,3 +1,18 @@
+public final class com/rsicarelli/fakt/compiler/api/LogLevel : java/lang/Enum {
+	public static final field Companion Lcom/rsicarelli/fakt/compiler/api/LogLevel$Companion;
+	public static final field DEBUG Lcom/rsicarelli/fakt/compiler/api/LogLevel;
+	public static final field INFO Lcom/rsicarelli/fakt/compiler/api/LogLevel;
+	public static final field QUIET Lcom/rsicarelli/fakt/compiler/api/LogLevel;
+	public static final field TRACE Lcom/rsicarelli/fakt/compiler/api/LogLevel;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/rsicarelli/fakt/compiler/api/LogLevel;
+	public static fun values ()[Lcom/rsicarelli/fakt/compiler/api/LogLevel;
+}
+
+public final class com/rsicarelli/fakt/compiler/api/LogLevel$Companion {
+	public final fun fromString (Ljava/lang/String;)Lcom/rsicarelli/fakt/compiler/api/LogLevel;
+}
+
 public final class com/rsicarelli/fakt/compiler/api/SourceSetContext {
 	public static final field Companion Lcom/rsicarelli/fakt/compiler/api/SourceSetContext$Companion;
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLcom/rsicarelli/fakt/compiler/api/SourceSetInfo;Ljava/util/List;Ljava/lang/String;)V

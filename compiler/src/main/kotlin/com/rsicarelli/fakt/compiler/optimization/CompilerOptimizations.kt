@@ -2,15 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.optimization
 
+import com.rsicarelli.fakt.compiler.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.types.TypeInfo
-import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
-import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import java.io.File
-
-// Extension function to report INFO messages
-private fun MessageCollector.reportInfo(message: String) {
-    this.report(CompilerMessageSeverity.INFO, message)
-}
 
 /**
  * Provides compiler optimization capabilities including custom annotation support and incremental compilation.
@@ -91,7 +85,7 @@ interface CompilerOptimizations {
         operator fun invoke(
             fakeAnnotations: List<String> = listOf("com.rsicarelli.fakt.Fake"),
             outputDir: String? = null,
-            messageCollector: MessageCollector? = null,
+            logger: FaktLogger,
         ): CompilerOptimizations {
             return object : CompilerOptimizations {
                 private val indexedTypes = mutableListOf<TypeInfo>()
@@ -109,8 +103,8 @@ interface CompilerOptimizations {
                 private val generatedSignatures: MutableSet<String> = loadSignaturesFromFile()
 
                 init {
-                    messageCollector?.reportInfo(
-                        "🔧 Fakt: CompilerOptimizations initialized (cache=${cacheFile?.absolutePath}, loaded=${generatedSignatures.size} signatures)"
+                    logger.trace(
+                        "CompilerOptimizations initialized (cache=${cacheFile?.absolutePath}, loaded=${generatedSignatures.size} signatures)"
                     )
                 }
 
@@ -123,9 +117,9 @@ interface CompilerOptimizations {
                                     signatures.add(line.trim())
                                 }
                             }
-                            messageCollector?.reportInfo("📖 Fakt: Loaded ${signatures.size} cached signatures from ${cacheFile.absolutePath}")
+                            logger.trace("Loaded ${signatures.size} cached signatures from ${cacheFile.absolutePath}")
                         } catch (e: Exception) {
-                            messageCollector?.reportInfo("⚠️ Fakt: Failed to load cache file: ${e.message}")
+                            logger.trace("Failed to load cache file: ${e.message}")
                         }
                     }
                     return signatures
@@ -140,7 +134,7 @@ interface CompilerOptimizations {
                             cacheFile.appendText("$signature\n")
                         }
                     } catch (e: Exception) {
-                        messageCollector?.reportInfo("⚠️ Fakt: Failed to write to cache file: ${e.message}")
+                        logger.trace("Failed to write to cache file: ${e.message}")
                     }
                 }
 

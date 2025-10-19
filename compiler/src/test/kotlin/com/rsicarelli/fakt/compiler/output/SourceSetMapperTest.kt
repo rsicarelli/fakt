@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.output
 
+import com.rsicarelli.fakt.compiler.telemetry.FaktLogger
 import kotlinx.coroutines.test.runTest
-import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import kotlin.test.Test
@@ -35,7 +35,7 @@ import kotlin.test.assertTrue
  * 4. Test fallback to module name mapping when source set is null
  */
 class SourceSetMapperTest {
-    private val messageCollector: MessageCollector? = null
+    private val logger = FaktLogger.quiet()
 
     /**
      * Helper to expose internal methods for testing.
@@ -44,10 +44,10 @@ class SourceSetMapperTest {
      */
     private class TestableSourceSetMapper(
         outputDir: String?,
-        messageCollector: MessageCollector?,
+        logger: FaktLogger,
     ) {
         // Store instance for method access via reflection
-        private val mapper = SourceSetMapper(outputDir, messageCollector)
+        private val mapper = SourceSetMapper(outputDir, logger)
 
         // Expose mapToTestSourceSet for testing (it's currently private)
         @Suppress("UNCHECKED_CAST")
@@ -66,7 +66,7 @@ class SourceSetMapperTest {
     fun `GIVEN JVM module name WHEN mapping to test source set THEN should return jvmTest`() =
         runTest {
             // GIVEN: JVM module names
-            val mapper = TestableSourceSetMapper(null, messageCollector)
+            val mapper = TestableSourceSetMapper(null, logger)
             val testCases =
                 listOf(
                     "api_jvmMain",
@@ -91,7 +91,7 @@ class SourceSetMapperTest {
     fun `GIVEN iOS module name WHEN mapping to test source set THEN should return iosTest`() =
         runTest {
             // GIVEN: iOS module names
-            val mapper = TestableSourceSetMapper(null, messageCollector)
+            val mapper = TestableSourceSetMapper(null, logger)
             val testCases =
                 listOf(
                     "api_iosMain",
@@ -115,7 +115,7 @@ class SourceSetMapperTest {
     fun `GIVEN common module name WHEN mapping to test source set THEN should return commonTest`() =
         runTest {
             // GIVEN: Common module names
-            val mapper = TestableSourceSetMapper(null, messageCollector)
+            val mapper = TestableSourceSetMapper(null, logger)
             val testCases =
                 listOf(
                     "api_commonMain",
@@ -140,7 +140,7 @@ class SourceSetMapperTest {
     fun `GIVEN JS module name WHEN mapping to test source set THEN should return jsTest`() =
         runTest {
             // GIVEN: JS module names
-            val mapper = TestableSourceSetMapper(null, messageCollector)
+            val mapper = TestableSourceSetMapper(null, logger)
             val testCases =
                 listOf(
                     "api_jsMain",
@@ -165,7 +165,7 @@ class SourceSetMapperTest {
     fun `GIVEN platform-specific module names WHEN mapping THEN should correctly identify all platforms`() =
         runTest {
             // GIVEN: Multiple platform-specific modules
-            val mapper = TestableSourceSetMapper(null, messageCollector)
+            val mapper = TestableSourceSetMapper(null, logger)
 
             val platformCases =
                 mapOf(
@@ -195,7 +195,7 @@ class SourceSetMapperTest {
     fun `GIVEN ambiguous module name WHEN mapping THEN should use intelligent fallback`() =
         runTest {
             // GIVEN: Module name without clear platform marker
-            val mapper = TestableSourceSetMapper(null, messageCollector)
+            val mapper = TestableSourceSetMapper(null, logger)
             val testCases =
                 listOf(
                     "api" to "commonTest", // Default fallback
@@ -226,7 +226,7 @@ class SourceSetMapperTest {
     ) = runTest {
         // GIVEN: Output dir for jvmMain and source set name
         val baseOutputDir = tempDir.resolve("build/generated/fakt").absolutePath
-        val sourceSetMapper = SourceSetMapper(baseOutputDir, messageCollector)
+        val sourceSetMapper = SourceSetMapper(baseOutputDir, logger)
 
         // Mock module fragment (module name doesn't matter when source set provided)
         val moduleFragment = createMockModuleFragment("api")
@@ -251,7 +251,7 @@ class SourceSetMapperTest {
     ) = runTest {
         // GIVEN: jvmMain compilation but file from commonMain
         val baseOutputDir = tempDir.resolve("build/generated/fakt/jvmTest").absolutePath
-        val sourceSetMapper = SourceSetMapper(baseOutputDir, messageCollector)
+        val sourceSetMapper = SourceSetMapper(baseOutputDir, logger)
 
         val moduleFragment = createMockModuleFragment("api_jvmMain")
 
@@ -275,7 +275,7 @@ class SourceSetMapperTest {
     ) = runTest {
         // GIVEN: Output dir and iosMain source set
         val baseOutputDir = tempDir.resolve("build/generated/fakt").absolutePath
-        val sourceSetMapper = SourceSetMapper(baseOutputDir, messageCollector)
+        val sourceSetMapper = SourceSetMapper(baseOutputDir, logger)
 
         val moduleFragment = createMockModuleFragment("api")
 
@@ -307,7 +307,7 @@ class SourceSetMapperTest {
         try {
             System.setProperty("user.dir", projectDir.absolutePath)
 
-            val sourceSetMapper = SourceSetMapper(null, messageCollector)
+            val sourceSetMapper = SourceSetMapper(null, logger)
             val moduleFragment = createMockModuleFragment("api_jvmMain")
 
             // WHEN: Getting generated dir without source set (null)

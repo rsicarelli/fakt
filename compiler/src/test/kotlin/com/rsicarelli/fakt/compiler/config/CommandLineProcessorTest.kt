@@ -1,3 +1,5 @@
+// Copyright (C) 2025 Rodrigo Sicarelli
+// SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.config
 
 import com.rsicarelli.fakt.compiler.api.SourceSetContext

@@ -1,6 +1,6 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-package com.rsicarelli.fakt.compiler.telemetry
+package com.rsicarelli.fakt.compiler.api
 
 /**
  * Logging verbosity levels for the Fakt compiler plugin.
@@ -11,13 +11,15 @@ package com.rsicarelli.fakt.compiler.telemetry
  * - [DEBUG]: Detailed breakdown by compilation phase (troubleshooting)
  * - [TRACE]: Exhaustive details including IR nodes and type resolution (deep debugging)
  *
- * **Usage in build.gradle.kts:**
+ * **Usage in build.gradle.kts (Type-Safe!):**
  * ```kotlin
+ * import com.rsicarelli.fakt.compiler.api.LogLevel
+ *
  * fakt {
- *     logLevel.set("INFO")    // Default - concise summary
- *     logLevel.set("DEBUG")   // Detailed phase breakdown
- *     logLevel.set("TRACE")   // Everything (for deep debugging)
- *     logLevel.set("QUIET")   // Silent (only errors)
+ *     logLevel.set(LogLevel.INFO)    // ✅ Type-safe!
+ *     logLevel.set(LogLevel.DEBUG)   // ✅ IDE autocomplete
+ *     logLevel.set(LogLevel.TRACE)   // ✅ Compile-time validation
+ *     logLevel.set(LogLevel.QUIET)
  * }
  * ```
  *

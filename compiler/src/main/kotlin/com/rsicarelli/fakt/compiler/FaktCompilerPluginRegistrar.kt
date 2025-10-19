@@ -5,8 +5,8 @@ package com.rsicarelli.fakt.compiler
 import com.rsicarelli.fakt.compiler.config.FaktOptions
 import com.rsicarelli.fakt.compiler.fir.FaktFirExtensionRegistrar
 import com.rsicarelli.fakt.compiler.ir.UnifiedFaktIrGenerationExtension
+import com.rsicarelli.fakt.compiler.telemetry.FaktLogger
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
-import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
@@ -40,115 +40,69 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
             )
         val options = FaktOptions.load(configuration)
 
-        reportPluginInvocation(messageCollector, options)
+        // Create FaktLogger with configured log level
+        val logger = FaktLogger(messageCollector, options.logLevel)
+
+        // TRACE only: Detailed plugin invocation logging
+        logger.trace("════════════════════════════════════════")
+        logger.trace("Compiler Plugin Registrar Invoked")
+        logger.trace("Plugin: enabled=${options.enabled}, logLevel=${options.logLevel}")
+        logger.trace("Options: $options")
+        logger.trace("────────────────────────────────────────")
 
         if (!options.enabled) {
-            reportPluginDisabled(messageCollector)
+            logger.trace("Plugin disabled, skipping registration")
+            logger.trace("════════════════════════════════════════")
             return
         }
 
-        registerFirExtension(messageCollector)
-        registerIrExtension(messageCollector, options)
+        registerFirExtension(logger)
+        registerIrExtension(logger, options)
 
-        messageCollector.report(
-            CompilerMessageSeverity.INFO,
-            "Fakt compiler plugin registered successfully",
-        )
-        messageCollector.report(
-            CompilerMessageSeverity.INFO,
-            "============================================",
-        )
-    }
-
-    /**
-     * Reports plugin invocation status and configuration to the message collector.
-     *
-     * @param messageCollector The message collector for compiler output
-     * @param options The loaded plugin options
-     */
-    private fun reportPluginInvocation(
-        messageCollector: MessageCollector,
-        options: FaktOptions,
-    ) {
-        messageCollector.report(
-            CompilerMessageSeverity.INFO,
-            "============================================",
-        )
-        messageCollector.report(
-            CompilerMessageSeverity.INFO,
-            "Fakt: Compiler Plugin Registrar Invoked",
-        )
-        messageCollector.report(
-            CompilerMessageSeverity.INFO,
-            "Fakt: Plugin enabled: ${options.enabled}",
-        )
-        if (options.debug) {
-            messageCollector.report(
-                CompilerMessageSeverity.INFO,
-                "Fakt compiler plugin enabled with options: $options",
-            )
-        }
-    }
-
-    /**
-     * Reports that the plugin is disabled and skips registration.
-     *
-     * @param messageCollector The message collector for compiler output
-     */
-    private fun reportPluginDisabled(messageCollector: MessageCollector) {
-        messageCollector.report(
-            CompilerMessageSeverity.INFO,
-            "Fakt: Plugin disabled, skipping registration",
-        )
-        messageCollector.report(
-            CompilerMessageSeverity.INFO,
-            "============================================",
-        )
+        // TRACE only: Successful registration confirmation
+        logger.trace("Fakt compiler plugin registered successfully")
+        logger.trace("════════════════════════════════════════")
     }
 
     /**
      * Registers the FIR extension for @Fake annotation detection in the FIR phase.
      *
-     * @param messageCollector The message collector for compiler output
+     * @param logger The FaktLogger for logging
      */
-    private fun ExtensionStorage.registerFirExtension(messageCollector: MessageCollector) {
-        messageCollector.report(CompilerMessageSeverity.INFO, "Fakt: Registering FIR extension")
+    private fun ExtensionStorage.registerFirExtension(logger: FaktLogger) {
+        logger.trace("Registering FIR extension")
         FirExtensionRegistrarAdapter.registerExtension(FaktFirExtensionRegistrar())
     }
 
     /**
      * Registers the unified IR generation extension for fake implementation generation.
      *
-     * @param messageCollector The message collector for compiler output
+     * @param logger The FaktLogger for logging
      * @param options The loaded plugin options
      */
     private fun ExtensionStorage.registerIrExtension(
-        messageCollector: MessageCollector,
+        logger: FaktLogger,
         options: FaktOptions,
     ) {
         val customAnnotations = listOf("com.rsicarelli.fakt.Fake")
-        messageCollector.report(
-            CompilerMessageSeverity.INFO,
-            "Fakt: Registering IR generation extension",
-        )
 
-        // Log source set context availability
+        // TRACE only: IR extension registration details
+        logger.trace("Registering IR generation extension")
+        logger.trace("Configured annotations: ${customAnnotations.joinToString()}")
+
+        // Log source set context availability (TRACE only)
         if (options.sourceSetContext != null) {
-            messageCollector.report(
-                CompilerMessageSeverity.INFO,
-                "Fakt: Using SourceSetContext " +
-                    "(${options.sourceSetContext.compilationName}/${options.sourceSetContext.targetName})",
+            logger.trace(
+                "SourceSetContext: " +
+                    "${options.sourceSetContext.compilationName}/${options.sourceSetContext.targetName}",
             )
         } else {
-            messageCollector.report(
-                CompilerMessageSeverity.INFO,
-                "Fakt: No SourceSetContext available, using legacy source set mapping",
-            )
+            logger.trace("No SourceSetContext available, using legacy source set mapping")
         }
 
         IrGenerationExtension.registerExtension(
             UnifiedFaktIrGenerationExtension(
-                messageCollector = messageCollector,
+                logger = logger,
                 outputDir = options.outputDir,
                 fakeAnnotations = customAnnotations,
             ),

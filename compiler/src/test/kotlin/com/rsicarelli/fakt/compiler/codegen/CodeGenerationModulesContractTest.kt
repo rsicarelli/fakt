@@ -3,6 +3,7 @@
 package com.rsicarelli.fakt.compiler.codegen
 
 import com.rsicarelli.fakt.compiler.output.SourceSetMapper
+import com.rsicarelli.fakt.compiler.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.types.ImportResolver
 import com.rsicarelli.fakt.compiler.types.TypeResolver
 import kotlin.test.Test
@@ -51,7 +52,7 @@ class CodeGenerationModulesContractTest {
         val sourceSetMapper =
             SourceSetMapper(
                 outputDir = "/tmp/test",
-                messageCollector = null,
+                logger = FaktLogger.quiet(),
             )
 
         // THEN - Should exist and have expected methods
@@ -111,7 +112,7 @@ class CodeGenerationModulesContractTest {
         val sourceSetMapper =
             SourceSetMapper(
                 outputDir = "/tmp/test",
-                messageCollector = null,
+                logger = FaktLogger.quiet(),
             )
         val implementationGenerator = ImplementationGenerator(typeResolver)
         val factoryGenerator = FactoryGenerator()
@@ -129,7 +130,7 @@ class CodeGenerationModulesContractTest {
                 importResolver = importResolver,
                 sourceSetMapper = sourceSetMapper,
                 generators = generators,
-                messageCollector = null,
+                logger = FaktLogger.quiet(),
             )
 
         // THEN

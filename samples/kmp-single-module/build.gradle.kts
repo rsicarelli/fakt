@@ -26,5 +26,5 @@ kotlin {
 }
 
 fakt {
-    logLevel.set(LogLevel.DEBUG)  // ✅ Type-safe!
+    logLevel.set(LogLevel.TRACE)  // ✅ Type-safe!
 }

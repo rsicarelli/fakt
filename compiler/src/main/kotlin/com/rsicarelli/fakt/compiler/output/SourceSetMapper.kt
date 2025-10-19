@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.output
 
-import org.jetbrains.kotlin.cli.common.messages.MessageCollector
+import com.rsicarelli.fakt.compiler.telemetry.FaktLogger
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import java.io.File
 
@@ -11,11 +11,11 @@ import java.io.File
  * Provides intelligent fallback strategies for different KMP target configurations.
  *
  * @param outputDir Gradle-provided output directory (if available)
- * @param messageCollector Compiler message collector for logging
+ * @param logger Logger for diagnostic messages
  */
 internal class SourceSetMapper(
     private val outputDir: String?,
-    private val messageCollector: MessageCollector?,
+    private val logger: FaktLogger,
 ) {
     /**
      * Get generated sources directory with source set-based routing.
@@ -76,8 +76,8 @@ internal class SourceSetMapper(
         val projectBase = resolveProjectBaseDirectory()
         val outputPath = File(projectBase, "$testSourceSet/kotlin")
 
-        messageCollector?.reportInfo(
-            "Fakt: Source set routing - $sourceSet → $testSourceSet\n" +
+        logger.trace(
+            "Source set routing - $sourceSet → $testSourceSet\n" +
                 "  Output: ${outputPath.absolutePath}",
         )
 
@@ -122,7 +122,7 @@ internal class SourceSetMapper(
 
         val dir = File(outputDir)
         return if (ensureDirectoryExists(dir)) {
-            messageCollector?.reportInfo("Fakt: Using Gradle-provided output directory: ${dir.absolutePath}")
+            logger.trace("Using Gradle-provided output directory: ${dir.absolutePath}")
             dir
         } else {
             null
@@ -426,10 +426,10 @@ internal class SourceSetMapper(
                 null
             }
         } catch (e: java.io.IOException) {
-            messageCollector?.reportInfo("Fakt: IOException finding project from daemon: ${e.message}")
+            logger.trace("IOException finding project from daemon: ${e.message}")
             null
         } catch (e: SecurityException) {
-            messageCollector?.reportInfo("Fakt: SecurityException finding project from daemon: ${e.message}")
+            logger.trace("SecurityException finding project from daemon: ${e.message}")
             null
         }
 
@@ -462,10 +462,10 @@ internal class SourceSetMapper(
             }
             dir.exists() && dir.isDirectory && dir.canWrite()
         } catch (e: java.io.IOException) {
-            messageCollector?.reportInfo("Fakt: Cannot access directory ${dir.absolutePath}: ${e.message}")
+            logger.trace("Cannot access directory ${dir.absolutePath}: ${e.message}")
             false
         } catch (e: SecurityException) {
-            messageCollector?.reportInfo("Fakt: Security restriction on directory ${dir.absolutePath}: ${e.message}")
+            logger.trace("Security restriction on directory ${dir.absolutePath}: ${e.message}")
             false
         }
 
@@ -477,8 +477,8 @@ internal class SourceSetMapper(
         primaryTarget: String,
         dir: File,
     ) {
-        messageCollector?.reportInfo("Fakt: Module '$moduleName' -> Primary target '$primaryTarget'")
-        messageCollector?.reportInfo("Fakt: Output directory: ${dir.absolutePath}")
+        logger.trace("Module '$moduleName' -> Primary target '$primaryTarget'")
+        logger.trace("Output directory: ${dir.absolutePath}")
     }
 
     /**
@@ -490,11 +490,11 @@ internal class SourceSetMapper(
         fallbackTarget: String,
         dir: File,
     ) {
-        messageCollector?.reportInfo(
-            "Fakt: Module '$moduleName' -> Primary target '$primaryTarget' not available, " +
+        logger.trace(
+            "Module '$moduleName' -> Primary target '$primaryTarget' not available, " +
                 "using fallback '$fallbackTarget'",
         )
-        messageCollector?.reportInfo("Fakt: Output directory: ${dir.absolutePath}")
+        logger.trace("Output directory: ${dir.absolutePath}")
     }
 
     /**
@@ -505,14 +505,10 @@ internal class SourceSetMapper(
         primaryTarget: String,
         dir: File,
     ) {
-        messageCollector?.reportInfo(
-            "Fakt: Module '$moduleName' -> Created primary target '$primaryTarget' " +
+        logger.trace(
+            "Module '$moduleName' -> Created primary target '$primaryTarget' " +
                 "(fallbacks unavailable)",
         )
-        messageCollector?.reportInfo("Fakt: Output directory: ${dir.absolutePath}")
-    }
-
-    private fun MessageCollector.reportInfo(message: String) {
-        this.report(org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.INFO, message)
+        logger.trace("Output directory: ${dir.absolutePath}")
     }
 }
