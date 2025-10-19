@@ -1,43 +1,43 @@
 # Fakt Development Commands
-# Run from project root to avoid cd ktfake/ constantly
+# Run from ktfake/ directory (cd ktfake && make <command>)
 
 .PHONY: build test compile clean format shadowJar test-sample validate quick-test full-rebuild docs docs-serve docs-open docs-stop
 
 # Core build commands
 build:
 	@echo "🏗️ Building Fakt..."
-	cd ktfake && ./gradlew build
+	./gradlew build
 
 test:
 	@echo "🧪 Running tests..."
-	cd ktfake && ./gradlew test
+	./gradlew test
 
 compile:
 	@echo "⚙️ Compiling Kotlin sources..."
-	cd ktfake && ./gradlew compileKotlinJvm
+	./gradlew compileKotlinJvm
 
 clean:
 	@echo "🧹 Cleaning build artifacts..."
-	cd ktfake && ./gradlew clean
+	./gradlew clean
 
 format:
 	@echo "✨ Formatting code..."
-	cd ktfake && ./gradlew spotlessApply
+	./gradlew spotlessApply
 
 # Compiler plugin specific
 shadowJar:
 	@echo "📦 Building compiler plugin JAR..."
-	cd ktfake && ./gradlew :compiler:shadowJar
+	./gradlew :compiler:shadowJar
 
 # Test samples (now composite builds - auto-rebuild plugin!)
 test-sample:
-	@echo "🎯 Testing single-module sample (composite build)..."
-	cd ktfake/samples/single-module && ./gradlew build
+	@echo "🎯 Testing kmp-single-module sample (composite build)..."
+	cd samples/kmp-single-module && ./gradlew build
 
 # Multi-module sample
 test-multi-module:
 	@echo "🏢 Testing multi-module sample (composite build)..."
-	cd ktfake/samples/multi-module && ./gradlew :app:build
+	cd samples/multi-module && ./gradlew :app:build
 
 # Comprehensive validation workflow
 validate: shadowJar test-sample test
@@ -46,27 +46,27 @@ validate: shadowJar test-sample test
 # Quick development cycle (composite build auto-rebuilds plugin!)
 quick-test:
 	@echo "⚡ Quick test cycle (composite builds)..."
-	cd ktfake/samples/single-module && rm -rf build/generated
-	cd ktfake/samples/single-module && ./gradlew compileKotlinJvm --no-build-cache
+	cd samples/kmp-single-module && rm -rf build/generated
+	cd samples/kmp-single-module && ./gradlew compileKotlinJvm --no-build-cache
 
 # Full rebuild (nuclear option)
 full-rebuild:
 	@echo "💥 Full rebuild with clean slate..."
-	cd ktfake && ./gradlew clean --no-build-cache
-	cd ktfake && ./gradlew :compiler:shadowJar
-	cd ktfake/samples/single-module && rm -rf build/generated
-	cd ktfake/samples/single-module && ./gradlew build
+	./gradlew clean --no-build-cache
+	./gradlew :compiler:shadowJar
+	cd samples/kmp-single-module && rm -rf build/generated
+	cd samples/kmp-single-module && ./gradlew build
 
 # Debug compiler plugin
 debug:
 	@echo "🐛 Debugging compiler plugin (composite build)..."
-	cd ktfake/samples/single-module && ./gradlew compileKotlinJvm -i | grep -E "(Fakt|Generated|ERROR)"
+	cd samples/kmp-single-module && ./gradlew compileKotlinJvm -i | grep -E "(Fakt|Generated|ERROR)"
 
 # Documentation
 docs:
 	@echo "📚 Generating Dokka documentation..."
-	cd ktfake && ./gradlew dokkaGenerate
-	@echo "✅ Documentation generated at ktfake/build/dokka/html/"
+	./gradlew dokkaGenerate
+	@echo "✅ Documentation generated at build/dokka/html/"
 	@echo "   Serve with: make docs-serve"
 
 docs-serve: docs
@@ -75,14 +75,14 @@ docs-serve: docs
 	@sleep 1
 	@echo "🌐 Starting HTTP server at http://localhost:8000"
 	@echo "   Press Ctrl+C to stop"
-	@cd ktfake/build/dokka/html && python3 -m http.server 8000
+	@cd build/dokka/html && python3 -m http.server 8000
 
 docs-open: docs
 	@echo "🛑 Stopping any existing server on port 8000..."
 	@lsof -ti:8000 | xargs kill -9 2>/dev/null || true
 	@sleep 1
 	@echo "🌐 Starting HTTP server in background..."
-	@nohup python3 -m http.server 8000 --directory ktfake/build/dokka/html > /tmp/docs-server.log 2>&1 & echo $$! > /tmp/docs-server.pid; \
+	@nohup python3 -m http.server 8000 --directory build/dokka/html > /tmp/docs-server.log 2>&1 & echo $$! > /tmp/docs-server.pid; \
 		sleep 2; \
 		echo "✅ Server started at http://localhost:8000 (PID: $$(cat /tmp/docs-server.pid))"; \
 		open http://localhost:8000; \
@@ -104,7 +104,7 @@ help:
 	@echo "  format          - Format code with Spotless"
 	@echo ""
 	@echo "  shadowJar       - Build compiler plugin JAR"
-	@echo "  test-sample     - Test single-module sample (composite build)"
+	@echo "  test-sample     - Test kmp-single-module sample (composite build)"
 	@echo "  test-multi-module - Test multi-module sample (composite build)"
 	@echo ""
 	@echo "  validate        - Full validation workflow"

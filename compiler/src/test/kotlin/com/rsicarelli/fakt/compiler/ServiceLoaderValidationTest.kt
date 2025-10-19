@@ -103,7 +103,7 @@ class ServiceLoaderValidationTest {
             try {
                 loadedClass.getDeclaredConstructor()
                 true
-            } catch (e: NoSuchMethodException) {
+            } catch (_: NoSuchMethodException) {
                 false
             }
 

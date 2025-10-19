@@ -53,8 +53,8 @@ class FaktOptionsTest {
             // THEN: Should load source set context
             assertNotNull(options.sourceSetContext, "Source set context should be loaded")
             assertEquals(context, options.sourceSetContext)
-            assertEquals("test", options.sourceSetContext?.compilationName)
-            assertEquals("jvm", options.sourceSetContext?.targetName)
+            assertEquals("test", options.sourceSetContext.compilationName)
+            assertEquals("jvm", options.sourceSetContext.targetName)
             assertTrue(options.enabled)
             assertFalse(options.debug)
         }
@@ -71,7 +71,10 @@ class FaktOptionsTest {
             val options = FaktOptions.load(configuration)
 
             // THEN: Context should be null (backward compatibility)
-            assertNull(options.sourceSetContext, "Source set context should be null when not provided")
+            assertNull(
+                options.sourceSetContext,
+                "Source set context should be null when not provided"
+            )
             assertTrue(options.enabled)
             assertTrue(options.debug)
         }
@@ -159,13 +162,13 @@ class FaktOptionsTest {
 
             // THEN: Full hierarchy should be preserved
             assertNotNull(options.sourceSetContext)
-            assertEquals(5, options.sourceSetContext?.allSourceSets?.size)
-            val sourceSetNames = options.sourceSetContext?.allSourceSets?.map { it.name }
-            assertTrue(sourceSetNames?.contains("iosX64Main") == true)
-            assertTrue(sourceSetNames?.contains("iosMain") == true)
-            assertTrue(sourceSetNames?.contains("appleMain") == true)
-            assertTrue(sourceSetNames?.contains("nativeMain") == true)
-            assertTrue(sourceSetNames?.contains("commonMain") == true)
+            assertEquals(5, options.sourceSetContext.allSourceSets.size)
+            val sourceSetNames = options.sourceSetContext.allSourceSets.map { it.name }
+            assertTrue(sourceSetNames.contains("iosX64Main"))
+            assertTrue(sourceSetNames.contains("iosMain"))
+            assertTrue(sourceSetNames.contains("appleMain"))
+            assertTrue(sourceSetNames.contains("nativeMain"))
+            assertTrue(sourceSetNames.contains("commonMain"))
         }
 
     @Test

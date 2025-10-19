@@ -29,11 +29,4 @@ include(
     ":runtime",
 )
 
-// Optional: Include samples for unified IDE workspace view
-// Note: Samples are independent composite builds with their own settings.gradle.kts
-// Dependency substitution happens in sample settings.gradle.kts via includeBuild("../..")
-//includeBuild("samples/single-module")
-//includeBuild("samples/multi-module")
-//includeBuild("samples/kmp-multi-module")
-
 rootProject.name = "fakt"

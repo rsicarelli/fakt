@@ -70,9 +70,9 @@ ktfake/
 │   └── @Fake                             # Main annotation
 ├── gradle-plugin/                     # Gradle integration
 └── samples/
-    ├── single-module/                 # ✅ Working example
-    ├── kmp-comprehensive-test/        # KMP testing
-    └── published-modules-test/        # Multi-module testing
+    ├── kmp-single-module/             # ✅ Working KMP example
+    ├── kmp-multi-module/              # Complex KMP multi-module
+    └── multi-module/                  # Multi-module testing
 ```
 
 ## ⚡ Essential Commands
@@ -84,7 +84,7 @@ ktfake/
 make shadowJar                                    # or: cd ktfake && ./gradlew :compiler:shadowJar
 
 # 🧪 Test working example
-make test-sample                                  # or: cd ktfake && ./gradlew :samples:single-module:build
+make test-sample                                  # or: cd ktfake && ./gradlew :samples:kmp-single-module:build
 
 # ⚡ Quick rebuild cycle (no cache)
 make quick-test                                   # Rebuild plugin + test sample fresh
@@ -417,7 +417,7 @@ make shadowJar
 make test-sample
 
 # 4. Verify generated code
-cat ktfake/samples/single-module/build/generated/fakt/test/kotlin/FakeXxxImpl.kt
+cat ktfake/samples/kmp-single-module/build/generated/fakt/test/kotlin/FakeXxxImpl.kt
 
 # 5. Format and validate
 make format
@@ -492,7 +492,7 @@ ktfake/compiler/src/main/kotlin/com/rsicarelli/fakt/compiler/
 **Testing:**
 ```kotlin
 .claude/docs/validation/testing-guidelines.md  # THE ABSOLUTE STANDARD
-ktfake/samples/single-module/                  # Working example project
+ktfake/samples/kmp-single-module/              # Working KMP example project
 ```
 
 ---

@@ -67,7 +67,7 @@ class UnifiedFaktIrGenerationExtension(
     private val outputDir: String? = null,
     private val fakeAnnotations: List<String> = listOf("com.rsicarelli.fakt.Fake"),
 ) : IrGenerationExtension {
-    private val optimizations = CompilerOptimizations(fakeAnnotations, outputDir)
+    private val optimizations = CompilerOptimizations(fakeAnnotations, outputDir, messageCollector)
 
     // Extracted modules following DRY principles
     private val typeResolver = TypeResolver()
@@ -255,7 +255,7 @@ class UnifiedFaktIrGenerationExtension(
 
             when {
                 !optimizations.needsRegeneration(typeInfo) -> {
-                    messageCollector?.reportInfo("Fakt: Skipping unchanged interface: $interfaceName")
+                    messageCollector?.reportInfo("Fakt: ✅ Skipping already generated: $interfaceName")
                     null
                 }
 
@@ -355,7 +355,7 @@ class UnifiedFaktIrGenerationExtension(
 
             when {
                 !optimizations.needsRegeneration(typeInfo) -> {
-                    messageCollector?.reportInfo("Fakt: Skipping unchanged class: $className")
+                    messageCollector?.reportInfo("Fakt: ✅ Skipping already generated: $className")
                     null
                 }
                 else -> fakeClass to typeInfo

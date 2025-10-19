@@ -3,7 +3,7 @@
 
 plugins {
     id("fakt-sample")
-    id("com.rsicarelli.fakt")
+    id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
 }
 
 kotlin {
