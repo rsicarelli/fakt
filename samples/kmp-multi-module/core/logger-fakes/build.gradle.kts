@@ -1,3 +1,4 @@
+import LogLevel
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
 
@@ -22,7 +23,7 @@ kotlin {
 
 // Configure Fakt plugin in COLLECTOR MODE
 fakt {
-    debug.set(true)
+    logLevel.set(LogLevel.DEBUG)
     @OptIn(com.rsicarelli.fakt.gradle.ExperimentalFaktMultiModule::class)
     collectFakesFrom(project(":core:logger"))
 }
