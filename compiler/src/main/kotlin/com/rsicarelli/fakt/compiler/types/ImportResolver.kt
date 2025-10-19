@@ -14,8 +14,6 @@ import org.jetbrains.kotlin.ir.util.kotlinFqName
 /**
  * Handles import resolution for generated fake implementations.
  * Collects and resolves import statements needed for cross-module type references.
- *
- * @since 1.0.0
  */
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 internal class ImportResolver(

@@ -43,6 +43,9 @@ class SimpleRepositoryTest {
         assertEquals("Test User", savedUser.name)
         assertEquals(2, allUsers.size)
         assertEquals("Alice", allUsers[0].name)
+        // Call tracking validation
+        assertEquals(1, userRepo.saveCallCount.value)
+        assertEquals(1, userRepo.findAllCallCount.value)
     }
 
     @Test
@@ -64,6 +67,9 @@ class SimpleRepositoryTest {
         assertEquals(110.0, savedProduct.price, 0.01)
         assertEquals(2, allProducts.size)
         assertEquals(99.99, allProducts[0].price, 0.01)
+        // Call tracking validation
+        assertEquals(1, productRepo.saveCallCount.value)
+        assertEquals(1, productRepo.findAllCallCount.value)
     }
 
     @Test
@@ -76,6 +82,8 @@ class SimpleRepositoryTest {
 
         // Then - findAll defaults to empty list
         assertEquals(emptyList(), allItems)
+        // Call tracking validation
+        assertEquals(1, repo.findAllCallCount.value)
     }
 
     @Test
@@ -94,5 +102,8 @@ class SimpleRepositoryTest {
         // Then
         assertEquals(84, saved)
         assertEquals(emptyList(), all)
+        // Call tracking validation - Verify both methods tracked independently
+        assertEquals(1, repo.saveCallCount.value)
+        assertEquals(1, repo.findAllCallCount.value)
     }
 }

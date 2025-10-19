@@ -13,8 +13,6 @@ import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 /**
  * Generates configuration DSL classes for fake implementations.
  * Creates type-safe DSL classes that provide convenient configuration of fake behavior.
- *
- * @since 1.0.0
  */
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 // TooManyFunctions: DSL generator requires many specialized builders for interfaces and classes
@@ -90,8 +88,21 @@ internal class ConfigurationDslGenerator(
     private fun generatePropertyConfigurators(properties: List<PropertyAnalysis>): String =
         properties.joinToString("") { property ->
             val propertyType = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
-            "    fun ${property.name}(behavior: () -> $propertyType) " +
-                "{ fake.configure${property.name.capitalize()}(behavior) }\n"
+
+            buildString {
+                append(
+                    "    fun ${property.name}(behavior: () -> $propertyType) " +
+                        "{ fake.configure${property.name.capitalize()}(behavior) }\n",
+                )
+
+                // For mutable properties, add setter configuration
+                if (property.isMutable) {
+                    append(
+                        "    fun set${property.name.capitalize()}(behavior: ($propertyType) -> Unit) " +
+                            "{ fake.configureSet${property.name.capitalize()}(behavior) }\n",
+                    )
+                }
+            }
         }
 
     private fun formatTypeParameters(typeParamsForHeader: List<String>): String =

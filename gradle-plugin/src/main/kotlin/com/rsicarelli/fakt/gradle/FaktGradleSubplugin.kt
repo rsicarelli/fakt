@@ -1,5 +1,7 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
+@file:OptIn(ExperimentalFaktMultiModule::class)
+
 package com.rsicarelli.fakt.gradle
 
 import kotlinx.serialization.encodeToString
@@ -30,6 +32,7 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         const val PLUGIN_VERSION = "1.0.0-SNAPSHOT" // Using project version
     }
 
+    @OptIn(ExperimentalFaktMultiModule::class)
     override fun apply(target: Project) {
         // Create the fakt extension for configuration
         val extension = target.extensions.create("fakt", FaktPluginExtension::class.java)

@@ -58,11 +58,16 @@ open class FaktPluginExtension
          *
          * Example:
          * ```kotlin
+         * @file:OptIn(ExperimentalFaktMultiModule::class)
+         *
          * fakt {
          *     collectFakesFrom(project(":foundation"))
          * }
          * ```
+         *
+         * @see ExperimentalFaktMultiModule
          */
+        @ExperimentalFaktMultiModule
         val collectFrom: Property<Project> = objects.property(Project::class.java)
 
         /**
@@ -70,7 +75,9 @@ open class FaktPluginExtension
          * This enables the dedicated fake module pattern (e.g., foundation-fakes).
          *
          * @param project The source project that generates fakes
+         * @see ExperimentalFaktMultiModule
          */
+        @ExperimentalFaktMultiModule
         fun collectFakesFrom(project: Project) {
             collectFrom.set(project)
         }

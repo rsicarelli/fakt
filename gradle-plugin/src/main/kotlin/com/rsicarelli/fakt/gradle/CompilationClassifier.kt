@@ -23,8 +23,6 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
  * - `debug` → false (Android variant, not test)
  * - `debugTest` → true (Android test variant)
  * - Custom suite associated with main → true (association pattern)
- *
- * @since 1.1.0
  */
 
 internal object CompilationClassifier {

@@ -31,8 +31,6 @@ import org.jetbrains.kotlin.ir.util.kotlinFqName
 
 /**
  * Handles type resolution and conversion from IR types to Kotlin string representations.
- *
- * @since 1.0.0
  */
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 internal class TypeResolver {

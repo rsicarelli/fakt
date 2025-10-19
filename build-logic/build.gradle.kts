@@ -40,5 +40,9 @@ gradlePlugin {
             id = "fakt-multiplatform"
             implementationClass = "FaktMultiplatformPlugin"
         }
+        register("fakt-sample") {
+            id = "fakt-sample"
+            implementationClass = "FaktSamplePlugin"
+        }
     }
 }

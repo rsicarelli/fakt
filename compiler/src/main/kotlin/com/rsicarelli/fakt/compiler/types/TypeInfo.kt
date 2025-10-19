@@ -14,8 +14,6 @@ package com.rsicarelli.fakt.compiler.types
  * @property fileName The source file name (e.g., "UserService.kt")
  * @property annotations List of annotation fully qualified names applied to this type
  * @property signature A unique signature for change detection and incremental compilation
- *
- * @since 1.0.0
  */
 data class TypeInfo(
     val name: String,

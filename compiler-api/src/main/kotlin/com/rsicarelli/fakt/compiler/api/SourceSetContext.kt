@@ -30,7 +30,6 @@ import kotlinx.serialization.Serializable
  * @property allSourceSets All source sets in the dependsOn hierarchy (including default)
  * @property outputDirectory Absolute path where generated code should be written
  *
- * @since 1.1.0
  * @see SourceSetInfo
  */
 @Serializable
@@ -77,7 +76,6 @@ data class SourceSetContext(
  * @property name Source set name (e.g., "jvmMain", "commonTest", "integrationTest")
  * @property parents Direct parent source sets from dependsOn relationships
  *
- * @since 1.1.0
  */
 @Serializable
 data class SourceSetInfo(

@@ -12,7 +12,6 @@ import java.io.File
  *
  * @param outputDir Gradle-provided output directory (if available)
  * @param messageCollector Compiler message collector for logging
- * @since 1.0.0
  */
 internal class SourceSetMapper(
     private val outputDir: String?,

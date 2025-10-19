@@ -14,8 +14,6 @@ import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
  *
  * Separated from the main generator to isolate analysis logic and make
  * it easier to test and maintain.
- *
- * @since 1.0.0
  */
 internal class InterfaceAnalyzer {
     private val patternAnalyzer = GenericPatternAnalyzer()

@@ -31,8 +31,6 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
  * - Automatically handles custom hierarchies
  * - Works with default hierarchy template or custom setup
  * - Handles diamond dependencies correctly
- *
- * @since 1.1.0
  */
 internal object SourceSetGraphTraversal {
     /**
