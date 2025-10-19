@@ -16,9 +16,6 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
 internal data class FaktOptions(
     val enabled: Boolean = false,
     val debug: Boolean = false,
-    val generateCallTracking: Boolean = true,
-    val generateBuilderPatterns: Boolean = true,
-    val strictMode: Boolean = false,
     val outputDir: String? = null,
     val sourceSetContext: SourceSetContext? = null,
 ) {
@@ -45,9 +42,6 @@ internal data class FaktOptions(
         FaktOptions(
             enabled=$enabled,
             debug=$debug,
-            generateCallTracking=$generateCallTracking,
-            generateBuilderPatterns=$generateBuilderPatterns,
-            strictMode=$strictMode,
             sourceSetContext=${sourceSetContext?.let { "present(${it.compilationName}/${it.targetName})" } ?: "null"}
         )
         """.trimIndent()
