@@ -1,4 +1,4 @@
-package com.rsicarelli.fakt.samples.singleModule.models
+package com.rsicarelli.fakt.samples.singlemodule.models
 
 import com.rsicarelli.fakt.GeneratesFake
 
