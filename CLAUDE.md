@@ -105,6 +105,52 @@ make clean                                        # or: cd ktfake && ./gradlew c
 make help
 ```
 
+### **Logging & Telemetry System**
+
+Fakt includes a professional telemetry system with 4 verbosity levels for troubleshooting and performance analysis.
+
+**Type-Safe Configuration:**
+
+```kotlin
+// In build.gradle.kts
+import com.rsicarelli.fakt.compiler.api.LogLevel
+
+fakt {
+    logLevel.set(LogLevel.INFO)    // ✅ Type-safe! (default - concise summary)
+    logLevel.set(LogLevel.DEBUG)   // ✅ IDE autocomplete
+    logLevel.set(LogLevel.TRACE)   // ✅ Compile-time validation
+    logLevel.set(LogLevel.QUIET)   // ✅ No typos possible
+}
+```
+
+**Log Level Outputs:**
+
+**INFO (default) - Concise summary:**
+```
+✅ 10 fakes generated in 1.2s (6 cached)
+   Discovery: 120ms | Analysis: 340ms | Generation: 580ms | I/O: 160ms
+   Cache hit rate: 40% (6/15)
+📁 build/generated/fakt/commonTest/kotlin
+```
+
+**DEBUG - Detailed breakdown:**
+```
+[DISCOVERY] 120ms - 15 interfaces, 3 classes
+[FILTERING] 85ms - Cache hits: 6/15 (40%)
+[ANALYSIS] 340ms
+  ├─ PredicateCombiner (18ms) - NoGenerics
+  ├─ PairMapper<T,U,K,V> (42ms) ⚠️ - ClassLevel
+[GENERATION] 580ms (avg 58ms/interface)
+```
+
+**TRACE - Everything (IR details, type resolution, etc)**
+
+**When to use each level:**
+- **QUIET**: CI/CD builds (zero overhead)
+- **INFO**: Normal development (default, <1ms overhead)
+- **DEBUG**: Troubleshooting generation issues (~5-10ms overhead)
+- **TRACE**: Deep debugging, bug reports (~20-50ms overhead)
+
 ### **Slash Commands (Claude Code)**
 
 ```bash
