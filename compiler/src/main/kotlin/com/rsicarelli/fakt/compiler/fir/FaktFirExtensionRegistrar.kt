@@ -34,11 +34,8 @@ class FaktFirExtensionRegistrar : FirExtensionRegistrar() {
         // Future enhancement: Add FIR-based validation when needed
         // +::FaktFirCheckers
 
-        // Mark that the FIR extension registrar is being called
-        // Using println because MessageCollector is not available in FirExtensionRegistrar context
-        println("============================================")
-        println("Fakt: FIR extension registrar configured")
-        println("Fakt: Ready to detect @Fake annotations")
-        println("============================================")
+        // Note: FIR extension registrar is invoked but remains silent
+        // MessageCollector is not available in FirExtensionRegistrar context
+        // All logging happens in IR phase with proper level control
     }
 }

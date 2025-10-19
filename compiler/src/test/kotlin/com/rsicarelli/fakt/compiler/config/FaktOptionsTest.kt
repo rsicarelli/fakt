@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.config
 
+import com.rsicarelli.fakt.compiler.api.LogLevel
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.api.SourceSetInfo
 import kotlinx.coroutines.test.runTest
@@ -128,7 +129,7 @@ class FaktOptionsTest {
             // THEN: Should use defaults
             assertNull(options.sourceSetContext, "Default context should be null")
             assertTrue(options.enabled, "Default enabled should be true")
-            assertTrue(options.debug, "Default debug should be true")
+            assertEquals(LogLevel.INFO, options.logLevel, "Default logLevel should be INFO")
             assertNull(options.outputDir, "Default outputDir should be null")
         }
 
@@ -202,7 +203,7 @@ class FaktOptionsTest {
 
             // THEN: String should contain context information
             assertTrue(optionsString.contains("enabled=true"))
-            assertTrue(optionsString.contains("debug=false"))
+            assertTrue(optionsString.contains("logLevel=INFO"))
             assertTrue(optionsString.contains("sourceSetContext"))
         }
 }

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler
 
+import com.rsicarelli.fakt.compiler.api.LogLevel
 import com.rsicarelli.fakt.compiler.config.FaktOptions
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
@@ -72,13 +73,13 @@ class FaktCompilerPluginRegistrarSimpleTest {
             val options =
                 FaktOptions(
                     enabled = true,
-                    debug = false,
+                    logLevel = LogLevel.INFO,
                 )
 
             val stringRepresentation = options.toString()
 
             assertTrue(stringRepresentation.contains("enabled=true"), "Should show enabled state")
-            assertTrue(stringRepresentation.contains("debug=false"), "Should show debug state")
+            assertTrue(stringRepresentation.contains("logLevel=INFO"), "Should show log level")
         }
 
     @Test
@@ -91,9 +92,9 @@ class FaktCompilerPluginRegistrarSimpleTest {
             val options = FaktOptions.load(configuration)
 
             // THEN
-            // NOTE: FaktOptions.load() defaults to enabled=true, debug=true when keys are missing
+            // NOTE: FaktOptions.load() defaults to enabled=true, logLevel=INFO when keys are missing
             assertTrue(options.enabled, "Should default enabled to true when not specified")
-            assertTrue(options.debug, "Should default debug to true when not specified")
+            assertEquals(LogLevel.INFO, options.logLevel, "Should default logLevel to INFO when not specified")
             assertEquals(null, options.outputDir, "Should default output dir to null when not specified")
         }
 }

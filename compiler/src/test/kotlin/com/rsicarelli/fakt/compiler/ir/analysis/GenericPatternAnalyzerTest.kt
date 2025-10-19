@@ -17,30 +17,6 @@ class GenericPatternAnalyzerTest {
         assertNotNull(analyzer)
     }
 
-    @Test
-    fun `GIVEN GenericPatternAnalyzer WHEN detecting transformation patterns THEN should identify common transformations`() {
-        val patterns = analyzer.detectCommonTransformations()
-
-        assertTrue(patterns.isNotEmpty(), "Should detect common transformation patterns")
-
-        // Verify some expected patterns exist
-        assertTrue(patterns.any { it.inputType == "User" && it.outputType == "UserDto" })
-        assertTrue(patterns.any { it.inputType == "T" && it.outputType == "Result<T>" })
-        assertTrue(patterns.any { it.inputType == "Order" && it.outputType == "OrderSummary" })
-        assertTrue(patterns.any { it.inputType == "Product" && it.outputType == "ProductDto" })
-    }
-
-    @Test
-    fun `GIVEN GenericPatternAnalyzer WHEN detecting common types THEN should identify standard Kotlin types`() {
-        val commonTypes = analyzer.detectCommonTypes()
-
-        assertTrue(commonTypes.isNotEmpty(), "Should detect common types")
-        assertTrue(commonTypes.contains("kotlin.String"))
-        assertTrue(commonTypes.contains("kotlin.Int"))
-        assertTrue(commonTypes.contains("kotlin.Boolean"))
-        assertTrue(commonTypes.contains("User"))
-        assertTrue(commonTypes.contains("Order"))
-    }
 
     @Test
     fun `GIVEN NoGenerics pattern WHEN getting analysis summary THEN should provide meaningful description`() {
@@ -65,18 +41,15 @@ class GenericPatternAnalyzerTest {
     }
 
     @Test
-    fun `GIVEN MethodLevelGenerics pattern WHEN getting analysis summary THEN should include detected types and patterns`() {
+    fun `GIVEN MethodLevelGenerics pattern WHEN getting analysis summary THEN should describe generic methods`() {
         val methodLevelPattern =
             GenericPattern.MethodLevelGenerics(
                 genericMethods = emptyList(),
-                detectedTypes = setOf("User", "Order"),
-                transformationPatterns = listOf(TransformationPattern("User", "UserDto")),
             )
         val summary = GenericPatternAnalyzer.getAnalysisSummary(methodLevelPattern)
 
         assertTrue(summary.contains("Method-level generics"))
-        assertTrue(summary.contains("detected types"))
-        assertTrue(summary.contains("transformation patterns"))
+        assertTrue(summary.contains("generic methods"))
     }
 
     @Test
@@ -86,8 +59,6 @@ class GenericPatternAnalyzerTest {
                 classTypeParameters = emptyList(),
                 classConstraints = emptyList(),
                 genericMethods = emptyList(),
-                detectedTypes = setOf("User"),
-                transformationPatterns = emptyList(),
             )
         val summary = GenericPatternAnalyzer.getAnalysisSummary(mixedPattern)
 

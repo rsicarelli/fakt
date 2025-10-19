@@ -115,6 +115,7 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 // Pass configuration options to the compiler plugin
                 add(SubpluginOption(key = "enabled", value = extension.enabled.get().toString()))
                 add(SubpluginOption(key = "debug", value = extension.debug.get().toString()))
+                add(SubpluginOption(key = "logLevel", value = extension.logLevel.get().name))
 
                 // Build complete source set context using modern API
                 val buildDir =

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.optimization
 
+import com.rsicarelli.fakt.compiler.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.types.TypeInfo
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.TestInstance
@@ -26,7 +27,7 @@ class CompilerOptimizationsTest {
     fun `GIVEN new interface WHEN checking regeneration THEN should return true`() =
         runTest {
             // GIVEN: Fresh optimization instance with new interface
-            val optimizations = CompilerOptimizations()
+            val optimizations = CompilerOptimizations(logger = FaktLogger.quiet())
             val typeInfo =
                 TypeInfo(
                     name = "UserService",
@@ -48,7 +49,7 @@ class CompilerOptimizationsTest {
     fun `GIVEN interface already generated WHEN checking regeneration THEN should return false`() =
         runTest {
             // GIVEN: Optimization instance with already generated interface
-            val optimizations = CompilerOptimizations()
+            val optimizations = CompilerOptimizations(logger = FaktLogger.quiet())
             val typeInfo =
                 TypeInfo(
                     name = "PaymentService",
@@ -73,7 +74,7 @@ class CompilerOptimizationsTest {
     fun `GIVEN multiple targets processing same interface WHEN checking regeneration THEN first should generate rest should skip`() =
         runTest {
             // GIVEN: Multiple KMP targets (jvm, js, native) with same interface
-            val optimizations = CompilerOptimizations()
+            val optimizations = CompilerOptimizations(logger = FaktLogger.quiet())
             val interfaceSignature = "interface com.example.AuthService|props:2|funs:4"
             val typeInfo =
                 TypeInfo(
@@ -105,7 +106,7 @@ class CompilerOptimizationsTest {
     fun `GIVEN different interfaces WHEN checking regeneration THEN should handle independently`() =
         runTest {
             // GIVEN: Two different interfaces
-            val optimizations = CompilerOptimizations()
+            val optimizations = CompilerOptimizations(logger = FaktLogger.quiet())
             val typeInfo1 =
                 TypeInfo(
                     name = "ServiceA",
@@ -141,7 +142,7 @@ class CompilerOptimizationsTest {
         runTest {
             // GIVEN: Optimizations configured with custom annotation
             val customAnnotation = "com.company.GenerateFake"
-            val optimizations = CompilerOptimizations(fakeAnnotations = listOf(customAnnotation))
+            val optimizations = CompilerOptimizations(fakeAnnotations = listOf(customAnnotation), logger = FaktLogger.quiet())
 
             // WHEN: Checking if annotation is configured
             val isConfigured = optimizations.isConfiguredFor(customAnnotation)
@@ -156,7 +157,7 @@ class CompilerOptimizationsTest {
     fun `GIVEN indexed types WHEN finding by annotation THEN should return matching types`() =
         runTest {
             // GIVEN: Multiple indexed types with different annotations
-            val optimizations = CompilerOptimizations()
+            val optimizations = CompilerOptimizations(logger = FaktLogger.quiet())
             val fakeAnnotation = "com.rsicarelli.fakt.Fake"
             val customAnnotation = "com.company.Custom"
 
@@ -199,7 +200,7 @@ class CompilerOptimizationsTest {
     fun `GIVEN interface with modified signature WHEN checking regeneration THEN should require regeneration`() =
         runTest {
             // GIVEN: Interface that was generated, then modified
-            val optimizations = CompilerOptimizations()
+            val optimizations = CompilerOptimizations(logger = FaktLogger.quiet())
             val originalTypeInfo =
                 TypeInfo(
                     name = "UserService",
@@ -234,7 +235,7 @@ class CompilerOptimizationsTest {
     fun `GIVEN default configuration WHEN creating optimizations THEN should use Fake annotation`() =
         runTest {
             // GIVEN: Default configuration
-            val optimizations = CompilerOptimizations()
+            val optimizations = CompilerOptimizations(logger = FaktLogger.quiet())
 
             // WHEN: Checking for default annotation
             val isConfigured = optimizations.isConfiguredFor("com.rsicarelli.fakt.Fake")

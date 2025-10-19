@@ -6,9 +6,9 @@ import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.SourceSetExtractor
 import com.rsicarelli.fakt.compiler.output.SourceSetMapper
+import com.rsicarelli.fakt.compiler.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.types.ImportResolver
 import com.rsicarelli.fakt.compiler.types.TypeResolver
-import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
@@ -38,7 +38,26 @@ internal data class GeneratedCode(
     val implementation: String,
     val factory: String,
     val configDsl: String,
-)
+) {
+    /**
+     * Calculates total lines of code across all generated components.
+     *
+     * @return Total non-blank, non-comment lines of code
+     */
+    fun calculateTotalLOC(): Int {
+        val combinedCode = "$implementation\n$factory\n$configDsl"
+        return com.rsicarelli.fakt.compiler.utils.calculateLOC(combinedCode)
+    }
+
+    /**
+     * Calculates total file size in bytes.
+     *
+     * @return Total size of all generated code
+     */
+    fun calculateTotalBytes(): Int {
+        return implementation.length + factory.length + configDsl.length
+    }
+}
 
 /**
  * Contains metadata for writing generated code to a file.
@@ -63,7 +82,7 @@ internal class CodeGenerator(
     private val importResolver: ImportResolver,
     private val sourceSetMapper: SourceSetMapper,
     private val generators: CodeGenerators,
-    private val messageCollector: MessageCollector?,
+    private val logger: FaktLogger,
 ) {
     /**
      * Generates complete fake implementation including class, factory, and configuration DSL.
@@ -76,12 +95,12 @@ internal class CodeGenerator(
         sourceInterface: IrClass,
         analysis: InterfaceAnalysis,
         moduleFragment: IrModuleFragment,
-    ) {
+    ): GeneratedCode {
         val interfaceName = analysis.interfaceName
         val fakeClassName = "Fake${interfaceName}Impl"
         val packageName = sourceInterface.packageFqName?.asString() ?: ""
 
-        messageCollector?.reportInfo("Fakt: Generating fake for interface $interfaceName")
+        logger.trace("Generating fake for interface $interfaceName")
 
         try {
             val generatedCode =
@@ -104,12 +123,13 @@ internal class CodeGenerator(
                 code = generatedCode,
             )
 
-            messageCollector?.reportInfo("Fakt: Successfully generated fake for $interfaceName -> $fakeClassName")
+            logger.trace("Successfully generated fake for $interfaceName -> $fakeClassName")
+            return generatedCode
         } catch (e: Exception) {
             // Top-level error boundary: Catch all exceptions during code generation
             // This is a legitimate use of generic exception handling to provide context
             // We log the error with interface name for debugging, then re-throw to fail fast
-            messageCollector?.reportError("Fakt: Failed to generate fake for $interfaceName: ${e.message}")
+            logger.error("Failed to generate fake for $interfaceName: ${e.message}")
             throw e
         }
     }
@@ -125,12 +145,12 @@ internal class CodeGenerator(
         sourceClass: IrClass,
         analysis: ClassAnalysis,
         moduleFragment: IrModuleFragment,
-    ) {
+    ): GeneratedCode {
         val className = analysis.className
         val fakeClassName = "Fake${className}Impl"
         val packageName = sourceClass.packageFqName?.asString() ?: ""
 
-        messageCollector?.reportInfo("Fakt: Generating fake for class $className")
+        logger.trace("Generating fake for class $className")
 
         try {
             val generatedCode =
@@ -153,9 +173,10 @@ internal class CodeGenerator(
                 code = generatedCode,
             )
 
-            messageCollector?.reportInfo("Fakt: Successfully generated fake for class $className -> $fakeClassName")
+            logger.trace("Successfully generated fake for class $className -> $fakeClassName")
+            return generatedCode
         } catch (e: Exception) {
-            messageCollector?.reportError("Fakt: Failed to generate fake for class $className: ${e.message}")
+            logger.error("Failed to generate fake for class $className: ${e.message}")
             throw e
         }
     }
@@ -223,7 +244,7 @@ internal class CodeGenerator(
 
         outputFile.writeText(fullCode)
 
-        messageCollector?.reportInfo("Fakt: Generated fake written to: ${outputFile.absolutePath}")
+        logger.trace("Generated fake written to: ${outputFile.absolutePath}")
     }
 
     /**
@@ -290,23 +311,7 @@ internal class CodeGenerator(
 
         outputFile.writeText(fullCode)
 
-        messageCollector?.reportInfo("Fakt: Generated class fake written to: ${outputFile.absolutePath}")
-    }
-
-    private fun MessageCollector.reportInfo(message: String) {
-        this.report(
-            org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.INFO,
-            message,
-            null,
-        )
-    }
-
-    private fun MessageCollector.reportError(message: String) {
-        this.report(
-            org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.ERROR,
-            message,
-            null,
-        )
+        logger.trace("Generated class fake written to: ${outputFile.absolutePath}")
     }
 
     /**

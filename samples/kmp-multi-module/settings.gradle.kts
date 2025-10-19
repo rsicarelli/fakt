@@ -7,29 +7,20 @@
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
-    // CRITICAL: This enables local plugin development via composite builds
-    // Plugin changes auto-rebuild when running this sample
-    includeBuild("../..")
+    // Include build-logic for convention plugins (fakt-sample, etc.)
     includeBuild("../../build-logic")
 
     repositories {
+        mavenLocal()  // ✅ Use published plugin from mavenLocal
         mavenCentral()
         google()
         gradlePluginPortal()
     }
 }
 
-// Separate includeBuild for dependency substitution (two planes!)
-// This substitutes ALL fakt artifacts with source projects
-includeBuild("../..") {
-    dependencySubstitution {
-        substitute(module("com.rsicarelli.fakt:runtime:1.0.0-COMPOSITE-BUILD"))
-            .using(project(":runtime"))
-    }
-}
-
 dependencyResolutionManagement {
     repositories {
+        mavenLocal()  // ✅ Use published runtime from mavenLocal
         mavenCentral()
         google()
     }
@@ -40,6 +31,7 @@ dependencyResolutionManagement {
         }
     }
 }
+
 
 rootProject.name = "kmp-multi-module"
 
