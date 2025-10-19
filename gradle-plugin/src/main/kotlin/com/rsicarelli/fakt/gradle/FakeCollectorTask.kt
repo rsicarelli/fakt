@@ -6,6 +6,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Internal
@@ -70,6 +71,17 @@ abstract class FakeCollectorTask : DefaultTask() {
     @get:OutputDirectory
     abstract val destinationDir: DirectoryProperty
 
+    /**
+     * Available source set names from the project's KMP configuration.
+     * Used for dynamic platform detection instead of hardcoded platform list.
+     * Empty set means fallback to legacy hardcoded behavior.
+     *
+     * Example: ["commonMain", "jvmMain", "iosMain", "tvosMain", "watchosMain", ...]
+     */
+    @get:Input
+    @get:Optional
+    abstract val availableSourceSets: SetProperty<String>
+
     init {
         group = "fakt"
         description = "Collects generated fakes from source project"
@@ -113,11 +125,13 @@ abstract class FakeCollectorTask : DefaultTask() {
                 return@forEach
             }
 
-            // Use platform detection for this source set
+            // Use platform detection for this source set (with available source sets if configured)
+            val sourceSetNames = availableSourceSets.getOrElse(emptySet())
             val result =
                 collectWithPlatformDetection(
                     sourceDir = kotlinDir,
                     destinationBaseDir = destinationBaseDir,
+                    availableSourceSets = sourceSetNames,
                 )
 
             totalCollected += result.collectedCount
@@ -147,13 +161,26 @@ abstract class FakeCollectorTask : DefaultTask() {
          *
          * Detection strategy:
          * 1. Extract package declaration from file content
-         * 2. Look for platform markers in package segments (.jvm., .js., .ios., etc.)
-         * 3. Return appropriate source set or default to commonMain
+         * 2. Dynamically match package segments against real source sets from project
+         * 3. Prioritize shortest match (closest to package segment name)
+         * 4. Falls back to commonMain if no match found
+         *
+         * **Dynamic Matching**:
+         * - Extracts package segments (e.g., "api.tvos.services" → ["api", "tvos", "services"])
+         * - Finds source sets that start with each segment (case-insensitive)
+         * - Prioritizes hierarchical source sets over architecture-specific ones
+         *   (e.g., iosMain over iosArm64Main for package "api.ios.services")
+         * - Falls back to commonMain if no match found
          *
          * @param fileContent The content of the fake file
+         * @param availableSourceSets Set of source set names available in the project
+         *   (from KotlinMultiplatformExtension.sourceSets.names)
          * @return The source set name (e.g., "jvmMain", "commonMain", "iosMain")
          */
-        fun determinePlatformSourceSet(fileContent: String): String {
+        fun determinePlatformSourceSet(
+            fileContent: String,
+            availableSourceSets: Set<String> = emptySet(),
+        ): String {
             // Extract package declaration (first N lines for performance)
             val packageDeclaration =
                 fileContent
@@ -167,16 +194,66 @@ abstract class FakeCollectorTask : DefaultTask() {
             // Split package into segments for analysis
             val packageSegments = packageDeclaration.split(".")
 
-            // Detect platform markers in package segments
-            return when {
-                packageSegments.any { it == "jvm" } -> "jvmMain"
-                packageSegments.any { it == "js" } -> "jsMain"
-                packageSegments.any { it == "ios" } -> "iosMain"
-                packageSegments.any { it == "native" } -> "nativeMain"
-                packageSegments.any { it == "android" } -> "androidMain"
-                packageSegments.any { it == "common" || it == "shared" } -> "commonMain"
-                else -> "commonMain" // Default fallback
+            // Dynamic matching using real source sets from project
+            return matchPackageToSourceSet(packageSegments, availableSourceSets)
+        }
+
+        /**
+         * Match package segments to available source sets dynamically.
+         * Prioritizes matches that are closest to the package segment.
+         *
+         * Strategy:
+         * 1. Find all source sets that match package segments (case-insensitive prefix match)
+         * 2. Prioritize shortest match (closest to package segment name)
+         * 3. This ensures hierarchical source sets are preferred over architecture-specific ones
+         *
+         * Example 1 - Hierarchical match:
+         * - Package: "api.ios.services" (segment: "ios")
+         * - Available: ["iosMain", "iosArm64Main", "iosX64Main"]
+         * - Matches: ["iosMain" (7 chars), "iosArm64Main" (13 chars), "iosX64Main" (10 chars)]
+         * - Result: "iosMain" (shortest/closest match)
+         *
+         * Example 2 - Architecture-specific match:
+         * - Package: "api.iosArm64.services" (segment: "iosArm64")
+         * - Available: ["iosMain", "iosArm64Main"]
+         * - Matches: ["iosArm64Main" (13 chars - exact match minus "Main")]
+         * - Result: "iosArm64Main" (exact architecture match)
+         *
+         * @param packageSegments List of package segments (e.g., ["api", "ios", "services"])
+         * @param availableSourceSets Set of source set names from project
+         * @return Matched source set name or "commonMain" as fallback
+         */
+        private fun matchPackageToSourceSet(
+            packageSegments: List<String>,
+            availableSourceSets: Set<String>,
+        ): String {
+            // Find all matching source sets for any package segment
+            // Store as pairs of (sourceSet, matchingSegment) to know which segment matched
+            val matchedSourceSets =
+                packageSegments
+                    .flatMap { segment ->
+                        availableSourceSets
+                            .filter { sourceSet ->
+                                // Match if source set name starts with segment (case-insensitive)
+                                // Examples:
+                                // - "ios" matches "iosMain", "iosArm64Main", "iosTest"
+                                // - "tvos" matches "tvosMain", "tvosArm64Main"
+                                // - "wasmJs" matches "wasmJsMain"
+                                sourceSet.startsWith(segment, ignoreCase = true) && sourceSet.endsWith("Main")
+                            }.map { sourceSet -> sourceSet to segment } // Keep track of which segment matched
+                    }.distinct()
+
+            // If no matches, fallback to commonMain
+            if (matchedSourceSets.isEmpty()) {
+                return "commonMain"
             }
+
+            // Prioritize source set with shortest name (closest match to package segment)
+            // This prioritizes hierarchical source sets over architecture-specific ones:
+            // - "ios" → "iosMain" (7 chars) preferred over "iosArm64Main" (13 chars)
+            // - "iosArm64" → "iosArm64Main" (13 chars) is the closest match
+            // - "tvos" → "tvosMain" (8 chars) preferred over "tvosSimulatorArm64Main" (23 chars)
+            return matchedSourceSets.minByOrNull { (sourceSet, _) -> sourceSet.length }?.first ?: "commonMain"
         }
 
         /**
@@ -199,11 +276,13 @@ abstract class FakeCollectorTask : DefaultTask() {
          *
          * @param sourceDir Directory containing generated fakes
          * @param destinationBaseDir Base directory for collected fakes
+         * @param availableSourceSets Set of available source sets for dynamic detection (optional)
          * @return Collection result with statistics
          */
         fun collectWithPlatformDetection(
             sourceDir: File,
             destinationBaseDir: File,
+            availableSourceSets: Set<String> = emptySet(),
         ): CollectionResult {
             val platformDistribution = mutableMapOf<String, Int>()
             var collectedCount = 0
@@ -215,7 +294,7 @@ abstract class FakeCollectorTask : DefaultTask() {
                 .forEach { sourceFile ->
                     // Read file content and detect platform
                     val fileContent = sourceFile.readText()
-                    val platform = determinePlatformSourceSet(fileContent)
+                    val platform = determinePlatformSourceSet(fileContent, availableSourceSets)
 
                     // Calculate relative path from source directory
                     val relativePath = sourceFile.relativeTo(sourceDir)
@@ -268,6 +347,9 @@ abstract class FakeCollectorTask : DefaultTask() {
                 return
             }
 
+            // Extract available source set names for dynamic platform detection
+            val availableSourceSetNames = kotlinExtension.sourceSets.names
+
             // Create single collector task with platform detection
             val taskName = "collectFakes"
             val task =
@@ -284,6 +366,10 @@ abstract class FakeCollectorTask : DefaultTask() {
                     it.destinationDir.set(
                         project.layout.buildDirectory.dir("generated/collected-fakes/_placeholder"),
                     )
+
+                    // Configure available source sets for dynamic platform detection
+                    // This enables support for ALL KMP targets without hardcoding
+                    it.availableSourceSets.set(availableSourceSetNames)
 
                     // Add dependency on source project's MAIN compilation tasks only
                     // Avoid test compilations to prevent circular dependencies

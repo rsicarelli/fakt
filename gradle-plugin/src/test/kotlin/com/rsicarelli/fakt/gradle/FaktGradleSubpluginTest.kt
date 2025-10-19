@@ -4,6 +4,7 @@ package com.rsicarelli.fakt.gradle
 
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Test
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -48,8 +49,6 @@ class FaktGradleSubpluginTest {
 
         // Then: Extension should have expected defaults
         assertTrue(extension.enabled.get())
-        assertTrue(extension.generateCallTracking.get())
-        assertTrue(extension.generateBuilderPatterns.get())
-        assertTrue(extension.threadSafetyChecks.get())
+        assertFalse(extension.debug.get())
     }
 }
