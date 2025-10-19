@@ -22,7 +22,7 @@ interface PaymentService {
      */
     fun processPayment(
         amount: Double,
-        currency: String = "USD",
+        currency: String,
     ): String?
 
     /**

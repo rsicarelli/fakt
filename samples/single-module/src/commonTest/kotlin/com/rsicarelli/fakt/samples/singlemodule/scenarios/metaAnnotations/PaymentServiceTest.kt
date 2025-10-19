@@ -65,7 +65,6 @@ class PaymentServiceTest {
             assertFalse(paymentService.refundTransaction("INVALID"))
         }
 
-    @Ignore // TODO: Default parameters not yet supported - tracked in other session
     @Test
     fun `test default parameters with custom annotation`() {
         // Given
@@ -77,9 +76,9 @@ class PaymentServiceTest {
             }
 
         // When - Explicitly passing currency parameter (default params not yet supported in Fakt)
-        val result = paymentService.processPayment(50.0, "USD")
+        val result = paymentService.processPayment(50.1, "USD")
 
         // Then - USD is used
-        assertEquals("Payment: 50.0 USD", result)
+        assertEquals("Payment: 50.1 USD", result)
     }
 }
