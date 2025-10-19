@@ -4,7 +4,7 @@ This directory contains comprehensive samples demonstrating Fakt capabilities ac
 
 ## Available Samples
 
-### 📦 **single-module**
+### 📦 **kmp-single-module**
 A single KMP module demonstrating core Fakt features:
 - **Basic Interfaces**: Simple property and method faking
 - **Suspend Functions**: Async/coroutine support with proper handling
@@ -54,8 +54,8 @@ Fakt generates fakes at the appropriate test source set level:
 # Build compiler plugin first
 ./gradlew :compiler:shadowJar
 
-# Test single-module sample
-cd samples/single-module
+# Test kmp-single-module sample
+cd samples/kmp-single-module
 ../../gradlew build
 
 # Test multi-module sample

@@ -1,0 +1,16 @@
+// Copyright (C) 2025 Rodrigo Sicarelli
+// SPDX-License-Identifier: Apache-2.0
+package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.collections
+
+import com.rsicarelli.fakt.Fake
+
+/**
+ * Scenario 26: Collection with predicate
+ */
+@Fake
+fun interface CollectionFilter<T> {
+    fun filter(
+        items: Collection<T>,
+        predicate: (T) -> Boolean,
+    ): Collection<T>
+}
