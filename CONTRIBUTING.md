@@ -47,7 +47,7 @@ make test
 
 # Test with samples
 make test-sample
-# or: ./gradlew :samples:single-module:build
+# or: ./gradlew :samples:kmp-single-module:build
 ```
 
 ---

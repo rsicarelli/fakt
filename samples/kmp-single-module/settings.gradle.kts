@@ -7,33 +7,20 @@
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
-    // CRITICAL: This enables local plugin development via composite builds
-    // Plugin changes auto-rebuild when running this sample
-    includeBuild("../..")
+    // Include build-logic for convention plugins (fakt-sample, etc.)
     includeBuild("../../build-logic")
 
     repositories {
+        mavenLocal()  // ✅ Use published plugin from mavenLocal
         mavenCentral()
         google()
         gradlePluginPortal()
     }
 }
 
-// Separate includeBuild for dependency substitution (two planes!)
-// This substitutes ALL fakt artifacts with source projects
-includeBuild("../..") {
-    dependencySubstitution {
-        substitute(module("com.rsicarelli.fakt:runtime:1.0.0-SNAPSHOT"))
-            .using(project(":runtime"))
-        substitute(module("com.rsicarelli.fakt:compiler-api:1.0.0-SNAPSHOT"))
-            .using(project(":compiler-api"))
-        substitute(module("com.rsicarelli.fakt:compiler:1.0.0-SNAPSHOT"))
-            .using(project(":compiler"))
-    }
-}
-
 dependencyResolutionManagement {
     repositories {
+        mavenLocal()  // ✅ Use published runtime from mavenLocal
         mavenCentral()
         google()
     }

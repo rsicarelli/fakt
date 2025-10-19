@@ -3,6 +3,14 @@
 package com.rsicarelli.fakt.compiler.optimization
 
 import com.rsicarelli.fakt.compiler.types.TypeInfo
+import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
+import org.jetbrains.kotlin.cli.common.messages.MessageCollector
+import java.io.File
+
+// Extension function to report INFO messages
+private fun MessageCollector.reportInfo(message: String) {
+    this.report(CompilerMessageSeverity.INFO, message)
+}
 
 /**
  * Provides compiler optimization capabilities including custom annotation support and incremental compilation.
@@ -68,22 +76,73 @@ interface CompilerOptimizations {
 
     companion object {
         /**
-         * Creates a new [CompilerOptimizations] instance with the specified configuration.
+         * Returns a [CompilerOptimizations] instance with file-based caching.
          *
-         * Simple in-memory implementation without incremental compilation persistence.
+         * **FILE-BASED CACHE**: Uses a file in the build directory to persist generated signatures
+         * across multiple compilation tasks (KMP targets). This prevents redundant generation when
+         * multiple targets (jvm, js, native, metadata, etc.) compile the same interface.
          *
          * @param fakeAnnotations List of fully qualified annotation names to process.
          *                       Defaults to `["com.rsicarelli.fakt.Fake"]`
-         * @param outputDir Optional output directory (unused in simple implementation)
-         * @return A new optimization instance configured for the specified annotations
+         * @param outputDir Output directory for generated code (used to determine cache file location)
+         * @param messageCollector Optional message collector for debug logging
+         * @return An optimization instance configured for the specified annotations with file-based caching
          */
         operator fun invoke(
             fakeAnnotations: List<String> = listOf("com.rsicarelli.fakt.Fake"),
             outputDir: String? = null,
-        ): CompilerOptimizations =
-            object : CompilerOptimizations {
+            messageCollector: MessageCollector? = null,
+        ): CompilerOptimizations {
+            return object : CompilerOptimizations {
                 private val indexedTypes = mutableListOf<TypeInfo>()
-                private val generatedSignatures = mutableSetOf<String>()
+
+                // File-based cache for signatures (shared across compilation tasks)
+                private val cacheFile: File? = outputDir?.let { dir ->
+                    // Use parent directory (build/generated/fakt) to store cache
+                    // This ensures the cache is shared across all source sets
+                    File(dir).parentFile?.resolve("fakt-cache")?.resolve("generated-signatures.txt")?.also {
+                        it.parentFile?.mkdirs()
+                    }
+                }
+
+                // Load previously generated signatures from file
+                private val generatedSignatures: MutableSet<String> = loadSignaturesFromFile()
+
+                init {
+                    messageCollector?.reportInfo(
+                        "🔧 Fakt: CompilerOptimizations initialized (cache=${cacheFile?.absolutePath}, loaded=${generatedSignatures.size} signatures)"
+                    )
+                }
+
+                private fun loadSignaturesFromFile(): MutableSet<String> {
+                    val signatures = mutableSetOf<String>()
+                    if (cacheFile?.exists() == true) {
+                        try {
+                            cacheFile.readLines().forEach { line ->
+                                if (line.isNotBlank()) {
+                                    signatures.add(line.trim())
+                                }
+                            }
+                            messageCollector?.reportInfo("📖 Fakt: Loaded ${signatures.size} cached signatures from ${cacheFile.absolutePath}")
+                        } catch (e: Exception) {
+                            messageCollector?.reportInfo("⚠️ Fakt: Failed to load cache file: ${e.message}")
+                        }
+                    }
+                    return signatures
+                }
+
+                private fun saveSignatureToFile(signature: String) {
+                    if (cacheFile == null) return
+
+                    try {
+                        // Append signature to file (synchronized to avoid concurrent writes)
+                        synchronized(cacheFile) {
+                            cacheFile.appendText("$signature\n")
+                        }
+                    } catch (e: Exception) {
+                        messageCollector?.reportInfo("⚠️ Fakt: Failed to write to cache file: ${e.message}")
+                    }
+                }
 
                 override fun isConfiguredFor(annotation: String): Boolean = annotation in fakeAnnotations
 
@@ -97,13 +156,16 @@ interface CompilerOptimizations {
                     }
 
                 override fun needsRegeneration(type: TypeInfo): Boolean {
-                    // Always regenerate in simple mode (no incremental compilation)
-                    return true
+                    // Check file-based cache to skip regeneration across compilation tasks
+                    // This prevents redundant generation when multiple KMP targets compile the same interface
+                    return type.signature !in generatedSignatures
                 }
 
                 override fun recordGeneration(type: TypeInfo) {
                     generatedSignatures.add(type.signature)
+                    saveSignatureToFile(type.signature)
                 }
             }
+        }
     }
 }

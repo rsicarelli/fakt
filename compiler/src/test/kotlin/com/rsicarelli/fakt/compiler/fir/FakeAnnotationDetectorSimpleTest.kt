@@ -38,7 +38,11 @@ class FakeAnnotationDetectorSimpleTest {
             // Then - should have sensible defaults
             assertFalse(params.trackCalls, "Should have call tracking disabled by default")
             assertFalse(params.builder, "Should have builder pattern disabled by default")
-            assertEquals(emptyList<ClassId>(), params.dependencies, "Should have empty dependencies by default")
+            assertEquals(
+                emptyList(),
+                params.dependencies,
+                "Should have empty dependencies by default"
+            )
             assertTrue(params.concurrent, "Should be concurrent/thread-safe by default")
             assertEquals("test", params.scope, "Should have test scope by default")
         }
@@ -125,7 +129,11 @@ class FakeAnnotationDetectorSimpleTest {
             // Then
             assertFalse(defaultParams.trackCalls, "Should not track calls by default")
             assertFalse(defaultParams.builder, "Should not generate builders by default")
-            assertEquals(emptyList<ClassId>(), defaultParams.dependencies, "Should have no dependencies by default")
+            assertEquals(
+                emptyList(),
+                defaultParams.dependencies,
+                "Should have no dependencies by default"
+            )
             assertTrue(defaultParams.concurrent, "Should be thread-safe by default")
             assertEquals("test", defaultParams.scope, "Should use test scope by default")
         }

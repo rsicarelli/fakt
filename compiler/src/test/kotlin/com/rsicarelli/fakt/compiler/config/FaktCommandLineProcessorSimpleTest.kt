@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.config
 
-import com.rsicarelli.fakt.compiler.config.FaktCommandLineProcessor
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi

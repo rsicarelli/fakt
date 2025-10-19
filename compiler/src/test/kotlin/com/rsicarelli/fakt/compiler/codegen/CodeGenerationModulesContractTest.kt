@@ -145,15 +145,6 @@ class CodeGenerationModulesContractTest {
 
     @Test
     fun `GIVEN code generation modules WHEN checking module separation THEN should be properly decoupled`() {
-        // GIVEN & WHEN
-        val typeResolver = TypeResolver()
-        val importResolver = ImportResolver(typeResolver)
-        val sourceSetMapper =
-            SourceSetMapper(
-                outputDir = "/tmp/test",
-                messageCollector = null,
-            )
-
         // TypeResolver should be independent
         val typeResolverFields = TypeResolver::class.java.declaredFields
         assertFalse(

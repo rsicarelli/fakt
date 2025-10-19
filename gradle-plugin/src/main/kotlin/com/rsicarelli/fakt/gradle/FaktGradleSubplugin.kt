@@ -80,12 +80,13 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
 
         // Apply to main compilations where @Fake annotations are defined
         // - JVM/Android projects: "main" compilation
-        // - KMP projects: "jvmMain", "jsMain", "iosMain", "commonMain", etc.
+        // - KMP projects: "jvmMain", "jsMain", "iosMain", "commonMain", "metadata", etc.
         val compilationName = kotlinCompilation.name.lowercase()
 
         val isMainCompilation =
             compilationName == "main" ||
-                compilationName.endsWith("main")
+                compilationName.endsWith("main") ||
+                compilationName == "metadata"  // ✅ FIX: Include metadata compilation for KMP
 
         project.logger.info(
             "Fakt: Checking compilation '${kotlinCompilation.name}' - applicable: $isMainCompilation",
