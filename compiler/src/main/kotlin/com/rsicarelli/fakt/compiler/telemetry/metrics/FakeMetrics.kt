@@ -11,6 +11,9 @@ import com.rsicarelli.fakt.compiler.ir.analysis.GenericPattern
  * Used for performance profiling, identifying slow fakes, and providing insights in
  * compilation reports.
  *
+ * **Time precision:** Uses nanoseconds (System.nanoTime()) for accurate measurement.
+ * Smart formatting converts to appropriate units (µs/ms/s) in reports.
+ *
  * **Usage:**
  * ```kotlin
  * val metrics = FakeMetrics(
@@ -18,8 +21,8 @@ import com.rsicarelli.fakt.compiler.ir.analysis.GenericPattern
  *     pattern = GenericPattern.NoGenerics,
  *     memberCount = 5,  // 2 properties + 3 functions
  *     typeParamCount = 0,
- *     analysisTimeMs = 18,
- *     generationTimeMs = 45,
+ *     analysisTimeNanos = 18_000_000,  // 18ms
+ *     generationTimeNanos = 45_000_000,  // 45ms
  *     generatedLOC = 87,
  *     fileSizeBytes = 2_450,
  *     importCount = 3
@@ -30,8 +33,8 @@ import com.rsicarelli.fakt.compiler.ir.analysis.GenericPattern
  * @property pattern Detected generic pattern (NoGenerics, ClassLevel, etc)
  * @property memberCount Total number of members (properties + functions)
  * @property typeParamCount Number of type parameters
- * @property analysisTimeMs Time spent analyzing structure (ms)
- * @property generationTimeMs Time spent generating code (ms)
+ * @property analysisTimeNanos Time spent analyzing structure (nanoseconds)
+ * @property generationTimeNanos Time spent generating code (nanoseconds)
  * @property generatedLOC Lines of code generated (implementation + factory + DSL)
  * @property fileSizeBytes Size of generated code in bytes
  * @property importCount Number of imports required
@@ -41,26 +44,26 @@ data class FakeMetrics(
     val pattern: GenericPattern,
     val memberCount: Int,
     val typeParamCount: Int,
-    val analysisTimeMs: Long,
-    val generationTimeMs: Long,
+    val analysisTimeNanos: Long,
+    val generationTimeNanos: Long,
     val generatedLOC: Int,
     val fileSizeBytes: Int = 0,
     val importCount: Int,
 ) {
     /**
-     * Total time spent on this fake (analysis + generation).
+     * Total time spent on this fake (analysis + generation) in nanoseconds.
      */
-    val totalTimeMs: Long
-        get() = analysisTimeMs + generationTimeMs
+    val totalTimeNanos: Long
+        get() = analysisTimeNanos + generationTimeNanos
 
     /**
      * Indicates if this fake is slow (took longer than threshold).
      *
-     * Threshold: 100ms total time
+     * Threshold: 100ms (100_000_000 nanoseconds) total time
      *
      * @return true if fake took >100ms to process
      */
-    fun isSlow(): Boolean = totalTimeMs > 100
+    fun isSlow(): Boolean = totalTimeNanos > 100_000_000
 
     /**
      * Returns a visual indicator for slow fakes.
@@ -70,12 +73,24 @@ data class FakeMetrics(
     fun slowIndicator(): String = if (isSlow()) " ⚠️" else ""
 
     /**
+     * Formats duration as human-readable string with smart unit selection.
+     *
+     * Automatically chooses the most appropriate unit:
+     * - 0-999µs: Shows microseconds
+     * - 1-999ms: Shows milliseconds
+     * - 1s+: Shows seconds with decimal
+     *
+     * @return Formatted duration string (e.g., "234µs", "45ms", "1.2s")
+     */
+    fun formattedDuration(): String = com.rsicarelli.fakt.compiler.telemetry.TimeFormatter.format(totalTimeNanos)
+
+    /**
      * Formats fake metrics as a one-line summary.
      *
-     * Format: "FakeName (42ms) - Pattern [warning]"
+     * Format: "FakeName (duration) - Pattern [warning]"
      *
      * Examples:
-     * - "PredicateCombiner (18ms) - NoGenerics"
+     * - "PredicateCombiner (234µs) - NoGenerics"
      * - "PairMapper (150ms) - ClassLevel ⚠️"
      *
      * @return Formatted summary string
@@ -88,6 +103,6 @@ data class FakeMetrics(
                 is GenericPattern.MethodLevelGenerics -> "MethodLevel"
                 is GenericPattern.MixedGenerics -> "Mixed"
             }
-        return "$name (${totalTimeMs}ms) - $patternName${slowIndicator()}"
+        return "$name (${formattedDuration()}) - $patternName${slowIndicator()}"
     }
 }

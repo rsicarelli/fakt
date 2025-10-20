@@ -10,10 +10,12 @@ package com.rsicarelli.fakt.compiler.telemetry.metrics
  *
  * Used by [CompilationReport] to generate formatted output at different log levels.
  *
+ * **Time precision:** Uses nanoseconds (System.nanoTime()) for accurate measurement.
+ *
  * **Usage:**
  * ```kotlin
  * val summary = CompilationSummary(
- *     totalTimeMs = 1238,
+ *     totalTimeNanos = 1_238_000_000,  // 1.238s
  *     interfacesDiscovered = 15,
  *     interfacesProcessed = 10,
  *     interfacesCached = 5,
@@ -21,8 +23,8 @@ package com.rsicarelli.fakt.compiler.telemetry.metrics
  *     classesProcessed = 2,
  *     classesCached = 1,
  *     phaseBreakdown = mapOf(
- *         "DISCOVERY" to PhaseMetrics("DISCOVERY", start, start + 120),
- *         "ANALYSIS" to PhaseMetrics("ANALYSIS", start + 120, start + 460)
+ *         "DISCOVERY" to PhaseMetrics("DISCOVERY", start, start + 120_000_000),
+ *         "ANALYSIS" to PhaseMetrics("ANALYSIS", start + 120_000_000, start + 460_000_000)
  *     ),
  *     fakeMetrics = listOf(...),
  *     totalLOC = 1847,
@@ -32,7 +34,7 @@ package com.rsicarelli.fakt.compiler.telemetry.metrics
  * )
  * ```
  *
- * @property totalTimeMs Total compilation time in milliseconds
+ * @property totalTimeNanos Total compilation time in nanoseconds
  * @property interfacesDiscovered Total interfaces discovered with @Fake
  * @property interfacesProcessed Interfaces actually processed (not cached)
  * @property interfacesCached Interfaces skipped (cached, unchanged)
@@ -47,7 +49,7 @@ package com.rsicarelli.fakt.compiler.telemetry.metrics
  * @property outputDirectory Output directory path
  */
 data class CompilationSummary(
-    val totalTimeMs: Long,
+    val totalTimeNanos: Long,
     val interfacesDiscovered: Int,
     val interfacesProcessed: Int,
     val interfacesCached: Int,
@@ -76,14 +78,14 @@ data class CompilationSummary(
     }
 
     /**
-     * Average time per fake in milliseconds.
+     * Average time per fake in nanoseconds.
      *
      * @return Average processing time, or 0 if no fakes processed
      */
     fun avgTimePerFake(): Long {
         val totalProcessed = interfacesProcessed + classesProcessed
         if (totalProcessed == 0) return 0
-        val totalFakeTime = fakeMetrics.sumOf { it.totalTimeMs }
+        val totalFakeTime = fakeMetrics.sumOf { it.totalTimeNanos }
         return totalFakeTime / totalProcessed
     }
 
@@ -93,7 +95,7 @@ data class CompilationSummary(
      * @param n Number of slowest fakes to return (default: 3)
      * @return List of slowest fakes, sorted by total time descending
      */
-    fun topSlowestFakes(n: Int = 3): List<FakeMetrics> = fakeMetrics.sortedByDescending { it.totalTimeMs }.take(n)
+    fun topSlowestFakes(n: Int = 3): List<FakeMetrics> = fakeMetrics.sortedByDescending { it.totalTimeNanos }.take(n)
 
     /**
      * Formats total file size as human-readable string.
@@ -119,19 +121,16 @@ data class CompilationSummary(
     fun isSuccessful(): Boolean = interfacesProcessed > 0 || classesProcessed > 0
 
     /**
-     * Formats total time as human-readable string.
+     * Formats total time as human-readable string with smart unit selection.
      *
      * Examples:
+     * - 234µs → "234µs"
      * - 340ms → "340ms"
      * - 1238ms → "1.2s"
      *
      * @return Formatted total time
      */
-    fun formattedTotalTime(): String =
-        when {
-            totalTimeMs < 1000 -> "${totalTimeMs}ms"
-            else -> String.format("%.1fs", totalTimeMs / 1000.0)
-        }
+    fun formattedTotalTime(): String = com.rsicarelli.fakt.compiler.telemetry.TimeFormatter.format(totalTimeNanos)
 
     /**
      * Total number of fakes generated (interfaces + classes).
@@ -198,16 +197,16 @@ data class CompilationSummary(
     fun getPhase(phaseName: String): PhaseMetrics? = phaseBreakdown[phaseName]
 
     /**
-     * Gets discovery phase timing.
+     * Gets discovery phase timing in nanoseconds.
      *
-     * @return Discovery phase metrics, or 0ms if not found
+     * @return Discovery phase duration, or 0 if not found
      */
-    fun discoveryTimeMs(): Long = getPhase("DISCOVERY")?.duration ?: 0L
+    fun discoveryTimeNanos(): Long = getPhase("DISCOVERY")?.duration ?: 0L
 
     /**
-     * Gets generation phase timing.
+     * Gets generation phase timing in nanoseconds.
      *
-     * @return Generation phase metrics, or 0ms if not found
+     * @return Generation phase duration, or 0 if not found
      */
-    fun generationTimeMs(): Long = getPhase("GENERATION")?.duration ?: 0L
+    fun generationTimeNanos(): Long = getPhase("GENERATION")?.duration ?: 0L
 }

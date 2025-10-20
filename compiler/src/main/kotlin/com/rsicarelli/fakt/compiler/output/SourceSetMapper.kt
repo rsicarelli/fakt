@@ -478,7 +478,6 @@ internal class SourceSetMapper(
         dir: File,
     ) {
         logger.trace("Module '$moduleName' -> Primary target '$primaryTarget'")
-        logger.trace("Output directory: ${dir.absolutePath}")
     }
 
     /**
@@ -494,7 +493,6 @@ internal class SourceSetMapper(
             "Module '$moduleName' -> Primary target '$primaryTarget' not available, " +
                 "using fallback '$fallbackTarget'",
         )
-        logger.trace("Output directory: ${dir.absolutePath}")
     }
 
     /**
@@ -509,6 +507,5 @@ internal class SourceSetMapper(
             "Module '$moduleName' -> Created primary target '$primaryTarget' " +
                 "(fallbacks unavailable)",
         )
-        logger.trace("Output directory: ${dir.absolutePath}")
     }
 }

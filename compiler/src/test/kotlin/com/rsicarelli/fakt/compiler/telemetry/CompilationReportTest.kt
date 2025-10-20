@@ -20,11 +20,11 @@ import kotlin.test.assertTrue
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CompilationReportTest {
     private fun createTestSummary(
-        totalTimeMs: Long = 44,
+        totalTimeNanos: Long = 44_000_000,  // 44ms in nanoseconds
         interfacesProcessed: Int = 100,
         classesProcessed: Int = 21,
     ): CompilationSummary {
-        val phaseMetrics = PhaseMetrics("GENERATION", 1000, 1044)
+        val phaseMetrics = PhaseMetrics("GENERATION", 1_000_000_000, 1_044_000_000)  // 1s start, 1.044s end = 44ms duration
 
         val fakeMetrics =
             FakeMetrics(
@@ -32,15 +32,15 @@ class CompilationReportTest {
                 pattern = GenericPattern.NoGenerics,
                 memberCount = 5,
                 typeParamCount = 0,
-                analysisTimeMs = 10,
-                generationTimeMs = 20,
+                analysisTimeNanos = 10_000_000,  // 10ms
+                generationTimeNanos = 20_000_000,  // 20ms
                 generatedLOC = 87,
                 fileSizeBytes = 2450,
                 importCount = 3,
             )
 
         return CompilationSummary(
-            totalTimeMs = totalTimeMs,
+            totalTimeNanos = totalTimeNanos,
             interfacesDiscovered = interfacesProcessed,
             interfacesProcessed = interfacesProcessed,
             interfacesCached = 0,
@@ -106,9 +106,12 @@ class CompilationReportTest {
         val report = CompilationReport.generate(summary, LogLevel.TRACE)
 
         // THEN
-        assertTrue(report.contains("FAKT COMPILATION REPORT (TRACE)"))
+        // New tree-style format: no "REPORT" title, more compact structure
+        assertTrue(report.contains("DISCOVERY"))
+        assertTrue(report.contains("GENERATION"))
+        assertTrue(report.contains("SUMMARY"))
         val lines = report.lines().filter { it.isNotBlank() }
-        assertTrue(lines.size > 20, "TRACE should have 20+ lines, got ${lines.size}")
+        assertTrue(lines.size > 10, "TRACE should have 10+ lines, got ${lines.size}")
     }
 
     @Test
@@ -127,7 +130,7 @@ class CompilationReportTest {
     @Test
     fun `GIVEN successful compilation WHEN generating success message THEN should show fakes generated`() {
         // GIVEN
-        val summary = createTestSummary(totalTimeMs = 1238)
+        val summary = createTestSummary(totalTimeNanos = 1_238_000_000)  // 1238ms = 1.2s
 
         // WHEN
         val message = CompilationReport.successMessage(summary, LogLevel.INFO)

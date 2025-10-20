@@ -60,7 +60,7 @@ class MetricsCollectorTest {
         // THEN
         val summary =
             collector.buildSummary(
-                totalTimeMs = 100,
+                totalTimeNanos = 100,
                 phaseBreakdown = emptyMap(),
                 outputDirectory = "test",
             )
@@ -80,8 +80,8 @@ class MetricsCollectorTest {
                 pattern = GenericPattern.NoGenerics,
                 memberCount = 5,
                 typeParamCount = 0,
-                analysisTimeMs = 10,
-                generationTimeMs = 20,
+                analysisTimeNanos = 10,
+                generationTimeNanos = 20,
                 generatedLOC = 50,
                 fileSizeBytes = 1024,
                 importCount = 3,
@@ -93,8 +93,8 @@ class MetricsCollectorTest {
                 pattern = GenericPattern.NoGenerics,
                 memberCount = 3,
                 typeParamCount = 0,
-                analysisTimeMs = 15,
-                generationTimeMs = 25,
+                analysisTimeNanos = 15,
+                generationTimeNanos = 25,
                 generatedLOC = 30,
                 fileSizeBytes = 512,
                 importCount = 2,
@@ -107,7 +107,7 @@ class MetricsCollectorTest {
         // THEN
         val summary =
             collector.buildSummary(
-                totalTimeMs = 100,
+                totalTimeNanos = 100,
                 phaseBreakdown = emptyMap(),
                 outputDirectory = "test",
             )
@@ -139,8 +139,8 @@ class MetricsCollectorTest {
                 pattern = GenericPattern.NoGenerics,
                 memberCount = 3,
                 typeParamCount = 0,
-                analysisTimeMs = 10,
-                generationTimeMs = 15,
+                analysisTimeNanos = 10,
+                generationTimeNanos = 15,
                 generatedLOC = 40,
                 fileSizeBytes = 800,
                 importCount = 2,
@@ -151,13 +151,13 @@ class MetricsCollectorTest {
         // WHEN
         val summary =
             collector.buildSummary(
-                totalTimeMs = 150,
+                totalTimeNanos = 150,
                 phaseBreakdown = mapOf("DISCOVERY" to phaseMetrics),
                 outputDirectory = "build/generated/fakt/test",
             )
 
         // THEN
-        assertEquals(150, summary.totalTimeMs)
+        assertEquals(150, summary.totalTimeNanos)
         assertEquals(10, summary.interfacesDiscovered)
         assertEquals(8, summary.interfacesProcessed)
         assertEquals(2, summary.interfacesCached)
@@ -178,8 +178,8 @@ class MetricsCollectorTest {
                 pattern = GenericPattern.NoGenerics,
                 memberCount = 1,
                 typeParamCount = 0,
-                analysisTimeMs = 5,
-                generationTimeMs = 10,
+                analysisTimeNanos = 5,
+                generationTimeNanos = 10,
                 generatedLOC = 20,
                 fileSizeBytes = 400,
                 importCount = 1,

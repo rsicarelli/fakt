@@ -155,12 +155,12 @@ class MetricsCollector {
      */
     @Synchronized
     fun buildSummary(
-        totalTimeMs: Long,
+        totalTimeNanos: Long,
         phaseBreakdown: Map<String, PhaseMetrics>,
         outputDirectory: String,
     ): CompilationSummary =
         CompilationSummary(
-            totalTimeMs = totalTimeMs,
+            totalTimeNanos = totalTimeNanos,
             interfacesDiscovered = interfacesDiscovered.get(),
             interfacesProcessed = interfacesProcessed.get(),
             interfacesCached = interfacesCached.get(),

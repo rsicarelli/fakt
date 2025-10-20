@@ -100,8 +100,6 @@ internal class CodeGenerator(
         val fakeClassName = "Fake${interfaceName}Impl"
         val packageName = sourceInterface.packageFqName?.asString() ?: ""
 
-        logger.trace("Generating fake for interface $interfaceName")
-
         try {
             val generatedCode =
                 GeneratedCode(
@@ -123,7 +121,6 @@ internal class CodeGenerator(
                 code = generatedCode,
             )
 
-            logger.trace("Successfully generated fake for $interfaceName -> $fakeClassName")
             return generatedCode
         } catch (e: Exception) {
             // Top-level error boundary: Catch all exceptions during code generation
@@ -150,8 +147,6 @@ internal class CodeGenerator(
         val fakeClassName = "Fake${className}Impl"
         val packageName = sourceClass.packageFqName?.asString() ?: ""
 
-        logger.trace("Generating fake for class $className")
-
         try {
             val generatedCode =
                 GeneratedCode(
@@ -173,7 +168,6 @@ internal class CodeGenerator(
                 code = generatedCode,
             )
 
-            logger.trace("Successfully generated fake for class $className -> $fakeClassName")
             return generatedCode
         } catch (e: Exception) {
             logger.error("Failed to generate fake for class $className: ${e.message}")
@@ -243,8 +237,6 @@ internal class CodeGenerator(
             }
 
         outputFile.writeText(fullCode)
-
-        logger.trace("Generated fake written to: ${outputFile.absolutePath}")
     }
 
     /**
@@ -310,8 +302,6 @@ internal class CodeGenerator(
             }
 
         outputFile.writeText(fullCode)
-
-        logger.trace("Generated class fake written to: ${outputFile.absolutePath}")
     }
 
     /**
