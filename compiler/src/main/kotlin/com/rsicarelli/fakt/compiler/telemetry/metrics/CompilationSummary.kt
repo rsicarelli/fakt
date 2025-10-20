@@ -130,7 +130,9 @@ data class CompilationSummary(
      *
      * @return Formatted total time
      */
-    fun formattedTotalTime(): String = com.rsicarelli.fakt.compiler.telemetry.TimeFormatter.format(totalTimeNanos)
+    fun formattedTotalTime(): String =
+        com.rsicarelli.fakt.compiler.telemetry.TimeFormatter
+            .format(totalTimeNanos)
 
     /**
      * Total number of fakes generated (interfaces + classes).

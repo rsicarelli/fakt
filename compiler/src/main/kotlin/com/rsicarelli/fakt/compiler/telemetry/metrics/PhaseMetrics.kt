@@ -66,5 +66,7 @@ data class PhaseMetrics(
      *
      * @return Formatted duration string
      */
-    fun formattedDuration(): String = com.rsicarelli.fakt.compiler.telemetry.TimeFormatter.format(duration)
+    fun formattedDuration(): String =
+        com.rsicarelli.fakt.compiler.telemetry.TimeFormatter
+            .format(duration)
 }

@@ -68,11 +68,12 @@ object ReportFormatter {
         val newFakes = summary.newFakes()
         val cachedFakes = summary.cachedFakes()
 
-        val breakdown = when {
-            newFakes == 0 && cachedFakes > 0 -> "($cachedFakes cached)"
-            newFakes > 0 && cachedFakes == 0 -> "($newFakes new)"
-            else -> "($newFakes new, $cachedFakes cached)"
-        }
+        val breakdown =
+            when {
+                newFakes == 0 && cachedFakes > 0 -> "($cachedFakes cached)"
+                newFakes > 0 && cachedFakes == 0 -> "($newFakes new)"
+                else -> "($newFakes new, $cachedFakes cached)"
+            }
 
         return "✅ $total fakes $breakdown | ${summary.formattedTotalTime()}"
     }
@@ -121,26 +122,28 @@ object ReportFormatter {
             // Generation (new vs cached breakdown)
             val newFakes = summary.newFakes()
             val cachedFakes = summary.cachedFakes()
-            val generationMsg = when {
-                newFakes == 0 && cachedFakes > 0 -> "$cachedFakes from cache"
-                newFakes > 0 && cachedFakes == 0 -> "$newFakes new fakes"
-                else -> "$newFakes new, $cachedFakes from cache"
-            }
+            val generationMsg =
+                when {
+                    newFakes == 0 && cachedFakes > 0 -> "$cachedFakes from cache"
+                    newFakes > 0 && cachedFakes == 0 -> "$newFakes new fakes"
+                    else -> "$newFakes new, $cachedFakes from cache"
+                }
             val generationTime = summary.getPhase("GENERATION")?.formattedDuration() ?: "0µs"
             appendLine("Generation: $generationMsg ($generationTime)")
 
             // LOC total
             val locFormatted = summary.formatNumber(summary.totalLOC)
-            val locMsg = when {
-                summary.totalFiles == 0 -> "All from cache (0 new LOC)"
-                cachedFakes == 0 -> "$locFormatted LOC total"
-                newFakes == 0 -> "$locFormatted LOC total (all cached)"
-                else -> {
-                    // Calculate new LOC (approximate: total * (new / total discovered))
-                    val newLOCApprox = (summary.totalLOC * newFakes) / (newFakes + cachedFakes)
-                    "$locFormatted LOC total (${summary.formatNumber(newLOCApprox)} new)"
+            val locMsg =
+                when {
+                    summary.totalFiles == 0 -> "All from cache (0 new LOC)"
+                    cachedFakes == 0 -> "$locFormatted LOC total"
+                    newFakes == 0 -> "$locFormatted LOC total (all cached)"
+                    else -> {
+                        // Calculate new LOC (approximate: total * (new / total discovered))
+                        val newLOCApprox = (summary.totalLOC * newFakes) / (newFakes + cachedFakes)
+                        "$locFormatted LOC total (${summary.formatNumber(newLOCApprox)} new)"
+                    }
                 }
-            }
             appendLine(locMsg)
         }
 
@@ -190,11 +193,15 @@ object ReportFormatter {
             appendLine("├─ New fakes: ${summary.newFakes()}")
             appendLine("├─ From cache: ${summary.cachedFakes()}")
             val avgLOC = summary.avgLOCPerFile()
-            appendLine("└─ Total LOC: ${summary.formatNumber(summary.totalLOC)} (avg ${avgLOC} LOC/file)")
+            appendLine("└─ Total LOC: ${summary.formatNumber(summary.totalLOC)} (avg $avgLOC LOC/file)")
 
             // Summary section (tree-style)
             appendLine("SUMMARY (${summary.formattedTotalTime()})")
-            appendLine("├─ Total fakes: ${summary.formatNumber(summary.totalDiscovered())} (${summary.newFakes()} new, ${summary.cachedFakes()} cached)")
+            appendLine(
+                "├─ Total fakes: ${summary.formatNumber(
+                    summary.totalDiscovered(),
+                )} (${summary.newFakes()} new, ${summary.cachedFakes()} cached)",
+            )
             val avgTimeNanos = if (summary.totalProcessed() > 0) summary.totalTimeNanos / summary.totalProcessed() else 0
             appendLine("└─ Avg time/fake: ${TimeFormatter.format(avgTimeNanos)}")
 
@@ -206,7 +213,9 @@ object ReportFormatter {
                     .take(10)
                     .forEachIndexed { index, metric ->
                         val prefix = if (index == 9 || index == summary.fakeMetrics.size - 1) "└─" else "├─"
-                        appendLine("$prefix ${index + 1}. ${metric.name} (${metric.formattedDuration()}) - ${metric.generatedLOC} LOC${metric.slowIndicator()}")
+                        appendLine(
+                            "$prefix ${index + 1}. ${metric.name} (${metric.formattedDuration()}) - ${metric.generatedLOC} LOC${metric.slowIndicator()}",
+                        )
                     }
                 appendLine()
             }

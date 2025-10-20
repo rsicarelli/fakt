@@ -86,7 +86,7 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         val isMainCompilation =
             compilationName == "main" ||
                 compilationName.endsWith("main") ||
-                compilationName == "metadata"  // ✅ FIX: Include metadata compilation for KMP
+                compilationName == "metadata" // ✅ FIX: Include metadata compilation for KMP
 
         project.logger.info(
             "Fakt: Checking compilation '${kotlinCompilation.name}' - applicable: $isMainCompilation",

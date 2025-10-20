@@ -17,7 +17,6 @@ class GenericPatternAnalyzerTest {
         assertNotNull(analyzer)
     }
 
-
     @Test
     fun `GIVEN NoGenerics pattern WHEN getting analysis summary THEN should provide meaningful description`() {
         val noGenericsPattern = GenericPattern.NoGenerics

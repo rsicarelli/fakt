@@ -101,12 +101,6 @@ class GenericPatternAnalyzer {
             }
         }
 
-
-
-
-
-
-
     /**
      * Convert IrType to string representation for analysis.
      */

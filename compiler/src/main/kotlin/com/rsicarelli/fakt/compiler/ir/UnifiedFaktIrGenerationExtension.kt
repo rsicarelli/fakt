@@ -208,13 +208,14 @@ class UnifiedFaktIrGenerationExtension(
                 val relativePath = if (packagePath.isNotEmpty()) "$packagePath/$fakeFileName" else fakeFileName
                 val outputPath = if (outputDir != null) "$outputDir/$relativePath" else relativePath
 
-                val analysisDetail = buildString {
-                    val typeParamCount = interfaceAnalysis.typeParameters.size
-                    if (typeParamCount > 0) {
-                        append("$typeParamCount type parameters, ")
+                val analysisDetail =
+                    buildString {
+                        val typeParamCount = interfaceAnalysis.typeParameters.size
+                        if (typeParamCount > 0) {
+                            append("$typeParamCount type parameters, ")
+                        }
+                        append("$memberCount members")
                     }
-                    append("$memberCount members")
-                }
 
                 logFakeProcessing(
                     name = interfaceName,
@@ -329,9 +330,10 @@ class UnifiedFaktIrGenerationExtension(
             logger.trace("├─ logLevel: ${logger.logLevel}")
             logger.trace("├─ detectedAnnotations: ${fakeAnnotations.joinToString(", ")}")
             if (outputDir != null) {
-                val simplifiedPath = outputDir
-                    .substringAfter("/ktfake/samples/", "")
-                    .ifEmpty { outputDir }
+                val simplifiedPath =
+                    outputDir
+                        .substringAfter("/ktfake/samples/", "")
+                        .ifEmpty { outputDir }
                 logger.trace("├─ output: $simplifiedPath")
             }
             logger.trace("└─ cache: ${optimizations.cacheSize()} signatures loaded")
@@ -345,7 +347,11 @@ class UnifiedFaktIrGenerationExtension(
         moduleFragment: IrModuleFragment,
     ) {
         // Calculate total time from all completed phases
-        val totalTime = telemetry.phaseTracker.getAllCompleted().values.sumOf { it.duration }
+        val totalTime =
+            telemetry.phaseTracker
+                .getAllCompleted()
+                .values
+                .sumOf { it.duration }
 
         // Generate compilation report
         val summary =
@@ -358,7 +364,8 @@ class UnifiedFaktIrGenerationExtension(
         // Log report based on level
         val report = CompilationReport.generate(summary, logger.logLevel)
         if (report.isNotEmpty()) {
-            report.lines()
+            report
+                .lines()
                 .filter { it.isNotBlank() } // Skip empty lines
                 .forEach { line ->
                     // Use trace() for TRACE level to avoid "Fakt:" prefix
@@ -570,7 +577,6 @@ class UnifiedFaktIrGenerationExtension(
                 logger.warn("$warning in $interfaceName")
             }
         }
-
     }
 
     /**
@@ -591,83 +597,91 @@ class UnifiedFaktIrGenerationExtension(
      * @return MD5 hash of the structural signature (32 characters)
      */
     private fun computeTypeSignature(irClass: IrClass): String {
-        val signature = buildString {
-            // 1. Type FQN and kind
-            val kind = if (irClass.kind == org.jetbrains.kotlin.descriptors.ClassKind.INTERFACE) "interface" else "class"
-            append("$kind ${irClass.kotlinFqName}")
+        val signature =
+            buildString {
+                // 1. Type FQN and kind
+                val kind = if (irClass.kind == org.jetbrains.kotlin.descriptors.ClassKind.INTERFACE) "interface" else "class"
+                append("$kind ${irClass.kotlinFqName}")
 
-            // 2. Type parameters with bounds (sorted for determinism)
-            val typeParams = irClass.typeParameters.map { typeParam ->
-                val bounds = typeParam.superTypes.joinToString(",") { bound ->
-                    typeResolver.irTypeToKotlinString(bound)
-                }
-                if (bounds.isNotEmpty()) {
-                    "${typeParam.name}:$bounds"
-                } else {
-                    typeParam.name.asString()
-                }
-            }.sorted()
+                // 2. Type parameters with bounds (sorted for determinism)
+                val typeParams =
+                    irClass.typeParameters
+                        .map { typeParam ->
+                            val bounds =
+                                typeParam.superTypes.joinToString(",") { bound ->
+                                    typeResolver.irTypeToKotlinString(bound)
+                                }
+                            if (bounds.isNotEmpty()) {
+                                "${typeParam.name}:$bounds"
+                            } else {
+                                typeParam.name.asString()
+                            }
+                        }.sorted()
 
-            if (typeParams.isNotEmpty()) {
-                append("|typeParams:<${typeParams.joinToString(",")}>")
+                if (typeParams.isNotEmpty()) {
+                    append("|typeParams:<${typeParams.joinToString(",")}>")
+                }
+
+                // 3. Properties (sorted alphabetically by name)
+                val properties =
+                    irClass.declarations
+                        .filterIsInstance<IrProperty>()
+                        .map { property ->
+                            val name = property.name.asString()
+                            val type = typeResolver.irTypeToKotlinString(property.getter?.returnType ?: property.backingField?.type!!)
+                            val mutability = if (property.isVar) "var" else "val"
+                            val nullability = if (property.getter?.returnType?.isMarkedNullable() == true) "nullable" else "nonNull"
+                            "$name:$type:$mutability:$nullability"
+                        }.sorted()
+
+                if (properties.isNotEmpty()) {
+                    append("|properties:${properties.size}|${properties.joinToString("|")}")
+                }
+
+                // 4. Functions (sorted alphabetically by name)
+                val functions =
+                    irClass.declarations
+                        .filterIsInstance<IrSimpleFunction>()
+                        .filterNot { IrAnalysisHelper.isSpecialFunction(it) }
+                        .map { function ->
+                            val name = function.name.asString()
+
+                            // Function parameters with names and types (using non-deprecated API)
+                            val params =
+                                function.parameters
+                                    .filter { it.kind == IrParameterKind.Regular }
+                                    .joinToString(",") { param ->
+                                        val paramName = param.name.asString()
+                                        val paramType = typeResolver.irTypeToKotlinString(param.type)
+                                        val vararg = if (param.varargElementType != null) "vararg:" else ""
+                                        val default = if (param.defaultValue != null) ":default" else ""
+                                        "$vararg$paramName:$paramType$default"
+                                    }
+
+                            // Return type
+                            val returnType = typeResolver.irTypeToKotlinString(function.returnType)
+
+                            // Modifiers
+                            val suspend = if (function.isSuspend) "suspend" else ""
+                            val inline = if (function.isInline) "inline" else ""
+                            val modifiers = listOf(suspend, inline).filter { it.isNotEmpty() }.joinToString(",")
+
+                            // Method-level type parameters
+                            val methodTypeParams = function.typeParameters.map { it.name.asString() }.sorted()
+                            val typeParamsStr =
+                                if (methodTypeParams.isNotEmpty()) {
+                                    "<${methodTypeParams.joinToString(",")}>"
+                                } else {
+                                    ""
+                                }
+
+                            "$name$typeParamsStr($params):$returnType${if (modifiers.isNotEmpty()) ":$modifiers" else ""}"
+                        }.sorted()
+
+                if (functions.isNotEmpty()) {
+                    append("|functions:${functions.size}|${functions.joinToString("|")}")
+                }
             }
-
-            // 3. Properties (sorted alphabetically by name)
-            val properties = irClass.declarations
-                .filterIsInstance<IrProperty>()
-                .map { property ->
-                    val name = property.name.asString()
-                    val type = typeResolver.irTypeToKotlinString(property.getter?.returnType ?: property.backingField?.type!!)
-                    val mutability = if (property.isVar) "var" else "val"
-                    val nullability = if (property.getter?.returnType?.isMarkedNullable() == true) "nullable" else "nonNull"
-                    "$name:$type:$mutability:$nullability"
-                }
-                .sorted()
-
-            if (properties.isNotEmpty()) {
-                append("|properties:${properties.size}|${properties.joinToString("|")}")
-            }
-
-            // 4. Functions (sorted alphabetically by name)
-            val functions = irClass.declarations
-                .filterIsInstance<IrSimpleFunction>()
-                .filterNot { IrAnalysisHelper.isSpecialFunction(it) }
-                .map { function ->
-                    val name = function.name.asString()
-
-                    // Function parameters with names and types (using non-deprecated API)
-                    val params = function.parameters
-                        .filter { it.kind == IrParameterKind.Regular }
-                        .joinToString(",") { param ->
-                            val paramName = param.name.asString()
-                            val paramType = typeResolver.irTypeToKotlinString(param.type)
-                            val vararg = if (param.varargElementType != null) "vararg:" else ""
-                            val default = if (param.defaultValue != null) ":default" else ""
-                            "$vararg$paramName:$paramType$default"
-                        }
-
-                    // Return type
-                    val returnType = typeResolver.irTypeToKotlinString(function.returnType)
-
-                    // Modifiers
-                    val suspend = if (function.isSuspend) "suspend" else ""
-                    val inline = if (function.isInline) "inline" else ""
-                    val modifiers = listOf(suspend, inline).filter { it.isNotEmpty() }.joinToString(",")
-
-                    // Method-level type parameters
-                    val methodTypeParams = function.typeParameters.map { it.name.asString() }.sorted()
-                    val typeParamsStr = if (methodTypeParams.isNotEmpty()) {
-                        "<${methodTypeParams.joinToString(",")}>"
-                    } else ""
-
-                    "$name$typeParamsStr($params):$returnType${if (modifiers.isNotEmpty()) ":$modifiers" else ""}"
-                }
-                .sorted()
-
-            if (functions.isNotEmpty()) {
-                append("|functions:${functions.size}|${functions.joinToString("|")}")
-            }
-        }
 
         // Hash the signature with MD5 for efficient storage (32 chars)
         return signature.toMD5Hash()
@@ -714,8 +728,12 @@ class UnifiedFaktIrGenerationExtension(
         analysisDetail: String = "",
     ) {
         logger.trace("$name")
-        val analysisTime = com.rsicarelli.fakt.compiler.telemetry.TimeFormatter.format(analysisTimeNanos)
-        val generationTime = com.rsicarelli.fakt.compiler.telemetry.TimeFormatter.format(generationTimeNanos)
+        val analysisTime =
+            com.rsicarelli.fakt.compiler.telemetry.TimeFormatter
+                .format(analysisTimeNanos)
+        val generationTime =
+            com.rsicarelli.fakt.compiler.telemetry.TimeFormatter
+                .format(generationTimeNanos)
 
         if (analysisDetail.isNotEmpty()) {
             logger.trace("├─ Analysis: $analysisDetail ($analysisTime)")

@@ -19,7 +19,7 @@ import kotlin.test.assertTrue
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ReportFormatterTest {
     private fun createTestSummary(
-        totalTimeNanos: Long = 44_000_000,  // 44ms
+        totalTimeNanos: Long = 44_000_000, // 44ms
         interfacesDiscovered: Int = 100,
         interfacesProcessed: Int = 100,
         interfacesCached: Int = 0,
@@ -35,8 +35,8 @@ class ReportFormatterTest {
         val phaseBreakdown =
             if (includePhases) {
                 mapOf(
-                    "DISCOVERY" to PhaseMetrics("DISCOVERY", 1_000_000_000, 1_002_000_000),  // 1s to 1.002s = 2ms
-                    "GENERATION" to PhaseMetrics("GENERATION", 1_002_000_000, 1_044_000_000),  // 1.002s to 1.044s = 42ms
+                    "DISCOVERY" to PhaseMetrics("DISCOVERY", 1_000_000_000, 1_002_000_000), // 1s to 1.002s = 2ms
+                    "GENERATION" to PhaseMetrics("GENERATION", 1_002_000_000, 1_044_000_000), // 1.002s to 1.044s = 42ms
                 )
             } else {
                 emptyMap()
@@ -50,8 +50,8 @@ class ReportFormatterTest {
                         pattern = GenericPattern.NoGenerics,
                         memberCount = 5,
                         typeParamCount = 0,
-                        analysisTimeNanos = 10_000_000,  // 10ms
-                        generationTimeNanos = 20_000_000,  // 20ms
+                        analysisTimeNanos = 10_000_000, // 10ms
+                        generationTimeNanos = 20_000_000, // 20ms
                         generatedLOC = 87,
                         fileSizeBytes = 2450,
                         importCount = 3,
@@ -61,8 +61,8 @@ class ReportFormatterTest {
                         pattern = GenericPattern.NoGenerics,
                         memberCount = 10,
                         typeParamCount = 0,
-                        analysisTimeNanos = 60_000_000,  // 60ms
-                        generationTimeNanos = 90_000_000,  // 90ms (total 150ms - marked as slow)
+                        analysisTimeNanos = 60_000_000, // 60ms
+                        generationTimeNanos = 90_000_000, // 90ms (total 150ms - marked as slow)
                         generatedLOC = 200,
                         fileSizeBytes = 5000,
                         importCount = 5,
@@ -94,12 +94,13 @@ class ReportFormatterTest {
     @Test
     fun `GIVEN summary with zero fakes WHEN formatting INFO THEN should show 0 fakes`() {
         // GIVEN
-        val summary = createTestSummary(
-            interfacesDiscovered = 0,
-            classesDiscovered = 0,
-            interfacesProcessed = 0,
-            classesProcessed = 0,
-        )
+        val summary =
+            createTestSummary(
+                interfacesDiscovered = 0,
+                classesDiscovered = 0,
+                interfacesProcessed = 0,
+                classesProcessed = 0,
+            )
 
         // WHEN
         val report = ReportFormatter.formatInfo(summary)
@@ -262,7 +263,7 @@ class ReportFormatterTest {
         assertTrue(report.contains("SLOWEST FAKES (Top 10):"))
         assertTrue(report.contains("SlowInterface (150ms)"))
         assertTrue(report.contains("200 LOC"))
-        assertTrue(report.contains("⚠️"))  // Slow indicator
+        assertTrue(report.contains("⚠️")) // Slow indicator
     }
 
     @Test

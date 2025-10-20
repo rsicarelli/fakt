@@ -98,13 +98,14 @@ interface CompilerOptimizations {
                 private val indexedTypes = mutableListOf<TypeInfo>()
 
                 // File-based cache for signatures (shared across compilation tasks)
-                private val cacheFile: File? = outputDir?.let { dir ->
-                    // Use parent directory (build/generated/fakt) to store cache
-                    // This ensures the cache is shared across all source sets
-                    File(dir).parentFile?.resolve("fakt-cache")?.resolve("generated-signatures.txt")?.also {
-                        it.parentFile?.mkdirs()
+                private val cacheFile: File? =
+                    outputDir?.let { dir ->
+                        // Use parent directory (build/generated/fakt) to store cache
+                        // This ensures the cache is shared across all source sets
+                        File(dir).parentFile?.resolve("fakt-cache")?.resolve("generated-signatures.txt")?.also {
+                            it.parentFile?.mkdirs()
+                        }
                     }
-                }
 
                 // Load previously generated signatures from file
                 private val generatedSignatures: MutableSet<String> = loadSignaturesFromFile()

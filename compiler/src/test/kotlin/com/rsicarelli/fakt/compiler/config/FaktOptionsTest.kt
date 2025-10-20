@@ -74,7 +74,7 @@ class FaktOptionsTest {
             // THEN: Context should be null (backward compatibility)
             assertNull(
                 options.sourceSetContext,
-                "Source set context should be null when not provided"
+                "Source set context should be null when not provided",
             )
             assertTrue(options.enabled)
             assertTrue(options.debug)

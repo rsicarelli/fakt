@@ -243,5 +243,4 @@ class CompilerOptimizationsTest {
             // THEN: Should be configured for default @Fake annotation
             assertTrue(isConfigured, "Default configuration should include @Fake annotation")
         }
-
 }

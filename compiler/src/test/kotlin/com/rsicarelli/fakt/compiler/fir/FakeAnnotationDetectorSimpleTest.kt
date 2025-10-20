@@ -41,7 +41,7 @@ class FakeAnnotationDetectorSimpleTest {
             assertEquals(
                 emptyList(),
                 params.dependencies,
-                "Should have empty dependencies by default"
+                "Should have empty dependencies by default",
             )
             assertTrue(params.concurrent, "Should be concurrent/thread-safe by default")
             assertEquals("test", params.scope, "Should have test scope by default")
@@ -132,7 +132,7 @@ class FakeAnnotationDetectorSimpleTest {
             assertEquals(
                 emptyList(),
                 defaultParams.dependencies,
-                "Should have no dependencies by default"
+                "Should have no dependencies by default",
             )
             assertTrue(defaultParams.concurrent, "Should be thread-safe by default")
             assertEquals("test", defaultParams.scope, "Should use test scope by default")
