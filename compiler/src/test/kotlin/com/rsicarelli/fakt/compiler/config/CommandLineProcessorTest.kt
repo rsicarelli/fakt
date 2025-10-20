@@ -238,7 +238,7 @@ class CommandLineProcessorTest {
             assertTrue(optionNames.contains("outputDir"), "Should have 'outputDir' option")
             assertTrue(
                 optionNames.contains("sourceSetContext"),
-                "Should have 'sourceSetContext' option"
+                "Should have 'sourceSetContext' option",
             )
         }
 

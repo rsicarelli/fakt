@@ -115,9 +115,7 @@ class FaktTelemetry
         fun startPhase(
             name: String,
             parent: String? = null,
-        ): String {
-            return phaseTracker.startPhase(name, parent)
-        }
+        ): String = phaseTracker.startPhase(name, parent)
 
         /**
          * Ends tracking of a phase and returns its metrics.
@@ -133,9 +131,7 @@ class FaktTelemetry
          * logger.debug("Generation took ${metrics.duration}ms")
          * ```
          */
-        fun endPhase(phaseId: String): PhaseMetrics {
-            return phaseTracker.endPhase(phaseId)
-        }
+        fun endPhase(phaseId: String): PhaseMetrics = phaseTracker.endPhase(phaseId)
 
         /**
          * Records metrics for a processed fake (interface or class).

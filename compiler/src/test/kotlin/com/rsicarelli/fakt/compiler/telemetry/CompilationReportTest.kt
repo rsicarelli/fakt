@@ -20,11 +20,11 @@ import kotlin.test.assertTrue
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CompilationReportTest {
     private fun createTestSummary(
-        totalTimeNanos: Long = 44_000_000,  // 44ms in nanoseconds
+        totalTimeNanos: Long = 44_000_000, // 44ms in nanoseconds
         interfacesProcessed: Int = 100,
         classesProcessed: Int = 21,
     ): CompilationSummary {
-        val phaseMetrics = PhaseMetrics("GENERATION", 1_000_000_000, 1_044_000_000)  // 1s start, 1.044s end = 44ms duration
+        val phaseMetrics = PhaseMetrics("GENERATION", 1_000_000_000, 1_044_000_000) // 1s start, 1.044s end = 44ms duration
 
         val fakeMetrics =
             FakeMetrics(
@@ -32,8 +32,8 @@ class CompilationReportTest {
                 pattern = GenericPattern.NoGenerics,
                 memberCount = 5,
                 typeParamCount = 0,
-                analysisTimeNanos = 10_000_000,  // 10ms
-                generationTimeNanos = 20_000_000,  // 20ms
+                analysisTimeNanos = 10_000_000, // 10ms
+                generationTimeNanos = 20_000_000, // 20ms
                 generatedLOC = 87,
                 fileSizeBytes = 2450,
                 importCount = 3,
@@ -130,7 +130,7 @@ class CompilationReportTest {
     @Test
     fun `GIVEN successful compilation WHEN generating success message THEN should show fakes generated`() {
         // GIVEN
-        val summary = createTestSummary(totalTimeNanos = 1_238_000_000)  // 1238ms = 1.2s
+        val summary = createTestSummary(totalTimeNanos = 1_238_000_000) // 1238ms = 1.2s
 
         // WHEN
         val message = CompilationReport.successMessage(summary, LogLevel.INFO)

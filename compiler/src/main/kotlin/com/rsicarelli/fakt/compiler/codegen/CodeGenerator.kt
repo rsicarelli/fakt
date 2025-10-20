@@ -46,7 +46,8 @@ internal data class GeneratedCode(
      */
     fun calculateTotalLOC(): Int {
         val combinedCode = "$implementation\n$factory\n$configDsl"
-        return com.rsicarelli.fakt.compiler.utils.calculateLOC(combinedCode)
+        return com.rsicarelli.fakt.compiler.utils
+            .calculateLOC(combinedCode)
     }
 
     /**
@@ -54,9 +55,7 @@ internal data class GeneratedCode(
      *
      * @return Total size of all generated code
      */
-    fun calculateTotalBytes(): Int {
-        return implementation.length + factory.length + configDsl.length
-    }
+    fun calculateTotalBytes(): Int = implementation.length + factory.length + configDsl.length
 }
 
 /**
