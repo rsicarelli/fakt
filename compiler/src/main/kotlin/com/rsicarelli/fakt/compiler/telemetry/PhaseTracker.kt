@@ -77,7 +77,7 @@ class PhaseTracker {
             Phase(
                 id = id,
                 name = name,
-                startTime = System.currentTimeMillis(),
+                startTime = System.nanoTime(),
                 parentId = parent,
             )
 
@@ -112,7 +112,7 @@ class PhaseTracker {
     fun endPhase(phaseId: String): PhaseMetrics {
         val phase = activePhases.remove(phaseId) ?: error("Phase $phaseId not found or already ended")
 
-        val endTime = System.currentTimeMillis()
+        val endTime = System.nanoTime()
 
         // Collect all sub-phase metrics (must be completed first)
         val subPhaseMetrics =

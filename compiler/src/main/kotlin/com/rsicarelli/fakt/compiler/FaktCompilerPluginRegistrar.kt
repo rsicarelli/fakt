@@ -42,26 +42,15 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
 
         // Create FaktLogger with configured log level
         val logger = FaktLogger(messageCollector, options.logLevel)
-
-        // TRACE only: Detailed plugin invocation logging
-        logger.trace("════════════════════════════════════════")
-        logger.trace("Compiler Plugin Registrar Invoked")
-        logger.trace("Plugin: enabled=${options.enabled}, logLevel=${options.logLevel}")
-        logger.trace("Options: $options")
-        logger.trace("────────────────────────────────────────")
+        val customAnnotations = listOf("com.rsicarelli.fakt.Fake")
 
         if (!options.enabled) {
             logger.trace("Plugin disabled, skipping registration")
-            logger.trace("════════════════════════════════════════")
             return
         }
 
         registerFirExtension(logger)
-        registerIrExtension(logger, options)
-
-        // TRACE only: Successful registration confirmation
-        logger.trace("Fakt compiler plugin registered successfully")
-        logger.trace("════════════════════════════════════════")
+        registerIrExtension(logger, options, customAnnotations)
     }
 
     /**
@@ -70,7 +59,6 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
      * @param logger The FaktLogger for logging
      */
     private fun ExtensionStorage.registerFirExtension(logger: FaktLogger) {
-        logger.trace("Registering FIR extension")
         FirExtensionRegistrarAdapter.registerExtension(FaktFirExtensionRegistrar())
     }
 
@@ -83,23 +71,8 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
     private fun ExtensionStorage.registerIrExtension(
         logger: FaktLogger,
         options: FaktOptions,
+        customAnnotations: List<String>,
     ) {
-        val customAnnotations = listOf("com.rsicarelli.fakt.Fake")
-
-        // TRACE only: IR extension registration details
-        logger.trace("Registering IR generation extension")
-        logger.trace("Configured annotations: ${customAnnotations.joinToString()}")
-
-        // Log source set context availability (TRACE only)
-        if (options.sourceSetContext != null) {
-            logger.trace(
-                "SourceSetContext: " +
-                    "${options.sourceSetContext.compilationName}/${options.sourceSetContext.targetName}",
-            )
-        } else {
-            logger.trace("No SourceSetContext available, using legacy source set mapping")
-        }
-
         IrGenerationExtension.registerExtension(
             UnifiedFaktIrGenerationExtension(
                 logger = logger,

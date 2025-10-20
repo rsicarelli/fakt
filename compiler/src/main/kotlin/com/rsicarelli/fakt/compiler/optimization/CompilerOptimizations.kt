@@ -68,6 +68,13 @@ interface CompilerOptimizations {
      */
     fun recordGeneration(type: TypeInfo)
 
+    /**
+     * Returns the number of signatures currently loaded in the cache.
+     *
+     * @return The size of the cache
+     */
+    fun cacheSize(): Int
+
     companion object {
         /**
          * Returns a [CompilerOptimizations] instance with file-based caching.
@@ -102,12 +109,6 @@ interface CompilerOptimizations {
                 // Load previously generated signatures from file
                 private val generatedSignatures: MutableSet<String> = loadSignaturesFromFile()
 
-                init {
-                    logger.trace(
-                        "CompilerOptimizations initialized (cache=${cacheFile?.absolutePath}, loaded=${generatedSignatures.size} signatures)"
-                    )
-                }
-
                 private fun loadSignaturesFromFile(): MutableSet<String> {
                     val signatures = mutableSetOf<String>()
                     if (cacheFile?.exists() == true) {
@@ -117,7 +118,6 @@ interface CompilerOptimizations {
                                     signatures.add(line.trim())
                                 }
                             }
-                            logger.trace("Loaded ${signatures.size} cached signatures from ${cacheFile.absolutePath}")
                         } catch (e: Exception) {
                             logger.trace("Failed to load cache file: ${e.message}")
                         }
@@ -159,6 +159,8 @@ interface CompilerOptimizations {
                     generatedSignatures.add(type.signature)
                     saveSignatureToFile(type.signature)
                 }
+
+                override fun cacheSize(): Int = generatedSignatures.size
             }
         }
     }

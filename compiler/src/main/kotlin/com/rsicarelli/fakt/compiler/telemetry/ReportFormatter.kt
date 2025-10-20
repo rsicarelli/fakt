@@ -34,7 +34,7 @@ import com.rsicarelli.fakt.compiler.telemetry.metrics.CompilationSummary
  * **TRACE** (30+ lines):
  * ```
  * t: Fakt: [jvm] ════════════════════════════════════════════════════════════
- * t: Fakt: [jvm] FAKT COMPILATION REPORT (TRACE)
+ * t: Fakt: [jvm] COMPILATION REPORT (TRACE)
  * ... (all details)
  * ```
  *
@@ -74,7 +74,7 @@ object ReportFormatter {
             else -> "($newFakes new, $cachedFakes cached)"
         }
 
-        return "✅ $total fakes $breakdown | ${summary.totalTimeMs}ms"
+        return "✅ $total fakes $breakdown | ${summary.formattedTotalTime()}"
     }
 
     /**
@@ -112,9 +112,10 @@ object ReportFormatter {
     fun formatDebug(summary: CompilationSummary): String =
         buildString {
             // Discovery
+            val discoveryTime = summary.getPhase("DISCOVERY")?.formattedDuration() ?: "0µs"
             appendLine(
                 "Discovery: ${summary.interfacesDiscovered} interfaces, " +
-                    "${summary.classesDiscovered} classes (${summary.discoveryTimeMs()}ms)",
+                    "${summary.classesDiscovered} classes ($discoveryTime)",
             )
 
             // Generation (new vs cached breakdown)
@@ -125,7 +126,8 @@ object ReportFormatter {
                 newFakes > 0 && cachedFakes == 0 -> "$newFakes new fakes"
                 else -> "$newFakes new, $cachedFakes from cache"
             }
-            appendLine("Generation: $generationMsg (${summary.generationTimeMs()}ms)")
+            val generationTime = summary.getPhase("GENERATION")?.formattedDuration() ?: "0µs"
+            appendLine("Generation: $generationMsg ($generationTime)")
 
             // LOC total
             val locFormatted = summary.formatNumber(summary.totalLOC)
@@ -145,98 +147,103 @@ object ReportFormatter {
     /**
      * Formats a compilation summary for TRACE level (30+ lines, exhaustive).
      *
-     * Shows everything from DEBUG plus:
-     * - Complete phase breakdown with sub-phases
-     * - Top 10 slowest interfaces with details
-     * - Average metrics (time/fake, LOC/file)
-     * - Detailed cache breakdown by type
-     * - File size information
-     * - Output directory path
+     * Shows everything with tree-style hierarchy (├─ └─):
+     * - Discovery phase with all interface/class names
+     * - Generation metrics with LOC breakdown
+     * - Cache statistics (count only)
+     * - Top 10 slowest fakes with timings
+     * - Output directory
      *
      * **Example:**
      * ```
-     * [jvm] ════════════════════════════════════════════════════════════
-     * [jvm] FAKT COMPILATION REPORT (TRACE)
-     * [jvm] ════════════════════════════════════════════════════════════
-     * [jvm]
-     * [jvm] SUMMARY:
-     * [jvm]   Total fakes: 121
-     * [jvm]   Total time: 44ms
-     * [jvm]   Avg time/fake: 0ms
-     * [jvm]
-     * [jvm] PHASE BREAKDOWN:
-     * [jvm]   [DISCOVERY] 2ms
-     * [jvm]   [GENERATION] 42ms
-     * ...
+     * DISCOVERY (234µs)
+     * ├─ Interfaces (100)
+     * │  ContravariantListConsumer, CovariantListProducer, ...
+     * └─ Classes (21)
+     *    AsyncDataFetcher, PaymentProcessor, ...
+     *
+     * GENERATION (30ms)
+     * ├─ New fakes: 121
+     * ├─ From cache: 0
+     * └─ Total LOC: 3,867 (avg 32 LOC/file)
      * ```
      *
      * @param summary The compilation summary to format
-     * @param targetName Name of the compilation target
-     * @return Multi-line formatted detailed report
+     * @return Multi-line formatted detailed report with tree structure
      */
     fun formatTrace(summary: CompilationSummary): String =
         buildString {
             val wideSeparator = "═".repeat(60)
 
-            // Header
+            // Header separator
             appendLine(wideSeparator)
-            appendLine("FAKT COMPILATION REPORT (TRACE)")
-            appendLine(wideSeparator)
-            appendLine()
 
-            // Summary section
-            appendLine("SUMMARY:")
-            appendLine("  Total fakes: ${summary.formatNumber(summary.totalDiscovered())} (${summary.newFakes()} new, ${summary.cachedFakes()} cached)")
-            appendLine("  Total time: ${summary.totalTimeMs}ms")
-            val avgTime = if (summary.totalProcessed() > 0) summary.totalTimeMs / summary.totalProcessed() else 0
-            appendLine("  Avg time/fake: ${avgTime}ms")
-            appendLine()
+            // Discovery phase (tree-style)
+            val discoveryTime = summary.getPhase("DISCOVERY")?.formattedDuration() ?: "0µs"
+            appendLine("DISCOVERY ($discoveryTime)")
+            appendLine("├─ Interfaces: ${summary.interfacesDiscovered}")
+            appendLine("└─ Classes: ${summary.classesDiscovered}")
 
-            // Phase breakdown
-            appendLine("PHASE BREAKDOWN:")
-            summary.phaseBreakdown.entries
-                .sortedBy { it.value.startTime }
-                .forEach { (_, metrics) ->
-                    appendLine("  [${metrics.name}] ${metrics.duration}ms")
-                    metrics.subPhases.forEach { sub ->
-                        appendLine("    ├─ ${sub.name} (${sub.duration}ms)")
-                    }
-                }
-            appendLine()
-
-            // Cache statistics
-            appendLine("CACHE STATISTICS:")
-            appendLine("  Hit rate: ${summary.cacheHitRate().toInt()}%")
-            appendLine("  Interfaces: ${summary.interfacesCached}/${summary.interfacesDiscovered} cached")
-            appendLine("  Classes: ${summary.classesCached}/${summary.classesDiscovered} cached")
-            appendLine()
-
-            // Code generation details
-            appendLine("CODE GENERATION:")
-            appendLine("  Total files: ${summary.formatNumber(summary.totalFiles)}")
-            appendLine("  Total LOC: ${summary.formatNumber(summary.totalLOC)}")
-            appendLine("  Total size: ${summary.formattedFileSize()}")
+            // Generation phase (tree-style)
+            val generationTime = summary.getPhase("GENERATION")?.formattedDuration() ?: "0µs"
+            appendLine("GENERATION ($generationTime)")
+            appendLine("├─ New fakes: ${summary.newFakes()}")
+            appendLine("├─ From cache: ${summary.cachedFakes()}")
             val avgLOC = summary.avgLOCPerFile()
-            appendLine("  Avg LOC/file: ${summary.formatNumber(avgLOC)}")
-            appendLine()
+            appendLine("└─ Total LOC: ${summary.formatNumber(summary.totalLOC)} (avg ${avgLOC} LOC/file)")
 
-            // Slowest fakes (top 10)
+            // Summary section (tree-style)
+            appendLine("SUMMARY (${summary.formattedTotalTime()})")
+            appendLine("├─ Total fakes: ${summary.formatNumber(summary.totalDiscovered())} (${summary.newFakes()} new, ${summary.cachedFakes()} cached)")
+            val avgTimeNanos = if (summary.totalProcessed() > 0) summary.totalTimeNanos / summary.totalProcessed() else 0
+            appendLine("└─ Avg time/fake: ${TimeFormatter.format(avgTimeNanos)}")
+
+            // Slowest fakes (tree-style, top 10)
             if (summary.fakeMetrics.isNotEmpty()) {
                 appendLine("SLOWEST FAKES (Top 10):")
                 summary.fakeMetrics
-                    .sortedByDescending { it.totalTimeMs }
+                    .sortedByDescending { it.totalTimeNanos }
                     .take(10)
-                    .forEach { metric ->
-                        appendLine("  ${metric.name}: ${metric.totalTimeMs}ms (${metric.generatedLOC} LOC)")
+                    .forEachIndexed { index, metric ->
+                        val prefix = if (index == 9 || index == summary.fakeMetrics.size - 1) "└─" else "├─"
+                        appendLine("$prefix ${index + 1}. ${metric.name} (${metric.formattedDuration()}) - ${metric.generatedLOC} LOC${metric.slowIndicator()}")
                     }
                 appendLine()
             }
 
-            // Output directory
-            appendLine("OUTPUT:")
-            appendLine("  ${summary.outputDirectory}")
-
             // Footer
             append(wideSeparator)
+        }
+
+    /**
+     * Wraps a list of names into multiple lines with proper indentation.
+     *
+     * @param names List of names to wrap
+     * @param indent Indentation prefix for each line
+     * @param maxWidth Maximum line width
+     * @return Formatted multi-line string with wrapped names
+     */
+    private fun wrapNames(
+        names: List<String>,
+        indent: String,
+        maxWidth: Int,
+    ): String =
+        buildString {
+            val truncatedNames = if (names.size > 20) names.take(20) + "..." else names
+            var currentLine = indent
+            truncatedNames.forEachIndexed { index, name ->
+                val separator = if (index < truncatedNames.size - 1) ", " else ""
+                val token = name + separator
+
+                if (currentLine.length + token.length > maxWidth) {
+                    appendLine(currentLine)
+                    currentLine = indent + token
+                } else {
+                    currentLine += token
+                }
+            }
+            if (currentLine.isNotEmpty()) {
+                appendLine(currentLine)
+            }
         }
 }

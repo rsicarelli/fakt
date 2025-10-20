@@ -103,7 +103,7 @@ class FaktLogger(
      */
     fun trace(message: String) {
         if (logLevel >= LogLevel.TRACE) {
-            messageCollector?.report(CompilerMessageSeverity.INFO, "Fakt: $message")
+            messageCollector?.report(CompilerMessageSeverity.INFO, message)
         }
     }
 

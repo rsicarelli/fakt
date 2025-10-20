@@ -19,7 +19,7 @@ import kotlin.test.assertTrue
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ReportFormatterTest {
     private fun createTestSummary(
-        totalTimeMs: Long = 44,
+        totalTimeNanos: Long = 44_000_000,  // 44ms
         interfacesDiscovered: Int = 100,
         interfacesProcessed: Int = 100,
         interfacesCached: Int = 0,
@@ -35,8 +35,8 @@ class ReportFormatterTest {
         val phaseBreakdown =
             if (includePhases) {
                 mapOf(
-                    "DISCOVERY" to PhaseMetrics("DISCOVERY", 1000, 1002),
-                    "GENERATION" to PhaseMetrics("GENERATION", 1002, 1044),
+                    "DISCOVERY" to PhaseMetrics("DISCOVERY", 1_000_000_000, 1_002_000_000),  // 1s to 1.002s = 2ms
+                    "GENERATION" to PhaseMetrics("GENERATION", 1_002_000_000, 1_044_000_000),  // 1.002s to 1.044s = 42ms
                 )
             } else {
                 emptyMap()
@@ -50,8 +50,8 @@ class ReportFormatterTest {
                         pattern = GenericPattern.NoGenerics,
                         memberCount = 5,
                         typeParamCount = 0,
-                        analysisTimeMs = 10,
-                        generationTimeMs = 20,
+                        analysisTimeNanos = 10_000_000,  // 10ms
+                        generationTimeNanos = 20_000_000,  // 20ms
                         generatedLOC = 87,
                         fileSizeBytes = 2450,
                         importCount = 3,
@@ -61,8 +61,8 @@ class ReportFormatterTest {
                         pattern = GenericPattern.NoGenerics,
                         memberCount = 10,
                         typeParamCount = 0,
-                        analysisTimeMs = 60,
-                        generationTimeMs = 90,
+                        analysisTimeNanos = 60_000_000,  // 60ms
+                        generationTimeNanos = 90_000_000,  // 90ms (total 150ms - marked as slow)
                         generatedLOC = 200,
                         fileSizeBytes = 5000,
                         importCount = 5,
@@ -73,7 +73,7 @@ class ReportFormatterTest {
             }
 
         return CompilationSummary(
-            totalTimeMs = totalTimeMs,
+            totalTimeNanos = totalTimeNanos,
             interfacesDiscovered = interfacesDiscovered,
             interfacesProcessed = interfacesProcessed,
             interfacesCached = interfacesCached,
@@ -218,8 +218,9 @@ class ReportFormatterTest {
         val report = ReportFormatter.formatTrace(summary)
 
         // THEN
+        // New tree-style format is more compact: ~15-16 lines with 2 fakes
         val lines = report.lines().filter { it.isNotBlank() }
-        assertTrue(lines.size > 20, "TRACE should have 20+ lines, got ${lines.size}")
+        assertTrue(lines.size > 10, "TRACE should have 10+ lines, got ${lines.size}")
     }
 
     @Test
@@ -231,7 +232,7 @@ class ReportFormatterTest {
         val report = ReportFormatter.formatTrace(summary)
 
         // THEN
-        assertTrue(report.contains("FAKT COMPILATION REPORT (TRACE)"))
+        // New tree-style format: starts and ends with separator, no "REPORT" title line
         assertTrue(report.startsWith("═".repeat(60)))
         assertTrue(report.endsWith("═".repeat(60)))
     }
@@ -245,9 +246,8 @@ class ReportFormatterTest {
         val report = ReportFormatter.formatTrace(summary)
 
         // THEN
-        assertTrue(report.contains("PHASE BREAKDOWN:"))
-        assertTrue(report.contains("[DISCOVERY]"))
-        assertTrue(report.contains("[GENERATION]"))
+        assertTrue(report.contains("DISCOVERY (2ms)"))
+        assertTrue(report.contains("GENERATION (42ms)"))
     }
 
     @Test
@@ -260,7 +260,9 @@ class ReportFormatterTest {
 
         // THEN
         assertTrue(report.contains("SLOWEST FAKES (Top 10):"))
-        assertTrue(report.contains("SlowInterface: 150ms"))
+        assertTrue(report.contains("SlowInterface (150ms)"))
+        assertTrue(report.contains("200 LOC"))
+        assertTrue(report.contains("⚠️"))  // Slow indicator
     }
 
     @Test
@@ -272,13 +274,10 @@ class ReportFormatterTest {
         val report = ReportFormatter.formatTrace(summary)
 
         // THEN
-        // Verify all major sections are present
-        assertTrue(report.contains("SUMMARY:"))
-        assertTrue(report.contains("PHASE BREAKDOWN:"))
-        assertTrue(report.contains("CACHE STATISTICS:"))
-        assertTrue(report.contains("CODE GENERATION:"))
+        // Verify all major sections are present (new tree-style format, no "OUTPUT:" section)
+        assertTrue(report.contains("SUMMARY ("))
+        assertTrue(report.contains("DISCOVERY ("))
+        assertTrue(report.contains("GENERATION ("))
         assertTrue(report.contains("SLOWEST FAKES"))
-        assertTrue(report.contains("OUTPUT:"))
-        assertTrue(report.contains("build/generated/fakt/commonTest/kotlin"))
     }
 }

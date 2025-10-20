@@ -76,12 +76,12 @@ class FaktTelemetry
             outputDirectory: String = "auto-detect",
             block: () -> Unit,
         ): CompilationSummary {
-            val startTime = System.currentTimeMillis()
+            val startTime = System.nanoTime()
 
             try {
                 block()
             } finally {
-                val endTime = System.currentTimeMillis()
+                val endTime = System.nanoTime()
                 val totalTime = endTime - startTime
 
                 // Build phase breakdown from completed phases
@@ -91,7 +91,7 @@ class FaktTelemetry
                         .mapKeys { (_, metrics) -> metrics.name }
 
                 return metricsCollector.buildSummary(
-                    totalTimeMs = totalTime,
+                    totalTimeNanos = totalTime,
                     phaseBreakdown = phaseBreakdown,
                     outputDirectory = outputDirectory,
                 )
@@ -116,7 +116,6 @@ class FaktTelemetry
             name: String,
             parent: String? = null,
         ): String {
-            logger.trace("Starting phase: $name")
             return phaseTracker.startPhase(name, parent)
         }
 
@@ -135,9 +134,7 @@ class FaktTelemetry
          * ```
          */
         fun endPhase(phaseId: String): PhaseMetrics {
-            val metrics = phaseTracker.endPhase(phaseId)
-            logger.trace("Completed phase: ${metrics.name} (${metrics.formattedDuration()})")
-            return metrics
+            return phaseTracker.endPhase(phaseId)
         }
 
         /**
@@ -165,7 +162,6 @@ class FaktTelemetry
          */
         fun recordFakeMetrics(metrics: FakeMetrics) {
             metricsCollector.recordFakeMetrics(metrics)
-            logger.trace("Recorded metrics for ${metrics.name}: ${metrics.totalTimeMs}ms, ${metrics.generatedLOC} LOC")
         }
 
         /**
