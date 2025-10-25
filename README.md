@@ -13,61 +13,14 @@
 
 Fakt is a **Kotlin compiler plugin** that generates type-safe test fakes at compile-time. It uses a two-phase **FIR → IR** compilation architecture to analyze `@Fake` annotated interfaces and classes, then generates production-quality fake implementations with expressive configuration DSLs.
 
-### Before Fakt - Manual Fake (40+ lines)
-
-```kotlin
-// Manual fake implementation - tedious, error-prone, hard to maintain
-class FakeUserRepositoryImpl : UserRepository {
-    private var findByIdBehavior: (String) -> User? = { _ -> null }
-    private var saveBehavior: (User) -> User = { it }
-    private var deleteBehavior: (String) -> Boolean = { _ -> false }
-    private var findByAgeBehavior: (Int, Int) -> List<User> = { _, _ -> emptyList() }
-    private var usersBehavior: () -> List<User> = { emptyList() }
-
-    override fun findById(id: String): User? = findByIdBehavior(id)
-    override fun save(user: User): User = saveBehavior(user)
-    override fun delete(id: String): Boolean = deleteBehavior(id)
-    override fun findByAge(minAge: Int, maxAge: Int): List<User> = findByAgeBehavior(minAge, maxAge)
-    override val users: List<User> get() = usersBehavior()
-
-    fun configureFindById(behavior: (String) -> User?) { findByIdBehavior = behavior }
-    fun configureSave(behavior: (User) -> User) { saveBehavior = behavior }
-    fun configureDelete(behavior: (String) -> Boolean) { deleteBehavior = behavior }
-    fun configureFindByAge(behavior: (Int, Int) -> List<User>) { findByAgeBehavior = behavior }
-    fun configureUsers(behavior: () -> List<User>) { usersBehavior = behavior }
-}
-
-// Factory function
-fun fakeUserRepository(configure: FakeUserRepositoryConfig.() -> Unit = {}): FakeUserRepositoryImpl {
-    return FakeUserRepositoryImpl().apply { FakeUserRepositoryConfig(this).configure() }
-}
-
-// Configuration DSL
-class FakeUserRepositoryConfig(private val fake: FakeUserRepositoryImpl) {
-    fun findById(behavior: (String) -> User?) { fake.configureFindById(behavior) }
-    fun save(behavior: (User) -> User) { fake.configureSave(behavior) }
-    fun delete(behavior: (String) -> Boolean) { fake.configureDelete(behavior) }
-    fun findByAge(behavior: (Int, Int) -> List<User>) { fake.configureFindByAge(behavior) }
-    fun users(behavior: () -> List<User>) { fake.configureUsers(behavior) }
-}
-```
-
-### After Fakt - Single Annotation
-
 ```kotlin
 import com.rsicarelli.fakt.Fake
 
 @Fake
-interface UserRepository {
-    val users: List<User>
-    fun findById(id: String): User?
-    fun save(user: User): User
-    fun delete(id: String): Boolean
-    fun findByAge(minAge: Int, maxAge: Int = 100): List<User>
+interface AnalyticsService {
+    fun track(event: String)
 }
 ```
-
-**Everything above is generated automatically at compile-time.**
 
 ### Usage in Tests
 
@@ -75,22 +28,17 @@ interface UserRepository {
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class UserServiceTest {
+class AnalyticsServiceTest {
     @Test
-    fun `GIVEN user repository WHEN saving user THEN should return saved user`() {
-        // Given - Configure fake with type-safe DSL
-        val fake = fakeUserRepository {
-            save { user -> user.copy(id = "generated-id") }
-            findById { id -> User(id, "Test User", "test@example.com") }
+    fun `GIVEN AnalyticsService fake WHEN configuring track THEN should execute behavior`() {
+        var capturedEvent: String? = null
+        val fake = fakeAnalyticsService {
+            track { event -> capturedEvent = event }
         }
 
-        // When
-        val saved = fake.save(User("", "John Doe", "john@example.com"))
-        val found = fake.findById("generated-id")
+        fake.track("user_clicked_button")
 
-        // Then
-        assertEquals("generated-id", saved.id)
-        assertEquals("Test User", found?.name)
+        assertEquals("user_clicked_button", capturedEvent)
     }
 }
 ```
@@ -102,21 +50,32 @@ class UserServiceTest {
 ### 1. Apply the Gradle Plugin
 
 ```kotlin
-// build.gradle.kts
+// root build.gradle.kts
 plugins {
-    kotlin("multiplatform") version "2.2.10"
-    id("com.rsicarelli.fakt") version "x.y.z"
-}
-
-kotlin {
-    jvm()
-    js(IR) { nodejs() }
-    iosArm64()
-    iosSimulatorArm64()
+  	id("org.jetbrains.kotlin.multiplatform") version "x.y.z" apply false
+	  id("com.rsicarelli.fakt") version "x.y.z" apply false
 }
 ```
 
-### 2. Annotate Your Interfaces
+### 2. Add runtime dependency
+
+```kotlin
+// module build.gradle.kts
+plugins {
+  	id("org.jetbrains.kotlin.multiplatform")
+	  id("com.rsicarelli.fakt")
+}
+
+kotlin {
+		sourceSets { 
+        commonMain.dependencies { 
+						implementation("com.rsicarelli.fakt:runtime:x.y.z")
+        }
+    }
+}
+```
+
+### 3. Annotate Your Interfaces
 
 ```kotlin
 // src/commonMain/kotlin/com/example/MyService.kt
@@ -128,7 +87,13 @@ interface MyService {
 }
 ```
 
-### 3. Use Generated Fakes in Tests
+### 4. Build your module
+
+```kotlin
+./gradlew module:build
+```
+
+### 5. Use Generated Fakes in Tests
 
 ```kotlin
 // src/commonTest/kotlin/com/example/MyServiceTest.kt
@@ -148,7 +113,7 @@ class MyServiceTest {
 }
 ```
 
-**That's it!** Fakt generates:
+✨**That's it!** Fakt generates:
 - `FakeMyServiceImpl` class
 - `fakeMyService {}` factory function
 - `FakeMyServiceConfig` DSL for configuration
@@ -157,58 +122,84 @@ class MyServiceTest {
 
 ## Features
 
-### Core Capabilities
+**At a Glance:**
+- ✅ **All class types** - Interfaces, abstract classes, open/final classes, companion objects
+- ✅ **Complete type system** - Full generics support (class-level, method-level, constraints, variance), SAM interfaces, complex stdlib types
+- ✅ **Kotlin features** - Suspend functions, properties (val/var), methods, default parameters, inheritance
+- ✅ **All KMP platforms** - Android, iOS, JVM, Native (macOS, Linux, Windows), JavaScript, WebAssembly
+- ⚠️ **Multi-module** - Experimental (requires dedicated `-fakes` modules)
+
+<details>
+<summary><b>📋 Complete Feature Breakdown</b></summary>
+
+### What You Can Fake
 
 - ✅ **Interfaces** - Primary target for fake generation
 - ✅ **Abstract Classes** - Supported with proper inheritance
 - ✅ **Open Classes** - Generate fakes for extensible classes
 - ✅ **Final Classes** - Works with sealed implementation classes
-- ✅ **Suspend Functions** - Full coroutine support
-- ✅ **Properties** (`val`/`var`) - Configurable getters/setters
-- ✅ **Methods** - Instance and extension methods
-- ✅ **Default Parameters** - Preserved in generated fakes
 - ✅ **Companion Objects** - Static-like members supported
 
 ### Type System Support
 
-- ✅ **Generics**
-  - Basic generics (`interface Repository<T>`)
-  - Method-level generics (`fun <T> process(item: T): T`)
-  - Class-level generics (`interface Cache<K, V>`)
-  - Generic constraints (`<T : Comparable<T>>`)
-  - Variance (`in`, `out`, invariant)
+**Generics:**
+- Basic generics (`interface Repository<T>`)
+- Method-level generics (`fun <T> process(item: T): T`)
+- Class-level generics (`interface Cache<K, V>`)
+- Generic constraints (`<T : Comparable<T>>`)
+- Variance (`in`, `out`, invariant)
 
-- ✅ **SAM Interfaces** (Single Abstract Method)
-  - Function types as parameters
-  - Higher-order functions
-  - Lambda expressions
+**Function Types:**
+- SAM interfaces (Single Abstract Method)
+- Higher-order functions
+- Lambda expressions
 
-- ✅ **Complex Standard Library Types**
-  - `Result<T>`, `Pair<A, B>`, `Triple<A, B, C>`
-  - `Sequence<T>`, `Lazy<T>`
-  - Nullable types (`T?`)
-  - Collections (`List`, `Set`, `Map`)
+**Standard Library Types:**
+- `Result<T>`, `Pair<A, B>`, `Triple<A, B, C>`
+- `Sequence<T>`, `Lazy<T>`
+- Nullable types (`T?`)
+- Collections (`List`, `Set`, `Map`)
+
+**Complex Types (as parameters/return types):**
+- Sealed classes
+- Enums (including rich enums with properties/methods)
+- Data classes
 
 ### Kotlin Language Features
 
-- ✅ **Sealed Classes** - Complete hierarchy support
-- ✅ **Enums** - Including enums with properties and methods
-- ✅ **Data Classes** - As parameter/return types
+- ✅ **Suspend Functions** - Full coroutine support
+- ✅ **Properties** (`val`/`var`) - Configurable getters/setters
+- ✅ **Methods** - Instance and extension methods
+- ✅ **Default Parameters** - Preserved in generated fakes
 - ✅ **Inheritance** - Multi-level inheritance hierarchies
 - ✅ **Meta-Annotations** - Custom annotations via `@GeneratesFake`
 
 ### Platform Support
 
-- ✅ **Kotlin Multiplatform**
-  - JVM (Java 11+)
-  - JavaScript (IR backend)
-  - Native (all targets: iOS, macOS, Linux, Windows)
-  - WebAssembly
-  - Android
+Fakt works at the **IR (Intermediate Representation) level**, which means it supports all Kotlin Multiplatform targets:
 
-- ✅ **Single-Platform Kotlin**
-  - JVM-only projects
-  - Android-only projects
+| Platform | Targets |
+|----------|---------|
+| **Android** | `androidTarget()` |
+| **iOS** | `iosArm64()`, `iosX64()`, `iosSimulatorArm64()` |
+| **JVM** | `jvm()` |
+| **JavaScript** | `js(IR)` - Browser & Node.js |
+| **WebAssembly** | `wasmJs()` |
+| **macOS** | `macosArm64()`, `macosX64()` |
+| **Linux** | `linuxArm64()`, `linuxX64()` |
+| **Windows** | `mingwX64()` |
+| **watchOS** | `watchosArm64()`, `watchosX64()`, `watchosSimulatorArm64()` |
+| **tvOS** | `tvosArm64()`, `tvosX64()`, `tvosSimulatorArm64()` |
+
+**Single-Platform Projects:**
+
+- ✅ JVM-only Kotlin projects
+- ✅ Android-only projects
+- ✅ Any single-target KMP project
+
+</details>
+
+---
 
 ### Multi-Module Support (Experimental)
 
