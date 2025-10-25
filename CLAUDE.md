@@ -117,7 +117,7 @@ import com.rsicarelli.fakt.compiler.api.LogLevel
 
 fakt {
     logLevel.set(LogLevel.INFO)    // ✅ Type-safe! (default - concise summary)
-    logLevel.set(LogLevel.DEBUG)   // ✅ IDE autocomplete
+    // logLevel.set(LogLevel.DEBUG)   // ✅ IDE autocomplete
     logLevel.set(LogLevel.TRACE)   // ✅ Compile-time validation
     logLevel.set(LogLevel.QUIET)   // ✅ No typos possible
 }

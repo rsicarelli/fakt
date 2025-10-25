@@ -48,7 +48,7 @@ class FaktCompilerPluginRegistrarSimpleTest {
             val options = FaktOptions()
 
             assertFalse(options.enabled, "Should be disabled by default")
-            assertFalse(options.debug, "Should have debug disabled by default")
+            assertEquals(LogLevel.INFO, options.logLevel, "Should have INFO log level by default")
             assertEquals(null, options.outputDir, "Should have null output dir by default")
         }
 
@@ -58,12 +58,12 @@ class FaktCompilerPluginRegistrarSimpleTest {
             val customOptions =
                 FaktOptions(
                     enabled = true,
-                    debug = true,
+                    logLevel = LogLevel.DEBUG,
                     outputDir = "/custom/path",
                 )
 
             assertTrue(customOptions.enabled, "Should preserve enabled state")
-            assertTrue(customOptions.debug, "Should preserve debug state")
+            assertEquals(LogLevel.DEBUG, customOptions.logLevel, "Should preserve log level")
             assertEquals("/custom/path", customOptions.outputDir, "Should preserve output directory")
         }
 

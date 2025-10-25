@@ -83,7 +83,7 @@ data class FakeMetrics(
      * @return Formatted duration string (e.g., "234µs", "45ms", "1.2s")
      */
     fun formattedDuration(): String =
-        com.rsicarelli.fakt.compiler.telemetry.TimeFormatter
+        com.rsicarelli.fakt.compiler.api.TimeFormatter
             .format(totalTimeNanos)
 
     /**

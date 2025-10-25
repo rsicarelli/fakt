@@ -20,20 +20,40 @@
 - **[🔧 Compilation Validation](docs/validation/compilation-validation.md)** - Ensure generated code compiles
 - **[🛡️ Type Safety Validation](docs/validation/type-safety-validation.md)** - Generic handling and type preservation
 
-## 🔧 **Available Commands**
+## 🔧 **Available Skills**
 
-### **Core Development Commands**
-```bash
-/debug-ir-generation <interface>      # Step-by-step IR generation debug
-/analyze-generic-scoping [interface]  # Deep analysis of generic type challenge
-/check-implementation-status [phase]  # Monitor progress and validate milestones
-/consult-kotlin-api <api>             # Validate Kotlin compiler API usage
-```
+Fakt uses Claude Code Skills for autonomous, context-aware development assistance. Skills activate automatically based on conversation context.
 
-### **Validation & Testing Commands**
+### **Core Workflows (Tier 1)**
+- **kotlin-ir-debugger** - Debug Kotlin compiler IR generation for @Fake interfaces
+- **bdd-test-runner** - Execute and validate GIVEN-WHEN-THEN tests with vanilla JUnit5
+- **behavior-analyzer-tester** - Deep behavior analysis and comprehensive unit test generation
+
+### **Validation (Tier 2)**
+- **metro-pattern-validator** - Validate Fakt implementation alignment with Metro patterns
+- **compilation-validator** - Validate generated code compiles without errors
+- **implementation-tracker** - Monitor KtFakes implementation progress across phases
+
+### **Analysis (Tier 3)**
+- **kotlin-api-consultant** - Query Kotlin compiler source for API validation and Metro alignment
+- **interface-analyzer** - Deep structural analysis of @Fake interfaces for generation planning
+- **compilation-error-analyzer** - Systematic compilation error diagnosis and resolution
+- **generic-scoping-analyzer** - Analyze generic type parameter scoping challenges with Phase 2A/2B solutions
+
+### **Knowledge Base**
+- **fakt-docs-navigator** - Intelligent navigator for 80+ documentation files
+
+### **Development Tools**
+- **skill-creator** - Creates new Claude Code Skills following best practices
+
+### **Legacy Slash Commands (Deprecated)**
+For backward compatibility, slash commands still work but Skills are preferred:
 ```bash
-/run-bdd-tests [pattern]              # Execute GIVEN-WHEN-THEN tests
-/validate-metro-alignment [component] # Check Metro pattern compliance
+/debug-ir-generation <interface>      # → Use kotlin-ir-debugger Skill
+/analyze-generic-scoping [interface]  # → Use generic-scoping-analyzer Skill
+/check-implementation-status [phase]  # → Use implementation-tracker Skill
+/run-bdd-tests [pattern]              # → Use bdd-test-runner Skill
+/validate-metro-alignment [component] # → Use metro-pattern-validator Skill
 ```
 
 ## 📁 **Documentation Structure**
@@ -41,29 +61,49 @@
 ```
 .claude/
 ├── README.md                         # This navigation index
+├── skills/                           # ⭐ Claude Code Skills (12 total)
+│   ├── core-workflows/               # Tier 1: Essential development workflows
+│   │   ├── kotlin-ir-debugger/
+│   │   ├── bdd-test-runner/
+│   │   └── behavior-analyzer-tester/
+│   ├── validation/                   # Tier 2: Validation and tracking
+│   │   ├── metro-pattern-validator/
+│   │   ├── compilation-validator/
+│   │   └── implementation-tracker/
+│   ├── analysis/                     # Tier 3: Deep analysis capabilities
+│   │   ├── kotlin-api-consultant/
+│   │   ├── interface-analyzer/
+│   │   ├── compilation-error-analyzer/
+│   │   └── generic-scoping-analyzer/
+│   ├── knowledge-base/               # Documentation navigation
+│   │   └── fakt-docs-navigator/
+│   └── development/                  # Development utilities
+│       └── skill-creator/
 ├── docs/
 │   ├── validation/                   # Testing and validation strategies
 │   │   ├── testing-guidelines.md    # THE ABSOLUTE TESTING STANDARD ⭐
 │   │   ├── compilation-validation.md # Generated code must compile
-│   │   └── type-safety-validation.md # Generic handling validation
+│   │   ├── type-safety-validation.md # Generic handling validation
+│   │   └── SKILLS-ACTIVATION-TESTS.md # 40+ test prompts for Skills
 │   ├── development/                  # Technical development guides
 │   │   ├── metro-alignment.md       # Metro architectural patterns
-│   │   └── kotlin-api-reference.md  # IR API usage validation
+│   │   ├── kotlin-api-reference.md  # IR API usage validation
+│   │   └── MIGRATION-PATTERNS.md    # Skills migration patterns
 │   ├── implementation/               # Status and roadmap tracking
 │   │   ├── current-status.md        # Phase 1 breakthrough status ⭐
-│   │   └── roadmap.md               # Phase 2 implementation plan ⭐
+│   │   ├── roadmap.md               # Phase 2 implementation plan ⭐
+│   │   └── DAY1-SUMMARY.md          # Skills migration progress
 │   ├── analysis/                     # Deep technical analysis
 │   │   └── generic-scoping-analysis.md # Core architectural challenge ⭐
 │   ├── architecture/                 # [Future] Architecture docs
 │   ├── examples/                     # [Future] Code examples and demos
 │   └── api/                         # [Future] API specifications
-└── commands/                         # Claude Code command definitions
-    ├── debug-ir-generation.md       # IR generation debugging
-    ├── analyze-generic-scoping.md   # Generic scoping analysis ⭐
-    ├── check-implementation-status.md # Progress monitoring ⭐
-    ├── run-bdd-tests.md             # GIVEN-WHEN-THEN test execution
-    ├── consult-kotlin-api.md        # API validation
-    └── validate-metro-alignment.md  # Metro pattern compliance
+└── commands/                         # Legacy slash commands (deprecated)
+    ├── debug-ir-generation.md       # → kotlin-ir-debugger Skill
+    ├── analyze-generic-scoping.md   # → generic-scoping-analyzer Skill
+    ├── check-implementation-status.md # → implementation-tracker Skill
+    ├── run-bdd-tests.md             # → bdd-test-runner Skill
+    └── validate-metro-alignment.md  # → metro-pattern-validator Skill
 ```
 
 ## 🎯 **Current Focus Areas**

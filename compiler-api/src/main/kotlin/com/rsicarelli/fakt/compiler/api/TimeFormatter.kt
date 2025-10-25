@@ -1,11 +1,13 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-package com.rsicarelli.fakt.compiler.telemetry
+package com.rsicarelli.fakt.compiler.api
+
+import java.util.Locale
 
 /**
  * Utility for formatting nanosecond durations to human-readable strings.
  *
- * Provides consistent time formatting across the Fakt compiler plugin's telemetry system.
+ * Provides consistent time formatting across Fakt compiler plugin and Gradle plugin.
  * Automatically selects the most appropriate unit based on duration magnitude.
  *
  * **Unit Selection:**
@@ -25,10 +27,19 @@ package com.rsicarelli.fakt.compiler.telemetry
  * **Design:**
  * - Single responsibility: format nanoseconds to human-readable strings
  * - No state (object singleton)
- * - Consistent across all telemetry components
+ * - Consistent across all Fakt components
  * - Performance optimized (simple arithmetic, no string allocations until final format)
  */
 object TimeFormatter {
+    // Time conversion constants
+    private const val NANOS_PER_MICRO = 1_000L
+    private const val NANOS_PER_MILLI = 1_000_000L
+    private const val NANOS_PER_SECOND = 1_000_000_000L
+    private const val MILLIS_PER_SECOND = 1_000L
+    private const val MILLIS_PER_MINUTE = 60_000L
+    private const val MILLIS_THRESHOLD = 1_000L
+    private const val SECONDS_PER_MINUTE = 60
+
     /**
      * Formats nanoseconds to human-readable time string with smart unit selection.
      *
@@ -36,18 +47,19 @@ object TimeFormatter {
      * @return Formatted time string (e.g., "234µs", "45ms", "1.2s", "1m 5s")
      */
     fun format(nanos: Long): String {
-        val micros = nanos / 1_000
-        val millis = nanos / 1_000_000
-        val seconds = nanos / 1_000_000_000.0
+        val micros = nanos / NANOS_PER_MICRO
+        val millis = nanos / NANOS_PER_MILLI
+        val seconds = nanos / NANOS_PER_SECOND.toDouble()
 
         return when {
-            nanos < 1_000_000 -> "${micros}µs" // < 1ms → show µs
-            millis < 1_000 -> "${millis}ms" // 1-999ms → show ms
-            seconds < 60 -> String.format("%.1fs", seconds) // 1-59s → show decimal seconds
+            nanos < NANOS_PER_MILLI -> "${micros}µs" // < 1ms → show µs
+            millis < MILLIS_THRESHOLD -> "${millis}ms" // 1-999ms → show ms
+            seconds < SECONDS_PER_MINUTE ->
+                String.format(Locale.ROOT, "%.1fs", seconds) // 1-59s → show decimal seconds
             else -> {
                 // 60s+ → show minutes and seconds
-                val minutes = millis / 60_000
-                val remainingSeconds = (millis % 60_000) / 1_000
+                val minutes = millis / MILLIS_PER_MINUTE
+                val remainingSeconds = (millis % MILLIS_PER_MINUTE) / MILLIS_PER_SECOND
                 "${minutes}m ${remainingSeconds}s"
             }
         }
