@@ -1,3 +1,7 @@
+@file:OptIn(ExperimentalKotlinGradlePluginApi::class)
+
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
 plugins {
@@ -46,5 +50,15 @@ kotlin {
     wasmJs {
         nodejs()
         binaries.executable()
+    }
+
+    dependencies {
+        implementation("com.rsicarelli.fakt:runtime:x.y.z")
+    }
+
+    sourceSets {
+        commonMain.dependencies {
+
+        }
     }
 }
