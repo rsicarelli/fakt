@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.telemetry
 
+import com.rsicarelli.fakt.compiler.api.TimeFormatter
 import com.rsicarelli.fakt.compiler.telemetry.metrics.CompilationSummary
 
 /**
@@ -41,7 +42,10 @@ import com.rsicarelli.fakt.compiler.telemetry.metrics.CompilationSummary
  * @see CompilationSummary
  */
 object ReportFormatter {
-    private const val SEPARATOR = "════════════════════════════════════════"
+    // Formatting constants
+    private const val SEPARATOR_WIDTH = 60
+    private const val TOP_SLOWEST_COUNT = 10
+    private const val LAST_INDEX_FOR_BOTTOM_TREE = 9
 
     /**
      * Formats a compilation summary for INFO level (1 line, rich).
@@ -176,7 +180,7 @@ object ReportFormatter {
      */
     fun formatTrace(summary: CompilationSummary): String =
         buildString {
-            val wideSeparator = "═".repeat(60)
+            val wideSeparator = "═".repeat(SEPARATOR_WIDTH)
 
             // Header separator
             appendLine(wideSeparator)
@@ -193,66 +197,42 @@ object ReportFormatter {
             appendLine("├─ New fakes: ${summary.newFakes()}")
             appendLine("├─ From cache: ${summary.cachedFakes()}")
             val avgLOC = summary.avgLOCPerFile()
-            appendLine("└─ Total LOC: ${summary.formatNumber(summary.totalLOC)} (avg $avgLOC LOC/file)")
+            val avgLOCLine = "└─ Total LOC: ${summary.formatNumber(summary.totalLOC)} (avg $avgLOC LOC/file)"
+            appendLine(avgLOCLine)
 
             // Summary section (tree-style)
             appendLine("SUMMARY (${summary.formattedTotalTime()})")
-            appendLine(
-                "├─ Total fakes: ${summary.formatNumber(
-                    summary.totalDiscovered(),
-                )} (${summary.newFakes()} new, ${summary.cachedFakes()} cached)",
-            )
-            val avgTimeNanos = if (summary.totalProcessed() > 0) summary.totalTimeNanos / summary.totalProcessed() else 0
+            val totalDiscovered = summary.formatNumber(summary.totalDiscovered())
+            val newCount = summary.newFakes()
+            val cachedCount = summary.cachedFakes()
+            val totalLine = "├─ Total fakes: $totalDiscovered ($newCount new, $cachedCount cached)"
+            appendLine(totalLine)
+            val avgTimeNanos =
+                if (summary.totalProcessed() > 0) {
+                    summary.totalTimeNanos / summary.totalProcessed()
+                } else {
+                    0
+                }
             appendLine("└─ Avg time/fake: ${TimeFormatter.format(avgTimeNanos)}")
 
             // Slowest fakes (tree-style, top 10)
             if (summary.fakeMetrics.isNotEmpty()) {
-                appendLine("SLOWEST FAKES (Top 10):")
+                appendLine("SLOWEST FAKES (Top $TOP_SLOWEST_COUNT):")
                 summary.fakeMetrics
                     .sortedByDescending { it.totalTimeNanos }
-                    .take(10)
+                    .take(TOP_SLOWEST_COUNT)
                     .forEachIndexed { index, metric ->
-                        val prefix = if (index == 9 || index == summary.fakeMetrics.size - 1) "└─" else "├─"
-                        appendLine(
-                            "$prefix ${index + 1}. ${metric.name} (${metric.formattedDuration()}) - ${metric.generatedLOC} LOC${metric.slowIndicator()}",
-                        )
+                        val isLast = index == LAST_INDEX_FOR_BOTTOM_TREE || index == summary.fakeMetrics.size - 1
+                        val prefix = if (isLast) "└─" else "├─"
+                        val slowLine =
+                            "$prefix ${index + 1}. ${metric.name} (${metric.formattedDuration()}) - " +
+                                "${metric.generatedLOC} LOC${metric.slowIndicator()}"
+                        appendLine(slowLine)
                     }
                 appendLine()
             }
 
             // Footer
             append(wideSeparator)
-        }
-
-    /**
-     * Wraps a list of names into multiple lines with proper indentation.
-     *
-     * @param names List of names to wrap
-     * @param indent Indentation prefix for each line
-     * @param maxWidth Maximum line width
-     * @return Formatted multi-line string with wrapped names
-     */
-    private fun wrapNames(
-        names: List<String>,
-        indent: String,
-        maxWidth: Int,
-    ): String =
-        buildString {
-            val truncatedNames = if (names.size > 20) names.take(20) + "..." else names
-            var currentLine = indent
-            truncatedNames.forEachIndexed { index, name ->
-                val separator = if (index < truncatedNames.size - 1) ", " else ""
-                val token = name + separator
-
-                if (currentLine.length + token.length > maxWidth) {
-                    appendLine(currentLine)
-                    currentLine = indent + token
-                } else {
-                    currentLine += token
-                }
-            }
-            if (currentLine.isNotEmpty()) {
-                appendLine(currentLine)
-            }
         }
 }

@@ -27,13 +27,12 @@ class DataCacheTest {
     fun `GIVEN nested list type WHEN storing batches THEN should maintain type safety`() {
         // Given - DataCache with nested List<List<String>>
         val batches = mutableListOf<List<String>>()
-        val cache =
-            fakeDataCache<String> {
-                storeBatch { items ->
-                    batches.add(items)
-                }
-                getAllBatches { batches }
+        val cache = fakeDataCache<String> {
+            storeBatch { items ->
+                batches.add(items)
             }
+            getAllBatches { batches }
+        }
 
         // When - Store multiple batches
         cache.storeBatch(listOf("a", "b", "c"))
@@ -113,15 +112,14 @@ class DataCacheTest {
     fun `GIVEN complex nested type WHEN using with User objects THEN should maintain type safety`() {
         // Given - DataCache with nested User lists
         val userGroups = mutableMapOf<String, List<User>>()
-        val cache =
-            fakeDataCache<User> {
-                storeGroups { groups ->
-                    userGroups.putAll(groups)
-                }
-                getGroup { name ->
-                    userGroups[name]
-                }
+        val cache = fakeDataCache<User> {
+            storeGroups { groups ->
+                userGroups.putAll(groups)
             }
+            getGroup { name ->
+                userGroups[name]
+            }
+        }
 
         // When - Store user groups
         val admins =

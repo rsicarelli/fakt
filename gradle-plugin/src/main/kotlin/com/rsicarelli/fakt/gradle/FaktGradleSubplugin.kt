@@ -114,7 +114,6 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             buildList {
                 // Pass configuration options to the compiler plugin
                 add(SubpluginOption(key = "enabled", value = extension.enabled.get().toString()))
-                add(SubpluginOption(key = "debug", value = extension.debug.get().toString()))
                 add(SubpluginOption(key = "logLevel", value = extension.logLevel.get().name))
 
                 // Build complete source set context using modern API
@@ -132,19 +131,6 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
 
                 // Also pass output directory for backwards compatibility
                 add(SubpluginOption(key = "outputDir", value = context.outputDirectory))
-
-                if (extension.debug.get()) {
-                    project.logger.info(
-                        """
-                        |Fakt: Source Set Context for ${kotlinCompilation.name}:
-                        |  Target: ${context.targetName} (${context.platformType})
-                        |  Default Source Set: ${context.defaultSourceSet.name}
-                        |  All Source Sets: ${context.allSourceSets.joinToString { it.name }}
-                        |  Is Test: ${context.isTest}
-                        |  Output: ${context.outputDirectory}
-                        """.trimMargin(),
-                    )
-                }
 
                 project.logger.info("Fakt: Configured compiler plugin with $size options")
             }

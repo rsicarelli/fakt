@@ -63,36 +63,6 @@ open class FaktPluginExtension
         val enabled: Property<Boolean> = objects.property(Boolean::class.java).convention(true)
 
         /**
-         * Enables detailed logging from the compiler plugin.
-         *
-         * **DEPRECATED:** Use [logLevel] instead for granular control.
-         *
-         * When enabled, Fakt logs:
-         * - Detected @Fake interfaces
-         * - Generated file paths
-         * - Source set configurations
-         * - Platform detection results (collector mode)
-         *
-         * **Default:** `false`
-         *
-         * **Usage:**
-         * ```kotlin
-         * fakt {
-         *     debug.set(true)  // Enable debug logs (deprecated)
-         *     // Better: use logLevel instead
-         *     logLevel.set("DEBUG")
-         * }
-         * ```
-         *
-         * **When to use:**
-         * - Troubleshooting why fakes aren't being generated
-         * - Understanding which source sets are being used
-         * - Debugging multi-module collection issues
-         */
-        @Deprecated("Use logLevel instead", ReplaceWith("logLevel.set(\"DEBUG\")"))
-        val debug: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
-
-        /**
          * Controls logging verbosity for the compiler plugin (Type-Safe!).
          *
          * Available levels:
@@ -109,7 +79,7 @@ open class FaktPluginExtension
          *
          * fakt {
          *     logLevel.set(LogLevel.INFO)    // ✅ Type-safe with IDE autocomplete!
-         *     logLevel.set(LogLevel.DEBUG)   // ✅ Compile-time validation
+         *     // logLevel.set(LogLevel.DEBUG)   // ✅ Compile-time validation
          *     logLevel.set(LogLevel.TRACE)   // ✅ No typos possible
          *     logLevel.set(LogLevel.QUIET)
          * }

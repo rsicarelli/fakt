@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.gradle
 
+import com.rsicarelli.fakt.compiler.api.LogLevel
+import com.rsicarelli.fakt.compiler.api.TimeFormatter
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
@@ -82,6 +84,18 @@ abstract class FakeCollectorTask : DefaultTask() {
     @get:Optional
     abstract val availableSourceSets: SetProperty<String>
 
+    /**
+     * Log level for controlling output verbosity.
+     * Respects the same logLevel configuration as the compiler plugin.
+     *
+     * - QUIET: No output
+     * - INFO: Summary only (default)
+     * - DEBUG: Summary + detailed per-source-set info
+     * - TRACE: Summary + details + registration info
+     */
+    @get:Input
+    abstract val logLevel: Property<LogLevel>
+
     init {
         group = "fakt"
         description = "Collects generated fakes from source project"
@@ -92,12 +106,14 @@ abstract class FakeCollectorTask : DefaultTask() {
 
     @TaskAction
     fun collectFakes() {
+        val startTime = System.nanoTime()
+        val faktLogger = GradleFaktLogger(logger, logLevel.get())
         val faktRootDir = sourceGeneratedDir.asFile.get()
 
         if (!faktRootDir.exists()) {
             val srcProjectName = sourceProjectPath.orNull?.substringAfterLast(":") ?: "unknown"
-            logger.warn(
-                "Fakt: No fakes found in source module '$srcProjectName'. " +
+            faktLogger.warn(
+                "No fakes found in source module '$srcProjectName'. " +
                     "Verify that source module has @Fake annotated interfaces, " +
                     "or remove this collector module if not needed.",
             )
@@ -108,7 +124,7 @@ abstract class FakeCollectorTask : DefaultTask() {
         val sourceSetDirs = faktRootDir.listFiles()?.filter { it.isDirectory } ?: emptyList()
 
         if (sourceSetDirs.isEmpty()) {
-            logger.warn("Fakt: No generated fakes found in $faktRootDir")
+            faktLogger.warn("No generated fakes found in $faktRootDir")
             return
         }
 
@@ -121,9 +137,11 @@ abstract class FakeCollectorTask : DefaultTask() {
 
         // Process each source set directory with platform detection
         sourceSetDirs.forEach { sourceSetDir ->
+            val sourceSetStartTime = System.nanoTime()
             val kotlinDir = sourceSetDir.resolve("kotlin")
+
             if (!kotlinDir.exists() || !kotlinDir.isDirectory) {
-                logger.info("Fakt: Skipping ${sourceSetDir.name} (no kotlin directory)")
+                faktLogger.debug("Skipping ${sourceSetDir.name} (no kotlin directory)")
                 return@forEach
             }
 
@@ -134,6 +152,7 @@ abstract class FakeCollectorTask : DefaultTask() {
                     sourceDir = kotlinDir,
                     destinationBaseDir = destinationBaseDir,
                     availableSourceSets = sourceSetNames,
+                    faktLogger = faktLogger,
                 )
 
             totalCollected += result.collectedCount
@@ -141,16 +160,25 @@ abstract class FakeCollectorTask : DefaultTask() {
                 platformStats[platform] = (platformStats[platform] ?: 0) + count
             }
 
-            logger.info(
-                "Fakt: Collected ${result.collectedCount} fake(s) from ${sourceSetDir.name}",
+            val sourceSetDuration = System.nanoTime() - sourceSetStartTime
+            faktLogger.debug(
+                "Collected ${result.collectedCount} fake(s) from ${sourceSetDir.name} " +
+                    "(${TimeFormatter.format(sourceSetDuration)})",
             )
         }
 
-        // Log summary
+        // Calculate total duration
+        val totalDuration = System.nanoTime() - startTime
         val srcProjectName = sourceProjectPath.orNull?.substringAfterLast(":") ?: "unknown"
-        logger.lifecycle("Fakt: Collected $totalCollected fake(s) from $srcProjectName")
+
+        // Log summary (INFO level)
+        faktLogger.info(
+            "✅ $totalCollected fake(s) collected from $srcProjectName | ${TimeFormatter.format(totalDuration)}",
+        )
+
+        // Log platform distribution (INFO level)
         platformStats.forEach { (platform, count) ->
-            logger.lifecycle("  - $platform: $count file(s)")
+            faktLogger.info("  ├─ $platform: $count file(s)")
         }
     }
 
@@ -279,12 +307,14 @@ abstract class FakeCollectorTask : DefaultTask() {
          * @param sourceDir Directory containing generated fakes
          * @param destinationBaseDir Base directory for collected fakes
          * @param availableSourceSets Set of available source sets for dynamic detection (optional)
+         * @param faktLogger Logger for trace-level file processing details (optional)
          * @return Collection result with statistics
          */
         fun collectWithPlatformDetection(
             sourceDir: File,
             destinationBaseDir: File,
             availableSourceSets: Set<String> = emptySet(),
+            faktLogger: GradleFaktLogger? = null,
         ): CollectionResult {
             val platformDistribution = mutableMapOf<String, Int>()
             var collectedCount = 0
@@ -310,6 +340,8 @@ abstract class FakeCollectorTask : DefaultTask() {
                     // Create parent directories and copy file
                     destFile.parentFile.mkdirs()
                     sourceFile.copyTo(destFile, overwrite = true)
+
+                    faktLogger?.trace("${sourceFile.name} → $platform (${fileContent.length} bytes)")
 
                     // Update statistics
                     collectedCount++
@@ -373,6 +405,9 @@ abstract class FakeCollectorTask : DefaultTask() {
                     // This enables support for ALL KMP targets without hardcoding
                     it.availableSourceSets.set(availableSourceSetNames)
 
+                    // Wire logLevel from extension for consistent telemetry
+                    it.logLevel.set(extension.logLevel)
+
                     // Add dependency on source project's MAIN compilation tasks only
                     // Avoid test compilations to prevent circular dependencies
                     it.dependsOn(
@@ -396,14 +431,7 @@ abstract class FakeCollectorTask : DefaultTask() {
                                 .resolve("${sourceSet.name}/kotlin")
                         }
                     sourceSet.kotlin.srcDir(platformDir)
-                    project.logger.info(
-                        "Fakt: Registered ${sourceSet.name} for platform-specific collected fakes",
-                    )
                 }
-
-            project.logger.info(
-                "Fakt: Registered collector task '$taskName' with platform detection",
-            )
         }
 
         /**
@@ -432,6 +460,9 @@ abstract class FakeCollectorTask : DefaultTask() {
                     project.layout.buildDirectory.dir("generated/collected-fakes/kotlin"),
                 )
 
+                // Wire logLevel from extension for consistent telemetry
+                it.logLevel.set(extension.logLevel)
+
                 // Add dependency on source project's MAIN compilation tasks only
                 // Avoid test compilations to prevent circular dependencies
                 // (test compilations may depend on -fakes modules)
@@ -442,11 +473,6 @@ abstract class FakeCollectorTask : DefaultTask() {
                     },
                 )
             }
-
-            project.logger.info(
-                "Fakt: Registered dynamic collector task 'collectFakes' " +
-                    "(auto-discovers all generated fakes)",
-            )
         }
     }
 }

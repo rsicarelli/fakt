@@ -27,7 +27,6 @@ import java.util.Base64
 class FaktCommandLineProcessor : CommandLineProcessor {
     companion object {
         val ENABLED_KEY = CompilerConfigurationKey<Boolean>("fakt.enabled")
-        val DEBUG_KEY = CompilerConfigurationKey<Boolean>("fakt.debug")
         val LOG_LEVEL_KEY = CompilerConfigurationKey<String>("fakt.logLevel")
         val OUTPUT_DIR_KEY = CompilerConfigurationKey<String>("fakt.outputDir")
         val SOURCE_SET_CONTEXT_KEY = CompilerConfigurationKey<SourceSetContext>("fakt.sourceSetContext")
@@ -37,14 +36,6 @@ class FaktCommandLineProcessor : CommandLineProcessor {
                 optionName = "enabled",
                 valueDescription = "true|false",
                 description = "Enable Fakt compiler plugin",
-                required = false,
-            )
-
-        val DEBUG_OPTION =
-            CliOption(
-                optionName = "debug",
-                valueDescription = "true|false",
-                description = "Enable debug logging (deprecated: use logLevel instead)",
                 required = false,
             )
 
@@ -78,7 +69,6 @@ class FaktCommandLineProcessor : CommandLineProcessor {
     override val pluginOptions: Collection<CliOption> =
         listOf(
             ENABLED_OPTION,
-            DEBUG_OPTION,
             LOG_LEVEL_OPTION,
             OUTPUT_DIR_OPTION,
             SOURCE_SET_CONTEXT_OPTION,
@@ -91,7 +81,6 @@ class FaktCommandLineProcessor : CommandLineProcessor {
     ) {
         when (option.optionName) {
             "enabled" -> configuration.put(ENABLED_KEY, value.toBoolean())
-            "debug" -> configuration.put(DEBUG_KEY, value.toBoolean())
             "logLevel" -> configuration.put(LOG_LEVEL_KEY, value)
             "outputDir" -> configuration.put(OUTPUT_DIR_KEY, value)
             "sourceSetContext" -> {

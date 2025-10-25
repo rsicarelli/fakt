@@ -45,11 +45,10 @@ class FaktCommandLineProcessorSimpleTest {
             val processor = FaktCommandLineProcessor()
             val options = processor.pluginOptions
 
-            assertEquals(5, options.size, "Should have exactly 5 plugin options")
+            assertEquals(4, options.size, "Should have exactly 4 plugin options")
 
             val optionNames = options.map { it.optionName }.toSet()
             assertTrue(optionNames.contains("enabled"), "Should include 'enabled' option")
-            assertTrue(optionNames.contains("debug"), "Should include 'debug' option (deprecated)")
             assertTrue(optionNames.contains("logLevel"), "Should include 'logLevel' option")
             assertTrue(optionNames.contains("outputDir"), "Should include 'outputDir' option")
             assertTrue(optionNames.contains("sourceSetContext"), "Should include 'sourceSetContext' option")
@@ -59,15 +58,15 @@ class FaktCommandLineProcessorSimpleTest {
     fun `GIVEN configuration keys WHEN checking key definitions THEN should have proper types`() =
         runTest {
             val enabledKey = FaktCommandLineProcessor.ENABLED_KEY
-            val debugKey = FaktCommandLineProcessor.DEBUG_KEY
+            val logLevelKey = FaktCommandLineProcessor.LOG_LEVEL_KEY
             val outputDirKey = FaktCommandLineProcessor.OUTPUT_DIR_KEY
 
             assertNotNull(enabledKey, "Enabled key should be defined")
-            assertNotNull(debugKey, "Debug key should be defined")
+            assertNotNull(logLevelKey, "Log level key should be defined")
             assertNotNull(outputDirKey, "Output dir key should be defined")
 
-            assertTrue(enabledKey != debugKey, "Keys should be distinct")
-            assertTrue(debugKey != outputDirKey, "Keys should be distinct")
+            assertTrue(enabledKey != logLevelKey, "Keys should be distinct")
+            assertTrue(logLevelKey != outputDirKey, "Keys should be distinct")
             assertTrue(enabledKey != outputDirKey, "Keys should be distinct")
         }
 
@@ -77,11 +76,11 @@ class FaktCommandLineProcessorSimpleTest {
             val configuration = CompilerConfiguration()
 
             val enabledValue = configuration.get(FaktCommandLineProcessor.ENABLED_KEY)
-            val debugValue = configuration.get(FaktCommandLineProcessor.DEBUG_KEY)
+            val logLevelValue = configuration.get(FaktCommandLineProcessor.LOG_LEVEL_KEY)
             val outputDirValue = configuration.get(FaktCommandLineProcessor.OUTPUT_DIR_KEY)
 
             assertEquals(null, enabledValue, "Unset enabled value should be null")
-            assertEquals(null, debugValue, "Unset debug value should be null")
+            assertEquals(null, logLevelValue, "Unset log level value should be null")
             assertEquals(null, outputDirValue, "Unset output directory should be null")
         }
 
@@ -95,6 +94,6 @@ class FaktCommandLineProcessorSimpleTest {
             val optionalOptions = options.filter { !it.required }
 
             assertEquals(0, requiredOptions.size, "No options should be required")
-            assertEquals(5, optionalOptions.size, "All 5 options should be optional")
+            assertEquals(4, optionalOptions.size, "All 4 options should be optional")
         }
 }

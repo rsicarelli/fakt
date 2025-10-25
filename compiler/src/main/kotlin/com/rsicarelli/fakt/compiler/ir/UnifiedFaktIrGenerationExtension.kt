@@ -266,7 +266,8 @@ class UnifiedFaktIrGenerationExtension(
             telemetry.recordFakeMetrics(
                 com.rsicarelli.fakt.compiler.telemetry.metrics.FakeMetrics(
                     name = className,
-                    pattern = com.rsicarelli.fakt.compiler.ir.analysis.GenericPattern.NoGenerics, // Classes don't have generic patterns tracked
+                    // Classes don't have generic patterns tracked
+                    pattern = com.rsicarelli.fakt.compiler.ir.analysis.GenericPattern.NoGenerics,
                     memberCount = memberCount,
                     typeParamCount = 0, // TODO: Track class type parameters
                     analysisTimeNanos = analysisTime,
@@ -729,10 +730,10 @@ class UnifiedFaktIrGenerationExtension(
     ) {
         logger.trace("$name")
         val analysisTime =
-            com.rsicarelli.fakt.compiler.telemetry.TimeFormatter
+            com.rsicarelli.fakt.compiler.api.TimeFormatter
                 .format(analysisTimeNanos)
         val generationTime =
-            com.rsicarelli.fakt.compiler.telemetry.TimeFormatter
+            com.rsicarelli.fakt.compiler.api.TimeFormatter
                 .format(generationTimeNanos)
 
         if (analysisDetail.isNotEmpty()) {

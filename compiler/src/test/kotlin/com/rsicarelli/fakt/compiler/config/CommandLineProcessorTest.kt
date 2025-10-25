@@ -145,25 +145,6 @@ class CommandLineProcessorTest {
         }
 
     @Test
-    fun `GIVEN debug option WHEN processing THEN should set debug flag`() =
-        runTest {
-            // GIVEN
-            val processor = FaktCommandLineProcessor()
-            val configuration = CompilerConfiguration()
-
-            // WHEN
-            processor.processOption(
-                option = processor.pluginOptions.first { it.optionName == "debug" } as AbstractCliOption,
-                value = "true",
-                configuration = configuration,
-            )
-
-            // THEN
-            val debug = configuration.get(FaktCommandLineProcessor.DEBUG_KEY)
-            assertTrue(debug == true, "Debug flag should be set")
-        }
-
-    @Test
     fun `GIVEN outputDir option WHEN processing THEN should set output directory`() =
         runTest {
             // GIVEN
@@ -234,7 +215,7 @@ class CommandLineProcessorTest {
             // THEN: Should have all required options
             val optionNames = options.map { it.optionName }
             assertTrue(optionNames.contains("enabled"), "Should have 'enabled' option")
-            assertTrue(optionNames.contains("debug"), "Should have 'debug' option")
+            assertTrue(optionNames.contains("logLevel"), "Should have 'logLevel' option")
             assertTrue(optionNames.contains("outputDir"), "Should have 'outputDir' option")
             assertTrue(
                 optionNames.contains("sourceSetContext"),

@@ -46,7 +46,6 @@ class FaktOptionsTest {
             val configuration = CompilerConfiguration()
             configuration.put(FaktCommandLineProcessor.SOURCE_SET_CONTEXT_KEY, context)
             configuration.put(FaktCommandLineProcessor.ENABLED_KEY, true)
-            configuration.put(FaktCommandLineProcessor.DEBUG_KEY, false)
 
             // WHEN: Loading options
             val options = FaktOptions.load(configuration)
@@ -57,7 +56,6 @@ class FaktOptionsTest {
             assertEquals("test", options.sourceSetContext.compilationName)
             assertEquals("jvm", options.sourceSetContext.targetName)
             assertTrue(options.enabled)
-            assertFalse(options.debug)
         }
 
     @Test
@@ -66,7 +64,7 @@ class FaktOptionsTest {
             // GIVEN: Configuration without source set context
             val configuration = CompilerConfiguration()
             configuration.put(FaktCommandLineProcessor.ENABLED_KEY, true)
-            configuration.put(FaktCommandLineProcessor.DEBUG_KEY, true)
+            configuration.put(FaktCommandLineProcessor.LOG_LEVEL_KEY, "DEBUG")
 
             // WHEN: Loading options
             val options = FaktOptions.load(configuration)
@@ -77,7 +75,7 @@ class FaktOptionsTest {
                 "Source set context should be null when not provided",
             )
             assertTrue(options.enabled)
-            assertTrue(options.debug)
+            assertEquals(LogLevel.DEBUG, options.logLevel)
         }
 
     @Test
@@ -103,7 +101,7 @@ class FaktOptionsTest {
             val configuration = CompilerConfiguration()
             configuration.put(FaktCommandLineProcessor.SOURCE_SET_CONTEXT_KEY, context)
             configuration.put(FaktCommandLineProcessor.ENABLED_KEY, true)
-            configuration.put(FaktCommandLineProcessor.DEBUG_KEY, true)
+            configuration.put(FaktCommandLineProcessor.LOG_LEVEL_KEY, "TRACE")
             configuration.put(FaktCommandLineProcessor.OUTPUT_DIR_KEY, "/custom/output")
 
             // WHEN: Loading options
@@ -113,7 +111,7 @@ class FaktOptionsTest {
             assertNotNull(options.sourceSetContext)
             assertEquals(context, options.sourceSetContext)
             assertTrue(options.enabled)
-            assertTrue(options.debug)
+            assertEquals(LogLevel.TRACE, options.logLevel)
             assertEquals("/custom/output", options.outputDir)
         }
 
@@ -194,7 +192,6 @@ class FaktOptionsTest {
             val configuration = CompilerConfiguration()
             configuration.put(FaktCommandLineProcessor.SOURCE_SET_CONTEXT_KEY, context)
             configuration.put(FaktCommandLineProcessor.ENABLED_KEY, true)
-            configuration.put(FaktCommandLineProcessor.DEBUG_KEY, false)
 
             val options = FaktOptions.load(configuration)
 

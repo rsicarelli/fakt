@@ -120,7 +120,8 @@ interface CompilerOptimizations {
                                 }
                             }
                         } catch (e: Exception) {
-                            logger.trace("Failed to load cache file: ${e.message}")
+                            logger.warn("Cache unavailable: Failed to load signatures from ${cacheFile.name}: ${e.message}")
+                            logger.trace("Full cache load error: ${e.stackTraceToString()}")
                         }
                     }
                     return signatures
@@ -135,7 +136,8 @@ interface CompilerOptimizations {
                             cacheFile.appendText("$signature\n")
                         }
                     } catch (e: Exception) {
-                        logger.trace("Failed to write to cache file: ${e.message}")
+                        logger.warn("Cache update failed: Cannot write signature to ${cacheFile.name}: ${e.message}")
+                        logger.trace("Full cache write error: ${e.stackTraceToString()}")
                     }
                 }
 

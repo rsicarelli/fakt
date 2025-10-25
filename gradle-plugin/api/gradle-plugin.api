@@ -55,7 +55,7 @@ public class com/rsicarelli/fakt/gradle/FaktPluginExtension {
 	public fun <init> (Lorg/gradle/api/model/ObjectFactory;)V
 	public final fun collectFakesFrom (Lorg/gradle/api/Project;)V
 	public final fun getCollectFrom ()Lorg/gradle/api/provider/Property;
-	public final fun getDebug ()Lorg/gradle/api/provider/Property;
 	public final fun getEnabled ()Lorg/gradle/api/provider/Property;
+	public final fun getLogLevel ()Lorg/gradle/api/provider/Property;
 }
 

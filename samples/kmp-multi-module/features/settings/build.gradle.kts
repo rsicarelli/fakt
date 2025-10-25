@@ -1,4 +1,4 @@
-import LogLevel
+
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
 
@@ -34,5 +34,5 @@ kotlin {
 }
 
 fakt {
-    logLevel.set(LogLevel.DEBUG)
+    logLevel.set(com.rsicarelli.fakt.compiler.api.LogLevel.TRACE)
 }
