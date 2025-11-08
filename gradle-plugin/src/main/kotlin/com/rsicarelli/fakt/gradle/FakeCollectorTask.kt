@@ -4,20 +4,21 @@ package com.rsicarelli.fakt.gradle
 
 import com.rsicarelli.fakt.compiler.api.LogLevel
 import com.rsicarelli.fakt.compiler.api.TimeFormatter
+import com.rsicarelli.fakt.gradle.FakeCollectorTask.Companion.registerForKmpProject
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
 import java.io.File
 
 /**
@@ -441,13 +442,47 @@ public abstract class FakeCollectorTask : DefaultTask() {
                                 .resolve("${sourceSet.name}/kotlin")
                         }
                     sourceSet.kotlin.srcDir(platformDir)
+
+                    // Wire task dependencies: ensure compilation tasks depend on collectFakes
+                    // This guarantees fakes are collected before any compilation that uses them
+                    // Uses type-based matching for robustness (only Kotlin tasks, not Java/Groovy)
+                    project.tasks.matching { compileTask ->
+                        // Type-based: only Kotlin compilation tasks
+                        (compileTask is KotlinCompile ||
+                                compileTask is Kotlin2JsCompile ||
+                                compileTask is KotlinNativeCompile) &&
+                                // Name-based: match source set name
+                                compileTask.name.contains(sourceSet.name, ignoreCase = true) &&
+                                // Safety: avoid test compilations
+                                !compileTask.name.contains("test", ignoreCase = true)
+                    }.configureEach { compileTask ->
+                        compileTask.dependsOn(task)
+                    }
                 }
         }
 
         /**
-         * Register a single collector task for non-KMP projects.
+         * Register a single collector task for single-platform projects.
          *
          * Uses the same auto-discovery approach as KMP projects for consistency.
+         *
+         * ## Supported Platforms
+         *
+         * - **JVM**: `org.jetbrains.kotlin.jvm` plugin
+         * - **Android Library**: `com.android.library` plugin
+         * - **Android Application**: `com.android.application` plugin
+         * - **Kotlin/JS**: `org.jetbrains.kotlin.js` plugin
+         * - **KMP Projects**: Use [registerForKmpProject] instead
+         *
+         * ## Task Dependency Strategy
+         *
+         * Uses type-based task matching for robustness:
+         * - JVM/Android: [KotlinCompile] tasks
+         * - JavaScript: [Kotlin2JsCompile] tasks
+         * - Native: Handled via KMP code path
+         *
+         * This ensures only Kotlin compilation tasks depend on `collectFakes`,
+         * avoiding false positives from Java/Groovy compilation tasks.
          *
          * @see ExperimentalFaktMultiModule
          */
@@ -458,7 +493,7 @@ public abstract class FakeCollectorTask : DefaultTask() {
         ) {
             val srcProject = extension.collectFrom.orNull ?: return
 
-            project.tasks.register("collectFakes", FakeCollectorTask::class.java) {
+            val task = project.tasks.register("collectFakes", FakeCollectorTask::class.java) {
                 it.sourceProjectPath.set(srcProject.path)
 
                 // Point to root fakt directory - task will auto-discover subdirectories
@@ -483,6 +518,61 @@ public abstract class FakeCollectorTask : DefaultTask() {
                     },
                 )
             }
+
+            // Register collected fakes directory as source and wire task dependencies
+            val collectedDir = project.layout.buildDirectory.dir("generated/collected-fakes/kotlin")
+
+            // === JVM Projects ===
+            project.plugins.withId("org.jetbrains.kotlin.jvm") {
+                project.extensions.findByType(org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension::class.java)
+                    ?.apply {
+                        sourceSets.getByName("main").kotlin.srcDir(collectedDir)
+
+                        // Type-based task dependencies for JVM compilation
+                        project.tasks.withType(KotlinCompile::class.java).configureEach {
+                            if (!it.name.contains("test", ignoreCase = true)) {
+                                it.dependsOn(task)
+                            }
+                        }
+                    }
+            }
+
+            // === Android Library Projects ===
+            project.plugins.withId("com.android.library") {
+                // Android uses Kotlin Android plugin internally (KotlinCompile tasks)
+                project.tasks.withType(KotlinCompile::class.java).configureEach {
+                    if (!it.name.contains("test", ignoreCase = true)) {
+                        it.dependsOn(task)
+                    }
+                }
+            }
+
+            // === Android Application Projects ===
+            project.plugins.withId("com.android.application") {
+                // Android apps also use KotlinCompile tasks
+                project.tasks.withType(KotlinCompile::class.java).configureEach {
+                    if (!it.name.contains("test", ignoreCase = true)) {
+                        it.dependsOn(task)
+                    }
+                }
+            }
+
+            // === Kotlin/JS Projects ===
+            project.plugins.withId("org.jetbrains.kotlin.js") {
+                // Use Kotlin2JsCompile for JavaScript compilation tasks
+                project.tasks.withType(Kotlin2JsCompile::class.java).configureEach {
+                    if (!it.name.contains("test", ignoreCase = true)) {
+                        it.dependsOn(task)
+                    }
+                }
+            }
+
+            // Note: Single-platform Kotlin/Native projects are rare in practice
+            // Native targets are typically configured through KMP (handled by registerForKmpProject)
+            // If single-platform Native support is needed, use:
+            // project.plugins.withId("org.jetbrains.kotlin.native") {
+            //     project.tasks.withType(KotlinNativeCompile::class.java).configureEach { ... }
+            // }
         }
     }
 }

@@ -17,11 +17,6 @@ import java.util.Base64
 
 /**
  * Command line processor for Fakt compiler plugin options.
- *
- * **Modernization (v1.1.0)**:
- * - Deserializes SourceSetContext from Gradle plugin
- * - No more hardcoded source set patterns
- * - Full support for custom test suites and KMP hierarchies
  */
 @OptIn(ExperimentalCompilerApi::class)
 class FaktCommandLineProcessor : CommandLineProcessor {
@@ -29,7 +24,8 @@ class FaktCommandLineProcessor : CommandLineProcessor {
         val ENABLED_KEY = CompilerConfigurationKey<Boolean>("fakt.enabled")
         val LOG_LEVEL_KEY = CompilerConfigurationKey<String>("fakt.logLevel")
         val OUTPUT_DIR_KEY = CompilerConfigurationKey<String>("fakt.outputDir")
-        val SOURCE_SET_CONTEXT_KEY = CompilerConfigurationKey<SourceSetContext>("fakt.sourceSetContext")
+        val SOURCE_SET_CONTEXT_KEY =
+            CompilerConfigurationKey<SourceSetContext>("fakt.sourceSetContext")
 
         val ENABLED_OPTION =
             CliOption(

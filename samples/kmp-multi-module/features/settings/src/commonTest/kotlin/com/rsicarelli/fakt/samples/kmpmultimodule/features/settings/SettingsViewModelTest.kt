@@ -57,10 +57,9 @@ class SettingsViewModelTest {
         runTest {
             // Given
             val testSettings = createTestSettings()
-            val settingsUseCase =
-                fakeSettingsUseCase {
-                    getSettings { _, _ -> testSettings }
-                }
+            val settingsUseCase = fakeSettingsUseCase {
+                getSettings { _, _ -> testSettings }
+            }
 
             val viewModel = factorySettingsViewModel(settingsUseCase = settingsUseCase)
 
@@ -333,11 +332,10 @@ class SettingsViewModelTest {
         runTest {
             // Given
             val originalSettings = createTestSettings()
-            val settingsUseCase =
-                fakeSettingsUseCase {
-                    getSettings { _, _ -> originalSettings }
-                    updateSettings { _, _, _ -> true }
-                }
+            val settingsUseCase = fakeSettingsUseCase {
+                getSettings { _, _ -> originalSettings }
+                updateSettings { _, _, _ -> true }
+            }
 
             val viewModel = factorySettingsViewModel(settingsUseCase = settingsUseCase)
 
@@ -376,7 +374,8 @@ class SettingsViewModelTest {
                     getSettings { _, _ -> createTestSettings() }
                 }
 
-            val viewModel = factorySettingsViewModel(settingsUseCase = settingsUseCase, logger = logger)
+            val viewModel =
+                factorySettingsViewModel(settingsUseCase = settingsUseCase, logger = logger)
 
             // When
             viewModel.loadSettings()

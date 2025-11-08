@@ -9,10 +9,14 @@ import com.rsicarelli.fakt.compiler.codegen.CodeGenerators
 import com.rsicarelli.fakt.compiler.codegen.ConfigurationDslGenerator
 import com.rsicarelli.fakt.compiler.codegen.FactoryGenerator
 import com.rsicarelli.fakt.compiler.codegen.ImplementationGenerator
+import com.rsicarelli.fakt.compiler.ir.analysis.SourceSetExtractor
 import com.rsicarelli.fakt.compiler.ir.utils.IrGenerationLogging
 import com.rsicarelli.fakt.compiler.ir.utils.validateAndLogGenericPattern
 import com.rsicarelli.fakt.compiler.optimization.CompilerOptimizations
+import com.rsicarelli.fakt.compiler.optimization.buildSignature
 import com.rsicarelli.fakt.compiler.output.SourceSetMapper
+import com.rsicarelli.fakt.compiler.types.TypeInfo
+import java.io.File
 import com.rsicarelli.fakt.compiler.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.telemetry.FaktTelemetry
 import com.rsicarelli.fakt.compiler.telemetry.metrics.FakeMetrics
@@ -22,6 +26,7 @@ import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.util.packageFqName
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
@@ -45,20 +50,6 @@ import org.jetbrains.kotlin.name.FqName
  * - FakeXxxImpl.kt - Implementation class with configurable behavior properties
  * - fakeXxx() - Type-safe factory function
  * - FakeXxxConfig - Configuration DSL class
- *
- * ## Safety: UnsafeDuringIrConstructionAPI Usage
- *
- * This extension uses APIs marked with `@UnsafeDuringIrConstructionAPI`:
- * - `IrClass.declarations` - For analyzing interface/class members
- * - `IrSymbol.owner` - For type hierarchy traversal
- *
- * **Why it's safe:**
- * - `IrGenerationExtension.generate()` is called **AFTER** IR construction is complete
- * - All IR symbols are bound at the post-linkage phase
- * - The "unsafe during construction" warning doesn't apply to the generation phase
- * - Metro compiler plugin (production-quality) uses the exact same approach
- *
- * See: `compiler/build.gradle.kts` for module-level opt-in configuration
  *
  * ## Threading Model
  *
@@ -259,6 +250,7 @@ class UnifiedFaktIrGenerationExtension(
      * @param moduleFragment IR module to scan for all class declarations
      * @return Immutable map from ClassId to IrClass for fast lookup
      */
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
     private fun buildIrClassMap(moduleFragment: IrModuleFragment): Map<ClassId, IrClass> {
         val map = mutableMapOf<ClassId, IrClass>()
 
@@ -304,6 +296,44 @@ class UnifiedFaktIrGenerationExtension(
 
         for (metadata in interfaceMetadata) {
             val interfaceName = metadata.interfaceName
+            val packageName = metadata.packageName
+
+            // Build signature for cache tracking
+            val signature = metadata.buildSignature()
+
+            // Build TypeInfo for cache operations
+            val typeInfo =
+                TypeInfo(
+                    name = interfaceName,
+                    fullyQualifiedName = "$packageName.$interfaceName",
+                    packageName = packageName,
+                    fileName = "$interfaceName.kt",
+                    annotations = listOf("com.rsicarelli.fakt.Fake"), // TODO: Support custom annotations
+                    signature = signature,
+                )
+
+            // Build output file path (same logic as CodeGenerator)
+            val sourceSetName = SourceSetExtractor.extractSourceSet(metadata.sourceInterface)
+            val outputDir = sourceSetMapper.getGeneratedSourcesDir(moduleFragment, sourceSetName)
+            val packagePath = packageName.replace('.', '/')
+            val packageDir = outputDir.resolve(packagePath)
+            val fakeClassName = "Fake${interfaceName}Impl"
+            val outputFile = packageDir.resolve("$fakeClassName.kt")
+
+            // Check cache: file exists AND signature matches
+            if (outputFile.exists() && !optimizations.needsRegeneration(typeInfo)) {
+                // Cache hit - skip generation
+                logger.debug("Cache hit: Skipping $interfaceName (file exists, signature matches)")
+                telemetry.metricsCollector.incrementInterfacesCached()
+                continue
+            }
+
+            // Cache miss - check if file exists with different signature
+            if (outputFile.exists()) {
+                // Signature changed - delete old file
+                logger.debug("Signature changed: Deleting old fake for $interfaceName")
+                outputFile.delete()
+            }
 
             // Convert to InterfaceAnalysis using adapter (NO re-analysis!)
             val analysisStartTime = System.nanoTime()
@@ -351,8 +381,8 @@ class UnifiedFaktIrGenerationExtension(
 
             telemetry.metricsCollector.incrementInterfacesProcessed()
 
-            // TODO: Add cache support for FIR mode (skip for now)
-            // optimizations.recordGeneration(typeInfo)
+            // Record successful generation in cache
+            optimizations.recordGeneration(typeInfo)
 
             // TRACE: Log tree-style per-interface processing
             if (logger.logLevel >= LogLevel.TRACE) {
@@ -405,6 +435,44 @@ class UnifiedFaktIrGenerationExtension(
 
         for (metadata in classMetadata) {
             val className = metadata.className
+            val packageName = metadata.packageName
+
+            // Build signature for cache tracking
+            val signature = metadata.buildSignature()
+
+            // Build TypeInfo for cache operations
+            val typeInfo =
+                TypeInfo(
+                    name = className,
+                    fullyQualifiedName = "$packageName.$className",
+                    packageName = packageName,
+                    fileName = "$className.kt",
+                    annotations = listOf("com.rsicarelli.fakt.Fake"), // TODO: Support custom annotations
+                    signature = signature,
+                )
+
+            // Build output file path (same logic as CodeGenerator)
+            val sourceSetName = SourceSetExtractor.extractSourceSet(metadata.sourceClass)
+            val outputDir = sourceSetMapper.getGeneratedSourcesDir(moduleFragment, sourceSetName)
+            val packagePath = packageName.replace('.', '/')
+            val packageDir = outputDir.resolve(packagePath)
+            val fakeClassName = "Fake${className}Impl"
+            val outputFile = packageDir.resolve("$fakeClassName.kt")
+
+            // Check cache: file exists AND signature matches
+            if (outputFile.exists() && !optimizations.needsRegeneration(typeInfo)) {
+                // Cache hit - skip generation
+                logger.debug("Cache hit: Skipping class $className (file exists, signature matches)")
+                telemetry.metricsCollector.incrementClassesCached()
+                continue
+            }
+
+            // Cache miss - check if file exists with different signature
+            if (outputFile.exists()) {
+                // Signature changed - delete old file
+                logger.debug("Signature changed: Deleting old fake for class $className")
+                outputFile.delete()
+            }
 
             // Convert to ClassAnalysis using adapter (preserves abstract/open distinction)
             val analysisStartTime = System.nanoTime()
@@ -447,6 +515,9 @@ class UnifiedFaktIrGenerationExtension(
             )
 
             telemetry.metricsCollector.incrementClassesProcessed()
+
+            // Record successful generation in cache
+            optimizations.recordGeneration(typeInfo)
 
             // TRACE: Log tree-style per-class processing
             if (logger.logLevel >= LogLevel.TRACE) {

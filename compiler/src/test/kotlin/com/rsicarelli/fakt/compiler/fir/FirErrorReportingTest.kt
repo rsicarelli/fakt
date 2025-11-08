@@ -24,12 +24,16 @@ import kotlin.test.assertTrue
  * 1. Non-interface (class/object annotated with @Fake)
  * 2. Sealed interface
  * 3. Local interface
+ * 4. Expect interface (KMP multiplatform)
+ * 5. External interface (FFI)
  *
  * FakeClassChecker:
- * 4. Non-class (object/enum annotated with @Fake)
- * 5. Non-abstract class
- * 6. Sealed class
- * 7. Local class
+ * 6. Non-class (object/enum annotated with @Fake)
+ * 7. Non-abstract class
+ * 8. Sealed class
+ * 9. Local class
+ * 10. Expect class (KMP multiplatform)
+ * 11. External class (FFI)
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FirErrorReportingTest {
@@ -43,6 +47,8 @@ class FirErrorReportingTest {
         assertTrue(FirFaktErrors.FAKE_MUST_BE_INTERFACE.startsWith("[FAKT]"))
         assertTrue(FirFaktErrors.FAKE_CANNOT_BE_SEALED.startsWith("[FAKT]"))
         assertTrue(FirFaktErrors.FAKE_CANNOT_BE_LOCAL.startsWith("[FAKT]"))
+        assertTrue(FirFaktErrors.FAKE_CANNOT_BE_EXPECT.startsWith("[FAKT]"))
+        assertTrue(FirFaktErrors.FAKE_CANNOT_BE_EXTERNAL.startsWith("[FAKT]"))
         assertTrue(FirFaktErrors.FAKE_CLASS_MUST_BE_ABSTRACT.startsWith("[FAKT]"))
         assertTrue(FirFaktErrors.FAKE_CLASS_CANNOT_BE_SEALED.startsWith("[FAKT]"))
     }
@@ -108,6 +114,31 @@ class FirErrorReportingTest {
         assertContains(message, "cannot", ignoreCase = true)
     }
 
+    @Test
+    fun `GIVEN FAKE_CANNOT_BE_EXPECT error WHEN checking message THEN explains expect restriction`() {
+        // GIVEN: Error for expect interface/class with @Fake (KMP multiplatform)
+
+        // WHEN: Checking message content
+        val message = FirFaktErrors.FAKE_CANNOT_BE_EXPECT
+
+        // THEN: Message clearly states expect restriction and mentions KMP context
+        assertContains(message, "expect", ignoreCase = true)
+        assertContains(message, "cannot", ignoreCase = true)
+        assertContains(message, "KMP", ignoreCase = false) // Case-sensitive: should be "KMP"
+    }
+
+    @Test
+    fun `GIVEN FAKE_CANNOT_BE_EXTERNAL error WHEN checking message THEN explains external restriction`() {
+        // GIVEN: Error for external interface/class with @Fake (FFI declarations)
+
+        // WHEN: Checking message content
+        val message = FirFaktErrors.FAKE_CANNOT_BE_EXTERNAL
+
+        // THEN: Message clearly states external restriction
+        assertContains(message, "external", ignoreCase = true)
+        assertContains(message, "cannot", ignoreCase = true)
+    }
+
     /**
      * Integration Test Documentation:
      *
@@ -133,16 +164,40 @@ class FirErrorReportingTest {
      *    }
      *    ```
      *
-     * 4. **Non-abstract class with @Fake**:
+     * 4. **Expect interface with @Fake** (KMP multiplatform):
+     *    ```kotlin
+     *    @Fake
+     *    expect interface PlatformService  // ERROR: [FAKT] @Fake cannot be applied to expect declarations (KMP)
+     *    ```
+     *
+     * 5. **External interface with @Fake** (FFI):
+     *    ```kotlin
+     *    @Fake
+     *    external interface NativeInterface  // ERROR: [FAKT] @Fake cannot be applied to external declarations
+     *    ```
+     *
+     * 6. **Non-abstract class with @Fake**:
      *    ```kotlin
      *    @Fake
      *    class ConcreteClass  // ERROR: [FAKT] @Fake class must be abstract
      *    ```
      *
-     * 5. **Sealed class with @Fake**:
+     * 7. **Sealed class with @Fake**:
      *    ```kotlin
      *    @Fake
      *    sealed class SealedBase  // ERROR: [FAKT] @Fake class cannot be sealed
+     *    ```
+     *
+     * 8. **Expect class with @Fake** (KMP multiplatform):
+     *    ```kotlin
+     *    @Fake
+     *    expect abstract class PlatformRepository  // ERROR: [FAKT] @Fake cannot be applied to expect declarations (KMP)
+     *    ```
+     *
+     * 9. **External class with @Fake** (FFI):
+     *    ```kotlin
+     *    @Fake
+     *    external class NativeClass  // ERROR: [FAKT] @Fake cannot be applied to external declarations
      *    ```
      *
      * Verification:

@@ -8,10 +8,8 @@ import com.rsicarelli.fakt.compiler.ir.analysis.SourceSetExtractor
 import com.rsicarelli.fakt.compiler.output.SourceSetMapper
 import com.rsicarelli.fakt.compiler.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.types.ImportResolver
-import com.rsicarelli.fakt.compiler.types.TypeResolver
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
-import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.util.packageFqName
 
 /**
@@ -78,7 +76,6 @@ internal data class WriteContext(
  * Orchestrates the generation of implementation classes, factory functions, and configuration DSLs.
  *
  */
-@OptIn(UnsafeDuringIrConstructionAPI::class)
 internal class CodeGenerator(
     private val importResolver: ImportResolver,
     private val sourceSetMapper: SourceSetMapper,
@@ -107,9 +104,15 @@ internal class CodeGenerator(
 
             val generatedCode =
                 GeneratedCode(
-                    implementation = generators.implementation.generateImplementation(analysis, fakeClassName),
+                    implementation = generators.implementation.generateImplementation(
+                        analysis,
+                        fakeClassName
+                    ),
                     factory = generators.factory.generateFactoryFunction(analysis, fakeClassName),
-                    configDsl = generators.configDsl.generateConfigurationDsl(analysis, fakeClassName),
+                    configDsl = generators.configDsl.generateConfigurationDsl(
+                        analysis,
+                        fakeClassName
+                    ),
                     importCount = requiredImports.size,
                 )
 
@@ -154,13 +157,20 @@ internal class CodeGenerator(
 
         try {
             // Collect imports to calculate count
-            val requiredImports = importResolver.collectRequiredImportsForClass(analysis, packageName)
+            val requiredImports =
+                importResolver.collectRequiredImportsForClass(analysis, packageName)
 
             val generatedCode =
                 GeneratedCode(
-                    implementation = generators.implementation.generateClassFake(analysis, fakeClassName),
+                    implementation = generators.implementation.generateClassFake(
+                        analysis,
+                        fakeClassName
+                    ),
                     factory = generators.factory.generateFactoryFunction(analysis, fakeClassName),
-                    configDsl = generators.configDsl.generateConfigurationDsl(analysis, fakeClassName),
+                    configDsl = generators.configDsl.generateConfigurationDsl(
+                        analysis,
+                        fakeClassName
+                    ),
                     importCount = requiredImports.size,
                 )
 
