@@ -16,58 +16,12 @@ import kotlin.test.assertTrue
  * Tests for [FaktSharedContext] following GIVEN-WHEN-THEN pattern.
  *
  * Testing strategy:
- * - FIR analysis feature flag behavior
  * - Annotation configuration checking
  * - Shared context creation
+ * - Metadata storage access
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FaktSharedContextTest {
-    @Test
-    fun `GIVEN context with useFirAnalysis true WHEN checking useFirAnalysis THEN returns true`() =
-        runTest {
-            // GIVEN
-            val options =
-                FaktOptions(
-                    enabled = true,
-                    useFirAnalysis = true,
-                )
-            val context =
-                FaktSharedContext(
-                    fakeAnnotations = FaktSharedContext.DEFAULT_FAKE_ANNOTATIONS,
-                    options = options,
-                    metadataStorage = FirMetadataStorage(),
-                )
-
-            // WHEN
-            val result = context.useFirAnalysis()
-
-            // THEN
-            assertTrue(result)
-        }
-
-    @Test
-    fun `GIVEN context with useFirAnalysis false WHEN checking useFirAnalysis THEN returns false`() =
-        runTest {
-            // GIVEN
-            val options =
-                FaktOptions(
-                    enabled = true,
-                    useFirAnalysis = false,
-                )
-            val context =
-                FaktSharedContext(
-                    fakeAnnotations = FaktSharedContext.DEFAULT_FAKE_ANNOTATIONS,
-                    options = options,
-                    metadataStorage = FirMetadataStorage(),
-                )
-
-            // WHEN
-            val result = context.useFirAnalysis()
-
-            // THEN
-            assertFalse(result)
-        }
-
     @Test
     fun `GIVEN default fake annotation WHEN checking if configured THEN returns true`() =
         runTest {
@@ -156,7 +110,6 @@ class FaktSharedContextTest {
                 FaktOptions(
                     enabled = true,
                     logLevel = LogLevel.DEBUG,
-                    useFirAnalysis = true,
                     outputDir = "/tmp/fakes",
                 )
             val context =
@@ -171,7 +124,6 @@ class FaktSharedContextTest {
 
             // THEN
             assertEquals(LogLevel.DEBUG, retrievedOptions.logLevel)
-            assertEquals(true, retrievedOptions.useFirAnalysis)
             assertEquals("/tmp/fakes", retrievedOptions.outputDir)
         }
 

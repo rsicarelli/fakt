@@ -23,5 +23,5 @@ kotlin {
 // Configure Fakt plugin in COLLECTOR MODE
 fakt {
     @OptIn(com.rsicarelli.fakt.gradle.ExperimentalFaktMultiModule::class)
-    collectFakesFrom(project(":core:analytics"))
+    collectFakesFrom(projects.core.analytics)
 }

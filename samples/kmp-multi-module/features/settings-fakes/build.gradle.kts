@@ -27,5 +27,5 @@ kotlin {
 fakt {
     logLevel.set(com.rsicarelli.fakt.compiler.api.LogLevel.TRACE)
     @OptIn(com.rsicarelli.fakt.gradle.ExperimentalFaktMultiModule::class)
-    collectFakesFrom(project(":features:settings"))
+    collectFakesFrom(projects.features.settings)
 }

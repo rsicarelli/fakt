@@ -20,13 +20,13 @@ runs:
       shell: bash
       run: ./gradlew -p samples/kmp-single-module check --no-daemon
 
-    - name: Test multi-module sample (all targets)
+    - name: Test kmp-multi-module sample (all targets)
       shell: bash
-      run: ./gradlew -p samples/multi-module allTests --continue --no-daemon
+      run: ./gradlew -p samples/kmp-multi-module allTests --continue --no-daemon
 
-    - name: Check multi-module sample (validations)
+    - name: Check kmp-multi-module sample (validations)
       shell: bash
-      run: ./gradlew -p samples/multi-module check --no-daemon
+      run: ./gradlew -p samples/kmp-multi-module check --no-daemon
 
     - name: Publish sample test results
       if: success() || failure()

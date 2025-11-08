@@ -14,10 +14,10 @@ import org.jetbrains.kotlin.name.ClassId
  *
  * Following Metro pattern: FIR phase analyzes and validates, IR phase generates.
  *
- * **Phase 3B.2 Change**: Removed `genericPattern` field - it will be reconstructed in IR phase
+ * Removed `genericPattern` field - it will be reconstructed in IR phase
  * from `typeParameters` and `functions` using IrTypeParameter (which we don't have in FIR).
  *
- * **Phase 3C.3 Change**: Added `inheritedProperties` and `inheritedFunctions` to support
+ * Added `inheritedProperties` and `inheritedFunctions` to support
  * interface inheritance. These are collected from super-interfaces recursively.
  *
  * **Immutable**: Once created in FIR phase, this metadata is never modified.
@@ -29,8 +29,8 @@ import org.jetbrains.kotlin.name.ClassId
  * @property typeParameters Class-level type parameters with bounds (e.g., ["T", "K : Comparable<K>"])
  * @property properties Properties declared directly in this interface
  * @property functions Functions declared directly in this interface (with method-level type parameters)
- * @property inheritedProperties Properties inherited from super-interfaces (Phase 3C.3)
- * @property inheritedFunctions Functions inherited from super-interfaces (Phase 3C.3)
+ * @property inheritedProperties Properties inherited from super-interfaces
+ * @property inheritedFunctions Functions inherited from super-interfaces
  * @property sourceLocation Location in source code for error reporting
  */
 data class ValidatedFakeInterface(
@@ -127,7 +127,7 @@ data class FirFunctionInfo(
 /**
  * Function parameter information.
  *
- * Phase 3C.4: Added defaultValueCode for rendering actual default value expressions.
+ * Added defaultValueCode for rendering actual default value expressions.
  *
  * @property name Parameter name
  * @property type Parameter type as string

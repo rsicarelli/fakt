@@ -1,4 +1,4 @@
-# Multi-Module Support: Frequently Asked Questions
+# KMP Multi-Module Support: Frequently Asked Questions
 
 **Last Updated**: 2025-10-05
 

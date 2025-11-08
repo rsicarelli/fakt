@@ -35,12 +35,6 @@ class FaktFirExtensionRegistrar(
      * The unary plus (+) operator registers the extension.
      */
     override fun ExtensionRegistrarContext.configurePlugin() {
-        // Only register if FIR analysis is enabled
-        if (!sharedContext.useFirAnalysis()) {
-            // Legacy mode: FIR does nothing, IR handles everything
-            return
-        }
-
         // Register FIR checkers for @Fake validation
         // Following Metro pattern: +::MetroFirCheckers (MetroFirExtensionRegistrar.kt:39)
         +{ session: FirSession -> FaktFirCheckers.create(session, sharedContext) }

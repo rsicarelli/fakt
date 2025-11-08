@@ -34,10 +34,10 @@ test-sample:
 	@echo "🎯 Testing kmp-single-module sample (composite build)..."
 	cd samples/kmp-single-module && ./gradlew build
 
-# Multi-module sample
-test-multi-module:
-	@echo "🏢 Testing multi-module sample (composite build)..."
-	cd samples/multi-module && ./gradlew :app:build
+# KMP multi-module sample
+test-kmp-multi-module:
+	@echo "🏢 Testing kmp-multi-module sample (composite build)..."
+	cd samples/kmp-multi-module && ./gradlew :app:build
 
 # Comprehensive validation workflow
 validate: shadowJar test-sample test
@@ -105,7 +105,7 @@ help:
 	@echo ""
 	@echo "  shadowJar       - Build compiler plugin JAR"
 	@echo "  test-sample     - Test kmp-single-module sample (composite build)"
-	@echo "  test-multi-module - Test multi-module sample (composite build)"
+	@echo "  test-kmp-multi-module - Test kmp-multi-module sample (composite build)"
 	@echo ""
 	@echo "  validate        - Full validation workflow"
 	@echo "  quick-test      - Quick development cycle (auto-rebuilds plugin!)"

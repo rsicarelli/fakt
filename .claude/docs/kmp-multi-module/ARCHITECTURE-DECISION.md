@@ -1,4 +1,4 @@
-# Multi-Module Support: Architectural Decision Record
+# KMP Multi-Module Support: Architectural Decision Record
 
 **Date**: 2025-10-05
 **Status**: ✅ APPROVED

@@ -51,10 +51,4 @@ kotlin {
         nodejs()
         binaries.executable()
     }
-
-    sourceSets {
-        commonMain.dependencies {
-
-        }
-    }
 }

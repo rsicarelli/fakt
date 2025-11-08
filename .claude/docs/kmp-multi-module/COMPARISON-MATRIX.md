@@ -1,4 +1,4 @@
-# Multi-Module Support: Comparison Matrix
+# KMP Multi-Module Support: Comparison Matrix
 
 **Date**: 2025-10-05
 **Purpose**: Side-by-side comparison of all evaluated architectural approaches

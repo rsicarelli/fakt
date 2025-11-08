@@ -111,7 +111,7 @@ internal class ImplementationGenerator(
         fakeClassName: String,
     ): String =
         buildString {
-            // Phase 2: Generate generic class declaration with type parameters
+            // Generate generic class declaration with type parameters
             // Handle where clause for multiple constraints on the same type parameter
             val (typeParamsForHeader, whereClause) = formatTypeParametersWithWhereClause(analysis.typeParameters)
 
@@ -184,11 +184,11 @@ internal class ImplementationGenerator(
         }
 
     private fun generateFunctionConfigMethod(function: FunctionAnalysis): String {
-        // Phase 3C.1: Build context for method-level generic handling
+        // Build context for method-level generic handling
         val methodTypeContext = buildMethodTypeParamContext(function)
         val hasMethodGenerics = methodTypeContext.hasMethodGenerics
 
-        // Phase 3C.1: Use context-aware parameter type building
+        // Use context-aware parameter type building
         val parameterTypes = buildConfigParameterTypes(function, methodTypeContext)
         val returnTypeString =
             typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
@@ -204,9 +204,8 @@ internal class ImplementationGenerator(
     /**
      * Build configuration parameter types preserving full generic signatures.
      *
-     * **Phase 1.1 Enhancement**: No longer applies erasure - preserves full generic signatures
-     * for type-safe DSL. The wrapper adapter in buildGenericConfigMethod handles the bridge
-     * to erased storage.
+     * Preserves full generic signatures for type-safe DSL.
+     * The wrapper adapter in buildGenericConfigMethod handles the bridge to erased storage.
      *
      * Key improvements:
      * - Preserves ALL type parameters (class-level and method-level)
@@ -230,7 +229,7 @@ internal class ImplementationGenerator(
                     "Array<out $elementType>"
                 }
                 else -> {
-                    // Phase 1.1: Preserve full signature - no erasure!
+                    // Preserve full signature - no erasure!
                     typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
                 }
             }
@@ -257,7 +256,7 @@ internal class ImplementationGenerator(
                 returnTypeString
             }
 
-        // Phase 1.1: Generate wrapper adapter that bridges full signature → erased storage
+        // Generate wrapper adapter that bridges full signature → erased storage
         return buildString {
             appendLine(
                 "    internal fun $methodTypeParams configure${function.name.capitalize()}(" +
@@ -265,7 +264,7 @@ internal class ImplementationGenerator(
             )
             appendLine("        @Suppress(\"UNCHECKED_CAST\")")
 
-            // Phase 1.1: Direct unchecked cast - no wrapper needed for suspend functions
+            // Direct unchecked cast - no wrapper needed for suspend functions
             // The types are compatible at runtime, just different generic parameters
             appendLine(
                 "        ${function.name}Behavior = behavior as $suspendModifier($erasedParamTypes) -> $erasedReturnType",
@@ -364,7 +363,7 @@ internal class ImplementationGenerator(
                     typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
                 }
 
-            // Phase 3C.4: Note - We do NOT add default values in override functions
+            // Note: We do NOT add default values in override functions
             // Kotlin rule: overriding functions inherit default values from the interface
             // and cannot redeclare them.
 
@@ -1268,7 +1267,7 @@ internal class ImplementationGenerator(
         }
 
     private fun buildSimpleClassConfigMethod(function: FunctionAnalysis): String {
-        // Phase 3C.1: Build context for method-level generic handling
+        // Build context for method-level generic handling
         val methodTypeContext = buildMethodTypeParamContext(function)
         val parameterTypes = buildConfigParameterTypes(function, methodTypeContext)
         val returnTypeString =

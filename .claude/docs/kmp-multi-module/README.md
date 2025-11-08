@@ -1,4 +1,4 @@
-# Multi-Module Support Documentation
+# KMP Multi-Module Support Documentation
 
 **Status**: Design Complete - Ready for Implementation
 **Strategy**: Custom Source Sets as Feature Variants

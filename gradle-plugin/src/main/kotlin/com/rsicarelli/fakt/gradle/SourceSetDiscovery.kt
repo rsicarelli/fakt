@@ -40,16 +40,28 @@ internal object SourceSetDiscovery {
     /**
      * Maps a main compilation name to its corresponding test source set.
      *
-     * **Examples**:
-     * - "main" → "test"
-     * - "jvmMain" → "jvmTest"
-     * - "commonMain" → "commonTest"
-     * - "iosX64Main" → "iosX64Test"
-     * - "test" → "test" (already a test compilation)
-     * - "jvmTest" → "jvmTest" (already a test compilation)
+     * This function transforms main source set names to their test equivalents following
+     * Kotlin's standard naming conventions. Test compilations are returned unchanged.
      *
-     * @param compilationName The compilation name to map
-     * @return The corresponding test source set name
+     * ## Mapping Rules
+     *
+     * **Main → Test transformations:**
+     * ```
+     * "main" → "test"
+     * "jvmMain" → "jvmTest"
+     * "commonMain" → "commonTest"
+     * "iosX64Main" → "iosX64Test"
+     * ```
+     *
+     * **Already test compilations (unchanged):**
+     * ```
+     * "test" → "test"
+     * "jvmTest" → "jvmTest"
+     * "commonTest" → "commontest"
+     * ```
+     *
+     * @param compilationName The compilation name to map (e.g., "main", "jvmMain", "test")
+     * @return The corresponding test source set name in lowercase
      */
     private fun mapToTestSourceSet(compilationName: String): String {
         // If already a test compilation, return as-is
@@ -74,18 +86,62 @@ internal object SourceSetDiscovery {
     /**
      * Build complete source set context from a compilation.
      *
-     * **Algorithm**:
-     * 1. Classify compilation (test vs main) using CompilationClassifier
+     * This is the main entry point for source set discovery. It analyzes a Kotlin compilation
+     * and produces a [SourceSetContext] containing all metadata needed by the compiler plugin.
+     *
+     * ## Algorithm
+     *
+     * 1. Classify compilation (test vs main) using [CompilationClassifier]
      * 2. Get default source set from compilation
-     * 3. Traverse source set graph to find all parents
+     * 3. Traverse source set graph to find all parents using [SourceSetGraphTraversal]
      * 4. Extract platform type and target metadata
      * 5. Build hierarchy map for compiler plugin
      * 6. Generate output directory path
-     * 7. Package into SourceSetContext
+     * 7. Package into [SourceSetContext]
      *
-     * @param compilation The compilation to analyze
-     * @param buildDir The project's build directory path
-     * @return Complete SourceSetContext ready for serialization
+     * ## Examples
+     *
+     * **KMP project with commonMain:**
+     * ```kotlin
+     * // Input: jvmMain compilation
+     * val context = buildContext(jvmMainCompilation, "/path/to/build")
+     *
+     * // Output:
+     * SourceSetContext(
+     *   compilationName = "main",
+     *   targetName = "jvm",
+     *   platformType = "jvm",
+     *   isTest = false,
+     *   defaultSourceSet = SourceSetInfo("jvmMain", parents=["commonMain"]),
+     *   allSourceSets = [jvmMain, commonMain],
+     *   outputDirectory = "/path/to/build/generated/fakt/commonTest/kotlin"
+     *   // ^ Note: commonTest because commonMain detected in hierarchy
+     * )
+     * ```
+     *
+     * **Single-platform JVM project:**
+     * ```kotlin
+     * // Input: test compilation
+     * val context = buildContext(testCompilation, "/path/to/build")
+     *
+     * // Output:
+     * SourceSetContext(
+     *   compilationName = "test",
+     *   targetName = "jvm",
+     *   platformType = "jvm",
+     *   isTest = true,
+     *   defaultSourceSet = SourceSetInfo("test", parents=[]),
+     *   allSourceSets = [test],
+     *   outputDirectory = "/path/to/build/generated/fakt/test/kotlin"
+     * )
+     * ```
+     *
+     * @param compilation The Kotlin compilation to analyze (e.g., jvmMain, commonTest)
+     * @param buildDir The project's build directory absolute path (e.g., "/path/to/build")
+     * @return Complete [SourceSetContext] ready for serialization to compiler plugin
+     * @see SourceSetContext
+     * @see CompilationClassifier.isTestCompilation
+     * @see SourceSetGraphTraversal.getAllParentSourceSets
      */
     fun buildContext(
         compilation: KotlinCompilation<*>,

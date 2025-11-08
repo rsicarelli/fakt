@@ -9,12 +9,13 @@ import kotlin.test.assertTrue
 
 class LoggingServiceTest {
     @Test
-    fun `GIVEN unconfigured start WHEN called THEN throws error`() {
+    fun `GIVEN unconfigured start WHEN called THEN delegates to super implementation`() {
         val service: LoggingService = fakeLoggingService {}
 
-        assertFailsWith<IllegalStateException> {
-            service.start()
-        }
+        val result = service.start()
+
+        // LoggingService.start() returns true in actual implementation (line 93)
+        assertTrue(result)
     }
 
     @Test
@@ -36,12 +37,14 @@ class LoggingServiceTest {
     }
 
     @Test
-    fun `GIVEN unconfigured log WHEN called THEN throws error`() {
+    fun `GIVEN unconfigured log WHEN called THEN delegates to super implementation`() {
         val service: LoggingService = fakeLoggingService {}
 
-        assertFailsWith<IllegalStateException> {
-            service.log("test")
-        }
+        // LoggingService.log() has a default implementation that does nothing (lines 98-100)
+        // Should not throw, just execute the super implementation
+        service.log("test")
+
+        // Test passes if no exception is thrown
     }
 
     @Test

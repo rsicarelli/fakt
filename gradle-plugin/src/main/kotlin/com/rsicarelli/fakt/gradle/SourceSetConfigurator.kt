@@ -8,7 +8,42 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import java.io.File
 
 /**
- * Helper class to configure source sets and output directories for generated fakes.
+ * Configures source sets and output directories for generated fake implementations.
+ *
+ * This internal utility handles the complex task of determining where to place generated
+ * fakes and ensuring they're accessible from test compilations. It supports both
+ * single-platform (JVM-only) and Kotlin Multiplatform (KMP) projects.
+ *
+ * ## Directory Strategy
+ *
+ * Generated fakes are ALWAYS placed in test source sets, never in main/production:
+ * ```
+ * build/generated/fakt/
+ * ├── commonTest/kotlin/     # KMP: Common test fakes
+ * ├── jvmTest/kotlin/        # KMP: JVM-specific test fakes
+ * ├── test/kotlin/           # Single-platform: Test fakes
+ * └── fakes/kotlin/          # KMP: Shared fakes (metadata target)
+ * ```
+ *
+ * ## KMP Source Set Mapping
+ *
+ * For multiplatform projects, generated fakes are added to existing test source sets:
+ * - `commonTest` → `build/generated/fakt/commonTest/kotlin`
+ * - `jvmTest` → `build/generated/fakt/jvmTest/kotlin`
+ * - `iosTest` → `build/generated/fakt/iosTest/kotlin`
+ *
+ * ## Usage
+ *
+ * This class is used internally by [FaktGradleSubplugin] during plugin application:
+ * ```kotlin
+ * val configurator = SourceSetConfigurator(project)
+ * configurator.configureSourceSets()  // Auto-configures based on project type
+ * val outputDir = configurator.getGeneratedSourcesDirectory(compilation)
+ * ```
+ *
+ * @property project The Gradle project to configure
+ * @see FaktGradleSubplugin
+ * @see SourceSetDiscovery
  */
 internal class SourceSetConfigurator(
     private val project: Project,
@@ -82,8 +117,32 @@ internal class SourceSetConfigurator(
     /**
      * Get the appropriate generated sources directory for a compilation.
      *
-     * Since we generate fakes FROM main sources FOR fakes source sets, we output to fakes directories.
+     * Since we generate fakes FROM main sources FOR test source sets, we output to test directories.
      * For KMP projects with shared code, we generate to fakes/kotlin for maximum compatibility.
+     *
+     * ## Directory Resolution Examples
+     *
+     * **KMP with commonMain:**
+     * ```
+     * compilation.target.name = "metadata"
+     * → returns: "build/generated/fakt/fakes/kotlin"
+     * ```
+     *
+     * **KMP with jvmMain:**
+     * ```
+     * compilation.target.name = "jvm"
+     * → returns: "build/generated/fakt/jvmTest/kotlin"
+     * ```
+     *
+     * **Single-platform JVM:**
+     * ```
+     * compilation.target.name = "jvm"
+     * → returns: "build/generated/fakt/test/kotlin"
+     * ```
+     *
+     * @param compilation The Kotlin compilation to get the output directory for
+     * @return Absolute path to the generated sources directory for this compilation
+     * @see shouldUseCommonFakesDirectory
      */
     fun getGeneratedSourcesDirectory(compilation: KotlinCompilation<*>): String {
         val targetName = compilation.target.name
@@ -115,6 +174,17 @@ internal class SourceSetConfigurator(
      * 2. Project has commonTest source set (tests need shared fakes)
      *
      * This ensures fakes are accessible from commonTest source set.
+     *
+     * ## Decision Logic
+     *
+     * ```
+     * targetName == "metadata" → true (always use common directory)
+     * hasCommonTest() → true (shared fakes needed)
+     * otherwise → false (use platform-specific directory)
+     * ```
+     *
+     * @param targetName The Kotlin compilation target name (e.g., "metadata", "jvm", "js")
+     * @return `true` if fakes should be generated to common directory, `false` for platform-specific
      */
     private fun shouldUseCommonFakesDirectory(targetName: String): Boolean {
         // Check if metadata target (commonMain compilation)

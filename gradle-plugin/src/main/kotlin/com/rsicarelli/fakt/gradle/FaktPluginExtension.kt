@@ -4,6 +4,7 @@ package com.rsicarelli.fakt.gradle
 
 import com.rsicarelli.fakt.compiler.api.LogLevel
 import org.gradle.api.Project
+import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
@@ -29,182 +30,197 @@ import javax.inject.Inject
  * @file:OptIn(ExperimentalFaktMultiModule::class)
  *
  * fakt {
- *     collectFakesFrom(project(":foundation"))  // Collect fakes from foundation module
+ *     // String-based (traditional)
+ *     collectFakesFrom(project(":foundation"))
+ *
+ *     // Type-safe accessor (recommended) ✨
+ *     collectFakesFrom(projects.foundation)
  * }
  * ```
  */
-open class FaktPluginExtension
-    @Inject
-    constructor(
-        objects: ObjectFactory,
-    ) {
-        /**
-         * Controls whether the Fakt plugin is active.
-         *
-         * When set to `false`, the plugin is completely disabled:
-         * - No fake generation occurs
-         * - No fake collection happens
-         * - Compilation behaves as if Fakt wasn't applied
-         *
-         * **Default:** `true`
-         *
-         * **Usage:**
-         * ```kotlin
-         * fakt {
-         *     enabled.set(false)  // Disable Fakt entirely
-         * }
-         * ```
-         *
-         * **Common use cases:**
-         * - Temporarily disable fake generation during debugging
-         * - Conditional enabling based on build variants
-         * - CI/CD pipeline optimization
-         */
-        val enabled: Property<Boolean> = objects.property(Boolean::class.java).convention(true)
+public open class FaktPluginExtension
+@Inject
+constructor(
+    objects: ObjectFactory,
+    private val project: Project,
+) {
+    /**
+     * Controls whether the Fakt plugin is active.
+     *
+     * When set to `false`, the plugin is completely disabled:
+     * - No fake generation occurs
+     * - No fake collection happens
+     * - Compilation behaves as if Fakt wasn't applied
+     *
+     * **Default:** `true`
+     *
+     * **Usage:**
+     * ```kotlin
+     * fakt {
+     *     enabled.set(false)  // Disable Fakt entirely
+     * }
+     * ```
+     *
+     * **Common use cases:**
+     * - Temporarily disable fake generation during debugging
+     * - Conditional enabling based on build variants
+     * - CI/CD pipeline optimization
+     */
+    public val enabled: Property<Boolean> = objects.property(Boolean::class.java).convention(true)
 
-        /**
-         * Controls logging verbosity for the compiler plugin (Type-Safe!).
-         *
-         * Available levels:
-         * - **QUIET**: No output except errors (fastest, minimal noise)
-         * - **INFO**: Concise summary with key metrics (default, production-ready)
-         * - **DEBUG**: Detailed breakdown by compilation phase (troubleshooting)
-         * - **TRACE**: Exhaustive details including IR nodes (deep debugging)
-         *
-         * **Default:** `LogLevel.INFO`
-         *
-         * **Usage (Type-Safe!):**
-         * ```kotlin
-         * import com.rsicarelli.fakt.compiler.api.LogLevel
-         *
-         * fakt {
-         *     logLevel.set(LogLevel.INFO)    // ✅ Type-safe with IDE autocomplete!
-         *     // logLevel.set(LogLevel.DEBUG)   // ✅ Compile-time validation
-         *     logLevel.set(LogLevel.TRACE)   // ✅ No typos possible
-         *     logLevel.set(LogLevel.QUIET)
-         * }
-         * ```
-         *
-         * **Output Examples:**
-         *
-         * **INFO (default):**
-         * ```
-         * ✅ 10 fakes generated in 1.2s (6 cached)
-         * Discovery: 120ms | Analysis: 340ms | Generation: 580ms
-         * Cache hit rate: 40% (6/15)
-         * ```
-         *
-         * **DEBUG:**
-         * ```
-         * [DISCOVERY] 120ms - 15 interfaces, 3 classes
-         * [ANALYSIS] 340ms
-         *   ├─ PredicateCombiner (18ms) - NoGenerics
-         *   ├─ PairMapper<T,U,K,V> (42ms) ⚠️ - ClassLevel
-         * [GENERATION] 580ms (avg 58ms/interface)
-         * ```
-         *
-         * **Performance Impact:**
-         * - QUIET: Zero overhead (recommended for CI/CD)
-         * - INFO: Negligible (<1ms)
-         * - DEBUG: Minor (~5-10ms)
-         * - TRACE: Moderate (~20-50ms)
-         *
-         * **When to use each level:**
-         * - **QUIET**: CI/CD builds, minimal output needed
-         * - **INFO**: Normal development, production builds
-         * - **DEBUG**: Troubleshooting generation issues, performance analysis
-         * - **TRACE**: Deep debugging, reporting bugs, understanding IR internals
-         */
-        val logLevel: Property<LogLevel> = objects.property(LogLevel::class.java).convention(LogLevel.INFO)
+    /**
+     * Controls logging verbosity for the compiler plugin (Type-Safe!).
+     *
+     * Available levels:
+     * - **QUIET**: No output except errors (fastest, minimal noise)
+     * - **INFO**: Concise summary with key metrics (default, production-ready)
+     * - **DEBUG**: Detailed breakdown by compilation phase (troubleshooting)
+     * - **TRACE**: Exhaustive details including IR nodes (deep debugging)
+     *
+     * **Default:** `LogLevel.INFO`
+     *
+     * **Usage (Type-Safe!):**
+     * ```kotlin
+     * import com.rsicarelli.fakt.compiler.api.LogLevel
+     *
+     * fakt {
+     *     logLevel.set(LogLevel.INFO)    // ✅ Type-safe with IDE autocomplete!
+     *     // logLevel.set(LogLevel.DEBUG)   // ✅ Compile-time validation
+     *     logLevel.set(LogLevel.TRACE)   // ✅ No typos possible
+     *     logLevel.set(LogLevel.QUIET)
+     * }
+     * ```
+     *
+     * **Output Examples:**
+     *
+     * **INFO (default):**
+     * ```
+     * ✅ 10 fakes generated in 1.2s (6 cached)
+     * Discovery: 120ms | Analysis: 340ms | Generation: 580ms
+     * Cache hit rate: 40% (6/15)
+     * ```
+     *
+     * **DEBUG:**
+     * ```
+     * [DISCOVERY] 120ms - 15 interfaces, 3 classes
+     * [ANALYSIS] 340ms
+     *   ├─ PredicateCombiner (18ms) - NoGenerics
+     *   ├─ PairMapper<T,U,K,V> (42ms) ⚠️ - ClassLevel
+     * [GENERATION] 580ms (avg 58ms/interface)
+     * ```
+     *
+     * **Performance Impact:**
+     * - QUIET: Zero overhead (recommended for CI/CD)
+     * - INFO: Negligible (<1ms)
+     * - DEBUG: Minor (~5-10ms)
+     * - TRACE: Moderate (~20-50ms)
+     *
+     * **When to use each level:**
+     * - **QUIET**: CI/CD builds, minimal output needed
+     * - **INFO**: Normal development, production builds
+     * - **DEBUG**: Troubleshooting generation issues, performance analysis
+     * - **TRACE**: Deep debugging, reporting bugs, understanding IR internals
+     */
+    public val logLevel: Property<LogLevel> =
+        objects.property(LogLevel::class.java).convention(LogLevel.INFO)
 
-        /**
-         * Enables FIR-based metadata analysis for fake generation.
-         *
-         * When enabled, the plugin uses Kotlin's FIR (Frontend Intermediate Representation) phase
-         * for annotation detection and validation, following the Metro compiler plugin architecture.
-         *
-         * **Two-phase approach:**
-         * - FIR phase: Validates @Fake annotations, extracts metadata
-         * - IR phase: Generates code from validated metadata
-         *
-         * **Default:** `false` (will become `true` in Phase 6)
-         *
-         * **Usage:**
-         * ```kotlin
-         * fakt {
-         *     useFirAnalysis.set(true)  // Enable FIR-based analysis
-         * }
-         * ```
-         *
-         * **Benefits:**
-         * - Earlier error detection (FIR phase vs IR phase)
-         * - More accurate source locations in error messages
-         * - Better alignment with Kotlin compiler architecture
-         * - Follows proven Metro patterns
-         *
-         * **Status:** Experimental (Phase 4 testing)
-         */
-        val useFirAnalysis: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
+    /**
+     * Source project to collect generated fakes from (collector mode).
+     *
+     * When set, this module switches to **collector mode**:
+     * - Does NOT generate its own fakes
+     * - Collects fakes from the specified source project
+     * - Places fakes in appropriate platform source sets (KMP support)
+     * - Enables the dedicated fake module pattern
+     *
+     * **Default:** Not set (generator mode)
+     *
+     * **Usage:**
+     * ```kotlin
+     * @file:OptIn(ExperimentalFaktMultiModule::class)
+     *
+     * fakt {
+     *     collectFakesFrom(project(":foundation"))
+     * }
+     * ```
+     *
+     * **Multi-module pattern:**
+     * ```
+     * foundation/              → Generates fakes (has @Fake interfaces)
+     * foundation-fakes/        → Collects fakes (this property set)
+     * domain/                  → Uses fakes (testImplementation(":foundation-fakes"))
+     * ```
+     *
+     * **Why use this:**
+     * - Share fakes across multiple test modules
+     * - Avoid circular dependencies
+     * - Separate fake generation from usage
+     *
+     * @see collectFakesFrom
+     * @see ExperimentalFaktMultiModule
+     */
+    @ExperimentalFaktMultiModule
+    public val collectFrom: Property<Project> = objects.property(Project::class.java)
 
-        /**
-         * Source project to collect generated fakes from (collector mode).
-         *
-         * When set, this module switches to **collector mode**:
-         * - Does NOT generate its own fakes
-         * - Collects fakes from the specified source project
-         * - Places fakes in appropriate platform source sets (KMP support)
-         * - Enables the dedicated fake module pattern
-         *
-         * **Default:** Not set (generator mode)
-         *
-         * **Usage:**
-         * ```kotlin
-         * @file:OptIn(ExperimentalFaktMultiModule::class)
-         *
-         * fakt {
-         *     collectFakesFrom(project(":foundation"))
-         * }
-         * ```
-         *
-         * **Multi-module pattern:**
-         * ```
-         * foundation/              → Generates fakes (has @Fake interfaces)
-         * foundation-fakes/        → Collects fakes (this property set)
-         * domain/                  → Uses fakes (testImplementation(":foundation-fakes"))
-         * ```
-         *
-         * **Why use this:**
-         * - Share fakes across multiple test modules
-         * - Avoid circular dependencies
-         * - Separate fake generation from usage
-         *
-         * @see collectFakesFrom
-         * @see ExperimentalFaktMultiModule
-         */
-        @ExperimentalFaktMultiModule
-        val collectFrom: Property<Project> = objects.property(Project::class.java)
-
-        /**
-         * Configures this module to collect fakes from the specified project.
-         *
-         * Convenience method for setting [collectFrom]. Switches this module to collector mode.
-         *
-         * @param project The source project that generates fakes (must have @Fake interfaces)
-         *
-         * **Usage:**
-         * ```kotlin
-         * @file:OptIn(ExperimentalFaktMultiModule::class)
-         *
-         * fakt {
-         *     collectFakesFrom(project(":foundation"))
-         * }
-         * ```
-         *
-         * @see collectFrom
-         * @see ExperimentalFaktMultiModule
-         */
-        @ExperimentalFaktMultiModule
-        fun collectFakesFrom(project: Project) {
-            collectFrom.set(project)
-        }
+    /**
+     * Configures this module to collect fakes from the specified project.
+     *
+     * Convenience method for setting [collectFrom]. Switches this module to collector mode.
+     *
+     * @param project The source project that generates fakes (must have @Fake interfaces)
+     *
+     * **Usage:**
+     * ```kotlin
+     * @file:OptIn(ExperimentalFaktMultiModule::class)
+     *
+     * fakt {
+     *     collectFakesFrom(project(":foundation"))
+     * }
+     * ```
+     *
+     * @see collectFrom
+     * @see ExperimentalFaktMultiModule
+     */
+    @ExperimentalFaktMultiModule
+    public fun collectFakesFrom(project: Project) {
+        collectFrom.set(project)
     }
+
+    /**
+     * Configures this module to collect fakes from the specified project using type-safe accessor.
+     *
+     * This overload enables usage of Gradle's type-safe project accessors for improved
+     * IDE support and compile-time validation. Both string-based and type-safe approaches
+     * are fully supported.
+     *
+     * Internally, this extracts the project path from the dependency and resolves it
+     * to the actual Project instance. This avoids using deprecated Gradle APIs.
+     *
+     * @param projectDependency Type-safe project accessor (e.g., projects.core.analytics)
+     *
+     * **Usage:**
+     * ```kotlin
+     * @file:OptIn(ExperimentalFaktMultiModule::class)
+     *
+     * fakt {
+     *     collectFakesFrom(projects.core.analytics)  // ✅ Type-safe with IDE autocomplete
+     * }
+     * ```
+     *
+     * **Enable type-safe accessors in settings.gradle.kts:**
+     * ```kotlin
+     * enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+     * ```
+     *
+     * @see collectFrom
+     * @see ExperimentalFaktMultiModule
+     */
+    @ExperimentalFaktMultiModule
+    public fun collectFakesFrom(projectDependency: ProjectDependency) {
+        // Extract path from ProjectDependency (Gradle 8.11+ non-deprecated API)
+        // Then resolve it to the actual Project instance using our injected project reference
+        val projectPath = projectDependency.path
+        val resolvedProject = project.project(projectPath)
+        collectFrom.set(resolvedProject)
+    }
+}

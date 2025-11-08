@@ -16,7 +16,7 @@
 - Creates detailed TDD todo list (RED → GREEN cycle)
 - Updates phase-specific CHANGELOGs
 - Updates overall current-status.md
-- Validates alignment with Metro patterns and testing standards
+- Validates alignment with testing standards
 
 **Use Cases**:
 - Starting work on roadmap features (final classes, singleton objects, data builders, etc.)
@@ -64,7 +64,7 @@
 - Analyzes current progress in generic implementation
 - Creates detailed TDD todo list (RED → GREEN cycle)
 - Updates CHANGELOG with session tracking
-- Validates alignment with Metro patterns and testing standards
+- Validates alignment with testing standards
 
 **Use Cases**:
 - Starting a new work session on generics
@@ -95,7 +95,7 @@
 - Comprehensive analysis of current Fakt infrastructure
 - Evaluates implementation strategies (erasure, substitution, mvp, full)
 - Creates detailed roadmap with IrTypeSubstitutor integration
-- Metro pattern alignment validation
+- Architecture pattern validation
 
 **Strategies**:
 - `erasure` - Type erasure MVP (fastest)
@@ -122,7 +122,7 @@
 - Analyzes interface methods, properties, type parameters
 - Identifies generic patterns and complexity
 - Suggests optimal code generation strategy
-- Validates Metro alignment
+- Validates architecture
 
 **Example**:
 ```bash
@@ -169,7 +169,7 @@
 
 - Traces IR generation process
 - Validates type parameter handling
-- Checks Metro pattern compliance
+- Checks architectural pattern compliance
 - Identifies generation issues
 
 **Example**:
@@ -194,22 +194,6 @@
 ```bash
 /validate-compilation --all
 /validate-compilation --interface=Repository --verbose
-```
-
----
-
-#### `/validate-metro-alignment [component_name]`
-**Validates KtFakes implementation alignment with Metro patterns**
-
-- Checks architectural alignment
-- Validates IR generation patterns
-- Tests two-phase compilation approach
-- Ensures best practices compliance
-
-**Example**:
-```bash
-/validate-metro-alignment
-/validate-metro-alignment GenericIrSubstitutor
 ```
 
 ---
@@ -315,9 +299,8 @@
 3. `/consult-kotlin-api <api>` - Validate API usage
 
 **Validation & Quality**:
-1. `/validate-metro-alignment` - Check patterns
-2. `/run-bdd-tests all` - Run tests
-3. `/validate-compilation --verbose` - Type safety check
+1. `/run-bdd-tests all` - Run tests
+2. `/validate-compilation --verbose` - Type safety check
 
 ---
 
@@ -326,8 +309,8 @@
 ### Must Use (Critical)
 
 1. **`/resume-and-update-generics`** ⭐ - Every session start
-2. **`/validate-metro-alignment`** - Before major decisions
-3. **`/run-bdd-tests`** - After each GREEN cycle
+2. **`/run-bdd-tests`** - After each GREEN cycle
+3. **`/validate-compilation`** - Before phase completion
 
 ### Should Use (Important)
 
@@ -437,11 +420,50 @@ Commands are markdown files in `.claude/commands/` with this structure:
 
 ---
 
+## 🔗 Integration with Skills
+
+Many slash commands automatically leverage specialized **Skills** for execution. Skills provide deep domain expertise and are auto-activated based on context.
+
+| Command | Primary Skill(s) Used | Auto-Activation |
+|---------|----------------------|-----------------|
+| `/debug-ir-generation` | `kotlin-ir-debugger` | ✅ On IR debugging prompts |
+| `/run-bdd-tests` | `bdd-test-runner` | ✅ On "run tests" keywords |
+| `/validate-compilation` | `compilation-validator` | ✅ On compilation validation |
+| `/consult-kotlin-api` | `kotlin-api-consultant` | ✅ On API validation prompts |
+| `/analyze-generic-scoping` | `generic-scoping-analyzer` | ✅ On generic/type parameter keywords |
+| `/analyze-compilation-error` | `compilation-error-analyzer` | ✅ On compilation error mentions |
+| `/analyze-interface-structure` | `interface-analyzer` | ✅ On interface analysis prompts |
+| `/analyze-and-test` | `behavior-analyzer-tester` | ✅ On test generation requests |
+| `/check-implementation-status` | `implementation-tracker` | ✅ On status/progress keywords |
+| `/document` | Various documentation skills | ✅ On documentation requests |
+
+**Skills System Benefits:**
+- **Auto-Activation**: Skills suggest themselves based on keywords and intent patterns
+- **Progressive Disclosure**: Skills load detailed resources only when needed (500-line rule)
+- **Composable**: Commands can invoke multiple skills for complex workflows
+- **Consistent**: Same skill logic across commands and direct invocation
+
+**Manual Skill Invocation:**
+```bash
+# Instead of command, use skill directly
+Use the Skill tool with "kotlin-api-consultant"
+Use the Skill tool with "bdd-test-runner"
+```
+
+**Skills Configuration:**
+- **Triggers**: `.claude/skills/skill-rules.json` defines auto-activation patterns
+- **Skill Definitions**: `.claude/skills/{category}/{skill-name}/SKILL.md`
+- **Resources**: `.claude/skills/{category}/{skill-name}/resources/` (progressive disclosure)
+
+See [Skills README](../skills/README.md) for complete skills documentation.
+
+---
+
 ## 🔗 Related Documentation
 
+- [Skills System](../skills/README.md) - Auto-activation and skill catalog
 - [Generic Implementation Docs](../docs/implementation/generics/)
 - [Testing Guidelines](../docs/validation/testing-guidelines.md)
-- [Metro Alignment](../docs/development/metro-alignment.md)
 - [CLAUDE.md](../../CLAUDE.md) - Main project documentation
 
 ---
@@ -462,5 +484,6 @@ Commands are markdown files in `.claude/commands/` with this structure:
 
 ---
 
-Last Updated: January 2025
-Total Commands: 15
+**Last Updated**: January 2025
+**Total Commands**: 16
+**Skills Integration**: 12 specialized skills with auto-activation

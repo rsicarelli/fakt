@@ -26,6 +26,5 @@ kotlin {
 }
 
 fakt {
-    logLevel.set(LogLevel.INFO)  // ✅ Type-safe!
-    useFirAnalysis.set(true)     // Phase 3B.5: Testing FIR mode with class-level generics
+    logLevel.set(LogLevel.INFO)
 }

@@ -3,7 +3,7 @@
 package com.rsicarelli.fakt.compiler.fir
 
 /**
- * FIR diagnostic errors for @Fake annotation validation (Phase 3B.4, Phase 3C.5).
+ * FIR diagnostic errors for @Fake annotation validation for @Fake validation.
  *
  * **Simplified Error Reporting**: Instead of using complex FIR diagnostic factories
  * (which may vary across Kotlin versions), we use direct error reporting via
@@ -22,8 +22,10 @@ internal object FirFaktErrors {
     const val FAKE_MUST_BE_INTERFACE = "[FAKT] @Fake can only be applied to interfaces, not classes or objects"
     const val FAKE_CANNOT_BE_SEALED = "[FAKT] @Fake cannot be applied to sealed interfaces"
     const val FAKE_CANNOT_BE_LOCAL = "[FAKT] @Fake cannot be applied to local classes or interfaces"
+    const val FAKE_CANNOT_BE_EXPECT = "[FAKT] @Fake cannot be applied to expect declarations (KMP)"
+    const val FAKE_CANNOT_BE_EXTERNAL = "[FAKT] @Fake cannot be applied to external declarations"
 
-    // Phase 3C.5: Updated class validation errors
+    // Updated class validation errors
     const val FAKE_CLASS_MUST_BE_ABSTRACT = "[FAKT] @Fake class must be abstract (contain abstract or open members)"
     const val FAKE_CLASS_CANNOT_BE_SEALED = "[FAKT] @Fake class cannot be sealed"
     const val FAKE_CLASS_CANNOT_BE_FINAL = "[FAKT] @Fake class cannot be final (must be abstract or open)"

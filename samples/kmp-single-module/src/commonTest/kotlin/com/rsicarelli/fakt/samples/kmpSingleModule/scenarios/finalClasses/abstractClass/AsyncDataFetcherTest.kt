@@ -20,10 +20,9 @@ class AsyncDataFetcherTest {
     fun `GIVEN async class WHEN suspend abstract not configured THEN should throw error`() =
         runTest {
             // Given
-            val fetcher =
-                fakeAsyncDataFetcher {
-                    validate { true }
-                }
+            val fetcher = fakeAsyncDataFetcher {
+                validate { true }
+            }
 
             // When/Then
             assertFailsWith<IllegalStateException> {
@@ -35,11 +34,10 @@ class AsyncDataFetcherTest {
     fun `GIVEN async class WHEN suspend abstract configured THEN should use configured behavior`() =
         runTest {
             // Given
-            val fetcher =
-                fakeAsyncDataFetcher {
-                    fetchData { url -> "data-from-$url" }
-                    validate { true }
-                }
+            val fetcher = fakeAsyncDataFetcher {
+                fetchData { url -> "data-from-$url" }
+                validate { true }
+            }
 
             // When
             val data = fetcher.fetchData("https://api.test.com")
@@ -52,12 +50,11 @@ class AsyncDataFetcherTest {
     fun `GIVEN async class WHEN suspend open not configured THEN should use super implementation`() =
         runTest {
             // Given
-            val fetcher =
-                fakeAsyncDataFetcher {
-                    fetchData { "data" }
-                    validate { true }
-                    // upload not configured
-                }
+            val fetcher = fakeAsyncDataFetcher {
+                fetchData { "data" }
+                validate { true }
+                // upload not configured
+            }
 
             // When
             val uploadSuccess = fetcher.upload("test-data")

@@ -15,20 +15,20 @@ import kotlin.test.assertTrue
  */
 class FileRepositoryTest {
     @Test
-    fun `GIVEN class extending abstract WHEN abstract methods not configured THEN should throw error`() {
+    fun `GIVEN class extending abstract WHEN abstract methods not configured THEN delegates to super implementation`() {
         // Given
         val repository =
             fakeFileRepository {
-                // Not configuring inherited abstract methods
+                // Not configuring inherited abstract methods - should use super
             }
 
-        // When/Then - inherited abstract methods require configuration
-        assertFailsWith<IllegalStateException> {
-            repository.findById("id")
-        }
-        assertFailsWith<IllegalStateException> {
-            repository.save("entity")
-        }
+        // When
+        val result = repository.findById("id")
+        repository.save("entity")
+
+        // Then - uses FileRepository's actual implementation (lines 52-59)
+        assertEquals(null, result) // findById returns null (line 54)
+        // save just executes without error (no-op implementation)
     }
 
     @Test

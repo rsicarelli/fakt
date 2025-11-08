@@ -7,13 +7,13 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 /**
- * Validates generated code patterns from samples/single-module.
+ * Validates generated code patterns from samples/kmp-single-module.
  *
  * **Testing Strategy**: Read actual generated files and validate expected patterns exist.
  * This pragmatic approach tests real compiler output without complex IR mocks.
  *
  * **Requirements**:
- * - samples/single-module must be built before running these tests
+ * - samples/kmp-single-module must be built before running these tests
  * - Generated files must exist in build/generated/fakt/common/test/kotlin/
  *
  * **Coverage**:
@@ -23,7 +23,7 @@ import kotlin.test.assertTrue
  * - Configuration methods generation
  */
 class GeneratedCodeValidationTest {
-    private val generatedDir = File("samples/single-module/build/generated/fakt/common/test/kotlin/test/sample")
+    private val generatedDir = File("samples/kmp-single-module/build/generated/fakt/common/test/kotlin/test/sample")
 
     // ==================================================================================
     // Behavior Properties Validation
