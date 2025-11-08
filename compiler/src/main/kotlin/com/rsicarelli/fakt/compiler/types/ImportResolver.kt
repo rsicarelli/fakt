@@ -4,7 +4,6 @@ package com.rsicarelli.fakt.compiler.types
 
 import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
-import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.IrTypeProjection
@@ -15,7 +14,6 @@ import org.jetbrains.kotlin.ir.util.kotlinFqName
  * Handles import resolution for generated fake implementations.
  * Collects and resolves import statements needed for cross-module type references.
  */
-@OptIn(UnsafeDuringIrConstructionAPI::class)
 internal class ImportResolver(
     private val typeResolver: TypeResolver,
 ) {

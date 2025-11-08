@@ -1,4 +1,3 @@
-
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
 
@@ -26,7 +25,7 @@ kotlin {
 
 // Configure Fakt plugin in COLLECTOR MODE
 fakt {
-logLevel.set(com.rsicarelli.fakt.compiler.api.LogLevel.TRACE)
+    logLevel.set(com.rsicarelli.fakt.compiler.api.LogLevel.TRACE)
     @OptIn(com.rsicarelli.fakt.gradle.ExperimentalFaktMultiModule::class)
     collectFakesFrom(projects.features.notifications)
 }

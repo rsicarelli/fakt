@@ -8,16 +8,11 @@ import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.ParameterAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.PropertyAnalysis
 import com.rsicarelli.fakt.compiler.types.TypeResolver
-import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 
 /**
  * Generates configuration DSL classes for fake implementations.
  * Creates type-safe DSL classes that provide convenient configuration of fake behavior.
  */
-@OptIn(UnsafeDuringIrConstructionAPI::class)
-// TooManyFunctions: DSL generator requires many specialized builders for interfaces and classes
-// Functions handle both interface and class DSL generation with proper type parameter formatting
-@Suppress("TooManyFunctions")
 internal class ConfigurationDslGenerator(
     private val typeResolver: TypeResolver,
 ) {
@@ -46,7 +41,13 @@ internal class ConfigurationDslGenerator(
 
         return buildString {
             appendLine(
-                generateClassHeader(configClassName, typeParameters, fakeClassName, typeParameterNames, whereClause),
+                generateClassHeader(
+                    configClassName,
+                    typeParameters,
+                    fakeClassName,
+                    typeParameterNames,
+                    whereClause
+                ),
             )
             append(generateFunctionConfigurators(analysis.functions))
             append(generatePropertyConfigurators(analysis.properties))
@@ -63,7 +64,7 @@ internal class ConfigurationDslGenerator(
     ): String =
         if (whereClause.isNotEmpty()) {
             "class $configClassName$typeParameters(" +
-                "private val fake: $fakeClassName$typeParameterNames) where $whereClause {"
+                    "private val fake: $fakeClassName$typeParameterNames) where $whereClause {"
         } else {
             "class $configClassName$typeParameters(private val fake: $fakeClassName$typeParameterNames) {"
         }
@@ -91,36 +92,43 @@ internal class ConfigurationDslGenerator(
                             "Array<out $elementType>"
                         } else {
                             // Keep full signature - no erasure!
-                            typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                            typeResolver.irTypeToKotlinString(
+                                param.type,
+                                preserveTypeParameters = true
+                            )
                         }
                     }
                 }
 
             // Keep original return type (including method-level generics)
-            val returnType = typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+            val returnType = typeResolver.irTypeToKotlinString(
+                function.returnType,
+                preserveTypeParameters = true
+            )
 
             val suspendModifier = if (function.isSuspend) "suspend " else ""
 
             "    fun $methodTypeParams${function.name}(" +
-                "behavior: $suspendModifier($parameterTypes) -> $returnType) " +
-                "{ fake.configure${function.name.capitalize()}(behavior) }\n"
+                    "behavior: $suspendModifier($parameterTypes) -> $returnType) " +
+                    "{ fake.configure${function.name.capitalize()}(behavior) }\n"
         }
 
     private fun generatePropertyConfigurators(properties: List<PropertyAnalysis>): String =
         properties.joinToString("") { property ->
-            val propertyType = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
+            val propertyType =
+                typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
 
             buildString {
                 append(
                     "    fun ${property.name}(behavior: () -> $propertyType) " +
-                        "{ fake.configure${property.name.capitalize()}(behavior) }\n",
+                            "{ fake.configure${property.name.capitalize()}(behavior) }\n",
                 )
 
                 // For mutable properties, add setter configuration
                 if (property.isMutable) {
                     append(
                         "    fun set${property.name.capitalize()}(behavior: ($propertyType) -> Unit) " +
-                            "{ fake.configureSet${property.name.capitalize()}(behavior) }\n",
+                                "{ fake.configureSet${property.name.capitalize()}(behavior) }\n",
                     )
                 }
             }
@@ -144,29 +152,6 @@ internal class ConfigurationDslGenerator(
      * Capitalize first letter of string.
      */
     private fun String.capitalize(): String = replaceFirstChar { it.uppercase() }
-
-    /**
-     * Builds parameter type string for configuration DSL methods.
-     * NOTE: DSL methods use function types, which CANNOT have vararg modifiers
-     * Varargs are converted to Array<out T> for function type signatures
-     *
-     * @param parameters List of parameters to process
-     * @return Comma-separated parameter type string with Array<out T> for varargs
-     */
-    private fun buildParameterTypeString(parameters: List<ParameterAnalysis>): String =
-        if (parameters.isEmpty()) {
-            ""
-        } else {
-            parameters.joinToString(", ") { param ->
-                if (param.isVararg) {
-                    // For varargs, use Array<out T> in function type (NOT vararg keyword)
-                    val elementType = unwrapVarargsType(param)
-                    "Array<out $elementType>"
-                } else {
-                    typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
-                }
-            }
-        }
 
     /**
      * Unwraps varargs Array<T> to element type T.
@@ -263,13 +248,13 @@ internal class ConfigurationDslGenerator(
             if (whereClause.isNotEmpty()) {
                 appendLine(
                     "class $configClassName$typeParameters(" +
-                        "private val fake: $fakeClassName$typeArguments" +
-                        ") where $whereClause {",
+                            "private val fake: $fakeClassName$typeArguments" +
+                            ") where $whereClause {",
                 )
             } else {
                 appendLine(
                     "class $configClassName$typeParameters(" +
-                        "private val fake: $fakeClassName$typeArguments) {",
+                            "private val fake: $fakeClassName$typeArguments) {",
                 )
             }
 
@@ -311,14 +296,14 @@ internal class ConfigurationDslGenerator(
             // Getter configuration
             appendLine(
                 "    fun $propertyName(behavior: () -> $returnTypeString) " +
-                    "{ fake.configure$capitalizedName(behavior) }",
+                        "{ fake.configure$capitalizedName(behavior) }",
             )
 
             // Setter configuration for mutable properties
             if (property.isMutable) {
                 appendLine(
                     "    fun set$capitalizedName(behavior: ($returnTypeString) -> Unit) " +
-                        "{ fake.configureSet$capitalizedName(behavior) }",
+                            "{ fake.configureSet$capitalizedName(behavior) }",
                 )
             }
         }.trimEnd() // Remove trailing newline so caller can control formatting
@@ -361,7 +346,8 @@ internal class ConfigurationDslGenerator(
             }
 
         // Keep original return type (including method-level generics)
-        val returnType = typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+        val returnType =
+            typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
 
         // Build behavior signature with full generic types
         val behaviorSignature =
@@ -371,9 +357,11 @@ internal class ConfigurationDslGenerator(
                 "$suspendModifier($parameterTypes) -> $returnType"
             }
 
-        return "    fun $methodTypeParams$functionName(behavior: $behaviorSignature) { fake.configure${functionName.replaceFirstChar {
-            it.uppercase()
-        }}(behavior) }"
+        return "    fun $methodTypeParams$functionName(behavior: $behaviorSignature) { fake.configure${
+            functionName.replaceFirstChar {
+                it.uppercase()
+            }
+        }(behavior) }"
     }
 
     /**
@@ -403,6 +391,7 @@ internal class ConfigurationDslGenerator(
             typeString.startsWith("Result<") -> convertResultType(typeString, methodTypeParamNames)
             typeString.startsWith("Map<") || typeString.startsWith("MutableMap<") ->
                 convertMapType(typeString, methodTypeParamNames)
+
             else -> convertCollectionOrPrimitiveType(typeString, methodTypeParamNames)
         }
 
@@ -427,7 +416,8 @@ internal class ConfigurationDslGenerator(
         val prefix = if (typeString.startsWith("MutableMap<")) "MutableMap<" else "Map<"
         val (key, value) = extractMapTypeParameters(typeString)
         val convertedKey = if (containsMethodTypeParam(key, methodTypeParamNames)) "Any?" else key
-        val convertedValue = if (containsMethodTypeParam(value, methodTypeParamNames)) "Any?" else value
+        val convertedValue =
+            if (containsMethodTypeParam(value, methodTypeParamNames)) "Any?" else value
         return "$prefix$convertedKey, $convertedValue>"
     }
 
@@ -435,11 +425,16 @@ internal class ConfigurationDslGenerator(
         typeString: String,
         methodTypeParamNames: Set<String>,
     ): String {
-        val collectionPrefixes = listOf("List<", "MutableList<", "Set<", "MutableSet<", "Collection<", "Iterable<")
+        val collectionPrefixes =
+            listOf("List<", "MutableList<", "Set<", "MutableSet<", "Collection<", "Iterable<")
         collectionPrefixes.forEach { prefix ->
             if (typeString.startsWith(prefix)) {
                 val innerType = extractFirstTypeParameter(typeString)
-                val convertedInner = if (containsMethodTypeParam(innerType, methodTypeParamNames)) "Any?" else innerType
+                val convertedInner = if (containsMethodTypeParam(
+                        innerType,
+                        methodTypeParamNames
+                    )
+                ) "Any?" else innerType
                 return "$prefix$convertedInner>"
             }
         }
@@ -473,11 +468,13 @@ internal class ConfigurationDslGenerator(
                     depth++
                     current.append(typeString[i])
                 }
+
                 '>' -> {
                     if (depth == 0) break
                     depth--
                     current.append(typeString[i])
                 }
+
                 ',' -> {
                     if (depth == 0) {
                         parts.add(current.toString().trim())
@@ -486,6 +483,7 @@ internal class ConfigurationDslGenerator(
                         current.append(typeString[i])
                     }
                 }
+
                 else -> current.append(typeString[i])
             }
         }

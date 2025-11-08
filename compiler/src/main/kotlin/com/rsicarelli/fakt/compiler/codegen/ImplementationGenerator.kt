@@ -8,16 +8,13 @@ import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.ParameterAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.PropertyAnalysis
 import com.rsicarelli.fakt.compiler.types.TypeResolver
-import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 
 /**
  * Generates fake implementation classes.
  * Handles the creation of implementation class code with behavior fields and method implementations.
  */
-@OptIn(UnsafeDuringIrConstructionAPI::class)
 // LargeClass: Code generator with comprehensive type handling (interfaces, classes, generics, varargs)
 // Heavily refactored from monolithic methods to 25+ focused helpers for maintainability
-@Suppress("LargeClass")
 internal class ImplementationGenerator(
     private val typeResolver: TypeResolver,
 ) {
@@ -189,7 +186,7 @@ internal class ImplementationGenerator(
         val hasMethodGenerics = methodTypeContext.hasMethodGenerics
 
         // Use context-aware parameter type building
-        val parameterTypes = buildConfigParameterTypes(function, methodTypeContext)
+        val parameterTypes = buildConfigParameterTypes(function)
         val returnTypeString =
             typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
         val suspendModifier = if (function.isSuspend) "suspend " else ""
@@ -213,12 +210,10 @@ internal class ImplementationGenerator(
      * - Type-safe DSL without developer casting
      *
      * @param function The function analysis
-     * @param context Type parameter context (unused now, kept for compatibility)
      * @return Parameter types string for configuration method signature
      */
     private fun buildConfigParameterTypes(
         function: FunctionAnalysis,
-        context: MethodTypeContext,
     ): String {
         if (function.parameters.isEmpty()) return ""
 
@@ -228,6 +223,7 @@ internal class ImplementationGenerator(
                     val elementType = unwrapVarargsType(param)
                     "Array<out $elementType>"
                 }
+
                 else -> {
                     // Preserve full signature - no erasure!
                     typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
@@ -243,7 +239,8 @@ internal class ImplementationGenerator(
         suspendModifier: String,
     ): String {
         val methodTypeParams = "<${function.typeParameters.joinToString(", ")}>"
-        val methodTypeParamNames = function.typeParameters.map { it.substringBefore(" :").trim() }.toSet()
+        val methodTypeParamNames =
+            function.typeParameters.map { it.substringBefore(" :").trim() }.toSet()
         val methodTypeContext = buildMethodTypeParamContext(function)
 
         // Storage uses erased types - must match buildFunctionParameterTypes logic
@@ -260,7 +257,7 @@ internal class ImplementationGenerator(
         return buildString {
             appendLine(
                 "    internal fun $methodTypeParams configure${function.name.capitalize()}(" +
-                    "behavior: $suspendModifier($parameterTypes) -> $returnTypeString) {",
+                        "behavior: $suspendModifier($parameterTypes) -> $returnTypeString) {",
             )
             appendLine("        @Suppress(\"UNCHECKED_CAST\")")
 
@@ -271,7 +268,7 @@ internal class ImplementationGenerator(
             )
 
             appendLine("    }")
-        }.toString()
+        }
     }
 
     private fun buildSimpleConfigMethod(
@@ -281,23 +278,24 @@ internal class ImplementationGenerator(
         suspendModifier: String,
     ): String =
         "    internal fun configure${function.name.capitalize()}(" +
-            "behavior: $suspendModifier($parameterTypes) -> $returnTypeString" +
-            ") { ${function.name}Behavior = behavior }\n"
+                "behavior: $suspendModifier($parameterTypes) -> $returnTypeString" +
+                ") { ${function.name}Behavior = behavior }\n"
 
     private fun generatePropertyConfigMethod(property: PropertyAnalysis): String {
-        val propertyType = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
+        val propertyType =
+            typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
 
         return buildString {
             append(
                 "    internal fun configure${property.name.capitalize()}(" +
-                    "behavior: () -> $propertyType) { ${property.name}Behavior = behavior }\n",
+                        "behavior: () -> $propertyType) { ${property.name}Behavior = behavior }\n",
             )
 
             // For mutable properties, add setter configuration
             if (property.isMutable) {
                 append(
                     "    internal fun configureSet${property.name.capitalize()}(" +
-                        "behavior: ($propertyType) -> Unit) { set${property.name.capitalize()}Behavior = behavior }\n",
+                            "behavior: ($propertyType) -> Unit) { set${property.name.capitalize()}Behavior = behavior }\n",
                 )
             }
         }
@@ -328,7 +326,8 @@ internal class ImplementationGenerator(
                 ""
             }
 
-        val returnTypeString = typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+        val returnTypeString =
+            typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
         val parameters = buildMethodParameterList(function)
         val suspendModifier = if (function.isSuspend) "suspend " else ""
 
@@ -346,11 +345,11 @@ internal class ImplementationGenerator(
         return buildString {
             appendLine(
                 "    override ${suspendModifier}fun $methodTypeParams${function.name}(" +
-                    "$parameters): $returnTypeString {",
+                        "$parameters): $returnTypeString {",
             )
             append(methodCall)
             appendLine("    }")
-        }.toString()
+        }
     }
 
     private fun buildMethodParameterList(function: FunctionAnalysis): String =
@@ -374,13 +373,16 @@ internal class ImplementationGenerator(
         function: FunctionAnalysis,
         returnTypeString: String,
     ): String {
-        val methodTypeParamNames = function.typeParameters.map { it.substringBefore(" :").trim() }.toSet()
+        val methodTypeParamNames =
+            function.typeParameters.map { it.substringBefore(" :").trim() }.toSet()
 
         val castedParamNames =
             function.parameters.joinToString(", ") { param ->
-                val paramTypeString = typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                val paramTypeString =
+                    typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
                 if (containsMethodTypeParam(paramTypeString, methodTypeParamNames)) {
-                    val convertedType = convertMethodTypeParamsToAny(paramTypeString, methodTypeParamNames)
+                    val convertedType =
+                        convertMethodTypeParamsToAny(paramTypeString, methodTypeParamNames)
                     "${param.name} as $convertedType"
                 } else {
                     param.name
@@ -391,11 +393,12 @@ internal class ImplementationGenerator(
             appendLine("        _${function.name}CallCount.update { it + 1 }")
             appendLine("        @Suppress(\"UNCHECKED_CAST\")")
             appendLine("        return ${function.name}Behavior($castedParamNames) as $returnTypeString")
-        }.toString()
+        }
     }
 
     private fun generatePropertyOverride(property: PropertyAnalysis): String {
-        val returnTypeString = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
+        val returnTypeString =
+            typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
 
         return if (property.isMutable) {
             buildString {
@@ -408,14 +411,14 @@ internal class ImplementationGenerator(
                 appendLine("            _set${property.name.capitalize()}CallCount.update { it + 1 }")
                 appendLine("            set${property.name.capitalize()}Behavior(value)")
                 appendLine("        }")
-            }.toString()
+            }
         } else {
             buildString {
                 appendLine("    override val ${property.name}: $returnTypeString get() {")
                 appendLine("        _${property.name}CallCount.update { it + 1 }")
                 appendLine("        return ${property.name}Behavior()")
                 appendLine("    }")
-            }.toString()
+            }
         }
     }
 
@@ -464,7 +467,7 @@ internal class ImplementationGenerator(
                     )
                     appendLine(
                         "    val set${property.name.capitalize()}CallCount: StateFlow<Int> get() = " +
-                            "_set${property.name.capitalize()}CallCount",
+                                "_set${property.name.capitalize()}CallCount",
                     )
                 }
             }
@@ -474,15 +477,17 @@ internal class ImplementationGenerator(
         val methodTypeContext = buildMethodTypeParamContext(function)
         val parameterTypes = buildFunctionParameterTypes(function, methodTypeContext)
         val returnType = buildFunctionReturnType(function, methodTypeContext)
-        val defaultLambda = generateTypeSafeDefault(function, returnType.converted, returnType.original)
+        val defaultLambda =
+            generateTypeSafeDefault(function, returnType.converted, returnType.original)
 
         val suspendModifier = if (function.isSuspend) "suspend " else ""
         return "    private var ${function.name}Behavior: " +
-            "$suspendModifier($parameterTypes) -> ${returnType.converted} = $defaultLambda\n"
+                "$suspendModifier($parameterTypes) -> ${returnType.converted} = $defaultLambda\n"
     }
 
     private fun generatePropertyBehaviorProperty(property: PropertyAnalysis): String {
-        val propertyType = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
+        val propertyType =
+            typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
         val defaultLambda = generateTypeSafePropertyDefault(property)
 
         return buildString {
@@ -526,6 +531,7 @@ internal class ImplementationGenerator(
                     val elementType = unwrapVarargsType(param)
                     "Array<out $elementType>"
                 }
+
                 else -> {
                     val typeString =
                         typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
@@ -545,9 +551,14 @@ internal class ImplementationGenerator(
         function: FunctionAnalysis,
         context: MethodTypeContext,
     ): ConvertedType {
-        val original = typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+        val original =
+            typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
         val converted =
-            if (context.hasMethodGenerics && containsMethodTypeParam(original, context.methodTypeParamNames)) {
+            if (context.hasMethodGenerics && containsMethodTypeParam(
+                    original,
+                    context.methodTypeParamNames
+                )
+            ) {
                 convertMethodTypeParamsToAny(original, context.methodTypeParamNames)
             } else {
                 original
@@ -582,12 +593,12 @@ internal class ImplementationGenerator(
             when {
                 // Case 1: Method-level generic with executable parameter
                 hasMethodGenerics && function.parameters.isNotEmpty() &&
-                    isExecutableParameter(function, typeForDefaultDetection) -> {
+                        isExecutableParameter(function, typeForDefaultDetection) -> {
                     generateExecutableParameterCall(function, typeForDefaultDetection)
                 }
                 // Case 2: Identity function (single param, same type as return)
                 function.parameters.size == 1 && !hasMethodGenerics &&
-                    isIdentityFunction(function, returnType) -> "it"
+                        isIdentityFunction(function, returnType) -> "it"
                 // Case 3: Default stdlib value
                 else -> generateKotlinStdlibDefault(typeForDefaultDetection, returnType)
             }
@@ -612,7 +623,7 @@ internal class ImplementationGenerator(
 
         return methodTypeParamNames.any { typeParam ->
             firstParamType.matches(Regex(".*\\(.*\\)\\s*->\\s*$typeParam\\b.*")) &&
-                typeForDefaultDetection.trim() == typeParam
+                    typeForDefaultDetection.trim() == typeParam
         }
     }
 
@@ -663,6 +674,7 @@ internal class ImplementationGenerator(
                     else -> "{ _ -> $body }"
                 }
             }
+
             else -> {
                 val params =
                     parameters
@@ -740,18 +752,43 @@ internal class ImplementationGenerator(
         getPrimitiveArrayDefault(originalType)
             ?: when {
                 // Lists
-                originalType.startsWith("List<") -> extractAndCreateCollection(convertedType, "emptyList")
-                originalType.startsWith("MutableList<") -> extractAndCreateCollection(convertedType, "mutableListOf")
-                originalType.startsWith("Collection<") -> extractAndCreateCollection(convertedType, "emptyList")
-                originalType.startsWith("Iterable<") -> extractAndCreateCollection(convertedType, "emptyList")
+                originalType.startsWith("List<") -> extractAndCreateCollection(
+                    convertedType,
+                    "emptyList"
+                )
+
+                originalType.startsWith("MutableList<") -> extractAndCreateCollection(
+                    convertedType,
+                    "mutableListOf"
+                )
+
+                originalType.startsWith("Collection<") -> extractAndCreateCollection(
+                    convertedType,
+                    "emptyList"
+                )
+
+                originalType.startsWith("Iterable<") -> extractAndCreateCollection(
+                    convertedType,
+                    "emptyList"
+                )
 
                 // Sets
-                originalType.startsWith("Set<") -> extractAndCreateCollection(convertedType, "emptySet")
-                originalType.startsWith("MutableSet<") -> extractAndCreateCollection(convertedType, "mutableSetOf")
+                originalType.startsWith("Set<") -> extractAndCreateCollection(
+                    convertedType,
+                    "emptySet"
+                )
+
+                originalType.startsWith("MutableSet<") -> extractAndCreateCollection(
+                    convertedType,
+                    "mutableSetOf"
+                )
 
                 // Maps
                 originalType.startsWith("Map<") -> extractAndCreateMap(convertedType, "emptyMap")
-                originalType.startsWith("MutableMap<") -> extractAndCreateMap(convertedType, "mutableMapOf")
+                originalType.startsWith("MutableMap<") -> extractAndCreateMap(
+                    convertedType,
+                    "mutableMapOf"
+                )
 
                 // Arrays
                 originalType.startsWith("Array<") -> extractAndCreateArray(originalType)
@@ -790,8 +827,16 @@ internal class ImplementationGenerator(
         convertedType: String = originalType,
     ): String? =
         when {
-            originalType.startsWith("Result<") -> extractAndCreateResult(originalType, convertedType)
-            originalType.startsWith("Sequence<") -> extractAndCreateCollection(convertedType, "emptySequence")
+            originalType.startsWith("Result<") -> extractAndCreateResult(
+                originalType,
+                convertedType
+            )
+
+            originalType.startsWith("Sequence<") -> extractAndCreateCollection(
+                convertedType,
+                "emptySequence"
+            )
+
             originalType.endsWith("?") -> "null"
             else -> null
         }
@@ -893,7 +938,10 @@ internal class ImplementationGenerator(
                 preserveTypeParameters = true,
             )
         return if (arrayType.startsWith("Array<") && arrayType.endsWith(">")) {
-            arrayType.substring(ARRAY_PREFIX_LENGTH, arrayType.length - 1) // Extract T from Array<T>
+            arrayType.substring(
+                ARRAY_PREFIX_LENGTH,
+                arrayType.length - 1
+            ) // Extract T from Array<T>
         } else {
             "String" // Safe fallback for varargs
         }
@@ -932,6 +980,7 @@ internal class ImplementationGenerator(
             typeString.startsWith("Result<") -> convertResultType(typeString, methodTypeParamNames)
             typeString.startsWith("Map<") || typeString.startsWith("MutableMap<") ->
                 convertMapType(typeString, methodTypeParamNames)
+
             else -> convertCollectionOrPrimitiveType(typeString, methodTypeParamNames)
         }
 
@@ -956,7 +1005,8 @@ internal class ImplementationGenerator(
         val prefix = if (typeString.startsWith("MutableMap<")) "MutableMap<" else "Map<"
         val (key, value) = extractMapTypeParameters(typeString)
         val convertedKey = if (containsMethodTypeParam(key, methodTypeParamNames)) "Any?" else key
-        val convertedValue = if (containsMethodTypeParam(value, methodTypeParamNames)) "Any?" else value
+        val convertedValue =
+            if (containsMethodTypeParam(value, methodTypeParamNames)) "Any?" else value
         return "$prefix$convertedKey, $convertedValue>"
     }
 
@@ -964,11 +1014,16 @@ internal class ImplementationGenerator(
         typeString: String,
         methodTypeParamNames: Set<String>,
     ): String {
-        val collectionPrefixes = listOf("List<", "MutableList<", "Set<", "MutableSet<", "Collection<", "Iterable<")
+        val collectionPrefixes =
+            listOf("List<", "MutableList<", "Set<", "MutableSet<", "Collection<", "Iterable<")
         collectionPrefixes.forEach { prefix ->
             if (typeString.startsWith(prefix)) {
                 val innerType = extractFirstTypeParameter(typeString)
-                val convertedInner = if (containsMethodTypeParam(innerType, methodTypeParamNames)) "Any?" else innerType
+                val convertedInner = if (containsMethodTypeParam(
+                        innerType,
+                        methodTypeParamNames
+                    )
+                ) "Any?" else innerType
                 return "$prefix$convertedInner>"
             }
         }
@@ -1058,7 +1113,7 @@ internal class ImplementationGenerator(
                     )
                     appendLine(
                         "    val set${property.name.capitalize()}CallCount: StateFlow<Int> get() = " +
-                            "_set${property.name.capitalize()}CallCount",
+                                "_set${property.name.capitalize()}CallCount",
                     )
                 }
             }
@@ -1074,7 +1129,7 @@ internal class ImplementationGenerator(
                     )
                     appendLine(
                         "    val set${property.name.capitalize()}CallCount: StateFlow<Int> get() = " +
-                            "_set${property.name.capitalize()}CallCount",
+                                "_set${property.name.capitalize()}CallCount",
                     )
                 }
             }
@@ -1095,36 +1150,43 @@ internal class ImplementationGenerator(
     private fun generateAbstractMethodBehaviors(methods: List<FunctionAnalysis>): String =
         methods.joinToString("") { function ->
             val parameterTypes = buildMethodParameterTypes(function.parameters)
-            val returnTypeString = typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+            val returnTypeString = typeResolver.irTypeToKotlinString(
+                function.returnType,
+                preserveTypeParameters = true
+            )
             val suspendModifier = if (function.isSuspend) "suspend " else ""
             val defaultLambda = createErrorLambda(function.name, function.parameters.size)
 
             "    private var ${function.name}Behavior: " +
-                "$suspendModifier($parameterTypes) -> $returnTypeString = $defaultLambda\n"
+                    "$suspendModifier($parameterTypes) -> $returnTypeString = $defaultLambda\n"
         }
 
     private fun generateOpenMethodBehaviors(methods: List<FunctionAnalysis>): String =
         methods.joinToString("") { function ->
             val parameterTypes = buildMethodParameterTypes(function.parameters)
-            val returnTypeString = typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+            val returnTypeString = typeResolver.irTypeToKotlinString(
+                function.returnType,
+                preserveTypeParameters = true
+            )
             val suspendModifier = if (function.isSuspend) "suspend " else ""
             val defaultLambda = createSuperCallLambda(function)
 
             "    private var ${function.name}Behavior: " +
-                "$suspendModifier($parameterTypes) -> $returnTypeString = $defaultLambda\n"
+                    "$suspendModifier($parameterTypes) -> $returnTypeString = $defaultLambda\n"
         }
 
     private fun generateAbstractPropertyBehaviors(properties: List<PropertyAnalysis>): String =
         properties.joinToString("") { property ->
-            val returnTypeString = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
+            val returnTypeString =
+                typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
             val getter =
                 "    private var ${property.name}Behavior: () -> $returnTypeString = " +
-                    "{ error(\"Configure ${property.name} behavior\") }\n"
+                        "{ error(\"Configure ${property.name} behavior\") }\n"
 
             val setter =
                 if (property.isMutable) {
                     "    private var set${property.name.capitalize()}Behavior: " +
-                        "($returnTypeString) -> Unit = { _ -> error(\"Configure ${property.name} setter\") }\n"
+                            "($returnTypeString) -> Unit = { _ -> error(\"Configure ${property.name} setter\") }\n"
                 } else {
                     ""
                 }
@@ -1133,15 +1195,16 @@ internal class ImplementationGenerator(
 
     private fun generateOpenPropertyBehaviors(properties: List<PropertyAnalysis>): String =
         properties.joinToString("") { property ->
-            val returnTypeString = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
+            val returnTypeString =
+                typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
             val getter =
                 "    private var ${property.name}Behavior: () -> $returnTypeString = " +
-                    "{ super.${property.name} }\n"
+                        "{ super.${property.name} }\n"
 
             val setter =
                 if (property.isMutable) {
                     "    private var set${property.name.capitalize()}Behavior: " +
-                        "($returnTypeString) -> Unit = { value -> super.${property.name} = value }\n"
+                            "($returnTypeString) -> Unit = { value -> super.${property.name} = value }\n"
                 } else {
                     ""
                 }
@@ -1206,37 +1269,41 @@ internal class ImplementationGenerator(
 
     private fun generateMethodOverrides(methods: List<FunctionAnalysis>): String =
         methods.joinToString("") { function ->
-            val returnTypeString = typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+            val returnTypeString = typeResolver.irTypeToKotlinString(
+                function.returnType,
+                preserveTypeParameters = true
+            )
             val parameters = buildOverrideParameters(function.parameters)
             val parameterNames = function.parameters.joinToString(", ") { it.name }
             val suspendModifier = if (function.isSuspend) "suspend " else ""
 
             "    override ${suspendModifier}fun ${function.name}($parameters): $returnTypeString {\n" +
-                "        _${function.name}CallCount.update { it + 1 }\n" +
-                "        return ${function.name}Behavior($parameterNames)\n" +
-                "    }\n"
+                    "        _${function.name}CallCount.update { it + 1 }\n" +
+                    "        return ${function.name}Behavior($parameterNames)\n" +
+                    "    }\n"
         }
 
     private fun generatePropertyOverrides(properties: List<PropertyAnalysis>): String =
         properties.joinToString("") { property ->
-            val returnTypeString = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
+            val returnTypeString =
+                typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
             val varOrVal = if (property.isMutable) "var" else "val"
 
             if (property.isMutable) {
                 "    override $varOrVal ${property.name}: $returnTypeString\n" +
-                    "        get() {\n" +
-                    "            _${property.name}CallCount.update { it + 1 }\n" +
-                    "            return ${property.name}Behavior()\n" +
-                    "        }\n" +
-                    "        set(value) {\n" +
-                    "            _set${property.name.capitalize()}CallCount.update { it + 1 }\n" +
-                    "            set${property.name.capitalize()}Behavior(value)\n" +
-                    "        }\n"
+                        "        get() {\n" +
+                        "            _${property.name}CallCount.update { it + 1 }\n" +
+                        "            return ${property.name}Behavior()\n" +
+                        "        }\n" +
+                        "        set(value) {\n" +
+                        "            _set${property.name.capitalize()}CallCount.update { it + 1 }\n" +
+                        "            set${property.name.capitalize()}Behavior(value)\n" +
+                        "        }\n"
             } else {
                 "    override $varOrVal ${property.name}: $returnTypeString get() {\n" +
-                    "        _${property.name}CallCount.update { it + 1 }\n" +
-                    "        return ${property.name}Behavior()\n" +
-                    "    }\n"
+                        "        _${property.name}CallCount.update { it + 1 }\n" +
+                        "        return ${property.name}Behavior()\n" +
+                        "    }\n"
             }
         }
 
@@ -1268,34 +1335,34 @@ internal class ImplementationGenerator(
 
     private fun buildSimpleClassConfigMethod(function: FunctionAnalysis): String {
         // Build context for method-level generic handling
-        val methodTypeContext = buildMethodTypeParamContext(function)
-        val parameterTypes = buildConfigParameterTypes(function, methodTypeContext)
+        val parameterTypes = buildConfigParameterTypes(function)
         val returnTypeString =
             typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
         val suspendModifier = if (function.isSuspend) "suspend " else ""
 
         return "    internal fun configure${function.name.capitalize()}(" +
-            "behavior: $suspendModifier($parameterTypes) -> $returnTypeString" +
-            ") { ${function.name}Behavior = behavior }\n"
+                "behavior: $suspendModifier($parameterTypes) -> $returnTypeString" +
+                ") { ${function.name}Behavior = behavior }\n"
     }
 
     private fun generateClassPropertyConfigMethod(property: PropertyAnalysis): String =
         buildString {
             val propertyName = property.name
-            val returnTypeString = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
+            val returnTypeString =
+                typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
 
             appendLine(
                 "    internal fun configure${propertyName.capitalize()}(" +
-                    "behavior: () -> $returnTypeString" +
-                    ") { ${propertyName}Behavior = behavior }",
+                        "behavior: () -> $returnTypeString" +
+                        ") { ${propertyName}Behavior = behavior }",
             )
 
             if (property.isMutable) {
                 appendLine(
                     "    internal fun configureSet${propertyName.capitalize()}(" +
-                        "behavior: ($returnTypeString) -> Unit" +
-                        ") { set${propertyName.capitalize()}Behavior = behavior }",
+                            "behavior: ($returnTypeString) -> Unit" +
+                            ") { set${propertyName.capitalize()}Behavior = behavior }",
                 )
             }
-        }.toString()
+        }
 }

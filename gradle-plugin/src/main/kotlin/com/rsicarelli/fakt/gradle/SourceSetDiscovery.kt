@@ -9,11 +9,6 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 /**
  * Discovers and builds complete source set context for a compilation.
  *
- * **Purpose**: Integration point that combines all Week 1 utilities:
- * - CompilationClassifier → Determine test vs main
- * - SourceSetGraphTraversal → Build source set hierarchy
- * - SourceSetContext → Package for compiler plugin
- *
  * **Architecture**:
  * ```
  * KotlinCompilation
@@ -23,15 +18,6 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
  * SourceSetContext (serializable)
  *       ↓
  * Compiler Plugin
- * ```
- *
- * **Usage**:
- * ```kotlin
- * val context = SourceSetDiscovery.buildContext(
- *     compilation = target.compilations.getByName("test"),
- *     buildDir = project.layout.buildDirectory.get().asFile.absolutePath
- * )
- * // context contains all metadata needed by compiler plugin
  * ```
  */
 internal object SourceSetDiscovery {

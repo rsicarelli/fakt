@@ -11,7 +11,6 @@ import org.jetbrains.kotlin.ir.types.IrStarProjection
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.IrTypeArgument
 import org.jetbrains.kotlin.ir.types.IrTypeProjection
-import org.jetbrains.kotlin.ir.types.IrTypeSubstitutor
 import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.types.isAny
 import org.jetbrains.kotlin.ir.types.isBoolean
@@ -32,44 +31,7 @@ import org.jetbrains.kotlin.ir.util.kotlinFqName
 /**
  * Handles type resolution and conversion from IR types to Kotlin string representations.
  */
-@OptIn(UnsafeDuringIrConstructionAPI::class)
 internal class TypeResolver {
-    /**
-     * Converts IR type to readable Kotlin string representation.
-     *
-     * @param irType The IR type to convert
-     * @return String representation of the type
-     */
-    fun irTypeToKotlinString(irType: IrType): String = irTypeToKotlinString(irType, preserveTypeParameters = false)
-
-    /**
-     * Converts IR type to readable Kotlin string representation with type substitution.
-     *
-     * This method applies type parameter substitution (e.g., T -> String) before converting
-     * to string representation. Essential for generic fake generation.
-     *
-     * Example:
-     * ```
-     * interface Repository<T> { fun save(item: T): T }
-     *
-     * // With substitutor mapping T -> String:
-     * irTypeToKotlinStringWithSubstitution(TType, substitutor) // "String"
-     * ```
-     *
-     * @param irType The IR type to convert
-     * @param substitutor The type substitutor to apply
-     * @return String representation with substitutions applied
-     */
-    fun irTypeToKotlinStringWithSubstitution(
-        irType: IrType,
-        substitutor: IrTypeSubstitutor,
-    ): String {
-        // First apply the substitution, then convert to string
-        val substitutedType = substitutor.substitute(irType)
-
-        // Convert the substituted type to string, preserving any remaining type parameters
-        return irTypeToKotlinString(substitutedType, preserveTypeParameters = true)
-    }
 
     /**
      * Converts IR type to readable Kotlin string representation with optional type parameter preservation.
@@ -127,6 +89,7 @@ internal class TypeResolver {
      * Handles complex (non-primitive) type conversion.
      * Extracted to reduce complexity of irTypeToKotlinString().
      */
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
     private fun handleComplexType(
         irType: IrType,
         preserveTypeParameters: Boolean,
@@ -175,6 +138,7 @@ internal class TypeResolver {
      * @param irType The type to generate a default value for
      * @return String representation of the default value
      */
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
     fun getDefaultValue(irType: IrType): String =
         getPrimitiveDefault(irType)
             ?: when {
@@ -276,25 +240,25 @@ internal class TypeResolver {
             }
             // NoGenerics pattern: Use specific type erasure rules for common types
             packageName == "kotlin.collections" && className in
-                listOf(
-                    "List",
-                    "MutableList",
-                )
-            -> "List<Any>"
+                    listOf(
+                        "List",
+                        "MutableList",
+                    )
+                -> "List<Any>"
 
             packageName == "kotlin.collections" && className in
-                listOf(
-                    "Set",
-                    "MutableSet",
-                )
-            -> "Set<Any>"
+                    listOf(
+                        "Set",
+                        "MutableSet",
+                    )
+                -> "Set<Any>"
 
             packageName == "kotlin.collections" && className in
-                listOf(
-                    "Map",
-                    "MutableMap",
-                )
-            -> "Map<Any, Any>"
+                    listOf(
+                        "Map",
+                        "MutableMap",
+                    )
+                -> "Map<Any, Any>"
 
             packageName == "kotlin.collections" && className == "Collection" -> "Collection<Any>"
             packageName == "kotlin" && className == "Result" -> "Result<Any>"
@@ -360,7 +324,11 @@ internal class TypeResolver {
             ?: when (irClass.kind) {
                 org.jetbrains.kotlin.descriptors.ClassKind.CLASS -> "null"
                 org.jetbrains.kotlin.descriptors.ClassKind.INTERFACE -> "null"
-                org.jetbrains.kotlin.descriptors.ClassKind.ENUM_CLASS -> handleEnumDefault(irClass, className)
+                org.jetbrains.kotlin.descriptors.ClassKind.ENUM_CLASS -> handleEnumDefault(
+                    irClass,
+                    className
+                )
+
                 else -> "TODO(\"Implement default for $className\")"
             }
     }
@@ -413,6 +381,7 @@ internal class TypeResolver {
     /**
      * Handles enum default value generation.
      */
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
     private fun handleEnumDefault(
         irClass: IrClass,
         className: String,
@@ -435,9 +404,9 @@ internal class TypeResolver {
      */
     fun isPrimitiveType(irType: IrType): Boolean =
         irType.isString() || irType.isInt() || irType.isBoolean() ||
-            irType.isUnit() || irType.isLong() || irType.isFloat() ||
-            irType.isDouble() || irType.isChar() || irType.isByte() ||
-            irType.isShort()
+                irType.isUnit() || irType.isLong() || irType.isFloat() ||
+                irType.isDouble() || irType.isChar() || irType.isByte() ||
+                irType.isShort()
 
     /**
      * Checks if an IR type represents a function type.

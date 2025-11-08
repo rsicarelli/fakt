@@ -17,6 +17,7 @@ import org.jetbrains.kotlin.fir.declarations.utils.isInline
 import org.jetbrains.kotlin.fir.declarations.utils.isSuspend
 import org.jetbrains.kotlin.fir.declarations.utils.modality
 import org.jetbrains.kotlin.fir.resolve.toSymbol
+import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 import org.jetbrains.kotlin.fir.symbols.impl.FirNamedFunctionSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirPropertySymbol
 import org.jetbrains.kotlin.fir.types.ConeClassLikeType
@@ -60,8 +61,6 @@ internal class FakeInterfaceChecker(
         // Check if class has @Fake annotation
         if (!declaration.hasAnnotation(FAKE_ANNOTATION_CLASS_ID, session)) return
 
-        val source = declaration.source ?: return
-
         // Skip non-interfaces (let FakeClassChecker handle classes)
         if (declaration.classKind != ClassKind.INTERFACE) {
             return // Skip, FakeClassChecker will validate classes
@@ -70,26 +69,26 @@ internal class FakeInterfaceChecker(
         // Validate not sealed
         if (declaration.modality == Modality.SEALED) {
             // Report error with source location
-            reportError(session, source, FirFaktErrors.FAKE_CANNOT_BE_SEALED)
+            reportError(FirFaktErrors.FAKE_CANNOT_BE_SEALED)
             return // Skip sealed interfaces
         }
 
         // Validate not local
         if (declaration.symbol.classId.isLocal) {
             // Report error with source location
-            reportError(session, source, FirFaktErrors.FAKE_CANNOT_BE_LOCAL)
+            reportError(FirFaktErrors.FAKE_CANNOT_BE_LOCAL)
             return // Skip local interfaces
         }
 
         // Validate not expect (KMP multiplatform)
         if (declaration.status.isExpect) {
-            reportError(session, source, FirFaktErrors.FAKE_CANNOT_BE_EXPECT)
+            reportError(FirFaktErrors.FAKE_CANNOT_BE_EXPECT)
             return // Skip expect interfaces
         }
 
         // Validate not external
         if (declaration.status.isExternal) {
-            reportError(session, source, FirFaktErrors.FAKE_CANNOT_BE_EXTERNAL)
+            reportError(FirFaktErrors.FAKE_CANNOT_BE_EXTERNAL)
             return // Skip external interfaces
         }
 
@@ -132,7 +131,10 @@ internal class FakeInterfaceChecker(
         val sourceLocation = extractSourceLocation(declaration)
 
         // Extract inherited members from super-interfaces
-        val (inheritedProperties, inheritedFunctions) = extractInheritedMembers(declaration, session)
+        val (inheritedProperties, inheritedFunctions) = extractInheritedMembers(
+            declaration,
+            session
+        )
 
         // Create and store validated metadata
         // GenericPattern will be reconstructed in IR phase from typeParameters + functions
@@ -170,7 +172,7 @@ internal class FakeInterfaceChecker(
      * @param declaration FIR class declaration with type parameters
      * @return List of type parameter metadata
      */
-    @OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class)
+    @OptIn(SymbolInternals::class)
     private fun extractTypeParameters(declaration: FirClass): List<FirTypeParameterInfo> =
         declaration.typeParameters.map { typeParamRef ->
             // FirClass.typeParameters returns List<FirTypeParameterRef>
@@ -210,7 +212,7 @@ internal class FakeInterfaceChecker(
      * @param declaration FIR class declaration
      * @return List of property metadata
      */
-    @OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class)
+    @OptIn(SymbolInternals::class)
     private fun extractProperties(declaration: FirClass): List<FirPropertyInfo> {
         val properties = mutableListOf<FirPropertyInfo>()
 
@@ -260,7 +262,7 @@ internal class FakeInterfaceChecker(
      * @param declaration FIR class declaration
      * @return List of function metadata
      */
-    @OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class)
+    @OptIn(SymbolInternals::class)
     private fun extractFunctions(declaration: FirClass): List<FirFunctionInfo> {
         val functions = mutableListOf<FirFunctionInfo>()
 
@@ -293,7 +295,6 @@ internal class FakeInterfaceChecker(
                     }
 
                 // Extract return type
-                // TODO: Implement proper ConeType→String rendering
                 val returnType = function.returnTypeRef.coneType.toString()
 
                 // Check modifiers
@@ -386,7 +387,7 @@ internal class FakeInterfaceChecker(
      * @param session FIR session for type resolution
      * @return Pair of (inherited properties, inherited functions)
      */
-    @OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class)
+    @OptIn(SymbolInternals::class)
     private fun extractInheritedMembers(
         declaration: FirClass,
         session: org.jetbrains.kotlin.fir.FirSession,
@@ -423,7 +424,7 @@ internal class FakeInterfaceChecker(
                         }
                     }
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // If we can't resolve a super type, skip it gracefully
                 // This can happen with external dependencies or incomplete compilation
                 // The interface will still be processed, just without those inherited members
@@ -448,7 +449,7 @@ internal class FakeInterfaceChecker(
      * @param propertiesAccumulator Mutable list to accumulate properties
      * @param functionsAccumulator Mutable list to accumulate functions
      */
-    @OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class)
+    @OptIn(SymbolInternals::class)
     private fun collectInheritedMembers(
         firClass: FirClass,
         session: org.jetbrains.kotlin.fir.FirSession,
@@ -488,7 +489,7 @@ internal class FakeInterfaceChecker(
                         }
                     }
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Skip unresolvable super types
             }
         }
@@ -504,13 +505,9 @@ internal class FakeInterfaceChecker(
      * The key goal: Detect and reject invalid @Fake usage early in FIR phase.
      * Full diagnostic integration can be added in future enhancements if needed.
      *
-     * @param session FIR session
-     * @param source Source element for context
      * @param message Error message to display
      */
     private fun reportError(
-        session: org.jetbrains.kotlin.fir.FirSession,
-        source: Any?,
         message: String,
     ) {
         // Log error to stderr (visible during compilation)

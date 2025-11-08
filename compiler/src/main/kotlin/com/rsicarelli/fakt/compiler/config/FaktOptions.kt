@@ -10,14 +10,7 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
  * Configuration options for the Fakt compiler plugin.
  * Loaded from Gradle plugin configuration and command line arguments.
  *
- * **Modernization (v1.1.0)**:
- * - Added sourceSetContext for data-driven source set resolution
- * - Replaces hardcoded source set patterns with dynamic hierarchy
- *
- * **Telemetry (v1.2.0)**:
- * - Added logLevel for granular logging control
- *
- * **Visibility**: Public to allow FIR/IR extensions to access configuration (Metro pattern)
+ * **Visibility**: Public to allow FIR/IR extensions to access configuration
  */
 data class FaktOptions(
     val enabled: Boolean = false,
@@ -32,7 +25,8 @@ data class FaktOptions(
             val enabled = configuration.get(FaktCommandLineProcessor.ENABLED_KEY) ?: true
             val logLevelString = configuration.get(FaktCommandLineProcessor.LOG_LEVEL_KEY)
             val outputDir = configuration.get(FaktCommandLineProcessor.OUTPUT_DIR_KEY)
-            val sourceSetContext = configuration.get(FaktCommandLineProcessor.SOURCE_SET_CONTEXT_KEY)
+            val sourceSetContext =
+                configuration.get(FaktCommandLineProcessor.SOURCE_SET_CONTEXT_KEY)
 
             // Determine log level: use logLevel if present, otherwise default to INFO
             val logLevel = logLevelString?.let { LogLevel.fromString(it) } ?: LogLevel.INFO

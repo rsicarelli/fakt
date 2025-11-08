@@ -11,17 +11,6 @@ import org.jetbrains.kotlin.fir.analysis.extensions.FirAdditionalCheckersExtensi
 /**
  * FIR checkers extension for @Fake annotation validation.
  *
- * Following Metro pattern (see metro/compiler/src/main/kotlin/dev/zacsweers/metro/compiler/fir/):
- * - Registered in [FaktFirExtensionRegistrar]
- * - Validates @Fake usage during FIR phase
- * - Stores validated metadata for IR generation
- *
- * **Metro Alignment**:
- * ```kotlin
- * // Metro pattern: MetroFirExtensionRegistrar.kt:39
- * +::MetroFirCheckers
- * ```
- *
  * **FIR Checkers Architecture**:
  * - Early validation (FIR phase) provides better error messages
  * - Source location information is most accurate in FIR
@@ -38,9 +27,6 @@ class FaktFirCheckers(
     /**
      * Register declaration checkers for @Fake validation.
      *
-     * Following Metro pattern: Register class checkers for annotation validation.
-     * See: metro/compiler/src/main/kotlin/dev/zacsweers/metro/compiler/fir/checkers/
-     *
      * @return DeclarationCheckers with our custom class checkers
      */
     override val declarationCheckers: DeclarationCheckers =
@@ -55,9 +41,7 @@ class FaktFirCheckers(
     companion object {
         /**
          * Factory function for FirAdditionalCheckersExtension.
-         *
-         * Following Metro pattern: Extension factories receive FirSession.
-         */
+         * */
         fun create(
             session: FirSession,
             sharedContext: FaktSharedContext,

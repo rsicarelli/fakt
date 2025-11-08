@@ -56,12 +56,10 @@ internal class FakeClassChecker(
         // Skip if already validated as interface (FakeInterfaceChecker handles it)
         if (declaration.classKind == ClassKind.INTERFACE) return
 
-        val source = declaration.source ?: return
-
         // Validate it's a class
         if (declaration.classKind != ClassKind.CLASS) {
             // Objects, enum classes, etc. cannot be faked
-            reportError(session, source, FirFaktErrors.FAKE_CLASS_MUST_BE_ABSTRACT)
+            reportError(FirFaktErrors.FAKE_CLASS_MUST_BE_ABSTRACT)
             return // Skip non-classes
         }
 
@@ -70,48 +68,52 @@ internal class FakeClassChecker(
             Modality.ABSTRACT -> {
                 // Allow abstract classes (existing behavior)
             }
+
             Modality.OPEN -> {
                 // Allow open classes if they have open members
                 if (!hasOpenMembers(declaration)) {
-                    reportError(session, source, FirFaktErrors.FAKE_OPEN_CLASS_NO_OPEN_MEMBERS)
+                    reportError(FirFaktErrors.FAKE_OPEN_CLASS_NO_OPEN_MEMBERS)
                     return
                 }
             }
+
             Modality.FINAL -> {
-                reportError(session, source, FirFaktErrors.FAKE_CLASS_CANNOT_BE_FINAL)
+                reportError(FirFaktErrors.FAKE_CLASS_CANNOT_BE_FINAL)
                 return
             }
+
             Modality.SEALED -> {
-                reportError(session, source, FirFaktErrors.FAKE_CLASS_CANNOT_BE_SEALED)
+                reportError(FirFaktErrors.FAKE_CLASS_CANNOT_BE_SEALED)
                 return
             }
+
             null -> {
                 // Treat null modality as FINAL
-                reportError(session, source, FirFaktErrors.FAKE_CLASS_CANNOT_BE_FINAL)
+                reportError(FirFaktErrors.FAKE_CLASS_CANNOT_BE_FINAL)
                 return
             }
         }
 
         // Validate not local
         if (declaration.symbol.classId.isLocal) {
-            reportError(session, source, FirFaktErrors.FAKE_CANNOT_BE_LOCAL)
+            reportError(FirFaktErrors.FAKE_CANNOT_BE_LOCAL)
             return
         }
 
         // Validate not expect (KMP multiplatform)
         if (declaration.status.isExpect) {
-            reportError(session, source, FirFaktErrors.FAKE_CANNOT_BE_EXPECT)
+            reportError(FirFaktErrors.FAKE_CANNOT_BE_EXPECT)
             return
         }
 
         // Validate not external
         if (declaration.status.isExternal) {
-            reportError(session, source, FirFaktErrors.FAKE_CANNOT_BE_EXTERNAL)
+            reportError(FirFaktErrors.FAKE_CANNOT_BE_EXTERNAL)
             return
         }
 
         // ✅ Validation passed - analyze and store metadata
-        analyzeAndStoreMetadata(declaration, session)
+        analyzeAndStoreMetadata(declaration)
     }
 
     /**
@@ -129,12 +131,13 @@ internal class FakeClassChecker(
 
         declaration.processAllDeclarations(session = declaration.moduleData.session) { symbol ->
             when (symbol) {
-                is org.jetbrains.kotlin.fir.symbols.impl.FirPropertySymbol -> {
+                is FirPropertySymbol -> {
                     if (symbol.fir.modality == Modality.OPEN) {
                         hasOpen = true
                     }
                 }
-                is org.jetbrains.kotlin.fir.symbols.impl.FirNamedFunctionSymbol -> {
+
+                is FirNamedFunctionSymbol -> {
                     if (symbol.fir.modality == Modality.OPEN) {
                         hasOpen = true
                     }
@@ -153,11 +156,9 @@ internal class FakeClassChecker(
      * - Open properties/methods (can be overridden)
      *
      * @param declaration Validated FIR class declaration
-     * @param session FIR session for type resolution
      */
     private fun analyzeAndStoreMetadata(
         declaration: FirClass,
-        session: org.jetbrains.kotlin.fir.FirSession,
     ) {
         val classId = declaration.classId
         val simpleName = classId.shortClassName.asString()
@@ -362,13 +363,9 @@ internal class FakeClassChecker(
      * The key goal: Detect and reject invalid @Fake usage early in FIR phase.
      * Full diagnostic integration can be added in future phases if needed.
      *
-     * @param session FIR session
-     * @param source Source element for context
      * @param message Error message to display
      */
     private fun reportError(
-        session: org.jetbrains.kotlin.fir.FirSession,
-        source: Any?,
         message: String,
     ) {
         // Log error to stderr (visible during compilation)
