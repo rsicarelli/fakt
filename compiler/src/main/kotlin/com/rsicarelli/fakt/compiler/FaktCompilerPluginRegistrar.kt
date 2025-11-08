@@ -74,7 +74,7 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
         logger: FaktLogger,
         sharedContext: FaktSharedContext,
     ) {
-        logger.trace("Registering FIR extension with useFirAnalysis=${sharedContext.useFirAnalysis()}")
+        logger.trace("Registering FIR extension")
         FirExtensionRegistrarAdapter.registerExtension(FaktFirExtensionRegistrar(sharedContext))
     }
 

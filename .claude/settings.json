@@ -1,0 +1,16 @@
+{
+  "description": "Claude Code settings for Fakt compiler plugin development with skill auto-activation",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "description": "Auto-suggest relevant skills based on user prompts and context",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/skill-activation-prompt.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -48,9 +48,6 @@ internal class FakeClassChecker(
 
     context(context: CheckerContext, reporter: DiagnosticReporter)
     override fun check(declaration: FirClass) {
-        // Skip if FIR analysis not enabled (legacy mode)
-        if (!sharedContext.useFirAnalysis()) return
-
         val session = context.session
 
         // Check if class has @Fake annotation
@@ -63,18 +60,18 @@ internal class FakeClassChecker(
 
         // Validate it's a class
         if (declaration.classKind != ClassKind.CLASS) {
-            // Phase 3B.4: Objects, enum classes, etc. cannot be faked
+            // Objects, enum classes, etc. cannot be faked
             reportError(session, source, FirFaktErrors.FAKE_CLASS_MUST_BE_ABSTRACT)
             return // Skip non-classes
         }
 
-        // Phase 3C.5: Validate class modality (abstract or open)
+        // Validate class modality (abstract or open)
         when (declaration.modality) {
             Modality.ABSTRACT -> {
-                // Allow abstract classes (existing behavior from Phase 3C.1)
+                // Allow abstract classes (existing behavior)
             }
             Modality.OPEN -> {
-                // Phase 3C.5: Allow open classes if they have open members
+                // Allow open classes if they have open members
                 if (!hasOpenMembers(declaration)) {
                     reportError(session, source, FirFaktErrors.FAKE_OPEN_CLASS_NO_OPEN_MEMBERS)
                     return
@@ -101,6 +98,18 @@ internal class FakeClassChecker(
             return
         }
 
+        // Validate not expect (KMP multiplatform)
+        if (declaration.status.isExpect) {
+            reportError(session, source, FirFaktErrors.FAKE_CANNOT_BE_EXPECT)
+            return
+        }
+
+        // Validate not external
+        if (declaration.status.isExternal) {
+            reportError(session, source, FirFaktErrors.FAKE_CANNOT_BE_EXTERNAL)
+            return
+        }
+
         // ✅ Validation passed - analyze and store metadata
         analyzeAndStoreMetadata(declaration, session)
     }
@@ -108,7 +117,7 @@ internal class FakeClassChecker(
     /**
      * Check if class has any open members (properties or methods).
      *
-     * Phase 3C.5: Open classes without open members cannot be faked
+     * Open classes without open members cannot be faked
      * because there's nothing to override.
      *
      * @param declaration FIR class declaration to check
@@ -154,10 +163,10 @@ internal class FakeClassChecker(
         val simpleName = classId.shortClassName.asString()
         val packageName = classId.packageFqName.asString()
 
-        // Phase 3C.1: Extract type parameters (same as interface)
+        // Extract type parameters (same as interface)
         val typeParameters = extractTypeParameters(declaration)
 
-        // Phase 3C.1: Extract abstract and open members separately
+        // Extract abstract and open members separately
         val (abstractProps, openProps) = extractProperties(declaration)
         val (abstractMethods, openMethods) = extractMethods(declaration)
 
@@ -172,14 +181,14 @@ internal class FakeClassChecker(
                 openProperties = openProps,
                 abstractMethods = abstractMethods,
                 openMethods = openMethods,
-                sourceLocation = FirSourceLocation.UNKNOWN, // Phase 3D: source location extraction
+                sourceLocation = FirSourceLocation.UNKNOWN, // source location extraction
             )
 
         sharedContext.metadataStorage.storeClass(metadata)
     }
 
     /**
-     * Extract type parameters from FIR class declaration (Phase 3C.1).
+     * Extract type parameters from FIR class declaration
      *
      * Same pattern as FakeInterfaceChecker - extracts type parameter names and bounds.
      *
@@ -205,7 +214,7 @@ internal class FakeClassChecker(
         }
 
     /**
-     * Extract properties from FIR class, separating abstract and open (Phase 3C.1).
+     * Extract properties from FIR class, separating abstract and open
      *
      * Returns pair of (abstract properties, open properties).
      * Uses modality to distinguish:
@@ -252,7 +261,7 @@ internal class FakeClassChecker(
     }
 
     /**
-     * Extract methods from FIR class, separating abstract and open (Phase 3C.1).
+     * Extract methods from FIR class, separating abstract and open
      *
      * Returns pair of (abstract methods, open methods).
      * Uses modality to distinguish:
@@ -273,7 +282,7 @@ internal class FakeClassChecker(
                 val name = function.name.asString()
 
                 // Extract parameters
-                // Phase 3C.4: Extract default value expressions and render to code strings
+                // Extract default value expressions and render to code strings
                 val parameters =
                     function.valueParameters.map { param ->
                         val defaultValue = param.defaultValue
@@ -344,10 +353,10 @@ internal class FakeClassChecker(
     }
 
     /**
-     * Report compilation error (Phase 3B.4 - Simplified).
+     * Report compilation error (Simplified approach).
      *
      * **Note**: FIR-level error reporting requires complex diagnostic factory setup
-     * that varies by Kotlin version. For Phase 3B.4, we use simpler error logging
+     * that varies by Kotlin version. For now, we use simpler error logging
      * that ensures validation stops invalid declarations from being processed.
      *
      * The key goal: Detect and reject invalid @Fake usage early in FIR phase.
@@ -362,7 +371,7 @@ internal class FakeClassChecker(
         source: Any?,
         message: String,
     ) {
-        // Phase 3B.4: Log error to stderr (visible during compilation)
+        // Log error to stderr (visible during compilation)
         // This ensures developers see validation errors immediately
         System.err.println("ERROR: $message")
 

@@ -9,7 +9,7 @@ import org.jetbrains.kotlin.types.ConstantValueKind
 /**
  * Renders FirExpression to Kotlin source code strings.
  *
- * **Phase 3C.4**: Default Parameter Support
+ * Default Parameter Support
  *
  * This is a pragmatic, simple renderer that handles common default value patterns:
  * - Literals: strings, numbers, booleans, null

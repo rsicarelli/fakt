@@ -17,20 +17,22 @@ import kotlin.test.assertTrue
  */
 class UserServiceImplTest {
     @Test
-    fun `GIVEN class implementing interface WHEN interface methods not configured THEN should throw error`() {
+    fun `GIVEN class implementing interface WHEN interface methods not configured THEN delegates to super implementation`() {
         // Given
         val service =
             fakeUserServiceImpl {
-                // Not configuring interface methods
+                // Not configuring interface methods - should use super implementation
             }
 
-        // When/Then - interface methods require configuration
-        assertFailsWith<IllegalStateException> {
-            service.getUser("123")
-        }
-        assertFailsWith<IllegalStateException> {
-            service.saveUser(User("1", "Test"))
-        }
+        // When - call interface methods
+        val user = service.getUser("123")
+        service.saveUser(User("1", "Test"))
+
+        // Then - uses UserServiceImpl's actual implementation (line 58-65)
+        assertEquals("123", user.id)
+        assertEquals("User 123", user.name)
+        assertEquals("user123@example.com", user.email)
+        // saveUser just executes without error (no-op implementation)
     }
 
     @Test

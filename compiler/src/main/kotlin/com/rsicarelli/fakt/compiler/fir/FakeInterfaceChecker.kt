@@ -55,9 +55,6 @@ internal class FakeInterfaceChecker(
 
     context(context: CheckerContext, reporter: DiagnosticReporter)
     override fun check(declaration: FirClass) {
-        // Skip if FIR analysis not enabled (legacy mode)
-        if (!sharedContext.useFirAnalysis()) return
-
         val session = context.session
 
         // Check if class has @Fake annotation
@@ -65,26 +62,37 @@ internal class FakeInterfaceChecker(
 
         val source = declaration.source ?: return
 
-        // Phase 3C.5: Skip non-interfaces (let FakeClassChecker handle classes)
+        // Skip non-interfaces (let FakeClassChecker handle classes)
         if (declaration.classKind != ClassKind.INTERFACE) {
             return // Skip, FakeClassChecker will validate classes
         }
 
         // Validate not sealed
         if (declaration.modality == Modality.SEALED) {
-            // Phase 3B.4: Report error with source location
+            // Report error with source location
             reportError(session, source, FirFaktErrors.FAKE_CANNOT_BE_SEALED)
             return // Skip sealed interfaces
         }
 
         // Validate not local
         if (declaration.symbol.classId.isLocal) {
-            // Phase 3B.4: Report error with source location
+            // Report error with source location
             reportError(session, source, FirFaktErrors.FAKE_CANNOT_BE_LOCAL)
             return // Skip local interfaces
         }
 
-        // TODO: Check for external/expect declarations
+        // Validate not expect (KMP multiplatform)
+        if (declaration.status.isExpect) {
+            reportError(session, source, FirFaktErrors.FAKE_CANNOT_BE_EXPECT)
+            return // Skip expect interfaces
+        }
+
+        // Validate not external
+        if (declaration.status.isExternal) {
+            reportError(session, source, FirFaktErrors.FAKE_CANNOT_BE_EXTERNAL)
+            return // Skip external interfaces
+        }
+
         // TODO: Validate interface has at least one member
 
         // ✅ Validation passed - analyze and store metadata
@@ -111,24 +119,24 @@ internal class FakeInterfaceChecker(
         val simpleName = classId.shortClassName.asString()
         val packageName = classId.packageFqName.asString()
 
-        // Phase 3B.1: Extract type parameters from FIR
+        // Extract type parameters from FIR
         val typeParameters = extractTypeParameters(declaration)
 
-        // Phase 3B.2: Extract properties from FIR
+        // Extract properties from FIR
         val properties = extractProperties(declaration)
 
-        // Phase 3B.3: Extract functions from FIR
+        // Extract functions from FIR
         val functions = extractFunctions(declaration)
 
-        // Phase 3B.5: Extract source location from FIR
+        // Extract source location from FIR
         val sourceLocation = extractSourceLocation(declaration)
 
-        // Phase 3C.3: Extract inherited members from super-interfaces
+        // Extract inherited members from super-interfaces
         val (inheritedProperties, inheritedFunctions) = extractInheritedMembers(declaration, session)
 
         // Create and store validated metadata
-        // Phase 3B.2: GenericPattern will be reconstructed in IR phase from typeParameters + functions
-        // Phase 3C.3: Now includes inherited members
+        // GenericPattern will be reconstructed in IR phase from typeParameters + functions
+        // Now includes inherited members
         val metadata =
             ValidatedFakeInterface(
                 classId = classId,
@@ -156,8 +164,8 @@ internal class FakeInterfaceChecker(
      * - `interface Foo<T : Comparable<T>>` → [FirTypeParameterInfo("T", ["kotlin.Comparable<T>"])]
      * - `interface Foo<T : A, B>` → [FirTypeParameterInfo("T", ["A", "B"])]
      *
-     * **Phase 3B.1 Note**: Currently extracts names only. Bounds rendering will be implemented
-     * in Phase 3B.4 with proper FirTypeRef→String conversion utilities.
+     * **Note**: Currently extracts names and basic bounds. Full type resolution
+     * with proper FirTypeRef→String conversion will be implemented in future enhancements.
      *
      * @param declaration FIR class declaration with type parameters
      * @return List of type parameter metadata
@@ -170,7 +178,7 @@ internal class FakeInterfaceChecker(
             val typeParam = typeParamRef.symbol.fir
             val name = typeParam.name.asString()
 
-            // Phase 3B.1: Extract type parameter bounds
+            // Extract type parameter bounds
             // FirTypeParameter.bounds contains List<FirTypeRef> representing constraints
             // e.g., `<T : Comparable<T>>` has bounds = [Comparable<T>]
             // e.g., `<T : A, B>` has bounds = [A, B] (multiple bounds via 'where' clause)
@@ -197,7 +205,7 @@ internal class FakeInterfaceChecker(
      * - `val name: String` → FirPropertyInfo("name", "String", false, false)
      * - `var count: Int?` → FirPropertyInfo("count", "Int?", true, true)
      *
-     * **Phase 3B.2 Note**: Uses basic type rendering. Phase 3B.4 will enhance with proper type resolution.
+     * **Note**: Uses basic type rendering. Future enhancements will add proper type resolution.
      *
      * @param declaration FIR class declaration
      * @return List of property metadata
@@ -214,7 +222,7 @@ internal class FakeInterfaceChecker(
                 val name = property.name.asString()
 
                 // Get type string representation
-                // TODO Phase 3B.4: Implement proper ConeType→String rendering
+                // TODO: Implement proper ConeType→String rendering
                 val type = property.returnTypeRef.coneType.toString()
 
                 // Check if property is mutable (var) or immutable (val)
@@ -247,7 +255,7 @@ internal class FakeInterfaceChecker(
      * - `fun getUser(): User` → FirFunctionInfo("getUser", [], "User", false, false, [], {})
      * - `suspend fun fetch(id: Int): Result<T>` → FirFunctionInfo("fetch", [...], "Result<T>", true, false, [], {})
      *
-     * **Phase 3B.3 Note**: Uses basic type rendering. Phase 3B.4 will enhance with proper type resolution.
+     * **Note**: Uses basic type rendering. Future enhancements will add proper type resolution.
      *
      * @param declaration FIR class declaration
      * @return List of function metadata
@@ -264,7 +272,7 @@ internal class FakeInterfaceChecker(
                 val name = function.name.asString()
 
                 // Extract parameters
-                // Phase 3C.4: Extract default value expressions and render to code strings
+                // Extract default value expressions and render to code strings
                 val parameters =
                     function.valueParameters.map { param ->
                         val defaultValue = param.defaultValue
@@ -285,7 +293,7 @@ internal class FakeInterfaceChecker(
                     }
 
                 // Extract return type
-                // TODO Phase 3B.4: Implement proper ConeType→String rendering
+                // TODO: Implement proper ConeType→String rendering
                 val returnType = function.returnTypeRef.coneType.toString()
 
                 // Check modifiers
@@ -293,7 +301,7 @@ internal class FakeInterfaceChecker(
                 val isInline = function.isInline
 
                 // Extract function-level type parameters
-                // Phase 3B.1: Extract bounds for method-level generics the same way
+                // Extract bounds for method-level generics the same way
                 val typeParameters =
                     function.typeParameters.map { typeParamRef ->
                         val typeParam = typeParamRef.symbol.fir
@@ -307,7 +315,7 @@ internal class FakeInterfaceChecker(
                         )
                     }
 
-                // Phase 3B.1: Build typeParameterBounds map from extracted bounds
+                // Build typeParameterBounds map from extracted bounds
                 // Format: Map<"T", "Comparable<T>"> for single bound
                 // Note: Kotlin doesn't support multiple bounds for same param in this format,
                 // but FirTypeParameterInfo.bounds handles it correctly as List<String>
@@ -339,29 +347,29 @@ internal class FakeInterfaceChecker(
      * Extracts file path, start/end line, and start/end column from the FIR source element.
      * This information is used for accurate error reporting during IR generation.
      *
-     * **Phase 3B.5 Note**: KtSourceElement API has complex type hierarchy with multiple implementations.
+     * **Note**: KtSourceElement API has complex type hierarchy with multiple implementations.
      * For now, returns UNKNOWN. Complete implementation requires deeper investigation of:
      * - KtPsiSourceElement vs KtLightSourceElement vs KtFakeSourceElement
      * - Accessing underlying PsiElement or LighterASTNode safely
      * - Converting offsets to line/column using KtSourceFileLinesMapping
      *
-     * TODO Phase 3B.5+: Implement full source location extraction using proper KtSourceElement API
-     * Current impact: Error messages will not include exact source locations (non-critical for Phase 3)
+     * TODO: Implement full source location extraction using proper KtSourceElement API
+     * Current impact: Error messages will not include exact source locations (non-critical)
      *
      * @param declaration FIR class declaration with source information
      * @return Source location metadata (UNKNOWN for now)
      */
     private fun extractSourceLocation(declaration: FirClass): FirSourceLocation {
-        // TODO Phase 3B.5+: Implement proper source location extraction
+        // TODO: Implement proper source location extraction
         // This requires investigating KtSourceElement type hierarchy and safe access patterns
-        // For now, returning UNKNOWN allows Phase 3 to proceed without blocking on this non-critical feature
+        // For now, returning UNKNOWN allows the plugin to proceed without blocking on this non-critical feature
         return FirSourceLocation.UNKNOWN
     }
 
     /**
      * Extract inherited members from super-interfaces.
      *
-     * **Phase 3C.3**: Recursively collects properties and functions from all super-interfaces.
+     * Recursively collects properties and functions from all super-interfaces.
      *
      * This method handles:
      * - Direct super-interfaces (e.g., `interface B : A`)
@@ -432,7 +440,7 @@ internal class FakeInterfaceChecker(
     /**
      * Recursively collect members from a super-interface and its ancestors.
      *
-     * **Phase 3C.3**: Helper method for inherited member extraction.
+     * Helper method for inherited member extraction.
      *
      * @param firClass The super-interface to process
      * @param session FIR session
@@ -487,14 +495,14 @@ internal class FakeInterfaceChecker(
     }
 
     /**
-     * Report compilation error (Phase 3B.4 - Simplified).
+     * Report compilation error (Simplified approach).
      *
      * **Note**: FIR-level error reporting requires complex diagnostic factory setup
-     * that varies by Kotlin version. For Phase 3B.4, we use simpler error logging
+     * that varies by Kotlin version. For now, we use simpler error logging
      * that ensures validation stops invalid declarations from being processed.
      *
      * The key goal: Detect and reject invalid @Fake usage early in FIR phase.
-     * Full diagnostic integration can be added in future phases if needed.
+     * Full diagnostic integration can be added in future enhancements if needed.
      *
      * @param session FIR session
      * @param source Source element for context
@@ -505,7 +513,7 @@ internal class FakeInterfaceChecker(
         source: Any?,
         message: String,
     ) {
-        // Phase 3B.4: Log error to stderr (visible during compilation)
+        // Log error to stderr (visible during compilation)
         // This ensures developers see validation errors immediately
         System.err.println("ERROR: $message")
 

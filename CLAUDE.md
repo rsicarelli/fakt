@@ -1,24 +1,19 @@
 # 🤖 CLAUDE.md - Fakt Compiler Plugin
 
-> **Metro-inspired Kotlin compiler plugin for type-safe fake generation**
+> **Production-ready Kotlin compiler plugin for type-safe fake generation**
 > **Status**: MAP (Minimum Awesome Product) - Core architecture complete, final polish in progress
 > **Last Updated**: January 2025
 
 ## 🎯 What is Fakt?
 
-**Fakt** (formerly ktfakes-prototype) is a Kotlin compiler plugin that generates type-safe test fakes at compile time using the `@Fake` annotation. Inspired by the [Metro Dependency Injection framework](https://github.com/slackhq/metro), Fakt follows a two-phase FIR → IR compilation approach to analyze interfaces and generate production-quality fake implementations.
-
-**Key Differences from Metro:**
-- **Metro**: Dependency injection code generation for production use
-- **Fakt**: Test fake generation for testing scenarios only
-- **Shared Patterns**: Two-phase FIR/IR compilation, CompilerPluginRegistrar structure, IrGenerationExtension patterns
+**Fakt** (formerly ktfakes-prototype) is a Kotlin compiler plugin that generates type-safe test fakes at compile time using the `@Fake` annotation. Fakt follows a two-phase FIR → IR compilation approach to analyze interfaces and generate production-quality fake implementations.
 
 **Problem Solved:**
 Writing test fakes manually is tedious and error-prone. Fakt generates type-safe fakes automatically with a clean DSL for configuring behavior, eliminating boilerplate while maintaining compile-time safety.
 
 ## 🏗️ Architecture
 
-### **Two-Phase Compilation (Metro-Inspired)**
+### **Two-Phase Compilation (FIR → IR)**
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -71,8 +66,7 @@ ktfake/
 ├── gradle-plugin/                     # Gradle integration
 └── samples/
     ├── kmp-single-module/             # ✅ Working KMP example
-    ├── kmp-multi-module/              # Complex KMP multi-module
-    └── multi-module/                  # Multi-module testing
+    └── kmp-multi-module/              # Complex KMP multi-module
 ```
 
 ## ⚡ Essential Commands
@@ -153,24 +147,82 @@ fakt {
 
 ### **Slash Commands (Claude Code)**
 
+Fakt includes 16 specialized slash commands for compiler plugin development:
+
 ```bash
-# 🔬 Debug IR generation for specific interface
-/debug-ir-generation <interface_name>
+# 🏗️ Environment & Setup
+/setup-development-environment [--full|--quick|--validate]  # Complete dev environment setup
 
-# 📚 Query Kotlin compiler source code
-/consult-kotlin-api <api_class>
+# 🔬 IR & Compiler Debugging
+/debug-ir-generation <interface_name>                       # Step-by-step IR generation debugging
+/consult-kotlin-api <api_class>                             # Query Kotlin compiler source
 
-# 🏆 Check Metro pattern alignment
-/validate-metro-alignment
+# 📊 Validation & Testing
+/validate-compilation [--interface=<name>|--all|--verbose]  # Compilation validation
+/run-bdd-tests [pattern|all|compiler]                       # Execute BDD GIVEN-WHEN-THEN tests
 
-# 🧪 Run BDD-style tests
-/run-bdd-tests <pattern>
+# 🔍 Analysis Tools
+/analyze-interface-structure <interface_name>               # Deep interface structural analysis
+/analyze-compilation-error [--type=<error_type>]            # Systematic error analysis
+/analyze-generic-scoping [interface_name|all]               # Generic type scoping analysis
+/analyze-and-test                                           # Behavior analysis & test generation
 
-# 📊 Check implementation status
-/check-implementation-status
+# 📈 Progress & Status
+/check-implementation-status [phase1|phase2|detailed]       # Monitor implementation progress
 
-# 🔍 Analyze interface structure
-/analyze-interface-structure <interface_name>
+# 🚀 Advanced Features
+/plan-generic-implementation [strategy]                     # Generic type implementation planning
+
+# 📚 Documentation
+/document [target]                                          # Professional KDoc documentation system
+
+# 🛠️ Roadmap Management
+/execute-roadmap [phase|feature]                            # Execute roadmap with TDD RED-GREEN
+/resume-and-update-generics                                 # Resume generic implementation
+```
+
+**Note**: Most commands automatically invoke relevant Skills when needed. See Skills System section below.
+
+### **Skills System (Auto-Activation)**
+
+Fakt includes 12 specialized skills that **automatically activate** based on your prompts and context:
+
+#### **Analysis Skills (4)**
+- **`kotlin-api-consultant`** - Queries Kotlin compiler source for API validation, Metro alignment
+- **`generic-scoping-analyzer`** - Analyzes generic type parameter scoping (class vs method level)
+- **`compilation-error-analyzer`** - Systematic compilation error diagnosis and resolution
+- **`interface-analyzer`** - Deep structural analysis of @Fake annotated interfaces
+
+#### **Core Workflows (3)**
+- **`bdd-test-runner`** - Executes BDD-compliant GIVEN-WHEN-THEN tests with compliance validation
+- **`kotlin-ir-debugger`** - Step-by-step IR generation debugging and validation
+- **`behavior-analyzer-tester`** - Deep behavior analysis and comprehensive test generation
+
+#### **Validation (3)**
+- **`compilation-validator`** - Production-grade compilation validation ensuring zero errors
+- **`compiler-architecture-validator`** - Validates compiler plugin architecture and patterns
+- **`implementation-tracker`** - Monitors implementation progress and phase completion
+
+#### **Development & Knowledge (2)**
+- **`skill-creator`** - Meta-skill for creating new Claude Code skills
+- **`fakt-docs-navigator`** - Intelligent navigation through 80+ documentation files
+
+**How Skills Work:**
+- **Auto-Activation**: Skills automatically suggest themselves based on keywords and intent patterns
+- **Priority Levels**: Critical (IR debugging, compilation) → High (API consultation, testing) → Medium → Low
+- **Manual Invocation**: Use the Skill tool with skill name (e.g., "kotlin-api-consultant")
+- **Configuration**: `.claude/skills/skill-rules.json` defines triggers and priorities
+
+**Example Auto-Activation:**
+```
+User: "Check if IrGenerationExtension API changed"
+→ Triggers: kotlin-api-consultant (high priority)
+
+User: "Run tests and validate BDD compliance"
+→ Triggers: bdd-test-runner (high priority)
+
+User: "Debug IR generation for UserService interface"
+→ Triggers: kotlin-ir-debugger (critical priority)
 ```
 
 ### **Summary: Critical Testing Practices**
@@ -205,10 +257,9 @@ fakt {
 
 ### **✅ SEMPRE FAZER:**
 
-1. **🏆 Consultar Metro patterns primeiro**
-   - Metro é nossa inspiração arquitetural
-   - Use `/validate-metro-alignment` antes de decisões arquiteturais
-   - Referência: `.claude/docs/development/metro-alignment.md`
+1. **🏆 Follow compiler plugin best practices**
+   - Use industry-standard two-phase FIR → IR compilation patterns
+   - Reference: `.claude/docs/` for architectural guidance
 
 2. **🎯 Validar com Kotlin compiler source**
    - APIs do compilador mudam entre versões

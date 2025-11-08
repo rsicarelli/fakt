@@ -1,4 +1,4 @@
-# Multi-Module Support: Implementation Roadmap
+# KMP Multi-Module Support: Implementation Roadmap
 
 **Strategy**: Custom Source Sets as Feature Variants
 **Duration**: 3 weeks
@@ -91,8 +91,8 @@ kotlin.run {
 
 **Validation**:
 ```bash
-# Apply convention to samples/multi-module/foundation
-./gradlew :samples:multi-module:foundation:sourceSets
+# Apply convention to samples/kmp-kmp-multi-module/foundation
+./gradlew :samples:kmp-multi-module:foundation:sourceSets
 # Expected: See 'fakes', 'jvmFakes', 'jsFakes' source sets
 ```
 
@@ -141,7 +141,7 @@ kotlin.targets.all { target ->
 **Validation**:
 ```bash
 # Check published variants
-./gradlew :samples:multi-module:foundation:outgoingVariants
+./gradlew :samples:kmp-multi-module:foundation:outgoingVariants
 # Expected: See jvmFakesElements, jsFakesElements with "-fakes" capability
 ```
 
@@ -161,7 +161,7 @@ kotlin.targets.all { target ->
 ```kotlin
 // domain/build.gradle.kts
 dependencies {
-    commonTestImplementation(project(":samples:multi-module:foundation")) {
+    commonTestImplementation(project(":samples:kmp-multi-module:foundation")) {
         capabilities {
             requireCapability("com.rsicarelli.fakt:foundation-fakes:1.0.0-SNAPSHOT")
         }
@@ -172,7 +172,7 @@ dependencies {
 **Validation**:
 ```bash
 # Build domain tests
-./gradlew :samples:multi-module:domain:compileTestKotlinJvm
+./gradlew :samples:kmp-multi-module:domain:compileTestKotlinJvm
 # Expected: Resolves foundation-fakes variant successfully
 ```
 
@@ -220,7 +220,7 @@ fun getGeneratedSourcesDirectory(compilation: KotlinCompilation<*>): String {
 **Validation**:
 ```bash
 # Build foundation with convention applied
-./gradlew :samples:multi-module:foundation:compileKotlinJvm
+./gradlew :samples:kmp-multi-module:foundation:compileKotlinJvm
 # Expected: FakeLogger.kt appears in src/jvmFakes/kotlin/
 ```
 
@@ -255,7 +255,7 @@ private fun registerGeneratedSources(kotlin: KotlinMultiplatformExtension) {
 **Validation**:
 ```bash
 # Check compilation includes generated code
-./gradlew :samples:multi-module:foundation:compileTestKotlinJvm --info
+./gradlew :samples:kmp-multi-module:foundation:compileTestKotlinJvm --info
 # Expected: Logs show src/jvmFakes/kotlin/ in source paths
 ```
 
@@ -346,7 +346,7 @@ dependencies {
 ```
 
 ```bash
-./gradlew :samples:multi-module:domain:dependencies --configuration commonTestCompileClasspath
+./gradlew :samples:kmp-multi-module:domain:dependencies --configuration commonTestCompileClasspath
 # Expected: See foundation-fakes capability resolved
 ```
 
@@ -388,7 +388,7 @@ fakt {
 **Validation**:
 ```bash
 # With auto-wire disabled, should NOT add capabilities
-./gradlew :samples:multi-module:domain:dependencies
+./gradlew :samples:kmp-multi-module:domain:dependencies
 # Expected: Only explicit capability declarations resolved
 ```
 
@@ -399,7 +399,7 @@ fakt {
 **Goal**: Comprehensive documentation and working examples.
 
 **Tasks**:
-1. Update all `.claude/docs/multi-module/` files
+1. Update all `.claude/docs/kmp-multi-module/` files
 2. Add inline code comments
 3. Create troubleshooting guide
 4. Write migration guide from dedicated modules
@@ -412,7 +412,7 @@ fakt {
 
 **Sample Structure**:
 ```
-samples/multi-module/
+samples/kmp-kmp-multi-module/
 ├─ foundation/
 │   ├─ build.gradle.kts (applies fakt-convention)
 │   ├─ src/commonMain/kotlin/Logger.kt

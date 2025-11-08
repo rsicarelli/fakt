@@ -1,4 +1,4 @@
-# Multi-Module Support: Technical Reference
+# KMP Multi-Module Support: Technical Reference
 
 **Date**: 2025-10-05
 **Strategy**: Custom Source Sets as Feature Variants

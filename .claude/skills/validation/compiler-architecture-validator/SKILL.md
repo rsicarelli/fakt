@@ -1,12 +1,12 @@
 ---
-name: metro-pattern-validator
-description: Validates Fakt implementation alignment with Metro architectural patterns including two-phase FIR→IR compilation, context-driven generation, CompilerPluginRegistrar structure, and IrGenerationExtension patterns. Use when checking Metro alignment, validating architectural patterns, verifying compiler plugin structure, or when user mentions "Metro patterns", "validate Metro", "architectural alignment", "check patterns", or specific component names.
+name: compiler-architecture-validator
+description: Validates Fakt implementation follows compiler plugin best practices including two-phase FIR→IR compilation, context-driven generation, CompilerPluginRegistrar structure, and IrGenerationExtension patterns. Use when validating architectural patterns, verifying compiler plugin structure, checking code quality, or when user mentions "architecture", "validate patterns", "compiler plugin", "check structure", or specific component names.
 allowed-tools: [Read, Grep, Glob, TodoWrite]
 ---
 
-# Metro Pattern Compliance Validator
+# Compiler Architecture Validator
 
-Validates Fakt compiler plugin implementation alignment with Metro dependency injection framework architectural patterns.
+Validates Fakt compiler plugin implementation follows industry-standard architectural patterns and best practices.
 
 ## Core Mission
 

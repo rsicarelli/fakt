@@ -30,7 +30,6 @@ class FaktCommandLineProcessor : CommandLineProcessor {
         val LOG_LEVEL_KEY = CompilerConfigurationKey<String>("fakt.logLevel")
         val OUTPUT_DIR_KEY = CompilerConfigurationKey<String>("fakt.outputDir")
         val SOURCE_SET_CONTEXT_KEY = CompilerConfigurationKey<SourceSetContext>("fakt.sourceSetContext")
-        val USE_FIR_ANALYSIS_KEY = CompilerConfigurationKey<Boolean>("fakt.useFirAnalysis")
 
         val ENABLED_OPTION =
             CliOption(
@@ -63,14 +62,6 @@ class FaktCommandLineProcessor : CommandLineProcessor {
                 description = "Serialized source set context from Gradle plugin",
                 required = false,
             )
-
-        val USE_FIR_ANALYSIS_OPTION =
-            CliOption(
-                optionName = "useFirAnalysis",
-                valueDescription = "true|false",
-                description = "Enable FIR-based analysis and validation (Metro-aligned architecture)",
-                required = false,
-            )
     }
 
     override val pluginId: String = "com.rsicarelli.fakt"
@@ -81,7 +72,6 @@ class FaktCommandLineProcessor : CommandLineProcessor {
             LOG_LEVEL_OPTION,
             OUTPUT_DIR_OPTION,
             SOURCE_SET_CONTEXT_OPTION,
-            USE_FIR_ANALYSIS_OPTION,
         )
 
     override fun processOption(
@@ -93,7 +83,6 @@ class FaktCommandLineProcessor : CommandLineProcessor {
             "enabled" -> configuration.put(ENABLED_KEY, value.toBoolean())
             "logLevel" -> configuration.put(LOG_LEVEL_KEY, value)
             "outputDir" -> configuration.put(OUTPUT_DIR_KEY, value)
-            "useFirAnalysis" -> configuration.put(USE_FIR_ANALYSIS_KEY, value.toBoolean())
             "sourceSetContext" -> {
                 val messageCollector =
                     configuration.get(

@@ -25,7 +25,7 @@ internal class FactoryGenerator {
         val factoryFunctionName = "fake$interfaceName"
         val configClassName = "Fake${interfaceName}Config"
 
-        // Phase 2: Generate reified generic factory function
+        // Generate reified generic factory function
         val hasGenerics = analysis.typeParameters.isNotEmpty()
 
         // Extract type parameter names (without constraints) for use as type arguments
@@ -64,7 +64,7 @@ internal class FactoryGenerator {
                     "): $returnType$whereClausePart {",
             )
 
-            // Phase 2: Use simple type parameter names for constructor (not reified, no constraints)
+            // Use simple type parameter names for constructor (not reified, no constraints)
             val constructorTypeParams =
                 if (hasGenerics) {
                     "<${typeParameterNames.joinToString(", ")}>"

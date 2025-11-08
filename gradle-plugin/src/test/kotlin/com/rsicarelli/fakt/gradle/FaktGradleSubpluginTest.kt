@@ -49,6 +49,5 @@ class FaktGradleSubpluginTest {
 
         // Then: Extension should have expected defaults
         assertTrue(extension.enabled.get())
-        assertFalse(extension.debug.get())
     }
 }

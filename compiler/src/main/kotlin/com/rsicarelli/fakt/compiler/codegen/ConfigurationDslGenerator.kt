@@ -70,7 +70,7 @@ internal class ConfigurationDslGenerator(
 
     private fun generateFunctionConfigurators(functions: List<FunctionAnalysis>): String =
         functions.joinToString("") { function ->
-            // Phase 1.1: Preserve full generic signatures (no erasure)
+            // Preserve full generic signatures (no erasure)
             val hasMethodGenerics = function.typeParameters.isNotEmpty()
 
             val methodTypeParams =
@@ -80,7 +80,7 @@ internal class ConfigurationDslGenerator(
                     ""
                 }
 
-            // Phase 1.1: Keep original parameter types (including method-level generics)
+            // Keep original parameter types (including method-level generics)
             val parameterTypes =
                 if (function.parameters.isEmpty()) {
                     ""
@@ -96,7 +96,7 @@ internal class ConfigurationDslGenerator(
                     }
                 }
 
-            // Phase 1.1: Keep original return type (including method-level generics)
+            // Keep original return type (including method-level generics)
             val returnType = typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
 
             val suspendModifier = if (function.isSuspend) "suspend " else ""
@@ -328,13 +328,13 @@ internal class ConfigurationDslGenerator(
      * Generates a single configuration method for a function (abstract or open).
      * Shared logic between interface and class DSL generation.
      *
-     * Phase 1.1: Preserves full generic signatures (no erasure) for type-safe DSL.
+     * Preserves full generic signatures (no erasure) for type-safe DSL.
      */
     private fun generateConfigMethodForFunction(function: FunctionAnalysis): String {
         val functionName = function.name
         val suspendModifier = if (function.isSuspend) "suspend " else ""
 
-        // Phase 1.1: Preserve full generic signatures (no erasure)
+        // Preserve full generic signatures (no erasure)
         val hasMethodGenerics = function.typeParameters.isNotEmpty()
 
         val methodTypeParams =
@@ -344,7 +344,7 @@ internal class ConfigurationDslGenerator(
                 ""
             }
 
-        // Phase 1.1: Keep original parameter types (including method-level generics)
+        // Keep original parameter types (including method-level generics)
         val parameterTypes =
             if (function.parameters.isEmpty()) {
                 ""
@@ -360,7 +360,7 @@ internal class ConfigurationDslGenerator(
                 }
             }
 
-        // Phase 1.1: Keep original return type (including method-level generics)
+        // Keep original return type (including method-level generics)
         val returnType = typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
 
         // Build behavior signature with full generic types

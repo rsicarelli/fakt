@@ -33,11 +33,13 @@ internal data class CodeGenerators(
  * @property implementation The generated implementation class code
  * @property factory The generated factory function code
  * @property configDsl The generated configuration DSL code
+ * @property importCount The number of imports required for this fake
  */
 internal data class GeneratedCode(
     val implementation: String,
     val factory: String,
     val configDsl: String,
+    val importCount: Int,
 ) {
     /**
      * Calculates total lines of code across all generated components.
@@ -100,11 +102,15 @@ internal class CodeGenerator(
         val packageName = sourceInterface.packageFqName?.asString() ?: ""
 
         try {
+            // Collect imports to calculate count
+            val requiredImports = importResolver.collectRequiredImports(analysis, packageName)
+
             val generatedCode =
                 GeneratedCode(
                     implementation = generators.implementation.generateImplementation(analysis, fakeClassName),
                     factory = generators.factory.generateFactoryFunction(analysis, fakeClassName),
                     configDsl = generators.configDsl.generateConfigurationDsl(analysis, fakeClassName),
+                    importCount = requiredImports.size,
                 )
 
             writeGeneratedCode(
@@ -147,11 +153,15 @@ internal class CodeGenerator(
         val packageName = sourceClass.packageFqName?.asString() ?: ""
 
         try {
+            // Collect imports to calculate count
+            val requiredImports = importResolver.collectRequiredImportsForClass(analysis, packageName)
+
             val generatedCode =
                 GeneratedCode(
                     implementation = generators.implementation.generateClassFake(analysis, fakeClassName),
                     factory = generators.factory.generateFactoryFunction(analysis, fakeClassName),
                     configDsl = generators.configDsl.generateConfigurationDsl(analysis, fakeClassName),
+                    importCount = requiredImports.size,
                 )
 
             writeGeneratedCodeForClass(

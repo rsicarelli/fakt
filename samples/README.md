@@ -15,7 +15,7 @@ A single KMP module demonstrating core Fakt features:
 
 **Source Set Targets**: `commonMain` → `commonTest`, `jvmMain` → `jvmTest`
 
-### 🏗️ **multi-module**
+### 🏗️ **kmp-multi-module**
 A complex multi-module KMP project showcasing:
 - **Cross-Module Faking**: Interfaces defined in one module, faked in another
 - **Platform-Specific Fakes**: Different implementations per target platform
@@ -58,8 +58,8 @@ Fakt generates fakes at the appropriate test source set level:
 cd samples/kmp-single-module
 ../../gradlew build
 
-# Test multi-module sample
-cd samples/multi-module
+# Test kmp-multi-module sample
+cd samples/kmp-multi-module
 ../../gradlew build
 
 # Clean and regenerate all fakes

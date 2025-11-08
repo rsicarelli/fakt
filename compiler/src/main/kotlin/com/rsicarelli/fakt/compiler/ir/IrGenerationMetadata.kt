@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir
 
+import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.FunctionAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.GenericPattern
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
@@ -18,7 +19,7 @@ import org.jetbrains.kotlin.ir.types.IrType
  * This is the **bridge** between FIR phase (string-based types) and IR phase (IrTypes).
  * Eliminates the need for re-analyzing IrClass instances.
  *
- * **Phase 3B.3**: This API enables proper FIR→IR communication following Metro pattern:
+ * This API enables proper FIR→IR communication following Metro pattern:
  * - FIR analyzes and extracts metadata (strings)
  * - FirToIrTransformer resolves strings → IrTypes and lookups IR nodes
  * - IR generation uses this metadata WITHOUT re-analysis
@@ -90,7 +91,7 @@ data class IrFunctionMetadata(
  *
  * Transformed from FirParameterInfo (strings) to IR-ready structure.
  *
- * Phase 3C.4: Added defaultValueCode for default parameter support in generated code.
+ * Added defaultValueCode for default parameter support in generated code.
  *
  * @property name Parameter name
  * @property type Resolved IrType (from FIR string representation)
@@ -112,7 +113,7 @@ data class IrParameterMetadata(
  * This is the **bridge** between FIR phase (string-based types) and IR phase (IrTypes) for abstract classes.
  * Similar to IrGenerationMetadata but separates abstract and open members.
  *
- * **Phase 3C.1**: Added to support abstract class fake generation.
+ * Added to support abstract class fake generation.
  * - FIR analyzes and extracts metadata (strings) with abstract/open separation
  * - FirToIrTransformer resolves strings → IrTypes and lookups IR nodes
  * - IR generation uses this metadata WITHOUT re-analysis
@@ -146,7 +147,7 @@ data class IrClassGenerationMetadata(
  * FactoryGenerator, ConfigurationDslGenerator) without refactoring them
  * to accept IrGenerationMetadata directly.
  *
- * **Phase 3B.3**: Adapter pattern for backward compatibility.
+ * Adapter pattern for backward compatibility.
  * **Future**: Refactor generators to accept IrGenerationMetadata directly.
  *
  * @return InterfaceAnalysis compatible with existing generators
@@ -159,17 +160,17 @@ fun IrGenerationMetadata.toInterfaceAnalysis(): InterfaceAnalysis =
         functions = functions.map { it.toFunctionAnalysis() },
         sourceInterface = sourceInterface,
         genericPattern = genericPattern,
-        debugInfo = StringBuilder("Generated from FIR metadata (Phase 3B.3)"),
+        debugInfo = StringBuilder("Generated from FIR metadata (FIR metadata)"),
     )
 
 /**
  * Adapter function: Convert IrClassGenerationMetadata to InterfaceAnalysis.
  *
- * For Phase 3C.1, we combine abstract and open members since existing generators
+ * We combine abstract and open members since existing generators
  * treat all interface members the same way (all must be implemented).
  *
- * **Phase 3C.1**: Temporary adapter to reuse existing code generators.
- * **Future Phase 3C.2+**: Refactor generators to handle open members with super delegation.
+ * Temporary adapter to reuse existing code generators.
+ * Future: Refactor generators to handle open members with super delegation.
  *
  * @return InterfaceAnalysis compatible with existing generators
  */
@@ -177,19 +178,19 @@ fun IrClassGenerationMetadata.toInterfaceAnalysis(): InterfaceAnalysis =
     InterfaceAnalysis(
         interfaceName = className,
         typeParameters = typeParameters,
-        // Phase 3C.1: Combine abstract + open properties (all need implementation/override)
+        // Combine abstract + open properties (all need implementation/override)
         properties = (abstractProperties + openProperties).map { it.toPropertyAnalysis() },
-        // Phase 3C.1: Combine abstract + open methods (all need implementation/override)
+        // Combine abstract + open methods (all need implementation/override)
         functions = (abstractMethods + openMethods).map { it.toFunctionAnalysis() },
         sourceInterface = sourceClass,
         genericPattern = genericPattern,
-        debugInfo = StringBuilder("Generated from FIR class metadata (Phase 3C.1)"),
+        debugInfo = StringBuilder("Generated from FIR class metadata (FIR class metadata)"),
     )
 
 /**
  * Adapter function: Convert IrClassGenerationMetadata to ClassAnalysis.
  *
- * Phase 3C.5: Use ClassAnalysis to preserve abstract/open distinction
+ * Use ClassAnalysis to preserve abstract/open distinction
  * for proper super delegation generation.
  *
  * Unlike toInterfaceAnalysis(), this keeps abstract and open members separate
@@ -199,8 +200,8 @@ fun IrClassGenerationMetadata.toInterfaceAnalysis(): InterfaceAnalysis =
  *
  * @return ClassAnalysis with separated abstract and open members
  */
-fun IrClassGenerationMetadata.toClassAnalysis(): com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis =
-    com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis(
+fun IrClassGenerationMetadata.toClassAnalysis(): ClassAnalysis =
+    ClassAnalysis(
         className = className,
         typeParameters = typeParameters,
         abstractMethods = abstractMethods.map { it.toFunctionAnalysis() },
@@ -240,7 +241,7 @@ private fun IrFunctionMetadata.toFunctionAnalysis(): FunctionAnalysis =
 /**
  * Convert IrParameterMetadata to ParameterAnalysis.
  *
- * Phase 3C.4: Pass through defaultValueCode for default parameter support.
+ * Pass through defaultValueCode for default parameter support.
  */
 private fun IrParameterMetadata.toParameterAnalysis(): ParameterAnalysis =
     ParameterAnalysis(

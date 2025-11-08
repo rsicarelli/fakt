@@ -1,0 +1,388 @@
+{
+    "version": "1.0",
+    "description": "Skill activation triggers for Fakt compiler plugin development. Controls when skills automatically suggest based on compiler development context, Kotlin API usage, Metro patterns, and testing workflows.",
+    "skills": {
+        "kotlin-api-consultant": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "Queries Kotlin compiler source for API validation, compatibility checks, Metro pattern alignment, and breaking change detection",
+            "promptTriggers": {
+                "keywords": [
+                    "Kotlin API",
+                    "compiler API",
+                    "IrGenerationExtension",
+                    "IrPluginContext",
+                    "IrFactory",
+                    "IrClass",
+                    "IrTypeParameter",
+                    "CompilerPluginRegistrar",
+                    "FirExtensionRegistrar",
+                    "API validation",
+                    "Metro API usage",
+                    "check API",
+                    "validate API",
+                    "compiler compatibility",
+                    "breaking changes",
+                    "IrType",
+                    "IrTypeSubstitutor",
+                    "IrSimpleType",
+                    "IrDeclaration"
+                ],
+                "intentPatterns": [
+                    "(check|validate|verify|consult).*?(Kotlin|compiler).*?API",
+                    "(how does|how to use|what is).*?(Ir|Fir).*?(class|interface|API)",
+                    "Metro.*?(use|uses|pattern).*?API",
+                    "(breaking change|deprecated|compatibility).*?API"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "compiler/src/**/*.kt",
+                    "compiler/src/main/kotlin/**/*Generator*.kt",
+                    "compiler/src/main/kotlin/**/*Extension*.kt"
+                ],
+                "contentPatterns": [
+                    "import org\\.jetbrains\\.kotlin\\.ir\\.",
+                    "import org\\.jetbrains\\.kotlin\\.fir\\.",
+                    "IrPluginContext",
+                    "IrGenerationExtension",
+                    "IrFactory"
+                ]
+            }
+        },
+        "generic-scoping-analyzer": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "Analyzes generic type parameter scoping challenges, distinguishes class-level vs method-level generics, and provides Phase 2A/2B solution patterns",
+            "promptTriggers": {
+                "keywords": [
+                    "generic",
+                    "generics",
+                    "type parameter",
+                    "IrTypeParameter",
+                    "class-level generic",
+                    "method-level generic",
+                    "generic scoping",
+                    "generic bounds",
+                    "variance",
+                    "covariant",
+                    "contravariant",
+                    "type substitution",
+                    "Phase 2",
+                    "Phase 2A",
+                    "Phase 2B"
+                ],
+                "intentPatterns": [
+                    "(analyze|debug|fix|handle).*?generic",
+                    "(class|method).*?level.*?generic",
+                    "(type parameter|generic).*?(scope|scoping|issue|problem)",
+                    "Phase 2.*?generic"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "compiler/src/**/*TypeResolver*.kt",
+                    "compiler/src/**/*Generic*.kt"
+                ],
+                "contentPatterns": [
+                    "IrTypeParameter",
+                    "typeParameters",
+                    "genericSignature"
+                ]
+            }
+        },
+        "compilation-error-analyzer": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "Systematic compilation error analysis and resolution with categorization, specific fixes, and pattern tracking",
+            "promptTriggers": {
+                "keywords": [
+                    "compilation error",
+                    "compile error",
+                    "compilation failed",
+                    "unresolved reference",
+                    "type mismatch",
+                    "missing import",
+                    "compilation issue",
+                    "generated code error",
+                    "Kotlin compiler error"
+                ],
+                "intentPatterns": [
+                    "(analyze|debug|fix|resolve).*?(compilation|compile).*?error",
+                    "(why|what).*(won't|doesn't|isn't).*?compile",
+                    "compilation.*?(fail|issue|problem)"
+                ]
+            }
+        },
+        "interface-analyzer": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "medium",
+            "description": "Deep structural analysis of @Fake annotated interfaces for generation planning",
+            "promptTriggers": {
+                "keywords": [
+                    "analyze interface",
+                    "interface structure",
+                    "@Fake interface",
+                    "interface analysis",
+                    "method signature",
+                    "property analysis",
+                    "interface metadata"
+                ],
+                "intentPatterns": [
+                    "analyze.*?interface.*?structure",
+                    "(what|how).*?interface.*?(method|property|signature)"
+                ]
+            }
+        },
+        "bdd-test-runner": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "Executes BDD-compliant GIVEN-WHEN-THEN tests with vanilla JUnit5 and validates test naming compliance",
+            "promptTriggers": {
+                "keywords": [
+                    "run tests",
+                    "execute tests",
+                    "test runner",
+                    "BDD",
+                    "GIVEN-WHEN-THEN",
+                    "test coverage",
+                    "validate tests",
+                    "JUnit5",
+                    "test compliance",
+                    "test pattern",
+                    "test validation"
+                ],
+                "intentPatterns": [
+                    "(run|execute|start).*?test",
+                    "(check|validate|verify).*?test.*?(pattern|naming|compliance)",
+                    "(test|BDD).*?(coverage|validation|compliance)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "compiler/src/test/**/*Test.kt"
+                ],
+                "contentPatterns": [
+                    "@Test",
+                    "fun `GIVEN",
+                    "@TestInstance"
+                ]
+            }
+        },
+        "kotlin-ir-debugger": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "critical",
+            "description": "Step-by-step IR generation debugging with Metro pattern validation and detailed IR node inspection",
+            "promptTriggers": {
+                "keywords": [
+                    "IR generation",
+                    "debug IR",
+                    "IR debugger",
+                    "IR nodes",
+                    "IrClass generation",
+                    "IrFunction generation",
+                    "IR phase",
+                    "Metro IR pattern",
+                    "IR debugging"
+                ],
+                "intentPatterns": [
+                    "debug.*?IR.*?generation",
+                    "(why|how).*?IR.*?(generate|create|build)",
+                    "IR.*?(issue|problem|error|debug)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "compiler/src/main/kotlin/**/*IrGenerator*.kt",
+                    "compiler/src/main/kotlin/**/*IrGenerationExtension*.kt"
+                ],
+                "contentPatterns": [
+                    "IrGenerationExtension",
+                    "irFactory\\.",
+                    "buildClass",
+                    "buildFunction"
+                ]
+            }
+        },
+        "behavior-analyzer-tester": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "medium",
+            "description": "Deep behavior analysis and comprehensive unit test generation following GIVEN-WHEN-THEN patterns",
+            "promptTriggers": {
+                "keywords": [
+                    "analyze behavior",
+                    "generate tests",
+                    "create tests",
+                    "test generation",
+                    "behavior analysis",
+                    "unit test",
+                    "add tests"
+                ],
+                "intentPatterns": [
+                    "generate.*?test",
+                    "(create|add|write).*?test.*?for",
+                    "analyze.*?behavior"
+                ]
+            }
+        },
+        "compilation-validator": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "critical",
+            "description": "Production-grade compilation validation ensuring zero errors, proper type safety, and correct smart defaults",
+            "promptTriggers": {
+                "keywords": [
+                    "validate compilation",
+                    "check compilation",
+                    "compilation validator",
+                    "compile validation",
+                    "generated code errors",
+                    "compile fakes",
+                    "type safety",
+                    "compilation validation",
+                    "does it compile"
+                ],
+                "intentPatterns": [
+                    "(validate|verify|check).*?compilation",
+                    "(does|will).*?(compile|work)",
+                    "compilation.*?(pass|succeed|work)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "build/generated/fakt/**/*.kt",
+                    "samples/**/build/generated/**/*.kt"
+                ]
+            }
+        },
+        "compiler-architecture-validator": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "Validates Fakt implementation follows compiler plugin best practices, two-phase FIR→IR compilation, and context-driven generation patterns",
+            "promptTriggers": {
+                "keywords": [
+                    "architecture",
+                    "validate architecture",
+                    "check architecture",
+                    "compiler plugin patterns",
+                    "two-phase compilation",
+                    "FIR phase",
+                    "IR phase",
+                    "context pattern",
+                    "CompilerPluginRegistrar pattern",
+                    "plugin structure",
+                    "validate patterns"
+                ],
+                "intentPatterns": [
+                    "(validate|verify|check).*?(architecture|pattern|structure)",
+                    "(follow|follows|following).*?(pattern|practice)",
+                    "compiler.*?plugin.*?(pattern|structure|architecture)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "compiler/src/main/kotlin/**/*Registrar*.kt",
+                    "compiler/src/main/kotlin/**/*Extension*.kt",
+                    "compiler/src/main/kotlin/fir/**/*.kt"
+                ]
+            }
+        },
+        "implementation-tracker": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "medium",
+            "description": "Monitors KtFakes implementation progress and validates phase completion status with real metrics",
+            "promptTriggers": {
+                "keywords": [
+                    "implementation status",
+                    "check status",
+                    "progress",
+                    "phase status",
+                    "implementation progress",
+                    "completion status",
+                    "project status",
+                    "current status"
+                ],
+                "intentPatterns": [
+                    "(check|show|what is).*?(status|progress)",
+                    "(how|what).*?(complete|done|finished)",
+                    "phase.*?(status|completion|progress)"
+                ]
+            }
+        },
+        "skill-creator": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "low",
+            "description": "Meta-skill for creating new Claude Code skills with proper structure, triggers, and integration",
+            "promptTriggers": {
+                "keywords": [
+                    "create skill",
+                    "new skill",
+                    "add skill",
+                    "skill development",
+                    "skill system",
+                    "skill template"
+                ],
+                "intentPatterns": [
+                    "(create|add|build|make).*?skill",
+                    "(how to|how do I).*?create.*?skill"
+                ]
+            }
+        },
+        "fakt-docs-navigator": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "low",
+            "description": "Navigation and access to Fakt documentation including testing guidelines, Metro alignment, and architectural patterns",
+            "promptTriggers": {
+                "keywords": [
+                    "documentation",
+                    "docs",
+                    "find docs",
+                    "testing guidelines",
+                    "Metro alignment docs",
+                    "architecture docs",
+                    "reference docs",
+                    "where is the doc"
+                ],
+                "intentPatterns": [
+                    "(find|where|show).*?(doc|documentation|guide)",
+                    "(read|check|consult).*?(doc|documentation|guide)"
+                ]
+            }
+        }
+    },
+    "notes": {
+        "enforcement_types": {
+            "suggest": "Skill suggestion appears but doesn't block execution",
+            "block": "Requires skill to be used before proceeding (guardrail)",
+            "warn": "Shows warning but allows proceeding"
+        },
+        "priority_levels": {
+            "critical": "Highest - Always trigger when matched (IR debugging, compilation validation, Metro alignment)",
+            "high": "Important - Trigger for most matches (API consultation, testing, generic analysis)",
+            "medium": "Moderate - Trigger for clear matches (behavior analysis, implementation tracking)",
+            "low": "Optional - Trigger only for explicit matches (skill creation, docs navigation)"
+        },
+        "customization": {
+            "pathPatterns": "Currently configured for ktfakes-prototype/ktfake project structure",
+            "keywords": "Focused on Kotlin compiler plugin development, Metro patterns, and BDD testing",
+            "intentPatterns": "Optimized for compiler development workflows and debugging"
+        },
+        "project_context": {
+            "project": "Fakt (formerly ktfakes-prototype)",
+            "purpose": "Kotlin compiler plugin for type-safe fake generation at compile time",
+            "architecture": "Two-phase FIR → IR compilation inspired by Metro DI framework",
+            "testing_standard": "GIVEN-WHEN-THEN with vanilla JUnit5 (THE ABSOLUTE STANDARD)"
+        }
+    }
+}

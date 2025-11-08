@@ -4,7 +4,6 @@
 
 package com.rsicarelli.fakt.gradle
 
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
@@ -15,21 +14,69 @@ import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import java.util.Base64
 
 /**
- * Gradle plugin for Fakt compiler plugin.
+ * Gradle plugin for Fakt compiler plugin integration.
  *
- * This plugin:
- * 1. Registers the Fakt compiler plugin with Kotlin compilation
- * 2. Provides the `fakt { }` DSL for configuration
- * 3. Automatically adds runtime dependency to test configurations
- * 4. Configures the plugin for test-only code generation
+ * This is the main entry point that bridges Gradle build system with the Fakt compiler plugin.
+ * It implements [KotlinCompilerPluginSupportPlugin] to hook into Kotlin's compilation lifecycle.
+ *
+ * ## Plugin Lifecycle
+ *
+ * ```
+ * 1. apply(Project)
+ *    └─> Creates `fakt { }` extension
+ *    └─> Configures source sets (generator mode) OR registers tasks (collector mode)
+ *    └─> Adds runtime dependencies to test configurations
+ *
+ * 2. isApplicable(KotlinCompilation)
+ *    └─> Called for each compilation (main, test, jvmMain, etc.)
+ *    └─> Returns true for main compilations only (where @Fake annotations exist)
+ *    └─> Skips test compilations (generated code goes there, not analyzed)
+ *
+ * 3. applyToCompilation(KotlinCompilation)
+ *    └─> Called for compilations where isApplicable returned true
+ *    └─> Serializes configuration to compiler plugin options
+ *    └─> Passes source set context (output directories, hierarchy, etc.)
+ * ```
+ *
+ * ## Modes of Operation
+ *
+ * **Generator Mode (default):**
+ * ```kotlin
+ * // build.gradle.kts
+ * fakt {
+ *     enabled.set(true)
+ *     logLevel.set(LogLevel.INFO)
+ * }
+ * // Generates fakes from @Fake annotations in main source sets
+ * ```
+ *
+ * **Collector Mode (experimental):**
+ * ```kotlin
+ * // build.gradle.kts
+ * fakt {
+ *     collectFrom(project(":source-module"))
+ * }
+ * // Copies generated fakes from another module without compilation
+ * ```
+ *
+ * ## Integration Points
+ *
+ * - **Extension DSL**: [FaktPluginExtension] provides `fakt { }` block
+ * - **Compiler Plugin**: Serializes options to Fakt compiler plugin
+ * - **Source Sets**: [SourceSetConfigurator] adds generated directories to test source sets
+ * - **Multi-Module**: [FakeCollectorTask] handles cross-module fake collection
+ *
+ * @see FaktPluginExtension
+ * @see SourceSetDiscovery
+ * @see FakeCollectorTask
  */
 @Suppress("unused") // used by reflection
-class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
-    companion object {
-        const val PLUGIN_ID = "com.rsicarelli.fakt"
-        const val PLUGIN_ARTIFACT_NAME = "compiler"
-        const val PLUGIN_GROUP_ID = "com.rsicarelli.fakt"
-        const val PLUGIN_VERSION = "1.0.0-SNAPSHOT" // Using project version
+public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
+    public companion object {
+        public const val PLUGIN_ID: String = "com.rsicarelli.fakt"
+        public const val PLUGIN_ARTIFACT_NAME: String = "compiler"
+        public const val PLUGIN_GROUP_ID: String = "com.rsicarelli.fakt"
+        public const val PLUGIN_VERSION: String = "1.0.0-SNAPSHOT" // Using project version
     }
 
     @OptIn(ExperimentalFaktMultiModule::class)
@@ -66,6 +113,48 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         target.logger.info("Fakt: Applied Gradle plugin to project ${target.name}")
     }
 
+    /**
+     * Determines if Fakt compiler plugin should be applied to a specific compilation.
+     *
+     * This is called by Gradle for EVERY Kotlin compilation in the project (main, test, jvmMain,
+     * jvmTest, commonMain, commonTest, etc.). We only want to analyze main compilations where
+     * `@Fake` annotations are defined, NOT test compilations where generated fakes are used.
+     *
+     * ## Decision Logic
+     *
+     * **Skip if collector mode** (no compilation needed, just copy tasks):
+     * ```kotlin
+     * fakt { collectFrom(project(":source")) } → returns false
+     * ```
+     *
+     * **Apply to main compilations only:**
+     * ```
+     * Single-platform JVM:
+     *   "main" → true  ✅
+     *   "test" → false ❌
+     *
+     * KMP:
+     *   "metadata" → true ✅ (commonMain representation)
+     *   "commonMain" → true ✅
+     *   "jvmMain" → true ✅
+     *   "iosMain" → true ✅
+     *   "commonTest" → false ❌
+     *   "jvmTest" → false ❌
+     * ```
+     *
+     * ## Why Skip Test Compilations?
+     *
+     * Test compilations don't contain `@Fake` annotations to process. They only USE the
+     * generated fakes that were created from main source sets. Applying the plugin to test
+     * compilations would:
+     * - Waste compilation time
+     * - Generate duplicate/empty output
+     * - Cause circular dependencies
+     *
+     * @param kotlinCompilation The Kotlin compilation to check
+     * @return `true` if plugin should be applied, `false` to skip this compilation
+     * @see applyToCompilation
+     */
     override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean {
         val project = kotlinCompilation.project
         val extension = project.extensions.findByType(FaktPluginExtension::class.java)
@@ -85,8 +174,8 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
 
         val isMainCompilation =
             compilationName == "main" ||
-                compilationName.endsWith("main") ||
-                compilationName == "metadata" // ✅ FIX: Include metadata compilation for KMP
+                    compilationName.endsWith("main") ||
+                    compilationName == "metadata" // ✅ FIX: Include metadata compilation for KMP
 
         project.logger.info(
             "Fakt: Checking compilation '${kotlinCompilation.name}' - applicable: $isMainCompilation",
@@ -104,6 +193,38 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             version = PLUGIN_VERSION,
         )
 
+    /**
+     * Applies Fakt compiler plugin to a specific Kotlin compilation.
+     *
+     * This is called by Gradle for each compilation where [isApplicable] returned true.
+     * It serializes all configuration and metadata into compiler plugin options that
+     * are passed to the Fakt compiler plugin via command-line arguments.
+     *
+     * ## Serialization Strategy
+     *
+     * 1. **Configuration Options**: Direct string/boolean values
+     *    - `enabled`: true/false
+     *    - `logLevel`: INFO/DEBUG/TRACE/QUIET
+     *
+     * 2. **Source Set Context**: Base64-encoded JSON
+     *    - Contains: compilation metadata, source set hierarchy, output directories
+     *    - Serialized with kotlinx.serialization
+     *    - Encoded to avoid special character issues in command-line arguments
+     *
+     * ## Example Compiler Options
+     *
+     * ```
+     * -P plugin:com.rsicarelli.fakt:enabled=true
+     * -P plugin:com.rsicarelli.fakt:logLevel=INFO
+     * -P plugin:com.rsicarelli.fakt:sourceSetContext=eyJjb21waWxhdGlvbk5hbWUiOi4uLg==
+     * -P plugin:com.rsicarelli.fakt:outputDir=/path/to/build/generated/fakt/test/kotlin
+     * ```
+     *
+     * @param kotlinCompilation The Kotlin compilation to configure (e.g., jvmMain, commonMain)
+     * @return A [Provider] of compiler plugin options, evaluated lazily at configuration time
+     * @see SourceSetDiscovery.buildContext
+     * @see FaktPluginExtension
+     */
     override fun applyToCompilation(kotlinCompilation: KotlinCompilation<*>): Provider<List<SubpluginOption>> {
         val project = kotlinCompilation.project
         val extension = project.extensions.getByType(FaktPluginExtension::class.java)
@@ -115,7 +236,6 @@ class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 // Pass configuration options to the compiler plugin
                 add(SubpluginOption(key = "enabled", value = extension.enabled.get().toString()))
                 add(SubpluginOption(key = "logLevel", value = extension.logLevel.get().name))
-                add(SubpluginOption(key = "useFirAnalysis", value = extension.useFirAnalysis.get().toString()))
 
                 // Build complete source set context using modern API
                 val buildDir =

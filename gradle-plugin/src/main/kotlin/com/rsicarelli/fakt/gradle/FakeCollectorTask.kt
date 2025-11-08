@@ -49,14 +49,14 @@ import java.io.File
  * @see ExperimentalFaktMultiModule
  */
 @ExperimentalFaktMultiModule
-abstract class FakeCollectorTask : DefaultTask() {
+public abstract class FakeCollectorTask : DefaultTask() {
     /**
      * The path to the source project that generates fakes.
      * Configuration cache compatible (stores path, not Project object).
      */
     @get:Input
     @get:Optional
-    abstract val sourceProjectPath: Property<String>
+    public abstract val sourceProjectPath: Property<String>
 
     /**
      * The directory where the source project generates fakes.
@@ -64,14 +64,14 @@ abstract class FakeCollectorTask : DefaultTask() {
      * Optional because not all source sets may have generated fakes.
      */
     @get:Internal // Not using @InputDirectory to allow missing directories
-    abstract val sourceGeneratedDir: DirectoryProperty
+    public abstract val sourceGeneratedDir: DirectoryProperty
 
     /**
      * The destination directory where collected fakes will be placed.
      * Typically: src/commonMain/kotlin/ or build/generated/collected-fakes/
      */
     @get:OutputDirectory
-    abstract val destinationDir: DirectoryProperty
+    public abstract val destinationDir: DirectoryProperty
 
     /**
      * Available source set names from the project's KMP configuration.
@@ -82,7 +82,7 @@ abstract class FakeCollectorTask : DefaultTask() {
      */
     @get:Input
     @get:Optional
-    abstract val availableSourceSets: SetProperty<String>
+    public abstract val availableSourceSets: SetProperty<String>
 
     /**
      * Log level for controlling output verbosity.
@@ -94,7 +94,7 @@ abstract class FakeCollectorTask : DefaultTask() {
      * - TRACE: Summary + details + registration info
      */
     @get:Input
-    abstract val logLevel: Property<LogLevel>
+    public abstract val logLevel: Property<LogLevel>
 
     init {
         group = "fakt"
@@ -105,7 +105,7 @@ abstract class FakeCollectorTask : DefaultTask() {
     }
 
     @TaskAction
-    fun collectFakes() {
+    public fun collectFakes() {
         val startTime = System.nanoTime()
         val faktLogger = GradleFaktLogger(logger, logLevel.get())
         val faktRootDir = sourceGeneratedDir.asFile.get()
@@ -114,8 +114,8 @@ abstract class FakeCollectorTask : DefaultTask() {
             val srcProjectName = sourceProjectPath.orNull?.substringAfterLast(":") ?: "unknown"
             faktLogger.warn(
                 "No fakes found in source module '$srcProjectName'. " +
-                    "Verify that source module has @Fake annotated interfaces, " +
-                    "or remove this collector module if not needed.",
+                        "Verify that source module has @Fake annotated interfaces, " +
+                        "or remove this collector module if not needed.",
             )
             return
         }
@@ -146,7 +146,7 @@ abstract class FakeCollectorTask : DefaultTask() {
             }
 
             // Use platform detection for this source set (with available source sets if configured)
-            val sourceSetNames = availableSourceSets.getOrElse(emptySet())
+            val sourceSetNames = availableSourceSets.getOrElse(mutableSetOf())
             val result =
                 collectWithPlatformDetection(
                     sourceDir = kotlinDir,
@@ -163,7 +163,7 @@ abstract class FakeCollectorTask : DefaultTask() {
             val sourceSetDuration = System.nanoTime() - sourceSetStartTime
             faktLogger.debug(
                 "Collected ${result.collectedCount} fake(s) from ${sourceSetDir.name} " +
-                    "(${TimeFormatter.format(sourceSetDuration)})",
+                        "(${TimeFormatter.format(sourceSetDuration)})",
             )
         }
 
@@ -173,7 +173,11 @@ abstract class FakeCollectorTask : DefaultTask() {
 
         // Log summary (INFO level)
         faktLogger.info(
-            "✅ $totalCollected fake(s) collected from $srcProjectName | ${TimeFormatter.format(totalDuration)}",
+            "✅ $totalCollected fake(s) collected from $srcProjectName | ${
+                TimeFormatter.format(
+                    totalDuration
+                )
+            }",
         )
 
         // Log platform distribution (INFO level)
@@ -182,7 +186,7 @@ abstract class FakeCollectorTask : DefaultTask() {
         }
     }
 
-    companion object {
+    public companion object {
         private const val PACKAGE_SCAN_LINES = 10 // Number of lines to scan for package declaration
 
         /**
@@ -207,7 +211,7 @@ abstract class FakeCollectorTask : DefaultTask() {
          *   (from KotlinMultiplatformExtension.sourceSets.names)
          * @return The source set name (e.g., "jvmMain", "commonMain", "iosMain")
          */
-        fun determinePlatformSourceSet(
+        public fun determinePlatformSourceSet(
             fileContent: String,
             availableSourceSets: Set<String> = emptySet(),
         ): String {
@@ -269,8 +273,12 @@ abstract class FakeCollectorTask : DefaultTask() {
                                 // - "ios" matches "iosMain", "iosArm64Main", "iosTest"
                                 // - "tvos" matches "tvosMain", "tvosArm64Main"
                                 // - "wasmJs" matches "wasmJsMain"
-                                sourceSet.startsWith(segment, ignoreCase = true) && sourceSet.endsWith("Main")
-                            }.map { sourceSet -> sourceSet to segment } // Keep track of which segment matched
+                                sourceSet.startsWith(
+                                    segment,
+                                    ignoreCase = true
+                                ) && sourceSet.endsWith("Main")
+                            }
+                            .map { sourceSet -> sourceSet to segment } // Keep track of which segment matched
                     }.distinct()
 
             // If no matches, fallback to commonMain
@@ -283,7 +291,8 @@ abstract class FakeCollectorTask : DefaultTask() {
             // - "ios" → "iosMain" (7 chars) preferred over "iosArm64Main" (13 chars)
             // - "iosArm64" → "iosArm64Main" (13 chars) is the closest match
             // - "tvos" → "tvosMain" (8 chars) preferred over "tvosSimulatorArm64Main" (23 chars)
-            return matchedSourceSets.minByOrNull { (sourceSet, _) -> sourceSet.length }?.first ?: "commonMain"
+            return matchedSourceSets.minByOrNull { (sourceSet, _) -> sourceSet.length }?.first
+                ?: "commonMain"
         }
 
         /**
@@ -292,7 +301,7 @@ abstract class FakeCollectorTask : DefaultTask() {
          * @property collectedCount Total number of files collected
          * @property platformDistribution Map of platform → file count
          */
-        data class CollectionResult(
+        public data class CollectionResult(
             val collectedCount: Int,
             val platformDistribution: Map<String, Int>,
         )
@@ -310,7 +319,7 @@ abstract class FakeCollectorTask : DefaultTask() {
          * @param faktLogger Logger for trace-level file processing details (optional)
          * @return Collection result with statistics
          */
-        fun collectWithPlatformDetection(
+        public fun collectWithPlatformDetection(
             sourceDir: File,
             destinationBaseDir: File,
             availableSourceSets: Set<String> = emptySet(),
@@ -368,13 +377,14 @@ abstract class FakeCollectorTask : DefaultTask() {
          * @see ExperimentalFaktMultiModule
          */
         @ExperimentalFaktMultiModule
-        fun registerForKmpProject(
+        public fun registerForKmpProject(
             project: Project,
             extension: FaktPluginExtension,
         ) {
             val srcProject = extension.collectFrom.orNull ?: return
 
-            val kotlinExtension = project.extensions.findByType(KotlinMultiplatformExtension::class.java)
+            val kotlinExtension =
+                project.extensions.findByType(KotlinMultiplatformExtension::class.java)
             if (kotlinExtension == null) {
                 // For non-KMP projects, create a single collector task
                 registerSingleCollectorTask(project, extension)
@@ -413,7 +423,7 @@ abstract class FakeCollectorTask : DefaultTask() {
                     it.dependsOn(
                         srcProject.tasks.matching { task ->
                             task.name.contains("compile", ignoreCase = true) &&
-                                !task.name.contains("test", ignoreCase = true)
+                                    !task.name.contains("test", ignoreCase = true)
                         },
                     )
                 }
@@ -469,7 +479,7 @@ abstract class FakeCollectorTask : DefaultTask() {
                 it.dependsOn(
                     srcProject.tasks.matching { task ->
                         task.name.contains("compile", ignoreCase = true) &&
-                            !task.name.contains("test", ignoreCase = true)
+                                !task.name.contains("test", ignoreCase = true)
                     },
                 )
             }

@@ -40,21 +40,6 @@ data class FaktSharedContext(
     val metadataStorage: FirMetadataStorage,
 ) {
     /**
-     * Check if FIR-based analysis is enabled.
-     *
-     * When true:
-     * - FIR phase performs validation and stores metadata
-     * - IR phase loads metadata from storage
-     *
-     * When false (legacy mode):
-     * - FIR phase does nothing
-     * - IR phase performs discovery and validation (old behavior)
-     *
-     * @return true if FIR analysis is enabled
-     */
-    fun useFirAnalysis(): Boolean = options.useFirAnalysis
-
-    /**
      * Check if specific annotation FQN is configured for fake generation.
      *
      * Used by FIR checkers to determine if a declaration should be processed.
