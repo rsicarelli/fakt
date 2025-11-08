@@ -164,30 +164,6 @@ fun IrGenerationMetadata.toInterfaceAnalysis(): InterfaceAnalysis =
     )
 
 /**
- * Adapter function: Convert IrClassGenerationMetadata to InterfaceAnalysis.
- *
- * We combine abstract and open members since existing generators
- * treat all interface members the same way (all must be implemented).
- *
- * Temporary adapter to reuse existing code generators.
- * Future: Refactor generators to handle open members with super delegation.
- *
- * @return InterfaceAnalysis compatible with existing generators
- */
-fun IrClassGenerationMetadata.toInterfaceAnalysis(): InterfaceAnalysis =
-    InterfaceAnalysis(
-        interfaceName = className,
-        typeParameters = typeParameters,
-        // Combine abstract + open properties (all need implementation/override)
-        properties = (abstractProperties + openProperties).map { it.toPropertyAnalysis() },
-        // Combine abstract + open methods (all need implementation/override)
-        functions = (abstractMethods + openMethods).map { it.toFunctionAnalysis() },
-        sourceInterface = sourceClass,
-        genericPattern = genericPattern,
-        debugInfo = StringBuilder("Generated from FIR class metadata (FIR class metadata)"),
-    )
-
-/**
  * Adapter function: Convert IrClassGenerationMetadata to ClassAnalysis.
  *
  * Use ClassAnalysis to preserve abstract/open distinction

@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.codegen
 
-import com.rsicarelli.fakt.compiler.output.SourceSetMapper
+import com.rsicarelli.fakt.compiler.api.SourceSetContext
+import com.rsicarelli.fakt.compiler.api.SourceSetInfo
 import com.rsicarelli.fakt.compiler.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.types.ImportResolver
 import com.rsicarelli.fakt.compiler.types.TypeResolver
@@ -47,20 +48,29 @@ class CodeGenerationModulesContractTest {
     }
 
     @Test
-    fun `GIVEN SourceSetMapper module WHEN instantiating THEN should create successfully`() {
-        // GIVEN & WHEN
-        val sourceSetMapper =
-            SourceSetMapper(
-                outputDir = "/tmp/test",
-                logger = FaktLogger.quiet(),
-            )
+    fun `GIVEN SourceSetContext module WHEN creating THEN should validate correctly`() {
+        // GIVEN
+        val defaultSourceSet = SourceSetInfo(name = "jvmTest", parents = listOf("commonTest"))
+        val allSourceSets = listOf(
+            defaultSourceSet,
+            SourceSetInfo(name = "commonTest", parents = emptyList())
+        )
 
-        // THEN - Should exist and have expected methods
-        assertNotNull(sourceSetMapper, "SourceSetMapper should be instantiable")
+        // WHEN
+        val sourceSetContext = SourceSetContext(
+            compilationName = "test",
+            targetName = "jvm",
+            platformType = "jvm",
+            isTest = true,
+            defaultSourceSet = defaultSourceSet,
+            allSourceSets = allSourceSets,
+            outputDirectory = "/tmp/test/generated/fakt/jvmTest/kotlin"
+        )
 
-        // Verify key methods exist
-        val methods = SourceSetMapper::class.java.declaredMethods.map { it.name }
-        assertTrue(methods.contains("getGeneratedSourcesDir"), "Should have getGeneratedSourcesDir method")
+        // THEN - Should exist and have expected properties
+        assertNotNull(sourceSetContext, "SourceSetContext should be instantiable")
+        assertTrue(sourceSetContext.isTest, "Should be marked as test compilation")
+        assertTrue(sourceSetContext.outputDirectory.isNotBlank(), "Should have output directory")
     }
 
     @Test
@@ -109,11 +119,22 @@ class CodeGenerationModulesContractTest {
         // GIVEN & WHEN
         val typeResolver = TypeResolver()
         val importResolver = ImportResolver(typeResolver)
-        val sourceSetMapper =
-            SourceSetMapper(
-                outputDir = "/tmp/test",
-                logger = FaktLogger.quiet(),
-            )
+
+        // Create SourceSetContext for testing
+        val defaultSourceSet = SourceSetInfo(name = "jvmTest", parents = listOf("commonTest"))
+        val sourceSetContext = SourceSetContext(
+            compilationName = "test",
+            targetName = "jvm",
+            platformType = "jvm",
+            isTest = true,
+            defaultSourceSet = defaultSourceSet,
+            allSourceSets = listOf(
+                defaultSourceSet,
+                SourceSetInfo(name = "commonTest", parents = emptyList())
+            ),
+            outputDirectory = "/tmp/test/generated/fakt/jvmTest/kotlin"
+        )
+
         val implementationGenerator = ImplementationGenerator(typeResolver)
         val factoryGenerator = FactoryGenerator()
         val configurationDslGenerator = ConfigurationDslGenerator(typeResolver)
@@ -128,7 +149,7 @@ class CodeGenerationModulesContractTest {
         val codeGenerator =
             CodeGenerator(
                 importResolver = importResolver,
-                sourceSetMapper = sourceSetMapper,
+                sourceSetContext = sourceSetContext,
                 generators = generators,
                 logger = FaktLogger.quiet(),
             )
@@ -153,11 +174,11 @@ class CodeGenerationModulesContractTest {
             "TypeResolver should not depend on ImportResolver",
         )
 
-        // ImportResolver should be independent
+        // ImportResolver should be independent (should only depend on TypeResolver)
         val importResolverFields = ImportResolver::class.java.declaredFields
         assertFalse(
-            importResolverFields.any { it.type.simpleName.contains("SourceSetMapper") },
-            "ImportResolver should not depend on SourceSetMapper",
+            importResolverFields.any { it.type.simpleName.contains("CodeGenerator") },
+            "ImportResolver should not depend on CodeGenerator",
         )
     }
 }

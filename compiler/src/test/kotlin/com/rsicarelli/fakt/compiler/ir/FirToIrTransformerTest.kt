@@ -10,9 +10,6 @@ import kotlin.test.assertEquals
 /**
  * Tests for FirToIrTransformer type bound sanitization.
  *
- * **Phase 3C.2**: Validates that type bounds from FIR (kotlin/Foo) are
- * correctly sanitized to proper Kotlin syntax (Foo).
- *
  * **Critical Fix**: FIR's coneType.toString() produces "kotlin/Any?" which is
  * invalid Kotlin syntax and causes compilation failures. The sanitization
  * converts these to clean, valid Kotlin type notation.

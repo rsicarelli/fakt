@@ -13,18 +13,9 @@ import com.rsicarelli.fakt.compiler.types.TypeResolver
  * Generates fake implementation classes.
  * Handles the creation of implementation class code with behavior fields and method implementations.
  */
-// LargeClass: Code generator with comprehensive type handling (interfaces, classes, generics, varargs)
-// Heavily refactored from monolithic methods to 25+ focused helpers for maintainability
 internal class ImplementationGenerator(
     private val typeResolver: TypeResolver,
 ) {
-    companion object {
-        /**
-         * Length of "Array<" prefix when extracting generic type from Array<T>.
-         */
-        private const val ARRAY_PREFIX_LENGTH = 6
-    }
-
     /**
      * Generates a fake implementation for a class (abstract or final with open members).
      *
@@ -1365,4 +1356,11 @@ internal class ImplementationGenerator(
                 )
             }
         }
+
+    companion object {
+        /**
+         * Length of "Array<" prefix when extracting generic type from Array<T>.
+         */
+        private const val ARRAY_PREFIX_LENGTH = 6
+    }
 }

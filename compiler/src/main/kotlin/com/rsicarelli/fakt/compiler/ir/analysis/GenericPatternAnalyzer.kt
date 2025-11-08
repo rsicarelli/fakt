@@ -7,6 +7,7 @@ import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
 import org.jetbrains.kotlin.ir.symbols.IrTypeParameterSymbol
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.isMarkedNullable
@@ -63,6 +64,7 @@ class GenericPatternAnalyzer {
     /**
      * Extract method-level type parameters from all functions in the interface.
      */
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
     private fun extractMethodTypeParameters(irClass: IrClass): List<GenericMethod> =
         irClass.declarations
             .filterIsInstance<IrSimpleFunction>()
@@ -104,6 +106,7 @@ class GenericPatternAnalyzer {
     /**
      * Convert IrType to string representation for analysis.
      */
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
     private fun irTypeToString(irType: IrType): String =
         when {
             irType is IrSimpleType && irType.classifier is IrTypeParameterSymbol -> {
@@ -111,6 +114,7 @@ class GenericPatternAnalyzer {
                 val paramName = typeParam.owner.name.asString()
                 if (irType.isMarkedNullable()) "$paramName?" else paramName
             }
+
             irType is IrSimpleType -> {
                 // Build full qualified name with type arguments
                 val classifier = irType.classifier
@@ -137,6 +141,7 @@ class GenericPatternAnalyzer {
                 val fullType = baseName + typeArguments
                 if (irType.isMarkedNullable()) "$fullType?" else fullType
             }
+
             else -> {
                 // Fallback to toString for other types
                 val typeString = irType.toString()
@@ -156,6 +161,7 @@ class GenericPatternAnalyzer {
          * @param irClass The IR class being validated
          * @return List of validation warnings (empty if valid)
          */
+        @OptIn(UnsafeDuringIrConstructionAPI::class)
         fun validatePattern(
             pattern: GenericPattern,
             irClass: IrClass,
@@ -218,14 +224,14 @@ class GenericPatternAnalyzer {
 
                 is GenericPattern.ClassLevelGenerics ->
                     "Class-level generics: ${pattern.typeParameters.size} type parameters, " +
-                        "${pattern.constraints.size} constraints"
+                            "${pattern.constraints.size} constraints"
 
                 is GenericPattern.MethodLevelGenerics ->
                     "Method-level generics: ${pattern.genericMethods.size} generic methods"
 
                 is GenericPattern.MixedGenerics ->
                     "Mixed generics: ${pattern.classTypeParameters.size} class type parameters, " +
-                        "${pattern.genericMethods.size} generic methods"
+                            "${pattern.genericMethods.size} generic methods"
             }
     }
 }

@@ -9,18 +9,15 @@ import com.rsicarelli.fakt.compiler.codegen.CodeGenerators
 import com.rsicarelli.fakt.compiler.codegen.ConfigurationDslGenerator
 import com.rsicarelli.fakt.compiler.codegen.FactoryGenerator
 import com.rsicarelli.fakt.compiler.codegen.ImplementationGenerator
-import com.rsicarelli.fakt.compiler.ir.analysis.SourceSetExtractor
 import com.rsicarelli.fakt.compiler.ir.utils.IrGenerationLogging
 import com.rsicarelli.fakt.compiler.ir.utils.validateAndLogGenericPattern
 import com.rsicarelli.fakt.compiler.optimization.CompilerOptimizations
 import com.rsicarelli.fakt.compiler.optimization.buildSignature
-import com.rsicarelli.fakt.compiler.output.SourceSetMapper
-import com.rsicarelli.fakt.compiler.types.TypeInfo
-import java.io.File
 import com.rsicarelli.fakt.compiler.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.telemetry.FaktTelemetry
 import com.rsicarelli.fakt.compiler.telemetry.metrics.FakeMetrics
 import com.rsicarelli.fakt.compiler.types.ImportResolver
+import com.rsicarelli.fakt.compiler.types.TypeInfo
 import com.rsicarelli.fakt.compiler.types.TypeResolver
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
@@ -73,6 +70,10 @@ class UnifiedFaktIrGenerationExtension(
     private val outputDir: String? = sharedContext.options.outputDir
     private val fakeAnnotations: List<String> = sharedContext.fakeAnnotations
 
+    // Get SourceSetContext from compiler options (provided by Gradle plugin)
+    private val sourceSetContext = sharedContext.options.sourceSetContext
+        ?: error("SourceSetContext is required. Ensure Gradle plugin version matches compiler plugin.")
+
     private val optimizations = CompilerOptimizations(
         fakeAnnotations = fakeAnnotations,
         outputDir = outputDir,
@@ -82,12 +83,6 @@ class UnifiedFaktIrGenerationExtension(
     // Extracted modules following DRY principles
     private val typeResolver = TypeResolver()
     private val importResolver = ImportResolver(typeResolver)
-
-    private val sourceSetMapper =
-        SourceSetMapper(
-            outputDir = outputDir,
-            logger = logger,
-        )
 
     private val generators =
         CodeGenerators(
@@ -99,7 +94,7 @@ class UnifiedFaktIrGenerationExtension(
     private val codeGenerator =
         CodeGenerator(
             importResolver = importResolver,
-            sourceSetMapper = sourceSetMapper,
+            sourceSetContext = sourceSetContext,
             generators = generators,
             logger = logger,
         )
@@ -312,9 +307,8 @@ class UnifiedFaktIrGenerationExtension(
                     signature = signature,
                 )
 
-            // Build output file path (same logic as CodeGenerator)
-            val sourceSetName = SourceSetExtractor.extractSourceSet(metadata.sourceInterface)
-            val outputDir = sourceSetMapper.getGeneratedSourcesDir(moduleFragment, sourceSetName)
+            // Build output file path using SourceSetContext (Gradle-provided directory)
+            val outputDir = java.io.File(sourceSetContext.outputDirectory)
             val packagePath = packageName.replace('.', '/')
             val packageDir = outputDir.resolve(packagePath)
             val fakeClassName = "Fake${interfaceName}Impl"
@@ -391,7 +385,7 @@ class UnifiedFaktIrGenerationExtension(
                 val fakeFileName = "Fake${interfaceName}Impl.kt"
                 val relativePath =
                     if (packagePath.isNotEmpty()) "$packagePath/$fakeFileName" else fakeFileName
-                val outputPath = if (outputDir != null) "$outputDir/$relativePath" else relativePath
+                val outputPath = "$outputDir/$relativePath"
 
                 val analysisDetail =
                     buildString {
@@ -451,9 +445,8 @@ class UnifiedFaktIrGenerationExtension(
                     signature = signature,
                 )
 
-            // Build output file path (same logic as CodeGenerator)
-            val sourceSetName = SourceSetExtractor.extractSourceSet(metadata.sourceClass)
-            val outputDir = sourceSetMapper.getGeneratedSourcesDir(moduleFragment, sourceSetName)
+            // Build output file path using SourceSetContext (Gradle-provided directory)
+            val outputDir = java.io.File(sourceSetContext.outputDirectory)
             val packagePath = packageName.replace('.', '/')
             val packageDir = outputDir.resolve(packagePath)
             val fakeClassName = "Fake${className}Impl"
@@ -526,7 +519,7 @@ class UnifiedFaktIrGenerationExtension(
                 val fakeFileName = "Fake${className}Impl.kt"
                 val relativePath =
                     if (packagePath.isNotEmpty()) "$packagePath/$fakeFileName" else fakeFileName
-                val outputPath = if (outputDir != null) "$outputDir/$relativePath" else relativePath
+                val outputPath = "$outputDir/$relativePath"
 
                 val analysisDetail =
                     buildString {

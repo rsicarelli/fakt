@@ -71,43 +71,31 @@ internal fun renderDefaultValue(expression: FirExpression?): String? {
  */
 private fun renderLiteral(literal: FirLiteralExpression): String? {
     return when (literal.kind) {
-        ConstantValueKind.Null -> "null"
-
-        ConstantValueKind.Boolean -> literal.value.toString()
-
-        ConstantValueKind.Char -> "'${literal.value}'"
-
-        ConstantValueKind.Byte -> "${literal.value}"
-
-        ConstantValueKind.UnsignedByte -> "${literal.value}u"
-
-        ConstantValueKind.Short -> "${literal.value}"
-
-        ConstantValueKind.UnsignedShort -> "${literal.value}u"
-
-        ConstantValueKind.Int -> "${literal.value}"
-
-        ConstantValueKind.UnsignedInt -> "${literal.value}u"
-
-        ConstantValueKind.Long -> "${literal.value}L"
-
-        ConstantValueKind.UnsignedLong -> "${literal.value}uL"
-
         ConstantValueKind.String -> {
             // Escape the string value properly
             val stringValue = literal.value as? String ?: return null
             "\"${escapeString(stringValue)}\""
         }
 
+        ConstantValueKind.Boolean -> literal.value.toString()
+        ConstantValueKind.Int -> "${literal.value}"
+        ConstantValueKind.Null -> "null"
+        ConstantValueKind.Long -> "${literal.value}L"
         ConstantValueKind.Float -> "${literal.value}f"
-
         ConstantValueKind.Double -> "${literal.value}"
+        ConstantValueKind.Char -> "'${literal.value}'"
+        ConstantValueKind.Byte -> "${literal.value}"
+        ConstantValueKind.Short -> "${literal.value}"
+        ConstantValueKind.UnsignedByte -> "${literal.value}u"
+        ConstantValueKind.UnsignedShort -> "${literal.value}u"
+        ConstantValueKind.UnsignedInt -> "${literal.value}u"
+        ConstantValueKind.UnsignedLong -> "${literal.value}uL"
 
         // Not supported yet
         ConstantValueKind.IntegerLiteral,
         ConstantValueKind.UnsignedIntegerLiteral,
         ConstantValueKind.Error,
-        -> null
+            -> null
     }
 }
 

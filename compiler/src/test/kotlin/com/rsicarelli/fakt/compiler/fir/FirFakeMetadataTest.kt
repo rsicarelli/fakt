@@ -106,7 +106,6 @@ class FirFakeMetadataTest {
             assertEquals(2, metadata.typeParameters.size)
             assertEquals(1, metadata.properties.size)
             assertEquals(1, metadata.functions.size)
-            // Phase 3B.2: genericPattern removed - will be computed in IR phase
         }
 
     @Test
