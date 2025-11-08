@@ -8,8 +8,7 @@ import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
-import org.jetbrains.kotlin.ir.types.classFqName
-import org.jetbrains.kotlin.ir.types.classifierOrNull
+import org.jetbrains.kotlin.ir.util.getClass
 import org.jetbrains.kotlin.ir.util.hasAnnotation
 import org.jetbrains.kotlin.name.FqName
 
@@ -27,7 +26,7 @@ internal object ClassAnalyzer {
      * A class is fakable if:
      * 1. It's a CLASS (not interface, object, enum)
      * 2. It's NOT sealed
-     * 3. It has @Fake annotation OR an annotation marked with @GeneratesFake
+     * 3. It has @Fake annotation
      * 4. It has at least one open/abstract method or property
      *
      * @return true if the class can be faked, false otherwise
@@ -39,54 +38,13 @@ internal object ClassAnalyzer {
             hasOverridableMembers()
 
     /**
-     * Checks if a class has a fake generation annotation.
+     * Checks if a class has @Fake annotation.
      *
-     * This method checks for annotations in two ways:
-     * 1. Direct @Fake annotation (backward compatibility)
-     * 2. Any annotation marked with @GeneratesFake meta-annotation
-     *
-     * @return true if class has a fake annotation, false otherwise
+     * @return true if class has @Fake annotation, false otherwise
      */
     private fun IrClass.hasFakeAnnotation(): Boolean {
-        // Direct @Fake check
-        if (hasAnnotation(FqName("com.rsicarelli.fakt.Fake"))) return true
-
-        // Check for @GeneratesFake meta-annotation
-        return annotations.any { annotation ->
-            hasGeneratesFakeMetaAnnotation(annotation)
-        }
+        return hasAnnotation(FqName("com.rsicarelli.fakt.Fake"))
     }
-
-    /**
-     * Checks if an annotation is annotated with @GeneratesFake meta-annotation.
-     *
-     * This enables companies to define their own annotations (like @TestDouble)
-     * by marking them with @GeneratesFake, without being locked into @Fake.
-     *
-     * Pattern inspired by Kotlin's @HidesFromObjC meta-annotation.
-     *
-     * @param annotation The annotation to check
-     * @return true if the annotation has @GeneratesFake meta-annotation, false otherwise
-     *
-     * ## Suppress Justification
-     * - **TooGenericExceptionCaught/SwallowedException**: Safe catch-all for IR traversal errors (expected for some annotation patterns)
-     * - **MaxLineLength**: ktlint prefers single-line function signature, but parameter type is long
-     */
-    @Suppress("TooGenericExceptionCaught", "SwallowedException", "MaxLineLength")
-    internal fun hasGeneratesFakeMetaAnnotation(annotation: org.jetbrains.kotlin.ir.expressions.IrConstructorCall): Boolean =
-        try {
-            // Get the annotation class from the type, returning false if null
-            val annotationClass = annotation.type.classifierOrNull?.owner as? IrClass
-
-            // Check if the annotation class itself has @GeneratesFake annotation
-            annotationClass?.annotations?.any { metaAnnotation ->
-                metaAnnotation.type.classFqName?.asString() == "com.rsicarelli.fakt.GeneratesFake"
-            } ?: false
-        } catch (e: Exception) {
-            // Safely handle any IR traversal errors
-            // This is expected for some annotation patterns
-            false
-        }
 
     /**
      * Checks if a class has any overridable members (open or abstract methods/properties).
@@ -136,6 +94,9 @@ internal object ClassAnalyzer {
                 IrAnalysisHelper.formatTypeParameterWithConstraints(typeParam)
             }
 
+        // Collect interface method names for detection
+        val interfaceMethodNames = collectInterfaceMethodNames(sourceClass)
+
         // Analyze all declarations in the class
         sourceClass.declarations.forEach { declaration ->
             when (declaration) {
@@ -150,6 +111,7 @@ internal object ClassAnalyzer {
                         declaration,
                         abstractMethods,
                         openMethods,
+                        interfaceMethodNames,
                     )
             }
         }
@@ -163,6 +125,29 @@ internal object ClassAnalyzer {
             openProperties = openProperties,
             sourceClass = sourceClass,
         )
+    }
+
+    /**
+     * Collects method names from all interfaces that this class implements.
+     * Used as fallback for detecting interface methods when overriddenSymbols is unreliable.
+     */
+    private fun collectInterfaceMethodNames(sourceClass: IrClass): Set<String> {
+        val interfaceMethodNames = mutableSetOf<String>()
+
+        // Walk through all supertypes to find interfaces
+        sourceClass.superTypes.forEach { superType ->
+            val superClass = superType.getClass() ?: return@forEach
+            if (superClass.kind == ClassKind.INTERFACE) {
+                // Collect all method names from this interface
+                superClass.declarations.filterIsInstance<IrSimpleFunction>().forEach { function ->
+                    if (!IrAnalysisHelper.isSpecialFunction(function)) {
+                        interfaceMethodNames.add(function.name.asString())
+                    }
+                }
+            }
+        }
+
+        return interfaceMethodNames
     }
 
     private fun analyzePropertyDeclaration(
@@ -191,27 +176,39 @@ internal object ClassAnalyzer {
         declaration: IrSimpleFunction,
         abstractMethods: MutableList<FunctionAnalysis>,
         openMethods: MutableList<FunctionAnalysis>,
+        interfaceMethodNames: Set<String>,
     ) {
         // Skip special functions and compiler-generated
         if (IrAnalysisHelper.isSpecialFunction(declaration)) return
         if (declaration.origin == IrDeclarationOrigin.FAKE_OVERRIDE) return
 
-        // Check if this method overrides an abstract method from superclass
+        // Check if this method overrides an abstract method from superclass or interface
+        // Interface methods should always require configuration (error defaults)
         val isOverridingAbstract =
             declaration.overriddenSymbols.any { overriddenSymbol ->
                 overriddenSymbol.owner.modality == Modality.ABSTRACT
             }
 
+        val isOverridingInterface =
+            declaration.overriddenSymbols.any { overriddenSymbol ->
+                val parentDeclaration = overriddenSymbol.owner.parent
+                parentDeclaration is IrClass && parentDeclaration.kind == ClassKind.INTERFACE
+            }
+
+        // Fallback: Check if method name matches any interface method
+        // This handles cases where overriddenSymbols doesn't contain interface methods
+        val isLikelyFromInterface = interfaceMethodNames.contains(declaration.name.asString())
+
         when {
-            // Priority 1: Methods overriding abstract methods → error() defaults
-            isOverridingAbstract -> {
+            // Priority 1: Methods overriding abstract/interface methods → error() defaults
+            isOverridingAbstract || isOverridingInterface || isLikelyFromInterface -> {
                 abstractMethods.add(IrAnalysisHelper.analyzeFunction(declaration))
             }
             // Priority 2: Methods declared as abstract in this class → error() defaults
             declaration.modality == Modality.ABSTRACT -> {
                 abstractMethods.add(IrAnalysisHelper.analyzeFunction(declaration))
             }
-            // Priority 3: Open methods without abstract override → super call defaults
+            // Priority 3: Open methods without abstract/interface override → super call defaults
             declaration.modality == Modality.OPEN -> {
                 openMethods.add(IrAnalysisHelper.analyzeFunction(declaration))
             }

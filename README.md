@@ -11,7 +11,7 @@
 
 ## What Is Fakt?
 
-Fakt is a **Kotlin compiler plugin** that generates type-safe test fakes at compile-time. It uses a two-phase **FIR → IR** compilation architecture to analyze `@Fake` annotated interfaces and classes, then generates production-quality fake implementations with expressive configuration DSLs.
+A **Kotlin compiler plugin** that generates type-safe test fakes at compile-time. It uses a two-phase **FIR → IR** compilation architecture to analyze `@Fake` annotated interfaces and classes, then generates production-quality fake implementations with expressive configuration DSLs.
 
 ```kotlin
 import com.rsicarelli.fakt.Fake
@@ -39,6 +39,7 @@ class AnalyticsServiceTest {
         fake.track("user_clicked_button")
 
         assertEquals("user_clicked_button", capturedEvent)
+        assertEquals(1, fake.trackCallCount.value)
     }
 }
 ```
@@ -120,61 +121,36 @@ class MyServiceTest {
 
 ---
 
+## Requirements
+
+- **Kotlin:** 2.2.20+
+- **Gradle:** 8.0+
+- **JVM:** 11+ (for compiler plugin execution)
+
+---
+
 ## Features
 
 **At a Glance:**
 - ✅ **All class types** - Interfaces, abstract classes, open/final classes, companion objects
 - ✅ **Complete type system** - Full generics support (class-level, method-level, constraints, variance), SAM interfaces, complex stdlib types
 - ✅ **Kotlin features** - Suspend functions, properties (val/var), methods, default parameters, inheritance
+- ✅ **Call tracking** - Automatic call counting per method/property via StateFlow (thread-safe, reactive)
 - ✅ **All KMP platforms** - Android, iOS, JVM, Native (macOS, Linux, Windows), JavaScript, WebAssembly
 - ⚠️ **Multi-module** - Experimental (requires dedicated `-fakes` modules)
 
-<details>
-<summary><b>📋 Complete Feature Breakdown</b></summary>
+**Not Supported:**
+- 🔜 **Data classes** - Cannot fake directly (work fine as parameter/return types)
+- ❌ **Sealed hierarchies** - Cannot fake `sealed class`/`sealed interface` (work fine as parameter/return types)
+- ❌ **Default parameters in interfaces** - `fun example(parameter: String = "")` not supported
 
-### What You Can Fake
+**Limitations:**
 
-- ✅ **Interfaces** - Primary target for fake generation
-- ✅ **Abstract Classes** - Supported with proper inheritance
-- ✅ **Open Classes** - Generate fakes for extensible classes
-- ✅ **Final Classes** - Works with sealed implementation classes
-- ✅ **Companion Objects** - Static-like members supported
+- ❌ **Generated code formatting** - Uses its own code style. Exclude `build/generated/fakt/` from linters.
 
-### Type System Support
+---
 
-**Generics:**
-- Basic generics (`interface Repository<T>`)
-- Method-level generics (`fun <T> process(item: T): T`)
-- Class-level generics (`interface Cache<K, V>`)
-- Generic constraints (`<T : Comparable<T>>`)
-- Variance (`in`, `out`, invariant)
-
-**Function Types:**
-- SAM interfaces (Single Abstract Method)
-- Higher-order functions
-- Lambda expressions
-
-**Standard Library Types:**
-- `Result<T>`, `Pair<A, B>`, `Triple<A, B, C>`
-- `Sequence<T>`, `Lazy<T>`
-- Nullable types (`T?`)
-- Collections (`List`, `Set`, `Map`)
-
-**Complex Types (as parameters/return types):**
-- Sealed classes
-- Enums (including rich enums with properties/methods)
-- Data classes
-
-### Kotlin Language Features
-
-- ✅ **Suspend Functions** - Full coroutine support
-- ✅ **Properties** (`val`/`var`) - Configurable getters/setters
-- ✅ **Methods** - Instance and extension methods
-- ✅ **Default Parameters** - Preserved in generated fakes
-- ✅ **Inheritance** - Multi-level inheritance hierarchies
-- ✅ **Meta-Annotations** - Custom annotations via `@GeneratesFake`
-
-### Platform Support
+## Platform Support
 
 Fakt works at the **IR (Intermediate Representation) level**, which means it supports all Kotlin Multiplatform targets:
 
@@ -197,13 +173,11 @@ Fakt works at the **IR (Intermediate Representation) level**, which means it sup
 - ✅ Android-only projects
 - ✅ Any single-target KMP project
 
-</details>
-
 ---
 
 ### Multi-Module Support (Experimental)
 
-⚠️ **Currently requires dedicated `-fakes` modules:**
+Fakt follows the community pattern of dedicated test modules (e.g., `-fakes`, `-test-fixtures`). The plugin collects generated fakes from a source module and exposes them through a separate Gradle module that other modules can depend on.
 
 ```kotlin
 // Producer module: :core:analytics
@@ -227,7 +201,57 @@ dependencies {
 }
 ```
 
-**Future**: Custom source sets approach planned (no dedicated modules required).
+---
+
+## Source Set Support
+
+Fakt generates fakes in the test source set corresponding to where `@Fake` is defined:
+
+```kotlin
+// Source src/androidMain/kotlin/MyService.kt
+@Fake interface AndroidService
+
+// Generated fake build/generated/fakt/androidUnitTest/kotlin/
+fun fakeAndroidService(...)
+
+// Source src/iosMain/kotlin/MyService.kt
+@Fake interface IOSService
+
+// Generated fake build/generated/fakt/iosTest/kotlin/
+fun fakeIOSService(...)
+```
+
+Supports all KMP source sets (commonMain, jvmMain, androidMain, iosMain, macosMain, linuxMain, etc.)
+
+> [!NOTE]
+> Fully tested with Default Hierarchy Template. Please file a bug if you have issues with custom hierarchy templates!
+
+--------
+
+## Compilation Performance
+
+Fakt generates code directly from **Kotlin's IR** without reflection or third-party libraries like KotlinPoet. This approach ensures maximum performance and zero runtime overhead.
+
+**Intelligent caching** minimizes compilation overhead across multiple KMP targets:
+
+**First compilation**: fakes are generated in the first `compileX` Gradle task
+
+```
+DISCOVERY: 1ms (100 interfaces, 21 classes)
+GENERATION: 39ms (121 new fakes, avg 333µs/fake, 3,867 LOC)
+TOTAL: 40ms
+```
+
+**Cached compilations** (all other targets):
+
+```
+iosArm64:					 1ms (121 from cache)
+android:           1ms (121 from cache)
+...
+```
+
+> [!TIP]
+> Enable `LogLevel.TRACE` or `LogLevel.DEBUG` to see detailed performance metrics in your builds.
 
 ---
 
@@ -242,115 +266,27 @@ Fakt includes a professional telemetry system with 4 verbosity levels:
 import com.rsicarelli.fakt.compiler.api.LogLevel
 
 fakt {
+  	enabled.set(true) // Default
     logLevel.set(LogLevel.INFO)  // Default - concise summary
+  	collectFakesFrom(...) // Experimental opt-in required
 }
 ```
 
 **Log Levels:**
 
-- **`QUIET`** - Zero output (CI/CD builds)
 - **`INFO`** (default) - Concise summary:
+
   ```
-  ✅ 10 fakes generated in 1.2s (6 cached)
-     Discovery: 120ms | Analysis: 340ms | Generation: 580ms | I/O: 160ms
-     Cache hit rate: 40% (6/15)
-  📁 build/generated/fakt/commonTest/kotlin
+  > Task :compileKotlinIosArm64
+  i: Fakt: ✅ 121 fakes (121 new) | 40ms
+  
+  > Task :compileKotlinLinuxX64
+  i: Fakt: ✅ 121 fakes (121 cached) | 959µs
   ```
 
+- **`QUIET`** - Zero output (CI/CD builds or minimal setup)
 - **`DEBUG`** - Detailed breakdown per interface
-- **`TRACE`** - Full IR details, type resolution, debugging info
-
-**When to use:**
-- `QUIET` - CI/CD builds (zero overhead)
-- `INFO` - Normal development (<1ms overhead)
-- `DEBUG` - Troubleshooting generation issues (~5-10ms overhead)
-- `TRACE` - Deep debugging, bug reports (~20-50ms overhead)
-
----
-
-## How It Works
-
-Fakt uses a **two-phase FIR → IR compilation architecture**, inspired by [Metro DI framework](https://github.com/ZacSweers/metro):
-
-### Phase 1: FIR (Frontend Intermediate Representation)
-```
-FaktFirExtensionRegistrar
-  ↓
-Detects @Fake annotations
-  ↓
-Validates interface structure
-  ↓
-Passes validated interfaces to IR phase
-```
-
-### Phase 2: IR (Intermediate Representation)
-```
-UnifiedFaktIrGenerationExtension
-  ↓
-InterfaceAnalyzer (extracts metadata)
-  ↓
-IrCodeGenerator (generates IR nodes)
-  ↓
-Output: Implementation + Factory + DSL
-```
-
-### Generated Code Structure
-
-For each `@Fake` annotated interface, Fakt generates:
-
-1. **Implementation Class** (`FakeXxxImpl`)
-   - Implements interface/extends class
-   - Behavior properties for each method/property
-   - Default implementations (no-op for Unit, sensible defaults for others)
-   - Call tracking via StateFlow
-
-2. **Factory Function** (`fakeXxx {}`)
-   - Creates new fake instance
-   - Accepts configuration lambda
-   - Type-safe, isolated instances
-
-3. **Configuration DSL** (`FakeXxxConfig`)
-   - Type-safe API for configuring behaviors
-   - IDE autocompletion support
-   - Compile-time validation
-
-**Output Location:** `build/generated/fakt/{sourceSet}/kotlin/`
-
-For deep technical details, see [CLAUDE.md](CLAUDE.md).
-
----
-
-## Requirements
-
-- **Kotlin:** 2.2.10+
-- **Gradle:** 8.0+
-- **JVM:** 11+ (for compiler plugin execution)
-
----
-
-## Documentation
-
-- **[CLAUDE.md](CLAUDE.md)** - Complete technical reference ("The Bible")
-- **[Samples](samples/kmp-single-module/)** - Working KMP examples with 100+ test scenarios
-- **[Testing Guidelines](.claude/docs/validation/testing-guidelines.md)** - GIVEN-WHEN-THEN standard
-- **[Multi-Module Design](.claude/docs/multi-module/README.md)** - Architecture documentation
-
----
-
-## Project Status
-
-**Fakt follows the MAP (Minimum Awesome Product) philosophy:**
-- ✅ Production-quality code generation
-- ✅ Type-safe DSL without `Any` casting
-- ✅ Comprehensive test coverage (100+ scenarios)
-- ✅ Professional error messages
-- ✅ Works with real-world KMP projects
-
-**Known Limitations:**
-- Multi-module support requires dedicated `-fakes` modules (experimental)
-- Call tracking always enabled (no opt-out currently)
-
-For current implementation status, see [implementation docs](.claude/docs/implementation/).
+- **`TRACE`** - Full IR details, type resolution, debugging info (have a small overhead in Compiler Plugin)
 
 ---
 
@@ -361,8 +297,6 @@ Contributions welcome! Please:
 2. Ensure all generated code compiles
 3. Test both single-platform and KMP scenarios
 4. Run `make format` before committing
-
-See [CLAUDE.md](CLAUDE.md) for development guidelines.
 
 ---
 

@@ -70,14 +70,35 @@ internal class ConfigurationDslGenerator(
 
     private fun generateFunctionConfigurators(functions: List<FunctionAnalysis>): String =
         functions.joinToString("") { function ->
+            // Phase 1.1: Preserve full generic signatures (no erasure)
+            val hasMethodGenerics = function.typeParameters.isNotEmpty()
+
             val methodTypeParams =
-                if (function.typeParameters.isNotEmpty()) {
+                if (hasMethodGenerics) {
                     "<${function.typeParameters.joinToString(", ")}> "
                 } else {
                     ""
                 }
-            val parameterTypes = buildParameterTypeString(function.parameters)
+
+            // Phase 1.1: Keep original parameter types (including method-level generics)
+            val parameterTypes =
+                if (function.parameters.isEmpty()) {
+                    ""
+                } else {
+                    function.parameters.joinToString(", ") { param ->
+                        if (param.isVararg) {
+                            val elementType = unwrapVarargsType(param)
+                            "Array<out $elementType>"
+                        } else {
+                            // Keep full signature - no erasure!
+                            typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                        }
+                    }
+                }
+
+            // Phase 1.1: Keep original return type (including method-level generics)
             val returnType = typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+
             val suspendModifier = if (function.isSuspend) "suspend " else ""
 
             "    fun $methodTypeParams${function.name}(" +
@@ -306,41 +327,172 @@ internal class ConfigurationDslGenerator(
     /**
      * Generates a single configuration method for a function (abstract or open).
      * Shared logic between interface and class DSL generation.
+     *
+     * Phase 1.1: Preserves full generic signatures (no erasure) for type-safe DSL.
      */
     private fun generateConfigMethodForFunction(function: FunctionAnalysis): String {
         val functionName = function.name
         val suspendModifier = if (function.isSuspend) "suspend " else ""
 
-        // Build parameter types list
+        // Phase 1.1: Preserve full generic signatures (no erasure)
+        val hasMethodGenerics = function.typeParameters.isNotEmpty()
+
+        val methodTypeParams =
+            if (hasMethodGenerics) {
+                "<${function.typeParameters.joinToString(", ")}> "
+            } else {
+                ""
+            }
+
+        // Phase 1.1: Keep original parameter types (including method-level generics)
         val parameterTypes =
             if (function.parameters.isEmpty()) {
                 ""
             } else {
                 function.parameters.joinToString(", ") { param ->
-                    val paramType =
-                        if (param.isVararg) {
-                            val elementType = unwrapVarargsType(param)
-                            "Array<out $elementType>"
-                        } else {
-                            typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
-                        }
-                    paramType
+                    if (param.isVararg) {
+                        val elementType = unwrapVarargsType(param)
+                        "Array<out $elementType>"
+                    } else {
+                        // Keep full signature - no erasure!
+                        typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                    }
                 }
             }
 
-        // Build return type
-        val returnTypeString = typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+        // Phase 1.1: Keep original return type (including method-level generics)
+        val returnType = typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
 
-        // Build behavior signature
+        // Build behavior signature with full generic types
         val behaviorSignature =
             if (function.parameters.isEmpty()) {
-                "$suspendModifier() -> $returnTypeString"
+                "$suspendModifier() -> $returnType"
             } else {
-                "$suspendModifier($parameterTypes) -> $returnTypeString"
+                "$suspendModifier($parameterTypes) -> $returnType"
             }
 
-        return "    fun $functionName(behavior: $behaviorSignature) { fake.configure${functionName.replaceFirstChar {
+        return "    fun $methodTypeParams$functionName(behavior: $behaviorSignature) { fake.configure${functionName.replaceFirstChar {
             it.uppercase()
         }}(behavior) }"
+    }
+
+    /**
+     * Check if a type string contains a method-level type parameter.
+     * Matches the implementation in ImplementationGenerator.
+     */
+    private fun containsMethodTypeParam(
+        typeString: String,
+        methodTypeParamNames: Set<String>,
+    ): Boolean =
+        methodTypeParamNames.any { typeParam ->
+            // Check if type parameter appears as a standalone word in the type string
+            typeString.contains(Regex("\\b$typeParam\\b"))
+        }
+
+    /**
+     * Recursively converts method-level type params to Any? while preserving wrapper types.
+     * Matches the implementation in ImplementationGenerator.
+     *
+     * E.g., Result<T> -> Result<Any?>, List<T> -> List<Any?>, T -> Any?
+     */
+    private fun convertMethodTypeParamsToAny(
+        typeString: String,
+        methodTypeParamNames: Set<String>,
+    ): String =
+        when {
+            typeString.startsWith("Result<") -> convertResultType(typeString, methodTypeParamNames)
+            typeString.startsWith("Map<") || typeString.startsWith("MutableMap<") ->
+                convertMapType(typeString, methodTypeParamNames)
+            else -> convertCollectionOrPrimitiveType(typeString, methodTypeParamNames)
+        }
+
+    private fun convertResultType(
+        typeString: String,
+        methodTypeParamNames: Set<String>,
+    ): String {
+        val innerType = extractFirstTypeParameter(typeString)
+        val convertedInner =
+            if (containsMethodTypeParam(innerType, methodTypeParamNames)) {
+                convertMethodTypeParamsToAny(innerType, methodTypeParamNames)
+            } else {
+                innerType
+            }
+        return "Result<$convertedInner>"
+    }
+
+    private fun convertMapType(
+        typeString: String,
+        methodTypeParamNames: Set<String>,
+    ): String {
+        val prefix = if (typeString.startsWith("MutableMap<")) "MutableMap<" else "Map<"
+        val (key, value) = extractMapTypeParameters(typeString)
+        val convertedKey = if (containsMethodTypeParam(key, methodTypeParamNames)) "Any?" else key
+        val convertedValue = if (containsMethodTypeParam(value, methodTypeParamNames)) "Any?" else value
+        return "$prefix$convertedKey, $convertedValue>"
+    }
+
+    private fun convertCollectionOrPrimitiveType(
+        typeString: String,
+        methodTypeParamNames: Set<String>,
+    ): String {
+        val collectionPrefixes = listOf("List<", "MutableList<", "Set<", "MutableSet<", "Collection<", "Iterable<")
+        collectionPrefixes.forEach { prefix ->
+            if (typeString.startsWith(prefix)) {
+                val innerType = extractFirstTypeParameter(typeString)
+                val convertedInner = if (containsMethodTypeParam(innerType, methodTypeParamNames)) "Any?" else innerType
+                return "$prefix$convertedInner>"
+            }
+        }
+        return if (containsMethodTypeParam(typeString, methodTypeParamNames)) "Any?" else typeString
+    }
+
+    private fun extractFirstTypeParameter(typeString: String): String {
+        val start = typeString.indexOf('<') + 1
+        var depth = 1
+        var end = start
+        while (end < typeString.length && depth > 0) {
+            when (typeString[end]) {
+                '<' -> depth++
+                '>' -> depth--
+                ',' -> if (depth == 1) break
+            }
+            if (depth > 0) end++
+        }
+        return typeString.substring(start, end).trim()
+    }
+
+    private fun extractMapTypeParameters(typeString: String): Pair<String, String> {
+        val start = typeString.indexOf('<') + 1
+        val parts = mutableListOf<String>()
+        var depth = 0
+        var current = StringBuilder()
+
+        for (i in start until typeString.length) {
+            when (typeString[i]) {
+                '<' -> {
+                    depth++
+                    current.append(typeString[i])
+                }
+                '>' -> {
+                    if (depth == 0) break
+                    depth--
+                    current.append(typeString[i])
+                }
+                ',' -> {
+                    if (depth == 0) {
+                        parts.add(current.toString().trim())
+                        current = StringBuilder()
+                    } else {
+                        current.append(typeString[i])
+                    }
+                }
+                else -> current.append(typeString[i])
+            }
+        }
+        if (current.isNotEmpty()) {
+            parts.add(current.toString().trim())
+        }
+
+        return parts[0] to parts[1]
     }
 }

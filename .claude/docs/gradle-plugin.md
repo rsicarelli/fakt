@@ -320,25 +320,7 @@ internal class FakeUserServiceImpl(
 }
 ```
 
-#### **3. Annotation Meta-Data System (Medium Priority)**
-```kotlin
-// Meta-annotation approach for company ownership
-@Target(AnnotationTarget.ANNOTATION_CLASS)
-@Retention(AnnotationRetention.BINARY)
-annotation class GeneratesFakes
-
-// Companies define their annotations
-@GeneratesFakes
-@Target(AnnotationTarget.CLASS)
-annotation class TestDouble
-
-// KtFakes detects any @GeneratesFakes-annotated annotation
-fun findFakeInterfaces(moduleFragment: IrModuleFragment): List<IrClass> {
-    return interfaces.filter { hasGeneratesFakesMetaAnnotation(it) }
-}
-```
-
-#### **4. Single-Pass Annotation Detection (Medium Priority)**
+#### **3. Single-Pass Annotation Detection (Medium Priority)**
 ```kotlin
 // CURRENT: O(n) * 5 chains
 return moduleFragment.files
@@ -437,19 +419,13 @@ compiler-runtime/                  # Essential optimizations only
 - [ ] Fix single-pass annotation detection
 - [ ] Update internal class visibility for clean autocomplete
 
-### **Phase 3: Annotation Ownership**
-- [ ] Implement @GeneratesFakes meta-annotation
-- [ ] Support company-owned annotations
-- [ ] Ensure zero runtime dependency option
-- [ ] Test breaking-change resilience
-
-### **Phase 4: Gradle Plugin**
+### **Phase 3: Gradle Plugin**
 - [ ] Move reporting logic from compiler-runtime to gradle-plugin
 - [ ] Implement simplified DSL configuration
 - [ ] Auto-configuration based on project size
 - [ ] Multi-module aggregated reporting
 
-### **Phase 5: Integration & Testing**
+### **Phase 4: Integration & Testing**
 - [ ] Integrate compiler-runtime with main compiler
 - [ ] End-to-end testing with simplified architecture
 - [ ] Performance validation with benchmarks

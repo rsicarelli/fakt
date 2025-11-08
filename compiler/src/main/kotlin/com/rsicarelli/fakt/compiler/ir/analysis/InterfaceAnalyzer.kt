@@ -14,10 +14,31 @@ import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
  *
  * Separated from the main generator to isolate analysis logic and make
  * it easier to test and maintain.
+ *
+ * **Phase 3B.3 Note**: This class is for **LEGACY IR DISCOVERY MODE ONLY**.
+ * When FIR analysis is enabled (`useFirAnalysis() == true`), this analyzer
+ * should NOT be called because FIR already extracted all metadata.
  */
 internal class InterfaceAnalyzer {
     private val patternAnalyzer = GenericPatternAnalyzer()
 
+    /**
+     * Analyze interface structure dynamically from IrClass.
+     *
+     * **IMPORTANT - Phase 3B.3**: This method is for **LEGACY MODE ONLY**.
+     *
+     * When FIR analysis is enabled, this method should NEVER be called because:
+     * - FIR phase already extracted all metadata (FakeInterfaceChecker)
+     * - Calling this would duplicate analysis work
+     * - Violates Metro pattern: "FIR analyzes, IR generates"
+     *
+     * Use cases:
+     * - ✅ Legacy IR discovery mode (`useFirAnalysis() == false`)
+     * - ❌ FIR mode (`useFirAnalysis() == true`) - use FirToIrTransformer instead
+     *
+     * @param sourceInterface IrClass to analyze
+     * @return InterfaceAnalysis with extracted metadata
+     */
     fun analyzeInterfaceDynamically(sourceInterface: IrClass): InterfaceAnalysis {
         val properties = mutableListOf<PropertyAnalysis>()
         val functions = mutableListOf<FunctionAnalysis>()

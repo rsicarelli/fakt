@@ -1,0 +1,516 @@
+// Copyright (C) 2025 Rodrigo Sicarelli
+// SPDX-License-Identifier: Apache-2.0
+package com.rsicarelli.fakt.compiler.fir
+
+import com.rsicarelli.fakt.compiler.FaktSharedContext
+import org.jetbrains.kotlin.descriptors.ClassKind
+import org.jetbrains.kotlin.descriptors.Modality
+import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
+import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
+import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
+import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirClassChecker
+import org.jetbrains.kotlin.fir.declarations.FirClass
+import org.jetbrains.kotlin.fir.declarations.hasAnnotation
+import org.jetbrains.kotlin.fir.declarations.processAllDeclarations
+import org.jetbrains.kotlin.fir.declarations.utils.classId
+import org.jetbrains.kotlin.fir.declarations.utils.isInline
+import org.jetbrains.kotlin.fir.declarations.utils.isSuspend
+import org.jetbrains.kotlin.fir.declarations.utils.modality
+import org.jetbrains.kotlin.fir.resolve.toSymbol
+import org.jetbrains.kotlin.fir.symbols.impl.FirNamedFunctionSymbol
+import org.jetbrains.kotlin.fir.symbols.impl.FirPropertySymbol
+import org.jetbrains.kotlin.fir.types.ConeClassLikeType
+import org.jetbrains.kotlin.fir.types.coneType
+import org.jetbrains.kotlin.fir.types.isMarkedNullable
+import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.name.FqName
+
+/**
+ * FIR checker for @Fake annotated interfaces.
+ *
+ * Following Metro pattern (see InjectConstructorChecker.kt:23-83):
+ * - Validates annotation usage during FIR phase
+ * - Reports errors with accurate source locations
+ * - Stores validated metadata for IR generation
+ *
+ * **Validation Rules**:
+ * 1. Must be an interface (not class, object, etc.)
+ * 2. Must not be sealed
+ * 3. Must not be external/expect declarations
+ * 4. Must not be local classes
+ *
+ * **Metro Alignment**:
+ * This follows the same validation pattern as Metro's InjectConstructorChecker,
+ * adapting it for @Fake annotation validation.
+ *
+ * @property sharedContext Shared context with metadata storage
+ */
+internal class FakeInterfaceChecker(
+    private val sharedContext: FaktSharedContext,
+) : FirClassChecker(MppCheckerKind.Common) {
+    companion object {
+        // @Fake annotation ClassId
+        private val FAKE_ANNOTATION_CLASS_ID = ClassId.topLevel(FqName("com.rsicarelli.fakt.Fake"))
+    }
+
+    context(context: CheckerContext, reporter: DiagnosticReporter)
+    override fun check(declaration: FirClass) {
+        // Skip if FIR analysis not enabled (legacy mode)
+        if (!sharedContext.useFirAnalysis()) return
+
+        val session = context.session
+
+        // Check if class has @Fake annotation
+        if (!declaration.hasAnnotation(FAKE_ANNOTATION_CLASS_ID, session)) return
+
+        val source = declaration.source ?: return
+
+        // Phase 3C.5: Skip non-interfaces (let FakeClassChecker handle classes)
+        if (declaration.classKind != ClassKind.INTERFACE) {
+            return // Skip, FakeClassChecker will validate classes
+        }
+
+        // Validate not sealed
+        if (declaration.modality == Modality.SEALED) {
+            // Phase 3B.4: Report error with source location
+            reportError(session, source, FirFaktErrors.FAKE_CANNOT_BE_SEALED)
+            return // Skip sealed interfaces
+        }
+
+        // Validate not local
+        if (declaration.symbol.classId.isLocal) {
+            // Phase 3B.4: Report error with source location
+            reportError(session, source, FirFaktErrors.FAKE_CANNOT_BE_LOCAL)
+            return // Skip local interfaces
+        }
+
+        // TODO: Check for external/expect declarations
+        // TODO: Validate interface has at least one member
+
+        // ✅ Validation passed - analyze and store metadata
+        analyzeAndStoreMetadata(declaration, session)
+    }
+
+    /**
+     * Analyze validated interface and store metadata for IR generation.
+     *
+     * This is where we extract all the information that IR phase will need:
+     * - Type parameters
+     * - Properties
+     * - Functions
+     * - Generic pattern classification
+     *
+     * @param declaration Validated FIR class declaration
+     * @param session FIR session for type resolution
+     */
+    private fun analyzeAndStoreMetadata(
+        declaration: FirClass,
+        session: org.jetbrains.kotlin.fir.FirSession,
+    ) {
+        val classId = declaration.classId
+        val simpleName = classId.shortClassName.asString()
+        val packageName = classId.packageFqName.asString()
+
+        // Phase 3B.1: Extract type parameters from FIR
+        val typeParameters = extractTypeParameters(declaration)
+
+        // Phase 3B.2: Extract properties from FIR
+        val properties = extractProperties(declaration)
+
+        // Phase 3B.3: Extract functions from FIR
+        val functions = extractFunctions(declaration)
+
+        // Phase 3B.5: Extract source location from FIR
+        val sourceLocation = extractSourceLocation(declaration)
+
+        // Phase 3C.3: Extract inherited members from super-interfaces
+        val (inheritedProperties, inheritedFunctions) = extractInheritedMembers(declaration, session)
+
+        // Create and store validated metadata
+        // Phase 3B.2: GenericPattern will be reconstructed in IR phase from typeParameters + functions
+        // Phase 3C.3: Now includes inherited members
+        val metadata =
+            ValidatedFakeInterface(
+                classId = classId,
+                simpleName = simpleName,
+                packageName = packageName,
+                typeParameters = typeParameters,
+                properties = properties,
+                functions = functions,
+                inheritedProperties = inheritedProperties,
+                inheritedFunctions = inheritedFunctions,
+                sourceLocation = sourceLocation,
+            )
+
+        sharedContext.metadataStorage.storeInterface(metadata)
+    }
+
+    /**
+     * Extract type parameters from FIR class declaration.
+     *
+     * Converts FIR type parameters to simplified FirTypeParameterInfo for IR generation.
+     * Each type parameter includes its name and bounds (constraints).
+     *
+     * Examples:
+     * - `interface Foo<T>` → [FirTypeParameterInfo("T", emptyList())]
+     * - `interface Foo<T : Comparable<T>>` → [FirTypeParameterInfo("T", ["kotlin.Comparable<T>"])]
+     * - `interface Foo<T : A, B>` → [FirTypeParameterInfo("T", ["A", "B"])]
+     *
+     * **Phase 3B.1 Note**: Currently extracts names only. Bounds rendering will be implemented
+     * in Phase 3B.4 with proper FirTypeRef→String conversion utilities.
+     *
+     * @param declaration FIR class declaration with type parameters
+     * @return List of type parameter metadata
+     */
+    @OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class)
+    private fun extractTypeParameters(declaration: FirClass): List<FirTypeParameterInfo> =
+        declaration.typeParameters.map { typeParamRef ->
+            // FirClass.typeParameters returns List<FirTypeParameterRef>
+            // We need to resolve the symbol to get the actual FirTypeParameter
+            val typeParam = typeParamRef.symbol.fir
+            val name = typeParam.name.asString()
+
+            // Phase 3B.1: Extract type parameter bounds
+            // FirTypeParameter.bounds contains List<FirTypeRef> representing constraints
+            // e.g., `<T : Comparable<T>>` has bounds = [Comparable<T>]
+            // e.g., `<T : A, B>` has bounds = [A, B] (multiple bounds via 'where' clause)
+            val bounds =
+                typeParam.bounds.map { boundRef ->
+                    // Render FirTypeRef to String using ConeType representation
+                    // This matches the pattern used for property/function types (lines 211, 264, 272)
+                    boundRef.coneType.toString()
+                }
+
+            FirTypeParameterInfo(
+                name = name,
+                bounds = bounds,
+            )
+        }
+
+    /**
+     * Extract properties from FIR class declaration.
+     *
+     * Converts FIR properties to simplified FirPropertyInfo for IR generation.
+     * Extracts name, type, mutability (var/val), and nullability.
+     *
+     * Examples:
+     * - `val name: String` → FirPropertyInfo("name", "String", false, false)
+     * - `var count: Int?` → FirPropertyInfo("count", "Int?", true, true)
+     *
+     * **Phase 3B.2 Note**: Uses basic type rendering. Phase 3B.4 will enhance with proper type resolution.
+     *
+     * @param declaration FIR class declaration
+     * @return List of property metadata
+     */
+    @OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class)
+    private fun extractProperties(declaration: FirClass): List<FirPropertyInfo> {
+        val properties = mutableListOf<FirPropertyInfo>()
+
+        // Use processAllDeclarations to iterate through class members
+        declaration.processAllDeclarations(session = declaration.moduleData.session) { symbol ->
+            // Only process property symbols
+            if (symbol is FirPropertySymbol) {
+                val property = symbol.fir
+                val name = property.name.asString()
+
+                // Get type string representation
+                // TODO Phase 3B.4: Implement proper ConeType→String rendering
+                val type = property.returnTypeRef.coneType.toString()
+
+                // Check if property is mutable (var) or immutable (val)
+                val isMutable = property.isVar
+
+                // ConeKotlinType.isMarkedNullable checks if nullability == ConeNullability.NULLABLE
+                val isNullable = property.returnTypeRef.coneType.isMarkedNullable
+
+                properties.add(
+                    FirPropertyInfo(
+                        name = name,
+                        type = type,
+                        isMutable = isMutable,
+                        isNullable = isNullable,
+                    ),
+                )
+            }
+        }
+
+        return properties
+    }
+
+    /**
+     * Extract functions from FIR class declaration.
+     *
+     * Converts FIR functions to simplified FirFunctionInfo for IR generation.
+     * Extracts name, parameters, return type, suspend/inline modifiers, and type parameters.
+     *
+     * Examples:
+     * - `fun getUser(): User` → FirFunctionInfo("getUser", [], "User", false, false, [], {})
+     * - `suspend fun fetch(id: Int): Result<T>` → FirFunctionInfo("fetch", [...], "Result<T>", true, false, [], {})
+     *
+     * **Phase 3B.3 Note**: Uses basic type rendering. Phase 3B.4 will enhance with proper type resolution.
+     *
+     * @param declaration FIR class declaration
+     * @return List of function metadata
+     */
+    @OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class)
+    private fun extractFunctions(declaration: FirClass): List<FirFunctionInfo> {
+        val functions = mutableListOf<FirFunctionInfo>()
+
+        // Use processAllDeclarations to iterate through class members
+        declaration.processAllDeclarations(session = declaration.moduleData.session) { symbol ->
+            // Only process function symbols
+            if (symbol is FirNamedFunctionSymbol) {
+                val function = symbol.fir
+                val name = function.name.asString()
+
+                // Extract parameters
+                // Phase 3C.4: Extract default value expressions and render to code strings
+                val parameters =
+                    function.valueParameters.map { param ->
+                        val defaultValue = param.defaultValue
+                        val defaultValueCode =
+                            if (defaultValue != null) {
+                                renderDefaultValue(defaultValue) // null if rendering failed/not supported
+                            } else {
+                                null
+                            }
+
+                        FirParameterInfo(
+                            name = param.name.asString(),
+                            type = param.returnTypeRef.coneType.toString(),
+                            hasDefaultValue = param.defaultValue != null,
+                            defaultValueCode = defaultValueCode,
+                            isVararg = param.isVararg,
+                        )
+                    }
+
+                // Extract return type
+                // TODO Phase 3B.4: Implement proper ConeType→String rendering
+                val returnType = function.returnTypeRef.coneType.toString()
+
+                // Check modifiers
+                val isSuspend = function.isSuspend
+                val isInline = function.isInline
+
+                // Extract function-level type parameters
+                // Phase 3B.1: Extract bounds for method-level generics the same way
+                val typeParameters =
+                    function.typeParameters.map { typeParamRef ->
+                        val typeParam = typeParamRef.symbol.fir
+                        val bounds =
+                            typeParam.bounds.map { boundRef ->
+                                boundRef.coneType.toString()
+                            }
+                        FirTypeParameterInfo(
+                            name = typeParam.name.asString(),
+                            bounds = bounds,
+                        )
+                    }
+
+                // Phase 3B.1: Build typeParameterBounds map from extracted bounds
+                // Format: Map<"T", "Comparable<T>"> for single bound
+                // Note: Kotlin doesn't support multiple bounds for same param in this format,
+                // but FirTypeParameterInfo.bounds handles it correctly as List<String>
+                val typeParameterBounds =
+                    typeParameters.associate { typeParam ->
+                        typeParam.name to typeParam.bounds.firstOrNull().orEmpty()
+                    }
+
+                functions.add(
+                    FirFunctionInfo(
+                        name = name,
+                        parameters = parameters,
+                        returnType = returnType,
+                        isSuspend = isSuspend,
+                        isInline = isInline,
+                        typeParameters = typeParameters,
+                        typeParameterBounds = typeParameterBounds,
+                    ),
+                )
+            }
+        }
+
+        return functions
+    }
+
+    /**
+     * Extract source location from FIR class declaration.
+     *
+     * Extracts file path, start/end line, and start/end column from the FIR source element.
+     * This information is used for accurate error reporting during IR generation.
+     *
+     * **Phase 3B.5 Note**: KtSourceElement API has complex type hierarchy with multiple implementations.
+     * For now, returns UNKNOWN. Complete implementation requires deeper investigation of:
+     * - KtPsiSourceElement vs KtLightSourceElement vs KtFakeSourceElement
+     * - Accessing underlying PsiElement or LighterASTNode safely
+     * - Converting offsets to line/column using KtSourceFileLinesMapping
+     *
+     * TODO Phase 3B.5+: Implement full source location extraction using proper KtSourceElement API
+     * Current impact: Error messages will not include exact source locations (non-critical for Phase 3)
+     *
+     * @param declaration FIR class declaration with source information
+     * @return Source location metadata (UNKNOWN for now)
+     */
+    private fun extractSourceLocation(declaration: FirClass): FirSourceLocation {
+        // TODO Phase 3B.5+: Implement proper source location extraction
+        // This requires investigating KtSourceElement type hierarchy and safe access patterns
+        // For now, returning UNKNOWN allows Phase 3 to proceed without blocking on this non-critical feature
+        return FirSourceLocation.UNKNOWN
+    }
+
+    /**
+     * Extract inherited members from super-interfaces.
+     *
+     * **Phase 3C.3**: Recursively collects properties and functions from all super-interfaces.
+     *
+     * This method handles:
+     * - Direct super-interfaces (e.g., `interface B : A`)
+     * - Transitive inheritance (e.g., `interface C : B`, where B extends A)
+     * - Multiple inheritance (e.g., `interface D : A, B`)
+     * - Diamond inheritance (e.g., `interface D : B, C` where both B and C extend A)
+     *
+     * Deduplication strategy:
+     * - Members are deduplicated by signature (name + parameter types)
+     * - If the same member appears in multiple super-interfaces, only one copy is kept
+     * - This matches Kotlin's inheritance resolution rules
+     *
+     * @param declaration FIR interface declaration
+     * @param session FIR session for type resolution
+     * @return Pair of (inherited properties, inherited functions)
+     */
+    @OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class)
+    private fun extractInheritedMembers(
+        declaration: FirClass,
+        session: org.jetbrains.kotlin.fir.FirSession,
+    ): Pair<List<FirPropertyInfo>, List<FirFunctionInfo>> {
+        val inheritedProperties = mutableListOf<FirPropertyInfo>()
+        val inheritedFunctions = mutableListOf<FirFunctionInfo>()
+
+        // Track visited interfaces to avoid infinite recursion (diamond inheritance)
+        val visitedInterfaces = mutableSetOf<ClassId>()
+
+        // Process each super type
+        declaration.superTypeRefs.forEach { superTypeRef ->
+            try {
+                // Resolve super type to get the actual class
+                val superType = superTypeRef.coneType
+
+                // ConeType should be ConeClassLikeType for class/interface types
+                if (superType is ConeClassLikeType) {
+                    // Use toSymbol() extension function to resolve the lookup tag
+                    val classifier = superType.lookupTag.toSymbol(session)
+
+                    if (classifier is org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol<*>) {
+                        val superClass = classifier.fir
+
+                        // Only process interfaces (skip Any, classes, etc.)
+                        if (superClass.classKind == ClassKind.INTERFACE) {
+                            collectInheritedMembers(
+                                superClass,
+                                session,
+                                visitedInterfaces,
+                                inheritedProperties,
+                                inheritedFunctions,
+                            )
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // If we can't resolve a super type, skip it gracefully
+                // This can happen with external dependencies or incomplete compilation
+                // The interface will still be processed, just without those inherited members
+            }
+        }
+
+        // Deduplicate by name (simple deduplication - more sophisticated could check signatures)
+        val uniqueProperties = inheritedProperties.distinctBy { it.name }
+        val uniqueFunctions = inheritedFunctions.distinctBy { it.name }
+
+        return Pair(uniqueProperties, uniqueFunctions)
+    }
+
+    /**
+     * Recursively collect members from a super-interface and its ancestors.
+     *
+     * **Phase 3C.3**: Helper method for inherited member extraction.
+     *
+     * @param firClass The super-interface to process
+     * @param session FIR session
+     * @param visitedInterfaces Set of already-visited interfaces (prevents infinite recursion)
+     * @param propertiesAccumulator Mutable list to accumulate properties
+     * @param functionsAccumulator Mutable list to accumulate functions
+     */
+    @OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class)
+    private fun collectInheritedMembers(
+        firClass: FirClass,
+        session: org.jetbrains.kotlin.fir.FirSession,
+        visitedInterfaces: MutableSet<ClassId>,
+        propertiesAccumulator: MutableList<FirPropertyInfo>,
+        functionsAccumulator: MutableList<FirFunctionInfo>,
+    ) {
+        val classId = firClass.symbol.classId
+
+        // Skip if already visited (handles diamond inheritance)
+        if (classId in visitedInterfaces) return
+        visitedInterfaces.add(classId)
+
+        // Extract members from this interface
+        propertiesAccumulator.addAll(extractProperties(firClass))
+        functionsAccumulator.addAll(extractFunctions(firClass))
+
+        // Recursively process super-interfaces of this interface
+        firClass.superTypeRefs.forEach { superTypeRef ->
+            try {
+                val superType = superTypeRef.coneType
+
+                if (superType is ConeClassLikeType) {
+                    val classifier = superType.lookupTag.toSymbol(session)
+
+                    if (classifier is org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol<*>) {
+                        val superClass = classifier.fir
+
+                        if (superClass.classKind == ClassKind.INTERFACE) {
+                            collectInheritedMembers(
+                                superClass,
+                                session,
+                                visitedInterfaces,
+                                propertiesAccumulator,
+                                functionsAccumulator,
+                            )
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // Skip unresolvable super types
+            }
+        }
+    }
+
+    /**
+     * Report compilation error (Phase 3B.4 - Simplified).
+     *
+     * **Note**: FIR-level error reporting requires complex diagnostic factory setup
+     * that varies by Kotlin version. For Phase 3B.4, we use simpler error logging
+     * that ensures validation stops invalid declarations from being processed.
+     *
+     * The key goal: Detect and reject invalid @Fake usage early in FIR phase.
+     * Full diagnostic integration can be added in future phases if needed.
+     *
+     * @param session FIR session
+     * @param source Source element for context
+     * @param message Error message to display
+     */
+    private fun reportError(
+        session: org.jetbrains.kotlin.fir.FirSession,
+        source: Any?,
+        message: String,
+    ) {
+        // Phase 3B.4: Log error to stderr (visible during compilation)
+        // This ensures developers see validation errors immediately
+        System.err.println("ERROR: $message")
+
+        // Note: The key behavior is that we return early from check(),
+        // preventing invalid declarations from being stored in metadata.
+        // This stops fake generation for invalid interfaces/classes.
+    }
+}

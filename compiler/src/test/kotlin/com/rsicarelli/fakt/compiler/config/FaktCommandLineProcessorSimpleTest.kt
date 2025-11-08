@@ -45,13 +45,14 @@ class FaktCommandLineProcessorSimpleTest {
             val processor = FaktCommandLineProcessor()
             val options = processor.pluginOptions
 
-            assertEquals(4, options.size, "Should have exactly 4 plugin options")
+            assertEquals(5, options.size, "Should have exactly 5 plugin options")
 
             val optionNames = options.map { it.optionName }.toSet()
             assertTrue(optionNames.contains("enabled"), "Should include 'enabled' option")
             assertTrue(optionNames.contains("logLevel"), "Should include 'logLevel' option")
             assertTrue(optionNames.contains("outputDir"), "Should include 'outputDir' option")
             assertTrue(optionNames.contains("sourceSetContext"), "Should include 'sourceSetContext' option")
+            assertTrue(optionNames.contains("useFirAnalysis"), "Should include 'useFirAnalysis' option (Phase 4)")
         }
 
     @Test
@@ -94,6 +95,6 @@ class FaktCommandLineProcessorSimpleTest {
             val optionalOptions = options.filter { !it.required }
 
             assertEquals(0, requiredOptions.size, "No options should be required")
-            assertEquals(4, optionalOptions.size, "All 4 options should be optional")
+            assertEquals(5, optionalOptions.size, "All 5 options should be optional (Phase 4: added useFirAnalysis)")
         }
 }

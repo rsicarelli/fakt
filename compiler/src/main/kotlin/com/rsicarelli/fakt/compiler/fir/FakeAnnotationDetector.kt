@@ -36,7 +36,9 @@ class FakeAnnotationDetector {
     fun hasFakeAnnotation(
         declaration: FirRegularClass,
         session: FirSession,
-    ): Boolean = declaration.hasAnnotation(FAKE_ANNOTATION_CLASS_ID, session)
+    ): Boolean {
+        return declaration.hasAnnotation(FAKE_ANNOTATION_CLASS_ID, session)
+    }
 
     /**
      * Check if a declaration has @FakeConfig annotation.
@@ -67,7 +69,6 @@ class FakeAnnotationDetector {
         }
     }
 
-    @Suppress("UnusedParameter")
     private fun extractParametersFromAnnotation(
         annotation: FirAnnotation,
         session: FirSession,
@@ -93,7 +94,7 @@ class FakeAnnotationDetector {
      * @param session The FIR session (reserved for future use)
      * @return ClassId of the annotation, currently always null
      */
-    @Suppress("FunctionOnlyReturningConstant", "UnusedParameter")
+    @Suppress("FunctionOnlyReturningConstant")
     private fun FirAnnotation.toAnnotationClassId(session: FirSession): ClassId? = null
 }
 
