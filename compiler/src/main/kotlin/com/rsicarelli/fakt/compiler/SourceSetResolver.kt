@@ -8,11 +8,6 @@ import com.rsicarelli.fakt.compiler.api.SourceSetInfo
 /**
  * Resolves source set hierarchies from compiler context.
  *
- * **Modernization (v1.1.0)**:
- * - Uses SourceSetContext from CommandLineProcessor
- * - Supports full KMP hierarchy traversal
- * - No hardcoded patterns - fully data-driven
- *
  * **Key Responsibilities**:
  * 1. Resolve source set by name from context
  * 2. Traverse parent hierarchy
@@ -29,13 +24,9 @@ class SourceSetResolver(
      *
      * @param sourceSetName The name of the source set to resolve
      * @return SourceSetInfo if found, null otherwise
-     *
-     * ## Suppress Justification
-     * - **MaxLineLength**: ktlint prefers single-line expression functions, but detekt enforces max line length.
-     *   Suppress to avoid conflict between the two linters.
      */
-    @Suppress("MaxLineLength")
-    fun resolveSourceSet(sourceSetName: String): SourceSetInfo? = context.allSourceSets.firstOrNull { it.name == sourceSetName }
+    fun resolveSourceSet(sourceSetName: String): SourceSetInfo? =
+        context.allSourceSets.firstOrNull { it.name == sourceSetName }
 
     /**
      * Gets the default source set for this compilation.

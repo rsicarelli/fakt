@@ -15,9 +15,6 @@ import kotlin.test.assertTrue
  * Actual error reporting behavior is validated through integration tests (E2E sample builds)
  * where we can verify error messages appear during compilation.
  *
- * **Phase 3B.4:** Error reporting is active in FakeInterfaceChecker and FakeClassChecker.
- * **Phase 3B.5:** Integration tests validate errors appear correctly.
- *
  * **Error Scenarios Covered:**
  *
  * FakeInterfaceChecker:

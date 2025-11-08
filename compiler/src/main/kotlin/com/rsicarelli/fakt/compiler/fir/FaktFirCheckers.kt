@@ -11,12 +11,6 @@ import org.jetbrains.kotlin.fir.analysis.extensions.FirAdditionalCheckersExtensi
 /**
  * FIR checkers extension for @Fake annotation validation.
  *
- * **FIR Checkers Architecture**:
- * - Early validation (FIR phase) provides better error messages
- * - Source location information is most accurate in FIR
- * - Validation errors prevent IR generation entirely
- * - Metadata stored in [FirMetadataStorage] for IR phase
- *
  * @property session FIR compilation session
  * @property sharedContext Shared context with metadata storage
  */

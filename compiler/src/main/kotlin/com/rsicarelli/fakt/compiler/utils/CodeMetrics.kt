@@ -6,15 +6,13 @@ package com.rsicarelli.fakt.compiler.utils
  * Calculates lines of code excluding blank lines and comments.
  */
 internal fun calculateLOC(code: String): Int =
-    code
-        .lines()
-        .filter { line ->
-            val trimmed = line.trim()
-            trimmed.isNotEmpty() &&
+    code.lines().count { line ->
+        val trimmed = line.trim()
+        trimmed.isNotEmpty() &&
                 !trimmed.startsWith("//") &&
                 !trimmed.startsWith("/*") &&
                 !trimmed.startsWith("*")
-        }.count()
+    }
 
 /**
  * Formats byte count into human-readable string.

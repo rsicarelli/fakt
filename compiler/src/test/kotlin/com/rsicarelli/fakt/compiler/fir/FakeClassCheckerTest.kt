@@ -18,9 +18,6 @@ import kotlin.test.assertTrue
  * - Verifies separation of abstract vs open members
  * - Ensures type parameter extraction with bounds
  * - Tests method-level type parameters
- *
- * Phase 3C.1: These tests validate that FakeClassChecker correctly extracts
- * metadata from FIR class declarations and stores it for IR transformation.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FakeClassCheckerTest {

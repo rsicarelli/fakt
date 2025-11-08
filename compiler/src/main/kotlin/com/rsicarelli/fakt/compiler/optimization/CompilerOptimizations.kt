@@ -86,7 +86,6 @@ interface CompilerOptimizations {
          * @param fakeAnnotations List of fully qualified annotation names to process.
          *                       Defaults to `["com.rsicarelli.fakt.Fake"]`
          * @param outputDir Output directory for generated code (used to determine cache file location)
-         * @param messageCollector Optional message collector for debug logging
          * @return An optimization instance configured for the specified annotations with file-based caching
          */
         operator fun invoke(
@@ -102,7 +101,8 @@ interface CompilerOptimizations {
                     outputDir?.let { dir ->
                         // Use parent directory (build/generated/fakt) to store cache
                         // This ensures the cache is shared across all source sets
-                        File(dir).parentFile?.resolve("fakt-cache")?.resolve("generated-signatures.txt")?.also {
+                        File(dir).parentFile?.resolve("fakt-cache")
+                            ?.resolve("generated-signatures.txt")?.also {
                             it.parentFile?.mkdirs()
                         }
                     }
@@ -141,7 +141,8 @@ interface CompilerOptimizations {
                     }
                 }
 
-                override fun isConfiguredFor(annotation: String): Boolean = annotation in fakeAnnotations
+                override fun isConfiguredFor(annotation: String): Boolean =
+                    annotation in fakeAnnotations
 
                 override fun indexType(type: TypeInfo) {
                     indexedTypes.add(type)

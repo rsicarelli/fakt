@@ -8,28 +8,9 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Thread-safe storage for passing validated metadata from FIR phase to IR phase.
  *
- * Following Metro pattern: Shared data structures between compilation phases.
- *
- * **Lifecycle**: Created once per compilation session in [FaktCompilerPluginRegistrar],
- * passed to both FIR and IR extensions.
- *
- * **Thread Safety**: Uses [ConcurrentHashMap] to handle concurrent access during compilation.
- *
- * **Usage Pattern**:
- * ```kotlin
- * // In FIR Phase
- * val metadata = ValidatedFakeInterface(...)
- * storage.storeInterface(metadata)
- *
- * // In IR Phase
- * val allInterfaces = storage.getAllInterfaces()
- * allInterfaces.forEach { generateFakeFor(it) }
- * ```
- *
  * ## Design Rationale
  *
  * **Why not serialize?**
- * - Metro uses shared objects, not serialization
  * - Same JVM process, no need for serialization overhead
  * - Type-safe at compile time
  *

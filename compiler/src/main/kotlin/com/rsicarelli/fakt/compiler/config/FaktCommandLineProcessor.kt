@@ -103,8 +103,6 @@ class FaktCommandLineProcessor : CommandLineProcessor {
                         CompilerMessageSeverity.WARNING,
                         "Fakt: Failed to deserialize sourceSetContext: ${e.javaClass.simpleName}: ${e.message}",
                     )
-                    // Fall back to null context for backward compatibility
-                    // Plugin will still load, but use legacy behavior
                 }
             }
         }

@@ -20,6 +20,15 @@ import kotlin.test.assertTrue
  * 3. Test that different interfaces are handled independently
  * 4. Test annotation configuration
  * 5. Test type indexing and lookup
+ *
+ * **Note on Signature Format**:
+ * These tests use simplified structural signatures for readability:
+ * - Test format: `"interface com.example.UserService|props:0|funs:2"`
+ * - Production format: MD5 file hash (32-character hex: `"a3f8b7c9d1e2f5a6b8c0d3e5f7a9b1c3"`)
+ *
+ * Production code uses MD5 file hashing via `SignatureBuilder.buildSignature()`.
+ * The cache system is format-agnostic (string equality only), so both work.
+ * Structural format is only used in production as fallback when source file unavailable.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CompilerOptimizationsTest {

@@ -3,9 +3,11 @@
 package com.rsicarelli.fakt.compiler.fir
 
 import com.rsicarelli.fakt.compiler.FaktSharedContext
+import org.jetbrains.kotlin.config.AnalysisFlag.Delegates.Boolean.Companion.defaultValue
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
+import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirClassChecker
@@ -92,8 +94,6 @@ internal class FakeInterfaceChecker(
             return // Skip external interfaces
         }
 
-        // TODO: Validate interface has at least one member
-
         // ✅ Validation passed - analyze and store metadata
         analyzeAndStoreMetadata(declaration, session)
     }
@@ -112,7 +112,7 @@ internal class FakeInterfaceChecker(
      */
     private fun analyzeAndStoreMetadata(
         declaration: FirClass,
-        session: org.jetbrains.kotlin.fir.FirSession,
+        session: FirSession,
     ) {
         val classId = declaration.classId
         val simpleName = classId.shortClassName.asString()
@@ -139,18 +139,17 @@ internal class FakeInterfaceChecker(
         // Create and store validated metadata
         // GenericPattern will be reconstructed in IR phase from typeParameters + functions
         // Now includes inherited members
-        val metadata =
-            ValidatedFakeInterface(
-                classId = classId,
-                simpleName = simpleName,
-                packageName = packageName,
-                typeParameters = typeParameters,
-                properties = properties,
-                functions = functions,
-                inheritedProperties = inheritedProperties,
-                inheritedFunctions = inheritedFunctions,
-                sourceLocation = sourceLocation,
-            )
+        val metadata = ValidatedFakeInterface(
+            classId = classId,
+            simpleName = simpleName,
+            packageName = packageName,
+            typeParameters = typeParameters,
+            properties = properties,
+            functions = functions,
+            inheritedProperties = inheritedProperties,
+            inheritedFunctions = inheritedFunctions,
+            sourceLocation = sourceLocation,
+        )
 
         sharedContext.metadataStorage.storeInterface(metadata)
     }
@@ -184,12 +183,10 @@ internal class FakeInterfaceChecker(
             // FirTypeParameter.bounds contains List<FirTypeRef> representing constraints
             // e.g., `<T : Comparable<T>>` has bounds = [Comparable<T>]
             // e.g., `<T : A, B>` has bounds = [A, B] (multiple bounds via 'where' clause)
-            val bounds =
-                typeParam.bounds.map { boundRef ->
-                    // Render FirTypeRef to String using ConeType representation
-                    // This matches the pattern used for property/function types (lines 211, 264, 272)
-                    boundRef.coneType.toString()
-                }
+            val bounds = typeParam.bounds.map { boundRef ->
+                // Render FirTypeRef to String using ConeType representation
+                boundRef.coneType.toString()
+            }
 
             FirTypeParameterInfo(
                 name = name,
@@ -224,7 +221,6 @@ internal class FakeInterfaceChecker(
                 val name = property.name.asString()
 
                 // Get type string representation
-                // TODO: Implement proper ConeType→String rendering
                 val type = property.returnTypeRef.coneType.toString()
 
                 // Check if property is mutable (var) or immutable (val)
@@ -275,24 +271,15 @@ internal class FakeInterfaceChecker(
 
                 // Extract parameters
                 // Extract default value expressions and render to code strings
-                val parameters =
-                    function.valueParameters.map { param ->
-                        val defaultValue = param.defaultValue
-                        val defaultValueCode =
-                            if (defaultValue != null) {
-                                renderDefaultValue(defaultValue) // null if rendering failed/not supported
-                            } else {
-                                null
-                            }
-
-                        FirParameterInfo(
-                            name = param.name.asString(),
-                            type = param.returnTypeRef.coneType.toString(),
-                            hasDefaultValue = param.defaultValue != null,
-                            defaultValueCode = defaultValueCode,
-                            isVararg = param.isVararg,
-                        )
-                    }
+                val parameters = function.valueParameters.map { param ->
+                    FirParameterInfo(
+                        name = param.name.asString(),
+                        type = param.returnTypeRef.coneType.toString(),
+                        hasDefaultValue = param.defaultValue != null,
+                        defaultValueCode = param.defaultValue?.let(::renderDefaultValue),
+                        isVararg = param.isVararg,
+                    )
+                }
 
                 // Extract return type
                 val returnType = function.returnTypeRef.coneType.toString()
@@ -306,13 +293,9 @@ internal class FakeInterfaceChecker(
                 val typeParameters =
                     function.typeParameters.map { typeParamRef ->
                         val typeParam = typeParamRef.symbol.fir
-                        val bounds =
-                            typeParam.bounds.map { boundRef ->
-                                boundRef.coneType.toString()
-                            }
                         FirTypeParameterInfo(
                             name = typeParam.name.asString(),
-                            bounds = bounds,
+                            bounds = typeParam.bounds.map { it.coneType.toString() },
                         )
                     }
 
@@ -320,10 +303,9 @@ internal class FakeInterfaceChecker(
                 // Format: Map<"T", "Comparable<T>"> for single bound
                 // Note: Kotlin doesn't support multiple bounds for same param in this format,
                 // but FirTypeParameterInfo.bounds handles it correctly as List<String>
-                val typeParameterBounds =
-                    typeParameters.associate { typeParam ->
-                        typeParam.name to typeParam.bounds.firstOrNull().orEmpty()
-                    }
+                val typeParameterBounds = typeParameters.associate { typeParam ->
+                    typeParam.name to typeParam.bounds.firstOrNull().orEmpty()
+                }
 
                 functions.add(
                     FirFunctionInfo(
@@ -390,7 +372,7 @@ internal class FakeInterfaceChecker(
     @OptIn(SymbolInternals::class)
     private fun extractInheritedMembers(
         declaration: FirClass,
-        session: org.jetbrains.kotlin.fir.FirSession,
+        session: FirSession,
     ): Pair<List<FirPropertyInfo>, List<FirFunctionInfo>> {
         val inheritedProperties = mutableListOf<FirPropertyInfo>()
         val inheritedFunctions = mutableListOf<FirFunctionInfo>()
@@ -452,7 +434,7 @@ internal class FakeInterfaceChecker(
     @OptIn(SymbolInternals::class)
     private fun collectInheritedMembers(
         firClass: FirClass,
-        session: org.jetbrains.kotlin.fir.FirSession,
+        session: FirSession,
         visitedInterfaces: MutableSet<ClassId>,
         propertiesAccumulator: MutableList<FirPropertyInfo>,
         functionsAccumulator: MutableList<FirFunctionInfo>,
