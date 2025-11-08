@@ -25,14 +25,7 @@ package com.rsicarelli.fakt
  * ## Thread Safety
  * Generated fakes are thread-safe by default through instance-based design.
  * Each call to the factory function creates a new isolated instance.
- *
- * ## Custom Annotations
- * Companies can define their own annotations instead of using `@Fake` by annotating
- * them with `@GeneratesFake`. See [GeneratesFake] for details.
- *
- * @see GeneratesFake
  */
-@GeneratesFake
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
 public annotation class Fake

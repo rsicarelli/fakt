@@ -59,6 +59,7 @@ internal object IrAnalysisHelper {
                         name = param.name.asString(),
                         type = param.type,
                         hasDefaultValue = param.defaultValue != null,
+                        defaultValueCode = null, // Phase 3C.4: TODO - render IR default value if needed for legacy path
                         isVararg = param.isVararg,
                     )
                 }
@@ -221,5 +222,6 @@ data class ParameterAnalysis(
     val name: String,
     val type: IrType,
     val hasDefaultValue: Boolean,
+    val defaultValueCode: String?, // Phase 3C.4: Rendered default value expression
     val isVararg: Boolean,
 )

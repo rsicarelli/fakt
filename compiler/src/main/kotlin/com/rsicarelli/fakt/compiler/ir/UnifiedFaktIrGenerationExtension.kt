@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir
 
+import com.rsicarelli.fakt.compiler.FaktSharedContext
 import com.rsicarelli.fakt.compiler.codegen.CodeGenerator
 import com.rsicarelli.fakt.compiler.codegen.CodeGenerators
 import com.rsicarelli.fakt.compiler.codegen.ConfigurationDslGenerator
@@ -45,6 +46,11 @@ import java.security.MessageDigest
  *
  * Based on the IR-Native demonstration architecture.
  *
+ * **Phase 4 - FIR/IR Separation (v1.3.0)**:
+ * - Receives FaktSharedContext for FIR→IR communication (Metro pattern)
+ * - Accesses validated metadata from FIR phase via metadataStorage
+ * - Eliminates redundant discovery/validation in IR phase
+ *
  * **Modernization (v1.1.0)**:
  * - Added sourceSetContext for data-driven source set resolution
  * - Uses SourceSetResolver for hierarchy traversal instead of hardcoded patterns
@@ -71,9 +77,12 @@ import java.security.MessageDigest
 @Suppress("TooManyFunctions")
 class UnifiedFaktIrGenerationExtension(
     private val logger: FaktLogger,
-    private val outputDir: String? = null,
-    private val fakeAnnotations: List<String> = listOf("com.rsicarelli.fakt.Fake"),
+    private val sharedContext: FaktSharedContext,
 ) : IrGenerationExtension {
+    // Extract fields from sharedContext
+    private val outputDir: String? = sharedContext.options.outputDir
+    private val fakeAnnotations: List<String> = sharedContext.fakeAnnotations
+
     private val optimizations = CompilerOptimizations(fakeAnnotations, outputDir, logger)
 
     companion object {
@@ -117,18 +126,173 @@ class UnifiedFaktIrGenerationExtension(
         logHeaderOnce()
 
         try {
-            val (fakeInterfaces, fakeClasses) = discoverAndLogFakes(moduleFragment) ?: return
-
-            val interfacesToProcess = filterInterfacesToProcess(fakeInterfaces)
-            val classesToProcess = filterClassesToProcess(fakeClasses)
-
-            processInterfaces(interfacesToProcess, moduleFragment)
-            processClasses(classesToProcess, moduleFragment)
-
-            logGenerationCompletion(interfacesToProcess.size, classesToProcess.size, moduleFragment)
+            // Phase 4.2: Check if FIR analysis is enabled
+            if (sharedContext.useFirAnalysis()) {
+                // Use FIR metadata (Metro pattern)
+                generateFromFirMetadata(moduleFragment, pluginContext)
+            } else {
+                // Legacy mode: IR discovery
+                generateFromIrDiscovery(moduleFragment)
+            }
         } catch (e: Exception) {
             logGenerationError(e)
         }
+    }
+
+    /**
+     * Generate fakes from FIR metadata (Phase 3B.3 - Fixed anti-pattern).
+     *
+     * **Previous Anti-Pattern (Phase 4.3)**:
+     * - Converted FIR metadata to IrClass instances
+     * - Passed to processInterfaces() → analyzeInterfaceDynamically()
+     * - Re-analyzed what FIR already validated (duplicate work!)
+     *
+     * **Phase 3B.3 Solution**:
+     * - Uses FirToIrTransformer to transform FIR metadata → IrGenerationMetadata
+     * - NO re-analysis of IrClass.declarations
+     * - Follows Metro pattern: FIR analyzes, IR generates
+     *
+     * @param moduleFragment IR module for generation
+     * @param pluginContext IR plugin context (for future enhancements)
+     */
+    private fun generateFromFirMetadata(
+        moduleFragment: IrModuleFragment,
+        pluginContext: IrPluginContext,
+    ) {
+        logger.trace("Phase 3B.3: Generating code from FIR metadata (fixed anti-pattern)")
+
+        // Load validated interfaces from FIR phase
+        val validatedInterfaces = sharedContext.metadataStorage.getAllInterfaces()
+        val validatedClasses = sharedContext.metadataStorage.getAllClasses()
+
+        logger.trace("FIR metadata loaded: ${validatedInterfaces.size} interfaces, ${validatedClasses.size} classes")
+
+        if (validatedInterfaces.isEmpty() && validatedClasses.isEmpty()) {
+            logger.trace("No validated interfaces or classes to generate")
+            return
+        }
+
+        // Build ClassId → IrClass map for fast lookup
+        val irClassMap = buildIrClassMap(moduleFragment)
+
+        // Phase 3B.3: Transform FIR metadata → IrGenerationMetadata (NO re-analysis!)
+        val transformer = FirToIrTransformer()
+
+        val interfaceMetadata =
+            validatedInterfaces.mapNotNull { firInterface ->
+                val irClass = irClassMap[firInterface.classId]
+                if (irClass == null) {
+                    logger.warn("Could not find IrClass for validated interface: ${firInterface.classId.asFqNameString()}")
+                    null
+                } else {
+                    logger.trace("Transforming FIR metadata for ${firInterface.simpleName}")
+                    transformer.transform(firInterface, irClass)
+                }
+            }
+
+        // TODO Phase 3B.3: Handle classes (not yet implemented)
+        val classesToProcess =
+            validatedClasses.mapNotNull { firClass ->
+                val irClass = irClassMap[firClass.classId]
+                if (irClass == null) {
+                    logger.warn("Could not find IrClass for validated class: ${firClass.classId.asFqNameString()}")
+                    null
+                } else {
+                    logger.trace("Matched FIR class ${firClass.simpleName} to IrClass")
+                    irClass
+                }
+            }
+
+        logger.info("Phase 3B.3: Transformed ${interfaceMetadata.size}/${validatedInterfaces.size} interfaces")
+
+        // Phase 3B.3: Process using IrGenerationMetadata (NO analyzeInterfaceDynamically!)
+        if (interfaceMetadata.isNotEmpty()) {
+            processInterfacesFromMetadata(interfaceMetadata, moduleFragment)
+        }
+
+        // Phase 3C.1: Transform classes using FirToIrTransformer
+        val classMetadata =
+            validatedClasses.mapNotNull { firClassMetadata ->
+                val irClass = irClassMap[firClassMetadata.classId]
+                if (irClass == null) {
+                    logger.warn(
+                        "Phase 3C.1: IrClass not found for ${firClassMetadata.simpleName}. " +
+                            "Skipping class transformation.",
+                    )
+                    null
+                } else {
+                    transformer.transformClass(firClassMetadata, irClass)
+                }
+            }
+
+        logger.info("Phase 3C.1: Transformed ${classMetadata.size}/${validatedClasses.size} classes")
+
+        // Phase 3C.1: Process using IrClassGenerationMetadata (NO analyzeClass!)
+        if (classMetadata.isNotEmpty()) {
+            processClassesFromMetadata(classMetadata, moduleFragment)
+        }
+
+        logGenerationCompletion(interfaceMetadata.size, classMetadata.size, moduleFragment)
+    }
+
+    /**
+     * Build a map of ClassId → IrClass for fast lookup.
+     *
+     * Walks the entire module fragment to find all classes/interfaces.
+     *
+     * @param moduleFragment IR module to scan
+     * @return Map from ClassId to IrClass
+     */
+    private fun buildIrClassMap(moduleFragment: IrModuleFragment): Map<org.jetbrains.kotlin.name.ClassId, IrClass> {
+        val map = mutableMapOf<org.jetbrains.kotlin.name.ClassId, IrClass>()
+
+        moduleFragment.files.forEach { file ->
+            file.declarations.filterIsInstance<IrClass>().forEach { irClass ->
+                val classId =
+                    org.jetbrains.kotlin.name.ClassId(
+                        irClass.packageFqName ?: org.jetbrains.kotlin.name.FqName.ROOT,
+                        org.jetbrains.kotlin.name
+                            .FqName(irClass.name.asString()),
+                        false, // isLocal
+                    )
+                map[classId] = irClass
+
+                // Also add nested classes
+                irClass.declarations.filterIsInstance<IrClass>().forEach { nestedClass ->
+                    val nestedClassId =
+                        org.jetbrains.kotlin.name.ClassId(
+                            irClass.packageFqName ?: org.jetbrains.kotlin.name.FqName.ROOT,
+                            org.jetbrains.kotlin.name
+                                .FqName("${irClass.name.asString()}.${nestedClass.name.asString()}"),
+                            false,
+                        )
+                    map[nestedClassId] = nestedClass
+                }
+            }
+        }
+
+        logger.trace("Built IR class map with ${map.size} classes")
+        return map
+    }
+
+    /**
+     * Generate fakes from IR discovery (legacy mode).
+     *
+     * This is the original implementation that discovers @Fake annotations
+     * and analyzes interfaces directly in IR phase.
+     *
+     * @param moduleFragment IR module for generation
+     */
+    private fun generateFromIrDiscovery(moduleFragment: IrModuleFragment) {
+        val (fakeInterfaces, fakeClasses) = discoverAndLogFakes(moduleFragment) ?: return
+
+        val interfacesToProcess = filterInterfacesToProcess(fakeInterfaces)
+        val classesToProcess = filterClassesToProcess(fakeClasses)
+
+        processInterfaces(interfacesToProcess, moduleFragment)
+        processClasses(classesToProcess, moduleFragment)
+
+        logGenerationCompletion(interfacesToProcess.size, classesToProcess.size, moduleFragment)
     }
 
     private fun discoverAndLogFakes(moduleFragment: IrModuleFragment): Pair<List<IrClass>, List<IrClass>>? {
@@ -224,6 +388,214 @@ class UnifiedFaktIrGenerationExtension(
                     loc = loc,
                     outputPath = outputPath,
                     analysisDetail = analysisDetail,
+                )
+            }
+        }
+
+        telemetry.endPhase(phaseId)
+    }
+
+    /**
+     * Process interfaces from IrGenerationMetadata (Phase 3B.3 - NO re-analysis).
+     *
+     * This method replaces the anti-pattern of passing IrClass to processInterfaces(),
+     * which triggered analyzeInterfaceDynamically() and re-analyzed what FIR already did.
+     *
+     * **Key Difference from processInterfaces()**:
+     * - ❌ NO call to analyzeInterfaceDynamically() (FIR already analyzed!)
+     * - ✅ Uses IrGenerationMetadata.toInterfaceAnalysis() adapter
+     * - ✅ Passes directly to code generators
+     * - ✅ Follows Metro pattern: FIR analyzes, IR generates
+     *
+     * @param interfaceMetadata List of transformed FIR metadata (IrTypes + IR nodes)
+     * @param moduleFragment Module for file creation
+     */
+    private fun processInterfacesFromMetadata(
+        interfaceMetadata: List<IrGenerationMetadata>,
+        moduleFragment: IrModuleFragment,
+    ) {
+        val phaseId = telemetry.startPhase("GENERATION")
+
+        for (metadata in interfaceMetadata) {
+            val interfaceName = metadata.interfaceName
+
+            // Phase 3B.3: Convert to InterfaceAnalysis using adapter (NO re-analysis!)
+            val analysisStartTime = System.nanoTime()
+            val interfaceAnalysis = metadata.toInterfaceAnalysis()
+            val analysisEndTime = System.nanoTime()
+            val analysisTime = analysisEndTime - analysisStartTime // Adapter overhead only (~1μs)
+
+            // Validate pattern (reuses existing validation logic)
+            validateAndLogPattern(interfaceAnalysis, metadata.sourceInterface, interfaceName)
+
+            // Track generation timing and capture generated code
+            val generationStartTime = System.nanoTime()
+            val generatedCode =
+                codeGenerator.generateWorkingFakeImplementation(
+                    sourceInterface = metadata.sourceInterface,
+                    analysis = interfaceAnalysis,
+                    moduleFragment = moduleFragment,
+                )
+            val generationEndTime = System.nanoTime()
+
+            // Calculate metrics
+            val loc = generatedCode.calculateTotalLOC()
+            val generationTime = generationEndTime - generationStartTime
+
+            // Record fake metrics
+            val memberCount = interfaceAnalysis.properties.size + interfaceAnalysis.functions.size
+            telemetry.recordFakeMetrics(
+                com.rsicarelli.fakt.compiler.telemetry.metrics.FakeMetrics(
+                    name = interfaceName,
+                    pattern = interfaceAnalysis.genericPattern,
+                    memberCount = memberCount,
+                    typeParamCount = interfaceAnalysis.typeParameters.size,
+                    analysisTimeNanos = analysisTime, // Adapter overhead, not FIR analysis time
+                    generationTimeNanos = generationTime,
+                    generatedLOC = loc,
+                    fileSizeBytes = generatedCode.calculateTotalBytes(),
+                    importCount = 0, // TODO: Track import count from ImportResolver
+                ),
+            )
+
+            telemetry.metricsCollector.incrementInterfacesProcessed()
+
+            // TODO Phase 3B.3: Add cache support for FIR mode (skip for now)
+            // optimizations.recordGeneration(typeInfo)
+
+            // TRACE: Log tree-style per-interface processing
+            if (logger.logLevel >= com.rsicarelli.fakt.compiler.api.LogLevel.TRACE) {
+                val packageName = metadata.packageName
+                val packagePath = packageName.replace('.', '/')
+                val fakeFileName = "Fake${interfaceName}Impl.kt"
+                val relativePath = if (packagePath.isNotEmpty()) "$packagePath/$fakeFileName" else fakeFileName
+                val outputPath = if (outputDir != null) "$outputDir/$relativePath" else relativePath
+
+                val analysisDetail =
+                    buildString {
+                        val typeParamCount = interfaceAnalysis.typeParameters.size
+                        if (typeParamCount > 0) {
+                            append("$typeParamCount type parameters, ")
+                        }
+                        append("$memberCount members")
+                    }
+
+                logFakeProcessing(
+                    name = interfaceName,
+                    analysisTimeNanos = analysisTime,
+                    generationTimeNanos = generationTime,
+                    loc = loc,
+                    outputPath = outputPath,
+                    analysisDetail = analysisDetail,
+                )
+            }
+        }
+
+        telemetry.endPhase(phaseId)
+    }
+
+    /**
+     * Process abstract classes from IrClassGenerationMetadata (Phase 3C.1 - NO re-analysis).
+     *
+     * Similar to processInterfacesFromMetadata() but handles abstract classes with
+     * separation of abstract/open members.
+     *
+     * **Key Features**:
+     * - ❌ NO call to analyzeClass() (FIR already analyzed!)
+     * - ✅ Uses IrClassGenerationMetadata.toInterfaceAnalysis() adapter
+     * - ✅ Passes directly to code generators (treats abstract+open members the same)
+     * - ✅ Follows Metro pattern: FIR analyzes, IR generates
+     *
+     * **Phase 3C.1 Note**: Currently combines abstract and open members since existing
+     * generators treat all members the same way (all need implementation/override).
+     * Future phases may enhance this to support super delegation for open members.
+     *
+     * @param classMetadata List of transformed FIR class metadata (IrTypes + IR nodes)
+     * @param moduleFragment Module for file creation
+     */
+    private fun processClassesFromMetadata(
+        classMetadata: List<IrClassGenerationMetadata>,
+        moduleFragment: IrModuleFragment,
+    ) {
+        val phaseId = telemetry.startPhase("GENERATION")
+
+        for (metadata in classMetadata) {
+            val className = metadata.className
+
+            // Phase 3C.5: Convert to ClassAnalysis using adapter (preserves abstract/open distinction)
+            val analysisStartTime = System.nanoTime()
+            val classAnalysis = metadata.toClassAnalysis()
+            val analysisEndTime = System.nanoTime()
+            val analysisTime = analysisEndTime - analysisStartTime // Adapter overhead only (~1μs)
+
+            // Validate pattern (ClassAnalysis has genericPattern property via IrGenerationMetadata)
+            // validateAndLogPattern requires InterfaceAnalysis, so we skip it for now
+            // Phase 3C.5: TODO - add class-specific validation if needed
+
+            // Track generation timing and capture generated code
+            val generationStartTime = System.nanoTime()
+            val generatedCode =
+                codeGenerator.generateWorkingClassFake(
+                    sourceClass = metadata.sourceClass,
+                    analysis = classAnalysis,
+                    moduleFragment = moduleFragment,
+                )
+            val generationEndTime = System.nanoTime()
+
+            // Calculate metrics
+            val loc = generatedCode.calculateTotalLOC()
+            val generationTime = generationEndTime - generationStartTime
+
+            // Record fake metrics
+            // Phase 3C.5: Count all members (abstract + open)
+            val memberCount = (
+                classAnalysis.abstractProperties.size + classAnalysis.openProperties.size +
+                    classAnalysis.abstractMethods.size + classAnalysis.openMethods.size
+            )
+            telemetry.recordFakeMetrics(
+                com.rsicarelli.fakt.compiler.telemetry.metrics.FakeMetrics(
+                    name = className,
+                    pattern = metadata.genericPattern, // Get from metadata, not classAnalysis
+                    memberCount = memberCount,
+                    typeParamCount = classAnalysis.typeParameters.size,
+                    analysisTimeNanos = analysisTime, // Adapter overhead, not FIR analysis time
+                    generationTimeNanos = generationTime,
+                    generatedLOC = loc,
+                    fileSizeBytes = generatedCode.calculateTotalBytes(),
+                    importCount = 0, // TODO: Track import count from ImportResolver
+                ),
+            )
+
+            telemetry.metricsCollector.incrementClassesProcessed()
+
+            // TRACE: Log tree-style per-class processing
+            if (logger.logLevel >= com.rsicarelli.fakt.compiler.api.LogLevel.TRACE) {
+                val packageName = metadata.packageName
+                val packagePath = packageName.replace('.', '/')
+                val fakeFileName = "Fake${className}Impl.kt"
+                val relativePath = if (packagePath.isNotEmpty()) "$packagePath/$fakeFileName" else fakeFileName
+                val outputPath = if (outputDir != null) "$outputDir/$relativePath" else relativePath
+
+                val analysisDetail =
+                    buildString {
+                        val typeParamCount = classAnalysis.typeParameters.size
+                        if (typeParamCount > 0) {
+                            append("$typeParamCount type parameters, ")
+                        }
+                        // Phase 3C.5: Count all properties and methods (abstract + open)
+                        val propCount = classAnalysis.abstractProperties.size + classAnalysis.openProperties.size
+                        val methodCount = classAnalysis.abstractMethods.size + classAnalysis.openMethods.size
+                        append("$propCount properties, ")
+                        append("$methodCount methods")
+                    }
+
+                logger.trace(
+                    "  ├─ $className ($analysisDetail)\n" +
+                        "  │  Pattern: ${metadata.genericPattern.javaClass.simpleName}\n" + // Get from metadata
+                        "  │  Output: $outputPath\n" +
+                        "  │  LOC: $loc lines\n" +
+                        "  │  Analysis time: ${analysisTime / 1_000}μs (adapter only)\n" +
+                        "  │  Generation time: ${generationTime / 1_000_000}ms",
                 )
             }
         }
@@ -485,10 +857,7 @@ class UnifiedFaktIrGenerationExtension(
         val matchingAnnotation =
             irClass.annotations.find { annotation ->
                 val annotationFqName = annotation.type.classFqName?.asString()
-                annotationFqName != null && (
-                    optimizations.isConfiguredFor(annotationFqName) ||
-                        ClassAnalyzer.hasGeneratesFakeMetaAnnotation(annotation)
-                )
+                annotationFqName != null && optimizations.isConfiguredFor(annotationFqName)
             }
 
         if (matchingAnnotation != null) {

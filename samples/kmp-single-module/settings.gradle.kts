@@ -18,6 +18,9 @@ pluginManagement {
     }
 }
 
+// Phase 1.1: Include ktfake root project as composite build to resolve runtime without Maven Local
+includeBuild("../..")
+
 dependencyResolutionManagement {
     repositories {
         mavenLocal()  // ✅ Use published runtime from mavenLocal

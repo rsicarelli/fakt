@@ -42,42 +42,59 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
 
         // Create FaktLogger with configured log level
         val logger = FaktLogger(messageCollector, options.logLevel)
-        val customAnnotations = listOf("com.rsicarelli.fakt.Fake")
 
         if (!options.enabled) {
             logger.trace("Plugin disabled, skipping registration")
             return
         }
 
-        registerFirExtension(logger)
-        registerIrExtension(logger, options, customAnnotations)
+        // Create shared context for FIR→IR communication (Metro pattern)
+        val sharedContext =
+            FaktSharedContext(
+                fakeAnnotations = FaktSharedContext.DEFAULT_FAKE_ANNOTATIONS,
+                options = options,
+                metadataStorage =
+                    com.rsicarelli.fakt.compiler.fir
+                        .FirMetadataStorage(),
+            )
+
+        registerFirExtension(logger, sharedContext)
+        registerIrExtension(logger, sharedContext)
     }
 
     /**
      * Registers the FIR extension for @Fake annotation detection in the FIR phase.
      *
+     * Following Metro pattern: Pass shared context to FIR extension.
+     *
      * @param logger The FaktLogger for logging
+     * @param sharedContext Shared context for FIR→IR communication
      */
-    private fun ExtensionStorage.registerFirExtension(logger: FaktLogger) {
-        FirExtensionRegistrarAdapter.registerExtension(FaktFirExtensionRegistrar())
+    private fun ExtensionStorage.registerFirExtension(
+        logger: FaktLogger,
+        sharedContext: FaktSharedContext,
+    ) {
+        logger.trace("Registering FIR extension with useFirAnalysis=${sharedContext.useFirAnalysis()}")
+        FirExtensionRegistrarAdapter.registerExtension(FaktFirExtensionRegistrar(sharedContext))
     }
 
     /**
      * Registers the unified IR generation extension for fake implementation generation.
      *
+     * Following Metro pattern: Pass shared context to IR extension for FIR metadata access.
+     *
      * @param logger The FaktLogger for logging
-     * @param options The loaded plugin options
+     * @param sharedContext Shared context for FIR→IR communication
      */
     private fun ExtensionStorage.registerIrExtension(
         logger: FaktLogger,
-        options: FaktOptions,
-        customAnnotations: List<String>,
+        sharedContext: FaktSharedContext,
     ) {
+        logger.trace("Registering IR extension with FIR metadata access")
         IrGenerationExtension.registerExtension(
             UnifiedFaktIrGenerationExtension(
                 logger = logger,
-                outputDir = options.outputDir,
-                fakeAnnotations = customAnnotations,
+                sharedContext = sharedContext,
             ),
         )
     }

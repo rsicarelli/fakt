@@ -71,33 +71,9 @@ for (file in moduleFragment.files) {
 }
 ```
 
-## 🏗️ **Phase 3: Annotation Ownership (Breaking Change Prevention)**
+## 🎨 **Phase 3: Gradle Plugin (User Experience)**
 
-### **3.1 Meta-Annotation System**
-```kotlin
-@Target(AnnotationTarget.ANNOTATION_CLASS)
-@Retention(AnnotationRetention.BINARY)
-annotation class GeneratesFakes
-
-// Companies define their own annotations
-@GeneratesFakes
-annotation class TestDouble
-
-// Zero runtime dependency option
-ktfake {
-    fakeAnnotation.set("com.company.TestDouble")
-    runtimeDependency.set("none")  // Pure Kotlin generated code
-}
-```
-
-### **3.2 Breaking Change Resilience**
-- [ ] Support any company-owned annotation via meta-annotation
-- [ ] Ensure zero KtFakes dependencies in generated code
-- [ ] Migration strategy from @Fake to company annotations
-
-## 🎨 **Phase 4: Gradle Plugin (User Experience)**
-
-### **4.1 Simplified DSL Implementation**
+### **3.1 Simplified DSL Implementation**
 ```kotlin
 ktfake {
     fakeAnnotation.set("com.company.TestDouble")  // Company annotation
@@ -114,7 +90,7 @@ ktfake {
 }
 ```
 
-### **4.2 Auto-Configuration**
+### **3.2 Auto-Configuration**
 - [ ] Auto-enable optimizations based on project size
 - [ ] Generate performance reports from compiler-runtime metrics
 - [ ] Multi-module aggregated dashboards

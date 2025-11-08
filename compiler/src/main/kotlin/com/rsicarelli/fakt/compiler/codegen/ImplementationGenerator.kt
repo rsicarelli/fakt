@@ -184,8 +184,12 @@ internal class ImplementationGenerator(
         }
 
     private fun generateFunctionConfigMethod(function: FunctionAnalysis): String {
-        val hasMethodGenerics = function.typeParameters.isNotEmpty()
-        val parameterTypes = buildConfigParameterTypes(function)
+        // Phase 3C.1: Build context for method-level generic handling
+        val methodTypeContext = buildMethodTypeParamContext(function)
+        val hasMethodGenerics = methodTypeContext.hasMethodGenerics
+
+        // Phase 3C.1: Use context-aware parameter type building
+        val parameterTypes = buildConfigParameterTypes(function, methodTypeContext)
         val returnTypeString =
             typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
         val suspendModifier = if (function.isSuspend) "suspend " else ""
@@ -197,15 +201,38 @@ internal class ImplementationGenerator(
         }
     }
 
-    private fun buildConfigParameterTypes(function: FunctionAnalysis): String {
+    /**
+     * Build configuration parameter types preserving full generic signatures.
+     *
+     * **Phase 1.1 Enhancement**: No longer applies erasure - preserves full generic signatures
+     * for type-safe DSL. The wrapper adapter in buildGenericConfigMethod handles the bridge
+     * to erased storage.
+     *
+     * Key improvements:
+     * - Preserves ALL type parameters (class-level and method-level)
+     * - Handles varargs correctly
+     * - Type-safe DSL without developer casting
+     *
+     * @param function The function analysis
+     * @param context Type parameter context (unused now, kept for compatibility)
+     * @return Parameter types string for configuration method signature
+     */
+    private fun buildConfigParameterTypes(
+        function: FunctionAnalysis,
+        context: MethodTypeContext,
+    ): String {
         if (function.parameters.isEmpty()) return ""
 
         return function.parameters.joinToString(", ") { param ->
-            if (param.isVararg) {
-                val elementType = unwrapVarargsType(param)
-                "Array<out $elementType>"
-            } else {
-                typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+            when {
+                param.isVararg -> {
+                    val elementType = unwrapVarargsType(param)
+                    "Array<out $elementType>"
+                }
+                else -> {
+                    // Phase 1.1: Preserve full signature - no erasure!
+                    typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                }
             }
         }
     }
@@ -218,31 +245,32 @@ internal class ImplementationGenerator(
     ): String {
         val methodTypeParams = "<${function.typeParameters.joinToString(", ")}>"
         val methodTypeParamNames = function.typeParameters.map { it.substringBefore(" :").trim() }.toSet()
+        val methodTypeContext = buildMethodTypeParamContext(function)
 
-        val castParamTypes =
-            if (function.parameters.isEmpty()) {
-                ""
-            } else {
-                List(function.parameters.size) { "Any?" }.joinToString(", ")
-            }
+        // Storage uses erased types - must match buildFunctionParameterTypes logic
+        val erasedParamTypes = buildFunctionParameterTypes(function, methodTypeContext)
 
-        val convertedReturnType =
+        val erasedReturnType =
             if (containsMethodTypeParam(returnTypeString, methodTypeParamNames)) {
                 convertMethodTypeParamsToAny(returnTypeString, methodTypeParamNames)
             } else {
                 returnTypeString
             }
 
+        // Phase 1.1: Generate wrapper adapter that bridges full signature → erased storage
         return buildString {
             appendLine(
                 "    internal fun $methodTypeParams configure${function.name.capitalize()}(" +
                     "behavior: $suspendModifier($parameterTypes) -> $returnTypeString) {",
             )
             appendLine("        @Suppress(\"UNCHECKED_CAST\")")
+
+            // Phase 1.1: Direct unchecked cast - no wrapper needed for suspend functions
+            // The types are compatible at runtime, just different generic parameters
             appendLine(
-                "        ${function.name}Behavior = behavior as " +
-                    "$suspendModifier($castParamTypes) -> $convertedReturnType",
+                "        ${function.name}Behavior = behavior as $suspendModifier($erasedParamTypes) -> $erasedReturnType",
             )
+
             appendLine("    }")
         }.toString()
     }
@@ -335,6 +363,11 @@ internal class ImplementationGenerator(
                 } else {
                     typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
                 }
+
+            // Phase 3C.4: Note - We do NOT add default values in override functions
+            // Kotlin rule: overriding functions inherit default values from the interface
+            // and cannot redeclare them.
+
             "$varargsPrefix${param.name}: $paramType"
         }
 
@@ -572,7 +605,11 @@ internal class ImplementationGenerator(
                 function.parameters[0].type,
                 preserveTypeParameters = true,
             )
-        val methodTypeParamNames = function.typeParameters.toSet()
+        // Extract just the type parameter names (without bounds like "T : Comparable<T>")
+        val methodTypeParamNames =
+            function.typeParameters
+                .map { it.substringBefore(" :").trim() }
+                .toSet()
 
         return methodTypeParamNames.any { typeParam ->
             firstParamType.matches(Regex(".*\\(.*\\)\\s*->\\s*$typeParam\\b.*")) &&
@@ -1231,7 +1268,9 @@ internal class ImplementationGenerator(
         }
 
     private fun buildSimpleClassConfigMethod(function: FunctionAnalysis): String {
-        val parameterTypes = buildConfigParameterTypes(function)
+        // Phase 3C.1: Build context for method-level generic handling
+        val methodTypeContext = buildMethodTypeParamContext(function)
+        val parameterTypes = buildConfigParameterTypes(function, methodTypeContext)
         val returnTypeString =
             typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
         val suspendModifier = if (function.isSuspend) "suspend " else ""

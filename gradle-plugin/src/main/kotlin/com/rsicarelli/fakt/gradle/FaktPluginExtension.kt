@@ -118,6 +118,35 @@ open class FaktPluginExtension
         val logLevel: Property<LogLevel> = objects.property(LogLevel::class.java).convention(LogLevel.INFO)
 
         /**
+         * Enables FIR-based metadata analysis for fake generation.
+         *
+         * When enabled, the plugin uses Kotlin's FIR (Frontend Intermediate Representation) phase
+         * for annotation detection and validation, following the Metro compiler plugin architecture.
+         *
+         * **Two-phase approach:**
+         * - FIR phase: Validates @Fake annotations, extracts metadata
+         * - IR phase: Generates code from validated metadata
+         *
+         * **Default:** `false` (will become `true` in Phase 6)
+         *
+         * **Usage:**
+         * ```kotlin
+         * fakt {
+         *     useFirAnalysis.set(true)  // Enable FIR-based analysis
+         * }
+         * ```
+         *
+         * **Benefits:**
+         * - Earlier error detection (FIR phase vs IR phase)
+         * - More accurate source locations in error messages
+         * - Better alignment with Kotlin compiler architecture
+         * - Follows proven Metro patterns
+         *
+         * **Status:** Experimental (Phase 4 testing)
+         */
+        val useFirAnalysis: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
+
+        /**
          * Source project to collect generated fakes from (collector mode).
          *
          * When set, this module switches to **collector mode**:
