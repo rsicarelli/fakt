@@ -3,7 +3,7 @@
 package com.rsicarelli.fakt.compiler
 
 import com.rsicarelli.fakt.compiler.api.LogLevel
-import com.rsicarelli.fakt.compiler.config.FaktOptions
+import com.rsicarelli.fakt.compiler.core.config.FaktOptions
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi

@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.fir
 
-import com.rsicarelli.fakt.compiler.FaktSharedContext
+import com.rsicarelli.fakt.compiler.fir.checkers.FaktFirCheckers
+import com.rsicarelli.fakt.compiler.core.context.FaktSharedContext
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
 

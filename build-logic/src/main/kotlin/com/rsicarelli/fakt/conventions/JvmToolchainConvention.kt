@@ -13,6 +13,8 @@ import org.gradle.kotlin.dsl.configure
  * Configures:
  * - Java 21 toolchain for all modules
  * - Ensures consistent JDK version across the project
+ *
+ * //TODO swap to regular Compiler Tasks for broader binary compatibility
  */
 fun Project.applyJvmToolchain() {
     pluginManager.withPlugin("java") {

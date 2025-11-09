@@ -169,7 +169,7 @@ class ServiceLoaderValidationTest {
         val className = serviceFile.readText().trim()
 
         // When
-        val expectedPackage = "com.rsicarelli.fakt.compiler.config"
+        val expectedPackage = "com.rsicarelli.fakt.compiler.core.config"
 
         // Then
         assertTrue(
@@ -181,8 +181,8 @@ class ServiceLoaderValidationTest {
         )
 
         assertTrue(
-            className == "com.rsicarelli.fakt.compiler.config.FaktCommandLineProcessor",
-            "Exact class name should be com.rsicarelli.fakt.compiler.config.FaktCommandLineProcessor. " +
+            className == "com.rsicarelli.fakt.compiler.core.config.FaktCommandLineProcessor",
+            "Exact class name should be com.rsicarelli.fakt.compiler.core.config.FaktCommandLineProcessor. " +
                 "Found: $className",
         )
     }
