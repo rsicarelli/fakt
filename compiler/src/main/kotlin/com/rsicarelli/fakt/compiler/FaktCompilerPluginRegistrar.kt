@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler
 
-import com.rsicarelli.fakt.compiler.config.FaktOptions
+import com.rsicarelli.fakt.compiler.core.config.FaktOptions
 import com.rsicarelli.fakt.compiler.fir.FaktFirExtensionRegistrar
-import com.rsicarelli.fakt.compiler.ir.UnifiedFaktIrGenerationExtension
-import com.rsicarelli.fakt.compiler.telemetry.FaktLogger
+import com.rsicarelli.fakt.compiler.fir.metadata.FirMetadataStorage
+import com.rsicarelli.fakt.compiler.ir.generation.UnifiedFaktIrGenerationExtension
+import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
+import com.rsicarelli.fakt.compiler.core.context.FaktSharedContext
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
@@ -53,9 +55,7 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
             FaktSharedContext(
                 fakeAnnotations = FaktSharedContext.DEFAULT_FAKE_ANNOTATIONS,
                 options = options,
-                metadataStorage =
-                    com.rsicarelli.fakt.compiler.fir
-                        .FirMetadataStorage(),
+                metadataStorage = FirMetadataStorage(),
             )
 
         registerFirExtension(logger, sharedContext)
