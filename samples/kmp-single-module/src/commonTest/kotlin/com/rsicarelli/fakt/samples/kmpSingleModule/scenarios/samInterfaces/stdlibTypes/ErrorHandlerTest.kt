@@ -12,10 +12,9 @@ class ErrorHandlerTest {
     @Test
     fun `GIVEN ErrorHandler SAM WHEN handling error THEN should return handled result`() {
         // Given
-        val handler =
-            fakeErrorHandler<String> {
-                handle { result -> result.getOrNull() ?: "default" }
-            }
+        val handler = fakeErrorHandler<String> {
+            handle { result -> result.getOrNull() ?: "default" }
+        }
 
         // When
         val successResult = handler.handle(Result.success("success"))

@@ -10,24 +10,17 @@ import kotlin.test.assertNull
 
 /**
  * Comprehensive test for ProductService fake generation.
- *
- * Validates:
- * - Suspend function behavior
- * - Methods with default parameters
- * - Nullable return types
- * - Default async behaviors
  */
 class ProductServiceTest {
     @Test
     fun `GIVEN ProductService fake WHEN calling suspend getProduct THEN should return Product`() =
         runTest {
             // Given
-            val fake =
-                fakeProductService {
-                    getProduct { id ->
-                        if (id == 1L) Product(1L, "Test Product", 99.99, "Electronics") else null
-                    }
+            val fake = fakeProductService {
+                getProduct { id ->
+                    if (id == 1L) Product(1L, "Test Product", 99.99, "Electronics") else null
                 }
+            }
 
             // When
             val foundProduct = fake.getProduct(1L)
@@ -43,14 +36,13 @@ class ProductServiceTest {
     fun `GIVEN ProductService fake WHEN searching with defaults THEN should handle default limit`() =
         runTest {
             // Given
-            val fake =
-                fakeProductService {
-                    searchProducts { query, limit ->
-                        List(limit) { index ->
-                            Product(index.toLong(), "$query-product-$index", 10.0 * index, "Test")
-                        }
+            val fake = fakeProductService {
+                searchProducts { query, limit ->
+                    List(limit) { index ->
+                        Product(index.toLong(), "$query-product-$index", 10.0 * index, "Test")
                     }
                 }
+            }
 
             // When - call with explicit limit
             val resultWithLimit = fake.searchProducts("test", 5)
@@ -68,12 +60,11 @@ class ProductServiceTest {
     fun `GIVEN ProductService fake WHEN updating price THEN should return updated product`() =
         runTest {
             // Given
-            val fake =
-                fakeProductService {
-                    updatePrice { id, newPrice ->
-                        Product(id, "Updated Product", newPrice, "Updated")
-                    }
+            val fake = fakeProductService {
+                updatePrice { id, newPrice ->
+                    Product(id, "Updated Product", newPrice, "Updated")
                 }
+            }
 
             // When
             val result = fake.updatePrice(123L, 149.99)

@@ -12,10 +12,9 @@ class ResultFunctionMapperTest {
     @Test
     fun `GIVEN ResultFunctionMapper SAM WHEN mapping result function THEN should transform`() {
         // Given
-        val mapper =
-            fakeResultFunctionMapper<Int, String> {
-                mapResult { fn, input -> Result.success(fn(input)) }
-            }
+        val mapper = fakeResultFunctionMapper<Int, String> {
+            mapResult { fn, input -> Result.success(fn(input)) }
+        }
 
         // When
         val result = mapper.mapResult({ it.toString() }, 42)

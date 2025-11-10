@@ -1,6 +1,5 @@
-// Copyright (C) 2025 Rodrigo Sicarelli.
+// Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-
 package com.rsicarelli.fakt.codegen.builder
 
 import com.rsicarelli.fakt.codegen.model.CodeBlock
@@ -107,6 +106,31 @@ public class FunctionBuilder @PublishedApi internal constructor(
                 type = parseType(type),
                 defaultValue = defaultValue?.let { CodeExpression.Raw(it) },
                 isVararg = vararg
+            )
+        )
+    }
+
+    /**
+     * Adds a type parameter to the function.
+     *
+     * Example:
+     * ```kotlin
+     * typeParam("T")  // fun <T> method()
+     * typeParam("R", "Comparable<R>")  // fun <R : Comparable<R>> method()
+     * ```
+     *
+     * @param name Type parameter name
+     * @param constraints Optional type constraints
+     */
+    public fun typeParam(
+        name: String,
+        vararg constraints: String,
+    ) {
+        typeParameters.add(
+            CodeTypeParameter(
+                name = name,
+                constraints = constraints.toList(),
+                isReified = false
             )
         )
     }

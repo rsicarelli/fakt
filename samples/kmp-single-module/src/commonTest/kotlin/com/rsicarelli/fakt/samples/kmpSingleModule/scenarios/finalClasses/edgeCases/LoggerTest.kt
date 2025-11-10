@@ -4,7 +4,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.finalClasses.edgeC
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class LoggerTest {
     @Test
@@ -20,12 +19,11 @@ class LoggerTest {
     fun `GIVEN configured log WHEN called with varargs THEN uses custom behavior`() {
         val logged = mutableListOf<String>()
 
-        val logger: Logger =
-            fakeLogger {
-                log { messages ->
-                    logged.addAll(messages)
-                }
+        val logger: Logger = fakeLogger {
+            log { messages ->
+                logged.addAll(messages)
             }
+        }
 
         logger.log("msg1", "msg2", "msg3")
 
@@ -46,13 +44,12 @@ class LoggerTest {
         var capturedLevel = ""
         val capturedMessages = mutableListOf<String>()
 
-        val logger: Logger =
-            fakeLogger {
-                logWithLevel { level, messages ->
-                    capturedLevel = level
-                    capturedMessages.addAll(messages)
-                }
+        val logger: Logger = fakeLogger {
+            logWithLevel { level, messages ->
+                capturedLevel = level
+                capturedMessages.addAll(messages)
             }
+        }
 
         logger.logWithLevel("ERROR", "msg1", "msg2")
 
@@ -71,16 +68,15 @@ class LoggerTest {
 
     @Test
     fun `GIVEN configured format WHEN called THEN uses custom behavior`() {
-        val logger: Logger =
-            fakeLogger {
-                format { template, args ->
-                    var result = template
-                    args.forEach { arg ->
-                        result = result.replaceFirst("%s", arg.toString())
-                    }
-                    result
+        val logger: Logger = fakeLogger {
+            format { template, args ->
+                var result = template
+                args.forEach { arg ->
+                    result = result.replaceFirst("%s", arg.toString())
                 }
+                result
             }
+        }
 
         val result = logger.format("Hello %s %s", "Beautiful", "World")
 
@@ -98,12 +94,11 @@ class LoggerTest {
 
     @Test
     fun `GIVEN configured combine WHEN called THEN uses custom behavior`() {
-        val logger: Logger =
-            fakeLogger {
-                combine { prefix, parts, suffix ->
-                    "$prefix[${parts.joinToString(",")}]$suffix"
-                }
+        val logger: Logger = fakeLogger {
+            combine { prefix, parts, suffix ->
+                "$prefix[${parts.joinToString(",")}]$suffix"
             }
+        }
 
         val result = logger.combine("START-", "a", "b", "c", suffix = "-END")
 
@@ -114,21 +109,20 @@ class LoggerTest {
     fun `GIVEN all methods configured WHEN called THEN all use custom behaviors`() {
         val allLogs = mutableListOf<String>()
 
-        val logger: Logger =
-            fakeLogger {
-                log { messages ->
-                    allLogs.add("log: ${messages.joinToString("")}")
-                }
-                logWithLevel { level, messages ->
-                    allLogs.add("$level: ${messages.joinToString("")}")
-                }
-                format { template, args ->
-                    "formatted: $template"
-                }
-                combine { prefix, parts, suffix ->
-                    "$prefix-combined-$suffix"
-                }
+        val logger: Logger = fakeLogger {
+            log { messages ->
+                allLogs.add("log: ${messages.joinToString("")}")
             }
+            logWithLevel { level, messages ->
+                allLogs.add("$level: ${messages.joinToString("")}")
+            }
+            format { template, args ->
+                "formatted: $template"
+            }
+            combine { prefix, parts, suffix ->
+                "$prefix-combined-$suffix"
+            }
+        }
 
         logger.log("a", "b")
         logger.logWithLevel("INFO", "c", "d")

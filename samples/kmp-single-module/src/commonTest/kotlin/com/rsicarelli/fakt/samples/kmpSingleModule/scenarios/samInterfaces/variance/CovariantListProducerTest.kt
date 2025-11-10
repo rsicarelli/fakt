@@ -13,10 +13,9 @@ class CovariantListProducerTest {
     @Test
     fun `GIVEN CovariantListProducer SAM WHEN producing list THEN should work with out variance`() {
         // Given
-        val producer =
-            fakeCovariantListProducer<String> {
-                produce { listOf("a", "b", "c") }
-            }
+        val producer = fakeCovariantListProducer<String> {
+            produce { listOf("a", "b", "c") }
+        }
 
         // When
         val result = producer.produce()
@@ -28,10 +27,9 @@ class CovariantListProducerTest {
     @Test
     fun `GIVEN CovariantListProducer SAM WHEN producing empty list THEN should handle correctly`() {
         // Given
-        val producer =
-            fakeCovariantListProducer<Int> {
-                produce { emptyList() }
-            }
+        val producer = fakeCovariantListProducer<Int> {
+            produce { emptyList() }
+        }
 
         // When
         val result = producer.produce()

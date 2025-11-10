@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.companionObjects.basic
 
-import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.companionObjects.basic.ConfigService
-import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.companionObjects.basic.fakeConfigService
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -14,12 +12,9 @@ class ConfigServiceTest {
     @Test
     fun `GIVEN interface with companion property WHEN using fake THEN instance methods should work`() {
         // Given
-        val service =
-            fakeConfigService {
-                getConfig { key ->
-                    "value-for-$key"
-                }
-            }
+        val service = fakeConfigService {
+            getConfig { key -> "value-for-$key" }
+        }
 
         // When
         val result = service.getConfig("api-key")

@@ -2,25 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.finalClasses.edgeCases
 
+import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.finalClasses.edgeCases.ConfigManager
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/**
- * Tests for P0 Scenario: ClassWithFinalMethods
- *
- * TESTING STANDARD: GIVEN-WHEN-THEN pattern (uppercase)
- * Framework: Vanilla JUnit5 + kotlin-test
- */
 class ConfigManagerTest {
     @Test
     fun `GIVEN class with final methods WHEN open methods configured THEN should use configured behavior`() {
         // Given
-        val manager =
-            fakeConfigManager {
-                loadConfig { key -> "custom-$key" }
-            }
+        val manager = fakeConfigManager {
+            loadConfig { key -> "custom-$key" }
+        }
 
         // When
         val config = manager.loadConfig("test")
@@ -32,11 +26,10 @@ class ConfigManagerTest {
     @Test
     fun `GIVEN class with final methods WHEN final methods called THEN should use original implementation`() {
         // Given
-        val manager =
-            fakeConfigManager {
-                // Configure open methods
-                loadConfig { "configured" }
-            }
+        val manager = fakeConfigManager {
+            // Configure open methods
+            loadConfig { "configured" }
+        }
 
         // When - final methods always use original implementation
         val version = manager.getVersion()
@@ -52,10 +45,9 @@ class ConfigManagerTest {
     @Test
     fun `GIVEN class with final methods WHEN not configured THEN open methods use super and final use original`() {
         // Given
-        val manager =
-            fakeConfigManager {
-                // Not configuring any methods
-            }
+        val manager = fakeConfigManager {
+            // Not configuring any methods
+        }
 
         // When
         val config = manager.loadConfig("key")
@@ -73,15 +65,14 @@ class ConfigManagerTest {
         // Given
         var saveCalled = false
         lateinit var manager: ConfigManager
-        manager =
-            fakeConfigManager {
-                saveConfig { key, value ->
-                    // Use validateKey (final) within configured behavior
-                    if (manager.validateKey(key)) {
-                        saveCalled = true
-                    }
+        manager = fakeConfigManager {
+            saveConfig { key, value ->
+                // Use validateKey (final) within configured behavior
+                if (manager.validateKey(key)) {
+                    saveCalled = true
                 }
             }
+        }
 
         // When
         manager.saveConfig("valid", "value") // Valid key

@@ -8,12 +8,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/**
- * Tests for P0 Scenario: AbstractClassMultipleAbstract
- *
- * TESTING STANDARD: GIVEN-WHEN-THEN pattern (uppercase)
- * Framework: Vanilla JUnit5 + kotlin-test
- */
 class PaymentProcessorTest {
     @Test
     fun `GIVEN abstract class WHEN no methods configured THEN all should throw error`() {
@@ -30,13 +24,12 @@ class PaymentProcessorTest {
     @Test
     fun `GIVEN abstract class WHEN all methods configured THEN should use configured behaviors`() {
         // Given
-        val processor =
-            fakePaymentProcessor {
-                process { amount -> amount > 0 }
-                validate { card -> card.length == 16 }
-                refund { txId -> 100.0 }
-                getFee { amount -> amount * 0.03 }
-            }
+        val processor = fakePaymentProcessor {
+            process { amount -> amount > 0 }
+            validate { card -> card.length == 16 }
+            refund { txId -> 100.0 }
+            getFee { amount -> amount * 0.03 }
+        }
 
         // When
         val processSuccess = processor.process(150.0)
@@ -58,11 +51,10 @@ class PaymentProcessorTest {
     @Test
     fun `GIVEN abstract class WHEN partially configured THEN configured work and others error`() {
         // Given - only configure validate and process
-        val processor =
-            fakePaymentProcessor {
-                validate { true }
-                process { amount -> amount > 0 }
-            }
+        val processor = fakePaymentProcessor {
+            validate { true }
+            process { amount -> amount > 0 }
+        }
 
         // When/Then
         assertTrue(processor.validate("any"))
@@ -79,19 +71,18 @@ class PaymentProcessorTest {
         var processCount = 0
         var validateCount = 0
 
-        val processor =
-            fakePaymentProcessor {
-                process { amount ->
-                    processCount++
-                    true
-                }
-                validate { card ->
-                    validateCount++
-                    true
-                }
-                refund { "0.0".toDouble() }
-                getFee { 0.0 }
+        val processor = fakePaymentProcessor {
+            process { amount ->
+                processCount++
+                true
             }
+            validate { card ->
+                validateCount++
+                true
+            }
+            refund { "0.0".toDouble() }
+            getFee { 0.0 }
+        }
 
         // When
         processor.process(100.0)

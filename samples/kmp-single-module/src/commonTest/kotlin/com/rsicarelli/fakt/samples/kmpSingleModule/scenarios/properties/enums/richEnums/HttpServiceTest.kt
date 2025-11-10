@@ -8,20 +8,13 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/**
- * Tests for HttpService fake with rich enum (enum with properties/constructors).
- *
- * Validates that enums with constructor parameters, properties, and methods
- * are properly handled by Fakt code generation.
- */
 class HttpServiceTest {
     @Test
     fun `GIVEN HttpService fake WHEN configuring defaultSuccessStatus THEN should return configured status`() {
         // Given
-        val httpService =
-            fakeHttpService {
-                defaultSuccessStatus { HttpStatus.CREATED }
-            }
+        val httpService = fakeHttpService {
+            defaultSuccessStatus { HttpStatus.CREATED }
+        }
 
         // When
         val status = httpService.defaultSuccessStatus
@@ -36,10 +29,9 @@ class HttpServiceTest {
     @Test
     fun `GIVEN HttpService fake WHEN configuring customErrorStatus as null THEN should return null`() {
         // Given
-        val httpService =
-            fakeHttpService {
-                customErrorStatus { null }
-            }
+        val httpService = fakeHttpService {
+            customErrorStatus { null }
+        }
 
         // When
         val status = httpService.customErrorStatus
@@ -51,10 +43,9 @@ class HttpServiceTest {
     @Test
     fun `GIVEN HttpService fake WHEN configuring customErrorStatus THEN should return configured error status`() {
         // Given
-        val httpService =
-            fakeHttpService {
-                customErrorStatus { HttpStatus.NOT_FOUND }
-            }
+        val httpService = fakeHttpService {
+            customErrorStatus { HttpStatus.NOT_FOUND }
+        }
 
         // When
         val status = httpService.customErrorStatus
@@ -68,33 +59,37 @@ class HttpServiceTest {
     @Test
     fun `GIVEN HttpService fake WHEN configuring sendRequest THEN should return configured status`() {
         // Given
-        val httpService =
-            fakeHttpService {
-                sendRequest { url ->
-                    when {
-                        url.contains("success") -> HttpStatus.OK
-                        url.contains("error") -> HttpStatus.INTERNAL_SERVER_ERROR
-                        else -> HttpStatus.BAD_REQUEST
-                    }
+        val httpService = fakeHttpService {
+            sendRequest { url ->
+                when {
+                    url.contains("success") -> HttpStatus.OK
+                    url.contains("error") -> HttpStatus.INTERNAL_SERVER_ERROR
+                    else -> HttpStatus.BAD_REQUEST
                 }
             }
+        }
 
         // When & Then
         assertEquals(HttpStatus.OK, httpService.sendRequest("https://api.example.com/success"))
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, httpService.sendRequest("https://api.example.com/error"))
-        assertEquals(HttpStatus.BAD_REQUEST, httpService.sendRequest("https://api.example.com/other"))
+        assertEquals(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            httpService.sendRequest("https://api.example.com/error")
+        )
+        assertEquals(
+            HttpStatus.BAD_REQUEST,
+            httpService.sendRequest("https://api.example.com/other")
+        )
     }
 
     @Test
     fun `GIVEN HttpService fake WHEN configuring isRetriable THEN should check if status is retriable`() {
         // Given
-        val httpService =
-            fakeHttpService {
-                isRetriable { status ->
-                    // Server errors and rate limiting are retriable
-                    status.isServerError() || status.code == 429
-                }
+        val httpService = fakeHttpService {
+            isRetriable { status ->
+                // Server errors and rate limiting are retriable
+                status.isServerError() || status.code == 429
             }
+        }
 
         // When & Then
         assertTrue(httpService.isRetriable(HttpStatus.INTERNAL_SERVER_ERROR))
@@ -105,12 +100,11 @@ class HttpServiceTest {
     @Test
     fun `GIVEN HttpService fake WHEN configuring getStatusByCode THEN should return status by code`() {
         // Given
-        val httpService =
-            fakeHttpService {
-                getStatusByCode { code ->
-                    HttpStatus.entries.firstOrNull { it.code == code }
-                }
+        val httpService = fakeHttpService {
+            getStatusByCode { code ->
+                HttpStatus.entries.firstOrNull { it.code == code }
             }
+        }
 
         // When & Then
         assertEquals(HttpStatus.OK, httpService.getStatusByCode(200))
@@ -121,12 +115,11 @@ class HttpServiceTest {
     @Test
     fun `GIVEN HttpService fake WHEN configuring formatResponse THEN should format response with status info`() {
         // Given
-        val httpService =
-            fakeHttpService {
-                formatResponse { status, body ->
-                    "${status.format()}: $body"
-                }
+        val httpService = fakeHttpService {
+            formatResponse { status, body ->
+                "${status.format()}: $body"
             }
+        }
 
         // When
         val response = httpService.formatResponse(HttpStatus.OK, "Success")
@@ -138,10 +131,9 @@ class HttpServiceTest {
     @Test
     fun `GIVEN HttpService fake WHEN using rich enum methods THEN should access enum properties and methods`() {
         // Given
-        val httpService =
-            fakeHttpService {
-                sendRequest { HttpStatus.UNAUTHORIZED }
-            }
+        val httpService = fakeHttpService {
+            sendRequest { HttpStatus.UNAUTHORIZED }
+        }
 
         // When
         val status = httpService.sendRequest("https://api.example.com")

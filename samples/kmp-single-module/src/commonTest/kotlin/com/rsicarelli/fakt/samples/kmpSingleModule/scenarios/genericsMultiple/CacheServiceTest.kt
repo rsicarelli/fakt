@@ -1,6 +1,7 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.genericsMultiple
+
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -8,24 +9,14 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/**
- * Comprehensive test for CacheService fake generation.
- *
- * Validates:
- * - Class-level generic types (TKey, TValue)
- * - Method-level generics with constraints (where R : TValue)
- * - Suspend methods with generics
- * - Cache operations (get, put, remove, etc.)
- */
 class CacheServiceTest {
     @Test
     fun `GIVEN CacheService WHEN accessing size properties THEN should return configured values`() {
         // Given
-        val fake =
-            fakeCacheService<String, Int> {
-                size { 5 }
-                maxSize { 100 }
-            }
+        val fake = fakeCacheService<String, Int> {
+            size { 5 }
+            maxSize { 100 }
+        }
 
         // When
         val currentSize = fake.size
@@ -40,13 +31,12 @@ class CacheServiceTest {
     fun `GIVEN CacheService WHEN getting and putting THEN should handle key-value operations`() {
         // Given
         val storage = mutableMapOf<String, Int>()
-        val fake =
-            fakeCacheService<String, Int> {
-                get { key -> storage[key] }
-                put { key, value ->
-                    storage.put(key, value)
-                }
+        val fake = fakeCacheService<String, Int> {
+            get { key -> storage[key] }
+            put { key, value ->
+                storage.put(key, value)
             }
+        }
 
         // When
         val initialGet = fake.get("key1")
@@ -62,10 +52,9 @@ class CacheServiceTest {
     fun `GIVEN CacheService WHEN removing THEN should return old value`() {
         // Given
         val storage = mutableMapOf("key1" to 100)
-        val fake =
-            fakeCacheService<String, Int> {
-                remove { key -> storage.remove(key) }
-            }
+        val fake = fakeCacheService<String, Int> {
+            remove { key -> storage.remove(key) }
+        }
 
         // When
         val removed = fake.remove("key1")
@@ -80,12 +69,11 @@ class CacheServiceTest {
     fun `GIVEN CacheService WHEN clearing THEN should execute clear behavior`() {
         // Given
         var clearCalled = false
-        val fake =
-            fakeCacheService<String, Int> {
-                clear {
-                    clearCalled = true
-                }
+        val fake = fakeCacheService<String, Int> {
+            clear {
+                clearCalled = true
             }
+        }
 
         // When
         fake.clear()
@@ -98,10 +86,9 @@ class CacheServiceTest {
     fun `GIVEN CacheService WHEN checking containsKey THEN should return boolean`() {
         // Given
         val storage = setOf("key1", "key2")
-        val fake =
-            fakeCacheService<String, Int> {
-                containsKey { key -> key in storage }
-            }
+        val fake = fakeCacheService<String, Int> {
+            containsKey { key -> key in storage }
+        }
 
         // When
         val contains1 = fake.containsKey("key1")
@@ -116,11 +103,10 @@ class CacheServiceTest {
     fun `GIVEN CacheService WHEN getting keys and values THEN should return collections`() {
         // Given
         val storage = mapOf("a" to 1, "b" to 2, "c" to 3)
-        val fake =
-            fakeCacheService<String, Int> {
-                keys { storage.keys }
-                values { storage.values }
-            }
+        val fake = fakeCacheService<String, Int> {
+            keys { storage.keys }
+            values { storage.values }
+        }
 
         // When
         val keys = fake.keys()
@@ -137,12 +123,11 @@ class CacheServiceTest {
     fun `GIVEN CacheService WHEN compute if absent THEN should handle where constraint`() {
         // Given
         val storage = mutableMapOf<String, Int>()
-        val fake =
-            fakeCacheService<String, Int> {
-                computeIfAbsent { key, computer ->
-                    storage.getOrPut(key) { computer(key) as Int }
-                }
+        val fake = fakeCacheService<String, Int> {
+            computeIfAbsent { key, computer ->
+                storage.getOrPut(key) { computer(key) as Int }
             }
+        }
 
         // When
         val result1 = fake.computeIfAbsent("key1") { 42 }
@@ -158,12 +143,11 @@ class CacheServiceTest {
         runTest {
             // Given
             val storage = mutableMapOf<String, String>()
-            val fake =
-                fakeCacheService<String, String> {
-                    asyncComputeIfAbsent { key, computer ->
-                        storage.getOrPut(key) { computer(key) as String }
-                    }
+            val fake = fakeCacheService<String, String> {
+                asyncComputeIfAbsent { key, computer ->
+                    storage.getOrPut(key) { computer(key) as String }
                 }
+            }
 
             // When
             val result = fake.asyncComputeIfAbsent("async-key") { "computed-$it" }

@@ -2,28 +2,21 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.properties.enums.companion
 
+import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.properties.enums.companion.Currency.Companion.isSupported
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.convert
 
-/**
- * Tests for CurrencyService fake with enum companion object.
- *
- * Validates that enums with companion objects are properly handled
- * by Fakt code generation, including accessing companion properties
- * and methods from enum instances.
- */
 class CurrencyServiceTest {
     @Test
     fun `GIVEN CurrencyService fake WHEN configuring defaultCurrency THEN should return configured currency`() {
         // Given
-        val currencyService =
-            fakeCurrencyService {
-                defaultCurrency { Currency.EUR }
-            }
+        val currencyService = fakeCurrencyService {
+            defaultCurrency { Currency.EUR }
+        }
 
         // When
         val currency = currencyService.defaultCurrency
@@ -37,10 +30,9 @@ class CurrencyServiceTest {
     @Test
     fun `GIVEN CurrencyService fake WHEN configuring preferredCurrency as null THEN should return null`() {
         // Given
-        val currencyService =
-            fakeCurrencyService {
-                preferredCurrency { null }
-            }
+        val currencyService = fakeCurrencyService {
+            preferredCurrency { null }
+        }
 
         // When
         val currency = currencyService.preferredCurrency
@@ -52,10 +44,9 @@ class CurrencyServiceTest {
     @Test
     fun `GIVEN CurrencyService fake WHEN configuring preferredCurrency THEN should return configured currency`() {
         // Given
-        val currencyService =
-            fakeCurrencyService {
-                preferredCurrency { Currency.BTC }
-            }
+        val currencyService = fakeCurrencyService {
+            preferredCurrency { Currency.BTC }
+        }
 
         // When
         val currency = currencyService.preferredCurrency
@@ -68,18 +59,17 @@ class CurrencyServiceTest {
     @Test
     fun `GIVEN CurrencyService fake WHEN configuring getExchangeRate THEN should return exchange rate`() {
         // Given
-        val currencyService =
-            fakeCurrencyService {
-                getExchangeRate { from, to ->
-                    when {
-                        from == to -> 1.0
-                        from == Currency.USD && to == Currency.EUR -> 0.85
-                        from == Currency.EUR && to == Currency.USD -> 1.18
-                        from == Currency.USD && to == Currency.GBP -> 0.73
-                        else -> 1.0
-                    }
+        val currencyService = fakeCurrencyService {
+            getExchangeRate { from, to ->
+                when {
+                    from == to -> 1.0
+                    from == Currency.USD && to == Currency.EUR -> 0.85
+                    from == Currency.EUR && to == Currency.USD -> 1.18
+                    from == Currency.USD && to == Currency.GBP -> 0.73
+                    else -> 1.0
                 }
             }
+        }
 
         // When & Then
         assertEquals(1.0, currencyService.getExchangeRate(Currency.USD, Currency.USD))
@@ -91,23 +81,21 @@ class CurrencyServiceTest {
     @Test
     fun `GIVEN CurrencyService fake WHEN configuring convert THEN should convert amount between currencies`() {
         // Given
-        val rates =
-            mapOf(
-                Pair(Currency.USD, Currency.EUR) to 0.85,
-                Pair(Currency.EUR, Currency.USD) to 1.18,
-            )
+        val rates = mapOf(
+            Pair(Currency.USD, Currency.EUR) to 0.85,
+            Pair(Currency.EUR, Currency.USD) to 1.18,
+        )
 
-        val currencyService =
-            fakeCurrencyService {
-                convert { amount, from, to ->
-                    if (from == to) {
-                        amount
-                    } else {
-                        val rate = rates[Pair(from, to)] ?: 1.0
-                        amount * rate
-                    }
+        val currencyService = fakeCurrencyService {
+            convert { amount, from, to ->
+                if (from == to) {
+                    amount
+                } else {
+                    val rate = rates[Pair(from, to)] ?: 1.0
+                    amount * rate
                 }
             }
+        }
 
         // When
         val converted = currencyService.convert(100.0, Currency.USD, Currency.EUR)
@@ -119,10 +107,9 @@ class CurrencyServiceTest {
     @Test
     fun `GIVEN CurrencyService fake WHEN configuring getSupportedCurrencies THEN should return all currencies`() {
         // Given
-        val currencyService =
-            fakeCurrencyService {
-                getSupportedCurrencies { Currency.entries }
-            }
+        val currencyService = fakeCurrencyService {
+            getSupportedCurrencies { Currency.entries }
+        }
 
         // When
         val currencies = currencyService.getSupportedCurrencies()
@@ -138,12 +125,11 @@ class CurrencyServiceTest {
     @Test
     fun `GIVEN CurrencyService fake WHEN configuring isSupported THEN should validate currency support`() {
         // Given
-        val currencyService =
-            fakeCurrencyService {
-                isSupported { currency ->
-                    currency in Currency.FIAT_CURRENCIES
-                }
+        val currencyService = fakeCurrencyService {
+            isSupported { currency ->
+                currency in Currency.FIAT_CURRENCIES
             }
+        }
 
         // When & Then
         assertTrue(currencyService.isSupported(Currency.USD))
@@ -154,12 +140,11 @@ class CurrencyServiceTest {
     @Test
     fun `GIVEN CurrencyService fake WHEN configuring formatAmount THEN should format with currency symbol`() {
         // Given
-        val currencyService =
-            fakeCurrencyService {
-                formatAmount { amount, currency ->
-                    currency.format(amount)
-                }
+        val currencyService = fakeCurrencyService {
+            formatAmount { amount, currency ->
+                currency.format(amount)
             }
+        }
 
         // When & Then
         assertEquals("$100.00", currencyService.formatAmount(100.0, Currency.USD))

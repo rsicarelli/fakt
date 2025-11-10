@@ -12,10 +12,9 @@ class ProducerTest {
     @Test
     fun `GIVEN Producer SAM WHEN producing THEN should return value`() {
         // Given
-        val producer =
-            fakeProducer<String> {
-                produce { "produced-value" }
-            }
+        val producer = fakeProducer<String> {
+            produce { "produced-value" }
+        }
 
         // When
         val result = producer.produce()

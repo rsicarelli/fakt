@@ -8,17 +8,13 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
-/**
- * Tests for ArrayHandler SAM interface.
- */
 class ArrayHandlerTest {
     @Test
     fun `GIVEN ArrayHandler SAM WHEN handling array THEN should process all elements`() {
         // Given
-        val handler =
-            fakeArrayHandler<String> {
-                handle { items -> items.map { it.uppercase() }.toTypedArray() }
-            }
+        val handler = fakeArrayHandler<String> {
+            handle { items -> items.map { it.uppercase() }.toTypedArray() }
+        }
 
         // When
         val result = handler.handle(arrayOf("a", "b", "c"))
@@ -30,10 +26,9 @@ class ArrayHandlerTest {
     @Test
     fun `GIVEN ArrayHandler SAM WHEN handling empty array THEN should return empty array`() {
         // Given
-        val handler =
-            fakeArrayHandler<Int> {
-                handle { items -> items.map { it * 2 }.toTypedArray() }
-            }
+        val handler = fakeArrayHandler<Int> {
+            handle { items -> items.map { it * 2 }.toTypedArray() }
+        }
 
         // When
         val result = handler.handle(emptyArray())

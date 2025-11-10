@@ -1,6 +1,5 @@
-// Copyright (C) 2025 Rodrigo Sicarelli.
+// Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-
 package com.rsicarelli.fakt.codegen.builder
 
 import com.rsicarelli.fakt.codegen.model.CodeBlock
@@ -106,8 +105,26 @@ public class PropertyBuilder @PublishedApi internal constructor(
         type = parseType(typeString),
         modifiers = modifiers,
         initializer = initializer?.let { CodeExpression.Raw(it) },
-        getter = getter?.let { CodeBlock.Expression(CodeExpression.Raw(it)) },
-        setter = setter?.let { CodeBlock.Expression(CodeExpression.Raw(it)) },
+        // Getter needs block syntax for multi-line statements (contains newline or return)
+        getter = getter?.let {
+            if (it.contains("\n") || it.contains("return")) {
+                // Multi-line statements, needs block syntax: get() { ... }
+                CodeBlock.Statements(listOf(it))
+            } else {
+                // Simple expression, can use expression syntax: get() = ...
+                CodeBlock.Expression(CodeExpression.Raw(it))
+            }
+        },
+        // Setter needs block syntax for multi-line statements or assignments
+        setter = setter?.let {
+            if (it.contains("\n") || it.contains("return") || it.contains("=")) {
+                // Multi-line or statement with assignment, needs block syntax: set(value) { ... }
+                CodeBlock.Statements(listOf(it))
+            } else {
+                // Pure expression, can use expression syntax: set(value) = ...
+                CodeBlock.Expression(CodeExpression.Raw(it))
+            }
+        },
         isMutable = isMutable
     )
 }

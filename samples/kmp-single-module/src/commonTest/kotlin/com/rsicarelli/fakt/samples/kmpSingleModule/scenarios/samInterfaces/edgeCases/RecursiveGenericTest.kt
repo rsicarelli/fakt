@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.edge
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for RecursiveGeneric SAM interface.
- */
 class RecursiveGenericTest {
     @Test
     fun `GIVEN RecursiveGeneric SAM WHEN processing recursive type THEN should handle self-reference`() {
@@ -18,10 +15,9 @@ class RecursiveGenericTest {
             override fun compareTo(other: Node) = value.compareTo(other.value)
         }
 
-        val processor =
-            fakeRecursiveGeneric<Node> {
-                process { item -> item.value * 2 }
-            }
+        val processor = fakeRecursiveGeneric<Node> {
+            process { item -> item.value * 2 }
+        }
 
         // When
         val result = processor.process(Node(21))
@@ -33,10 +29,9 @@ class RecursiveGenericTest {
     @Test
     fun `GIVEN RecursiveGeneric SAM WHEN using String THEN should work with comparable`() {
         // Given
-        val processor =
-            fakeRecursiveGeneric<String> {
-                process { item -> item.length }
-            }
+        val processor = fakeRecursiveGeneric<String> {
+            process { item -> item.length }
+        }
 
         // When
         val result = processor.process("hello")

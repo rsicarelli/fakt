@@ -12,10 +12,9 @@ class ResultProcessorTest {
     @Test
     fun `GIVEN ResultProcessor SAM WHEN processing input THEN should return result`() {
         // Given
-        val processor =
-            fakeResultProcessor<Int> {
-                process { input -> Result.success(input * 2) }
-            }
+        val processor = fakeResultProcessor<Int> {
+            process { input -> Result.success(input * 2) }
+        }
 
         // When
         val result = processor.process(21)

@@ -7,18 +7,15 @@ import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.gener
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.time.Duration.Companion.convert
 
-/**
- * Tests for Converter SAM interface.
- */
 class ConverterTest {
     @Test
     fun `GIVEN SAM with two generics WHEN configuring THEN should convert types`() {
         // Given
-        val converter =
-            fakeConverter<String, Int> {
-                convert { input -> input.length }
-            }
+        val converter = fakeConverter<String, Int> {
+            convert { input -> input.length }
+        }
 
         // When
         val result = converter.convert("hello")

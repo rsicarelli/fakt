@@ -5,7 +5,7 @@ plugins {
     id("fakt-spotless")
     id("fakt-ktlint")
     id("fakt-detekt")
-    kotlin("plugin.serialization") version libs.versions.kotlin.get()
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.mavenPublish)
 }
 

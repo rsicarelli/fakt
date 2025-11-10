@@ -12,10 +12,9 @@ class SequenceFilterTest {
     @Test
     fun `GIVEN SequenceFilter SAM WHEN filtering sequence THEN should return filtered sequence`() {
         // Given
-        val filter =
-            fakeSequenceFilter<Int> {
-                filter { seq, predicate -> seq.filter(predicate) }
-            }
+        val filter = fakeSequenceFilter<Int> {
+            filter { seq, predicate -> seq.filter(predicate) }
+        }
 
         // When
         val result = filter.filter(sequenceOf(1, 2, 3, 4, 5)) { it % 2 == 0 }

@@ -420,16 +420,23 @@ internal class ImplementationGenerator(
      * @param analysis The analyzed interface metadata
      * @return Generated behavior properties code
      */
-    private fun generateBehaviorProperties(analysis: InterfaceAnalysis): String =
-        buildString {
+    private fun generateBehaviorProperties(analysis: InterfaceAnalysis): String {
+        // Extract class-level type parameters (e.g., "T", "K", "V" from interface<T, K, V>)
+        // Each typeParameter is already "T : Any?" format, extract just the name
+        val classLevelTypeParams = analysis.typeParameters.map { typeParam ->
+            typeParam.substringBefore(" :").trim()
+        }.toSet()
+
+        return buildString {
             analysis.functions.forEach { function ->
-                append(generateFunctionBehaviorProperty(function))
+                append(generateFunctionBehaviorProperty(function, classLevelTypeParams))
             }
 
             analysis.properties.forEach { property ->
-                append(generatePropertyBehaviorProperty(property))
+                append(generatePropertyBehaviorProperty(property, classLevelTypeParams))
             }
         }
+    }
 
     /**
      * Generates call tracking fields using MutableStateFlow for thread-safe call counting.
@@ -464,22 +471,32 @@ internal class ImplementationGenerator(
             }
         }
 
-    private fun generateFunctionBehaviorProperty(function: FunctionAnalysis): String {
+    private fun generateFunctionBehaviorProperty(
+        function: FunctionAnalysis,
+        classLevelTypeParams: Set<String> = emptySet()
+    ): String {
         val methodTypeContext = buildMethodTypeParamContext(function)
         val parameterTypes = buildFunctionParameterTypes(function, methodTypeContext)
         val returnType = buildFunctionReturnType(function, methodTypeContext)
-        val defaultLambda =
-            generateTypeSafeDefault(function, returnType.converted, returnType.original)
+        val defaultLambda = generateTypeSafeDefault(
+            function,
+            returnType.converted,
+            returnType.original,
+            classLevelTypeParams
+        )
 
         val suspendModifier = if (function.isSuspend) "suspend " else ""
         return "    private var ${function.name}Behavior: " +
                 "$suspendModifier($parameterTypes) -> ${returnType.converted} = $defaultLambda\n"
     }
 
-    private fun generatePropertyBehaviorProperty(property: PropertyAnalysis): String {
+    private fun generatePropertyBehaviorProperty(
+        property: PropertyAnalysis,
+        classLevelTypeParams: Set<String> = emptySet()
+    ): String {
         val propertyType =
             typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
-        val defaultLambda = generateTypeSafePropertyDefault(property)
+        val defaultLambda = generateTypeSafePropertyDefault(property, classLevelTypeParams)
 
         return buildString {
             append("    private var ${property.name}Behavior: () -> $propertyType = $defaultLambda\n")
@@ -575,6 +592,7 @@ internal class ImplementationGenerator(
         function: FunctionAnalysis,
         convertedType: String,
         originalType: String = convertedType,
+        classLevelTypeParams: Set<String> = emptySet()
     ): String {
         val returnType = convertedType
         val typeForDefaultDetection = originalType
@@ -591,7 +609,7 @@ internal class ImplementationGenerator(
                 function.parameters.size == 1 && !hasMethodGenerics &&
                         isIdentityFunction(function, returnType) -> "it"
                 // Case 3: Default stdlib value
-                else -> generateKotlinStdlibDefault(typeForDefaultDetection, returnType)
+                else -> generateKotlinStdlibDefault(typeForDefaultDetection, returnType, classLevelTypeParams)
             }
 
         return wrapInLambda(lambdaBody, function.parameters)
@@ -680,10 +698,13 @@ internal class ImplementationGenerator(
      * Generate type-safe default for properties.
      * Uses broad Kotlin stdlib support with exact types - no casting!
      */
-    private fun generateTypeSafePropertyDefault(property: PropertyAnalysis): String {
+    private fun generateTypeSafePropertyDefault(
+        property: PropertyAnalysis,
+        classLevelTypeParams: Set<String> = emptySet()
+    ): String {
         val propertyType =
             typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
-        val defaultValue = generateKotlinStdlibDefault(propertyType)
+        val defaultValue = generateKotlinStdlibDefault(propertyType, classLevelTypeParams = classLevelTypeParams)
         return "{ $defaultValue }"
     }
 
@@ -697,13 +718,14 @@ internal class ImplementationGenerator(
     private fun generateKotlinStdlibDefault(
         originalType: String,
         convertedType: String = originalType,
+        classLevelTypeParams: Set<String> = emptySet()
     ): String =
         // Check nullable types FIRST - they always default to null
         if (originalType.endsWith("?")) {
             "null"
         } else {
             getPrimitiveDefaults(originalType)
-                ?: getCollectionDefaults(originalType, convertedType)
+                ?: getCollectionDefaults(originalType, convertedType, classLevelTypeParams)
                 ?: getKotlinStdlibDefaults(originalType, convertedType)
                 ?: handleDomainType(originalType)
         }
@@ -739,6 +761,7 @@ internal class ImplementationGenerator(
     private fun getCollectionDefaults(
         originalType: String,
         convertedType: String = originalType,
+        classLevelTypeParams: Set<String> = emptySet()
     ): String? =
         getPrimitiveArrayDefault(originalType)
             ?: when {
@@ -781,8 +804,8 @@ internal class ImplementationGenerator(
                     "mutableMapOf"
                 )
 
-                // Arrays
-                originalType.startsWith("Array<") -> extractAndCreateArray(originalType)
+                // Arrays - Pass class-level type params
+                originalType.startsWith("Array<") -> extractAndCreateArray(originalType, classLevelTypeParams)
 
                 else -> null
             }
@@ -874,9 +897,33 @@ internal class ImplementationGenerator(
         }
     }
 
-    private fun extractAndCreateArray(typeString: String): String {
+    private fun extractAndCreateArray(
+        typeString: String,
+        classLevelTypeParams: Set<String> = emptySet()
+    ): String {
         val typeParam = extractFirstTypeParameter(typeString)
-        return "emptyArray<$typeParam>()"
+
+        // Check if the array element type is a class-level generic
+        return if (isClassLevelTypeParam(typeParam, classLevelTypeParams)) {
+            // Use non-reified array creation with suppression
+            "@Suppress(\"UNCHECKED_CAST\") arrayOfNulls<Any?>(0) as Array<$typeParam>"
+        } else {
+            // Use reified emptyArray() for concrete types
+            "emptyArray<$typeParam>()"
+        }
+    }
+
+    /**
+     * Checks if a type parameter name is a class-level generic.
+     * Handles simple cases (T) and nested cases (List<T>).
+     */
+    private fun isClassLevelTypeParam(
+        typeParam: String,
+        classLevelTypeParams: Set<String>
+    ): Boolean {
+        // Extract base type parameter name (handles "T", "List<T>", etc.)
+        val baseTypeParam = typeParam.substringBefore("<").trim()
+        return classLevelTypeParams.contains(baseTypeParam)
     }
 
     private fun extractAndCreateResult(

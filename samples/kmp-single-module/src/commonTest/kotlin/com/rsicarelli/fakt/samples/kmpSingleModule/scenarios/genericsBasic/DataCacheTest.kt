@@ -7,12 +7,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-/**
- * P0.2: Nested generics test.
- *
- * Tests that nested generic types (List<List<T>>, Map<K, List<V>>) work correctly.
- * This is a common pattern in real-world code for batch operations and grouped data.
- */
 class DataCacheTest {
     @Test
     fun `GIVEN DataCache with nested generics WHEN generating fake THEN should preserve nested types`() {
@@ -50,15 +44,14 @@ class DataCacheTest {
     fun `GIVEN Map with List values WHEN storing groups THEN should maintain type safety`() {
         // Given - DataCache with Map<String, List<T>>
         val groups = mutableMapOf<String, List<Int>>()
-        val cache =
-            fakeDataCache<Int> {
-                storeGroups { data ->
-                    groups.putAll(data)
-                }
-                getGroup { name ->
-                    groups[name]
-                }
+        val cache = fakeDataCache<Int> {
+            storeGroups { data ->
+                groups.putAll(data)
             }
+            getGroup { name ->
+                groups[name]
+            }
+        }
 
         // When - Store grouped data
         cache.storeGroups(
@@ -82,21 +75,19 @@ class DataCacheTest {
     fun `GIVEN matrix structure WHEN storing nested lists THEN should preserve structure`() {
         // Given - DataCache with matrix-like structure List<List<T>>
         var storedMatrix: List<List<String>> = emptyList()
-        val cache =
-            fakeDataCache<String> {
-                storeNested { data ->
-                    storedMatrix = data
-                }
-                getMatrix { storedMatrix }
+        val cache = fakeDataCache<String> {
+            storeNested { data ->
+                storedMatrix = data
             }
+            getMatrix { storedMatrix }
+        }
 
         // When - Store matrix data
-        val matrix =
-            listOf(
-                listOf("a1", "a2", "a3"),
-                listOf("b1", "b2", "b3"),
-                listOf("c1", "c2", "c3"),
-            )
+        val matrix = listOf(
+            listOf("a1", "a2", "a3"),
+            listOf("b1", "b2", "b3"),
+            listOf("c1", "c2", "c3"),
+        )
         cache.storeNested(matrix)
         val retrieved: List<List<String>> = cache.getMatrix()
 
@@ -122,16 +113,14 @@ class DataCacheTest {
         }
 
         // When - Store user groups
-        val admins =
-            listOf(
-                User("1", "Admin1", "admin1@example.com"),
-                User("2", "Admin2", "admin2@example.com"),
-            )
-        val users =
-            listOf(
-                User("3", "User1", "user1@example.com"),
-                User("4", "User2", "user2@example.com"),
-            )
+        val admins = listOf(
+            User("1", "Admin1", "admin1@example.com"),
+            User("2", "Admin2", "admin2@example.com"),
+        )
+        val users = listOf(
+            User("3", "User1", "user1@example.com"),
+            User("4", "User2", "user2@example.com"),
+        )
         cache.storeGroups(
             mapOf(
                 "admins" to admins,

@@ -5,17 +5,13 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.coll
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for MapWithFunction SAM interface.
- */
 class MapWithFunctionTest {
     @Test
     fun `GIVEN MapWithFunction SAM WHEN transforming with mapper THEN should apply function`() {
         // Given
-        val mapper =
-            fakeMapWithFunction<Int, String> {
-                transform { items, fn -> items.map(fn) }
-            }
+        val mapper = fakeMapWithFunction<Int, String> {
+            transform { items, fn -> items.map(fn) }
+        }
 
         // When
         val result = mapper.transform(listOf(1, 2, 3)) { (it * 10).toString() }

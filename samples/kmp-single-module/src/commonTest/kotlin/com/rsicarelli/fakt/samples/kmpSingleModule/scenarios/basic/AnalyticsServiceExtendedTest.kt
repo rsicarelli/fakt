@@ -7,11 +7,6 @@ import kotlin.test.assertEquals
 
 /**
  * Tests for AnalyticsServiceExtended - Interface extending another interface.
- *
- * Covers:
- * - Interface inheritance (extends AnalyticsService)
- * - Multiple methods (track from parent, identify from child)
- * - Unit return type methods
  */
 class AnalyticsServiceExtendedTest {
     @Test
@@ -47,8 +42,8 @@ class AnalyticsServiceExtendedTest {
     @Test
     fun `GIVEN extended analytics service WHEN using both methods THEN should work correctly`() {
         // Given
-        var events = mutableListOf<String>()
-        var users = mutableListOf<String>()
+        val events = mutableListOf<String>()
+        val users = mutableListOf<String>()
 
         val service = fakeAnalyticsServiceExtended {
             track { event -> events.add(event) }

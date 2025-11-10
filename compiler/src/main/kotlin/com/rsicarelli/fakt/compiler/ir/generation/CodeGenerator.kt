@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.generation
 
+import com.rsicarelli.fakt.codegen.renderer.CodeBuilder
+import com.rsicarelli.fakt.codegen.renderer.renderTo
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.core.telemetry.calculateLOC
 import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
@@ -15,12 +17,14 @@ import org.jetbrains.kotlin.ir.util.packageFqName
 /**
  * Groups the code generators used by CodeGenerator.
  *
- * @property implementation Generator for fake implementation classes
+ * @property implementation Generator for fake implementation classes (OLD - string-based)
+ * @property implementationV2 Generator for fake implementation classes (NEW - DSL-based)
  * @property factory Generator for factory functions
  * @property configDsl Generator for configuration DSL
  */
 internal data class CodeGenerators(
     val implementation: ImplementationGenerator,
+    val implementationV2: ImplementationGeneratorV2,
     val factory: FactoryGenerator,
     val configDsl: ConfigurationDslGenerator,
 )
@@ -102,21 +106,31 @@ internal class CodeGenerator(
         val packageName = sourceInterface.packageFqName?.asString() ?: ""
 
         try {
-            // Collect imports to calculate count
+            // Collect required imports for implementation
             val requiredImports = importResolver.collectRequiredImports(analysis, packageName)
 
+            // Generate implementation + factory using V2
+            val generatedV2 = generators.implementationV2.generateImplementation(
+                analysis,
+                packageName,
+                requiredImports.toList()
+            )
+
+            // Render CodeFile to string
+            val builder = CodeBuilder()
+            generatedV2.implementationFile.renderTo(builder)
+            val implementationCode = builder.build()
+
+            // Assemble final code (implementation from V2, factory from V2, config still old)
             val generatedCode =
                 GeneratedCode(
-                    implementation = generators.implementation.generateImplementation(
-                        analysis,
-                        fakeClassName
-                    ),
-                    factory = generators.factory.generateFactoryFunction(analysis, fakeClassName),
+                    implementation = implementationCode, // Complete file with package + imports
+                    factory = generatedV2.factoryFunction, // Now from V2!
                     configDsl = generators.configDsl.generateConfigurationDsl(
                         analysis,
                         fakeClassName
                     ),
-                    importCount = requiredImports.size,
+                    importCount = 0, // TODO: Remove (imports now in implementationCode)
                 )
 
             writeGeneratedCode(
@@ -159,22 +173,31 @@ internal class CodeGenerator(
         val packageName = sourceClass.packageFqName?.asString() ?: ""
 
         try {
-            // Collect imports to calculate count
-            val requiredImports =
-                importResolver.collectRequiredImportsForClass(analysis, packageName)
+            // Collect required imports for implementation
+            val requiredImports = importResolver.collectRequiredImportsForClass(analysis, packageName)
 
+            // Generate implementation + factory using V2
+            val generatedV2 = generators.implementationV2.generateClassFake(
+                analysis,
+                packageName,
+                requiredImports.toList()
+            )
+
+            // Render CodeFile to string
+            val builder = CodeBuilder()
+            generatedV2.implementationFile.renderTo(builder)
+            val implementationCode = builder.build()
+
+            // Assemble final code (implementation from V2, factory from V2, config still old)
             val generatedCode =
                 GeneratedCode(
-                    implementation = generators.implementation.generateClassFake(
-                        analysis,
-                        fakeClassName
-                    ),
-                    factory = generators.factory.generateFactoryFunction(analysis, fakeClassName),
+                    implementation = implementationCode, // Complete file with package + imports
+                    factory = generatedV2.factoryFunction, // Now from V2!
                     configDsl = generators.configDsl.generateConfigurationDsl(
                         analysis,
                         fakeClassName
                     ),
-                    importCount = requiredImports.size,
+                    importCount = 0, // TODO: Remove (imports now in implementationCode)
                 )
 
             writeGeneratedCodeForClass(
@@ -222,39 +245,19 @@ internal class CodeGenerator(
         packageDir.mkdirs()
         val outputFile = packageDir.resolve("$fakeClassName.kt")
 
-        // Collect all required imports from the interface analysis
-        val requiredImports = importResolver.collectRequiredImports(analysis, packageName)
-
+        // Implementation now includes package + imports via codegen-v2
+        // Factory and configDSL are still old generators (no package/imports)
         val fullCode =
             buildString {
-                appendLine("// Generated by Fakt")
-                appendLine("// Interface: $interfaceName")
-                appendLine("package ${escapePackageName(packageName)}")
-                appendLine()
-
-                // Add StateFlow imports for call tracking
-                appendLine("import kotlinx.coroutines.flow.MutableStateFlow")
-                appendLine("import kotlinx.coroutines.flow.StateFlow")
-                appendLine("import kotlinx.coroutines.flow.update")
-                appendLine()
-
-                // Add required imports
-                if (requiredImports.isNotEmpty()) {
-                    requiredImports.sorted().forEach { import ->
-                        appendLine("import $import")
-                    }
-                    appendLine()
-                }
-
-                // Add implementation class
+                // Implementation already has: package, imports, class (from codegen-v2)
                 append(code.implementation)
                 appendLine()
 
-                // Add factory function
+                // Add factory function (no package/imports)
                 append(code.factory)
                 appendLine()
 
-                // Add configuration DSL
+                // Add configuration DSL (no package/imports)
                 append(code.configDsl)
                 appendLine()
             }
@@ -287,40 +290,19 @@ internal class CodeGenerator(
         packageDir.mkdirs()
         val outputFile = packageDir.resolve("$fakeClassName.kt")
 
-        // Collect required imports from class analysis
-        // Classes need imports for return types, parameter types, etc.
-        val requiredImports = importResolver.collectRequiredImportsForClass(analysis, packageName)
-
+        // Implementation now includes package + imports via codegen-v2
+        // Factory and configDSL are still old generators (no package/imports)
         val fullCode =
             buildString {
-                appendLine("// Generated by Fakt")
-                appendLine("// Class: $className")
-                appendLine("package ${escapePackageName(packageName)}")
-                appendLine()
-
-                // Add StateFlow imports for call tracking
-                appendLine("import kotlinx.coroutines.flow.MutableStateFlow")
-                appendLine("import kotlinx.coroutines.flow.StateFlow")
-                appendLine("import kotlinx.coroutines.flow.update")
-                appendLine()
-
-                // Add required imports
-                if (requiredImports.isNotEmpty()) {
-                    requiredImports.sorted().forEach { import ->
-                        appendLine("import $import")
-                    }
-                    appendLine()
-                }
-
-                // Add implementation class
+                // Implementation already has: package, imports, class (from codegen-v2)
                 append(code.implementation)
                 appendLine()
 
-                // Add factory function
+                // Add factory function (no package/imports)
                 append(code.factory)
                 appendLine()
 
-                // Add configuration DSL
+                // Add configuration DSL (no package/imports)
                 append(code.configDsl)
                 appendLine()
             }

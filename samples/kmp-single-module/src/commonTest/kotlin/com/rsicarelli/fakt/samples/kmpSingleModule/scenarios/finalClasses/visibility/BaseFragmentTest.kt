@@ -6,20 +6,13 @@ import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/**
- * Tests for P1 Scenario: ClassWithProtectedMembers
- *
- * TESTING STANDARD: GIVEN-WHEN-THEN pattern (uppercase)
- * Framework: Vanilla JUnit5 + kotlin-test
- */
 class BaseFragmentTest {
     @Test
     fun `GIVEN class with protected members WHEN not configured THEN should use super implementation`() {
         // Given
-        val fragment =
-            fakeBaseFragment {
-                // Not configuring protected members
-            }
+        val fragment = fakeBaseFragment {
+            // Not configuring protected members
+        }
 
         // When
         fragment.onCreate()
@@ -33,10 +26,9 @@ class BaseFragmentTest {
     fun `GIVEN class with protected members WHEN public method configured THEN should work`() {
         // Given
         var onCreateCalled = false
-        val fragment =
-            fakeBaseFragment {
-                onCreate { onCreateCalled = true }
-            }
+        val fragment = fakeBaseFragment {
+            onCreate { onCreateCalled = true }
+        }
 
         // When
         fragment.onCreate()
@@ -48,10 +40,9 @@ class BaseFragmentTest {
     @Test
     fun `GIVEN class with protected property WHEN configured THEN public method sees configured value`() {
         // Given
-        val fragment =
-            fakeBaseFragment {
-                isInitialized { false } // Override to false
-            }
+        val fragment = fakeBaseFragment {
+            isInitialized { false } // Override to false
+        }
 
         // When
         val result = fragment.checkInitialized()
@@ -64,11 +55,10 @@ class BaseFragmentTest {
     fun `GIVEN class with protected method WHEN public method calls it THEN configured behavior runs`() {
         // Given
         var initCalled = false
-        val fragment =
-            fakeBaseFragment {
-                onInit { initCalled = true }
-                // onCreate calls onInit internally
-            }
+        val fragment = fakeBaseFragment {
+            onInit { initCalled = true }
+            // onCreate calls onInit internally
+        }
 
         // When
         fragment.onCreate() // This calls onInit internally
@@ -80,12 +70,11 @@ class BaseFragmentTest {
     @Test
     fun `GIVEN class with protected members WHEN mixing configured and super THEN should work correctly`() {
         // Given
-        val fragment =
-            fakeBaseFragment {
-                onInit { } // Configure protected method (no-op)
-                // onCreate uses super
-                // isInitialized uses super
-            }
+        val fragment = fakeBaseFragment {
+            onInit { } // Configure protected method (no-op)
+            // onCreate uses super
+            // isInitialized uses super
+        }
 
         // When
         fragment.onCreate()

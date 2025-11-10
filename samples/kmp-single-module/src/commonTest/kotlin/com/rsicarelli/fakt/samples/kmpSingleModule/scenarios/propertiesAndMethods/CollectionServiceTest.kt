@@ -1,29 +1,20 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.propertiesAndMethods
+
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * Comprehensive test for CollectionService fake generation.
- *
- * Validates:
- * - Collection type transformations (List -> Set, Set -> Map)
- * - Method-level generics with collections
- * - Nested collection handling
- * - Map transformations with generics
- */
 class CollectionServiceTest {
     @Test
     fun `GIVEN CollectionService WHEN processing strings THEN should transform List to Set`() {
         // Given
-        val fake =
-            fakeCollectionService {
-                processStrings { items ->
-                    items.map { it.uppercase() }.toSet()
-                }
+        val fake = fakeCollectionService {
+            processStrings { items ->
+                items.map { it.uppercase() }.toSet()
             }
+        }
 
         // When
         val result = fake.processStrings(listOf("a", "b", "a", "c"))
@@ -38,12 +29,11 @@ class CollectionServiceTest {
     @Test
     fun `GIVEN CollectionService WHEN processing numbers THEN should transform Set to Map`() {
         // Given
-        val fake =
-            fakeCollectionService {
-                processNumbers { items ->
-                    items.associateWith { "Number: $it" }
-                }
+        val fake = fakeCollectionService {
+            processNumbers { items ->
+                items.associateWith { "Number: $it" }
             }
+        }
 
         // When
         val result = fake.processNumbers(setOf(1, 2, 3))
@@ -58,19 +48,17 @@ class CollectionServiceTest {
     @Test
     fun `GIVEN CollectionService WHEN transforming map THEN should use method-level generics`() {
         // Given
-        val fake =
-            fakeCollectionService {
-                transformMap<String, Int> { map, transformer ->
-                    map.mapValues { (k, v) -> transformer(k, v) }
-                }
+        val fake = fakeCollectionService {
+            transformMap<String, Int> { map, transformer ->
+                map.mapValues { (k, v) -> transformer(k, v) }
             }
+        }
 
         // When
         val inputMap = mapOf("a" to 1, "b" to 2, "c" to 3)
-        val result =
-            fake.transformMap(inputMap) { key, value ->
-                "$key=$value"
-            }
+        val result = fake.transformMap(inputMap) { key, value ->
+            "$key=$value"
+        }
 
         // Then
         assertEquals(3, result.size)
@@ -82,21 +70,19 @@ class CollectionServiceTest {
     @Test
     fun `GIVEN CollectionService WHEN handling nested collections THEN should preserve structure`() {
         // Given
-        val fake =
-            fakeCollectionService {
-                nestedCollections { data ->
-                    data.entries.map { (key, listOfSets) ->
-                        mapOf(key to listOfSets.flatten().first())
-                    }
+        val fake = fakeCollectionService {
+            nestedCollections { data ->
+                data.entries.map { (key, listOfSets) ->
+                    mapOf(key to listOfSets.flatten().first())
                 }
             }
+        }
 
         // When
-        val input =
-            mapOf(
-                "group1" to listOf(setOf(1, 2), setOf(3, 4)),
-                "group2" to listOf(setOf(5, 6)),
-            )
+        val input = mapOf(
+            "group1" to listOf(setOf(1, 2), setOf(3, 4)),
+            "group2" to listOf(setOf(5, 6)),
+        )
         val result = fake.nestedCollections(input)
 
         // Then

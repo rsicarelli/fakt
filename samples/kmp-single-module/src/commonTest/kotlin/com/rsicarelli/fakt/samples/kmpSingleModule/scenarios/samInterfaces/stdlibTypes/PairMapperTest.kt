@@ -12,10 +12,9 @@ class PairMapperTest {
     @Test
     fun `GIVEN PairMapper SAM WHEN mapping pair THEN should transform both elements`() {
         // Given
-        val mapper =
-            fakePairMapper<Int, String, String, Int> {
-                map { pair -> pair.second to pair.first.toString().length }
-            }
+        val mapper = fakePairMapper<Int, String, String, Int> {
+            map { pair -> pair.second to pair.first.toString().length }
+        }
 
         // When
         val result = mapper.map(42 to "hello")
@@ -27,10 +26,9 @@ class PairMapperTest {
     @Test
     fun `GIVEN PairMapper SAM WHEN mapping with same types THEN should work correctly`() {
         // Given
-        val mapper =
-            fakePairMapper<String, String, String, String> {
-                map { pair -> pair.first.uppercase() to pair.second.lowercase() }
-            }
+        val mapper = fakePairMapper<String, String, String, String> {
+            map { pair -> pair.first.uppercase() to pair.second.lowercase() }
+        }
 
         // When
         val result = mapper.map("Hello" to "WORLD")

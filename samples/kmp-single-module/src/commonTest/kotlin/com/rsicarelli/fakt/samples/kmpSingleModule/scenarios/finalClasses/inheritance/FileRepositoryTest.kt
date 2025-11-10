@@ -7,20 +7,13 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
-/**
- * Tests for P1 Scenario: ClassExtendingAbstractClass
- *
- * TESTING STANDARD: GIVEN-WHEN-THEN pattern (uppercase)
- * Framework: Vanilla JUnit5 + kotlin-test
- */
 class FileRepositoryTest {
     @Test
     fun `GIVEN class extending abstract WHEN abstract methods not configured THEN delegates to super implementation`() {
         // Given
-        val repository =
-            fakeFileRepository {
-                // Not configuring inherited abstract methods - should use super
-            }
+        val repository = fakeFileRepository {
+            // Not configuring inherited abstract methods - should use super
+        }
 
         // When
         val result = repository.findById("id")
@@ -34,11 +27,10 @@ class FileRepositoryTest {
     @Test
     fun `GIVEN class extending abstract WHEN abstract methods configured THEN should use configured behavior`() {
         // Given
-        val repository =
-            fakeFileRepository {
-                findById { id -> "found-$id" }
-                save { entity -> Unit } // No-op save
-            }
+        val repository = fakeFileRepository {
+            findById { id -> "found-$id" }
+            save { entity -> Unit } // No-op save
+        }
 
         // When
         val result = repository.findById("123")
@@ -50,13 +42,12 @@ class FileRepositoryTest {
     @Test
     fun `GIVEN class extending abstract WHEN own open methods not configured THEN should use super implementation`() {
         // Given
-        val repository =
-            fakeFileRepository {
-                // Configure abstract methods (required)
-                findById { null }
-                save { }
-                // Not configuring own open methods
-            }
+        val repository = fakeFileRepository {
+            // Configure abstract methods (required)
+            findById { null }
+            save { }
+            // Not configuring own open methods
+        }
 
         // When
         val all = repository.findAll()
@@ -72,15 +63,14 @@ class FileRepositoryTest {
         val testData = listOf("file1.txt", "file2.txt")
         var cacheClearCalled = false
 
-        val repository =
-            fakeFileRepository {
-                // Configure abstract (required)
-                findById { null }
-                save { }
-                // Configure own open methods
-                findAll { testData }
-                clearCache { cacheClearCalled = true }
-            }
+        val repository = fakeFileRepository {
+            // Configure abstract (required)
+            findById { null }
+            save { }
+            // Configure own open methods
+            findAll { testData }
+            clearCache { cacheClearCalled = true }
+        }
 
         // When
         val all = repository.findAll()
@@ -94,13 +84,12 @@ class FileRepositoryTest {
     @Test
     fun `GIVEN class extending abstract WHEN mixing configured and super THEN should work correctly`() {
         // Given
-        val repository =
-            fakeFileRepository {
-                findById { id -> "entity-$id" } // Configure abstract
-                save { } // Configure abstract
-                findAll { listOf("cached") } // Configure open
-                // clearCache uses super (not configured)
-            }
+        val repository = fakeFileRepository {
+            findById { id -> "entity-$id" } // Configure abstract
+            save { } // Configure abstract
+            findAll { listOf("cached") } // Configure open
+            // clearCache uses super (not configured)
+        }
 
         // When
         val found = repository.findById("1")

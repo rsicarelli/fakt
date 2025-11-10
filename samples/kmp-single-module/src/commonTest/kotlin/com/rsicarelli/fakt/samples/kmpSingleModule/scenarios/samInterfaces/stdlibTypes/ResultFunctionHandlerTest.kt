@@ -14,10 +14,9 @@ class ResultFunctionHandlerTest {
     @Test
     fun `GIVEN ResultFunctionHandler SAM WHEN transforming with Result THEN should handle both types`() {
         // Given
-        val handler =
-            fakeResultFunctionHandler<String, Int> {
-                handle { result, mapper -> result.map(mapper) }
-            }
+        val handler = fakeResultFunctionHandler<String, Int> {
+            handle { result, mapper -> result.map(mapper) }
+        }
 
         // When
         val result = handler.handle(Result.success("hello"), { it.length })
@@ -30,10 +29,9 @@ class ResultFunctionHandlerTest {
     @Test
     fun `GIVEN ResultFunctionHandler SAM WHEN input fails THEN should propagate failure`() {
         // Given
-        val handler =
-            fakeResultFunctionHandler<String, Int> {
-                handle { result, mapper -> result.map(mapper) }
-            }
+        val handler = fakeResultFunctionHandler<String, Int> {
+            handle { result, mapper -> result.map(mapper) }
+        }
 
         // When
         val result =

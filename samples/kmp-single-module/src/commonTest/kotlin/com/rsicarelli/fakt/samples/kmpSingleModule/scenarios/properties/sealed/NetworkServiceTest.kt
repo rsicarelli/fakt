@@ -11,20 +11,13 @@ import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/**
- * Tests for NetworkService fake with sealed classes.
- *
- * Validates that sealed classes (enum-like algebraic data types) are
- * properly handled by Fakt code generation, including generic sealed classes.
- */
 class NetworkServiceTest {
     @Test
     fun `GIVEN NetworkService fake WHEN configuring currentState THEN should return sealed class state`() {
         // Given
-        val networkService =
-            fakeNetworkService {
-                currentState { NetworkResult.Loading }
-            }
+        val networkService = fakeNetworkService {
+            currentState { NetworkResult.Loading }
+        }
 
         // When
         val state = networkService.currentState
@@ -36,10 +29,9 @@ class NetworkServiceTest {
     @Test
     fun `GIVEN NetworkService fake WHEN configuring lastResult as null THEN should return null`() {
         // Given
-        val networkService =
-            fakeNetworkService {
-                lastResult { null }
-            }
+        val networkService = fakeNetworkService {
+            lastResult { null }
+        }
 
         // When
         val result = networkService.lastResult
@@ -51,10 +43,9 @@ class NetworkServiceTest {
     @Test
     fun `GIVEN NetworkService fake WHEN configuring lastResult THEN should return sealed class result`() {
         // Given
-        val networkService =
-            fakeNetworkService {
-                lastResult { NetworkResult.Success("cached data") }
-            }
+        val networkService = fakeNetworkService {
+            lastResult { NetworkResult.Success("cached data") }
+        }
 
         // When
         val result = networkService.lastResult
@@ -68,17 +59,16 @@ class NetworkServiceTest {
     fun `GIVEN NetworkService fake WHEN configuring fetchData THEN should return sealed class from suspend function`() =
         runTest {
             // Given
-            val networkService =
-                fakeNetworkService {
-                    fetchData { url ->
-                        delay(10) // Simulate network call
-                        when {
-                            url.contains("success") -> NetworkResult.Success("data from $url")
-                            url.contains("error") -> NetworkResult.Error("Not found", 404)
-                            else -> NetworkResult.Loading
-                        }
+            val networkService = fakeNetworkService {
+                fetchData { url ->
+                    delay(10) // Simulate network call
+                    when {
+                        url.contains("success") -> NetworkResult.Success("data from $url")
+                        url.contains("error") -> NetworkResult.Error("Not found", 404)
+                        else -> NetworkResult.Loading
                     }
                 }
+            }
 
             // When
             val successResult = networkService.fetchData("https://api.example.com/success")
@@ -99,17 +89,16 @@ class NetworkServiceTest {
     @Test
     fun `GIVEN NetworkService fake WHEN configuring handleResult THEN should handle sealed class patterns`() {
         // Given
-        val networkService =
-            fakeNetworkService {
-                handleResult { result ->
-                    when (result) {
-                        is NetworkResult.Success -> "Success: ${result.data}"
-                        is NetworkResult.Error -> "Error: ${result.message} (${result.code})"
-                        is NetworkResult.Loading -> "Loading..."
-                        is NetworkResult.Idle -> "Idle"
-                    }
+        val networkService = fakeNetworkService {
+            handleResult { result ->
+                when (result) {
+                    is NetworkResult.Success -> "Success: ${result.data}"
+                    is NetworkResult.Error -> "Error: ${result.message} (${result.code})"
+                    is NetworkResult.Loading -> "Loading..."
+                    is NetworkResult.Idle -> "Idle"
                 }
             }
+        }
 
         // When & Then
         assertEquals(
@@ -135,21 +124,20 @@ class NetworkServiceTest {
         // Given
         // Note: Method-level generics with sealed classes have type erasure limitations
         // This test validates the basic structure, though full generic safety requires runtime checks
-        val networkService =
-            fakeNetworkService {
-                mapResult { result, transform ->
-                    @Suppress("UNCHECKED_CAST")
-                    when (result) {
-                        is NetworkResult.Success<*> -> {
-                            val data = result.data
-                            NetworkResult.Success(transform(data))
-                        }
-                        is NetworkResult.Error -> result
-                        is NetworkResult.Loading -> NetworkResult.Loading
-                        is NetworkResult.Idle -> NetworkResult.Idle
+        val networkService = fakeNetworkService {
+            mapResult { result, transform ->
+                when (result) {
+                    is NetworkResult.Success<*> -> {
+                        val data = result.data
+                        NetworkResult.Success(transform(data))
                     }
+
+                    is NetworkResult.Error -> result
+                    is NetworkResult.Loading -> NetworkResult.Loading
+                    is NetworkResult.Idle -> NetworkResult.Idle
                 }
             }
+        }
 
         // When
         val stringResult = NetworkResult.Success("42")
@@ -163,12 +151,11 @@ class NetworkServiceTest {
     @Test
     fun `GIVEN NetworkService fake WHEN configuring isSuccess THEN should check sealed class type`() {
         // Given
-        val networkService =
-            fakeNetworkService {
-                isSuccess { result ->
-                    result is NetworkResult.Success
-                }
+        val networkService = fakeNetworkService {
+            isSuccess { result ->
+                result is NetworkResult.Success
             }
+        }
 
         // When & Then
         assertTrue(networkService.isSuccess(NetworkResult.Success("data")))
@@ -180,13 +167,12 @@ class NetworkServiceTest {
     @Test
     fun `GIVEN NetworkService fake WHEN using sealed class data objects THEN should handle singleton cases`() {
         // Given
-        val networkService =
-            fakeNetworkService {
-                currentState { NetworkResult.Idle }
-                fetchData { url ->
-                    if (url.contains("loading")) NetworkResult.Loading else NetworkResult.Idle
-                }
+        val networkService = fakeNetworkService {
+            currentState { NetworkResult.Idle }
+            fetchData { url ->
+                if (url.contains("loading")) NetworkResult.Loading else NetworkResult.Idle
             }
+        }
 
         // When
         val currentState = networkService.currentState
@@ -201,20 +187,19 @@ class NetworkServiceTest {
         runTest {
             // Given
             val results = mutableListOf<NetworkResult<String>>()
-            val networkService =
-                fakeNetworkService {
-                    fetchData { url ->
-                        val result =
-                            when {
-                                url.endsWith("1") -> NetworkResult.Success("data1")
-                                url.endsWith("2") -> NetworkResult.Error("error2", 404)
-                                url.endsWith("3") -> NetworkResult.Loading
-                                else -> NetworkResult.Idle
-                            }
-                        results.add(result)
-                        result
-                    }
+            val networkService = fakeNetworkService {
+                fetchData { url ->
+                    val result =
+                        when {
+                            url.endsWith("1") -> NetworkResult.Success("data1")
+                            url.endsWith("2") -> NetworkResult.Error("error2", 404)
+                            url.endsWith("3") -> NetworkResult.Loading
+                            else -> NetworkResult.Idle
+                        }
+                    results.add(result)
+                    result
                 }
+            }
 
             // When
             val result1 = networkService.fetchData("url1")

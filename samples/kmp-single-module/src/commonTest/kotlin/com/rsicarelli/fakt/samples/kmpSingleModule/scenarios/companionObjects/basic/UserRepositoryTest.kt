@@ -2,28 +2,22 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.companionObjects.basic
 
-import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.companionObjects.basic.User
-import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.companionObjects.basic.UserRepository
-import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.companionObjects.basic.fakeUserRepository
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
  * Tests for UserRepository interface.
- * Note: Companion object support is a future feature
  */
 class UserRepositoryTest {
     @Test
     fun `GIVEN UserRepository fake WHEN configuring getUser THEN should return configured user`() {
         // Given
-        val repo =
-            fakeUserRepository {
-                getUser { id ->
-                    Result.success(User(id, "Test User"))
-                }
+        val repo = fakeUserRepository {
+            getUser { id ->
+                Result.success(User(id, "Test User"))
             }
+        }
 
         // When
         val result = repo.getUser("123")
@@ -37,12 +31,11 @@ class UserRepositoryTest {
     @Test
     fun `GIVEN UserRepository fake WHEN getUser fails THEN should return failure`() {
         // Given
-        val repo =
-            fakeUserRepository {
-                getUser {
-                    Result.failure(Exception("User not found"))
-                }
+        val repo = fakeUserRepository {
+            getUser {
+                Result.failure(Exception("User not found"))
             }
+        }
 
         // When
         val result = repo.getUser("456")

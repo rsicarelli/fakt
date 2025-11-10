@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.higherOrder
 
-import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.higherOrder.CallbackHandler
 import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.higherOrder.fakeCallbackHandler
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -16,16 +15,15 @@ class CallbackHandlerTest {
     fun `GIVEN CallbackHandler SAM WHEN handling with callbacks THEN should invoke both`() {
         // Given
         val results = mutableListOf<String>()
-        val handler =
-            fakeCallbackHandler<Int> {
-                handle { value, onSuccess, onError ->
-                    if (value > 0) {
-                        onSuccess(value.toString())
-                    } else {
-                        onError(IllegalArgumentException("Negative value"))
-                    }
+        val handler = fakeCallbackHandler<Int> {
+            handle { value, onSuccess, onError ->
+                if (value > 0) {
+                    onSuccess(value.toString())
+                } else {
+                    onError(IllegalArgumentException("Negative value"))
                 }
             }
+        }
 
         // When - success case
         handler.handle(
@@ -42,16 +40,15 @@ class CallbackHandlerTest {
     fun `GIVEN CallbackHandler SAM WHEN error occurs THEN should invoke error callback`() {
         // Given
         val errors = mutableListOf<Throwable>()
-        val handler =
-            fakeCallbackHandler<Int> {
-                handle { value, onSuccess, onError ->
-                    if (value > 0) {
-                        onSuccess(value.toString())
-                    } else {
-                        onError(IllegalArgumentException("Negative value"))
-                    }
+        val handler = fakeCallbackHandler<Int> {
+            handle { value, onSuccess, onError ->
+                if (value > 0) {
+                    onSuccess(value.toString())
+                } else {
+                    onError(IllegalArgumentException("Negative value"))
                 }
             }
+        }
 
         // When - error case
         handler.handle(

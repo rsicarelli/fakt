@@ -12,10 +12,9 @@ class PairProcessorTest {
     @Test
     fun `GIVEN PairProcessor SAM WHEN processing pair THEN should return processed result`() {
         // Given
-        val processor =
-            fakePairProcessor<Int> {
-                process { pair -> pair.first + pair.second }
-            }
+        val processor = fakePairProcessor<Int> {
+            process { pair -> pair.first + pair.second }
+        }
 
         // When
         val result = processor.process(Pair(10, 32))

@@ -5,17 +5,13 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.edge
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for StarProjectionHandler SAM interface.
- */
 class StarProjectionHandlerTest {
     @Test
     fun `GIVEN StarProjectionHandler SAM WHEN handling star projection THEN should work with any list`() {
         // Given
-        val handler =
-            fakeStarProjectionHandler {
-                handle { items -> items.size }
-            }
+        val handler = fakeStarProjectionHandler {
+            handle { items -> items.size }
+        }
 
         // When
         val result = handler.handle(listOf("a", "b", "c"))
@@ -27,10 +23,9 @@ class StarProjectionHandlerTest {
     @Test
     fun `GIVEN StarProjectionHandler SAM WHEN handling different types THEN should work generically`() {
         // Given
-        val handler =
-            fakeStarProjectionHandler {
-                handle { items -> items.size }
-            }
+        val handler = fakeStarProjectionHandler {
+            handle { items -> items.size }
+        }
 
         // When
         val stringResult = handler.handle(listOf("x", "y"))

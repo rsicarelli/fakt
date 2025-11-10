@@ -12,10 +12,9 @@ class FunctionExecutorTest {
     @Test
     fun `GIVEN FunctionExecutor SAM WHEN executing with transform THEN should apply function`() {
         // Given
-        val executor =
-            fakeFunctionExecutor<Int, String> {
-                execute { fn, input -> fn(input) }
-            }
+        val executor = fakeFunctionExecutor<Int, String> {
+            execute { fn, input -> fn(input) }
+        }
 
         // When
         val result = executor.execute({ it.toString() }, 42)
@@ -27,13 +26,12 @@ class FunctionExecutorTest {
     @Test
     fun `GIVEN FunctionExecutor SAM WHEN chaining multiple transforms THEN should compose`() {
         // Given
-        val executor =
-            fakeFunctionExecutor<String, Int> {
-                execute { fn, input ->
-                    val intermediate = input.uppercase()
-                    fn(intermediate)
-                }
+        val executor = fakeFunctionExecutor<String, Int> {
+            execute { fn, input ->
+                val intermediate = input.uppercase()
+                fn(intermediate)
             }
+        }
 
         // When
         val result = executor.execute({ it.length }, "hello")

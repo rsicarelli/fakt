@@ -7,17 +7,13 @@ import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.basic
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for StringFormatter SAM interface.
- */
 class StringFormatterTest {
     @Test
     fun `GIVEN SAM with String return WHEN formatting THEN should convert to string`() {
         // Given
-        val formatter =
-            fakeStringFormatter {
-                format { value -> "Value: $value" }
-            }
+        val formatter = fakeStringFormatter {
+            format { value -> "Value: $value" }
+        }
 
         // When
         val result = formatter.format(42)

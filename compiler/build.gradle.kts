@@ -29,6 +29,8 @@ dependencies {
     testImplementation(libs.coroutines.test)
     // For tests, we need the actual compiler
     testImplementation(libs.kotlin.compilerEmbeddable)
+    // For compilation validation tests
+    testImplementation(libs.kotlin.compileTesting)
 }
 
 // Disable regular jar task

@@ -13,10 +13,9 @@ class NullableTransformerTest {
     @Test
     fun `GIVEN SAM with nullable generic WHEN transforming null THEN should handle correctly`() {
         // Given
-        val transformer =
-            fakeNullableTransformer<String> {
-                transform { input -> input?.uppercase() }
-            }
+        val transformer = fakeNullableTransformer<String> {
+            transform { input -> input?.uppercase() }
+        }
 
         // When
         val nonNullResult = transformer.transform("hello")
@@ -30,10 +29,9 @@ class NullableTransformerTest {
     @Test
     fun `GIVEN NullableTransformer SAM WHEN transforming null THEN should handle gracefully`() {
         // Given
-        val transformer =
-            fakeNullableTransformer<String> {
-                transform { input -> input?.uppercase() }
-            }
+        val transformer = fakeNullableTransformer<String> {
+            transform { input -> input?.uppercase() }
+        }
 
         // When
         val nonNullResult = transformer.transform("hello")

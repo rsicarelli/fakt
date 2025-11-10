@@ -12,10 +12,9 @@ class CovariantProducerTest {
     @Test
     fun `GIVEN CovariantProducer SAM WHEN producing value THEN should work with subtypes`() {
         // Given
-        val producer =
-            fakeCovariantProducer<String> {
-                produce { "test value" }
-            }
+        val producer = fakeCovariantProducer<String> {
+            produce { "test value" }
+        }
 
         // When
         val result = producer.produce()
@@ -27,10 +26,9 @@ class CovariantProducerTest {
     @Test
     fun `GIVEN CovariantProducer SAM WHEN producing nullable THEN should handle null`() {
         // Given
-        val producer =
-            fakeCovariantProducer<String?> {
-                produce { null }
-            }
+        val producer = fakeCovariantProducer<String?> {
+            produce { null }
+        }
 
         // When
         val result = producer.produce()
@@ -42,10 +40,9 @@ class CovariantProducerTest {
     @Test
     fun `GIVEN CovariantProducer with List WHEN producing THEN should work covariantly`() {
         // Given
-        val producer =
-            fakeCovariantProducer<List<String>> {
-                produce { listOf("a", "b", "c") }
-            }
+        val producer = fakeCovariantProducer<List<String>> {
+            produce { listOf("a", "b", "c") }
+        }
 
         // When
         val result = producer.produce()

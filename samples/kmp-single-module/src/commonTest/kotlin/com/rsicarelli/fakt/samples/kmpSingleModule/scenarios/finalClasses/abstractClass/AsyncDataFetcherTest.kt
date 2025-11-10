@@ -9,12 +9,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/**
- * Tests for P1 Scenario: AbstractClassWithSuspend
- *
- * TESTING STANDARD: GIVEN-WHEN-THEN pattern (uppercase)
- * Framework: Vanilla JUnit5 + kotlin-test + kotlinx-coroutines-test
- */
 class AsyncDataFetcherTest {
     @Test
     fun `GIVEN async class WHEN suspend abstract not configured THEN should throw error`() =
@@ -70,15 +64,14 @@ class AsyncDataFetcherTest {
         runTest {
             // Given
             var uploadCalled = false
-            val fetcher =
-                fakeAsyncDataFetcher {
-                    fetchData { url -> "configured-$url" }
-                    upload { data ->
-                        uploadCalled = true
-                        true
-                    }
-                    validate { data -> data.length > 5 }
+            val fetcher = fakeAsyncDataFetcher {
+                fetchData { url -> "configured-$url" }
+                upload { data ->
+                    uploadCalled = true
+                    true
                 }
+                validate { data -> data.length > 5 }
+            }
 
             // When
             val data = fetcher.fetchData("url")
@@ -98,11 +91,10 @@ class AsyncDataFetcherTest {
     fun `GIVEN async class WHEN mixing suspend and regular THEN both should work correctly`() =
         runTest {
             // Given
-            val fetcher =
-                fakeAsyncDataFetcher {
-                    fetchData { "async-data" }
-                    validate { data -> data == "valid" }
-                }
+            val fetcher = fakeAsyncDataFetcher {
+                fetchData { "async-data" }
+                validate { data -> data == "valid" }
+            }
 
             // When
             val data = fetcher.fetchData("any") // Suspend

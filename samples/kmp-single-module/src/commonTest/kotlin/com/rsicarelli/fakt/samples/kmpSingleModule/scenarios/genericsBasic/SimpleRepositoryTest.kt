@@ -1,18 +1,10 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.genericsBasic
+
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * P0.0: Class-level generic fake generation ✅
- *
- * Validates that:
- * 1. Generated factory function accepts type parameter (inline fun <reified T>)
- * 2. Type safety is preserved at use-site
- * 3. Configuration DSL works with generic types
- * 4. Different type instantiations maintain separate type safety
- */
 class SimpleRepositoryTest {
     data class User(
         val id: String,
@@ -27,11 +19,10 @@ class SimpleRepositoryTest {
     @Test
     fun `GIVEN generic repository WHEN configured with User type THEN should maintain type safety`() {
         // Given - create fake with explicit type parameter
-        val userRepo =
-            fakeSimpleRepository<User> {
-                save { user -> user.copy(id = "saved-${user.id}") }
-                findAll { listOf(User("1", "Alice"), User("2", "Bob")) }
-            }
+        val userRepo = fakeSimpleRepository<User> {
+            save { user -> user.copy(id = "saved-${user.id}") }
+            findAll { listOf(User("1", "Alice"), User("2", "Bob")) }
+        }
 
         // When - use the repository
         val inputUser = User("123", "Test User")
@@ -51,11 +42,10 @@ class SimpleRepositoryTest {
     @Test
     fun `GIVEN generic repository WHEN configured with Product type THEN should maintain type safety`() {
         // Given - create fake with different type parameter
-        val productRepo =
-            fakeSimpleRepository<Product> {
-                save { product -> product.copy(price = product.price * 1.1) }
-                findAll { listOf(Product("p1", 99.99), Product("p2", 149.99)) }
-            }
+        val productRepo = fakeSimpleRepository<Product> {
+            save { product -> product.copy(price = product.price * 1.1) }
+            findAll { listOf(Product("p1", 99.99), Product("p2", 149.99)) }
+        }
 
         // When
         val inputProduct = Product("new", 100.0)
@@ -89,11 +79,10 @@ class SimpleRepositoryTest {
     @Test
     fun `GIVEN generic repository WHEN partially configured THEN should use configured and default behaviors`() {
         // Given - configure only save behavior
-        val repo =
-            fakeSimpleRepository<Int> {
-                save { it * 2 }
-                // findAll not configured - will use default
-            }
+        val repo = fakeSimpleRepository<Int> {
+            save { it * 2 }
+            // findAll not configured - will use default
+        }
 
         // When
         val saved = repo.save(42)

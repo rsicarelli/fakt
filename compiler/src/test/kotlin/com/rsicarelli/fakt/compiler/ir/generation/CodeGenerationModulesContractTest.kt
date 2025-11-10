@@ -137,12 +137,14 @@ class CodeGenerationModulesContractTest {
         )
 
         val implementationGenerator = ImplementationGenerator(typeResolution)
+        val implementationGeneratorV2 = ImplementationGeneratorV2(typeResolution)
         val factoryGenerator = FactoryGenerator()
         val configurationDslGenerator = ConfigurationDslGenerator(typeResolution)
 
         val generators =
             CodeGenerators(
                 implementation = implementationGenerator,
+                implementationV2 = implementationGeneratorV2,
                 factory = factoryGenerator,
                 configDsl = configurationDslGenerator,
             )

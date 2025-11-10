@@ -6,18 +6,14 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for AsyncTransformer SAM interface.
- */
 class AsyncTransformerTest {
     @Test
     fun `GIVEN SAM with suspend generic WHEN transforming async THEN should work in coroutines`() =
         runTest {
             // Given
-            val transformer =
-                fakeAsyncTransformer<Int> {
-                    transform { input -> input * 2 }
-                }
+            val transformer = fakeAsyncTransformer<Int> {
+                transform { input -> input * 2 }
+            }
 
             // When
             val result = transformer.transform(21)

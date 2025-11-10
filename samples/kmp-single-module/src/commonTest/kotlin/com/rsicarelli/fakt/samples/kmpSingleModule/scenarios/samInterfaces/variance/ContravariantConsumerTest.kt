@@ -13,10 +13,9 @@ class ContravariantConsumerTest {
     fun `GIVEN ContravariantConsumer SAM WHEN consuming value THEN should accept supertypes`() {
         // Given
         val consumed = mutableListOf<String>()
-        val consumer =
-            fakeContravariantConsumer<String> {
-                consume { value -> consumed.add(value) }
-            }
+        val consumer = fakeContravariantConsumer<String> {
+            consume { value -> consumed.add(value) }
+        }
 
         // When
         consumer.consume("test")
@@ -29,10 +28,9 @@ class ContravariantConsumerTest {
     fun `GIVEN ContravariantConsumer SAM WHEN consuming multiple THEN should accumulate`() {
         // Given
         val consumed = mutableListOf<Int>()
-        val consumer =
-            fakeContravariantConsumer<Int> {
-                consume { value -> consumed.add(value) }
-            }
+        val consumer = fakeContravariantConsumer<Int> {
+            consume { value -> consumed.add(value) }
+        }
 
         // When
         consumer.consume(1)

@@ -23,6 +23,7 @@ jdk = "21"
 junit5 = "5.13.4"
 jvmTarget = "21"
 kotlin = "2.2.20"
+kotlin-compile-testing = "0.11.0"
 kotlinx-coroutines = "1.10.2"
 kotlinx-serialization = "1.9.0"
 ksp = "2.2.20-2.0.3"
@@ -55,6 +56,7 @@ spotless-gradlePlugin = { module = "com.diffplug.spotless:spotless-plugin-gradle
 
 # Runtime Libraries
 kotlin-compilerEmbeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin" }
+kotlin-compileTesting = { module = "dev.zacsweers.kctfork:core", version.ref = "kotlin-compile-testing" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-testJunit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5", version.ref = "kotlin" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
@@ -64,5 +66,6 @@ junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "jun
 atomicfu = { id = "org.jetbrains.kotlinx.atomicfu", version.ref = "atomicfu" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
 shadow = { id = "com.gradleup.shadow", version = "9.1.0" }

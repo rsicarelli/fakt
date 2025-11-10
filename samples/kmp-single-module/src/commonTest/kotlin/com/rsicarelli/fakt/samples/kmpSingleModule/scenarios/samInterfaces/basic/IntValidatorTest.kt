@@ -9,17 +9,13 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/**
- * Tests for IntValidator SAM interface.
- */
 class IntValidatorTest {
     @Test
     fun `GIVEN SAM with Int param WHEN configuring fake THEN should validate correctly`() {
         // Given
-        val validator =
-            fakeIntValidator {
-                validate { value -> value > 0 }
-            }
+        val validator = fakeIntValidator {
+            validate { value -> value > 0 }
+        }
 
         // When
         val positiveResult = validator.validate(42)

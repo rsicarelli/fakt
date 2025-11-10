@@ -14,10 +14,9 @@ class ResultHandlerTest {
     @Test
     fun `GIVEN SAM with Result generic WHEN handling THEN should wrap in Result`() {
         // Given
-        val handler =
-            fakeResultHandler<String> {
-                handle { input -> Result.success(input.uppercase()) }
-            }
+        val handler = fakeResultHandler<String> {
+            handle { input -> Result.success(input.uppercase()) }
+        }
 
         // When
         val result = handler.handle("hello")
@@ -30,10 +29,9 @@ class ResultHandlerTest {
     @Test
     fun `GIVEN ResultHandler SAM WHEN handling success THEN should wrap in Result success`() {
         // Given
-        val handler =
-            fakeResultHandler<String> {
-                handle { input -> Result.success(input.uppercase()) }
-            }
+        val handler = fakeResultHandler<String> {
+            handle { input -> Result.success(input.uppercase()) }
+        }
 
         // When
         val result = handler.handle("hello")
@@ -46,10 +44,9 @@ class ResultHandlerTest {
     @Test
     fun `GIVEN ResultHandler SAM WHEN handling failure THEN should wrap in Result failure`() {
         // Given
-        val handler =
-            fakeResultHandler<String> {
-                handle { _ -> Result.failure(IllegalStateException("Test error")) }
-            }
+        val handler = fakeResultHandler<String> {
+            handle { _ -> Result.failure(IllegalStateException("Test error")) }
+        }
 
         // When
         val result = handler.handle("test")

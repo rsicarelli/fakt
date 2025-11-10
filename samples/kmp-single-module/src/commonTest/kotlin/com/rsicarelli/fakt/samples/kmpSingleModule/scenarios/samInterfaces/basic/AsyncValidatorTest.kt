@@ -7,18 +7,14 @@ import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/**
- * Tests for AsyncValidator SAM interface.
- */
 class AsyncValidatorTest {
     @Test
     fun `GIVEN SAM with suspend function WHEN using fake THEN should support coroutines`() =
         runTest {
             // Given
-            val validator =
-                fakeAsyncValidator {
-                    validate { input -> input.length > 3 }
-                }
+            val validator = fakeAsyncValidator {
+                validate { input -> input.length > 3 }
+            }
 
             // When
             val shortResult = validator.validate("ab")

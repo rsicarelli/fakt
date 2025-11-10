@@ -1,6 +1,7 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.basic
+
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -9,23 +10,16 @@ import kotlin.test.assertTrue
 
 /**
  * Comprehensive test for ComplexApiService fake generation.
- *
- * Validates:
- * - Multiple properties (non-nullable and nullable)
- * - Methods with many default parameters
- * - Method-level generics with multiple type parameters
- * - Suspend functions with generics and nullable lambdas
  */
 class ComplexApiServiceTest {
     @Test
     fun `GIVEN ComplexApiService WHEN accessing properties THEN should return configured values`() {
         // Given
-        val fake =
-            fakeComplexApiService {
-                baseUrl { "https://api.example.com" }
-                timeout { 5000L }
-                retryCount { 3 }
-            }
+        val fake = fakeComplexApiService {
+            baseUrl { "https://api.example.com" }
+            timeout { 5000L }
+            retryCount { 3 }
+        }
 
         // When
         val url = fake.baseUrl
@@ -41,12 +35,11 @@ class ComplexApiServiceTest {
     @Test
     fun `GIVEN ComplexApiService WHEN making request with defaults THEN should handle all defaults`() {
         // Given
-        val fake =
-            fakeComplexApiService {
-                makeRequest { endpoint, method, headers, body, timeout ->
-                    "$method $endpoint (timeout: ${timeout}ms)"
-                }
+        val fake = fakeComplexApiService {
+            makeRequest { endpoint, method, headers, body, timeout ->
+                "$method $endpoint (timeout: ${timeout}ms)"
             }
+        }
 
         // When - call with all defaults
         val result1 = fake.makeRequest("/users")
@@ -62,28 +55,26 @@ class ComplexApiServiceTest {
     fun `GIVEN ComplexApiService WHEN batch requests THEN should handle parallel processing`() =
         runTest {
             // Given
-            val fake =
-                fakeComplexApiService {
-                    makeBatchRequests { requests, parallel, onProgress ->
-                        requests.mapIndexed { index, (endpoint, headers) ->
-                            onProgress?.invoke(index + 1, requests.size)
-                            Result.success("Response from $endpoint")
-                        }
+            val fake = fakeComplexApiService {
+                makeBatchRequests { requests, parallel, onProgress ->
+                    requests.mapIndexed { index, (endpoint, headers) ->
+                        onProgress?.invoke(index + 1, requests.size)
+                        Result.success("Response from $endpoint")
                     }
                 }
+            }
 
             // When
             var progressCalled = 0
-            val results =
-                fake.makeBatchRequests(
-                    listOf(
-                        "/users" to emptyMap(),
-                        "/posts" to emptyMap(),
-                    ),
-                    parallel = true,
-                ) { current, total ->
-                    progressCalled++
-                }
+            val results = fake.makeBatchRequests(
+                listOf(
+                    "/users" to emptyMap(),
+                    "/posts" to emptyMap(),
+                ),
+                parallel = true,
+            ) { current, total ->
+                progressCalled++
+            }
 
             // Then
             assertEquals(2, results.size)
@@ -94,12 +85,11 @@ class ComplexApiServiceTest {
     @Test
     fun `GIVEN ComplexApiService WHEN parsing response THEN should use method-level generic`() {
         // Given
-        val fake =
-            fakeComplexApiService {
-                parseResponse<Int> { response, parser, fallback ->
-                    parser(response) ?: fallback
-                }
+        val fake = fakeComplexApiService {
+            parseResponse<Int> { response, parser, fallback ->
+                parser(response) ?: fallback
             }
+        }
 
         // When
         val successResult = fake.parseResponse("42", { it.toIntOrNull() })
@@ -116,21 +106,19 @@ class ComplexApiServiceTest {
     fun `GIVEN ComplexApiService WHEN processing with retry THEN should handle retry logic`() =
         runTest {
             // Given
-            val fake =
-                fakeComplexApiService {
-                    processWithRetry<Any?, Any?> { request, processor, _, _ ->
-                        // Simulate successful processing after retries
-                        Result.success(processor(request))
-                    }
+            val fake = fakeComplexApiService {
+                processWithRetry<Any?, Any?> { request, processor, _, _ ->
+                    // Simulate successful processing after retries
+                    Result.success(processor(request))
                 }
+            }
 
             // When
-            val result =
-                fake.processWithRetry(
-                    "test-request",
-                    { req -> "Processed: $req" },
-                    retryCount = 3,
-                ) { _, _ -> /* onRetry callback */ }
+            val result = fake.processWithRetry(
+                request = "test-request",
+                processor = { req -> "Processed: $req" },
+                retryCount = 3,
+            ) { _, _ -> /* onRetry callback */ }
 
             // Then
             assertTrue(result.isSuccess)
