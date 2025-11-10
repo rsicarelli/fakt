@@ -4,6 +4,7 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.high
 
 import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.higherOrder.PredicateCombiner
 import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.higherOrder.fakePredicateCombiner
+import kotlinx.coroutines.flow.combine
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -14,10 +15,9 @@ class PredicateCombinerTest {
     @Test
     fun `GIVEN PredicateCombiner SAM WHEN combining THEN should combine predicates`() {
         // Given
-        val combiner =
-            fakePredicateCombiner<Int> {
-                combine { p1, p2 -> { x -> p1(x) && p2(x) } }
-            }
+        val combiner = fakePredicateCombiner<Int> {
+            combine { p1, p2 -> { x -> p1(x) && p2(x) } }
+        }
 
         // When
         val combined = combiner.combine({ it > 5 }, { it < 10 })

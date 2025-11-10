@@ -15,30 +15,14 @@ import kotlin.test.assertTrue
 
 /**
  * Comprehensive call tracking tests using MutableStateFlow.
- *
- * Tests follow GIVEN-WHEN-THEN BDD pattern and validate:
- * - Basic call counting
- * - Thread-safety with concurrent calls
- * - Suspend function tracking
- * - Generic method tracking
- * - Nullable type handling
- * - Custom domain types
- * - Property access tracking (getter/setter)
- * - StateFlow observation
- * - Edge cases
  */
 class CallTrackingTest {
-    // ========================================
-    // 1. Basic Call Counting
-    // ========================================
-
     @Test
     fun `GIVEN fake with call tracking WHEN method called once THEN callCount should be 1`() {
         // Given
-        val fake =
-            fakeTrackedService {
-                simpleMethod { "result" }
-            }
+        val fake = fakeTrackedService {
+            simpleMethod { "result" }
+        }
 
         // When
         fake.simpleMethod()
@@ -50,10 +34,9 @@ class CallTrackingTest {
     @Test
     fun `GIVEN fake with call tracking WHEN method called 3 times THEN callCount should be 3`() {
         // Given
-        val fake =
-            fakeTrackedService {
-                simpleMethod { "result" }
-            }
+        val fake = fakeTrackedService {
+            simpleMethod { "result" }
+        }
 
         // When
         fake.simpleMethod()
@@ -76,18 +59,13 @@ class CallTrackingTest {
         assertEquals(0, count)
     }
 
-    // ========================================
-    // 2. Concurrent Calls (Thread-Safety)
-    // ========================================
-
     @Test
     fun `GIVEN fake WHEN 100 concurrent coroutines call method THEN callCount should be 100`() =
         runTest {
             // Given
-            val fake =
-                fakeTrackedService {
-                    simpleMethod { "result" }
-                }
+            val fake = fakeTrackedService {
+                simpleMethod { "result" }
+            }
 
             // When - Launch 100 concurrent coroutines
             List(100) {
@@ -102,18 +80,16 @@ class CallTrackingTest {
     fun `GIVEN fake WHEN multiple suspend methods called concurrently THEN all counts accurate`() =
         runTest {
             // Given
-            val fake =
-                fakeTrackedService {
-                    asyncMethod { "async-result" }
-                    batchProcess { items -> items.map { it.uppercase() } }
-                }
+            val fake = fakeTrackedService {
+                asyncMethod { "async-result" }
+                batchProcess { items -> items.map { it.uppercase() } }
+            }
 
             // When - Mix of concurrent calls
-            val jobs =
-                buildList {
-                    repeat(50) { add(launch { fake.asyncMethod() }) }
-                    repeat(30) { add(launch { fake.batchProcess(listOf("a", "b")) }) }
-                }
+            val jobs = buildList {
+                repeat(50) { add(launch { fake.asyncMethod() }) }
+                repeat(30) { add(launch { fake.batchProcess(listOf("a", "b")) }) }
+            }
             jobs.forEach { it.join() }
 
             // Then
@@ -121,18 +97,13 @@ class CallTrackingTest {
             assertEquals(30, fake.batchProcessCallCount.value)
         }
 
-    // ========================================
-    // 3. Suspend Functions Tracking
-    // ========================================
-
     @Test
     fun `GIVEN suspend method WHEN called multiple times THEN callCount increments correctly`() =
         runTest {
             // Given
-            val fake =
-                fakeTrackedService {
-                    asyncMethod { "async-result" }
-                }
+            val fake = fakeTrackedService {
+                asyncMethod { "async-result" }
+            }
 
             // When
             fake.asyncMethod()
@@ -147,10 +118,9 @@ class CallTrackingTest {
     fun `GIVEN async batch operations WHEN concurrent execution THEN tracking remains accurate`() =
         runTest {
             // Given
-            val fake =
-                fakeTrackedService {
-                    batchProcess { items -> items }
-                }
+            val fake = fakeTrackedService {
+                batchProcess { items -> items }
+            }
 
             // When - Process 20 batches concurrently
             List(20) {
@@ -163,17 +133,12 @@ class CallTrackingTest {
             assertEquals(20, fake.batchProcessCallCount.value)
         }
 
-    // ========================================
-    // 4. Generic Methods Tracking
-    // ========================================
-
     @Test
     fun `GIVEN method with generics WHEN called with different types THEN callCount tracks all invocations`() {
         // Given
-        val fake =
-            fakeTrackedService {
-                genericMethod<Any?> { it }
-            }
+        val fake = fakeTrackedService {
+            genericMethod<Any?> { it }
+        }
 
         // When - Call with different types
         fake.genericMethod("string")
@@ -188,10 +153,9 @@ class CallTrackingTest {
     fun `GIVEN method-level generics WHEN multiple type instantiations THEN single counter tracks all`() =
         runTest {
             // Given
-            val fake =
-                fakeTrackedService {
-                    asyncGenericMethod<Any?> { it }
-                }
+            val fake = fakeTrackedService {
+                asyncGenericMethod<Any?> { it }
+            }
 
             // When
             fake.asyncGenericMethod("test")
@@ -202,17 +166,12 @@ class CallTrackingTest {
             assertEquals(3, fake.asyncGenericMethodCallCount.value)
         }
 
-    // ========================================
-    // 5. Nullable Types Tracking
-    // ========================================
-
     @Test
     fun `GIVEN method returning nullable WHEN called THEN callCount increments`() {
         // Given
-        val fake =
-            fakeTrackedService {
-                nullableMethod { "result" }
-            }
+        val fake = fakeTrackedService {
+            nullableMethod { "result" }
+        }
 
         // When
         fake.nullableMethod()
@@ -225,10 +184,9 @@ class CallTrackingTest {
     @Test
     fun `GIVEN method with nullable params WHEN passed null THEN tracking works correctly`() {
         // Given
-        val fake =
-            fakeTrackedService {
-                nullableParamMethod { value -> value != null }
-            }
+        val fake = fakeTrackedService {
+            nullableParamMethod { value -> value != null }
+        }
 
         // When
         fake.nullableParamMethod(null)
@@ -239,17 +197,12 @@ class CallTrackingTest {
         assertEquals(3, fake.nullableParamMethodCallCount.value)
     }
 
-    // ========================================
-    // 6. Custom Domain Types Tracking
-    // ========================================
-
     @Test
     fun `GIVEN method with User type WHEN called THEN callCount tracks invocations`() {
         // Given
-        val fake =
-            fakeTrackedService {
-                customTypeMethod { user -> user.copy(name = "${user.name}-modified") }
-            }
+        val fake = fakeTrackedService {
+            customTypeMethod { user -> user.copy(name = "${user.name}-modified") }
+        }
 
         // When
         val user = User("1", "Alice", "alice@test.com", 25)
@@ -263,10 +216,9 @@ class CallTrackingTest {
     @Test
     fun `GIVEN complex return types WHEN invoked THEN tracking accurate`() {
         // Given
-        val fake =
-            fakeTrackedService {
-                methodWithParams { _, _ -> true }
-            }
+        val fake = fakeTrackedService {
+            methodWithParams { _, _ -> true }
+        }
 
         // When
         fake.methodWithParams("id-1", 10)
@@ -277,17 +229,12 @@ class CallTrackingTest {
         assertEquals(3, fake.methodWithParamsCallCount.value)
     }
 
-    // ========================================
-    // 7. Property Access Tracking
-    // ========================================
-
     @Test
     fun `GIVEN property val WHEN accessed multiple times THEN callCount increments`() {
         // Given
-        val fake =
-            fakeTrackedService {
-                readOnlyProperty { "property-value" }
-            }
+        val fake = fakeTrackedService {
+            readOnlyProperty { "property-value" }
+        }
 
         // When
         val value1 = fake.readOnlyProperty
@@ -301,10 +248,9 @@ class CallTrackingTest {
     @Test
     fun `GIVEN property var WHEN read and written THEN separate tracking for getter and setter`() {
         // Given
-        val fake =
-            fakeTrackedService {
-                mutableProperty { 42 }
-            }
+        val fake = fakeTrackedService {
+            mutableProperty { 42 }
+        }
 
         // When
         val read1 = fake.mutableProperty // getter
@@ -318,17 +264,12 @@ class CallTrackingTest {
         assertEquals(2, fake.setMutablePropertyCallCount.value) // 2 writes
     }
 
-    // ========================================
-    // 8. StateFlow Observation
-    // ========================================
-
     @Test
     fun `GIVEN fake WHEN observing callCount flow THEN can read current value`() {
         // Given
-        val fake =
-            fakeTrackedService {
-                simpleMethod { "result" }
-            }
+        val fake = fakeTrackedService {
+            simpleMethod { "result" }
+        }
 
         // When
         fake.simpleMethod()
@@ -342,12 +283,11 @@ class CallTrackingTest {
     @Test
     fun `GIVEN multiple methods WHEN called THEN can observe all flows independently`() {
         // Given
-        val fake =
-            fakeTrackedService {
-                simpleMethod { "simple" }
-                methodWithParams { _, _ -> true }
-                nullableMethod { "nullable" }
-            }
+        val fake = fakeTrackedService {
+            simpleMethod { "simple" }
+            methodWithParams { _, _ -> true }
+            nullableMethod { "nullable" }
+        }
 
         // When
         fake.simpleMethod()
@@ -363,17 +303,12 @@ class CallTrackingTest {
         assertEquals(3, fake.nullableMethodCallCount.value)
     }
 
-    // ========================================
-    // 9. Varargs Methods
-    // ========================================
-
     @Test
     fun `GIVEN method with varargs WHEN called with different arg counts THEN tracking works`() {
         // Given
-        val fake =
-            fakeTrackedService {
-                varargsMethod { values -> values.size }
-            }
+        val fake = fakeTrackedService {
+            varargsMethod { values -> values.size }
+        }
 
         // When
         fake.varargsMethod("a")
@@ -384,17 +319,12 @@ class CallTrackingTest {
         assertEquals(3, fake.varargsMethodCallCount.value)
     }
 
-    // ========================================
-    // 10. Edge Cases
-    // ========================================
-
     @Test
     fun `GIVEN method throws exception WHEN called THEN callCount still increments`() {
         // Given
-        val fake =
-            fakeTrackedService {
-                simpleMethod { error("Intentional error") }
-            }
+        val fake = fakeTrackedService {
+            simpleMethod { error("Intentional error") }
+        }
 
         // When
         runCatching { fake.simpleMethod() }
@@ -408,13 +338,12 @@ class CallTrackingTest {
     fun `GIVEN behavior configured to return different values WHEN called THEN tracking independent of behavior`() {
         // Given
         var counter = 0
-        val fake =
-            fakeTrackedService {
-                simpleMethod {
-                    counter++
-                    "result-$counter"
-                }
+        val fake = fakeTrackedService {
+            simpleMethod {
+                counter++
+                "result-$counter"
             }
+        }
 
         // When
         val result1 = fake.simpleMethod()

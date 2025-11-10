@@ -12,10 +12,9 @@ class BivariantMapperTest {
     @Test
     fun `GIVEN BivariantMapper SAM WHEN mapping with both variances THEN should work correctly`() {
         // Given
-        val mapper =
-            fakeBivariantMapper<String, Int> {
-                map { input -> input.length }
-            }
+        val mapper = fakeBivariantMapper<String, Int> {
+            map { input -> input.length }
+        }
 
         // When
         val result = mapper.map("hello")

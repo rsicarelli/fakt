@@ -7,24 +7,15 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/**
- * Tests for P1 Scenario: GenericClassWithConstraint
- *
- * TESTING STANDARD: GIVEN-WHEN-THEN pattern (uppercase)
- * Framework: Vanilla JUnit5 + kotlin-test
- *
- * Validates generic class fakes with type parameter constraints (T : Comparable<T>).
- */
 class SortedRepositoryTest {
     @Test
     fun `GIVEN repository with Int type WHEN adding numbers THEN should accept comparable types`() {
         // Given
         var addedItems = mutableListOf<Int>()
-        val repository: SortedRepository<Int> =
-            fakeSortedRepository {
-                add { item -> addedItems.add(item) }
-                getSorted { addedItems.sorted() }
-            }
+        val repository: SortedRepository<Int> = fakeSortedRepository {
+            add { item -> addedItems.add(item) }
+            getSorted { addedItems.sorted() }
+        }
 
         // When
         repository.add(5)
@@ -40,10 +31,9 @@ class SortedRepositoryTest {
     @Test
     fun `GIVEN configured findMin WHEN getting min THEN should return custom value`() {
         // Given
-        val repository: SortedRepository<Int> =
-            fakeSortedRepository {
-                findMin { -100 }
-            }
+        val repository: SortedRepository<Int> = fakeSortedRepository {
+            findMin { -100 }
+        }
 
         // When
         val min = repository.findMin()
@@ -55,10 +45,9 @@ class SortedRepositoryTest {
     @Test
     fun `GIVEN configured getSorted WHEN retrieving THEN should return custom sorted list`() {
         // Given
-        val repository: SortedRepository<String> =
-            fakeSortedRepository {
-                getSorted { listOf("alpha", "beta", "gamma", "delta").sorted() }
-            }
+        val repository: SortedRepository<String> = fakeSortedRepository {
+            getSorted { listOf("alpha", "beta", "gamma", "delta").sorted() }
+        }
 
         // When
         val sorted = repository.getSorted()
@@ -71,12 +60,11 @@ class SortedRepositoryTest {
     @Test
     fun `GIVEN repository with String type WHEN using THEN should work with different comparable type`() {
         // Given
-        val repository: SortedRepository<String> =
-            fakeSortedRepository {
-                findMin { "aaa" }
-                findMax { "zzz" }
-                getSorted { listOf("middle", "value") }
-            }
+        val repository: SortedRepository<String> = fakeSortedRepository {
+            findMin { "aaa" }
+            findMax { "zzz" }
+            getSorted { listOf("middle", "value") }
+        }
 
         // When
         val min = repository.findMin()

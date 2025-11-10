@@ -7,17 +7,13 @@ import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.colle
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for SetFilter SAM interface.
- */
 class SetFilterTest {
     @Test
     fun `GIVEN SetFilter SAM WHEN filtering set THEN should return filtered set`() {
         // Given
-        val filter =
-            fakeSetFilter<Int> {
-                filter { set -> set.filter { it > 3 }.toSet() }
-            }
+        val filter = fakeSetFilter<Int> {
+            filter { set -> set.filter { it > 3 }.toSet() }
+        }
 
         // When
         val result = filter.filter(setOf(1, 2, 3, 4, 5))

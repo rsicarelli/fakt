@@ -15,10 +15,9 @@ class SequenceMapperTest {
     @Test
     fun `GIVEN SequenceMapper SAM WHEN mapping sequence THEN should lazily transform elements`() {
         // Given
-        val mapper =
-            fakeSequenceMapper<Int, String> {
-                map { sequence -> sequence.map { it.toString() } }
-            }
+        val mapper = fakeSequenceMapper<Int, String> {
+            map { sequence -> sequence.map { it.toString() } }
+        }
 
         // When
         val result = mapper.map(sequenceOf(1, 2, 3))
@@ -30,10 +29,9 @@ class SequenceMapperTest {
     @Test
     fun `GIVEN SequenceMapper SAM WHEN mapping empty sequence THEN should return empty sequence`() {
         // Given
-        val mapper =
-            fakeSequenceMapper<String, Int> {
-                map { sequence -> sequence.map { it.length } }
-            }
+        val mapper = fakeSequenceMapper<String, Int> {
+            map { sequence -> sequence.map { it.length } }
+        }
 
         // When
         val result = mapper.map(emptySequence())
@@ -46,15 +44,14 @@ class SequenceMapperTest {
     fun `GIVEN SequenceMapper SAM WHEN filtering sequence THEN should preserve laziness`() {
         // Given
         var transformCount = 0
-        val mapper =
-            fakeSequenceMapper<Int, Int> {
-                map { sequence ->
-                    sequence.map {
-                        transformCount++
-                        it * 2
-                    }
+        val mapper = fakeSequenceMapper<Int, Int> {
+            map { sequence ->
+                sequence.map {
+                    transformCount++
+                    it * 2
                 }
             }
+        }
 
         // When
         val result = mapper.map(sequenceOf(1, 2, 3, 4, 5))

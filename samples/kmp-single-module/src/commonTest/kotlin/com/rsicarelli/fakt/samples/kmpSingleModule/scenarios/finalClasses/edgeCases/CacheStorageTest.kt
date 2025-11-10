@@ -2,17 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.finalClasses.edgeCases
 
+import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.finalClasses.edgeCases.fakeCacheStorage
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/**
- * Tests for P1 Scenario: ClassWithNullableTypes
- *
- * TESTING STANDARD: GIVEN-WHEN-THEN pattern (uppercase)
- * Framework: Vanilla JUnit5 + kotlin-test
- */
 class CacheStorageTest {
     @Test
     fun `GIVEN cache with nullable types WHEN not configured THEN should use super defaults`() {
@@ -31,15 +26,14 @@ class CacheStorageTest {
     @Test
     fun `GIVEN cache WHEN configured with nullable return THEN should handle nulls correctly`() {
         // Given
-        val cache =
-            fakeCacheStorage {
-                get { key ->
-                    when (key) {
-                        "existing" -> "value"
-                        else -> null
-                    }
+        val cache = fakeCacheStorage {
+            get { key ->
+                when (key) {
+                    "existing" -> "value"
+                    else -> null
                 }
             }
+        }
 
         // When
         val existing = cache.get("existing")
@@ -54,12 +48,11 @@ class CacheStorageTest {
     fun `GIVEN cache WHEN configured with nullable parameter THEN should accept null values`() {
         // Given
         var lastValue: String? = "initial"
-        val cache =
-            fakeCacheStorage {
-                put { key, value ->
-                    lastValue = value
-                }
+        val cache = fakeCacheStorage {
+            put { key, value ->
+                lastValue = value
             }
+        }
 
         // When
         cache.put("key1", "value1")
@@ -75,15 +68,14 @@ class CacheStorageTest {
     @Test
     fun `GIVEN cache WHEN find with null prefix THEN should handle null parameter`() {
         // Given
-        val cache =
-            fakeCacheStorage {
-                find { prefix ->
-                    when (prefix) {
-                        null -> listOf("all", "items")
-                        else -> listOf("filtered-$prefix")
-                    }
+        val cache = fakeCacheStorage {
+            find { prefix ->
+                when (prefix) {
+                    null -> listOf("all", "items")
+                    else -> listOf("filtered-$prefix")
                 }
             }
+        }
 
         // When
         val allItems = cache.find(null)
@@ -99,10 +91,9 @@ class CacheStorageTest {
     @Test
     fun `GIVEN cache WHEN using super with null THEN should work correctly`() {
         // Given - only configure get, others use super
-        val cache =
-            fakeCacheStorage {
-                get { "configured" }
-            }
+        val cache = fakeCacheStorage {
+            get { "configured" }
+        }
 
         // When
         val value = cache.get("any")

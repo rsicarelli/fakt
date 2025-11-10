@@ -7,17 +7,13 @@ import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.colle
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for IterableProcessor SAM interface.
- */
 class IterableProcessorTest {
     @Test
     fun `GIVEN IterableProcessor SAM WHEN processing iterable THEN should return processed iterable`() {
         // Given
-        val processor =
-            fakeIterableProcessor<Int> {
-                process { iterable -> iterable.map { it + 1 }.asIterable() }
-            }
+        val processor = fakeIterableProcessor<Int> {
+            process { iterable -> iterable.map { it + 1 }.asIterable() }
+        }
 
         // When
         val result = processor.process(listOf(1, 2, 3))

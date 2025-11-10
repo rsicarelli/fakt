@@ -1,6 +1,5 @@
-// Copyright (C) 2025 Rodrigo Sicarelli.
+// Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-
 package com.rsicarelli.fakt.codegen.builder
 
 import com.rsicarelli.fakt.codegen.model.CodeType
@@ -13,6 +12,7 @@ import com.rsicarelli.fakt.codegen.model.CodeType
  * - Generic types: "List<String>", "Map<String, Int>"
  * - Nullable types: "String?", "User?"
  * - Nested generics: "List<Map<String, Int>>"
+ * - Function types: "(Int, String) -> Boolean", "suspend (T) -> Unit"
  *
  * Note: This is a simple parser for common cases.
  * Complex types may need explicit CodeType construction.
@@ -24,6 +24,14 @@ internal fun parseType(typeString: String): CodeType {
     return when {
         typeString.endsWith("?") ->
             CodeType.Nullable(parseType(typeString.dropLast(1)))
+
+        // Function types: (A, B) -> R or suspend (A) -> R
+        // Must check BEFORE generic check because function types may contain generics
+        typeString.contains(" -> ") -> {
+            // Function types are represented as Simple types in the model
+            // The renderer will output them as-is
+            CodeType.Simple(typeString)
+        }
 
         typeString.contains("<") -> {
             val name = typeString.substringBefore("<")

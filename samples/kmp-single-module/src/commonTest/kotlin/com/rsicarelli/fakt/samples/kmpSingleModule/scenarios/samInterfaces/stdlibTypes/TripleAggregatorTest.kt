@@ -12,10 +12,9 @@ class TripleAggregatorTest {
     @Test
     fun `GIVEN TripleAggregator SAM WHEN aggregating triple THEN should combine values`() {
         // Given
-        val aggregator =
-            fakeTripleAggregator<Int> {
-                aggregate { triple -> triple.first + triple.second + triple.third }
-            }
+        val aggregator = fakeTripleAggregator<Int> {
+            aggregate { triple -> triple.first + triple.second + triple.third }
+        }
 
         // When
         val result = aggregator.aggregate(Triple(1, 2, 3))

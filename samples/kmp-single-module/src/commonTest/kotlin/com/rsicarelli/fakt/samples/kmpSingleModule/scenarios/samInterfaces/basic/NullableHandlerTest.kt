@@ -2,23 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.basic
 
-import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.basic.NullableHandler
 import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.basic.fakeNullableHandler
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-/**
- * Tests for NullableHandler SAM interface.
- */
 class NullableHandlerTest {
     @Test
     fun `GIVEN SAM with nullable types WHEN using fake THEN should handle nulls`() {
         // Given
-        val handler =
-            fakeNullableHandler {
-                handle { input -> input?.uppercase() }
-            }
+        val handler = fakeNullableHandler {
+            handle { input -> input?.uppercase() }
+        }
 
         // When
         val resultWithValue = handler.handle("hello")

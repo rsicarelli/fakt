@@ -12,10 +12,9 @@ class VariantTransformerTest {
     @Test
     fun `GIVEN VariantTransformer SAM WHEN transforming THEN should transform with variance`() {
         // Given
-        val transformer =
-            fakeVariantTransformer<String, Int> {
-                transform { input: String -> input.length }
-            }
+        val transformer = fakeVariantTransformer<String, Int> {
+            transform { input: String -> input.length }
+        }
 
         // When
         val result = transformer.transform("hello")

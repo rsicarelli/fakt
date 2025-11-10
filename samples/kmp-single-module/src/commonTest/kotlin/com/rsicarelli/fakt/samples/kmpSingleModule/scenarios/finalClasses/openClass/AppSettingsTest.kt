@@ -8,12 +8,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/**
- * Tests for P1 Scenario: OpenClassWithProperties
- *
- * TESTING STANDARD: GIVEN-WHEN-THEN pattern (uppercase)
- * Framework: Vanilla JUnit5 + kotlin-test
- */
 class AppSettingsTest {
     @Test
     fun `GIVEN open class with properties WHEN not configured THEN should use super defaults`() {
@@ -34,12 +28,11 @@ class AppSettingsTest {
     @Test
     fun `GIVEN open class with properties WHEN properties configured THEN should use configured values`() {
         // Given
-        val settings =
-            fakeAppSettings {
-                theme { "dark" }
-                isDarkMode { true }
-                maxRetries { 5 }
-            }
+        val settings = fakeAppSettings {
+            theme { "dark" }
+            isDarkMode { true }
+            maxRetries { 5 }
+        }
 
         // When
         val theme = settings.theme
@@ -55,11 +48,10 @@ class AppSettingsTest {
     @Test
     fun `GIVEN open class WHEN mixing properties and methods THEN both should work`() {
         // Given
-        val settings =
-            fakeAppSettings {
-                theme { "custom" }
-                getSetting { key -> "value-$key" }
-            }
+        val settings = fakeAppSettings {
+            theme { "custom" }
+            getSetting { key -> "value-$key" }
+        }
 
         // When
         val theme = settings.theme
@@ -75,10 +67,9 @@ class AppSettingsTest {
     @Test
     fun `GIVEN open class WHEN partially configured THEN should mix configured and super`() {
         // Given - only configure theme
-        val settings =
-            fakeAppSettings {
-                theme { "blue" }
-            }
+        val settings = fakeAppSettings {
+            theme { "blue" }
+        }
 
         // When
         val theme = settings.theme

@@ -5,17 +5,13 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.edge
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 
-/**
- * Tests for IntArrayProcessor SAM interface.
- */
 class IntArrayProcessorTest {
     @Test
     fun `GIVEN IntArrayProcessor SAM WHEN processing int array THEN should sum elements`() {
         // Given
-        val processor =
-            fakeIntArrayProcessor {
-                process { items -> intArrayOf(items.sum()) }
-            }
+        val processor = fakeIntArrayProcessor {
+            process { items -> intArrayOf(items.sum()) }
+        }
 
         // When
         val result = processor.process(intArrayOf(1, 2, 3, 4, 5))
@@ -27,10 +23,9 @@ class IntArrayProcessorTest {
     @Test
     fun `GIVEN IntArrayProcessor SAM WHEN processing empty THEN should return zero`() {
         // Given
-        val processor =
-            fakeIntArrayProcessor {
-                process { items -> intArrayOf(items.sum()) }
-            }
+        val processor = fakeIntArrayProcessor {
+            process { items -> intArrayOf(items.sum()) }
+        }
 
         // When
         val result = processor.process(intArrayOf())

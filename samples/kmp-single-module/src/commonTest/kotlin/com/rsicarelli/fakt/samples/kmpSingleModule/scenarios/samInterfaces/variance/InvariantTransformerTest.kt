@@ -12,10 +12,9 @@ class InvariantTransformerTest {
     @Test
     fun `GIVEN InvariantTransformer SAM WHEN transforming THEN should require exact type`() {
         // Given
-        val transformer =
-            fakeInvariantTransformer<String> {
-                transform { value -> value.uppercase() }
-            }
+        val transformer = fakeInvariantTransformer<String> {
+            transform { value -> value.uppercase() }
+        }
 
         // When
         val result = transformer.transform("hello")

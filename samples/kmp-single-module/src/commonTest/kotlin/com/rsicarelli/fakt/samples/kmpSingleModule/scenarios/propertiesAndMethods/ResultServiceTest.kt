@@ -1,34 +1,25 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.propertiesAndMethods
+
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * Comprehensive test for ResultService fake generation.
- *
- * Validates:
- * - Method-level generics with Result<T>
- * - Multiple method-level type parameters (T, R)
- * - Suspend functions with generics
- * - Result type transformations
- */
 class ResultServiceTest {
     @Test
     fun `GIVEN ResultService WHEN trying operation THEN should wrap in Result`() {
         // Given
-        val fake =
-            fakeResultService {
-                tryOperation<Any?> { operation ->
-                    try {
-                        Result.success(operation())
-                    } catch (e: Exception) {
-                        Result.failure(e)
-                    }
+        val fake = fakeResultService {
+            tryOperation<Any?> { operation ->
+                try {
+                    Result.success(operation())
+                } catch (e: Exception) {
+                    Result.failure(e)
                 }
             }
+        }
 
         // When
         val successResult = fake.tryOperation { 42 }
@@ -43,16 +34,16 @@ class ResultServiceTest {
     @Test
     fun `GIVEN ResultService WHEN mapping result THEN should transform success value`() {
         // Given
-        val fake =
-            fakeResultService {
-                mapResult<Any?, Any?> { result, mapper ->
-                    result.map(mapper)
-                }
+        val fake = fakeResultService {
+            mapResult<Any?, Any?> { result, mapper ->
+                result.map(mapper)
             }
+        }
 
         // When
         val successResult = fake.mapResult(Result.success(5)) { it * 2 }
-        val failureResult = fake.mapResult<Int, String>(Result.failure(Exception("Error"))) { it.toString() }
+        val failureResult =
+            fake.mapResult<Int, String>(Result.failure(Exception("Error"))) { it.toString() }
 
         // Then
         assertTrue(successResult.isSuccess)
@@ -64,16 +55,15 @@ class ResultServiceTest {
     fun `GIVEN ResultService WHEN trying async operation THEN should handle suspend`() =
         runTest {
             // Given
-            val fake =
-                fakeResultService {
-                    tryAsyncOperation<Any?> { operation ->
-                        try {
-                            Result.success(operation())
-                        } catch (e: Exception) {
-                            Result.failure(e)
-                        }
+            val fake = fakeResultService {
+                tryAsyncOperation<Any?> { operation ->
+                    try {
+                        Result.success(operation())
+                    } catch (e: Exception) {
+                        Result.failure(e)
                     }
                 }
+            }
 
             // When
             val result = fake.tryAsyncOperation { "async-result" }
@@ -86,35 +76,32 @@ class ResultServiceTest {
     @Test
     fun `GIVEN ResultService WHEN combining results THEN should merge list of results`() {
         // Given
-        val fake =
-            fakeResultService {
-                combineResults { results ->
-                    val failures = results.filter { it.isFailure }
-                    if (failures.isNotEmpty()) {
-                        Result.failure(failures.first().exceptionOrNull()!!)
-                    } else {
-                        Result.success(results.mapNotNull { it.getOrNull() })
-                    }
+        val fake = fakeResultService {
+            combineResults { results ->
+                val failures = results.filter { it.isFailure }
+                if (failures.isNotEmpty()) {
+                    Result.failure(failures.first().exceptionOrNull()!!)
+                } else {
+                    Result.success(results.mapNotNull { it.getOrNull() })
                 }
             }
+        }
 
         // When
-        val allSuccess =
-            fake.combineResults(
-                listOf(
-                    Result.success("a"),
-                    Result.success("b"),
-                    Result.success("c"),
-                ),
-            )
-        val hasFailure =
-            fake.combineResults(
-                listOf(
-                    Result.success("a"),
-                    Result.failure(Exception("Error")),
-                    Result.success("c"),
-                ),
-            )
+        val allSuccess = fake.combineResults(
+            listOf(
+                Result.success("a"),
+                Result.success("b"),
+                Result.success("c"),
+            ),
+        )
+        val hasFailure = fake.combineResults(
+            listOf(
+                Result.success("a"),
+                Result.failure(Exception("Error")),
+                Result.success("c"),
+            ),
+        )
 
         // Then
         assertTrue(allSuccess.isSuccess)

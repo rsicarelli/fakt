@@ -1,6 +1,5 @@
-// Copyright (C) 2025 Rodrigo Sicarelli.
+// Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-
 package com.rsicarelli.fakt.codegen.builder
 
 import com.rsicarelli.fakt.codegen.model.CodeDeclaration
@@ -115,6 +114,8 @@ public class CodeFileBuilder @PublishedApi internal constructor(
      *     body = "return FakeUserServiceImpl()"
      * }
      * ```
+     *
+     * TODO Phase 10: Will be used for top-level factory functions in generated fakes.
      *
      * @param name The function name
      * @param block DSL block for configuring the function

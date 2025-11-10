@@ -7,18 +7,14 @@ import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.basic
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for VoidAction SAM interface.
- */
 class VoidActionTest {
     @Test
     fun `GIVEN SAM with Unit return WHEN configuring THEN should execute action`() {
         // Given
         var executedCommand = ""
-        val action =
-            fakeVoidAction {
-                execute { command -> executedCommand = command }
-            }
+        val action = fakeVoidAction {
+            execute { command -> executedCommand = command }
+        }
 
         // When
         action.execute("test-command")

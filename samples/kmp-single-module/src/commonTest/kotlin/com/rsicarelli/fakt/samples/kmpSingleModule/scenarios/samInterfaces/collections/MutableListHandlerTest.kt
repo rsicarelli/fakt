@@ -5,20 +5,16 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.coll
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for MutableListHandler SAM interface.
- */
 class MutableListHandlerTest {
     @Test
     fun `GIVEN MutableListHandler SAM WHEN handling THEN should modify list`() {
         // Given
-        val handler =
-            fakeMutableListHandler<Int> {
-                handle { list ->
-                    list.add(99)
-                    list
-                }
+        val handler = fakeMutableListHandler<Int> {
+            handle { list ->
+                list.add(99)
+                list
             }
+        }
 
         // When
         val list = mutableListOf(1, 2, 3)

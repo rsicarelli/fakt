@@ -13,10 +13,9 @@ class ContravariantListConsumerTest {
     fun `GIVEN ContravariantListConsumer SAM WHEN consuming list THEN should work with in variance`() {
         // Given
         val consumed = mutableListOf<List<String>>()
-        val consumer =
-            fakeContravariantListConsumer<String> {
-                consume { list -> consumed.add(list) }
-            }
+        val consumer = fakeContravariantListConsumer<String> {
+            consume { list -> consumed.add(list) }
+        }
 
         // When
         consumer.consume(listOf("x", "y", "z"))
@@ -29,10 +28,9 @@ class ContravariantListConsumerTest {
     fun `GIVEN ContravariantListConsumer SAM WHEN consuming empty THEN should handle correctly`() {
         // Given
         val consumed = mutableListOf<List<Int>>()
-        val consumer =
-            fakeContravariantListConsumer<Int> {
-                consume { list -> consumed.add(list) }
-            }
+        val consumer = fakeContravariantListConsumer<Int> {
+            consume { list -> consumed.add(list) }
+        }
 
         // When
         consumer.consume(emptyList())

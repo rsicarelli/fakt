@@ -14,10 +14,9 @@ class LazyProviderTest {
     @Test
     fun `GIVEN LazyProvider SAM WHEN providing lazily THEN should return lazy value`() {
         // Given
-        val provider =
-            fakeLazyProvider<String> {
-                provide { lazy { "lazy-value" } }
-            }
+        val provider = fakeLazyProvider<String> {
+            provide { lazy { "lazy-value" } }
+        }
 
         // When
         val result = provider.provide()

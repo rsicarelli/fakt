@@ -2,23 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.generics
 
-import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.generics.ListMapper
-import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.generics.fakeListMapper
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * Tests for ListMapper SAM interface.
- */
 class ListMapperTest {
     @Test
     fun `GIVEN ListMapper SAM WHEN mapping list elements THEN should transform all items`() {
         // Given
-        val mapper =
-            fakeListMapper<Int, String> {
-                map { items -> items.map { it.toString() } }
-            }
+        val mapper = fakeListMapper<Int, String> {
+            map { items -> items.map { it.toString() } }
+        }
 
         // When
         val result = mapper.map(listOf(1, 2, 3))
@@ -30,10 +24,9 @@ class ListMapperTest {
     @Test
     fun `GIVEN ListMapper SAM WHEN mapping empty list THEN should return empty list`() {
         // Given
-        val mapper =
-            fakeListMapper<Int, String> {
-                map { items -> items.map { it.toString() } }
-            }
+        val mapper = fakeListMapper<Int, String> {
+            map { items -> items.map { it.toString() } }
+        }
 
         // When
         val result = mapper.map(emptyList())
@@ -45,10 +38,9 @@ class ListMapperTest {
     @Test
     fun `GIVEN ListMapper SAM with nullable elements WHEN mapping THEN should handle nulls`() {
         // Given
-        val mapper =
-            fakeListMapper<Int?, String?> {
-                map { items -> items.map { it?.toString() } }
-            }
+        val mapper = fakeListMapper<Int?, String?> {
+            map { items -> items.map { it?.toString() } }
+        }
 
         // When
         val result = mapper.map(listOf(1, null, 3))

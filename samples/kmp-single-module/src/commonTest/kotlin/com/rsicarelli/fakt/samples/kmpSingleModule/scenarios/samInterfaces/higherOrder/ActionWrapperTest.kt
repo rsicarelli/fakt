@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.higherOrder
 
-import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.higherOrder.ActionWrapper
-import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.higherOrder.fakeActionWrapper
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -14,17 +12,16 @@ class ActionWrapperTest {
     @Test
     fun `GIVEN ActionWrapper SAM WHEN wrapping action THEN should execute wrapped action`() {
         // Given
-        var executionLog = mutableListOf<String>()
-        val wrapper =
-            fakeActionWrapper<String> {
-                wrap { action ->
-                    { input: String ->
-                        executionLog.add("before-$input")
-                        action(input)
-                        executionLog.add("after-$input")
-                    }
+        val executionLog = mutableListOf<String>()
+        val wrapper = fakeActionWrapper<String> {
+            wrap { action ->
+                { input: String ->
+                    executionLog.add("before-$input")
+                    action(input)
+                    executionLog.add("after-$input")
                 }
             }
+        }
 
         // When
         var executed = ""

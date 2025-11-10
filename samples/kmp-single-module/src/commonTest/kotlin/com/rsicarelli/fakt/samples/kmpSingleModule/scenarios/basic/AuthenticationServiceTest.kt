@@ -12,12 +12,6 @@ import kotlin.test.assertTrue
 
 /**
  * Comprehensive test for AuthenticationService fake generation.
- *
- * Validates:
- * - Multiple property types (Boolean, nullable, Set)
- * - Suspend functions returning Result<T>
- * - Collection parameter handling (List vs Collection)
- * - Complex authentication patterns
  */
 class AuthenticationServiceTest {
     @Test
@@ -25,12 +19,11 @@ class AuthenticationServiceTest {
         // Given
         val testUser = User("u1", "Alice", "alice@example.com", 25)
         val testPermissions = setOf("read", "write", "delete")
-        val fake =
-            fakeAuthenticationService {
-                isLoggedIn { true }
-                currentUser { testUser }
-                permissions { testPermissions }
-            }
+        val fake = fakeAuthenticationService {
+            isLoggedIn { true }
+            currentUser { testUser }
+            permissions { testPermissions }
+        }
 
         // When
         val loggedIn = fake.isLoggedIn
@@ -48,16 +41,15 @@ class AuthenticationServiceTest {
     fun `GIVEN AuthenticationService fake WHEN logging in THEN should return Result with User`() =
         runTest {
             // Given
-            val fake =
-                fakeAuthenticationService {
-                    login { username, password ->
-                        if (username == "admin" && password == "secret") {
-                            Result.success(User("u1", username, "admin@example.com", 30))
-                        } else {
-                            Result.failure(Exception("Invalid credentials"))
-                        }
+            val fake = fakeAuthenticationService {
+                login { username, password ->
+                    if (username == "admin" && password == "secret") {
+                        Result.success(User("u1", username, "admin@example.com", 30))
+                    } else {
+                        Result.failure(Exception("Invalid credentials"))
                     }
                 }
+            }
 
             // When
             val successResult = fake.login("admin", "secret")
@@ -73,10 +65,9 @@ class AuthenticationServiceTest {
     fun `GIVEN AuthenticationService fake WHEN logging out THEN should return Result Unit`() =
         runTest {
             // Given
-            val fake =
-                fakeAuthenticationService {
-                    logout { Result.success(Unit) }
-                }
+            val fake = fakeAuthenticationService {
+                logout { Result.success(Unit) }
+            }
 
             // When
             val result = fake.logout()
@@ -89,10 +80,9 @@ class AuthenticationServiceTest {
     fun `GIVEN AuthenticationService fake WHEN refreshing token THEN should return Result String`() =
         runTest {
             // Given
-            val fake =
-                fakeAuthenticationService {
-                    refreshToken { Result.success("new-token-12345") }
-                }
+            val fake = fakeAuthenticationService {
+                refreshToken { Result.success("new-token-12345") }
+            }
 
             // When
             val result = fake.refreshToken()
@@ -105,10 +95,9 @@ class AuthenticationServiceTest {
     @Test
     fun `GIVEN AuthenticationService fake WHEN checking single permission THEN should return boolean`() {
         // Given
-        val fake =
-            fakeAuthenticationService {
-                hasPermission { perm -> perm in setOf("read", "write") }
-            }
+        val fake = fakeAuthenticationService {
+            hasPermission { perm -> perm in setOf("read", "write") }
+        }
 
         // When
         val hasRead = fake.hasPermission("read")
@@ -123,12 +112,11 @@ class AuthenticationServiceTest {
     fun `GIVEN AuthenticationService fake WHEN checking any permissions THEN should handle list`() {
         // Given
         val userPermissions = setOf("read", "write")
-        val fake =
-            fakeAuthenticationService {
-                hasAnyPermissions { perms ->
-                    perms.any { it in userPermissions }
-                }
+        val fake = fakeAuthenticationService {
+            hasAnyPermissions { perms ->
+                perms.any { it in userPermissions }
             }
+        }
 
         // When
         val hasAny1 = fake.hasAnyPermissions(listOf("read", "admin"))
@@ -143,12 +131,11 @@ class AuthenticationServiceTest {
     fun `GIVEN AuthenticationService fake WHEN checking all permissions THEN should handle collection`() {
         // Given
         val userPermissions = setOf("read", "write")
-        val fake =
-            fakeAuthenticationService {
-                hasAllPermissions { perms ->
-                    perms.all { it in userPermissions }
-                }
+        val fake = fakeAuthenticationService {
+            hasAllPermissions { perms ->
+                perms.all { it in userPermissions }
             }
+        }
 
         // When
         val hasAll1 = fake.hasAllPermissions(listOf("read", "write"))

@@ -30,12 +30,11 @@ class UserServiceTest {
 
     @Test
     fun `GIVEN configured findById WHEN called with null THEN uses custom behavior`() {
-        val service: UserService =
-            fakeUserService {
-                findById { id ->
-                    if (id == null) null else User(id, "Test")
-                }
+        val service: UserService = fakeUserService {
+            findById { id ->
+                if (id == null) null else User(id, "Test")
             }
+        }
 
         val result = service.findById(null)
 
@@ -44,12 +43,11 @@ class UserServiceTest {
 
     @Test
     fun `GIVEN configured findById WHEN called with id THEN returns user`() {
-        val service: UserService =
-            fakeUserService {
-                findById { id ->
-                    if (id == null) null else User(id, "Test")
-                }
+        val service: UserService = fakeUserService {
+            findById { id ->
+                if (id == null) null else User(id, "Test")
             }
+        }
 
         val result = service.findById("123")
 
@@ -69,12 +67,11 @@ class UserServiceTest {
 
     @Test
     fun `GIVEN configured update WHEN called with null THEN uses custom behavior`() {
-        val service: UserService =
-            fakeUserService {
-                update { user ->
-                    user != null
-                }
+        val service: UserService = fakeUserService {
+            update { user ->
+                user != null
             }
+        }
 
         val result = service.update(null)
 
@@ -83,12 +80,11 @@ class UserServiceTest {
 
     @Test
     fun `GIVEN configured update WHEN called with user THEN returns true`() {
-        val service: UserService =
-            fakeUserService {
-                update { user ->
-                    user != null
-                }
+        val service: UserService = fakeUserService {
+            update { user ->
+                user != null
             }
+        }
 
         val result = service.update(User("123", "Test"))
 
@@ -107,12 +103,11 @@ class UserServiceTest {
 
     @Test
     fun `GIVEN configured merge WHEN both null THEN returns null`() {
-        val service: UserService =
-            fakeUserService {
-                merge { primary, secondary ->
-                    primary ?: secondary
-                }
+        val service: UserService = fakeUserService {
+            merge { primary, secondary ->
+                primary ?: secondary
             }
+        }
 
         val result = service.merge(null, null)
 
@@ -121,12 +116,11 @@ class UserServiceTest {
 
     @Test
     fun `GIVEN configured merge WHEN primary null THEN returns secondary`() {
-        val service: UserService =
-            fakeUserService {
-                merge { primary, secondary ->
-                    primary ?: secondary
-                }
+        val service: UserService = fakeUserService {
+            merge { primary, secondary ->
+                primary ?: secondary
             }
+        }
         val secondary = User("2", "Secondary")
 
         val result = service.merge(null, secondary)
@@ -147,10 +141,9 @@ class UserServiceTest {
     fun `GIVEN configured currentUser WHEN accessed THEN returns user`() {
         val user = User("123", "Current")
 
-        val service: UserService =
-            fakeUserService {
-                currentUser { user }
-            }
+        val service: UserService = fakeUserService {
+            currentUser { user }
+        }
 
         val result = service.currentUser
 
@@ -170,11 +163,10 @@ class UserServiceTest {
     fun `GIVEN configured cachedUser WHEN set and get THEN uses custom behavior`() {
         var storage: User? = null
 
-        val service: UserService =
-            fakeUserService {
-                cachedUser { storage }
-                setCachedUser { user -> storage = user }
-            }
+        val service: UserService = fakeUserService {
+            cachedUser { storage }
+            setCachedUser { user -> storage = user }
+        }
 
         val user = User("123", "Cached")
         service.cachedUser = user
@@ -187,13 +179,12 @@ class UserServiceTest {
     fun `GIVEN all methods configured WHEN called THEN all use custom behaviors`() {
         val testUser = User("123", "Test")
 
-        val service: UserService =
-            fakeUserService {
-                findById { id -> if (id != null) testUser else null }
-                update { user -> user != null }
-                merge { primary, secondary -> primary ?: secondary }
-                currentUser { testUser }
-            }
+        val service: UserService = fakeUserService {
+            findById { id -> if (id != null) testUser else null }
+            update { user -> user != null }
+            merge { primary, secondary -> primary ?: secondary }
+            currentUser { testUser }
+        }
 
         val found = service.findById("123")
         val updated = service.update(testUser)

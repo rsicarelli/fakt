@@ -11,23 +11,15 @@ import kotlin.test.assertTrue
 
 /**
  * Comprehensive test for UserRepository fake generation.
- *
- * Validates:
- * - Property access
- * - Methods returning nullable types
- * - Methods with default parameters
- * - Collection handling
- * - Default behaviors
  */
 class UserRepositoryTest {
     @Test
     fun `GIVEN UserRepository fake WHEN accessing users property THEN should return configured list`() {
         // Given
-        val testUsers =
-            listOf(
-                User("1", "Alice", "alice@example.com", 25),
-                User("2", "Bob", "bob@example.com", 30),
-            )
+        val testUsers = listOf(
+            User("1", "Alice", "alice@example.com", 25),
+            User("2", "Bob", "bob@example.com", 30),
+        )
         val fake =
             fakeUserRepository {
                 users { testUsers }
@@ -47,12 +39,16 @@ class UserRepositoryTest {
     @Test
     fun `GIVEN UserRepository fake WHEN finding by ID THEN should return user or null`() {
         // Given
-        val fake =
-            fakeUserRepository {
-                findById { id ->
-                    if (id == "existing") User("existing", "Found User", "found@example.com", 28) else null
-                }
+        val fake = fakeUserRepository {
+            findById { id ->
+                if (id == "existing") User(
+                    "existing",
+                    "Found User",
+                    "found@example.com",
+                    28
+                ) else null
             }
+        }
 
         // When
         val existingUser = fake.findById("existing")
@@ -68,12 +64,11 @@ class UserRepositoryTest {
     @Test
     fun `GIVEN UserRepository fake WHEN saving user THEN should return saved user`() {
         // Given
-        val fake =
-            fakeUserRepository {
-                save { user ->
-                    user.copy(id = "saved-${user.id}")
-                }
+        val fake = fakeUserRepository {
+            save { user ->
+                user.copy(id = "saved-${user.id}")
             }
+        }
 
         // When
         val inputUser = User("123", "Test", "test@example.com", 25)
@@ -90,10 +85,9 @@ class UserRepositoryTest {
     @Test
     fun `GIVEN UserRepository fake WHEN deleting THEN should return boolean`() {
         // Given
-        val fake =
-            fakeUserRepository {
-                delete { id -> id == "deletable" }
-            }
+        val fake = fakeUserRepository {
+            delete { id -> id == "deletable" }
+        }
 
         // When
         val deletedExisting = fake.delete("deletable")
@@ -109,15 +103,14 @@ class UserRepositoryTest {
     @Test
     fun `GIVEN UserRepository fake WHEN using findByAge with defaults THEN should handle default parameters`() {
         // Given
-        val fake =
-            fakeUserRepository {
-                findByAge { minAge, maxAge ->
-                    listOf(
-                        User("1", "Young", "young@example.com", minAge),
-                        User("2", "Old", "old@example.com", maxAge),
-                    )
-                }
+        val fake = fakeUserRepository {
+            findByAge { minAge, maxAge ->
+                listOf(
+                    User("1", "Young", "young@example.com", minAge),
+                    User("2", "Old", "old@example.com", maxAge),
+                )
             }
+        }
 
         // When - call with both parameters
         val resultBoth = fake.findByAge(20, 30)

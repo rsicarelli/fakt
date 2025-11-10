@@ -1,6 +1,5 @@
-// Copyright (C) 2025 Rodrigo Sicarelli.
+// Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-
 package com.rsicarelli.fakt.codegen.model
 
 /**
@@ -29,6 +28,8 @@ data class CodeFile(
     /**
      * Adds a top-level declaration.
      * Returns new CodeFile instance (immutable).
+     *
+     * TODO Phase 10: Alternative mutation API (currently builders are preferred).
      */
     fun addDeclaration(declaration: CodeDeclaration): CodeFile =
         copy(declarations = declarations + declaration)
@@ -37,6 +38,8 @@ data class CodeFile(
      * Adds an import statement.
      * Returns new CodeFile instance (immutable).
      * Automatically deduplicates imports.
+     *
+     * TODO Phase 10: Alternative mutation API (currently builders are preferred).
      */
     fun addImport(fqName: String): CodeFile =
         copy(imports = imports + fqName)
@@ -73,6 +76,8 @@ data class CodeClass(
     /**
      * Adds a member to this class.
      * Returns new CodeClass instance (immutable).
+     *
+     * TODO Phase 10: Alternative mutation API (currently ClassBuilder is preferred).
      */
     fun addMember(member: CodeMember): CodeClass =
         copy(members = members + member)
@@ -189,6 +194,8 @@ sealed interface CodeType {
 
     /**
      * Lambda/function type (e.g., (String) -> Int, suspend (User) -> Unit).
+     *
+     * TODO Phase 10: Will be used for behavior properties like var getUserBehavior: (String) -> User?.
      */
     data class Lambda(
         val parameters: List<CodeType>,

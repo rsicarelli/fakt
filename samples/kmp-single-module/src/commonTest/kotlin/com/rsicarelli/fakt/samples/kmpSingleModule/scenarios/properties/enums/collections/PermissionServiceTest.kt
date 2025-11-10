@@ -8,20 +8,13 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/**
- * Tests for PermissionService fake with enum collections.
- *
- * Validates that collections of enums (List, Set, Map) are properly
- * handled by Fakt code generation.
- */
 class PermissionServiceTest {
     @Test
     fun `GIVEN PermissionService fake WHEN configuring accessLevels THEN should return enum list`() {
         // Given
-        val permissionService =
-            fakePermissionService {
-                accessLevels { listOf(AccessLevel.READ, AccessLevel.WRITE, AccessLevel.READ) }
-            }
+        val permissionService = fakePermissionService {
+            accessLevels { listOf(AccessLevel.READ, AccessLevel.WRITE, AccessLevel.READ) }
+        }
 
         // When
         val levels = permissionService.accessLevels
@@ -34,10 +27,9 @@ class PermissionServiceTest {
     @Test
     fun `GIVEN PermissionService fake WHEN configuring requiredPermissions THEN should return enum set`() {
         // Given
-        val permissionService =
-            fakePermissionService {
-                requiredPermissions { setOf(AccessLevel.READ, AccessLevel.EXECUTE) }
-            }
+        val permissionService = fakePermissionService {
+            requiredPermissions { setOf(AccessLevel.READ, AccessLevel.EXECUTE) }
+        }
 
         // When
         val permissions = permissionService.requiredPermissions
@@ -52,16 +44,14 @@ class PermissionServiceTest {
     @Test
     fun `GIVEN PermissionService fake WHEN configuring permissionDescriptions THEN should return map with enum keys`() {
         // Given
-        val descriptions =
-            mapOf(
-                AccessLevel.READ to "View content",
-                AccessLevel.WRITE to "Modify content",
-                AccessLevel.ADMIN to "Full control",
-            )
-        val permissionService =
-            fakePermissionService {
-                permissionDescriptions { descriptions }
-            }
+        val descriptions = mapOf(
+            AccessLevel.READ to "View content",
+            AccessLevel.WRITE to "Modify content",
+            AccessLevel.ADMIN to "Full control",
+        )
+        val permissionService = fakePermissionService {
+            permissionDescriptions { descriptions }
+        }
 
         // When
         val result = permissionService.permissionDescriptions
@@ -77,16 +67,14 @@ class PermissionServiceTest {
     @Test
     fun `GIVEN PermissionService fake WHEN configuring userPermissions THEN should return map with enum values`() {
         // Given
-        val userPerms =
-            mapOf(
-                "user1" to AccessLevel.READ,
-                "user2" to AccessLevel.ADMIN,
-                "user3" to AccessLevel.WRITE,
-            )
-        val permissionService =
-            fakePermissionService {
-                userPermissions { userPerms }
-            }
+        val userPerms = mapOf(
+            "user1" to AccessLevel.READ,
+            "user2" to AccessLevel.ADMIN,
+            "user3" to AccessLevel.WRITE,
+        )
+        val permissionService = fakePermissionService {
+            userPermissions { userPerms }
+        }
 
         // When
         val result = permissionService.userPermissions
@@ -102,10 +90,9 @@ class PermissionServiceTest {
     @Test
     fun `GIVEN PermissionService fake WHEN configuring optionalPermissions as null THEN should return null`() {
         // Given
-        val permissionService =
-            fakePermissionService {
-                optionalPermissions { null }
-            }
+        val permissionService = fakePermissionService {
+            optionalPermissions { null }
+        }
 
         // When
         val permissions = permissionService.optionalPermissions
@@ -117,10 +104,9 @@ class PermissionServiceTest {
     @Test
     fun `GIVEN PermissionService fake WHEN configuring optionalPermissions THEN should return enum list`() {
         // Given
-        val permissionService =
-            fakePermissionService {
-                optionalPermissions { listOf(AccessLevel.EXECUTE) }
-            }
+        val permissionService = fakePermissionService {
+            optionalPermissions { listOf(AccessLevel.EXECUTE) }
+        }
 
         // When
         val permissions = permissionService.optionalPermissions
@@ -133,17 +119,22 @@ class PermissionServiceTest {
     @Test
     fun `GIVEN PermissionService fake WHEN configuring getUserPermissions THEN should return user's permissions`() {
         // Given
-        val permissionService =
-            fakePermissionService {
-                getUserPermissions { userId ->
-                    when (userId) {
-                        "admin" -> listOf(AccessLevel.READ, AccessLevel.WRITE, AccessLevel.EXECUTE, AccessLevel.ADMIN)
-                        "editor" -> listOf(AccessLevel.READ, AccessLevel.WRITE)
-                        "viewer" -> listOf(AccessLevel.READ)
-                        else -> emptyList()
-                    }
+        val permissionService = fakePermissionService {
+            getUserPermissions { userId ->
+                when (userId) {
+                    "admin" -> listOf(
+                        AccessLevel.READ,
+                        AccessLevel.WRITE,
+                        AccessLevel.EXECUTE,
+                        AccessLevel.ADMIN
+                    )
+
+                    "editor" -> listOf(AccessLevel.READ, AccessLevel.WRITE)
+                    "viewer" -> listOf(AccessLevel.READ)
+                    else -> emptyList()
                 }
             }
+        }
 
         // When & Then
         assertEquals(4, permissionService.getUserPermissions("admin").size)
@@ -155,22 +146,25 @@ class PermissionServiceTest {
     @Test
     fun `GIVEN PermissionService fake WHEN configuring hasAllPermissions THEN should check if user has required permissions`() {
         // Given
-        val userPermissions =
-            mapOf(
-                "admin" to listOf(AccessLevel.READ, AccessLevel.WRITE, AccessLevel.ADMIN),
-                "editor" to listOf(AccessLevel.READ, AccessLevel.WRITE),
-            )
+        val userPermissions = mapOf(
+            "admin" to listOf(AccessLevel.READ, AccessLevel.WRITE, AccessLevel.ADMIN),
+            "editor" to listOf(AccessLevel.READ, AccessLevel.WRITE),
+        )
 
-        val permissionService =
-            fakePermissionService {
-                hasAllPermissions { userId, required ->
-                    val userPerms = userPermissions[userId] ?: emptyList()
-                    required.all { it in userPerms }
-                }
+        val permissionService = fakePermissionService {
+            hasAllPermissions { userId, required ->
+                val userPerms = userPermissions[userId] ?: emptyList()
+                required.all { it in userPerms }
             }
+        }
 
         // When & Then
-        assertTrue(permissionService.hasAllPermissions("admin", setOf(AccessLevel.READ, AccessLevel.WRITE)))
+        assertTrue(
+            permissionService.hasAllPermissions(
+                "admin",
+                setOf(AccessLevel.READ, AccessLevel.WRITE)
+            )
+        )
         assertTrue(permissionService.hasAllPermissions("editor", setOf(AccessLevel.READ)))
         assertFalse(permissionService.hasAllPermissions("editor", setOf(AccessLevel.ADMIN)))
     }
@@ -179,16 +173,16 @@ class PermissionServiceTest {
     fun `GIVEN PermissionService fake WHEN configuring grantPermissions THEN should grant multiple permissions`() {
         // Given
         val grantedPermissions = mutableMapOf<String, MutableList<AccessLevel>>()
-        val permissionService =
-            fakePermissionService {
-                grantPermissions { userId, permissions ->
-                    grantedPermissions.getOrPut(userId) { mutableListOf() }.addAll(permissions)
-                    true
-                }
+        val permissionService = fakePermissionService {
+            grantPermissions { userId, permissions ->
+                grantedPermissions.getOrPut(userId) { mutableListOf() }.addAll(permissions)
+                true
             }
+        }
 
         // When
-        val result = permissionService.grantPermissions("user1", listOf(AccessLevel.READ, AccessLevel.WRITE))
+        val result =
+            permissionService.grantPermissions("user1", listOf(AccessLevel.READ, AccessLevel.WRITE))
 
         // Then
         assertTrue(result)
@@ -198,16 +192,15 @@ class PermissionServiceTest {
     @Test
     fun `GIVEN PermissionService fake WHEN configuring getPermissionGroups THEN should return nested enum lists`() {
         // Given
-        val permissionService =
-            fakePermissionService {
-                getPermissionGroups {
-                    listOf(
-                        listOf(AccessLevel.READ, AccessLevel.WRITE), // Basic permissions
-                        listOf(AccessLevel.EXECUTE), // Advanced permissions
-                        listOf(AccessLevel.ADMIN), // Admin permissions
-                    )
-                }
+        val permissionService = fakePermissionService {
+            getPermissionGroups {
+                listOf(
+                    listOf(AccessLevel.READ, AccessLevel.WRITE), // Basic permissions
+                    listOf(AccessLevel.EXECUTE), // Advanced permissions
+                    listOf(AccessLevel.ADMIN), // Admin permissions
+                )
             }
+        }
 
         // When
         val groups = permissionService.getPermissionGroups()
@@ -223,17 +216,15 @@ class PermissionServiceTest {
     @Test
     fun `GIVEN PermissionService fake WHEN configuring getPermissionPriorities THEN should return enum to int map`() {
         // Given
-        val priorities =
-            mapOf(
-                AccessLevel.ADMIN to 1,
-                AccessLevel.WRITE to 2,
-                AccessLevel.EXECUTE to 3,
-                AccessLevel.READ to 4,
-            )
-        val permissionService =
-            fakePermissionService {
-                getPermissionPriorities { priorities }
-            }
+        val priorities = mapOf(
+            AccessLevel.ADMIN to 1,
+            AccessLevel.WRITE to 2,
+            AccessLevel.EXECUTE to 3,
+            AccessLevel.READ to 4,
+        )
+        val permissionService = fakePermissionService {
+            getPermissionPriorities { priorities }
+        }
 
         // When
         val result = permissionService.getPermissionPriorities()

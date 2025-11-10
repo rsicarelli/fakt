@@ -7,22 +7,18 @@ import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.colle
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for NestedCollectionHandler SAM interface.
- */
 class NestedCollectionHandlerTest {
     @Test
     fun `GIVEN NestedCollectionHandler SAM WHEN handling nested collections THEN should transform`() {
         // Given
-        val handler =
-            fakeNestedCollectionHandler {
-                handle { data ->
-                    data
-                        .flatMap { map ->
-                            map.entries.map { it.key to it.value.toList() }
-                        }.toMap()
-                }
+        val handler = fakeNestedCollectionHandler {
+            handle { data ->
+                data
+                    .flatMap { map ->
+                        map.entries.map { it.key to it.value.toList() }
+                    }.toMap()
             }
+        }
 
         // When
         val input =

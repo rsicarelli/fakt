@@ -7,12 +7,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/**
- * Tests for P1 Scenario: ClassWithMutableProperties
- *
- * TESTING STANDARD: GIVEN-WHEN-THEN pattern (uppercase)
- * Framework: Vanilla JUnit5 + kotlin-test
- */
 class SettingsTest {
     @Test
     fun `GIVEN class with mutable properties WHEN not configured THEN should use super getter defaults`() {
@@ -33,12 +27,11 @@ class SettingsTest {
     @Test
     fun `GIVEN class with mutable properties WHEN getter configured THEN should return configured value`() {
         // Given
-        val settings =
-            fakeSettings {
-                theme { "dark" }
-                fontSize { 16 }
-                isAutoSaveEnabled { false }
-            }
+        val settings = fakeSettings {
+            theme { "dark" }
+            fontSize { 16 }
+            isAutoSaveEnabled { false }
+        }
 
         // When
         val theme = settings.theme
@@ -54,10 +47,9 @@ class SettingsTest {
     @Test
     fun `GIVEN class with mutable properties WHEN setter used THEN should call super setter`() {
         // Given
-        val settings =
-            fakeSettings {
-                // Not configuring setters, they should call super
-            }
+        val settings = fakeSettings {
+            // Not configuring setters, they should call super
+        }
 
         // When
         settings.theme = "dark"
@@ -76,11 +68,10 @@ class SettingsTest {
         var capturedTheme: String? = null
         var capturedFontSize: Int? = null
 
-        val settings =
-            fakeSettings {
-                setTheme { value -> capturedTheme = value }
-                setFontSize { value -> capturedFontSize = value }
-            }
+        val settings = fakeSettings {
+            setTheme { value -> capturedTheme = value }
+            setFontSize { value -> capturedFontSize = value }
+        }
 
         // When
         settings.theme = "custom"
@@ -97,12 +88,11 @@ class SettingsTest {
         var themeSetCount = 0
         var fontSizeSetCount = 0
 
-        val settings =
-            fakeSettings {
-                setTheme { value -> themeSetCount++ }
-                setFontSize { value -> fontSizeSetCount++ }
-                setIsAutoSaveEnabled { value -> /* no-op */ }
-            }
+        val settings = fakeSettings {
+            setTheme { value -> themeSetCount++ }
+            setFontSize { value -> fontSizeSetCount++ }
+            setIsAutoSaveEnabled { value -> /* no-op */ }
+        }
 
         // When
         settings.resetToDefaults() // Sets all three properties

@@ -5,17 +5,13 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.edge
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for ComplexBoundHandler SAM interface.
- */
 class ComplexBoundHandlerTest {
     @Test
     fun `GIVEN ComplexBoundHandler SAM WHEN handling complex bounds THEN should respect constraints`() {
         // Given - String implements both CharSequence and Comparable<String>
-        val handler =
-            fakeComplexBoundHandler<String> {
-                handle { item -> item.length }
-            }
+        val handler = fakeComplexBoundHandler<String> {
+            handle { item -> item.length }
+        }
 
         // When
         val result = handler.handle("test")

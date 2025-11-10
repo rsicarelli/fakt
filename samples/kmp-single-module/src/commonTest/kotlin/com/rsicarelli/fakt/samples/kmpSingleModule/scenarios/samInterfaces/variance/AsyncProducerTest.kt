@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.variance
 
+import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -14,10 +15,9 @@ class AsyncProducerTest {
     fun `GIVEN AsyncProducer SAM WHEN producing with transform THEN should work with suspend`() =
         runTest {
             // Given
-            val producer =
-                fakeAsyncProducer<String> {
-                    produce { "value" }
-                }
+            val producer = fakeAsyncProducer<String> {
+                produce { "value" }
+            }
 
             // When
             val result = producer.produce()
@@ -30,10 +30,9 @@ class AsyncProducerTest {
     fun `GIVEN AsyncProducer SAM WHEN transform is suspend THEN should handle coroutines`() =
         runTest {
             // Given
-            val producer =
-                fakeAsyncProducer<Int> {
-                    produce { 42 }
-                }
+            val producer = fakeAsyncProducer<Int> {
+                produce { 42 }
+            }
 
             // When
             val result = producer.produce()

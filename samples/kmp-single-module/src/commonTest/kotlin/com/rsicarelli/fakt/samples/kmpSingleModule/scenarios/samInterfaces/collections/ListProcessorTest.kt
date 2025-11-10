@@ -7,17 +7,13 @@ import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.colle
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for ListProcessor SAM interface.
- */
 class ListProcessorTest {
     @Test
     fun `GIVEN ListProcessor SAM WHEN processing THEN should return processed list`() {
         // Given
-        val processor =
-            fakeListProcessor<Int> {
-                process { list -> list.map { it * 2 } }
-            }
+        val processor = fakeListProcessor<Int> {
+            process { list -> list.map { it * 2 } }
+        }
 
         // When
         val result = processor.process(listOf(1, 2, 3))

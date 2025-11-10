@@ -1,28 +1,19 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.genericsBasic
+
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Comprehensive test for GenericEventProcessor fake generation.
- *
- * Validates:
- * - Class-level generic type parameters
- * - Method-level generic type parameters
- * - Lambda parameters with generics
- * - Type safety across transformations
- */
 class GenericEventProcessorTest {
     @Test
     fun `GIVEN GenericEventProcessor WHEN processing item THEN should preserve class-level type T`() {
         // Given
-        val fake =
-            fakeGenericEventProcessor<String> {
-                process { item, processor ->
-                    processor(item.uppercase())
-                }
+        val fake = fakeGenericEventProcessor<String> {
+            process { item, processor ->
+                processor(item.uppercase())
             }
+        }
 
         // When
         val result = fake.process("hello") { "Processed: $it" }
@@ -34,12 +25,11 @@ class GenericEventProcessorTest {
     @Test
     fun `GIVEN GenericEventProcessor WHEN transforming THEN should preserve method-level type R`() {
         // Given
-        val fake =
-            fakeGenericEventProcessor<Int> {
-                transform<Any?> { items, transformer ->
-                    items.map(transformer)
-                }
+        val fake = fakeGenericEventProcessor<Int> {
+            transform<Any?> { items, transformer ->
+                items.map(transformer)
             }
+        }
 
         // When
         val result = fake.transform(listOf(1, 2, 3)) { it * 2 }
@@ -55,15 +45,15 @@ class GenericEventProcessorTest {
             val id: String,
             val name: String,
         )
-        val fake =
-            fakeGenericEventProcessor<User> {
-                process { user, processor ->
-                    processor(user.copy(name = user.name.uppercase()))
-                }
-                transform<Any?> { users, transformer ->
-                    users.map(transformer)
-                }
+
+        val fake = fakeGenericEventProcessor<User> {
+            process { user, processor ->
+                processor(user.copy(name = user.name.uppercase()))
             }
+            transform<Any?> { users, transformer ->
+                users.map(transformer)
+            }
+        }
 
         // When
         val processResult = fake.process(User("1", "alice")) { "User: ${it.name}" }

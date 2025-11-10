@@ -9,12 +9,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/**
- * Tests for P0 Scenario: OpenClassMultipleMethods
- *
- * TESTING STANDARD: GIVEN-WHEN-THEN pattern (uppercase)
- * Framework: Vanilla JUnit5 + kotlin-test
- */
 class UserRepositoryTest {
     @Test
     fun `GIVEN open class with multiple methods WHEN not configured THEN should use super implementations`() {
@@ -36,10 +30,9 @@ class UserRepositoryTest {
     fun `GIVEN open class WHEN configuring single method THEN should use configured behavior`() {
         // Given
         val testUser = User("test-1", "Test User", "test@example.com")
-        val repository =
-            fakeUserRepository {
-                findById { id -> testUser }
-            }
+        val repository = fakeUserRepository {
+            findById { id -> testUser }
+        }
 
         // When
         val result = repository.findById("any-id")
@@ -54,21 +47,19 @@ class UserRepositoryTest {
         // Given
         var saveCalled = false
         var deleteCalled = false
-        val testUsers =
-            listOf(
-                User("1", "User 1", "user1@test.com"),
-                User("2", "User 2", "user2@test.com"),
-            )
+        val testUsers = listOf(
+            User("1", "User 1", "user1@test.com"),
+            User("2", "User 2", "user2@test.com"),
+        )
 
-        val repository =
-            fakeUserRepository {
-                save { user -> saveCalled = true }
-                delete { id ->
-                    deleteCalled = true
-                    true
-                }
-                findAll { testUsers }
+        val repository = fakeUserRepository {
+            save { user -> saveCalled = true }
+            delete { id ->
+                deleteCalled = true
+                true
             }
+            findAll { testUsers }
+        }
 
         // When
         repository.save(testUsers[0])
@@ -87,10 +78,9 @@ class UserRepositoryTest {
     fun `GIVEN open class WHEN partially configured THEN should mix super and configured behaviors`() {
         // Given - only configure findById, others use super
         val testUser = User("configured", "Configured", "config@test.com")
-        val repository =
-            fakeUserRepository {
-                findById { id -> if (id == "configured") testUser else null }
-            }
+        val repository = fakeUserRepository {
+            findById { id -> if (id == "configured") testUser else null }
+        }
 
         // When
         val found = repository.findById("configured")

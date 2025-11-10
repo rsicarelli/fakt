@@ -6,21 +6,13 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-/**
- * Tests for TaskService fake with enum properties.
- *
- * REGRESSION TEST: Verifies fix for enum property type inference issue.
- * Before fix: "Initializer type mismatch: expected Function0<Priority>, actual Function0<Unit>"
- * After fix: Explicit 'as Nothing' cast makes lambda type correctly as () -> Priority
- */
 class TaskServiceTest {
     @Test
     fun `GIVEN TaskService fake WHEN configuring defaultPriority THEN should return configured priority`() {
         // Given
-        val taskService =
-            fakeTaskService {
-                defaultPriority { Priority.HIGH }
-            }
+        val taskService = fakeTaskService {
+            defaultPriority { Priority.HIGH }
+        }
 
         // When
         val priority = taskService.defaultPriority
@@ -32,10 +24,9 @@ class TaskServiceTest {
     @Test
     fun `GIVEN TaskService fake WHEN configuring maxPriority as null THEN should return null`() {
         // Given
-        val taskService =
-            fakeTaskService {
-                maxPriority { null }
-            }
+        val taskService = fakeTaskService {
+            maxPriority { null }
+        }
 
         // When
         val priority = taskService.maxPriority
@@ -47,10 +38,9 @@ class TaskServiceTest {
     @Test
     fun `GIVEN TaskService fake WHEN configuring maxPriority THEN should return configured priority`() {
         // Given
-        val taskService =
-            fakeTaskService {
-                maxPriority { Priority.CRITICAL }
-            }
+        val taskService = fakeTaskService {
+            maxPriority { Priority.CRITICAL }
+        }
 
         // When
         val priority = taskService.maxPriority
@@ -63,12 +53,11 @@ class TaskServiceTest {
     fun `GIVEN TaskService fake WHEN configuring createTask THEN should return configured task`() {
         // Given
         val expectedTask = Task("Write tests", Priority.HIGH)
-        val taskService =
-            fakeTaskService {
-                createTask { name, priority ->
-                    Task(name, priority)
-                }
+        val taskService = fakeTaskService {
+            createTask { name, priority ->
+                Task(name, priority)
             }
+        }
 
         // When
         val task = taskService.createTask("Write tests", Priority.HIGH)
@@ -80,20 +69,18 @@ class TaskServiceTest {
     @Test
     fun `GIVEN TaskService fake WHEN configuring getTasksByPriority THEN should return filtered tasks`() {
         // Given
-        val highPriorityTasks =
-            listOf(
-                Task("Fix bug", Priority.HIGH),
-                Task("Release", Priority.HIGH),
-            )
-        val taskService =
-            fakeTaskService {
-                getTasksByPriority { priority ->
-                    when (priority) {
-                        Priority.HIGH -> highPriorityTasks
-                        else -> emptyList()
-                    }
+        val highPriorityTasks = listOf(
+            Task("Fix bug", Priority.HIGH),
+            Task("Release", Priority.HIGH),
+        )
+        val taskService = fakeTaskService {
+            getTasksByPriority { priority ->
+                when (priority) {
+                    Priority.HIGH -> highPriorityTasks
+                    else -> emptyList()
                 }
             }
+        }
 
         // When
         val tasks = taskService.getTasksByPriority(Priority.HIGH)
@@ -109,16 +96,15 @@ class TaskServiceTest {
         val lowPriorityTask = Task("Documentation", Priority.LOW)
         val criticalTask = Task("Security patch", Priority.CRITICAL)
 
-        val taskService =
-            fakeTaskService {
-                getTasksByPriority { priority ->
-                    when (priority) {
-                        Priority.LOW -> listOf(lowPriorityTask)
-                        Priority.CRITICAL -> listOf(criticalTask)
-                        else -> emptyList()
-                    }
+        val taskService = fakeTaskService {
+            getTasksByPriority { priority ->
+                when (priority) {
+                    Priority.LOW -> listOf(lowPriorityTask)
+                    Priority.CRITICAL -> listOf(criticalTask)
+                    else -> emptyList()
                 }
             }
+        }
 
         // When & Then
         assertEquals(listOf(lowPriorityTask), taskService.getTasksByPriority(Priority.LOW))

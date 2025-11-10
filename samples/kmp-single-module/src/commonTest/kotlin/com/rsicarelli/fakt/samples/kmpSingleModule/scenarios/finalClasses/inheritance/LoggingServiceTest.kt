@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.finalClasses.inheritance
 
+import kotlinx.coroutines.NonCancellable.start
+import kotlin.math.log
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -22,13 +24,12 @@ class LoggingServiceTest {
     fun `GIVEN configured start WHEN called THEN uses custom behavior`() {
         var called = false
 
-        val service: LoggingService =
-            fakeLoggingService {
-                start {
-                    called = true
-                    false
-                }
+        val service: LoggingService = fakeLoggingService {
+            start {
+                called = true
+                false
             }
+        }
 
         val result = service.start()
 
@@ -51,10 +52,9 @@ class LoggingServiceTest {
     fun `GIVEN configured log WHEN called THEN uses custom behavior`() {
         val messages = mutableListOf<String>()
 
-        val service: LoggingService =
-            fakeLoggingService {
-                log { msg -> messages.add(msg) }
-            }
+        val service: LoggingService = fakeLoggingService {
+            log { msg -> messages.add(msg) }
+        }
 
         service.log("test1")
         service.log("test2")
@@ -73,10 +73,9 @@ class LoggingServiceTest {
 
     @Test
     fun `GIVEN configured getLogLevel WHEN called THEN uses custom behavior`() {
-        val service: LoggingService =
-            fakeLoggingService {
-                getLogLevel { "DEBUG" }
-            }
+        val service: LoggingService = fakeLoggingService {
+            getLogLevel { "DEBUG" }
+        }
 
         val level = service.getLogLevel()
 
@@ -88,15 +87,14 @@ class LoggingServiceTest {
         var startCalled = false
         val messages = mutableListOf<String>()
 
-        val service: LoggingService =
-            fakeLoggingService {
-                start {
-                    startCalled = true
-                    true
-                }
-                log { msg -> messages.add(msg) }
-                getLogLevel { "TRACE" }
+        val service: LoggingService = fakeLoggingService {
+            start {
+                startCalled = true
+                true
             }
+            log { msg -> messages.add(msg) }
+            getLogLevel { "TRACE" }
+        }
 
         val started = service.start()
         service.log("msg1")

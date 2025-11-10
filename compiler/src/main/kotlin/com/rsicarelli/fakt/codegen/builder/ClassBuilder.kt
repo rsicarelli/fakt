@@ -1,6 +1,5 @@
-// Copyright (C) 2025 Rodrigo Sicarelli.
+// Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-
 package com.rsicarelli.fakt.codegen.builder
 
 import com.rsicarelli.fakt.codegen.model.CodeClass
@@ -45,6 +44,8 @@ public class ClassBuilder @PublishedApi internal constructor(
 
     /**
      * Add type parameter: typeParam("T") or typeParam("T", "Comparable<T>")
+     *
+     * TODO Phase 10: Will be used for generic interfaces like Repository<T>.
      *
      * @param name Type parameter name
      * @param constraints Type constraints (e.g., "Comparable<T>")
@@ -91,6 +92,8 @@ public class ClassBuilder @PublishedApi internal constructor(
 
     /**
      * Adds where clause for multiple constraints.
+     *
+     * TODO Phase 10: Will be used for complex generic constraints like where T : Comparable<T>.
      *
      * @param clause The where clause (e.g., "T : Comparable<T>, T : Serializable")
      */

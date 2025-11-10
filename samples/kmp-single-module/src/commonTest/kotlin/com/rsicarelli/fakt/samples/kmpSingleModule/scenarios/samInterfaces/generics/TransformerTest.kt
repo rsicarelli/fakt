@@ -13,10 +13,9 @@ class TransformerTest {
     @Test
     fun `GIVEN SAM with single generic WHEN using reified fake THEN should be type-safe`() {
         // Given
-        val transformer =
-            fakeTransformer<String> {
-                transform { input -> input.uppercase() }
-            }
+        val transformer = fakeTransformer<String> {
+            transform { input -> input.uppercase() }
+        }
 
         // When
         val result = transformer.transform("hello")
@@ -47,10 +46,9 @@ class TransformerTest {
             val age: Int,
         )
 
-        val transformer =
-            fakeTransformer<Person> {
-                transform { person -> person.copy(age = person.age + 1) }
-            }
+        val transformer = fakeTransformer<Person> {
+            transform { person -> person.copy(age = person.age + 1) }
+        }
 
         // When
         val result = transformer.transform(Person("Alice", 30))

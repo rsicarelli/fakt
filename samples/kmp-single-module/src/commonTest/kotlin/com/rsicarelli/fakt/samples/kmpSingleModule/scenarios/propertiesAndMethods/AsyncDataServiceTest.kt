@@ -1,29 +1,19 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.propertiesAndMethods
+
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 
-/**
- * Comprehensive test for AsyncDataService fake generation.
- *
- * Validates:
- * - Suspend functions
- * - Method-level generics with suspend
- * - List transformations with suspend
- * - Default async behaviors
- */
 class AsyncDataServiceTest {
     @Test
     fun `GIVEN AsyncDataService fake WHEN calling fetchData THEN should return async result`() =
         runTest {
             // Given
-            val fake =
-                fakeAsyncDataService {
-                    fetchData { "async-data-result" }
-                }
+            val fake = fakeAsyncDataService {
+                fetchData { "async-data-result" }
+            }
 
             // When
             val result = fake.fetchData()
@@ -36,10 +26,9 @@ class AsyncDataServiceTest {
     fun `GIVEN AsyncDataService fake WHEN calling processData with generics THEN should preserve type`() =
         runTest {
             // Given
-            val fake =
-                fakeAsyncDataService {
-                    processData<Any?> { data -> data } // Identity function with explicit type
-                }
+            val fake = fakeAsyncDataService {
+                processData<Any?> { data -> data } // Identity function with explicit type
+            }
 
             // When
             val stringResult = fake.processData("test-string")
@@ -54,12 +43,11 @@ class AsyncDataServiceTest {
     fun `GIVEN AsyncDataService fake WHEN batch processing THEN should handle list transformation`() =
         runTest {
             // Given
-            val fake =
-                fakeAsyncDataService {
-                    batchProcess { items ->
-                        items.map { it.uppercase() }
-                    }
+            val fake = fakeAsyncDataService {
+                batchProcess { items ->
+                    items.map { it.uppercase() }
                 }
+            }
 
             // When
             val result = fake.batchProcess(listOf("a", "b", "c"))

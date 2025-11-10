@@ -2,25 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.finalClasses.mixed
 
+import kotlin.math.log
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
-/**
- * Tests for P0 Scenario: MixedAbstractAndOpen
- *
- * TESTING STANDARD: GIVEN-WHEN-THEN pattern (uppercase)
- * Framework: Vanilla JUnit5 + kotlin-test
- */
 class DataServiceTest {
     @Test
     fun `GIVEN mixed class WHEN abstract method not configured THEN should throw error`() {
         // Given
-        val service =
-            fakeDataService {
-                // Not configuring abstract methods
-            }
+        val service = fakeDataService {
+            // Not configuring abstract methods
+        }
 
         // When/Then - should error on abstract methods
         assertFailsWith<IllegalStateException> {
@@ -34,11 +28,10 @@ class DataServiceTest {
     @Test
     fun `GIVEN mixed class WHEN abstract methods configured THEN should use configured behavior`() {
         // Given
-        val service =
-            fakeDataService {
-                fetchData { "test-data" }
-                validate { data -> data.isNotEmpty() }
-            }
+        val service = fakeDataService {
+            fetchData { "test-data" }
+            validate { data -> data.isNotEmpty() }
+        }
 
         // When
         val data = service.fetchData()
@@ -52,12 +45,11 @@ class DataServiceTest {
     @Test
     fun `GIVEN mixed class WHEN open methods not configured THEN should use super implementation`() {
         // Given
-        val service =
-            fakeDataService {
-                fetchData { "data" }
-                validate { true }
-                // Not configuring open methods
-            }
+        val service = fakeDataService {
+            fetchData { "data" }
+            validate { true }
+            // Not configuring open methods
+        }
 
         // When
         val transformed = service.transform("hello")
@@ -71,15 +63,14 @@ class DataServiceTest {
     fun `GIVEN mixed class WHEN all methods configured THEN should use configured behaviors`() {
         // Given
         var logCalled = false
-        val service =
-            fakeDataService {
-                // Configure abstract methods
-                fetchData { "configured-data" }
-                validate { data -> data.length > 5 }
-                // Configure open methods
-                transform { data -> data.lowercase() }
-                log { message -> logCalled = true }
-            }
+        val service = fakeDataService {
+            // Configure abstract methods
+            fetchData { "configured-data" }
+            validate { data -> data.length > 5 }
+            // Configure open methods
+            transform { data -> data.lowercase() }
+            log { message -> logCalled = true }
+        }
 
         // When
         val data = service.fetchData()
@@ -99,12 +90,11 @@ class DataServiceTest {
     @Test
     fun `GIVEN mixed class WHEN partially configured THEN should mix defaults correctly`() {
         // Given - configure only abstract methods
-        val service =
-            fakeDataService {
-                fetchData { "data" }
-                validate { true }
-                // transform and log use super
-            }
+        val service = fakeDataService {
+            fetchData { "data" }
+            validate { true }
+            // transform and log use super
+        }
 
         // When
         val data = service.fetchData()

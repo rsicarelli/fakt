@@ -7,17 +7,13 @@ import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.colle
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for MapTransformer SAM interface.
- */
 class MapTransformerTest {
     @Test
     fun `GIVEN MapTransformer SAM WHEN transforming map THEN should return map with string values`() {
         // Given
-        val transformer =
-            fakeMapTransformer<String, Int> {
-                transform { map -> map.mapValues { it.value.toString() } }
-            }
+        val transformer = fakeMapTransformer<String, Int> {
+            transform { map -> map.mapValues { it.value.toString() } }
+        }
 
         // When
         val result = transformer.transform(mapOf("a" to 1, "b" to 2))

@@ -13,10 +13,9 @@ class ConsumerTest {
     fun `GIVEN Consumer SAM WHEN consuming THEN should consume value`() {
         // Given
         var consumed = ""
-        val consumer =
-            fakeConsumer<String> {
-                consume { value -> consumed = value }
-            }
+        val consumer = fakeConsumer<String> {
+            consume { value -> consumed = value }
+        }
 
         // When
         consumer.consume("test-value")

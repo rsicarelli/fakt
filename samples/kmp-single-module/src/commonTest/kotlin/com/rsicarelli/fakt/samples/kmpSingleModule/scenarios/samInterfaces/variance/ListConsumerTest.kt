@@ -13,10 +13,9 @@ class ListConsumerTest {
     fun `GIVEN ListConsumer SAM WHEN consuming list THEN should accept list`() {
         // Given
         var consumed = listOf<String>()
-        val consumer =
-            fakeListConsumer<String> {
-                consume { list -> consumed = list }
-            }
+        val consumer = fakeListConsumer<String> {
+            consume { list -> consumed = list }
+        }
 
         // When
         consumer.consume(listOf("a", "b"))

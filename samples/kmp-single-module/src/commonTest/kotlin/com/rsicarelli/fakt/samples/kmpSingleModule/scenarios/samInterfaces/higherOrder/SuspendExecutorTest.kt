@@ -14,10 +14,9 @@ class SuspendExecutorTest {
     fun `GIVEN SuspendExecutor SAM WHEN executing suspend function THEN should execute`() =
         runTest {
             // Given
-            val executor =
-                fakeSuspendExecutor<Int, String> {
-                    execute { fn, input -> fn(input) }
-                }
+            val executor = fakeSuspendExecutor<Int, String> {
+                execute { fn, input -> fn(input) }
+            }
 
             // When
             val result = executor.execute({ input -> input.toString() }, 42)
