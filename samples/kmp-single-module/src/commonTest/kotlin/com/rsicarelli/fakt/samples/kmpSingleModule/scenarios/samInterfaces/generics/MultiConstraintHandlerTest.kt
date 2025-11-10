@@ -6,9 +6,6 @@ import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.gener
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for MultiConstraintHandler SAM interface.
- */
 class MultiConstraintHandlerTest {
     @Test
     fun `GIVEN SAM with multiple constraints WHEN creating fake THEN should compile`() {

@@ -138,18 +138,20 @@ public fun CodeFunction.renderTo(builder: CodeBuilder) {
         "<${typeParameters.joinToString { it.render() }}> "
     } else ""
 
+    val receiverStr = receiverType?.let { "${it.render()}." } ?: ""
+
     val paramsStr = parameters.joinToString { it.render() }
     val returnTypeStr = ": ${returnType.render()}"
 
     when (body) {
         is CodeBlock.Expression -> {
             builder.appendLine(
-                "${modifiersStr}fun $typeParamsStr$name($paramsStr)$returnTypeStr = ${(body as CodeBlock.Expression).expr.render()}"
+                "${modifiersStr}fun $typeParamsStr$receiverStr$name($paramsStr)$returnTypeStr = ${(body as CodeBlock.Expression).expr.render()}"
             )
         }
 
         is CodeBlock.Statements -> {
-            builder.block("${modifiersStr}fun $typeParamsStr$name($paramsStr)$returnTypeStr") {
+            builder.block("${modifiersStr}fun $typeParamsStr$receiverStr$name($paramsStr)$returnTypeStr") {
                 body.statements.forEach { stmt ->
                     appendLine(stmt)
                 }
@@ -157,7 +159,7 @@ public fun CodeFunction.renderTo(builder: CodeBuilder) {
         }
 
         CodeBlock.Empty -> {
-            builder.appendLine("${modifiersStr}fun $typeParamsStr$name($paramsStr)$returnTypeStr")
+            builder.appendLine("${modifiersStr}fun $typeParamsStr$receiverStr$name($paramsStr)$returnTypeStr")
         }
     }
 }

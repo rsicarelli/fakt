@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.stdl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for TripleAggregator SAM interface.
- */
 class TripleAggregatorTest {
     @Test
     fun `GIVEN TripleAggregator SAM WHEN aggregating triple THEN should combine values`() {

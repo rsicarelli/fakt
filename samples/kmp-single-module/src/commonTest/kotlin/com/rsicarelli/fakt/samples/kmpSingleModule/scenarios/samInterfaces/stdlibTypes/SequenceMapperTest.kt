@@ -8,9 +8,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * Tests for SequenceMapper SAM interface.
- */
 class SequenceMapperTest {
     @Test
     fun `GIVEN SequenceMapper SAM WHEN mapping sequence THEN should lazily transform elements`() {

@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.high
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for FunctionComposer SAM interface.
- */
 class FunctionComposerTest {
     @Test
     fun `GIVEN FunctionComposer SAM WHEN composing THEN should compose functions`() {

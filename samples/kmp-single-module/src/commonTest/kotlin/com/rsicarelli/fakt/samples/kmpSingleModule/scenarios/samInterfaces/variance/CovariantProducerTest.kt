@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.vari
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for CovariantProducer SAM interface.
- */
 class CovariantProducerTest {
     @Test
     fun `GIVEN CovariantProducer SAM WHEN producing value THEN should work with subtypes`() {

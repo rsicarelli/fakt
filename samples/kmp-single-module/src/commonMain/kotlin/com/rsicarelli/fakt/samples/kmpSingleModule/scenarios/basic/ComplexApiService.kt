@@ -45,6 +45,6 @@ interface ComplexApiService {
         request: TRequest,
         processor: suspend (TRequest) -> TResponse,
         retryCount: Int = 3,
-        onRetry: ((Int, Exception) -> Unit)? = null,
+        onRetry: ((Int, kotlin.Exception) -> Unit)? = null,
     ): Result<TResponse>
 }

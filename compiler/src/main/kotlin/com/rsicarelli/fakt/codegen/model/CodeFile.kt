@@ -94,6 +94,7 @@ data class CodeClass(
  * @property typeParameters Generic type parameters
  * @property isSuspend Whether this is a suspend function
  * @property isInline Whether this is an inline function
+ * @property receiverType Extension receiver type for extension functions (e.g., Vector for fun Vector.plus())
  */
 data class CodeFunction(
     val name: String,
@@ -103,7 +104,8 @@ data class CodeFunction(
     val modifiers: Set<CodeModifier> = emptySet(),
     val typeParameters: List<CodeTypeParameter> = emptyList(),
     val isSuspend: Boolean = false,
-    val isInline: Boolean = false
+    val isInline: Boolean = false,
+    val receiverType: CodeType? = null  // Extension receiver type (e.g., Vector for fun Vector.plus())
 ) : CodeDeclaration, CodeMember
 
 /**

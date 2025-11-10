@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.high
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for ActionWrapper SAM interface.
- */
 class ActionWrapperTest {
     @Test
     fun `GIVEN ActionWrapper SAM WHEN wrapping action THEN should execute wrapped action`() {

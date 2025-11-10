@@ -40,13 +40,20 @@ internal fun FunctionAnalysis.toMethodSpec(typeResolver: TypeResolution): Method
         if (bound != null) "$typeParam : $bound" else typeParam
     }
 
+    // Extract extension receiver type if present
+    val extensionReceiverTypeStr = extensionReceiverType?.let {
+        typeResolver.irTypeToKotlinString(it, preserveTypeParameters = true)
+    }
+
     return MethodSpec(
         name = name,
         params = paramTriples,
         returnType = returnTypeStr,
         isSuspend = isSuspend,
         isVararg = isVararg,
-        typeParameters = formattedTypeParams
+        typeParameters = formattedTypeParams,
+        isOperator = isOperator,
+        extensionReceiverType = extensionReceiverTypeStr
     )
 }
 

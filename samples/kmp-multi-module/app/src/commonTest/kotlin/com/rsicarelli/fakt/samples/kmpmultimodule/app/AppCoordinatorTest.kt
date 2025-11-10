@@ -26,11 +26,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * Tests for AppCoordinator demonstrating full-stack cross-module integration.
- *
- * This test shows how fakes from multiple modules (core + features) work together.
- */
 class AppCoordinatorTest {
 
     // ============================================================================

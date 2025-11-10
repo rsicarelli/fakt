@@ -7,9 +7,6 @@ import com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.stdli
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for LazyProvider SAM interface.
- */
 class LazyProviderTest {
     @Test
     fun `GIVEN LazyProvider SAM WHEN providing lazily THEN should return lazy value`() {

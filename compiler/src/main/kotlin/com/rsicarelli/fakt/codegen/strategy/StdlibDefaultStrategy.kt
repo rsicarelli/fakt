@@ -84,14 +84,18 @@ public class StdlibDefaultStrategy : DefaultValueStrategy {
      *
      * Uses primitive, stdlib, and collection strategies for common types.
      * Supports recursive resolution for nested stdlib types (e.g., Result<StateFlow<Int>>).
-     * Falls back to TODO for unsupported types.
+     * Falls back to error() for unsupported types (design choice: explicit config over auto-mocking).
      */
     private fun resolveNestedDefault(type: CodeType): CodeExpression {
         return when {
             primitiveStrategy.supports(type) -> primitiveStrategy.defaultValue(type)
             supports(type) -> defaultValue(type)  // Recursive: handles nested stdlib types
             collectionStrategy.supports(type) -> collectionStrategy.defaultValue(type)
-            else -> CodeExpression.Raw("TODO(\"No default for $type\")")
+            else -> CodeExpression.Raw(
+                "error(\"Type '$type' requires explicit configuration. \" + " +
+                "\"Fakt prioritizes type-safety over auto-mocking. \" + " +
+                "\"Configure behavior via fake factory DSL.\") as Nothing"
+            )
         }
     }
 

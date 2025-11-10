@@ -35,6 +35,7 @@ public class FunctionBuilder @PublishedApi internal constructor(
     private val modifiers = mutableSetOf<CodeModifier>()
     private var returnType: CodeType = CodeType.Simple("Unit")
     private var bodyBlock: CodeBlock = CodeBlock.Empty
+    private var receiverType: CodeType? = null
 
     /**
      * Whether this is a suspend function.
@@ -172,6 +173,28 @@ public class FunctionBuilder @PublishedApi internal constructor(
     }
 
     /**
+     * Makes function operator.
+     */
+    public fun operator() {
+        modifiers.add(CodeModifier.OPERATOR)
+    }
+
+    /**
+     * Sets extension receiver type for extension functions.
+     *
+     * Example:
+     * ```kotlin
+     * receiver("Vector")  // fun Vector.plus()
+     * receiver("List<T>")  // fun List<T>.sum()
+     * ```
+     *
+     * @param type Receiver type as string
+     */
+    public fun receiver(type: String) {
+        receiverType = parseType(type)
+    }
+
+    /**
      * Builds the final [CodeFunction].
      *
      * @return Immutable [CodeFunction] instance
@@ -185,6 +208,7 @@ public class FunctionBuilder @PublishedApi internal constructor(
         body = bodyBlock,
         modifiers = modifiers,
         isSuspend = isSuspend,
-        isInline = isInline
+        isInline = isInline,
+        receiverType = receiverType
     )
 }

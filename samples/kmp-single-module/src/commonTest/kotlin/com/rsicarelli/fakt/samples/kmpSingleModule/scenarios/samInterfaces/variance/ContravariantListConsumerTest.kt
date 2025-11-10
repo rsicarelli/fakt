@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.vari
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for ContravariantListConsumer SAM interface.
- */
 class ContravariantListConsumerTest {
     @Test
     fun `GIVEN ContravariantListConsumer SAM WHEN consuming list THEN should work with in variance`() {

@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.stdl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for ResultProcessor SAM interface.
- */
 class ResultProcessorTest {
     @Test
     fun `GIVEN ResultProcessor SAM WHEN processing input THEN should return result`() {

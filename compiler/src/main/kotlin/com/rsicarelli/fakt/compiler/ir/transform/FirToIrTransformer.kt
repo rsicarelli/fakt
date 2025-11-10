@@ -9,10 +9,23 @@ import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeClass
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeInterface
 import com.rsicarelli.fakt.compiler.ir.analysis.GenericPatternAnalyzer
 import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
+import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
+
+/**
+ * Metro-inspired compatibility wrapper for accessing extension receiver parameter.
+ *
+ * Uses the unified `parameters` list instead of deprecated `extensionReceiverParameter`.
+ * This approach is future-proof against Kotlin compiler API changes.
+ *
+ * @return Extension receiver parameter, or null if function is not an extension
+ */
+private val IrFunction.extensionReceiverParameterCompat: IrValueParameter?
+    get() = parameters.firstOrNull { it.kind == IrParameterKind.ExtensionReceiver }
 
 /**
  * Transforms FIR metadata (string-based types) to IR generation metadata (IrTypes + IR nodes).
@@ -318,6 +331,8 @@ internal class FirToIrTransformer {
             isInline = firFunction.isInline,
             typeParameters = methodTypeParameters,
             typeParameterBounds = firFunction.typeParameterBounds,
+            isOperator = irFunction.isOperator,
+            extensionReceiverType = irFunction.extensionReceiverParameterCompat?.type,
             irFunction = irFunction,
         )
     }

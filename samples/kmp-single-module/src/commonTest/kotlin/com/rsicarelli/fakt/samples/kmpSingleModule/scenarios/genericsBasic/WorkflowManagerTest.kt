@@ -9,17 +9,15 @@ import kotlin.test.assertNotNull
 class WorkflowManagerTest {
     @Test
     fun `GIVEN WorkflowManager with method-level generics WHEN generating fake THEN should preserve type parameters`() {
-        // Given - Interface with method-level generics: fun <T> executeStep(...)
-        // fakeWorkflowManager is generated with method-level generics preserved
-
-        // When - Create fake without configuration (uses default identity behavior)
+        // Given
         val workflow = fakeWorkflowManager()
 
-        // Then - Should preserve type safety at usage with any type
+        // When
         val stringResult: String = workflow.executeStep { "test" }
-        assertEquals("test", stringResult)
-
         val intResult: Int = workflow.executeStep { 42 }
+
+        // Then
+        assertEquals("test", stringResult)
         assertEquals(42, intResult)
     }
 

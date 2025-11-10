@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.vari
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for InvariantTransformer SAM interface.
- */
 class InvariantTransformerTest {
     @Test
     fun `GIVEN InvariantTransformer SAM WHEN transforming THEN should require exact type`() {

@@ -8,9 +8,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-/**
- * Tests for Analytics fake generation and configuration.
- */
 class AnalyticsTest {
 
     @Test
@@ -95,9 +92,6 @@ class AnalyticsTest {
     }
 }
 
-/**
- * Tests for PerformanceMonitor fake generation and configuration.
- */
 class PerformanceMonitorTest {
 
     @Test

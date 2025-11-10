@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.vari
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for VariantTransformer SAM interface.
- */
 class VariantTransformerTest {
     @Test
     fun `GIVEN VariantTransformer SAM WHEN transforming THEN should transform with variance`() {

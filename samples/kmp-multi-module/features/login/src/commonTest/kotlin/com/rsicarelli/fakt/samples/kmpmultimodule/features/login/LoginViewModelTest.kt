@@ -30,18 +30,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * Comprehensive tests for LoginViewModel demonstrating:
- * - Turbine for StateFlow testing
- * - K2.2+ backing fields pattern
- * - Account locking logic
- * - Failed attempts tracking (using Fakt!)
- * - OAuth flow
- * - Concurrency and thread safety
- * - Factory pattern for clean test setup
- *
- * This serves as a production-ready example for the Fakt community.
- */
 class LoginViewModelTest {
 
     companion object {

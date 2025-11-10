@@ -7,14 +7,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-/**
- * Tests for Logger fake generation and configuration.
- *
- * Validates:
- * - Logger fake is generated correctly
- * - Configuration DSL works for all methods
- * - Structured logging captures data correctly
- */
 class LoggerTest {
 
     @Test

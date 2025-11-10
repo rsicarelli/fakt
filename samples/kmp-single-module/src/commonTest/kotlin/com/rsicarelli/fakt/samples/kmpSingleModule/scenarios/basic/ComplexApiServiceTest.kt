@@ -8,9 +8,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/**
- * Comprehensive test for ComplexApiService fake generation.
- */
 class ComplexApiServiceTest {
     @Test
     fun `GIVEN ComplexApiService WHEN accessing properties THEN should return configured values`() {

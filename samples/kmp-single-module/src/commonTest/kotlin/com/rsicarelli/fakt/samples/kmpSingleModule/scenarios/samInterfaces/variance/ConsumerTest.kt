@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.vari
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for Consumer SAM interface.
- */
 class ConsumerTest {
     @Test
     fun `GIVEN Consumer SAM WHEN consuming THEN should consume value`() {

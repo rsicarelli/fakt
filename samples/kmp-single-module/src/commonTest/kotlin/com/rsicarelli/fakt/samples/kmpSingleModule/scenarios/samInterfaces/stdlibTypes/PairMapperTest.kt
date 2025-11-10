@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.stdl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for PairMapper SAM interface.
- */
 class PairMapperTest {
     @Test
     fun `GIVEN PairMapper SAM WHEN mapping pair THEN should transform both elements`() {

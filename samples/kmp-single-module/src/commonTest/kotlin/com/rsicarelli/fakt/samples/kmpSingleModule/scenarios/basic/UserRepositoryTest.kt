@@ -9,9 +9,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/**
- * Comprehensive test for UserRepository fake generation.
- */
 class UserRepositoryTest {
     @Test
     fun `GIVEN UserRepository fake WHEN accessing users property THEN should return configured list`() {

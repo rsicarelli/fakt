@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.stdl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for PairProcessor SAM interface.
- */
 class PairProcessorTest {
     @Test
     fun `GIVEN PairProcessor SAM WHEN processing pair THEN should return processed result`() {

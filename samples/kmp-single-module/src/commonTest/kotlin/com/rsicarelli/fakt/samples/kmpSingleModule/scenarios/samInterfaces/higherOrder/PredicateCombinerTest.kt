@@ -8,9 +8,6 @@ import kotlinx.coroutines.flow.combine
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/**
- * Tests for PredicateCombiner SAM interface.
- */
 class PredicateCombinerTest {
     @Test
     fun `GIVEN PredicateCombiner SAM WHEN combining THEN should combine predicates`() {

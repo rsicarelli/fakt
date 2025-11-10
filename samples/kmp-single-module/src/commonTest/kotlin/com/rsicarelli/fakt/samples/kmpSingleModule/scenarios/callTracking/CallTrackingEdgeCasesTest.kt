@@ -14,9 +14,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
-/**
- * Comprehensive edge case tests for call tracking with MutableStateFlow.
- */
 class CallTrackingEdgeCasesTest {
 
     @Test

@@ -86,13 +86,23 @@ internal class ImplementationGeneratorV2(
         packageName: String,
         imports: List<String> = emptyList(),
     ): GeneratedCodeV2 {
-        // Combine abstract and open members
-        val allFunctions = analysis.abstractMethods + analysis.openMethods
-        val allProperties = analysis.abstractProperties + analysis.openProperties
+        // Convert abstract and open members to method specs (keeping track of which are abstract)
+        val abstractMethodSpecs = analysis.abstractMethods.map { function ->
+            function.toMethodSpec(typeResolver).copy(isAbstract = true)
+        }
+        val openMethodSpecs = analysis.openMethods.map { function ->
+            function.toMethodSpec(typeResolver).copy(isAbstract = false)
+        }
+        val methodSpecs = abstractMethodSpecs + openMethodSpecs
 
-        // Convert to method/property specs
-        val methodSpecs = allFunctions.map { it.toMethodSpec(typeResolver) }
-        val propertySpecs = allProperties.map { it.toPropertySpec(typeResolver) }
+        // Convert abstract and open properties (keeping track of which are abstract)
+        val abstractPropertySpecs = analysis.abstractProperties.map { property ->
+            property.toPropertySpec(typeResolver).copy(isAbstract = true)
+        }
+        val openPropertySpecs = analysis.openProperties.map { property ->
+            property.toPropertySpec(typeResolver).copy(isAbstract = false)
+        }
+        val propertySpecs = abstractPropertySpecs + openPropertySpecs
 
         // Generate implementation using DSL
         val implementationFile = generateCompleteFake(

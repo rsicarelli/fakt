@@ -76,7 +76,7 @@ internal class DefaultValueProvider(
             irType.isChar() -> "'\\u0000'"
             irType.isByte() -> "0"
             irType.isShort() -> "0"
-            irType.isNothing() -> "TODO(\"Nothing type has no values\")"
+            irType.isNothing() -> "error(\"Nothing type has no values - this indicates a type error\") as Nothing"
             irType.isAny() -> "Any()"
             else -> null
         }
@@ -104,7 +104,7 @@ internal class DefaultValueProvider(
      * Handles default values for class types with intelligent defaults.
      */
     private fun handleClassDefault(irType: IrType): String {
-        val irClass = irType.getClass() ?: return "TODO(\"Unknown type\")"
+        val irClass = irType.getClass() ?: return "error(\"Unknown type requires explicit configuration. Configure behavior via fake factory DSL.\") as Nothing"
         val className = irClass.name.asString()
         val packageName = irClass.kotlinFqName.parent().asString()
 
@@ -114,7 +114,7 @@ internal class DefaultValueProvider(
                 ClassKind.CLASS -> "null"
                 ClassKind.INTERFACE -> "null"
                 ClassKind.ENUM_CLASS -> handleEnumDefault(irClass, className)
-                else -> "TODO(\"Implement default for $className\")"
+                else -> "error(\"Type '$className' requires explicit configuration. Fakt prioritizes type-safety over auto-mocking. Configure behavior via fake factory DSL.\") as Nothing"
             }
     }
 
@@ -136,7 +136,7 @@ internal class DefaultValueProvider(
             className == "Array" -> "emptyArray()"
             className == "Pair" -> "Pair(null, null)"
             className == "Triple" -> "Triple(null, null, null)"
-            className.startsWith("Function") -> "{ TODO(\"Function not implemented\") }"
+            className.startsWith("Function") -> "{ error(\"Function type requires explicit configuration. Configure behavior via fake factory DSL.\") }"
             else -> null
         }
     }
@@ -175,7 +175,7 @@ internal class DefaultValueProvider(
         return if (enumEntries.isNotEmpty()) {
             "$className.${enumEntries.first().name.asString()}"
         } else {
-            "TODO(\"Empty enum $className\")"
+            "error(\"Empty enum '$className' has no values - this indicates a type error\") as Nothing"
         }
     }
 }

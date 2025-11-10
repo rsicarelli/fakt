@@ -20,17 +20,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * Comprehensive tests for SettingsViewModel demonstrating:
- * - Turbine for StateFlow testing
- * - K2.2+ backing fields pattern
- * - OPTIMISTIC UPDATES pattern (update UI before storage)
- * - Rollback on error
- * - Concurrency and thread safety
- * - Factory pattern with TestScope extension
- *
- * This serves as a production-ready example for the Fakt community.
- */
 class SettingsViewModelTest {
 
     companion object {

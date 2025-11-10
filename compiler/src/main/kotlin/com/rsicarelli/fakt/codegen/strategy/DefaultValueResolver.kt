@@ -67,6 +67,11 @@ public class DefaultValueResolver(
         }
 
         // Fallback for unsupported types
-        return CodeExpression.Raw("TODO(\"No default for $type\")")
+        // Design choice: Explicit configuration over auto-mocking for type-safety
+        return CodeExpression.Raw(
+            "error(\"Type '$type' requires explicit configuration. \" + " +
+            "\"Fakt prioritizes type-safety over auto-mocking. \" + " +
+            "\"Configure behavior via fake factory DSL.\") as Nothing"
+        )
     }
 }

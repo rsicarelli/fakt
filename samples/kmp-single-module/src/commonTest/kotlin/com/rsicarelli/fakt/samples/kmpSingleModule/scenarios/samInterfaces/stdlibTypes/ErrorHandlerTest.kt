@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.stdl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for ErrorHandler SAM interface.
- */
 class ErrorHandlerTest {
     @Test
     fun `GIVEN ErrorHandler SAM WHEN handling error THEN should return handled result`() {

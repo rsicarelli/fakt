@@ -25,19 +25,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * Comprehensive tests for OrderViewModel demonstrating:
- * - Turbine for StateFlow testing
- * - K2.2+ backing fields pattern
- * - Multi-step order creation flow
- * - Order cancellation with reload
- * - Retry mechanism
- * - Analytics event tracking
- * - Concurrency and thread safety
- * - Factory pattern with TestScope extension
- *
- * This serves as a production-ready example for the Fakt community.
- */
 class OrderViewModelTest {
 
     companion object {

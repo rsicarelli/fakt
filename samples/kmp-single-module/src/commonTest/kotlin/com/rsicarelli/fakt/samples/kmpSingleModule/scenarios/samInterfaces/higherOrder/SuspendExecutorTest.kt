@@ -6,9 +6,6 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for SuspendExecutor SAM interface.
- */
 class SuspendExecutorTest {
     @Test
     fun `GIVEN SuspendExecutor SAM WHEN executing suspend function THEN should execute`() =

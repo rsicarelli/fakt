@@ -7,9 +7,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/**
- * Tests for ResultHandler SAM interface.
- */
 class ResultHandlerTest {
     @Test
     fun `GIVEN SAM with Result generic WHEN handling THEN should wrap in Result`() {

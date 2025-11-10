@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.high
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for TransformChain SAM interface.
- */
 class TransformChainTest {
     @Test
     fun `GIVEN TransformChain SAM WHEN applying chain THEN should compose functions`() {

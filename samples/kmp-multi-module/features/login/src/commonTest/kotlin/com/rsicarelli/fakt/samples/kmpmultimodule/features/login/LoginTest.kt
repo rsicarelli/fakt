@@ -22,9 +22,6 @@ import kotlin.test.assertTrue
 private const val TEST_TIMESTAMP = 1_735_689_600_000L // 2025-01-01 00:00:00 UTC
 private const val TEST_EXPIRY = TEST_TIMESTAMP + 3_600_000L // +1 hour
 
-/**
- * Tests for LoginUseCase demonstrating cross-module fake usage.
- */
 class LoginUseCaseTest {
 
     @Test
@@ -167,9 +164,6 @@ class LoginUseCaseTest {
         }
 }
 
-/**
- * Tests for LoginRepository demonstrating data layer operations.
- */
 class LoginRepositoryTest {
 
     @Test
@@ -256,9 +250,6 @@ class LoginRepositoryTest {
         }
 }
 
-/**
- * Tests for LoginValidator.
- */
 class LoginValidatorTest {
 
     @Test

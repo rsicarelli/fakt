@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.high
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for FunctionExecutor SAM interface.
- */
 class FunctionExecutorTest {
     @Test
     fun `GIVEN FunctionExecutor SAM WHEN executing with transform THEN should apply function`() {

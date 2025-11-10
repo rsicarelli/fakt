@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.companionObjects.b
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for ConfigService interface with companion property.
- */
 class ConfigServiceTest {
     @Test
     fun `GIVEN interface with companion property WHEN using fake THEN instance methods should work`() {
