@@ -17,14 +17,12 @@ import org.jetbrains.kotlin.ir.util.packageFqName
 /**
  * Groups the code generators used by CodeGenerator.
  *
- * @property implementation Generator for fake implementation classes (OLD - string-based)
- * @property implementationV2 Generator for fake implementation classes (NEW - DSL-based)
+ * @property implementation Generator for fake implementation classes
  * @property factory Generator for factory functions
  * @property configDsl Generator for configuration DSL
  */
 internal data class CodeGenerators(
     val implementation: ImplementationGenerator,
-    val implementationV2: ImplementationGeneratorV2,
     val factory: FactoryGenerator,
     val configDsl: ConfigurationDslGenerator,
 )
@@ -109,8 +107,8 @@ internal class CodeGenerator(
             // Collect required imports for implementation
             val requiredImports = importResolver.collectRequiredImports(analysis, packageName)
 
-            // Generate implementation + factory using V2
-            val generatedV2 = generators.implementationV2.generateImplementation(
+            // Generate implementation + factory
+            val generated = generators.implementation.generateImplementation(
                 analysis,
                 packageName,
                 requiredImports.toList()
@@ -118,14 +116,14 @@ internal class CodeGenerator(
 
             // Render CodeFile to string
             val builder = CodeBuilder()
-            generatedV2.implementationFile.renderTo(builder)
+            generated.implementationFile.renderTo(builder)
             val implementationCode = builder.build()
 
-            // Assemble final code (implementation from V2, factory from V2, config still old)
+            // Assemble final code
             val generatedCode =
                 GeneratedCode(
                     implementation = implementationCode, // Complete file with package + imports
-                    factory = generatedV2.factoryFunction, // Now from V2!
+                    factory = generated.factoryFunction,
                     configDsl = generators.configDsl.generateConfigurationDsl(
                         analysis,
                         fakeClassName
@@ -176,8 +174,8 @@ internal class CodeGenerator(
             // Collect required imports for implementation
             val requiredImports = importResolver.collectRequiredImportsForClass(analysis, packageName)
 
-            // Generate implementation + factory using V2
-            val generatedV2 = generators.implementationV2.generateClassFake(
+            // Generate implementation + factory
+            val generated = generators.implementation.generateClassFake(
                 analysis,
                 packageName,
                 requiredImports.toList()
@@ -185,14 +183,14 @@ internal class CodeGenerator(
 
             // Render CodeFile to string
             val builder = CodeBuilder()
-            generatedV2.implementationFile.renderTo(builder)
+            generated.implementationFile.renderTo(builder)
             val implementationCode = builder.build()
 
-            // Assemble final code (implementation from V2, factory from V2, config still old)
+            // Assemble final code
             val generatedCode =
                 GeneratedCode(
                     implementation = implementationCode, // Complete file with package + imports
-                    factory = generatedV2.factoryFunction, // Now from V2!
+                    factory = generated.factoryFunction,
                     configDsl = generators.configDsl.generateConfigurationDsl(
                         analysis,
                         fakeClassName
@@ -245,11 +243,11 @@ internal class CodeGenerator(
         packageDir.mkdirs()
         val outputFile = packageDir.resolve("$fakeClassName.kt")
 
-        // Implementation now includes package + imports via codegen-v2
+        // Implementation now includes package + imports via DSL
         // Factory and configDSL are still old generators (no package/imports)
         val fullCode =
             buildString {
-                // Implementation already has: package, imports, class (from codegen-v2)
+                // Implementation already has: package, imports, class (from DSL)
                 append(code.implementation)
                 appendLine()
 
@@ -290,11 +288,11 @@ internal class CodeGenerator(
         packageDir.mkdirs()
         val outputFile = packageDir.resolve("$fakeClassName.kt")
 
-        // Implementation now includes package + imports via codegen-v2
+        // Implementation now includes package + imports via DSL
         // Factory and configDSL are still old generators (no package/imports)
         val fullCode =
             buildString {
-                // Implementation already has: package, imports, class (from codegen-v2)
+                // Implementation already has: package, imports, class (from DSL)
                 append(code.implementation)
                 appendLine()
 

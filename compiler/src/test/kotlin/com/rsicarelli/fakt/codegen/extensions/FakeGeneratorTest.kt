@@ -22,7 +22,7 @@ class FakeGeneratorTest {
         val methods = listOf(
             MethodSpec(
                 name = "getUser",
-                params = listOf("id" to "String"),
+                params = listOf(Triple("id", "String", false)),
                 returnType = "User?"
             )
         )
@@ -52,7 +52,7 @@ class FakeGeneratorTest {
         val methods = listOf(
             MethodSpec(
                 name = "saveUser",
-                params = listOf("user" to "User"),
+                params = listOf(Triple("user", "User", false)),
                 returnType = "Result<Unit>",
                 isSuspend = true
             )
@@ -81,7 +81,7 @@ class FakeGeneratorTest {
         val methods = listOf(
             MethodSpec(
                 name = "process",
-                params = listOf("items" to "String"),
+                params = listOf(Triple("items", "String", false)),
                 returnType = "Int",
                 isVararg = true
             )
@@ -162,9 +162,9 @@ class FakeGeneratorTest {
     fun `GIVEN generateCompleteFake WHEN multiple methods THEN generates all implementations`() {
         // GIVEN
         val methods = listOf(
-            MethodSpec("getUser", listOf("id" to "String"), "User?"),
-            MethodSpec("saveUser", listOf("user" to "User"), "Result<Unit>", isSuspend = true),
-            MethodSpec("deleteUser", listOf("id" to "String"), "Unit")
+            MethodSpec("getUser", listOf(Triple("id", "String", false)), "User?"),
+            MethodSpec("saveUser", listOf(Triple("user", "User", false)), "Result<Unit>", isSuspend = true),
+            MethodSpec("deleteUser", listOf(Triple("id", "String", false)), "Unit")
         )
 
         // WHEN
@@ -255,9 +255,9 @@ class FakeGeneratorTest {
     fun `GIVEN generateCompleteFake WHEN complete interface THEN generates full fake implementation`() {
         // GIVEN
         val methods = listOf(
-            MethodSpec("getUser", listOf("id" to "String"), "User?"),
+            MethodSpec("getUser", listOf(Triple("id", "String", false)), "User?"),
             MethodSpec("getAllUsers", emptyList(), "List<User>"),
-            MethodSpec("saveUser", listOf("user" to "User"), "Result<Unit>", isSuspend = true)
+            MethodSpec("saveUser", listOf(Triple("user", "User", false)), "Result<Unit>", isSuspend = true)
         )
 
         val properties = listOf(

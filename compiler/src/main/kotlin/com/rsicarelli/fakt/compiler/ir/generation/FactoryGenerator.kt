@@ -179,7 +179,6 @@ internal class FactoryGenerator {
 
     /**
      * Formats type parameters for factory function headers, handling where clauses for multiple constraints.
-     * Same logic as ImplementationGenerator's formatTypeParametersWithWhereClause.
      */
     private fun formatTypeParametersWithWhereClause(typeParameters: List<String>): Pair<List<String>, String> {
         if (typeParameters.isEmpty()) {
