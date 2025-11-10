@@ -182,7 +182,6 @@ internal class ConfigurationDslGenerator(
 
     /**
      * Formats type parameters for config class headers, handling where clauses for multiple constraints.
-     * Same logic as ImplementationGenerator's formatTypeParametersWithWhereClause.
      */
     private fun formatTypeParametersWithWhereClause(typeParameters: List<String>): Pair<List<String>, String> {
         if (typeParameters.isEmpty()) {
@@ -386,7 +385,6 @@ internal class ConfigurationDslGenerator(
 
     /**
      * Check if a type string contains a method-level type parameter.
-     * Matches the implementation in ImplementationGenerator.
      */
     private fun containsMethodTypeParam(
         typeString: String,
@@ -399,7 +397,6 @@ internal class ConfigurationDslGenerator(
 
     /**
      * Recursively converts method-level type params to Any? while preserving wrapper types.
-     * Matches the implementation in ImplementationGenerator.
      *
      * E.g., Result<T> -> Result<Any?>, List<T> -> List<Any?>, T -> Any?
      */

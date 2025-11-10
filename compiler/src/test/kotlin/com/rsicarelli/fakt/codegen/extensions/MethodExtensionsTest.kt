@@ -47,7 +47,7 @@ class MethodExtensionsTest {
             klass("FakeServiceImpl") {
                 overrideMethod(
                     name = "compute",
-                    params = listOf("x" to "Int", "y" to "String", "flag" to "Boolean"),
+                    params = listOf(Triple("x", "Int", false), Triple("y", "String", false), Triple("flag", "Boolean", false)),
                     returnType = "Result<Unit>"
                 )
             }
@@ -70,7 +70,7 @@ class MethodExtensionsTest {
             klass("FakeServiceImpl") {
                 overrideMethod(
                     name = "doSomething",
-                    params = listOf("value" to "String"),
+                    params = listOf(Triple("value", "String", false)),
                     returnType = "Unit"
                 )
             }
@@ -94,7 +94,7 @@ class MethodExtensionsTest {
             klass("FakeAsyncServiceImpl") {
                 overrideMethod(
                     name = "fetchUser",
-                    params = listOf("id" to "String"),
+                    params = listOf(Triple("id", "String", false)),
                     returnType = "User?",
                     isSuspend = true
                 )
@@ -315,7 +315,7 @@ class MethodExtensionsTest {
                 // Override method
                 overrideMethod(
                     name = "getUser",
-                    params = listOf("id" to "String"),
+                    params = listOf(Triple("id", "String", false)),
                     returnType = "User?"
                 )
 

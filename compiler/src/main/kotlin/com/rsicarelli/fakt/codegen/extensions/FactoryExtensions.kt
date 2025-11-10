@@ -15,7 +15,7 @@ package com.rsicarelli.fakt.codegen.extensions
  * }
  * ```
  *
- * Note: Currently generates as string because codegen-v2 DSL doesn't support
+ * Note: Currently generates as string because the DSL doesn't support
  * function-level type parameters with reified modifier and where clauses yet.
  * This will be refactored when DSL gains full support.
  *

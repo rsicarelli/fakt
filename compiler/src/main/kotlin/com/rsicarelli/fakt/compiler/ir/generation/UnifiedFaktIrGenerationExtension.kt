@@ -84,8 +84,7 @@ class UnifiedFaktIrGenerationExtension(
 
     private val generators =
         CodeGenerators(
-            implementation = ImplementationGenerator(typeResolver), // OLD - keep for reference
-            implementationV2 = ImplementationGeneratorV2(typeResolver), // NEW - DSL-based
+            implementation = ImplementationGenerator(typeResolver),
             factory = FactoryGenerator(),
             configDsl = ConfigurationDslGenerator(typeResolver),
         )
