@@ -10,9 +10,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-/**
- * Tests for HttpClient fake generation and configuration.
- */
 class HttpClientTest {
 
     @Test
@@ -141,9 +138,6 @@ class HttpClientTest {
     }
 }
 
-/**
- * Tests for ApiClient fake generation and configuration.
- */
 
 class ApiClientTest {
 
@@ -238,9 +232,6 @@ class ApiClientTest {
     }
 }
 
-/**
- * Tests for WebSocketClient fake generation and configuration.
- */
 class WebSocketClientTest {
 
     @Test
@@ -278,9 +269,6 @@ class WebSocketClientTest {
     }
 }
 
-/**
- * Tests for WebSocketConnection fake generation and configuration.
- */
 class WebSocketConnectionTest {
 
     @Test

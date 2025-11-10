@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.vari
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for ResultProducer SAM interface.
- */
 class ResultProducerTest {
     @Test
     fun `GIVEN ResultProducer SAM WHEN producing result THEN should return result`() {

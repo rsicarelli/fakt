@@ -6,9 +6,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
-/**
- * Tests for Transformer SAM interface.
- */
 class TransformerTest {
     @Test
     fun `GIVEN SAM with single generic WHEN using reified fake THEN should be type-safe`() {

@@ -17,9 +17,6 @@ import kotlin.test.assertTrue
 // Test timestamp constants (KMP-compatible)
 private const val TEST_TIMESTAMP = 1_735_689_600_000L // 2025-01-01 00:00:00 UTC
 
-/**
- * Tests for OrderUseCase demonstrating cross-module integration.
- */
 class OrderUseCaseTest {
 
     @Test
@@ -136,9 +133,6 @@ class OrderUseCaseTest {
         }
 }
 
-/**
- * Tests for OrderValidator.
- */
 class OrderValidatorTest {
 
     @Test

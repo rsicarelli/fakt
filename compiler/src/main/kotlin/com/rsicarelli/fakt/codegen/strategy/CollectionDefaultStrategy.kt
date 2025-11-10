@@ -9,6 +9,7 @@ import com.rsicarelli.fakt.codegen.model.CodeType
  * Strategy for generating default values for Kotlin collection types.
  *
  * Supports standard collections with empty initializers:
+ * - Collection<T> → emptyList() (Collection is abstract, List is concrete impl)
  * - List<T> → emptyList()
  * - Set<T> → emptySet()
  * - Map<K,V> → emptyMap()
@@ -66,6 +67,7 @@ public class CollectionDefaultStrategy(
         }
 
         val functionName = when (typeName) {
+            "Collection" -> "emptyList"  // Collection is abstract, use List as concrete impl
             "List" -> "emptyList"
             "Set" -> "emptySet"
             "Map" -> "emptyMap"
@@ -81,6 +83,7 @@ public class CollectionDefaultStrategy(
 
     private companion object {
         private val COLLECTION_TYPES = setOf(
+            "Collection",  // Abstract collection interface
             "List",
             "Set",
             "Map",

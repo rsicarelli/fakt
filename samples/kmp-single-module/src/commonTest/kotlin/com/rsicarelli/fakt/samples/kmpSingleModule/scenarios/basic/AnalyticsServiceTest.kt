@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.basic
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Comprehensive test for AnalyticsService fake generation.
- */
 class AnalyticsServiceTest {
     @Test
     fun `GIVEN AnalyticsService fake WHEN configuring track THEN should execute behavior`() {

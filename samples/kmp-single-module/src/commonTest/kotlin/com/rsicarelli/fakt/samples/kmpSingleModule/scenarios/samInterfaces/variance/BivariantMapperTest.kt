@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.vari
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for BivariantMapper SAM interface.
- */
 class BivariantMapperTest {
     @Test
     fun `GIVEN BivariantMapper SAM WHEN mapping with both variances THEN should work correctly`() {

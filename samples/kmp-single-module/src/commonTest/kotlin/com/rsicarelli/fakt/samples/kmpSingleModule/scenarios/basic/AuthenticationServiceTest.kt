@@ -10,9 +10,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/**
- * Comprehensive test for AuthenticationService fake generation.
- */
 class AuthenticationServiceTest {
     @Test
     fun `GIVEN AuthenticationService fake WHEN accessing properties THEN should return configured values`() {

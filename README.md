@@ -11,7 +11,9 @@
 
 ## What Is Fakt?
 
-A **Kotlin compiler plugin** that generates type-safe test fakes at compile-time. It uses a two-phase **FIR → IR** compilation architecture to analyze `@Fake` annotated interfaces and classes, then generates production-quality fake implementations with expressive configuration DSLs.
+A **Kotlin compiler plugin** that generates type-safe test fakes at compile-time. It uses a
+two-phase **FIR → IR** compilation architecture to analyze `@Fake` annotated interfaces and classes,
+then generates production-quality fake implementations with expressive configuration DSLs.
 
 ```kotlin
 import com.rsicarelli.fakt.Fake
@@ -53,8 +55,8 @@ class AnalyticsServiceTest {
 ```kotlin
 // root build.gradle.kts
 plugins {
-  	id("org.jetbrains.kotlin.multiplatform") version "x.y.z" apply false
-	  id("com.rsicarelli.fakt") version "x.y.z" apply false
+    id("org.jetbrains.kotlin.multiplatform") version "x.y.z" apply false
+    id("com.rsicarelli.fakt") version "x.y.z" apply false
 }
 ```
 
@@ -63,14 +65,14 @@ plugins {
 ```kotlin
 // module build.gradle.kts
 plugins {
-  	id("org.jetbrains.kotlin.multiplatform")
-	  id("com.rsicarelli.fakt")
+    id("org.jetbrains.kotlin.multiplatform")
+    id("com.rsicarelli.fakt")
 }
 
 kotlin {
-		sourceSets { 
-        commonMain.dependencies { 
-						implementation("com.rsicarelli.fakt:runtime:x.y.z")
+    sourceSets {
+        commonMain.dependencies {
+            implementation("com.rsicarelli.fakt:runtime:x.y.z")
         }
     }
 }
@@ -115,6 +117,7 @@ class MyServiceTest {
 ```
 
 ✨**That's it!** Fakt generates:
+
 - `FakeMyServiceImpl` class
 - `fakeMyService {}` factory function
 - `FakeMyServiceConfig` DSL for configuration
@@ -125,47 +128,56 @@ class MyServiceTest {
 
 - **Kotlin:** 2.2.20+
 - **Gradle:** 8.0+
-- **JVM:** 11+ (for compiler plugin execution)
+- **JVM:** 11+
 
 ---
 
 ## Features
 
 **At a Glance:**
+
 - ✅ **All class types** - Interfaces, abstract classes, open/final classes, companion objects
-- ✅ **Complete type system** - Full generics support (class-level, method-level, constraints, variance), SAM interfaces, complex stdlib types
-- ✅ **Kotlin features** - Suspend functions, properties (val/var), methods, default parameters, inheritance
-- ✅ **Call tracking** - Automatic call counting per method/property via StateFlow (thread-safe, reactive)
-- ✅ **All KMP platforms** - Android, iOS, JVM, Native (macOS, Linux, Windows), JavaScript, WebAssembly
-- ⚠️ **Multi-module** - Experimental (requires dedicated `-fakes` modules)
+- ✅ **Complete type system** - Full generics support (class-level, method-level, constraints,
+  variance), SAM interfaces, complex stdlib types
+- ✅ **Kotlin features** - Suspend functions, properties (val/var), methods, default parameters,
+  inheritance
+- ✅ **Call tracking** - Automatic call counting per method/property via StateFlow (thread-safe,
+  reactive)
+- ✅ **All KMP platforms** - Android, iOS, JVM, Native (macOS, Linux, Windows), JavaScript,
+  WebAssembly
+- ⚠️ **Multi-module** - Experimental (requires dedicated `-test` modules)
 
 **Not Supported:**
+
 - 🔜 **Data classes** - Cannot fake directly (work fine as parameter/return types)
-- ❌ **Sealed hierarchies** - Cannot fake `sealed class`/`sealed interface` (work fine as parameter/return types)
+- ❌ **Sealed hierarchies** - Cannot fake `sealed class`/`sealed interface` (work fine as
+  parameter/return types)
 - ❌ **Default parameters in interfaces** - `fun example(parameter: String = "")` not supported
 
 **Limitations:**
 
-- ❌ **Generated code formatting** - Uses its own code style. Exclude `build/generated/fakt/` from linters.
+- ❌ **Generated code formatting** - Uses its own code style. Exclude `build/generated/fakt/` from
+  linters.
 
 ---
 
 ## Platform Support
 
-Fakt works at the **IR (Intermediate Representation) level**, which means it supports all Kotlin Multiplatform targets:
+Fakt works at the **IR (Intermediate Representation) level**, which means it supports all Kotlin
+Multiplatform targets:
 
-| Platform | Targets |
-|----------|---------|
-| **Android** | `androidTarget()` |
-| **iOS** | `iosArm64()`, `iosX64()`, `iosSimulatorArm64()` |
-| **JVM** | `jvm()` |
-| **JavaScript** | `js(IR)` - Browser & Node.js |
-| **WebAssembly** | `wasmJs()` |
-| **macOS** | `macosArm64()`, `macosX64()` |
-| **Linux** | `linuxArm64()`, `linuxX64()` |
-| **Windows** | `mingwX64()` |
-| **watchOS** | `watchosArm64()`, `watchosX64()`, `watchosSimulatorArm64()` |
-| **tvOS** | `tvosArm64()`, `tvosX64()`, `tvosSimulatorArm64()` |
+| Platform        | Targets                                                     |
+|-----------------|-------------------------------------------------------------|
+| **Android**     | `androidTarget()`                                           |
+| **iOS**         | `iosArm64()`, `iosX64()`, `iosSimulatorArm64()`             |
+| **JVM**         | `jvm()`                                                     |
+| **JavaScript**  | `js(IR)` - Browser & Node.js                                |
+| **WebAssembly** | `wasmJs()`                                                  |
+| **macOS**       | `macosArm64()`, `macosX64()`                                |
+| **Linux**       | `linuxArm64()`, `linuxX64()`                                |
+| **Windows**     | `mingwX64()`                                                |
+| **watchOS**     | `watchosArm64()`, `watchosX64()`, `watchosSimulatorArm64()` |
+| **tvOS**        | `tvosArm64()`, `tvosX64()`, `tvosSimulatorArm64()`          |
 
 **Single-Platform Projects:**
 
@@ -177,11 +189,14 @@ Fakt works at the **IR (Intermediate Representation) level**, which means it sup
 
 ### Multi-Module Support (Experimental)
 
-Fakt follows the community pattern of dedicated test modules (e.g., `-fakes`, `-test-fixtures`). The plugin collects generated fakes from a source module and exposes them through a separate Gradle module that other modules can depend on.
+Fakt follows the community pattern of dedicated test modules (e.g., `-fakes`, `-test`). The
+plugin collects generated fakes from a source module and exposes them through a separate Gradle
+module that other modules can depend on.
 
 ```kotlin
 // Producer module: :core:analytics
-@Fake interface Analytics
+@Fake
+interface Analytics
 
 // Dedicated module: :core:analytics-fakes/build.gradle.kts
 plugins {
@@ -190,7 +205,7 @@ plugins {
 
 fakt {
     @OptIn(ExperimentalFaktMultiModule::class)
-    collectFakesFrom(project(":core:analytics"))
+    collectFakesFrom(projects.core.analytics)
 }
 
 // Consumer module: :app/build.gradle.kts
@@ -209,28 +224,30 @@ Fakt generates fakes in the test source set corresponding to where `@Fake` is de
 
 ```kotlin
 // Source src/androidMain/kotlin/MyService.kt
-@Fake interface AndroidService
+@Fake
+interface AndroidService
 
 // Generated fake build/generated/fakt/androidUnitTest/kotlin/
 fun fakeAndroidService(...)
 
 // Source src/iosMain/kotlin/MyService.kt
-@Fake interface IOSService
+@Fake
+interface IOSService
 
 // Generated fake build/generated/fakt/iosTest/kotlin/
 fun fakeIOSService(...)
 ```
 
-Supports all KMP source sets (commonMain, jvmMain, androidMain, iosMain, macosMain, linuxMain, etc.)
-
 > [!NOTE]
-> Fully tested with Default Hierarchy Template. Please file a bug if you have issues with custom hierarchy templates!
+> Fully tested with Default Hierarchy Template. Please file a bug if you have issues with custom
+> hierarchy templates!
 
 --------
 
 ## Compilation Performance
 
-Fakt generates code directly from **Kotlin's IR** without reflection or third-party libraries like KotlinPoet. This approach ensures maximum performance and zero runtime overhead.
+Fakt generates code directly from **Kotlin's IR** without reflection or third-party libraries like
+KotlinPoet. This approach ensures maximum performance and zero runtime overhead.
 
 **Intelligent caching** minimizes compilation overhead across multiple KMP targets:
 
@@ -245,8 +262,8 @@ TOTAL: 40ms
 **Cached compilations** (all other targets):
 
 ```
-iosArm64:					 1ms (121 from cache)
-android:           1ms (121 from cache)
+iosArm64:		    1ms (121 from cache)
+android:            1ms (121 from cache)
 ...
 ```
 
@@ -266,9 +283,9 @@ Fakt includes a professional telemetry system with 4 verbosity levels:
 import com.rsicarelli.fakt.compiler.api.LogLevel
 
 fakt {
-  	enabled.set(true) // Default
+    enabled.set(true) // Default
     logLevel.set(LogLevel.INFO)  // Default - concise summary
-  	collectFakesFrom(...) // Experimental opt-in required
+    collectFakesFrom(...) // Experimental opt-in required
 }
 ```
 
@@ -286,13 +303,15 @@ fakt {
 
 - **`QUIET`** - Zero output (CI/CD builds or minimal setup)
 - **`DEBUG`** - Detailed breakdown per interface
-- **`TRACE`** - Full IR details, type resolution, debugging info (have a small overhead in Compiler Plugin)
+- **`TRACE`** - Full IR details, type resolution, debugging info (have a small overhead in Compiler
+  Plugin)
 
 ---
 
 ## Contributing
 
 Contributions welcome! Please:
+
 1. Follow GIVEN-WHEN-THEN testing standard
 2. Ensure all generated code compiles
 3. Test both single-platform and KMP scenarios

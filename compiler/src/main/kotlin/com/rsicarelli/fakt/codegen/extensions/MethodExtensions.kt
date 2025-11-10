@@ -11,7 +11,9 @@ import com.rsicarelli.fakt.codegen.builder.FunctionBuilder
  * Generates pattern:
  * ```kotlin
  * override fun <T> methodName(params): ReturnType {
- *     return methodNameBehavior(params)
+ *     return methodNameBehavior(params)  // For interfaces/abstract methods
+ *     // OR
+ *     return methodNameBehavior?.invoke(params) ?: super.methodName(params)  // For open methods
  * }
  * ```
  *
@@ -20,6 +22,9 @@ import com.rsicarelli.fakt.codegen.builder.FunctionBuilder
  * @param returnType Return type
  * @param isSuspend Whether this is a suspend function
  * @param typeParameters Method-level type parameters (e.g., ["T", "R : Comparable<R>"])
+ * @param useSuperDelegation If true, generates nullable invoke with super delegation for open methods
+ * @param extensionReceiverType Extension receiver type (e.g., "Vector" for fun Vector.plus())
+ * @param isOperator Whether this is an operator function
  */
 fun ClassBuilder.overrideMethod(
     name: String,
@@ -27,8 +32,13 @@ fun ClassBuilder.overrideMethod(
     returnType: String,
     isSuspend: Boolean = false,
     typeParameters: List<String> = emptyList(),
+    useSuperDelegation: Boolean = false,
+    extensionReceiverType: String? = null,
+    isOperator: Boolean = false,
 ) {
     function(name) {
+        if (isOperator) operator()
+        if (extensionReceiverType != null) receiver(extensionReceiverType)
         override()
         if (isSuspend) suspend()
 
@@ -62,7 +72,8 @@ fun ClassBuilder.overrideMethod(
         // When method has type parameters, we need to cast parameters to erased types
         val needsCast = typeParameters.isNotEmpty()
 
-        val paramNames = if (needsCast) {
+        // Generate parameter names for behavior invocation
+        val regularParamNames = if (needsCast) {
             // Extract type parameter names for erasure checking
             val typeParamNames = typeParameters.map { it.split(" : ", limit = 2)[0].trim() }.toSet()
 
@@ -87,15 +98,55 @@ fun ClassBuilder.overrideMethod(
             params.joinToString(", ") { it.first }
         }
 
+        // For extension functions, prepend 'this' receiver as first argument
+        val paramNames = if (extensionReceiverType != null) {
+            if (regularParamNames.isEmpty()) {
+                "this"
+            } else {
+                "this, $regularParamNames"
+            }
+        } else {
+            regularParamNames
+        }
+
         val returnCast = if (needsCast && returnType != "Unit") " as $returnType" else ""
 
-        body = if (returnType == "Unit") {
-            "$callTracking\n        ${name}Behavior($paramNames)"
-        } else {
-            if (needsCast) {
-                "@Suppress(\"UNCHECKED_CAST\")\n        $callTracking\n        return ${name}Behavior($paramNames)$returnCast"
+        // Generate super call parameters (handle varargs and named parameters after varargs)
+        val hasVararg = params.any { it.third }
+        val varargIndex = if (hasVararg) params.indexOfFirst { it.third } else -1
+        val superCallParams = params.mapIndexed { index, (paramName, _, isVararg) ->
+            when {
+                isVararg -> "*$paramName"
+                hasVararg && index > varargIndex -> "$paramName = $paramName"  // Named parameter after vararg
+                else -> paramName
+            }
+        }.joinToString(", ")
+
+        // Generate body with super delegation for open methods
+        body = if (useSuperDelegation) {
+            // Open method: nullable invoke with super delegation
+            val invocation = "${name}Behavior?.invoke($paramNames)"
+            val superCall = "super.$name($superCallParams)"
+
+            if (returnType == "Unit") {
+                "$callTracking\n        $invocation ?: $superCall"
             } else {
-                "$callTracking\n        return ${name}Behavior($paramNames)"
+                if (needsCast) {
+                    "$callTracking\n        @Suppress(\"UNCHECKED_CAST\")\n        return ($invocation ?: $superCall)$returnCast"
+                } else {
+                    "$callTracking\n        return $invocation ?: $superCall"
+                }
+            }
+        } else {
+            // Abstract or interface method: direct behavior call
+            if (returnType == "Unit") {
+                "$callTracking\n        ${name}Behavior($paramNames)"
+            } else {
+                if (needsCast) {
+                    "$callTracking\n        @Suppress(\"UNCHECKED_CAST\")\n        return ${name}Behavior($paramNames)$returnCast"
+                } else {
+                    "$callTracking\n        return ${name}Behavior($paramNames)"
+                }
             }
         }
     }
@@ -107,19 +158,27 @@ fun ClassBuilder.overrideMethod(
  * Generates pattern:
  * ```kotlin
  * override fun methodName(vararg items: T): ReturnType {
- *     return methodNameBehavior(items)
+ *     return methodNameBehavior(items)  // For interfaces/abstract methods
+ *     // OR
+ *     return methodNameBehavior?.invoke(items) ?: super.methodName(*items)  // For open methods
  * }
  * ```
  *
  * @param varargType The Array type (e.g., "Array<String>"), element type will be extracted
+ * @param useSuperDelegation If true, generates nullable invoke with super delegation for open methods
  */
 fun ClassBuilder.overrideVarargMethod(
     name: String,
     varargName: String,
     varargType: String,
     returnType: String,
+    useSuperDelegation: Boolean = false,
+    extensionReceiverType: String? = null,
+    isOperator: Boolean = false,
 ) {
     function(name) {
+        if (isOperator) operator()
+        if (extensionReceiverType != null) receiver(extensionReceiverType)
         override()
         // Extract element type from Array<T> or Array<out T>
         // "Array<String>" -> "String"
@@ -134,10 +193,31 @@ fun ClassBuilder.overrideVarargMethod(
         returns(returnType)
 
         val callTracking = "_${name}CallCount.update { it + 1 }"
-        body = if (returnType == "Unit") {
-            "$callTracking\n        ${name}Behavior($varargName)"
+
+        // For extension functions, prepend 'this' receiver as first argument
+        val paramNames = if (extensionReceiverType != null) {
+            "this, $varargName"
         } else {
-            "$callTracking\n        return ${name}Behavior($varargName)"
+            varargName
+        }
+
+        body = if (useSuperDelegation) {
+            // Open method: nullable invoke with super delegation
+            val invocation = "${name}Behavior?.invoke($paramNames)"
+            val superCall = "super.$name(*$varargName)"
+
+            if (returnType == "Unit") {
+                "$callTracking\n        $invocation ?: $superCall"
+            } else {
+                "$callTracking\n        return $invocation ?: $superCall"
+            }
+        } else {
+            // Abstract or interface method: direct behavior call
+            if (returnType == "Unit") {
+                "$callTracking\n        ${name}Behavior($paramNames)"
+            } else {
+                "$callTracking\n        return ${name}Behavior($paramNames)"
+            }
         }
     }
 }

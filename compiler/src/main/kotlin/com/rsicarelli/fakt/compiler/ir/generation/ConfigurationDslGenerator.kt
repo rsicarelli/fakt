@@ -82,7 +82,7 @@ internal class ConfigurationDslGenerator(
                 }
 
             // Keep original parameter types (including method-level generics)
-            val parameterTypes =
+            val regularParamTypes =
                 if (function.parameters.isEmpty()) {
                     ""
                 } else {
@@ -99,6 +99,18 @@ internal class ConfigurationDslGenerator(
                         }
                     }
                 }
+
+            // For extension functions, prepend receiver type to parameter list
+            val parameterTypes = if (function.extensionReceiverType != null) {
+                val receiverTypeStr = typeResolver.irTypeToKotlinString(function.extensionReceiverType, preserveTypeParameters = true)
+                if (regularParamTypes.isEmpty()) {
+                    receiverTypeStr
+                } else {
+                    "$receiverTypeStr, $regularParamTypes"
+                }
+            } else {
+                regularParamTypes
+            }
 
             // Keep original return type (including method-level generics)
             val returnType = typeResolver.irTypeToKotlinString(
@@ -330,20 +342,28 @@ internal class ConfigurationDslGenerator(
             }
 
         // Keep original parameter types (including method-level generics)
-        val parameterTypes =
-            if (function.parameters.isEmpty()) {
-                ""
-            } else {
-                function.parameters.joinToString(", ") { param ->
-                    if (param.isVararg) {
-                        val elementType = unwrapVarargsType(param)
-                        "Array<out $elementType>"
-                    } else {
-                        // Keep full signature - no erasure!
-                        typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
-                    }
+        val regularParamTypes =
+            function.parameters.joinToString(", ") { param ->
+                if (param.isVararg) {
+                    val elementType = unwrapVarargsType(param)
+                    "Array<out $elementType>"
+                } else {
+                    // Keep full signature - no erasure!
+                    typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
                 }
             }
+
+        // For extension functions, prepend receiver type to parameter list
+        val parameterTypes = if (function.extensionReceiverType != null) {
+            val receiverTypeStr = typeResolver.irTypeToKotlinString(function.extensionReceiverType, preserveTypeParameters = true)
+            if (regularParamTypes.isEmpty()) {
+                receiverTypeStr
+            } else {
+                "$receiverTypeStr, $regularParamTypes"
+            }
+        } else {
+            regularParamTypes
+        }
 
         // Keep original return type (including method-level generics)
         val returnType =
@@ -351,7 +371,7 @@ internal class ConfigurationDslGenerator(
 
         // Build behavior signature with full generic types
         val behaviorSignature =
-            if (function.parameters.isEmpty()) {
+            if (parameterTypes.isEmpty()) {
                 "$suspendModifier() -> $returnType"
             } else {
                 "$suspendModifier($parameterTypes) -> $returnType"

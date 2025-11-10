@@ -7,9 +7,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * Tests for CallbackHandler SAM interface.
- */
 class CallbackHandlerTest {
     @Test
     fun `GIVEN CallbackHandler SAM WHEN handling with callbacks THEN should invoke both`() {

@@ -83,6 +83,8 @@ data class IrFunctionMetadata(
     val isInline: Boolean,
     val typeParameters: List<String>,
     val typeParameterBounds: Map<String, String>,
+    val isOperator: Boolean,
+    val extensionReceiverType: IrType?,
     val irFunction: IrSimpleFunction,
 )
 
@@ -211,6 +213,8 @@ private fun IrFunctionMetadata.toFunctionAnalysis(): FunctionAnalysis =
         isInline = isInline,
         typeParameters = typeParameters,
         typeParameterBounds = typeParameterBounds,
+        isOperator = isOperator,
+        extensionReceiverType = extensionReceiverType,
         irFunction = irFunction,
     )
 

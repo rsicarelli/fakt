@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.stdl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for TripleProcessor SAM interface.
- */
 class TripleProcessorTest {
     @Test
     fun `GIVEN TripleProcessor SAM WHEN processing triple THEN should transform all elements`() {

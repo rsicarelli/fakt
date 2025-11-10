@@ -6,9 +6,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * Tests for PredicateFilter SAM interface.
- */
 class PredicateFilterTest {
     @Test
     fun `GIVEN PredicateFilter SAM WHEN filtering with predicate THEN should apply condition`() {

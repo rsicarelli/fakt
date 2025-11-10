@@ -10,9 +10,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/**
- * Tests for KeyValueStorage fake generation and configuration.
- */
 class KeyValueStorageTest {
 
     @Test
@@ -170,9 +167,6 @@ class KeyValueStorageTest {
         }
 }
 
-/**
- * Tests for Cache fake generation and configuration.
- */
 class CacheTest {
 
     @Test
@@ -271,9 +265,6 @@ class CacheTest {
     }
 }
 
-/**
- * Tests for SecureStorage fake generation and configuration.
- */
 class SecureStorageTest {
 
     @Test

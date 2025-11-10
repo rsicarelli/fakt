@@ -7,9 +7,6 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for AsyncProducer SAM interface.
- */
 class AsyncProducerTest {
     @Test
     fun `GIVEN AsyncProducer SAM WHEN producing with transform THEN should work with suspend`() =

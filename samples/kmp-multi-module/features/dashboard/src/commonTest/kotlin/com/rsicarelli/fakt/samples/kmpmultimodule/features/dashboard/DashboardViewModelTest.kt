@@ -22,17 +22,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * Comprehensive tests for DashboardViewModel demonstrating:
- * - Turbine for StateFlow testing
- * - K2.2+ backing fields pattern
- * - Concurrency and thread safety
- * - Timing simulation with coroutines test
- * - Internal counter validation
- * - Factory pattern for clean test setup
- *
- * This serves as a production-ready example for the Fakt community.
- */
 class DashboardViewModelTest {
 
     // ============================================================================

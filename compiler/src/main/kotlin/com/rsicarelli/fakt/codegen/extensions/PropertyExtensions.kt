@@ -102,6 +102,70 @@ fun ClassBuilder.suspendBehaviorProperty(
 }
 
 /**
+ * Creates a nullable behavior property for an open class method.
+ *
+ * Generates pattern:
+ * ```kotlin
+ * private var {methodName}Behavior: ((Params) -> ReturnType)? = null
+ * ```
+ *
+ * Used for open methods in classes that should delegate to super when unconfigured.
+ *
+ * @param methodName Name of the method this behavior is for
+ * @param paramTypes List of parameter types
+ * @param returnType Return type of the function
+ */
+fun ClassBuilder.nullableBehaviorProperty(
+    methodName: String,
+    paramTypes: List<String>,
+    returnType: String,
+) {
+    val functionType = if (paramTypes.isEmpty()) {
+        "(() -> $returnType)?"
+    } else {
+        "((${paramTypes.joinToString(", ")}) -> $returnType)?"
+    }
+
+    property("${methodName}Behavior", functionType) {
+        private()
+        mutable()
+        initializer = "null"
+    }
+}
+
+/**
+ * Creates a nullable suspend behavior property for an open class suspend method.
+ *
+ * Generates pattern:
+ * ```kotlin
+ * private var {methodName}Behavior: (suspend (Params) -> ReturnType)? = null
+ * ```
+ *
+ * Used for open suspend methods in classes that should delegate to super when unconfigured.
+ *
+ * @param methodName Name of the suspend method
+ * @param paramTypes List of parameter types
+ * @param returnType Return type of the function
+ */
+fun ClassBuilder.nullableSuspendBehaviorProperty(
+    methodName: String,
+    paramTypes: List<String>,
+    returnType: String,
+) {
+    val functionType = if (paramTypes.isEmpty()) {
+        "(suspend () -> $returnType)?"
+    } else {
+        "(suspend (${paramTypes.joinToString(", ")}) -> $returnType)?"
+    }
+
+    property("${methodName}Behavior", functionType) {
+        private()
+        mutable()
+        initializer = "null"
+    }
+}
+
+/**
  * Creates a simple mutable property with default value.
  *
  * Generates pattern:

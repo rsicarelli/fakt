@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.basic
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for AnalyticsServiceExtended - Interface extending another interface.
- */
 class AnalyticsServiceExtendedTest {
     @Test
     fun `GIVEN extended analytics service WHEN tracking event THEN should execute configured behavior`() {

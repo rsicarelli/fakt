@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.stdl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for SequenceFilter SAM interface.
- */
 class SequenceFilterTest {
     @Test
     fun `GIVEN SequenceFilter SAM WHEN filtering sequence THEN should return filtered sequence`() {

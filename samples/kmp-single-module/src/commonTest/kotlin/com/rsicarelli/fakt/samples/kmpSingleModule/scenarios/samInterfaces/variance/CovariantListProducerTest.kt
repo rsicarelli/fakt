@@ -6,9 +6,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * Tests for CovariantListProducer SAM interface.
- */
 class CovariantListProducerTest {
     @Test
     fun `GIVEN CovariantListProducer SAM WHEN producing list THEN should work with out variance`() {

@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.high
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for ResultFunctionMapper SAM interface.
- */
 class ResultFunctionMapperTest {
     @Test
     fun `GIVEN ResultFunctionMapper SAM WHEN mapping result function THEN should transform`() {

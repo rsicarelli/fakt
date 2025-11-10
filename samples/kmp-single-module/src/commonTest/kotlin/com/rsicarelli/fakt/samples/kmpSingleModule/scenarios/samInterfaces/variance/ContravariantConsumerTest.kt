@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.vari
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for ContravariantConsumer SAM interface.
- */
 class ContravariantConsumerTest {
     @Test
     fun `GIVEN ContravariantConsumer SAM WHEN consuming value THEN should accept supertypes`() {

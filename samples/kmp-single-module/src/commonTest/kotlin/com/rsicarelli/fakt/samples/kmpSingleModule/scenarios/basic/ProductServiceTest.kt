@@ -8,9 +8,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-/**
- * Comprehensive test for ProductService fake generation.
- */
 class ProductServiceTest {
     @Test
     fun `GIVEN ProductService fake WHEN calling suspend getProduct THEN should return Product`() =

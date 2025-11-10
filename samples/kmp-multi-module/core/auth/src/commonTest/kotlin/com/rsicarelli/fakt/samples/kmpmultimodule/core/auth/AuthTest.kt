@@ -15,9 +15,6 @@ import kotlin.test.assertTrue
 private const val TEST_TIMESTAMP = 1_735_689_600_000L // 2025-01-01 00:00:00 UTC
 private const val TEST_EXPIRY = TEST_TIMESTAMP + 3_600_000L // +1 hour
 
-/**
- * Tests for AuthProvider fake generation and configuration.
- */
 class AuthProviderTest {
 
     @Test
@@ -145,9 +142,6 @@ class AuthProviderTest {
         }
 }
 
-/**
- * Tests for TokenStorage fake generation and configuration.
- */
 class TokenStorageTest {
 
     @Test
@@ -261,9 +255,6 @@ class TokenStorageTest {
         }
 }
 
-/**
- * Tests for Authorizer fake generation and configuration.
- */
 class AuthorizerTest {
 
     @Test

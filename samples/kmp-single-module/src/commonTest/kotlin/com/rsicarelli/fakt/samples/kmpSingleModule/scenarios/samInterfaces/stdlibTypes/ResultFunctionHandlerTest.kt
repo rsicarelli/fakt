@@ -7,9 +7,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/**
- * Tests for ResultFunctionHandler SAM interface.
- */
 class ResultFunctionHandlerTest {
     @Test
     fun `GIVEN ResultFunctionHandler SAM WHEN transforming with Result THEN should handle both types`() {

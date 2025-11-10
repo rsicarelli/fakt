@@ -68,6 +68,8 @@ data class FunctionAnalysis(
     val isInline: Boolean,
     val typeParameters: List<String>, // Method-level type parameters like <T>, <T, R>
     val typeParameterBounds: Map<String, String>, // Type parameter bounds like R : TValue
+    val isOperator: Boolean, // Whether this function is declared with 'operator' modifier
+    val extensionReceiverType: IrType?, // Extension receiver type (e.g., Vector for fun Vector.plus())
     val irFunction: IrSimpleFunction,
 )
 

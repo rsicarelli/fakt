@@ -5,9 +5,6 @@ package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.samInterfaces.vari
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Tests for ListConsumer SAM interface.
- */
 class ListConsumerTest {
     @Test
     fun `GIVEN ListConsumer SAM WHEN consuming list THEN should accept list`() {

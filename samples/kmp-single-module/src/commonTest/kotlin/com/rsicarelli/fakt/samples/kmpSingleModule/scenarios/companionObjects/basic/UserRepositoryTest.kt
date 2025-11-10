@@ -6,9 +6,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * Tests for UserRepository interface.
- */
 class UserRepositoryTest {
     @Test
     fun `GIVEN UserRepository fake WHEN configuring getUser THEN should return configured user`() {

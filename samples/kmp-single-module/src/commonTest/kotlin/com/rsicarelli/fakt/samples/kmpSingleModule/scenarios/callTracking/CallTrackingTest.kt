@@ -13,9 +13,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-/**
- * Comprehensive call tracking tests using MutableStateFlow.
- */
 class CallTrackingTest {
     @Test
     fun `GIVEN fake with call tracking WHEN method called once THEN callCount should be 1`() {

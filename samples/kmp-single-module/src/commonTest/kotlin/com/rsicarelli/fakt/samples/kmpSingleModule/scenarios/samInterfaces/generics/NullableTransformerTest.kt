@@ -6,9 +6,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-/**
- * Tests for NullableTransformer SAM interface.
- */
 class NullableTransformerTest {
     @Test
     fun `GIVEN SAM with nullable generic WHEN transforming null THEN should handle correctly`() {

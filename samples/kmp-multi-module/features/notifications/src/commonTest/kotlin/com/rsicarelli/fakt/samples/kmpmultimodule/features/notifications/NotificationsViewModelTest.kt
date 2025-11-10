@@ -20,18 +20,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * Comprehensive tests for NotificationsViewModel demonstrating:
- * - Turbine for StateFlow testing
- * - K2.2+ backing fields pattern
- * - OPTIMISTIC UPDATES pattern (update UI before API)
- * - Rollback on error
- * - Badge counter tracking (unread count)
- * - Concurrency and thread safety
- * - Factory pattern with TestScope extension
- *
- * This serves as a production-ready example for the Fakt community.
- */
 class NotificationsViewModelTest {
 
     companion object {
