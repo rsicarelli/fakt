@@ -346,6 +346,143 @@ Kotlin 2.0's release broke KSP-based mocking libraries. The K2 compiler "fails t
 
 **The Verdict**: KSP is the wrong tool for production-quality fake generation. A compiler-level solution is the only viable path.
 
+### The Mokkery Exception: Compiler Plugins as the Survivor Architecture
+
+While the KSP ecosystem collapsed, one library thrived: **Mokkery**[^20].
+
+Mokkery is a Kotlin/IR compiler plugin—not a KSP processor. This architectural choice proved decisive during the K2 migration. While Mockative and MocKMP struggled with broken `commonTest` generation, Mokkery's developer was proactively testing K2 betas in February 2024 and shipped stable K2 support by May 2024[^21].
+
+**The Real-World Impact**:
+
+The K2 migration created a forced ecosystem migration. StreetComplete, a popular open-source Android app with 10,000+ tests, had to abandon Mockative for Mokkery when K2 broke their test suite[^22]. The Mockative maintainer himself publicly suggested users investigate Mokkery as a viable alternative[^8].
+
+This ecosystem schism validated a critical insight: **compiler plugins, not KSP, are the only stable architecture for KMP test tooling**.
+
+**Why Mokkery Succeeded**:
+
+Mokkery operates *inside* the Kotlin compiler as an IR transformer. When you write `mock<UserRepository>()`, Mokkery's plugin replaces that call with a fully-generated implementation class at the IR level[^23]. This eliminates KSP's fundamental problem: fragile source-set code generation.
+
+Mokkery's API is intentionally designed as a MockK analogue[^24], providing zero-friction migration for KMP developers:
+
+```kotlin
+// Mokkery: Familiar MockK-like DSL
+val repository = mock<BookRepository>()
+every { repository.findAll() } returns flowOf(Book("..."))
+verify(exhaustiveOrder) { repository.findById("1") }
+```
+
+Mokkery is production-ready (v2.10.2), actively maintained, and the current incumbent for KMP mocking[^25]. For teams committed to interaction-based testing, Mokkery is a credible, stable solution.
+
+**The Compiler Plugin Validation**:
+
+Mokkery's success proves the architectural validity of compiler plugins for KMP testing. Both Mokkery and Fakt share this fundamental design decision. This isn't coincidental—it's the *only* path that survives K2's stricter compilation model.
+
+**Where Mokkery and Fakt Diverge**:
+
+The critical difference isn't architecture—it's **testing paradigm coverage**.
+
+Mokkery is a **mocking library** designed exclusively for *interaction-based testing* (verifying that methods were called). Fakt is a **fake generator** that supports *both paradigms*: state-based testing (primary) with built-in interaction tracking through StateFlow call counting.
+
+This distinction reveals itself in Mokkery's documented limitations[^26]. As a mocking library, Mokkery is architecturally *unable* to mock:
+
+- `object` singletons
+- `sealed class` and `sealed interface` hierarchies
+- Top-level functions and extension functions
+- Final classes from third-party dependencies
+
+These aren't bugs—they're the glass ceiling of the mocking paradigm. Mocking requires "fully overridable" types (interfaces, abstract classes). Sealed types, objects, and final classes cannot be "mocked" at runtime.
+
+**Fakt's Dual Paradigm Advantage**:
+
+Fakt doesn't mock—it generates *real implementations* with support for both testing approaches. Every generated fake includes:
+
+- **Behavior configuration** (state-based testing)
+- **StateFlow call tracking** (interaction-based testing)
+- **Thread-safety** (no `var count = 0` footguns)
+
+As documented earlier in "Supporting Both Testing Paradigms," the same Fakt fake can verify state *and* interactions:
+
+```kotlin
+val fake = fakeUserRepository {
+    save { user -> user.copy(id = "generated-id") }
+}
+
+// State-based verification
+val result = fake.save(User("test"))
+assertEquals("generated-id", result.id) // What happened?
+
+// Interaction-based verification (same fake)
+assertEquals(1, fake.saveCallCount.value) // How many times?
+```
+
+This dual paradigm support means you're not forced to choose philosophies—Fakt adapts to your testing needs.
+
+**The Brittleness Trade-off**:
+
+Consider this refactoring scenario that highlights the paradigm difference:
+
+```kotlin
+// Original implementation
+fun checkout() {
+    repository.saveOrder(order)
+}
+
+// Mokkery test (interaction-based ONLY)
+verify(exactly = 1) { repository.saveOrder(order) }
+
+// Refactored implementation (same outcome, different method signature)
+fun checkout() {
+    repository.saveOrderWithAudit(order, auditLog = true)
+}
+
+// Result: Mokkery test BREAKS (false negative)
+// The outcome is identical, but the process changed
+```
+
+The outcome is identical (order saved), but the *process* changed. The mock-based test fails even though no bug exists. This is the brittleness Martin Fowler warned about—tests coupled to *how* code works, not *what* it achieves[^10].
+
+The same refactoring with Fakt:
+
+```kotlin
+// Fakt test (state-based verification)
+val fake = fakeRepository()
+viewModel.checkout()
+assertEquals(1, fake.orders.size) // Assert OUTCOME, not process
+// Test survives refactoring
+```
+
+This test survives because it verifies **state** (was the order saved?), not **interactions** (which method was called?). And when you *do* need interaction verification, Fakt provides it through StateFlow: `assertEquals(1, fake.saveOrderCallCount.value)`.
+
+**Complementary Solutions**:
+
+Mokkery and Fakt serve different philosophical commitments:
+
+| Choose Mokkery When: | Choose Fakt When: |
+|----------------------|-------------------|
+| Interaction-based testing is your standard | State-based testing is your primary approach |
+| MockK muscle memory drives your team | Need both paradigms in one tool |
+| Side-effect verification without observable state | Building test fixtures with controllable behavior |
+| Committed to London School exclusively | Following Google's NiA pattern (state-based) |
+
+For teams with MockK expertise, Mokkery is the natural KMP migration path. For teams adopting state-based testing or needing flexibility between both paradigms, Fakt completes the Kotlin async testing stack (`runTest` + Turbine + Fakes).
+
+**The Architectural Depth Difference**:
+
+Mokkery and Fakt differ even at the compiler level:
+
+- **Mokkery**: IR-only plugin (single-phase, anonymous IR classes, invisible output)
+- **Fakt**: FIR → IR plugin (two-phase, readable `.kt` files, full debuggability)
+
+Fakt's two-phase architecture provides richer semantic information (full type resolution at FIR) and debuggable output (step through generated fakes with breakpoints). Mokkery's IR-only approach is invisible (no physical files), which works well for mocking but limits debuggability.
+
+**Conclusion**:
+
+Mokkery validates the compiler plugin architecture as the survivor of the K2 schism. It's an excellent solution for teams committed to interaction-based testing. Fakt extends this foundation by supporting *both* testing paradigms—state-based verification with optional interaction tracking—while generating real implementations that handle sealed types, objects, and other idiomatic Kotlin patterns that mocking fundamentally cannot support.
+
+The choice isn't "which is better"—it's about **paradigm needs**. Mokkery excels at interaction-based testing. Fakt provides dual paradigm support with architectural advantages for Kotlin's full type system.
+
+---
+
 ### Fakt's FIR → IR Two-Phase Architecture
 
 Fakt uses a **Metro-inspired** production compiler plugin architecture with deep integration into Kotlin's compilation pipeline:
@@ -509,7 +646,7 @@ Fakt represents the convergence of:
 - **Dual paradigm support** (state-based AND interaction-based testing)
 - **Compiler-level stability** (FIR → IR architecture survives K2 updates)
 
-For JVM-only teams, Fakt delivers 40% faster test suites[^1] and more resilient tests. For KMP teams, Fakt is the **only stable, feature-complete testing solution** for `commonTest`.
+For JVM-only teams, Fakt delivers 40% faster test suites[^1] and more resilient tests. For KMP teams, Fakt is the **only stable fake generator** for `commonTest`, complementing Mokkery's mocking capabilities with dual paradigm support and full Kotlin type system coverage.
 
 ---
 
@@ -561,3 +698,17 @@ For JVM-only teams, Fakt delivers 40% faster test suites[^1] and more resilient 
 [^18]: Why we should use wiremock instead of Mockito. Stack Overflow. [https://stackoverflow.com/questions/50726017/why-we-should-use-wiremock-instead-of-mockito](https://stackoverflow.com/questions/50726017/why-we-should-use-wiremock-instead-of-mockito)
 
 [^19]: Stop Breaking My API: A Practical Guide to Contract Testing with Pact. Medium. [https://medium.com/@mohsenny/stop-breaking-my-api-a-practical-guide-to-contract-testing-with-pact-33858d113386](https://medium.com/@mohsenny/stop-breaking-my-api-a-practical-guide-to-contract-testing-with-pact-33858d113386)
+
+[^20]: lupuuss/Mokkery: The mocking library for Kotlin Multiplatform. GitHub. [https://github.com/lupuuss/Mokkery](https://github.com/lupuuss/Mokkery)
+
+[^21]: Kotlin 2.0.0 support · Issue #1 · lupuuss/Mokkery. GitHub. [https://github.com/lupuuss/Mokkery/issues/1](https://github.com/lupuuss/Mokkery/issues/1)
+
+[^22]: Use multiplatform mocking library for tests · Issue #5420 · streetcomplete/StreetComplete. GitHub. [https://github.com/streetcomplete/StreetComplete/issues/5420](https://github.com/streetcomplete/StreetComplete/issues/5420)
+
+[^23]: Kotlin 2.2.0 support · Issue #83 · lupuuss/Mokkery. GitHub. [https://github.com/lupuuss/Mokkery/issues/83](https://github.com/lupuuss/Mokkery/issues/83)
+
+[^24]: Mocking | Mokkery. [https://mokkery.dev/docs/Guides/Mocking/](https://mokkery.dev/docs/Guides/Mocking/)
+
+[^25]: A to Z of Testing in Kotlin Multiplatform. Kinto Technologies. [https://blog.kinto-technologies.com/posts/2024-12-24-tests-in-kmp/](https://blog.kinto-technologies.com/posts/2024-12-24-tests-in-kmp/)
+
+[^26]: Limitations | Mokkery. [https://mokkery.dev/docs/Limitations/](https://mokkery.dev/docs/Limitations/)
