@@ -338,25 +338,66 @@
                 ]
             }
         },
-        "fakt-docs-navigator": {
+        "public-docs-navigator": {
             "type": "domain",
             "enforcement": "suggest",
-            "priority": "low",
-            "description": "Navigation and access to Fakt documentation including testing guidelines, Metro alignment, and architectural patterns",
+            "priority": "medium",
+            "description": "Navigate Fakt's public MkDocs documentation site (docs/) for users learning about Fakt features, multi-module setup, testing patterns, and code generation strategy",
             "promptTriggers": {
                 "keywords": [
                     "documentation",
                     "docs",
-                    "find docs",
-                    "testing guidelines",
-                    "Metro alignment docs",
-                    "architecture docs",
-                    "reference docs",
-                    "where is the doc"
+                    "public docs",
+                    "user guide",
+                    "reference",
+                    "mkdocs",
+                    "codegen strategy",
+                    "fakes over mocks",
+                    "multi-module",
+                    "getting started",
+                    "installation",
+                    "quick start",
+                    "how to use",
+                    "user documentation",
+                    "feature guide",
+                    "testing patterns guide",
+                    "migration guide",
+                    "performance guide"
                 ],
                 "intentPatterns": [
-                    "(find|where|show).*?(doc|documentation|guide)",
-                    "(read|check|consult).*?(doc|documentation|guide)"
+                    "(show|find|where).*?(doc|documentation|guide)",
+                    "how.*?(do I |to )?use.*?fakt",
+                    "how.*?(do I |to )?(setup|install|configure).*?fakt",
+                    "(explain|show|what is).*?(codegen|multi-module|fakes over mocks)",
+                    "(getting started|quick start|first fake)"
+                ]
+            }
+        },
+        "fakt-docs-navigator": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "medium",
+            "description": "Navigate Fakt's internal contributor documentation (.claude/docs/) covering compiler plugin architecture, testing guidelines, Metro patterns, and implementation roadmaps",
+            "promptTriggers": {
+                "keywords": [
+                    "internal docs",
+                    "contributor docs",
+                    ".claude/docs",
+                    "testing guidelines",
+                    "Metro alignment",
+                    "compiler architecture",
+                    "architecture docs",
+                    "implementation roadmap",
+                    "codegen v2",
+                    "FIR implementation",
+                    "IR implementation",
+                    "validation docs",
+                    "development docs"
+                ],
+                "intentPatterns": [
+                    "(find|where|show).*?(internal|contributor).*?(doc|documentation)",
+                    "(testing guidelines|Metro alignment|compiler architecture)",
+                    "(read|check|consult).*?(implementation|architecture).*?doc"
                 ]
             }
         }
