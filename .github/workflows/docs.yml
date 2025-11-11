@@ -1,0 +1,87 @@
+# Generates and deploys Fakt documentation site to GitHub Pages
+name: Fakt Docs Site
+
+on:
+  push:
+    branches: ["main"]
+
+  # Allows manual deployments
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow pushing to `gh-pages` branch
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# Only allow one docs deployment at a time
+concurrency:
+  group: 'pages-dev'
+  cancel-in-progress: false
+
+jobs:
+  docs-site:
+    runs-on: ubuntu-latest
+    if: github.repository == 'rsicarelli/fakt'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install MkDocs dependencies
+        run: |
+          pip install --requirement .github/workflows/mkdocs-requirements.txt
+
+      - name: Extract Fakt version from gradle.properties
+        id: version
+        run: |
+          FAKT_VERSION=$(grep "VERSION_NAME=" gradle.properties | cut -d'=' -f2)
+          echo "FAKT_VERSION=$FAKT_VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $FAKT_VERSION"
+
+      - name: Validate version format
+        run: |
+          VERSION="${{ steps.version.outputs.FAKT_VERSION }}"
+
+          # Check if version is empty
+          if [[ -z "$VERSION" ]]; then
+            echo "ERROR: VERSION_NAME is empty in gradle.properties"
+            exit 1
+          fi
+
+          # Check if version matches x.y.z or x.y.z-SNAPSHOT pattern
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?$ ]]; then
+            echo "ERROR: VERSION_NAME '$VERSION' does not match expected format:"
+            echo "   Expected: x.y.z or x.y.z-SNAPSHOT (e.g., 1.0.0 or 1.0.0-SNAPSHOT)"
+            echo "   Actual: $VERSION"
+            exit 1
+          fi
+
+          echo "Version format is valid: $VERSION"
+
+      - name: Configure Git for Mike
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch gh-pages branch
+        run: |
+          git fetch origin gh-pages:gh-pages || echo "gh-pages branch doesn't exist yet (first deployment)"
+
+      - name: Show current mike versions
+        run: |
+          echo "Current mike versions available:"
+          mike list || echo "No docs site versions found (likely first deployment)"
+
+      - name: Deploy SNAPSHOT Docs with mike
+        if: ${{ success() && contains(steps.version.outputs.FAKT_VERSION, 'SNAPSHOT') }}
+        run: mike deploy --update-aliases --push ${{ steps.version.outputs.FAKT_VERSION }} snapshot
+
+      - name: Deploy Release Docs with mike
+        if: ${{ success() && !contains(steps.version.outputs.FAKT_VERSION, 'SNAPSHOT') }}
+        run: |
+          mike deploy --update-aliases --push ${{ steps.version.outputs.FAKT_VERSION }} latest
