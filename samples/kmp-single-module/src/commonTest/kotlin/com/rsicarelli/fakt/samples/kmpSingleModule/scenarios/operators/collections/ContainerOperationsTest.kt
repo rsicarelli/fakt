@@ -129,16 +129,17 @@ class RangeOperationsTest {
         // Given
         val fake = fakeRangeOperations {
             rangeTo { receiver, other ->
-                receiver..other
+                CustomRange(receiver.value, other.value)
             }
         }
 
         // When
-        val range = with(fake) { 1.rangeTo(10) } // Can use operator form: 1..10
+        val range = with(fake) { CustomNumber(1).rangeTo(CustomNumber(10)) }
 
         // Then
-        assertEquals(1..10, range)
-        assertTrue(5 in range)
+        assertEquals(CustomRange(1, 10), range)
+        assertEquals(1, range.start)
+        assertEquals(10, range.endInclusive)
     }
 
     @Test
@@ -146,17 +147,18 @@ class RangeOperationsTest {
         // Given
         val fake = fakeRangeOperations {
             rangeUntil { receiver, other ->
-                receiver..<other
+                // Exclusive range: endInclusive is one less than the upper bound
+                CustomRange(receiver.value, other.value - 1)
             }
         }
 
         // When
-        val range = with(fake) { 1.rangeUntil(10) } // Can use operator form: 1..<10
+        val range = with(fake) { CustomNumber(1).rangeUntil(CustomNumber(10)) }
 
         // Then
-        assertEquals(1..<10, range)
-        assertTrue(5 in range)
-        assertFalse(10 in range) // Exclusive
+        assertEquals(CustomRange(1, 9), range) // Exclusive: 1..<10 means 1..9
+        assertEquals(1, range.start)
+        assertEquals(9, range.endInclusive) // 9, not 10 (exclusive)
     }
 }
 

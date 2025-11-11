@@ -43,21 +43,29 @@ interface ContainerOperations<K, V> {
 }
 
 /**
- * Test interface for range operators.
+ * Custom types for range operator testing.
+ * Using custom types avoids shadowing built-in Int.rangeTo() and Int.rangeUntil().
+ */
+data class CustomNumber(val value: Int)
+data class CustomRange(val start: Int, val endInclusive: Int)
+
+/**
+ * Test interface for range operators with extension functions.
+ * Tests Fakt's ability to generate fakes for operator extension functions.
  */
 @Fake
 interface RangeOperations {
     /**
-     * Range-to operator.
-     * Usage: 1..10
+     * Range-to operator for custom numbers.
+     * Usage: customNum1..customNum2
      */
-    operator fun Int.rangeTo(other: Int): IntRange
+    operator fun CustomNumber.rangeTo(other: CustomNumber): CustomRange
 
     /**
-     * Range-until operator.
-     * Usage: 1..<10
+     * Range-until operator for custom numbers.
+     * Usage: customNum1..<customNum2
      */
-    operator fun Int.rangeUntil(other: Int): IntRange
+    operator fun CustomNumber.rangeUntil(other: CustomNumber): CustomRange
 }
 
 /**
