@@ -106,50 +106,108 @@ Executes BDD-compliant GIVEN-WHEN-THEN tests with vanilla JUnit5, validates test
 
 ---
 
-## Skill #3: fakt-docs-navigator
+## Skill #3: public-docs-navigator
 
 **Target Description:**
 ```
-Intelligent navigator for Fakt's 80+ documentation files covering architecture, testing guidelines, Metro patterns, generic type handling, implementation roadmaps, and troubleshooting. Use when user asks about project concepts, patterns, guidelines, Metro alignment, testing standards, generic types, phase implementation, or needs reference to specific documentation.
+Navigate Fakt's public MkDocs documentation site (docs/) for users learning about Fakt features, multi-module setup, testing patterns, and code generation strategy. Use when users ask about documentation, guides, multi-module setup, code generation strategy, testing patterns, or need help understanding Fakt features. Provides quick navigation to reference docs, usage guides, multi-module documentation, and troubleshooting resources.
 ```
 
 ### Test Prompts (Should Activate)
 
-**Conceptual questions:**
-1. "What are the testing guidelines for this project?"
-2. "Explain Metro patterns in Fakt"
-3. "What's the status of generic type support?"
-4. "How does the architecture work?"
+**Getting started:**
+1. "How do I get started with Fakt?"
+2. "Show me the installation guide"
+3. "How do I create my first fake?"
+4. "Quick start tutorial for Fakt"
 
-**Documentation lookup:**
-5. "What does the documentation say about generics?"
-6. "Show me the Metro alignment guidelines"
-7. "What's the implementation roadmap?"
-8. "What are the Phase 2 goals?"
+**Feature documentation:**
+5. "How do I use generics in Fakt?"
+6. "Show me how to handle suspend functions"
+7. "What are the configuration options?"
+8. "How do properties work?"
 
-**Best practices:**
-9. "What's the correct way to test interfaces?"
-10. "How should I handle suspend functions?"
-11. "What are the multi-module setup guidelines?"
+**Multi-module:**
+9. "How do I set up multi-module support?"
+10. "Multi-module troubleshooting guide"
+11. "How does KMP multi-module work?"
+12. "Show me the FakeCollectorTask documentation"
 
-**Troubleshooting references:**
-12. "What does the docs say about compilation errors?"
-13. "Are there any known issues with generics?"
-14. "What's the recommended approach for KMP?"
+**Strategic documentation:**
+13. "Explain the code generation strategy"
+14. "Why fakes over mocks?"
+15. "Show me the performance comparison"
+16. "What are the limitations?"
+
+**Migration and guides:**
+17. "How do I migrate from MockK?"
+18. "What are the testing patterns?"
+19. "Show me the migration guide"
 
 ### Negative Tests (Should NOT Activate)
 
-**Action requests (different Skills):**
-- "Debug the IR for UserService" (should activate kotlin-ir-debugger)
-- "Run tests" (should activate bdd-test-runner)
-- "Validate Metro alignment" (should activate metro-pattern-validator)
+**Internal contributor docs (use fakt-docs-navigator):**
+- "What are the testing guidelines for contributors?" (should activate fakt-docs-navigator)
+- "Show me the Metro alignment docs" (should activate fakt-docs-navigator)
+- "What's the compiler architecture?" (should activate fakt-docs-navigator)
 
-**Code-specific:**
-- "What does this code do?" (should use general Read/analysis, not docs)
+**Action requests:**
+- "Generate a fake for UserService" (different task, not documentation)
+- "Run tests" (should activate bdd-test-runner)
 
 ---
 
-## Skill #4: behavior-analyzer-tester
+## Skill #4: fakt-docs-navigator
+
+**Target Description:**
+```
+Navigate Fakt's internal contributor documentation (.claude/docs/, 66 files across 18 directories) covering compiler plugin architecture, testing guidelines, Metro patterns, generic type handling, implementation roadmaps, FIR/IR design, and troubleshooting. Use when discussing internal implementation, compiler architecture, Metro alignment, testing standards, codegen v2, or contributor-level technical details. For public user documentation, use public-docs-navigator instead.
+```
+
+### Test Prompts (Should Activate)
+
+**Contributor guidelines:**
+1. "What are the testing guidelines for this project?"
+2. "Show me the BDD standards"
+3. "What's THE ABSOLUTE STANDARD for testing?"
+
+**Metro patterns:**
+4. "Explain Metro patterns in Fakt"
+5. "Show me the Metro alignment guidelines"
+6. "How does Metro handle generics?"
+7. "What are the Metro FIR/IR patterns?"
+
+**Architecture:**
+8. "How does the compiler architecture work?"
+9. "What's the codegen v2 approach?"
+10. "Show me the FIR implementation plan"
+11. "What's the unified IR native design?"
+
+**Implementation status:**
+12. "What's the status of generic type support?"
+13. "What's the implementation roadmap?"
+14. "What are the Phase 2 goals?"
+15. "Show me the current implementation status"
+
+**Technical deep dives:**
+16. "What does the documentation say about generic scoping?"
+17. "Are there any known issues with class-level generics?"
+18. "What's the validation approach for compilation?"
+
+### Negative Tests (Should NOT Activate)
+
+**Public user docs (use public-docs-navigator):**
+- "How do I install Fakt?" (should activate public-docs-navigator)
+- "Show me the multi-module setup guide" (should activate public-docs-navigator)
+- "How do I use generics?" (should activate public-docs-navigator)
+
+**Action requests:**
+- "Debug the IR for UserService" (should activate kotlin-ir-debugger)
+- "Run tests" (should activate bdd-test-runner)
+
+---
+
+## Skill #5: behavior-analyzer-tester
 
 **Target Description:**
 ```
@@ -278,7 +336,8 @@ Update this file with:
 |-------|-------------|-----------|--------|--------------|
 | kotlin-ir-debugger | 10 | ? | ? | ?% |
 | bdd-test-runner | 14 | ? | ? | ?% |
-| fakt-docs-navigator | 14 | ? | ? | ?% |
+| public-docs-navigator | 19 | ? | ? | ?% |
+| fakt-docs-navigator | 18 | ? | ? | ?% |
 | behavior-analyzer-tester | 10 | ? | ? | ?% |
 
 **Target: >90% success rate per Skill**

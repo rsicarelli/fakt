@@ -1,319 +1,623 @@
-# KtFakes API Specifications - Unified IR-Native Implementation
+# Fakt API Specifications
 
-> **Status**: Production-Ready with Working Examples ✅
-> **Architecture**: Unified IR-Native Compiler Plugin
-> **Testing Standard**: [📋 Testing Guidelines](.claude/docs/validation/testing-guidelines.md)
-> **Last Updated**: September 2025
+> **Status**: Production-Ready
+> **Last Updated**: January 2025
+> **Architecture**: FIR → IR Two-Phase Compiler Plugin
 
-## 🎯 **Overview**
+## Overview
 
-This document provides complete API specifications for KtFakes with **working examples** from our unified IR-native implementation. All examples are validated against the current production code generation.
+Fakt is a Kotlin compiler plugin that generates type-safe test fakes at compile time. This document provides complete API specifications with **real examples from working code**.
 
-## 🚀 **Core API**
+## Core API
 
-### **@Fake Annotation**
+### @Fake Annotation
 
 ```kotlin
-package dev.rsicarelli.ktfake
+package com.rsicarelli.fakt
 
 @Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
-annotation class Fake(
-    val trackCalls: Boolean = false,
-    val builder: Boolean = false,
-    val concurrent: Boolean = false,
-    val scope: String = "test",
-    val dependencies: Array<KClass<*>> = []
-)
+@Retention(AnnotationRetention.BINARY)
+public annotation class Fake
 ```
 
-**Purpose**: Mark interfaces for fake implementation generation
-**Scope**: Compile-time only, no runtime overhead
-**Safety**: Only processed in test source sets
+**Purpose**: Mark interfaces/classes for fake generation
+**Scope**: Compile-time processing, zero runtime overhead
+**Output**: Generated test fakes in test source sets
 
-## 📋 **Working Examples**
+## Generated Code Structure
 
-All examples below are from **real generated code** in our `test-sample` project:
+For each `@Fake` annotated interface, three components are generated:
 
-### **Example 1: Basic Interface with Properties and Methods**
+1. **Implementation Class** - `Fake{InterfaceName}Impl`
+2. **Factory Function** - `fake{interfaceName}()`
+3. **Configuration DSL** - `Fake{InterfaceName}Config`
 
-**Input Interface**:
+## Working Examples
+
+All examples below are from **real generated code** in the kmp-single-module sample project.
+
+### Example 1: Basic Repository Pattern
+
+**Input Interface:**
 ```kotlin
 @Fake
-interface TestService {
-    val someValue: String
-    fun getValue(): String
-    fun setValue(value: String)
+interface UserRepository {
+    val users: List<User>
+    fun findById(id: String): User?
+    fun save(user: User): User
+    fun delete(id: String): Boolean
+    fun findByAge(minAge: Int, maxAge: Int = 100): List<User>
 }
 ```
 
-**Generated Implementation**:
+**Generated Implementation:**
 ```kotlin
-class FakeTestServiceImpl : TestService {
-    private var someValueeBehavior: () -> String = { "" }
-    private var getValueBehavior: () -> String = { "" }
-    private var setValueBehavior: (String) -> Unit = { _ -> Unit }
+class FakeUserRepositoryImpl : UserRepository {
+    // Call tracking (thread-safe with StateFlow)
+    private val _usersCallCount: MutableStateFlow<Int> = MutableStateFlow(0)
+    val usersCallCount: StateFlow<Int> get() = _usersCallCount
 
-    override val someValue: String get() = someValueBehavior()
-    override fun getValue(): String = getValueBehavior()
-    override fun setValue(value: String): Unit = setValueBehavior(value)
+    private val _findByIdCallCount: MutableStateFlow<Int> = MutableStateFlow(0)
+    val findByIdCallCount: StateFlow<Int> get() = _findByIdCallCount
 
-    internal fun configuresomeValue(behavior: () -> String) { someValueBehavior = behavior }
-    internal fun configureGetValue(behavior: () -> String) { getValueBehavior = behavior }
-    internal fun configureSetValue(behavior: (String) -> Unit) { setValueBehavior = behavior }
+    private val _saveCallCount: MutableStateFlow<Int> = MutableStateFlow(0)
+    val saveCallCount: StateFlow<Int> get() = _saveCallCount
+
+    private val _deleteCallCount: MutableStateFlow<Int> = MutableStateFlow(0)
+    val deleteCallCount: StateFlow<Int> get() = _deleteCallCount
+
+    private val _findByAgeCallCount: MutableStateFlow<Int> = MutableStateFlow(0)
+    val findByAgeCallCount: StateFlow<Int> get() = _findByAgeCallCount
+
+    // Behavior storage
+    private var usersBehavior: () -> List<User> = { emptyList() }
+    private var findByIdBehavior: (String) -> User? = { null }
+    private var saveBehavior: (User) -> User = { it }
+    private var deleteBehavior: (String) -> Boolean = { false }
+    private var findByAgeBehavior: (Int, Int) -> List<User> = { _, _ -> emptyList() }
+
+    // Property implementation
+    override val users: List<User>
+        get() {
+            _usersCallCount.update { it + 1 }
+            return usersBehavior()
+        }
+
+    // Method implementations
+    override fun findById(id: String): User? {
+        _findByIdCallCount.update { it + 1 }
+        return findByIdBehavior(id)
+    }
+
+    override fun save(user: User): User {
+        _saveCallCount.update { it + 1 }
+        return saveBehavior(user)
+    }
+
+    override fun delete(id: String): Boolean {
+        _deleteCallCount.update { it + 1 }
+        return deleteBehavior(id)
+    }
+
+    override fun findByAge(minAge: Int, maxAge: Int): List<User> {
+        _findByAgeCallCount.update { it + 1 }
+        return findByAgeBehavior(minAge, maxAge)
+    }
+
+    // Configuration methods (internal)
+    internal fun configureUsers(behavior: () -> List<User>) {
+        usersBehavior = behavior
+    }
+
+    internal fun configureFindById(behavior: (String) -> User?) {
+        findByIdBehavior = behavior
+    }
+
+    internal fun configureSave(behavior: (User) -> User) {
+        saveBehavior = behavior
+    }
+
+    internal fun configureDelete(behavior: (String) -> Boolean) {
+        deleteBehavior = behavior
+    }
+
+    internal fun configureFindByAge(behavior: (Int, Int) -> List<User>) {
+        findByAgeBehavior = behavior
+    }
 }
 ```
 
-**Generated Factory Function**:
+**Generated Factory:**
 ```kotlin
-fun fakeTestService(configure: FakeTestServiceConfig.() -> Unit = {}): TestService {
-    return FakeTestServiceImpl().apply { FakeTestServiceConfig(this).configure() }
+fun fakeUserRepository(
+    configure: FakeUserRepositoryConfig.() -> Unit = {}
+): FakeUserRepositoryImpl {
+    return FakeUserRepositoryImpl().apply {
+        FakeUserRepositoryConfig(this).configure()
+    }
 }
 ```
 
-**Generated Configuration DSL**:
+**Generated Configuration DSL:**
 ```kotlin
-class FakeTestServiceConfig(private val fake: FakeTestServiceImpl) {
-    fun someValue(behavior: () -> String) { fake.configuresomeValue(behavior) }
-    fun getValue(behavior: () -> String) { fake.configureGetValue(behavior) }
-    fun setValue(behavior: (String) -> Unit) { fake.configureSetValue(behavior) }
+class FakeUserRepositoryConfig(private val fake: FakeUserRepositoryImpl) {
+    fun findById(behavior: (String) -> User?) { fake.configureFindById(behavior) }
+    fun save(behavior: (User) -> User) { fake.configureSave(behavior) }
+    fun delete(behavior: (String) -> Boolean) { fake.configureDelete(behavior) }
+    fun findByAge(behavior: (Int, Int) -> List<User>) { fake.configureFindByAge(behavior) }
+    fun users(behavior: () -> List<User>) { fake.configureUsers(behavior) }
 }
 ```
 
-### **Example 2: Suspend Functions Interface**
+### Example 2: Suspend Functions with Generics
 
-**Input Interface**:
+**Input Interface:**
 ```kotlin
 @Fake
-interface AsyncUserService {
-    suspend fun getUser(id: String): String
-    suspend fun updateUser(id: String, name: String): Boolean
+interface AsyncDataService {
+    suspend fun fetchData(): String
+    suspend fun <T> processData(data: T): T
+    suspend fun batchProcess(items: List<String>): List<String>
 }
 ```
 
-**Generated Implementation**:
+**Generated Implementation:**
 ```kotlin
-class FakeAsyncUserServiceImpl : AsyncUserService {
-    private var getUserBehavior: suspend (String) -> String = { _ -> "" }
-    private var updateUserBehavior: suspend (String, String) -> Boolean = { _, _ -> false }
+class FakeAsyncDataServiceImpl : AsyncDataService {
+    // Call tracking
+    private val _fetchDataCallCount: MutableStateFlow<Int> = MutableStateFlow(0)
+    val fetchDataCallCount: StateFlow<Int> get() = _fetchDataCallCount
 
-    override suspend fun getUser(id: String): String = getUserBehavior(id)
-    override suspend fun updateUser(id: String, name: String): Boolean = updateUserBehavior(id, name)
+    private val _processDataCallCount: MutableStateFlow<Int> = MutableStateFlow(0)
+    val processDataCallCount: StateFlow<Int> get() = _processDataCallCount
 
-    internal fun configureGetUser(behavior: suspend (String) -> String) { getUserBehavior = behavior }
-    internal fun configureUpdateUser(behavior: suspend (String, String) -> Boolean) { updateUserBehavior = behavior }
+    private val _batchProcessCallCount: MutableStateFlow<Int> = MutableStateFlow(0)
+    val batchProcessCallCount: StateFlow<Int> get() = _batchProcessCallCount
+
+    // Behavior storage
+    private var fetchDataBehavior: suspend () -> String = { "" }
+    private var processDataBehavior: suspend (Any?) -> Any? = { it }
+    private var batchProcessBehavior: suspend (List<String>) -> List<String> = { it }
+
+    // Suspend function implementations
+    override suspend fun fetchData(): String {
+        _fetchDataCallCount.update { it + 1 }
+        return fetchDataBehavior()
+    }
+
+    override suspend fun <T : Any?> processData(data: T): T {
+        _processDataCallCount.update { it + 1 }
+        @Suppress("UNCHECKED_CAST")
+        return processDataBehavior(data as Any?) as T
+    }
+
+    override suspend fun batchProcess(items: List<String>): List<String> {
+        _batchProcessCallCount.update { it + 1 }
+        return batchProcessBehavior(items)
+    }
+
+    // Configuration methods
+    internal fun configureFetchData(behavior: suspend () -> String) {
+        fetchDataBehavior = behavior
+    }
+
+    internal fun <T : Any?> configureProcessData(behavior: suspend (T) -> T) {
+        @Suppress("UNCHECKED_CAST")
+        processDataBehavior = behavior as suspend (Any?) -> Any?
+    }
+
+    internal fun configureBatchProcess(behavior: suspend (List<String>) -> List<String>) {
+        batchProcessBehavior = behavior
+    }
 }
 ```
 
-**Generated Configuration DSL**:
+**Generated Configuration DSL:**
 ```kotlin
-class FakeAsyncUserServiceConfig(private val fake: FakeAsyncUserServiceImpl) {
-    fun getUser(behavior: suspend (String) -> String) { fake.configureGetUser(behavior) }
-    fun updateUser(behavior: suspend (String, String) -> Boolean) { fake.configureUpdateUser(behavior) }
+class FakeAsyncDataServiceConfig(private val fake: FakeAsyncDataServiceImpl) {
+    fun fetchData(behavior: suspend () -> String) {
+        fake.configureFetchData(behavior)
+    }
+
+    fun <T : Any?> processData(behavior: suspend (T) -> T) {
+        fake.configureProcessData(behavior)
+    }
+
+    fun batchProcess(behavior: suspend (List<String>) -> List<String>) {
+        fake.configureBatchProcess(behavior)
+    }
 }
 ```
 
-### **Example 3: Method-Only Interface**
+## Usage API
 
-**Input Interface**:
+### Basic Usage with Default Behavior
+
 ```kotlin
-@Fake
-interface AnalyticsService {
-    fun track(event: String)
-    fun identify(userId: String)
-    fun flush()
+@Test
+fun `GIVEN fake repository WHEN using defaults THEN should return smart defaults`() = runTest {
+    // Given
+    val repo = fakeUserRepository()
+
+    // When & Then
+    assertEquals(emptyList(), repo.users)
+    assertNull(repo.findById("123"))
+    assertEquals(false, repo.delete("123"))
 }
 ```
 
-**Generated Implementation**:
+### Custom Behavior Configuration
+
 ```kotlin
-class FakeAnalyticsServiceImpl : AnalyticsService {
-    private var trackBehavior: (String) -> Unit = { _ -> Unit }
-    private var identifyBehavior: (String) -> Unit = { _ -> Unit }
-    private var flushBehavior: () -> Unit = { Unit }
+@Test
+fun `GIVEN configured fake WHEN calling methods THEN should use custom behavior`() = runTest {
+    // Given
+    val testUser = User("123", "John Doe", 30)
+    val repo = fakeUserRepository {
+        findById { id ->
+            if (id == "123") testUser else null
+        }
+        save { user ->
+            user.copy(name = user.name.uppercase())
+        }
+        delete { id -> id.isNotEmpty() }
+    }
 
-    override fun track(event: String): Unit = trackBehavior(event)
-    override fun identify(userId: String): Unit = identifyBehavior(userId)
-    override fun flush(): Unit = flushBehavior()
-
-    internal fun configureTrack(behavior: (String) -> Unit) { trackBehavior = behavior }
-    internal fun configureIdentify(behavior: (String) -> Unit) { identifyBehavior = behavior }
-    internal fun configureFlush(behavior: () -> Unit) { flushBehavior = behavior }
+    // When & Then
+    assertEquals(testUser, repo.findById("123"))
+    assertNull(repo.findById("456"))
+    assertEquals("JANE DOE", repo.save(User("456", "Jane Doe", 25)).name)
+    assertTrue(repo.delete("123"))
 }
 ```
 
-## 🎯 **Generated API Patterns**
+### Call Tracking Verification
 
-### **Factory Function Pattern**
 ```kotlin
-// Pattern: fake{InterfaceName}(configure: Fake{InterfaceName}Config.() -> Unit = {})
-fun fakeTestService(configure: FakeTestServiceConfig.() -> Unit = {}): TestService
-fun fakeAsyncUserService(configure: FakeAsyncUserServiceConfig.() -> Unit = {}): AsyncUserService
-fun fakeAnalyticsService(configure: FakeAnalyticsServiceConfig.() -> Unit = {}): AnalyticsService
-```
+@Test
+fun `GIVEN fake service WHEN calling methods THEN should track call counts`() = runTest {
+    // Given
+    val repo = fakeUserRepository()
 
-### **Implementation Class Pattern**
-```kotlin
-// Pattern: Fake{InterfaceName}Impl : {InterfaceName}
-class FakeTestServiceImpl : TestService
-class FakeAsyncUserServiceImpl : AsyncUserService
-class FakeAnalyticsServiceImpl : AnalyticsService
-```
+    // When
+    repo.findById("1")
+    repo.findById("2")
+    repo.findById("3")
+    repo.save(User("4", "Test", 25))
 
-### **Configuration DSL Pattern**
-```kotlin
-// Pattern: Fake{InterfaceName}Config
-class FakeTestServiceConfig(private val fake: FakeTestServiceImpl)
-class FakeAsyncUserServiceConfig(private val fake: FakeAsyncUserServiceImpl)
-class FakeAnalyticsServiceConfig(private val fake: FakeAnalyticsServiceImpl)
-```
-
-## 🔧 **Usage API**
-
-### **Basic Usage**
-```kotlin
-// Default behavior (using smart defaults)
-val service = fakeTestService()
-assertEquals("", service.getValue()) // String default
-assertEquals("", service.someValue) // Property default
-
-// Custom behavior configuration
-val customService = fakeTestService {
-    getValue { "custom-value" }
-    someValue { "awesome-someValue" }
-    setValue { value -> println("Setting: $value") }
+    // Then
+    assertEquals(3, repo.findByIdCallCount.value)
+    assertEquals(1, repo.saveCallCount.value)
+    assertEquals(0, repo.deleteCallCount.value)
 }
 ```
 
-### **Suspend Function Usage**
+### Suspend Function Testing
+
 ```kotlin
 @Test
 fun `GIVEN async service WHEN calling suspend functions THEN should work correctly`() = runTest {
-    // Default behavior
-    val service = fakeAsyncUserService()
-    assertEquals("", service.getUser("123"))
-    assertEquals(false, service.updateUser("123", "New Name"))
-
-    // Custom behavior
-    val customService = fakeAsyncUserService {
-        getUser { id -> "User-$id" }
-        updateUser { id, name -> true }
+    // Given
+    val service = fakeAsyncDataService {
+        fetchData { "test-data" }
+        processData<String> { data -> data.uppercase() }
+        batchProcess { items -> items.map { it.reversed() } }
     }
 
-    assertEquals("User-123", customService.getUser("123"))
-    assertEquals(true, customService.updateUser("123", "Updated"))
+    // When & Then
+    assertEquals("test-data", service.fetchData())
+    assertEquals("HELLO", service.processData("hello"))
+    assertEquals(listOf("cba", "fed"), service.batchProcess(listOf("abc", "def")))
+
+    // Verify call tracking
+    assertEquals(1, service.fetchDataCallCount.value)
+    assertEquals(1, service.processDataCallCount.value)
+    assertEquals(1, service.batchProcessCallCount.value)
 }
 ```
 
-### **Testing Patterns**
+### Reactive Testing with StateFlow
+
 ```kotlin
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class UserServiceTest {
+@Test
+fun `GIVEN fake service WHEN observing call counts THEN should receive updates`() = runTest {
+    // Given
+    val service = fakeAsyncDataService()
+    val callCounts = mutableListOf<Int>()
 
-    @Test
-    fun `GIVEN fake user service WHEN getting user THEN should return configured value`() = runTest {
-        // Given
-        val service = fakeAsyncUserService {
-            getUser { id -> "User-$id" }
+    // Collect call count changes
+    val job = launch {
+        service.fetchDataCallCount.collect { count ->
+            callCounts.add(count)
         }
-
-        // When
-        val result = service.getUser("123")
-
-        // Then
-        assertEquals("User-123", result)
     }
 
-    @Test
-    fun `GIVEN analytics service WHEN tracking events THEN should execute configured behavior`() = runTest {
-        // Given
-        val events = mutableListOf<String>()
-        val analytics = fakeAnalyticsService {
-            track { event -> events.add(event) }
-        }
+    // When
+    delay(50)
+    service.fetchData()
+    delay(50)
+    service.fetchData()
+    delay(50)
+    service.fetchData()
+    delay(50)
 
-        // When
-        analytics.track("user_login")
-        analytics.track("page_view")
-
-        // Then
-        assertEquals(listOf("user_login", "page_view"), events)
-    }
+    // Then
+    assertEquals(listOf(0, 1, 2, 3), callCounts)
+    job.cancel()
 }
 ```
 
-## 📊 **Type System Support**
+## Generated Patterns
 
-### **Smart Default Values**
+### Naming Conventions
+
+```kotlin
+// Interface name → Generated names
+@Fake interface UserService
+// → class FakeUserServiceImpl
+// → fun fakeUserService()
+// → class FakeUserServiceConfig
+
+@Fake interface ApiClient
+// → class FakeApiClientImpl
+// → fun fakeApiClient()
+// → class FakeApiClientConfig
+```
+
+### Method Name Conventions
+
+```kotlin
+// Interface method → Generated components
+fun getUser(id: String): User
+
+// Behavior field:
+private var getUserBehavior: (String) -> User = { id -> User(id, "", 0) }
+
+// Call tracking:
+private val _getUserCallCount: MutableStateFlow<Int> = MutableStateFlow(0)
+val getUserCallCount: StateFlow<Int> get() = _getUserCallCount
+
+// Override implementation:
+override fun getUser(id: String): User {
+    _getUserCallCount.update { it + 1 }
+    return getUserBehavior(id)
+}
+
+// Configuration method:
+internal fun configureGetUser(behavior: (String) -> User) {
+    getUserBehavior = behavior
+}
+
+// DSL method:
+fun getUser(behavior: (String) -> User) { fake.configureGetUser(behavior) }
+```
+
+## Type System
+
+### Smart Default Values
+
+Fakt generates intelligent defaults based on return types:
+
 ```kotlin
 // Primitive types
-String → ""
-Int → 0
-Boolean → false
-Unit → Unit
+String          → { "" }
+Int             → { 0 }
+Long            → { 0L }
+Float           → { 0.0f }
+Double          → { 0.0 }
+Boolean         → { false }
+Char            → { '\u0000' }
 
-// Collections
-List<T> → emptyList()
-Map<K,V> → emptyMap()
-Set<T> → emptySet()
-
-// Special types
-Result<T> → Result.success("")
-Flow<T> → emptyFlow()
+// Unit type
+Unit            → { Unit }
 
 // Nullable types
-String? → null
-Int? → null
-Any? → null
+String?         → { null }
+User?           → { null }
+T?              → { null }
 
-// Function types
-() -> String → { "" }
-(String) -> Unit → { _ -> Unit }
-suspend (T) -> R → { _ -> defaultValue<R>() }
+// Collections
+List<T>         → { emptyList() }
+Set<T>          → { emptySet() }
+Map<K, V>       → { emptyMap() }
+Array<T>        → { emptyArray() }
+
+// Kotlin stdlib types
+Pair<A, B>      → { Pair(defaultA, defaultB) }
+Triple<A, B, C> → { Triple(defaultA, defaultB, defaultC) }
+Result<T>       → { Result.success(defaultT) }
+Sequence<T>     → { emptySequence() }
+
+// Custom types
+User            → Identity function { it }
+CustomClass     → Identity function { it }
 ```
 
-### **Function Type Resolution**
+### Generic Type Handling
+
+**Method-Level Generics:**
 ```kotlin
-// Method signatures are preserved exactly
-interface Repository {
-    fun process(data: String, callback: (String) -> Unit): Boolean
+@Fake
+interface DataProcessor {
+    fun <T> process(data: T): T
+    suspend fun <R> transform(input: R): R
 }
 
-// Generated:
-private var processBehavior: (String, (String) -> Unit) -> Boolean = { _, _ -> false }
-override fun process(data: String, callback: (String) -> Unit): Boolean = processBehavior(data, callback)
-```
+// Generated with type erasure workarounds:
+private var processBehavior: (Any?) -> Any? = { it }
 
-## 🚨 **Current Limitations**
-
-### **Phase 2A: Method-Level Generics** ⚠️
-```kotlin
-// Currently requires workaround
-interface GenericService {
-    fun <T> process(data: T): T  // Method-level generic challenge
-}
-
-// Workaround: Use interface-level generics
-interface GenericService<T> {
-    fun process(data: T): T  // ✅ Fully supported
+internal fun <T : Any?> configureProcess(behavior: (T) -> T) {
+    @Suppress("UNCHECKED_CAST")
+    processBehavior = behavior as (Any?) -> Any?
 }
 ```
 
-### **Advanced Features** 🔮
+**Class-Level Generics:**
 ```kotlin
-// Future features (not yet implemented)
-@Fake(trackCalls = true)  // Call tracking
-@Fake(builder = true)     // Builder pattern
-@Fake(dependencies = [...]) // Cross-module dependencies
+@Fake
+interface Repository<T> {
+    fun save(item: T): T
+    fun findAll(): List<T>
+}
+
+// Generated with concrete type parameter handling:
+class FakeRepositoryImpl<T> : Repository<T> {
+    private var saveBehavior: (T) -> T = { it }
+    private var findAllBehavior: () -> List<T> = { emptyList() }
+
+    override fun save(item: T): T {
+        _saveCallCount.update { it + 1 }
+        return saveBehavior(item)
+    }
+
+    override fun findAll(): List<T> {
+        _findAllCallCount.update { it + 1 }
+        return findAllBehavior()
+    }
+}
 ```
 
-## 🔗 **Related Documentation**
+### Higher-Order Functions
 
-- **[📋 Testing Guidelines](.claude/docs/validation/testing-guidelines.md)** - GIVEN-WHEN-THEN patterns
-- **[📋 Type Safety Validation](.claude/docs/validation/type-safety-validation.md)** - Type system testing
-- **[📋 Working Examples](.claude/docs/examples/working-examples.md)** - Complete usage examples
-- **[📋 Generic Scoping Analysis](.claude/docs/analysis/generic-scoping-analysis.md)** - Technical challenges
+```kotlin
+@Fake
+interface EventHandler {
+    fun onEvent(callback: (String) -> Unit)
+    fun process(transform: (Int) -> String): String
+}
 
----
+// Generated preserving function types:
+private var onEventBehavior: ((String) -> Unit) -> Unit = { callback -> Unit }
+private var processBehavior: ((Int) -> String) -> String = { transform -> "" }
+```
 
-**This API specification reflects the current production-ready state of KtFakes with working examples validated against real generated code.**
+## Call Tracking API
+
+### StateFlow Integration
+
+Every generated fake includes thread-safe call tracking via StateFlow:
+
+```kotlin
+class FakeXxxImpl : Xxx {
+    // Private mutable state
+    private val _{methodName}CallCount: MutableStateFlow<Int> = MutableStateFlow(0)
+
+    // Public read-only accessor
+    val {methodName}CallCount: StateFlow<Int>
+        get() = _{methodName}CallCount
+
+    // Automatic increment on method call
+    override fun {methodName}(...): ReturnType {
+        _{methodName}CallCount.update { it + 1 }
+        return {methodName}Behavior(...)
+    }
+}
+```
+
+### Call Tracking Usage
+
+**Simple Verification:**
+```kotlin
+val service = fakeUserRepository()
+service.findById("123")
+assertEquals(1, service.findByIdCallCount.value)
+```
+
+**Multiple Calls:**
+```kotlin
+val service = fakeUserRepository()
+repeat(5) { service.findById("$it") }
+assertEquals(5, service.findByIdCallCount.value)
+```
+
+**Flow Collection:**
+```kotlin
+val service = fakeUserRepository()
+val counts = mutableListOf<Int>()
+
+launch {
+    service.findByIdCallCount.collect { counts.add(it) }
+}
+
+service.findById("1")
+delay(100)
+assertEquals(listOf(0, 1), counts)
+```
+
+## Thread Safety
+
+All generated fakes are **thread-safe by design**:
+
+1. **Call tracking** uses `MutableStateFlow` with atomic updates via `.update { }`
+2. **Behavior configuration** happens before concurrent access (during DSL setup)
+3. **Factory pattern** ensures each test gets an isolated instance
+
+```kotlin
+@Test
+fun `GIVEN fake service WHEN called concurrently THEN should track correctly`() = runTest {
+    // Given
+    val service = fakeUserRepository()
+
+    // When - 100 concurrent calls
+    (1..100).map { id ->
+        launch {
+            service.findById("$id")
+        }
+    }.forEach { it.join() }
+
+    // Then - All calls tracked
+    assertEquals(100, service.findByIdCallCount.value)
+}
+```
+
+## Output Location
+
+Generated fakes are placed in test source sets:
+
+```
+build/generated/fakt/
+├── commonTest/kotlin/              # KMP common test code
+│   └── com/example/package/
+│       └── FakeXxxImpl.kt
+├── jvmTest/kotlin/                 # JVM-specific tests
+│   └── com/example/package/
+│       └── FakeXxxImpl.kt
+└── test/kotlin/                    # Single-platform projects
+    └── com/example/package/
+        └── FakeXxxImpl.kt
+```
+
+## Compilation Flow
+
+```
+Source Code
+     ↓
+[@Fake Annotation Detected]
+     ↓
+┌─────────────────────────┐
+│  PHASE 1: FIR Analysis  │
+│  • Detect @Fake         │
+│  • Validate interface   │
+│  • Extract metadata     │
+└─────────────────────────┘
+     ↓
+┌─────────────────────────┐
+│  PHASE 2: IR Generation │
+│  • Create IR nodes      │
+│  • Generate impl class  │
+│  • Generate factory     │
+│  • Generate DSL         │
+│  • Add call tracking    │
+└─────────────────────────┘
+     ↓
+Generated Fakes (Test Source Set)
+     ↓
+Compilation Success ✓
+```
+
+## Related Documentation
+
+- `.claude/docs/api/annotations.md` - @Fake annotation reference
+- `.claude/docs/api/generated-api.md` - Generated code patterns
+- `.claude/docs/validation/testing-guidelines.md` - GIVEN-WHEN-THEN testing standards
+- `docs/introduction/why-fakt.md` - Design philosophy and motivation

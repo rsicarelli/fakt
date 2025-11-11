@@ -95,7 +95,7 @@ All trigger patterns are defined in `.claude/skills/skill-rules.json`:
 
 ---
 
-## 📚 Available Skills (12 Total)
+## 📚 Available Skills (13 Total)
 
 ### 🔍 Analysis Skills (4)
 
@@ -274,7 +274,7 @@ User: "Check if IrTypeParameter API is stable"
 
 ---
 
-### 🛠️ Development & Knowledge (2)
+### 🛠️ Development & Knowledge (3)
 
 #### 11. `skill-creator`
 **Purpose**: Meta-skill for creating new Claude Code skills
@@ -293,20 +293,53 @@ User: "Check if IrTypeParameter API is stable"
 
 ---
 
-#### 12. `fakt-docs-navigator`
-**Purpose**: Intelligent navigation through 80+ Fakt documentation files
+#### 12. `public-docs-navigator`
+**Purpose**: Navigate Fakt's public MkDocs documentation site for user guides and feature documentation
 
 **Auto-Activates On**:
-- Keywords: "documentation", "docs", "find docs", "testing guidelines", "Metro alignment docs"
-- Intent: "(find|where|show).*?doc"
+- Keywords: "documentation", "docs", "public docs", "mkdocs", "getting started", "multi-module", "codegen strategy"
+- Intent: "(show|find|where).*?doc", "how.*?use.*?fakt", "(explain|show).*?(codegen|multi-module)"
 
 **Use Cases**:
-- Finding relevant documentation quickly
-- Accessing testing guidelines, architecture docs
-- Navigating implementation roadmaps
-- Referencing troubleshooting guides
+- Finding user-facing documentation (installation, quick start, guides)
+- Accessing multi-module setup tutorials and troubleshooting
+- Referencing code generation strategy and architecture decisions
+- Learning about fakes vs mocks performance analysis
 
-**Priority**: **LOW** (documentation access is optional)
+**Documentation Coverage**:
+- 29 files in docs/ (public MkDocs site)
+- Introduction (5 files): overview, why-fakt, installation, quick-start, features
+- Usage (5 files): basic-usage, suspend-functions, generics, properties, call-tracking
+- Guides (3 files): testing-patterns, migration, performance
+- Multi-Module (6 files): comprehensive KMP multi-module documentation
+- Reference (6 files): API, codegen-strategy, fakes-over-mocks, configuration, compatibility, limitations
+
+**Priority**: **MEDIUM** (proactively helps users find relevant documentation)
+
+---
+
+#### 13. `fakt-docs-navigator`
+**Purpose**: Navigate Fakt's internal contributor documentation for compiler architecture and implementation details
+
+**Auto-Activates On**:
+- Keywords: "internal docs", "contributor docs", ".claude/docs", "testing guidelines", "Metro alignment", "compiler architecture"
+- Intent: "(find|where|show).*?(internal|contributor).*?doc", "(testing guidelines|Metro alignment)"
+
+**Use Cases**:
+- Accessing internal testing guidelines and BDD standards
+- Finding Metro alignment patterns and architectural decisions
+- Navigating implementation roadmaps and phase documentation
+- Referencing FIR/IR implementation details and codegen v2 architecture
+
+**Documentation Coverage**:
+- 66 files across 18 directories in .claude/docs/ (internal contributor docs)
+- validation/ (4 files): testing-guidelines.md (THE ABSOLUTE STANDARD), compilation-validation.md
+- development/ (5 files): metro-alignment.md, kotlin-api-reference.md, decision-tree.md
+- implementation/ (4 files + generics/): roadmap.md, fir-full-support-plan.md
+- architecture/ (4 files): unified-ir-native.md, code-generation-strategies.md
+- codegen-v2/ (2 files): README.md, ADR.md (Architecture Decision Record)
+
+**Priority**: **MEDIUM** (helps contributors navigate internal documentation)
 
 ---
 
@@ -504,10 +537,11 @@ See `skill-creator` skill for detailed guidance.
 - `interface-analyzer` - Structural analysis is occasional
 - `behavior-analyzer-tester` - Test generation is periodic
 - `implementation-tracker` - Status checks are intermittent
+- `public-docs-navigator` - Proactively helps with user documentation
+- `fakt-docs-navigator` - Helps contributors navigate internal docs
 
 ### Low (Activate Only for Explicit Requests)
 - `skill-creator` - Skill creation is rare
-- `fakt-docs-navigator` - Documentation access is optional
 
 ---
 
@@ -521,6 +555,6 @@ See `skill-creator` skill for detailed guidance.
 ---
 
 **Last Updated**: January 2025
-**Total Skills**: 12 (4 Analysis + 3 Core Workflows + 3 Validation + 2 Development/Knowledge)
+**Total Skills**: 13 (4 Analysis + 3 Core Workflows + 3 Validation + 3 Development/Knowledge)
 **Auto-Activation**: Enabled via UserPromptSubmit hook
 **Configuration**: `.claude/skills/skill-rules.json`

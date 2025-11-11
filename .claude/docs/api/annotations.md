@@ -1,296 +1,339 @@
-# KtFakes Annotations Reference
+# Fakt Annotations Reference
 
-> **Purpose**: Complete reference for all KtFakes annotations and their usage
-> **Status**: Production-Ready Core + Future Features Documented
-> **Testing Standard**: [📋 Testing Guidelines](.claude/docs/validation/testing-guidelines.md)
+> **Status**: Production-Ready
+> **Last Updated**: January 2025
+> **Package**: `com.rsicarelli.fakt`
 
-## 🎯 **Core Annotation: @Fake**
+## @Fake Annotation
 
-### **Basic Definition**
+The `@Fake` annotation is the single, simple annotation used to mark interfaces or classes for fake generation.
+
+### Definition
+
 ```kotlin
-package dev.rsicarelli.ktfake
+package com.rsicarelli.fakt
 
+/**
+ * Primary annotation for marking interfaces/classes for fake generation.
+ *
+ * This annotation enables compile-time generation of thread-safe fake implementations
+ * that can be used in tests. The generated fakes follow the factory function pattern
+ * to ensure instance isolation and eliminate race conditions.
+ *
+ * ## Basic Usage
+ * ```kotlin
+ * @Fake
+ * interface UserService {
+ *     suspend fun getUser(id: String): User
+ * }
+ *
+ * // Usage in tests
+ * val userService = fakeUserService {
+ *     getUser { id -> User(id, "Test User") }
+ * }
+ * ```
+ *
+ * ## Thread Safety
+ * Generated fakes are thread-safe by default through instance-based design.
+ * Each call to the factory function creates a new isolated instance.
+ */
 @Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
-annotation class Fake(
-    val trackCalls: Boolean = false,
-    val builder: Boolean = false,
-    val concurrent: Boolean = false,
-    val scope: String = "test",
-    val dependencies: Array<KClass<*>> = []
-)
+@Retention(AnnotationRetention.BINARY)
+public annotation class Fake
 ```
 
-### **Parameters Reference**
+### Characteristics
 
-#### **trackCalls: Boolean = false**
-**Status**: 🔮 Future Feature (Phase 2B)
-**Purpose**: Enable method call tracking and verification
+- **No Parameters**: The annotation is intentionally simple with no configuration parameters
+- **Target**: Can only be applied to classes (interfaces and classes)
+- **Retention**: BINARY - available during compilation and in compiled code
+- **Thread-Safe**: Generated implementations use StateFlow for call tracking
+- **Test-Only**: Generated code is placed in test source sets (commonTest, jvmTest, etc.)
+
+### Usage Examples
+
+#### Basic Interface
 
 ```kotlin
-@Fake(trackCalls = true)
-interface UserService {
-    fun getUser(id: String): User
-    fun updateUser(user: User): Boolean
+@Fake
+interface AnalyticsService {
+    fun track(event: String)
+    fun identify(userId: String)
 }
-
-// Future generated API:
-val service = fakeUserService()
-service.getUser("123")
-service.getUser("456")
-
-// Verification API (future):
-verify(service).getUser("123") // Called once
-verify(service).getUser(any()) // Called twice
-verify(service).updateUser(never()) // Never called
 ```
 
-#### **builder: Boolean = false**
-**Status**: 🔮 Future Feature (Phase 2B)
-**Purpose**: Generate builder pattern for data class creation
+#### Interface with Properties
 
 ```kotlin
-@Fake(builder = true)
+@Fake
 interface UserRepository {
+    val users: List<User>
+    fun findById(id: String): User?
     fun save(user: User): User
 }
-
-// Future generated API:
-val user = buildUser {
-    id = "123"
-    name = "John Doe"
-    email = "john@example.com"
-}
 ```
 
-#### **concurrent: Boolean = false**
-**Status**: 🔮 Future Feature (Phase 2B)
-**Purpose**: Thread-safe fake implementation with synchronization
+#### Suspend Functions
 
-```kotlin
-@Fake(concurrent = true)
-interface CacheService {
-    fun put(key: String, value: Any)
-    fun get(key: String): Any?
-}
-
-// Generated with thread-safe behavior storage
-// Uses ConcurrentHashMap and atomic operations
-```
-
-#### **scope: String = "test"**
-**Status**: ✅ Current Implementation
-**Purpose**: Control where fakes are generated
-
-```kotlin
-@Fake(scope = "test")        // Default: test source sets only
-@Fake(scope = "debug")       // Debug builds only
-@Fake(scope = "all")         // All source sets (NOT recommended)
-```
-
-**Security Validation**:
-```kotlin
-@Test
-fun `GIVEN fake annotation WHEN in main source set THEN should reject generation`() = runTest {
-    // Security constraint: fakes only in test source sets
-    // Compiler plugin validates source set type before generation
-}
-```
-
-#### **dependencies: Array<KClass<*>> = []**
-**Status**: 🔮 Future Feature (Phase 2C)
-**Purpose**: Cross-module fake dependency injection
-
-```kotlin
-@Fake(dependencies = [UserRepository::class, EmailService::class])
-interface UserManager {
-    fun createUser(data: UserData): User
-}
-
-// Future generated API with dependency injection:
-val userManager = fakeUserManager {
-    // Automatic injection of fake dependencies
-    dependencies {
-        userRepository = fakeUserRepository { ... }
-        emailService = fakeEmailService { ... }
-    }
-}
-```
-
-## 🔧 **Usage Patterns**
-
-### **Basic Usage (Current)**
 ```kotlin
 @Fake
-interface ApiService {
-    suspend fun fetchData(): Result<String>
-    fun processData(data: String): Boolean
-}
-
-// Generated factory function
-val service = fakeApiService {
-    fetchData { Result.success("test-data") }
-    processData { data -> data.isNotEmpty() }
-}
-```
-
-### **Advanced Configuration (Current)**
-```kotlin
-@Test
-fun `GIVEN complex service WHEN configuring behaviors THEN should work correctly`() = runTest {
-    // Given
-    val apiService = fakeApiService {
-        fetchData {
-            if (Math.random() > 0.5) Result.success("data")
-            else Result.failure(Exception("Network error"))
-        }
-        processData { data ->
-            println("Processing: $data")
-            true
-        }
-    }
-
-    // When & Then
-    val result = apiService.fetchData()
-    assertTrue(result.isSuccess || result.isFailure)
-    assertTrue(apiService.processData("test"))
-}
-```
-
-## 📋 **Annotation Validation**
-
-### **Compile-Time Validation**
-```kotlin
-@Test
-fun `GIVEN invalid annotation parameters WHEN compiling THEN should report errors`() = runTest {
-    // Invalid target - should fail compilation
-    // @Fake
-    // class MyClass { ... } // Error: @Fake only for interfaces
-
-    // Invalid scope - should warn
-    // @Fake(scope = "invalid")
-    // interface Service { ... } // Warning: Unknown scope
-}
-```
-
-### **Source Set Validation**
-```kotlin
-@Test
-fun `GIVEN fake annotation WHEN in production code THEN should be ignored`() = runTest {
-    // Security test: production code should not process @Fake
-    // Only test source sets: src/test/kotlin, src/jvmTest/kotlin, etc.
-}
-```
-
-## 🔮 **Future Annotations (Design)**
-
-### **@FakeConfig**
-```kotlin
-@Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
-annotation class FakeConfig(
-    val defaultBehavior: DefaultBehavior = DefaultBehavior.RETURN_DEFAULTS,
-    val strictMode: Boolean = false,
-    val generateDocs: Boolean = true
-)
-
-enum class DefaultBehavior {
-    RETURN_DEFAULTS,  // Current behavior
-    THROW_EXCEPTION,  // Throw for unconfigured methods
-    NO_OP            // Do nothing for Unit methods
-}
-```
-
-### **@CallTracking**
-```kotlin
-@Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.SOURCE)
-annotation class CallTracking(
-    val enabled: Boolean = true,
-    val captureArgs: Boolean = true,
-    val captureReturn: Boolean = false
-)
-
-// Usage:
-@Fake(trackCalls = true)
-interface UserService {
-    @CallTracking(captureArgs = true, captureReturn = true)
-    fun getUser(id: String): User
-
-    @CallTracking(enabled = false)
-    fun internalMethod(): Unit  // Not tracked
-}
-```
-
-### **@MockBehavior**
-```kotlin
-@Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.SOURCE)
-annotation class MockBehavior(
-    val defaultReturn: String = "",
-    val throwsException: KClass<out Exception> = Nothing::class,
-    val delay: Long = 0L  // For suspend functions
-)
-
-// Usage:
-@Fake
-interface ApiService {
-    @MockBehavior(defaultReturn = """{"status": "ok"}""")
+interface AsyncDataService {
     suspend fun fetchData(): String
-
-    @MockBehavior(throwsException = NetworkException::class)
-    suspend fun uploadData(data: String): Unit
+    suspend fun processData(data: String): Boolean
 }
 ```
 
-## 🧪 **Testing Annotation Behavior**
+#### Generic Methods
 
-### **Annotation Processing Tests**
+```kotlin
+@Fake
+interface DataProcessor {
+    suspend fun <T : Any?> processData(data: T): T
+    fun <T> transform(input: T): T
+}
+```
+
+#### SAM Interfaces (Single Abstract Method)
+
+```kotlin
+@Fake
+fun interface StringFormatter {
+    fun format(input: String): String
+}
+```
+
+## Generated Features
+
+For each `@Fake` annotated interface, the compiler plugin generates:
+
+### 1. Implementation Class
+
+```kotlin
+class Fake{InterfaceName}Impl : {InterfaceName} {
+    // Call tracking via StateFlow (thread-safe)
+    private val _{methodName}CallCount: MutableStateFlow<Int> = MutableStateFlow(0)
+    val {methodName}CallCount: StateFlow<Int> get() = _{methodName}CallCount
+
+    // Behavior storage
+    private var {methodName}Behavior: {LambdaType} = {defaultValue}
+
+    // Interface implementation with call counting
+    override fun {methodName}({params}): {ReturnType} {
+        _{methodName}CallCount.update { it + 1 }
+        return {methodName}Behavior({args})
+    }
+
+    // Configuration methods (internal)
+    internal fun configure{MethodName}(behavior: {LambdaType}) {
+        {methodName}Behavior = behavior
+    }
+}
+```
+
+### 2. Factory Function
+
+```kotlin
+fun fake{interfaceName}(
+    configure: Fake{InterfaceName}Config.() -> Unit = {}
+): Fake{InterfaceName}Impl {
+    return Fake{InterfaceName}Impl().apply {
+        Fake{InterfaceName}Config(this).configure()
+    }
+}
+```
+
+### 3. Configuration DSL
+
+```kotlin
+class Fake{InterfaceName}Config(private val fake: Fake{InterfaceName}Impl) {
+    fun {methodName}(behavior: {LambdaType}) {
+        fake.configure{MethodName}(behavior)
+    }
+}
+```
+
+### 4. Call Tracking API
+
+All generated fakes include automatic call tracking:
+
+```kotlin
+val service = fakeUserRepository()
+
+// Each method has a corresponding call count
+service.findById("123")
+service.findById("456")
+
+// Access call counts via StateFlow
+assertEquals(2, service.findByIdCallCount.value)
+assertEquals(0, service.saveCallCount.value)
+```
+
+## Supported Constructs
+
+### ✅ Fully Supported
+
+- **Interfaces** - Primary target for @Fake annotation
+- **Abstract classes** - Full support for abstract class faking
+- **Open classes** - Generates fakes for open classes
+- **Final classes** - Generates fakes for final classes
+- **Properties** (val, var) - Both mutable and immutable properties
+- **Methods** (fun) - Regular functions with any signature
+- **Suspend functions** - Full coroutine support
+- **Generic methods** - Method-level type parameters (e.g., `<T> process(data: T): T`)
+- **Generic classes** - Class-level type parameters (e.g., `interface Repository<T>`)
+- **Default parameters** - Methods with default parameter values
+- **Nullable types** - Full null safety support
+- **Collections** - List, Set, Map, etc.
+- **Higher-order functions** - Functions that accept or return functions
+- **SAM interfaces** - Single Abstract Method (fun interface)
+- **Companion objects** - Interfaces with companion objects
+- **Sealed classes/interfaces** - Support for sealed hierarchies
+- **Enum properties** - Properties with enum types
+- **Variance** (in, out) - Covariant and contravariant type parameters
+- **Type constraints** - Generic constraints (e.g., `T : Comparable<T>`)
+
+### ⚠️ Limitations
+
+None identified. Fakt has comprehensive support for all Kotlin language constructs.
+
+## Validation Rules
+
+The compiler plugin performs several validations:
+
+### Compile-Time Checks
+
+1. **Target Validation**: `@Fake` can only be applied to classes (interfaces, abstract classes, open/final classes)
+2. **Source Set Validation**: Generated fakes are only placed in test source sets
+3. **Member Validation**: All interface/abstract members must be fakeable
+
+### What Happens During Compilation
+
+```
+@Fake Annotation Found
+        ↓
+FIR Phase: Detect and Validate
+        ↓
+IR Phase: Generate Implementation
+        ↓
+Output: {InterfaceName}Fakes.kt in test source set
+        ↓
+Contains:
+  - FakeXxxImpl (implementation)
+  - fakeXxx() (factory)
+  - FakeXxxConfig (DSL)
+  - Call tracking API (StateFlow)
+```
+
+## Usage Patterns
+
+### Test Setup
+
 ```kotlin
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class AnnotationProcessingTest {
+class UserServiceTest {
 
     @Test
-    fun `GIVEN interface with Fake annotation WHEN processing THEN should generate fakes`() = runTest {
-        // Test annotation detection and processing
-    }
+    fun `GIVEN user service WHEN fetching user THEN should return configured value`() = runTest {
+        // Given
+        val service = fakeUserRepository {
+            findById { id -> User(id, "Test User") }
+        }
 
-    @Test
-    fun `GIVEN interface without Fake annotation WHEN processing THEN should skip generation`() = runTest {
-        // Test annotation requirement validation
-    }
+        // When
+        val user = service.findById("123")
 
-    @Test
-    fun `GIVEN Fake annotation with invalid parameters WHEN processing THEN should report error`() = runTest {
-        // Test parameter validation
+        // Then
+        assertEquals("Test User", user?.name)
+        assertEquals(1, service.findByIdCallCount.value)
     }
 }
 ```
 
-### **Generated Code Validation**
+### Call Count Verification
+
 ```kotlin
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class GeneratedCodeValidationTest {
-
-    @Test
-    fun `GIVEN annotated interface WHEN generated THEN should preserve annotation intent`() = runTest {
-        // Validate that generated code reflects annotation parameters
+@Test
+fun `GIVEN analytics service WHEN tracking multiple events THEN should count all calls`() = runTest {
+    // Given
+    val events = mutableListOf<String>()
+    val analytics = fakeAnalyticsService {
+        track { event -> events.add(event) }
     }
 
-    @Test
-    fun `GIVEN scope parameter WHEN generating THEN should respect source set constraints`() = runTest {
-        // Test scope validation and security constraints
-    }
+    // When
+    analytics.track("login")
+    analytics.track("page_view")
+    analytics.track("logout")
+
+    // Then
+    assertEquals(3, analytics.trackCallCount.value)
+    assertEquals(listOf("login", "page_view", "logout"), events)
 }
 ```
 
-## 🔗 **Related Documentation**
+### Flow-Based Testing
 
-- **[📋 API Specifications](.claude/docs/api/specifications.md)** - Complete API reference
-- **[📋 Testing Guidelines](.claude/docs/validation/testing-guidelines.md)** - GIVEN-WHEN-THEN patterns
-- **[📋 Type Safety Validation](.claude/docs/validation/type-safety-validation.md)** - Type system behavior
-- **[📋 Working Examples](.claude/docs/examples/working-examples.md)** - Practical usage patterns
+```kotlin
+@Test
+fun `GIVEN service WHEN observing call counts THEN should react to changes`() = runTest {
+    // Given
+    val service = fakeUserRepository()
+    val callCounts = mutableListOf<Int>()
 
----
+    // Observe call count changes
+    launch {
+        service.findByIdCallCount.collect { count ->
+            callCounts.add(count)
+        }
+    }
 
-**This annotation reference covers both current production features and documented future enhancements for KtFakes development planning.**
+    // When
+    service.findById("1")
+    service.findById("2")
+
+    // Then
+    delay(100) // Allow collection
+    assertEquals(listOf(0, 1, 2), callCounts)
+}
+```
+
+## Migration from Other Frameworks
+
+### From MockK
+
+```kotlin
+// Before (MockK)
+val service = mockk<UserRepository>()
+every { service.findById("123") } returns User("123", "John")
+verify(exactly = 1) { service.findById("123") }
+
+// After (Fakt)
+val service = fakeUserRepository {
+    findById { id -> User(id, "John") }
+}
+service.findById("123")
+assertEquals(1, service.findByIdCallCount.value)
+```
+
+### From Mockito
+
+```kotlin
+// Before (Mockito)
+val service = mock(UserRepository::class.java)
+`when`(service.findById("123")).thenReturn(User("123", "John"))
+verify(service, times(1)).findById("123")
+
+// After (Fakt)
+val service = fakeUserRepository {
+    findById { id -> User(id, "John") }
+}
+service.findById("123")
+assertEquals(1, service.findByIdCallCount.value)
+```
+
+## Related Documentation
+
+- `.claude/docs/api/specifications.md` - Complete API specifications with examples
+- `.claude/docs/api/generated-api.md` - Detailed generated code reference
+- `docs/introduction/why-fakt.md` - Why Fakt exists and design philosophy
+- `.claude/docs/validation/testing-guidelines.md` - Testing patterns with Fakt
