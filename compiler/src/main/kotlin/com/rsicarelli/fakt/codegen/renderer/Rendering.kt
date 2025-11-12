@@ -125,7 +125,7 @@ public fun CodeClass.renderTo(builder: CodeBuilder) {
  * @param builder The [CodeBuilder] to write to
  */
 public fun CodeFunction.renderTo(builder: CodeBuilder) {
-    val modifiersStr = buildString {
+    val modifiersStr = buildString(capacity = 50) {
         if (modifiers.isNotEmpty()) {
             append(modifiers.joinToString(" ") { it.name.lowercase() })
             append(" ")
@@ -247,7 +247,7 @@ public fun CodeType.render(): String = when (this) {
  *
  * @return Type parameter as Kotlin source string
  */
-public fun CodeTypeParameter.render(): String = buildString {
+public fun CodeTypeParameter.render(): String = buildString(capacity = 40) {
     if (variance != CodeTypeParameter.Variance.INVARIANT) {
         append("${variance.name.lowercase()} ")
     }
@@ -263,7 +263,7 @@ public fun CodeTypeParameter.render(): String = buildString {
  *
  * @return Parameter as Kotlin source string
  */
-public fun CodeParameter.render(): String = buildString {
+public fun CodeParameter.render(): String = buildString(capacity = 50) {
     if (isVararg) append("vararg ")
     append("$name: ${type.render()}")
     defaultValue?.let { append(" = ${it.render()}") }

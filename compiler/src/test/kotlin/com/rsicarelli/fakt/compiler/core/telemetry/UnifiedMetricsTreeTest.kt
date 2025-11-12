@@ -253,7 +253,7 @@ class UnifiedMetricsTreeTest {
 
             // THEN: Should handle overflow without crashing
             assertContains(result, "VeryLongInterfaceNameThatWillDefinitelyOverflowTheTargetColumnWidth")
-            assertContains(result, "total") // Time should still appear
+            assertContains(result, "µs") // Time should still appear
         }
 
     @Test

@@ -32,14 +32,14 @@ import com.rsicarelli.fakt.compiler.api.TimeFormatter
  * ├─ Total IR time                                                             1.2ms
  * ├─ Total time                                                                1.4ms
  * ├─ Interfaces: 3
- * │  ├─ UserService                                                            580µs total
+ * │  ├─ UserService                                                            580µs
  * │  │  ├─ FIR analysis: 0 type parameters, 5 members                          45µs
  * │  │  └─ IR generation: FakeUserServiceImpl 73 LOC                           535µs
- * │  ├─ DataCache                                                              340µs total
+ * │  ├─ DataCache                                                              340µs
  * │  │  ├─ FIR analysis: 1 type parameters, 3 members                          40µs
  * │  │  └─ IR generation: FakeDataCacheImpl 58 LOC                             300µs
  * └─ Classes: 1
- *    └─ DataHolder                                                             120µs total
+ *    └─ DataHolder                                                             120µs
  *       ├─ FIR analysis: 1 type parameters, 2 members                          30µs
  *       └─ IR generation: FakeDataHolderImpl 45 LOC                            90µs
  * ```
@@ -142,7 +142,7 @@ data class UnifiedMetricsTree(
         val irTime = TimeFormatter.format(metric.irTimeNanos)
 
         // Line 1: Fake name with total time
-        appendLine(formatLine("$prefix ${metric.name}", "$totalTime total", targetColumn))
+        appendLine(formatLine("$prefix ${metric.name}", totalTime, targetColumn))
 
         // Line 2: FIR analysis details
         val firLine = "${detailPrefix}├─ FIR analysis: ${metric.firTypeParamCount} type parameters, ${metric.firMemberCount} members"

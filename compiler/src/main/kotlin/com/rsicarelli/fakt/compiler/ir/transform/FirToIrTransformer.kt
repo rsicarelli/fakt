@@ -109,17 +109,15 @@ internal class FirToIrTransformer {
         // 3. Format type parameters with bounds
         val typeParameters = firMetadata.typeParameters.map { formatTypeParameter(it) }
 
-        // 4. Compute generic pattern (reuses existing GenericPatternAnalyzer)
-        val genericPattern = patternAnalyzer.analyzeInterface(irClass)
-
+        // 4. Pass pattern analyzer for lazy computation
         return IrGenerationMetadata(
             interfaceName = firMetadata.simpleName,
             packageName = firMetadata.packageName,
             typeParameters = typeParameters,
             properties = allProperties,
             functions = allFunctions,
-            genericPattern = genericPattern,
             sourceInterface = irClass,
+            patternAnalyzer = patternAnalyzer,
         )
     }
 
@@ -170,9 +168,7 @@ internal class FirToIrTransformer {
         // 5. Format type parameters with bounds
         val typeParameters = firMetadata.typeParameters.map { formatTypeParameter(it) }
 
-        // 6. Compute generic pattern (reuses existing GenericPatternAnalyzer)
-        val genericPattern = patternAnalyzer.analyzeInterface(irClass)
-
+        // 6. Pass pattern analyzer for lazy computation
         return IrClassGenerationMetadata(
             className = firMetadata.simpleName,
             packageName = firMetadata.packageName,
@@ -181,8 +177,8 @@ internal class FirToIrTransformer {
             openProperties = openProperties,
             abstractMethods = abstractMethods,
             openMethods = openMethods,
-            genericPattern = genericPattern,
             sourceClass = irClass,
+            patternAnalyzer = patternAnalyzer,
         )
     }
 

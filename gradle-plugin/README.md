@@ -112,7 +112,7 @@ fakt {
     // Enable/disable plugin
     enabled.set(true)
 
-    // Logging verbosity: QUIET, INFO, DEBUG, TRACE
+    // Logging verbosity: QUIET, INFO, DEBUG
     logLevel.set(LogLevel.DEBUG)
 
     // Use FIR-based analysis (experimental)

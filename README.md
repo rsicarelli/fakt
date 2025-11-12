@@ -396,8 +396,7 @@ import com.rsicarelli.fakt.compiler.api.LogLevel
 fakt {
     logLevel.set(LogLevel.INFO)  // Default: concise summary
     // LogLevel.QUIET  - Zero output (CI/CD)
-    // LogLevel.DEBUG  - Detailed breakdown
-    // LogLevel.TRACE  - Full IR details
+    // LogLevel.DEBUG  - Detailed breakdown with FIR + IR details
 }
 ```
 

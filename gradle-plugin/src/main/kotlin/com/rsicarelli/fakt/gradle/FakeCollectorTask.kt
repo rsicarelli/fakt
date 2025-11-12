@@ -352,7 +352,7 @@ public abstract class FakeCollectorTask : DefaultTask() {
                     destFile.parentFile.mkdirs()
                     sourceFile.copyTo(destFile, overwrite = true)
 
-                    faktLogger?.trace("${sourceFile.name} → $platform (${fileContent.length} bytes)")
+                    faktLogger?.debug("${sourceFile.name} → $platform (${fileContent.length} bytes)")
 
                     // Update statistics
                     collectedCount++

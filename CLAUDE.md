@@ -101,7 +101,7 @@ make help
 
 ### **Logging & Telemetry System**
 
-Fakt includes a professional telemetry system with 4 verbosity levels for troubleshooting and performance analysis.
+Fakt includes a professional telemetry system with 3 verbosity levels for troubleshooting and performance analysis.
 
 **Type-Safe Configuration:**
 
@@ -111,9 +111,8 @@ import com.rsicarelli.fakt.compiler.api.LogLevel
 
 fakt {
     logLevel.set(LogLevel.INFO)    // ✅ Type-safe! (default - concise summary)
-    // logLevel.set(LogLevel.DEBUG)   // ✅ IDE autocomplete
-    logLevel.set(LogLevel.TRACE)   // ✅ Compile-time validation
-    logLevel.set(LogLevel.QUIET)   // ✅ No typos possible
+    logLevel.set(LogLevel.DEBUG)   // ✅ IDE autocomplete, detailed output
+    logLevel.set(LogLevel.QUIET)   // ✅ Compile-time validation
 }
 ```
 
@@ -127,7 +126,7 @@ fakt {
 📁 build/generated/fakt/commonTest/kotlin
 ```
 
-**DEBUG - Detailed breakdown:**
+**DEBUG - Detailed breakdown with FIR + IR details:**
 ```
 [DISCOVERY] 120ms - 15 interfaces, 3 classes
 [FILTERING] 85ms - Cache hits: 6/15 (40%)
@@ -135,15 +134,14 @@ fakt {
   ├─ PredicateCombiner (18ms) - NoGenerics
   ├─ PairMapper<T,U,K,V> (42ms) ⚠️ - ClassLevel
 [GENERATION] 580ms (avg 58ms/interface)
+  ├─ FIR + IR node inspection, type resolution steps
+  ├─ Import resolution, source set mapping
 ```
-
-**TRACE - Everything (IR details, type resolution, etc)**
 
 **When to use each level:**
 - **QUIET**: CI/CD builds (zero overhead)
 - **INFO**: Normal development (default, <1ms overhead)
-- **DEBUG**: Troubleshooting generation issues (~5-10ms overhead)
-- **TRACE**: Deep debugging, bug reports (~20-50ms overhead)
+- **DEBUG**: Troubleshooting, deep debugging, bug reports (~5-10ms overhead)
 
 ### **Skills System (Auto-Activation)**
 

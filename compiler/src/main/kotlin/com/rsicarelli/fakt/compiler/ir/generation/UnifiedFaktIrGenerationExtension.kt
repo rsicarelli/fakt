@@ -149,7 +149,7 @@ class UnifiedFaktIrGenerationExtension(
         val validatedClasses = sharedContext.metadataStorage.getAllClasses()
 
         if (validatedInterfaces.isEmpty() && validatedClasses.isEmpty()) {
-            logger.trace("No validated interfaces or classes to generate")
+            logger.debug("No validated interfaces or classes to generate")
             return
         }
 
@@ -271,7 +271,7 @@ class UnifiedFaktIrGenerationExtension(
             }
         }
 
-        logger.trace("Built IR class map with ${map.size} classes")
+        logger.debug("Built IR class map with ${map.size} classes")
         return map
     }
 
