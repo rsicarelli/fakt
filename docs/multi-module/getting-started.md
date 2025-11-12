@@ -52,7 +52,7 @@ mkdir -p core/analytics/src/commonMain/kotlin/com/example/core/analytics
 ```kotlin
 // core/analytics/build.gradle.kts
 plugins {
-    kotlin("multiplatform") version "2.2.10"
+    kotlin("multiplatform") version "2.2.20"
     id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
 }
 
@@ -141,7 +141,7 @@ mkdir -p core/analytics-fakes/src
 ```kotlin
 // core/analytics-fakes/build.gradle.kts
 plugins {
-    kotlin("multiplatform") version "2.2.10"
+    kotlin("multiplatform") version "2.2.20"
     id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
 }
 
@@ -263,7 +263,7 @@ Now use the collected fakes in your app or feature modules.
 ```kotlin
 // app/build.gradle.kts
 plugins {
-    kotlin("multiplatform") version "2.2.10"
+    kotlin("multiplatform") version "2.2.20"
 }
 
 kotlin {
@@ -536,7 +536,7 @@ Centralize versions using Gradle version catalogs:
 ```toml
 [versions]
 fakt = "1.0.0-SNAPSHOT"
-kotlin = "2.2.10"
+kotlin = "2.2.20"
 coroutines = "1.10.1"
 
 [plugins]
@@ -680,7 +680,7 @@ include(":app")
 
 ```kotlin
 plugins {
-    kotlin("multiplatform") version "2.2.10"
+    kotlin("multiplatform") version "2.2.20"
     id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
 }
 
@@ -713,7 +713,7 @@ fakt {
 
 ```kotlin
 plugins {
-    kotlin("multiplatform") version "2.2.10"
+    kotlin("multiplatform") version "2.2.20"
     id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
 }
 
@@ -743,7 +743,7 @@ fakt {
 
 ```kotlin
 plugins {
-    kotlin("multiplatform") version "2.2.10"
+    kotlin("multiplatform") version "2.2.20"
 }
 
 kotlin {

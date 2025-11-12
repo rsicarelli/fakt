@@ -117,7 +117,7 @@ mkdir -p core/analytics-fakes/src
 ```kotlin
 // core/analytics-fakes/build.gradle.kts
 plugins {
-    kotlin("multiplatform") version "2.2.10"
+    kotlin("multiplatform") version "2.2.20"
     id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
 }
 

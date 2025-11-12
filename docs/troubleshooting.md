@@ -32,7 +32,7 @@ Common issues and solutions.
 
 **Causes**:
 
-1. **Kotlin version mismatch**: Ensure you're on Kotlin 2.2.10+
+1. **Kotlin version mismatch**: Ensure you're on Kotlin 2.2.20+
 2. **Fakt version incompatibility**: Update Fakt to match your Kotlin version
 
 **Solution**:
@@ -40,7 +40,7 @@ Common issues and solutions.
 ```kotlin
 // gradle/libs.versions.toml
 [versions]
-kotlin = "2.2.10"
+kotlin = "2.2.20"
 fakt = "1.0.0-SNAPSHOT"
 ```
 

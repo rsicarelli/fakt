@@ -412,7 +412,7 @@ Ready to set up multi-module support? Follow the [Getting Started Guide](getting
 ## Requirements
 
 - **Fakt**: 1.0.0-SNAPSHOT+
-- **Kotlin**: 2.2.10+
+- **Kotlin**: 2.2.20+
 - **Gradle**: 8.0+
 - **Multi-Module Project**: Producer + Collector + Consumer setup
 

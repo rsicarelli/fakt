@@ -179,7 +179,7 @@ Error: This plugin requires Kotlin 2.0.0+
 **Cause**: Project using Kotlin 1.x
 **Solution**: Update to Kotlin 2.0.0+:
 ```kotlin
-kotlin("jvm") version "2.2.10"
+kotlin("jvm") version "2.2.20"
 ```
 
 ---

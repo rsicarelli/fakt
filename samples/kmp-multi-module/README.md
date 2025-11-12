@@ -207,7 +207,7 @@ class AppCoordinatorTest {
 **Setup:** Add to root `build.gradle.kts`:
 ```kotlin
 plugins {
-    kotlin("multiplatform") version "2.1.0" apply false
+    kotlin("multiplatform") version "2.2.20" apply false
     id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT" apply false
 }
 ```

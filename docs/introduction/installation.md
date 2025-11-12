@@ -100,7 +100,7 @@ dependencies {
 
 | Requirement      | Version    |
 |------------------|------------|
-| **Kotlin**       | 2.2.10+    |
+| **Kotlin**       | 2.2.20+    |
 | **Gradle**       | 8.0+       |
 | **JVM**          | 11+        |
 
@@ -121,7 +121,7 @@ Fakt-generated code appears in `build/generated/fakt/` and is automatically inde
 
 | Fakt Version     | Kotlin Version Support |
 |------------------|------------------------|
-| 1.0.0-SNAPSHOT   | 2.2.10 - 2.2.30        |
+| 1.0.0-SNAPSHOT   | 2.2.20 - 2.2.30        |
 
 Fakt follows forward compatibility on a best-effort basis (usually N+.2 minor versions).
 

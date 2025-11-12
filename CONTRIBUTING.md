@@ -26,7 +26,7 @@ This project adheres to the Contributor Covenant [Code of Conduct](CODE_OF_CONDU
 ### Prerequisites
 
 - **JDK 21** (Temurin recommended)
-- **Kotlin 2.2.10+**
+- **Kotlin 2.2.20+**
 - **Gradle 8.0+** (wrapper provided)
 - **Git**
 

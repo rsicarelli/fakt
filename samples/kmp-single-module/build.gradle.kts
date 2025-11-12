@@ -26,5 +26,5 @@ kotlin {
 }
 
 fakt {
-    logLevel.set(LogLevel.INFO)
+    logLevel.set(LogLevel.DEBUG)
 }
