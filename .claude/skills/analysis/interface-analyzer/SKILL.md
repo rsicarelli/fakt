@@ -499,7 +499,7 @@ Expected success: 60% (original) vs 100% (simplified)
    - Plan migration to Phase 2
 
 4. Track in roadmap:
-   .claude/docs/implementation/generics/ROADMAP.md
+   .claude/docs/implementation/generics/complex-generics-strategy.md
 ```
 
 ## Supporting Files

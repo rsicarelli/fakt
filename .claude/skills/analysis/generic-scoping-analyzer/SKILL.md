@@ -559,8 +559,8 @@ Long-term Plan:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📚 REFERENCES:
-- Deep Analysis: .claude/docs/analysis/generic-scoping-analysis.md
-- Phase 2 Roadmap: .claude/docs/implementation/generics/ROADMAP.md
+- Technical Reference: .claude/docs/implementation/generics/technical-reference.md
+- Generic Strategies: .claude/docs/implementation/generics/complex-generics-strategy.md
 - Implementation Guide: .claude/docs/implementation/generics/
 
 ═══════════════════════════════════════════════════

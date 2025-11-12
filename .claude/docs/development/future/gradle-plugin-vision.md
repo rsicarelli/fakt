@@ -1,8 +1,12 @@
-# KtFakes Gradle Plugin Design - MAP Approach
+# Gradle Plugin Vision - MAP Approach (FUTURE DESIGN)
 
-> **Context**: Multi-module enterprise project configuration with Metro-aligned patterns
-> **Date**: September 2025
-> **Status**: Design phase - addressing annotation ownership and breaking changes
+> ⚠️ **This is a DESIGN VISION document, not current implementation**  
+> **For current implementation, see**: `.claude/docs/architecture/gradle-plugin.md`
+>
+> **Context**: Multi-module enterprise project configuration with Metro-aligned patterns  
+> **Date**: September 2025  
+> **Status**: Design phase - ~80% of features NOT YET IMPLEMENTED  
+> **Purpose**: Roadmap for future enhancements beyond current minimal implementation
 
 ## 🎯 **Design Philosophy**
 

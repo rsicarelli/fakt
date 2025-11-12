@@ -422,8 +422,8 @@ DSL Type Safety:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📚 REFERENCES:
-- Validation Docs: .claude/docs/validation/compilation-validation.md
-- Type Safety: .claude/docs/validation/type-safety-validation.md
+- Validation Docs: .claude/docs/development/validation/compilation-validation.md
+- Type Safety: .claude/docs/development/validation/type-safety-validation.md
 - Troubleshooting: Use compilation-error-analyzer Skill
 
 ═══════════════════════════════════════════════════
@@ -454,7 +454,7 @@ Recommended actions:
 
 For generic-related errors:
 - Consult: generic-scoping-analyzer Skill
-- Reference: .claude/docs/analysis/generic-scoping-analysis.md
+- Reference: .claude/docs/implementation/generics/technical-reference.md
 ```
 
 ## Supporting Files

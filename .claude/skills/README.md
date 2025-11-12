@@ -332,12 +332,11 @@ User: "Check if IrTypeParameter API is stable"
 - Referencing FIR/IR implementation details and codegen v2 architecture
 
 **Documentation Coverage**:
-- 66 files across 18 directories in .claude/docs/ (internal contributor docs)
-- validation/ (4 files): testing-guidelines.md (THE ABSOLUTE STANDARD), compilation-validation.md
-- development/ (5 files): metro-alignment.md, kotlin-api-reference.md, decision-tree.md
-- implementation/ (4 files + generics/): roadmap.md, fir-full-support-plan.md
-- architecture/ (4 files): unified-ir-native.md, code-generation-strategies.md
-- codegen-v2/ (2 files): README.md, ADR.md (Architecture Decision Record)
+- 70+ files across 3 main directories in .claude/docs/ (internal contributor docs)
+- development/validation/ (4 files): testing-guidelines.md (THE ABSOLUTE STANDARD), compilation-validation.md
+- development/ (12 files): metro-alignment.md, kotlin-api-reference.md, decision-tree.md, contexts/, examples/, future/
+- implementation/ (7 subdirs): architecture/, codegen-v2/, generics/, patterns/, multi-module/, source_sets/, api/
+- troubleshooting/ (1 file): common-issues.md
 
 **Priority**: **MEDIUM** (helps contributors navigate internal documentation)
 
@@ -550,7 +549,7 @@ See `skill-creator` skill for detailed guidance.
 - [Commands README](../commands/README.md) - Slash commands that use skills
 - [CLAUDE.md](../../CLAUDE.md) - Main project documentation with skills overview
 - [skill-rules.json](./skill-rules.json) - Trigger configuration
-- [Testing Guidelines](../docs/validation/testing-guidelines.md) - BDD standards
+- [Testing Guidelines](../docs/development/validation/testing-guidelines.md) - BDD standards
 
 ---
 
