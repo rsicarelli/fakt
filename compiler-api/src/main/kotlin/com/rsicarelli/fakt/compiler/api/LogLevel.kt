@@ -8,8 +8,7 @@ package com.rsicarelli.fakt.compiler.api
  * Controls how much information is displayed during compilation:
  * - [QUIET]: No output except errors (fastest compilation, minimal noise)
  * - [INFO]: Concise summary with key metrics (default, production-ready)
- * - [DEBUG]: Detailed breakdown by compilation phase (troubleshooting)
- * - [TRACE]: Exhaustive details including IR nodes and type resolution (deep debugging)
+ * - [DEBUG]: Detailed breakdown with FIR + IR details and type resolution (troubleshooting)
  *
  * **Usage in build.gradle.kts (Type-Safe!):**
  * ```kotlin
@@ -18,16 +17,14 @@ package com.rsicarelli.fakt.compiler.api
  * fakt {
  *     logLevel.set(LogLevel.INFO)    // ✅ Type-safe!
  *     logLevel.set(LogLevel.DEBUG)   // ✅ IDE autocomplete
- *     logLevel.set(LogLevel.TRACE)   // ✅ Compile-time validation
- *     logLevel.set(LogLevel.QUIET)
+ *     logLevel.set(LogLevel.QUIET)   // ✅ Compile-time validation
  * }
  * ```
  *
  * **Performance Impact:**
  * - QUIET: Zero overhead (recommended for CI/CD)
  * - INFO: Negligible overhead (<1ms)
- * - DEBUG: Minor overhead (~5-10ms for aggregation)
- * - TRACE: Moderate overhead (~20-50ms for detailed logging)
+ * - DEBUG: Minor overhead (~5-10ms for detailed logging)
  *
  * The enum is comparable, allowing checks like `currentLevel >= LogLevel.DEBUG`.
  */
@@ -70,36 +67,25 @@ enum class LogLevel {
      * - Per-interface summary (name, pattern, timing)
      * - Cache statistics (hits, misses, reasons)
      * - Slow operation warnings
-     *
-     * Typical output: 30-50 lines
-     *
-     * Use when:
-     * - Troubleshooting generation issues
-     * - Understanding performance bottlenecks
-     * - Investigating why specific interfaces take long
-     */
-    DEBUG,
-
-    /**
-     * Exhaustive details for deep debugging.
-     *
-     * Shows everything from DEBUG plus:
-     * - IR node inspection details
+     * - FIR + IR node inspection details
      * - Type resolution steps
      * - Generic pattern analysis breakdown
      * - Import resolution process
      * - Source set mapping details
      * - Generated code snippets (first few lines)
      *
-     * Typical output: 100-200+ lines
+     * Typical output: 30-100+ lines
      *
      * Use when:
+     * - Troubleshooting generation issues
+     * - Understanding performance bottlenecks
+     * - Investigating why specific interfaces take long
      * - Deep debugging compiler plugin issues
-     * - Understanding IR generation internals
+     * - Understanding FIR + IR generation internals
      * - Reporting bugs with full context
      * - Developing new features
      */
-    TRACE,
+    DEBUG,
     ;
 
     companion object {
@@ -125,7 +111,6 @@ enum class LogLevel {
                 "QUIET" -> QUIET
                 "INFO" -> INFO
                 "DEBUG" -> DEBUG
-                "TRACE" -> TRACE
                 else -> INFO // Default to INFO on invalid input
             }
     }

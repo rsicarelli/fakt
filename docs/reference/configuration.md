@@ -20,8 +20,7 @@ Available levels:
 
 - `LogLevel.QUIET` - Zero output (CI/CD)
 - `LogLevel.INFO` - Concise summary (default)
-- `LogLevel.DEBUG` - Detailed breakdown
-- `LogLevel.TRACE` - Full IR details
+- `LogLevel.DEBUG` - Detailed breakdown with FIR + IR details
 
 ---
 

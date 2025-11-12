@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.core.types
 
+import java.util.concurrent.ConcurrentHashMap
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
@@ -28,13 +29,23 @@ import org.jetbrains.kotlin.ir.types.makeNotNull
  *
  * Focuses on converting IrType to readable Kotlin code strings,
  * handling primitives, nullability, and complex types.
+ *
+ * Uses memoization to cache type string conversions for performance.
  */
 internal class TypeRenderer(
     private val genericTypeHandler: GenericTypeHandler,
     private val functionTypeHandler: FunctionTypeHandler,
 ) {
     /**
+     * Thread-safe cache for type string conversions.
+     * Key: Pair(IrType, preserveTypeParameters flag)
+     * Value: Rendered string representation
+     */
+    private val typeStringCache = ConcurrentHashMap<Pair<IrType, Boolean>, String>()
+    /**
      * Renders IR type to Kotlin string representation with optional type parameter preservation.
+     *
+     * Uses memoization to avoid repeated expensive type conversions.
      *
      * @param irType The IR type to render
      * @param preserveTypeParameters Whether to preserve generic type parameters
@@ -43,7 +54,7 @@ internal class TypeRenderer(
     fun render(
         irType: IrType,
         preserveTypeParameters: Boolean,
-    ): String =
+    ): String = typeStringCache.getOrPut(irType to preserveTypeParameters) {
         when {
             // Handle nullable types
             irType.isMarkedNullable() -> {
@@ -65,6 +76,7 @@ internal class TypeRenderer(
                 irType.asPrimitiveName()
                     ?: handleComplexType(irType, preserveTypeParameters)
         }
+    }
 
     /**
      * Check if a type is primitive and doesn't need imports.

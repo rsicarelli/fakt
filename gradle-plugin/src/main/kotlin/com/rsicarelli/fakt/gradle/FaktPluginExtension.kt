@@ -68,9 +68,8 @@ public open class FaktPluginExtension @Inject constructor(
      *
      * fakt {
      *     logLevel.set(LogLevel.INFO) // Concise summary with key metrics (default)
-     *     logLevel.set(LogLevel.DEBUG) // Detailed breakdown by compilation phase
-     *     logLevel.set(LogLevel.TRACE) // Exhaustive details (deep debugging)
-     *     logLevel.set(LogLevel.QUIET) //No output except errors (fastest, minimal noise)
+     *     logLevel.set(LogLevel.DEBUG) // Detailed breakdown with FIR + IR details (troubleshooting)
+     *     logLevel.set(LogLevel.QUIET) // No output except errors (fastest, minimal noise)
      * }
      * ```
      */

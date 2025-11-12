@@ -22,12 +22,6 @@ public class GradleFaktLogger(
         }
     }
 
-    public fun trace(message: String) {
-        if (logLevel >= LogLevel.TRACE) {
-            logger.debug("Fakt: $message")
-        }
-    }
-
     public fun warn(message: String): Unit = logger.warn("Fakt: $message")
 
     public fun error(message: String): Unit = logger.error("Fakt: $message")
@@ -49,8 +43,5 @@ public class GradleFaktLogger(
 
         public fun debug(logger: Logger): GradleFaktLogger =
             GradleFaktLogger(logger, LogLevel.DEBUG)
-
-        public fun trace(logger: Logger): GradleFaktLogger =
-            GradleFaktLogger(logger, LogLevel.TRACE)
     }
 }

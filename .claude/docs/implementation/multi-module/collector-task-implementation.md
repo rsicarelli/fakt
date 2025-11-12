@@ -163,7 +163,7 @@ abstract class FakeCollectorTask : DefaultTask() {
 
 **Purpose**: Logging verbosity control
 
-**Values**: `QUIET`, `INFO`, `DEBUG`, `TRACE`
+**Values**: `QUIET`, `INFO`, `DEBUG`
 
 **Default**: `INFO`
 
@@ -807,11 +807,11 @@ fun registerSingleCollectorTask(
 
 ## Debugging Guide
 
-### Enable TRACE Logging
+### Enable DEBUG Logging
 
 ```kotlin
 fakt {
-    logLevel.set(com.rsicarelli.fakt.compiler.api.LogLevel.TRACE)
+    logLevel.set(com.rsicarelli.fakt.compiler.api.LogLevel.DEBUG)
 }
 ```
 

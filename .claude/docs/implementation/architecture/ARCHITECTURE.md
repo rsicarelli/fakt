@@ -205,7 +205,7 @@ FunctionTypeHandler.kt      # Function type handling
 **Location**: `compiler/src/main/kotlin/com/rsicarelli/fakt/compiler/core/telemetry/`
 
 ```kotlin
-FaktLogger.kt              # Multi-level logging (QUIET, INFO, DEBUG, TRACE)
+FaktLogger.kt              # Multi-level logging (QUIET, INFO, DEBUG)
 FaktTelemetry.kt           # Performance metrics collection
 CompilationReport.kt       # Generation statistics
 MetricsCollector.kt        # Compile-time metrics
@@ -215,8 +215,7 @@ PhaseTracker.kt            # Phase timing
 **Log Levels** (configured via Gradle):
 - `QUIET` - Silent (CI/CD)
 - `INFO` - Concise summary (default, recommended)
-- `DEBUG` - Detailed breakdown (troubleshooting)
-- `TRACE` - Everything (deep debugging)
+- `DEBUG` - Detailed breakdown with FIR + IR details (troubleshooting)
 
 ### Import Resolution
 

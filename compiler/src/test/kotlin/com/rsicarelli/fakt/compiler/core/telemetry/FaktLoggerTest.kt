@@ -101,39 +101,6 @@ class FaktLoggerTest {
         }
 
     @Test
-    fun `GIVEN DEBUG level WHEN logging trace THEN should not log`() =
-        runTest {
-            // GIVEN: Test message collector at DEBUG level
-            val messageCollector = TestMessageCollector()
-            val logger = FaktLogger(messageCollector, LogLevel.DEBUG)
-
-            // WHEN: Attempting to log at TRACE level
-            logger.trace("Trace details")
-
-            // THEN: Should not log (DEBUG < TRACE)
-            assertTrue(messageCollector.messages.isEmpty(), "DEBUG level should not log TRACE messages")
-        }
-
-    @Test
-    fun `GIVEN TRACE level WHEN logging all levels THEN should log everything`() =
-        runTest {
-            // GIVEN: Test message collector at TRACE level
-            val messageCollector = TestMessageCollector()
-            val logger = FaktLogger(messageCollector, LogLevel.TRACE)
-
-            // WHEN: Logging at all levels
-            logger.info("Info message")
-            logger.debug("Debug message")
-            logger.trace("Trace message")
-
-            // THEN: Should log all 3 messages
-            assertEquals(3, messageCollector.messages.size, "TRACE level should log everything")
-            assertTrue(messageCollector.messages[0].second.contains("Info message"))
-            assertTrue(messageCollector.messages[1].second.contains("Debug message"))
-            assertTrue(messageCollector.messages[2].second.contains("Trace message"))
-        }
-
-    @Test
     fun `GIVEN any level WHEN logging warning THEN should always log`() =
         runTest {
             // GIVEN: Test message collector at QUIET level (most restrictive)

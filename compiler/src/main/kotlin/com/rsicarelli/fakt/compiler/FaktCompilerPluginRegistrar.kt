@@ -88,7 +88,7 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
     private fun ExtensionStorage.registerFirExtension(
         sharedContext: FaktSharedContext,
     ) {
-        sharedContext.logger.trace("Registering FIR extension")
+        sharedContext.logger.debug("Registering FIR extension")
         FirExtensionRegistrarAdapter.registerExtension(FaktFirExtensionRegistrar(sharedContext))
     }
 
@@ -102,14 +102,14 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
     private fun ExtensionStorage.registerIrExtension(
         sharedContext: FaktSharedContext,
     ) {
-        sharedContext.logger.trace("Registering IR extension with FIR metadata access")
+        sharedContext.logger.debug("Registering IR extension with FIR metadata access")
         IrGenerationExtension.registerExtension(
             UnifiedFaktIrGenerationExtension(sharedContext),
         )
     }
 
     /**
-     * Logs plugin initialization details at TRACE level.
+     * Logs plugin initialization details at DEBUG level.
      *
      * This is called BEFORE FIR/IR extension registration to ensure linear, sequential logging.
      *
@@ -124,19 +124,19 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
         fakeAnnotations: List<String>,
         optimizations: CompilerOptimizations,
     ) {
-        logger.trace("════════════════════════════════════════════════════════════")
-        logger.trace("Fakt Plugin initialized")
-        logger.trace("├─ enabled: true")
-        logger.trace("├─ logLevel: ${options.logLevel}")
-        logger.trace("├─ detectedAnnotations: ${fakeAnnotations.joinToString(", ")}")
+        logger.debug("════════════════════════════════════════════════════════════")
+        logger.debug("Fakt Plugin initialized")
+        logger.debug("├─ enabled: true")
+        logger.debug("├─ logLevel: ${options.logLevel}")
+        logger.debug("├─ detectedAnnotations: ${fakeAnnotations.joinToString(", ")}")
         if (options.outputDir != null) {
             val simplifiedPath =
                 options.outputDir
                     .substringAfter("/ktfakes/samples/", "")
                     .ifEmpty { options.outputDir }
-            logger.trace("├─ output: $simplifiedPath")
+            logger.debug("├─ output: $simplifiedPath")
         }
-        logger.trace("└─ cache: ${optimizations.cacheSize()} signatures loaded")
-        logger.trace("════════════════════════════════════════════════════════════")
+        logger.debug("└─ cache: ${optimizations.cacheSize()} signatures loaded")
+        logger.debug("════════════════════════════════════════════════════════════")
     }
 }

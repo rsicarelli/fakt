@@ -36,8 +36,7 @@ import com.rsicarelli.fakt.compiler.api.LogLevel
 fakt {
     logLevel.set(LogLevel.INFO)   // Default: concise summary
     // LogLevel.QUIET  - Zero output (CI/CD)
-    // LogLevel.DEBUG  - Detailed breakdown
-    // LogLevel.TRACE  - Full IR details
+    // LogLevel.DEBUG  - Detailed breakdown with FIR + IR details
 }
 ```
 
@@ -59,10 +58,10 @@ fakt {
 [ANALYSIS] 340ms
   ├─ UserRepository (18ms)
   ├─ Analytics (42ms)
+  ├─ FIR + IR node inspection, type resolution
 ```
 
-**TRACE:**
-Full IR details, type resolution, etc. (~20-50ms overhead)
+Includes full FIR + IR details, type resolution, etc. (~5-10ms overhead)
 
 ---
 

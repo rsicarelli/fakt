@@ -68,7 +68,7 @@ fakt {
 
     // Control compiler logging verbosity
     logLevel.set(LogLevel.INFO)  // Default: INFO
-    // Options: QUIET, INFO, DEBUG, TRACE
+    // Options: QUIET, INFO, DEBUG
 
     // Multi-module: Collect fakes from another project (experimental)
     @OptIn(ExperimentalFaktMultiModule::class)
@@ -81,7 +81,7 @@ fakt {
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | `enabled` | `Property<Boolean>` | `true` | Enable/disable fake generation entirely |
-| `logLevel` | `Property<LogLevel>` | `INFO` | Compiler logging verbosity (QUIET/INFO/DEBUG/TRACE) |
+| `logLevel` | `Property<LogLevel>` | `INFO` | Compiler logging verbosity (QUIET/INFO/DEBUG) |
 | `collectFrom` | `Property<Project>` | Not set | Source project for multi-module fake collection |
 
 ### Log Levels
@@ -98,26 +98,15 @@ Discovery: 120ms | Analysis: 340ms | Generation: 580ms
 Cache hit rate: 40% (6/15)
 ```
 
-**DEBUG**: Detailed breakdown by compilation phase
+**DEBUG**: Detailed breakdown with FIR + IR details
 ```
 [DISCOVERY] 120ms - 15 interfaces, 3 classes
 [ANALYSIS] 340ms
   ├─ PredicateCombiner (18ms) - NoGenerics
   ├─ PairMapper<T,U,K,V> (42ms) ⚠️ - ClassLevel
 [GENERATION] 580ms (avg 58ms/interface)
-```
-
-**TRACE**: Exhaustive details for deep debugging
-```
-[DISCOVERY] Scanning moduleFragment...
-  ├─ File: UserService.kt (3 declarations)
-  ├─ Found interface: UserService (@Fake)
-[ANALYSIS] UserService
-  ├─ Type parameters: 0
-  ├─ Members: 5 (2 properties, 3 functions)
-  ├─ Dependencies: Repository<User>, Logger
-[GENERATION] UserService
-  ├─ Generated file: FakeUserServiceImpl.kt (89 LOC)
+  ├─ FIR + IR node inspection, type resolution
+  ├─ Import resolution, source set mapping
 ```
 
 ## 🏢 Multi-Module Support

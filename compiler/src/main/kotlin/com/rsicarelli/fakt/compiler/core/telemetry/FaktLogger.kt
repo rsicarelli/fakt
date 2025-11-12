@@ -25,8 +25,7 @@ import org.jetbrains.kotlin.cli.common.messages.MessageCollector
  * val logger = FaktLogger(messageCollector, LogLevel.DEBUG)
  *
  * logger.info("Processing interface")      // Always shown (level >= INFO)
- * logger.debug("Analyzing type parameters") // Only when DEBUG or TRACE
- * logger.trace("IR node: $irNode")         // Only when TRACE
+ * logger.debug("Analyzing type parameters") // Only when DEBUG
  * ```
  *
  * @property messageCollector The Kotlin compiler's message collector (may be null)
@@ -45,12 +44,6 @@ class FaktLogger(
 
     fun debug(message: String) {
         if (logLevel >= LogLevel.DEBUG) {
-            messageCollector?.report(CompilerMessageSeverity.INFO, message)
-        }
-    }
-
-    fun trace(message: String) {
-        if (logLevel >= LogLevel.TRACE) {
             messageCollector?.report(CompilerMessageSeverity.INFO, message)
         }
     }
@@ -81,8 +74,5 @@ class FaktLogger(
 
         fun debug(messageCollector: MessageCollector?): FaktLogger =
             FaktLogger(messageCollector, LogLevel.DEBUG)
-
-        fun trace(messageCollector: MessageCollector?): FaktLogger =
-            FaktLogger(messageCollector, LogLevel.TRACE)
     }
 }
