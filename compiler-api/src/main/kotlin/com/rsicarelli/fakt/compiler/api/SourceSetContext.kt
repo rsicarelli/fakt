@@ -8,13 +8,12 @@ import kotlinx.serialization.Serializable
  * Complete source set context for a single Kotlin compilation.
  *
  * This data model is passed from the Gradle plugin to the compiler plugin
- * via SubpluginOption serialization, replacing all hardcoded pattern matching
- * logic with programmatic discovery.
+ * via SubpluginOption serialization.
  *
  * **Architecture**:
  * - Gradle plugin discovers project structure using KotlinCompilation APIs
  * - Serializes this context to JSON + Base64
- * - Compiler plugin deserializes and uses directly (no pattern matching!)
+ * - Compiler plugin deserializes and uses directly
  *
  * **Benefits**:
  * - Zero hardcoded source set names

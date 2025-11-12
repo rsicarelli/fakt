@@ -15,6 +15,7 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -524,7 +525,7 @@ public abstract class FakeCollectorTask : DefaultTask() {
 
             // === JVM Projects ===
             project.plugins.withId("org.jetbrains.kotlin.jvm") {
-                project.extensions.findByType(org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension::class.java)
+                project.extensions.findByType(KotlinJvmProjectExtension::class.java)
                     ?.apply {
                         sourceSets.getByName("main").kotlin.srcDir(collectedDir)
 
@@ -566,13 +567,6 @@ public abstract class FakeCollectorTask : DefaultTask() {
                     }
                 }
             }
-
-            // Note: Single-platform Kotlin/Native projects are rare in practice
-            // Native targets are typically configured through KMP (handled by registerForKmpProject)
-            // If single-platform Native support is needed, use:
-            // project.plugins.withId("org.jetbrains.kotlin.native") {
-            //     project.tasks.withType(KotlinNativeCompile::class.java).configureEach { ... }
-            // }
         }
     }
 }

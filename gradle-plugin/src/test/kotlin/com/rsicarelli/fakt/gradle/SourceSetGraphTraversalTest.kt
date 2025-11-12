@@ -18,7 +18,7 @@ class SourceSetGraphTraversalTest {
         val commonMain = FakeKotlinSourceSet(name = "commonMain")
 
         // WHEN
-        val result = SourceSetGraphTraversal.getAllParentSourceSets(commonMain)
+        val result = commonMain.getAllParentSourceSets()
 
         // THEN
         assertEquals(1, result.size)
@@ -36,7 +36,7 @@ class SourceSetGraphTraversalTest {
             )
 
         // WHEN
-        val result = SourceSetGraphTraversal.getAllParentSourceSets(jvmMain)
+        val result = jvmMain.getAllParentSourceSets()
 
         // THEN
         assertEquals(2, result.size, "Should include jvmMain and commonMain")
@@ -54,7 +54,7 @@ class SourceSetGraphTraversalTest {
         val iosX64Main = FakeKotlinSourceSet(name = "iosX64Main", parents = setOf(iosMain))
 
         // WHEN
-        val result = SourceSetGraphTraversal.getAllParentSourceSets(iosX64Main)
+        val result = iosX64Main.getAllParentSourceSets()
 
         // THEN
         assertEquals(5, result.size, "Should include all 5 levels")
@@ -83,7 +83,7 @@ class SourceSetGraphTraversalTest {
             )
 
         // WHEN
-        val result = SourceSetGraphTraversal.getAllParentSourceSets(iosMain)
+        val result = iosMain.getAllParentSourceSets()
 
         // THEN
         assertEquals(4, result.size, "Should not duplicate commonMain")
@@ -112,73 +112,12 @@ class SourceSetGraphTraversalTest {
             )
 
         // WHEN
-        val result = SourceSetGraphTraversal.getAllParentSourceSets(jvmMain)
+        val result = jvmMain.getAllParentSourceSets()
 
         // THEN
         assertEquals(3, result.size)
         assertTrue(result.contains(jvmMain))
         assertTrue(result.contains(commonMain))
         assertTrue(result.contains(utilsMain))
-    }
-
-    @Test
-    fun `GIVEN hierarchy map builder WHEN building THEN should create correct structure`() {
-        // GIVEN
-        val commonMain = FakeKotlinSourceSet(name = "commonMain")
-        val jvmMain = FakeKotlinSourceSet(name = "jvmMain", parents = setOf(commonMain))
-
-        // WHEN
-        val map = SourceSetGraphTraversal.buildHierarchyMap(jvmMain)
-
-        // THEN
-        assertEquals(2, map.size)
-        assertEquals(listOf("commonMain"), map["jvmMain"])
-        assertEquals(emptyList(), map["commonMain"])
-    }
-
-    @Test
-    fun `GIVEN complex hierarchy map WHEN building THEN should preserve parent relationships`() {
-        // GIVEN: iOS hierarchy
-        val commonMain = FakeKotlinSourceSet(name = "commonMain")
-        val nativeMain = FakeKotlinSourceSet(name = "nativeMain", parents = setOf(commonMain))
-        val appleMain = FakeKotlinSourceSet(name = "appleMain", parents = setOf(nativeMain))
-        val iosMain = FakeKotlinSourceSet(name = "iosMain", parents = setOf(appleMain))
-
-        // WHEN
-        val map = SourceSetGraphTraversal.buildHierarchyMap(iosMain)
-
-        // THEN
-        assertEquals(4, map.size)
-        assertEquals(listOf("appleMain"), map["iosMain"])
-        assertEquals(listOf("nativeMain"), map["appleMain"])
-        assertEquals(listOf("commonMain"), map["nativeMain"])
-        assertEquals(emptyList(), map["commonMain"])
-    }
-
-    @Test
-    fun `GIVEN diamond hierarchy map WHEN building THEN should list all direct parents`() {
-        // GIVEN: Diamond pattern
-        val commonMain = FakeKotlinSourceSet(name = "commonMain")
-        val nativeMain = FakeKotlinSourceSet(name = "nativeMain", parents = setOf(commonMain))
-        val appleMain = FakeKotlinSourceSet(name = "appleMain", parents = setOf(commonMain))
-        val iosMain =
-            FakeKotlinSourceSet(
-                name = "iosMain",
-                parents = setOf(nativeMain, appleMain),
-            )
-
-        // WHEN
-        val map = SourceSetGraphTraversal.buildHierarchyMap(iosMain)
-
-        // THEN
-        assertEquals(4, map.size)
-
-        // iosMain should list BOTH direct parents (sorted)
-        val iosMainParents = map["iosMain"]!!.sorted()
-        assertEquals(listOf("appleMain", "nativeMain"), iosMainParents)
-
-        // Both intermediate nodes point to commonMain
-        assertEquals(listOf("commonMain"), map["nativeMain"])
-        assertEquals(listOf("commonMain"), map["appleMain"])
     }
 }

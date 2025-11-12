@@ -3,6 +3,8 @@
 package com.rsicarelli.fakt.compiler.core.context
 
 import com.rsicarelli.fakt.compiler.core.config.FaktOptions
+import com.rsicarelli.fakt.compiler.core.optimization.CompilerOptimizations
+import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.fir.metadata.FirMetadataStorage
 
 /**
@@ -11,11 +13,15 @@ import com.rsicarelli.fakt.compiler.fir.metadata.FirMetadataStorage
  * @property fakeAnnotations List of @Fake annotation FQNs to detect (e.g., ["com.rsicarelli.fakt.Fake"])
  * @property options Compiler plugin options (log level, output dir, feature flags)
  * @property metadataStorage Storage for FIR→IR metadata passing
+ * @property logger Logger instance for level-aware logging across compilation phases
+ * @property optimizations Compiler optimizations instance for caching and incremental compilation
  */
 data class FaktSharedContext(
     val fakeAnnotations: List<String>,
     val options: FaktOptions,
     val metadataStorage: FirMetadataStorage,
+    val logger: FaktLogger,
+    val optimizations: CompilerOptimizations,
 ) {
     /**
      * Check if specific annotation FQN is configured for fake generation.

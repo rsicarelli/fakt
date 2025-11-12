@@ -17,7 +17,6 @@ dependencies {
     implementation(libs.detekt.gradlePlugin)
 
     // Root Plugin Dependencies
-    implementation(libs.dokka.gradlePlugin)
     implementation(libs.binaryCompatibilityValidator.gradlePlugin)
     implementation(libs.licenseReport.gradlePlugin)
 

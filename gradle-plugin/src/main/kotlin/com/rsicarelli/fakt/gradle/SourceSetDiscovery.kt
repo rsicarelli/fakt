@@ -4,7 +4,9 @@ package com.rsicarelli.fakt.gradle
 
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.api.SourceSetInfo
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
+import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 
 /**
  * Discovers and builds complete source set context for a compilation.
@@ -65,6 +67,7 @@ internal object SourceSetDiscovery {
                 val prefix = compilationName.dropLast(MAIN_SUFFIX_LENGTH)
                 "${prefix}Test"
             }
+
             else -> "test" // Default fallback
         }
     }
@@ -77,9 +80,9 @@ internal object SourceSetDiscovery {
      *
      * ## Algorithm
      *
-     * 1. Classify compilation (test vs main) using [CompilationClassifier]
+     * 1. Classify compilation (test vs main)
      * 2. Get default source set from compilation
-     * 3. Traverse source set graph to find all parents using [SourceSetGraphTraversal]
+     * 3. Traverse source set graph to find all parents
      * 4. Extract platform type and target metadata
      * 5. Build hierarchy map for compiler plugin
      * 6. Generate output directory path
@@ -126,21 +129,19 @@ internal object SourceSetDiscovery {
      * @param buildDir The project's build directory absolute path (e.g., "/path/to/build")
      * @return Complete [SourceSetContext] ready for serialization to compiler plugin
      * @see SourceSetContext
-     * @see CompilationClassifier.isTestCompilation
-     * @see SourceSetGraphTraversal.getAllParentSourceSets
      */
     fun buildContext(
         compilation: KotlinCompilation<*>,
         buildDir: String,
     ): SourceSetContext {
         // 1. Classify compilation (test vs main)
-        val isTest = CompilationClassifier.isTestCompilation(compilation)
+        val isTest = compilation.isTestCompilation
 
         // 2. Get default source set
         val defaultSourceSet = compilation.defaultSourceSet
 
         // 3. Traverse source set graph to get all parents
-        val allSourceSets = SourceSetGraphTraversal.getAllParentSourceSets(defaultSourceSet)
+        val allSourceSets = defaultSourceSet.getAllParentSourceSets()
 
         // 4. Build source set info list with hierarchy
         val sourceSetInfos =
@@ -193,4 +194,93 @@ internal object SourceSetDiscovery {
             outputDirectory = outputDirectory,
         )
     }
+}
+
+/**
+ * Classifies Kotlin compilations as test or production code.
+ *
+ * **Purpose**: Determine if a compilation should generate fakes in test or main source sets.
+ *
+ * **Heuristics** (evaluated in order):
+ * 1. **Standard test compilation name**: `compilation.name == "test"`
+ * 2. **Convention**: `compilation.name.endsWith("Test", ignoreCase = true)`
+ * 3. **Associated with main**: Compilation is associated with main compilation (test suite pattern)
+ *
+ * **Examples**:
+ * - `test` → true (standard)
+ * - `main` → false (standard)
+ * - `integrationTest` → true (convention)
+ * - `e2eTest` → true (convention)
+ * - `debug` → false (Android variant, not test)
+ * - `debugTest` → true (Android test variant)
+ * - Custom suite associated with main → true (association pattern)
+ *
+ * @param this@isTestCompilation The compilation to classify
+ * @return true if this is a test compilation, false if it's production code
+ */
+public val KotlinCompilation<*>.isTestCompilation: Boolean
+    get() {
+        // Heuristic 1: Standard test compilation name
+        if (this.name == KotlinCompilation.TEST_COMPILATION_NAME) {
+            return true
+        }
+
+        // Heuristic 2: Convention - name ends with "Test" (case-insensitive)
+        // Heuristic 3: Associated with main compilation (test suite pattern)
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        val associatedCompilations = this.allAssociatedCompilations
+        return this.name.endsWith("Test", ignoreCase = true) ||
+                associatedCompilations.any { it.name == KotlinCompilation.MAIN_COMPILATION_NAME }
+    }
+
+
+/**
+ * Traverse the dependsOn graph upwards using BFS to find all parent source sets.
+ * Includes the starting source set in the result.
+ *
+ * **Example 1 - Simple hierarchy**:
+ * ```
+ * jvmMain.dependsOn(commonMain)
+ * Result: Set(jvmMain, commonMain)
+ * ```
+ *
+ * **Example 2 - Deep hierarchy**:
+ * ```
+ * iosX64Main → iosMain → appleMain → nativeMain → commonMain
+ * Result: Set(iosX64Main, iosMain, appleMain, nativeMain, commonMain)
+ * ```
+ *
+ * **Example 3 - Diamond dependency**:
+ * ```
+ *        commonMain
+ *        /        \
+ *   nativeMain   appleMain
+ *        \        /
+ *         iosMain
+ * Result: Set(iosMain, nativeMain, appleMain, commonMain)
+ * ```
+ * @receiver [KotlinSourceSet]
+ * @return Set of all source sets in the hierarchy (including starting set)
+ */
+public fun KotlinSourceSet.getAllParentSourceSets(): Set<KotlinSourceSet> {
+    val allParents = mutableSetOf<KotlinSourceSet>()
+    val queue = ArrayDeque<KotlinSourceSet>()
+
+    // Start with the initial source set
+    queue.add(this)
+    allParents.add(this)
+
+    // BFS traversal
+    while (queue.isNotEmpty()) {
+        val current = queue.removeFirst()
+
+        // For each direct parent, add it to the set and queue if not seen before
+        current.dependsOn.forEach { parent ->
+            if (allParents.add(parent)) {
+                queue.add(parent)
+            }
+        }
+    }
+
+    return allParents
 }

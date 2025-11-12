@@ -157,30 +157,4 @@ class SimplifiedSourceSetConfigurationTest {
         assertTrue(jsTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/jsTest/kotlin") })
         assertTrue(iosTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/iosArm64Test/kotlin") })
     }
-
-    // ========================================
-    // Compiler Plugin Output Directory
-    // ========================================
-
-    @Test
-    fun `GIVEN project with commonTest WHEN compiling main THEN compiler should output to fakes kotlin`() {
-        // Given
-        val project = createKmpProject()
-        val kotlin = project.getKotlinExtension()
-        kotlin.jvm()
-        project.evaluate()
-
-        val mainCompilation =
-            kotlin.targets
-                .getByName("jvm")
-                .compilations
-                .getByName("main")
-        val configurator = SourceSetConfigurator(project)
-
-        // When
-        val outputDir = configurator.getGeneratedSourcesDirectory(mainCompilation)
-
-        // Then - Should output to common directory (not jvmFakes) because commonTest exists
-        assertTrue(outputDir.contains("build/generated/fakt/fakes/kotlin"))
-    }
 }

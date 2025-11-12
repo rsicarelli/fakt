@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import com.rsicarelli.fakt.conventions.applyApiValidationConvention
-import com.rsicarelli.fakt.conventions.applyDokkaConvention
 import com.rsicarelli.fakt.conventions.applyLicenseReportConvention
 import com.rsicarelli.fakt.conventions.applySpotlessPredeclare
 import org.gradle.api.Plugin
@@ -13,7 +12,6 @@ import org.gradle.api.Project
  *
  * Applies and configures:
  * - Binary Compatibility Validator (apiValidation)
- * - Dokka documentation
  * - License Report (dependency license auditing)
  * - Spotless predeclareDeps
  *
@@ -28,11 +26,9 @@ class FaktRootPlugin : Plugin<Project> {
 
         with(target) {
             pluginManager.apply("org.jetbrains.kotlinx.binary-compatibility-validator")
-            pluginManager.apply("org.jetbrains.dokka")
             pluginManager.apply("com.diffplug.spotless")
 
             applyApiValidationConvention()
-            applyDokkaConvention()
             applyLicenseReportConvention()
             applySpotlessPredeclare()
         }

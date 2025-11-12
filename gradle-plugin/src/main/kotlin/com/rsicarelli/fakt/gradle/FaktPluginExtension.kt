@@ -5,7 +5,6 @@ package com.rsicarelli.fakt.gradle
 import com.rsicarelli.fakt.compiler.api.LogLevel
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ProjectDependency
-import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import javax.inject.Inject
@@ -17,30 +16,20 @@ import javax.inject.Inject
  * - **Generator mode** (default): Generates fakes from @Fake annotated interfaces
  * - **Collector mode**: Collects generated fakes from another module (multi-module projects)
  *
- * **Basic usage** (generator mode):
- * ```kotlin
- * fakt {
- *     // All properties have sensible defaults, configuration is optional
- *     debug.set(true)  // Enable to troubleshoot generation issues
- * }
- * ```
- *
  * **Multi-module usage** (collector mode):
  * ```kotlin
  * @file:OptIn(ExperimentalFaktMultiModule::class)
  *
  * fakt {
- *     // String-based (traditional)
+ *     // String-based
  *     collectFakesFrom(project(":foundation"))
  *
- *     // Type-safe accessor (recommended) ✨
+ *     // Type-safe accessor
  *     collectFakesFrom(projects.foundation)
  * }
  * ```
  */
-public open class FaktPluginExtension
-@Inject
-constructor(
+public open class FaktPluginExtension @Inject constructor(
     objects: ObjectFactory,
     private val project: Project,
 ) {
@@ -69,57 +58,21 @@ constructor(
     public val enabled: Property<Boolean> = objects.property(Boolean::class.java).convention(true)
 
     /**
-     * Controls logging verbosity for the compiler plugin (Type-Safe!).
-     *
-     * Available levels:
-     * - **QUIET**: No output except errors (fastest, minimal noise)
-     * - **INFO**: Concise summary with key metrics (default, production-ready)
-     * - **DEBUG**: Detailed breakdown by compilation phase (troubleshooting)
-     * - **TRACE**: Exhaustive details including IR nodes (deep debugging)
+     * Controls logging verbosity for the compiler plugin.
      *
      * **Default:** `LogLevel.INFO`
      *
-     * **Usage (Type-Safe!):**
+     * **Usage:**
      * ```kotlin
      * import com.rsicarelli.fakt.compiler.api.LogLevel
      *
      * fakt {
-     *     logLevel.set(LogLevel.INFO)    // ✅ Type-safe with IDE autocomplete!
-     *     // logLevel.set(LogLevel.DEBUG)   // ✅ Compile-time validation
-     *     logLevel.set(LogLevel.TRACE)   // ✅ No typos possible
-     *     logLevel.set(LogLevel.QUIET)
+     *     logLevel.set(LogLevel.INFO) // Concise summary with key metrics (default)
+     *     logLevel.set(LogLevel.DEBUG) // Detailed breakdown by compilation phase
+     *     logLevel.set(LogLevel.TRACE) // Exhaustive details (deep debugging)
+     *     logLevel.set(LogLevel.QUIET) //No output except errors (fastest, minimal noise)
      * }
      * ```
-     *
-     * **Output Examples:**
-     *
-     * **INFO (default):**
-     * ```
-     * ✅ 10 fakes generated in 1.2s (6 cached)
-     * Discovery: 120ms | Analysis: 340ms | Generation: 580ms
-     * Cache hit rate: 40% (6/15)
-     * ```
-     *
-     * **DEBUG:**
-     * ```
-     * [DISCOVERY] 120ms - 15 interfaces, 3 classes
-     * [ANALYSIS] 340ms
-     *   ├─ PredicateCombiner (18ms) - NoGenerics
-     *   ├─ PairMapper<T,U,K,V> (42ms) ⚠️ - ClassLevel
-     * [GENERATION] 580ms (avg 58ms/interface)
-     * ```
-     *
-     * **Performance Impact:**
-     * - QUIET: Zero overhead (recommended for CI/CD)
-     * - INFO: Negligible (<1ms)
-     * - DEBUG: Minor (~5-10ms)
-     * - TRACE: Moderate (~20-50ms)
-     *
-     * **When to use each level:**
-     * - **QUIET**: CI/CD builds, minimal output needed
-     * - **INFO**: Normal development, production builds
-     * - **DEBUG**: Troubleshooting generation issues, performance analysis
-     * - **TRACE**: Deep debugging, reporting bugs, understanding IR internals
      */
     public val logLevel: Property<LogLevel> =
         objects.property(LogLevel::class.java).convention(LogLevel.INFO)
@@ -135,27 +88,6 @@ constructor(
      *
      * **Default:** Not set (generator mode)
      *
-     * **Usage:**
-     * ```kotlin
-     * @file:OptIn(ExperimentalFaktMultiModule::class)
-     *
-     * fakt {
-     *     collectFakesFrom(project(":foundation"))
-     * }
-     * ```
-     *
-     * **Multi-module pattern:**
-     * ```
-     * foundation/              → Generates fakes (has @Fake interfaces)
-     * foundation-fakes/        → Collects fakes (this property set)
-     * domain/                  → Uses fakes (testImplementation(":foundation-fakes"))
-     * ```
-     *
-     * **Why use this:**
-     * - Share fakes across multiple test modules
-     * - Avoid circular dependencies
-     * - Separate fake generation from usage
-     *
      * @see collectFakesFrom
      * @see ExperimentalFaktMultiModule
      */
@@ -170,9 +102,7 @@ constructor(
      * @param project The source project that generates fakes (must have @Fake interfaces)
      *
      * **Usage:**
-     * ```kotlin
-     * @file:OptIn(ExperimentalFaktMultiModule::class)
-     *
+     * ```kotlin*
      * fakt {
      *     collectFakesFrom(project(":foundation"))
      * }
@@ -199,11 +129,9 @@ constructor(
      * @param projectDependency Type-safe project accessor (e.g., projects.core.analytics)
      *
      * **Usage:**
-     * ```kotlin
-     * @file:OptIn(ExperimentalFaktMultiModule::class)
-     *
+     * ```kotlin*
      * fakt {
-     *     collectFakesFrom(projects.core.analytics)  // ✅ Type-safe with IDE autocomplete
+     *     collectFakesFrom(projects.core.analytics)
      * }
      * ```
      *
@@ -217,10 +145,6 @@ constructor(
      */
     @ExperimentalFaktMultiModule
     public fun collectFakesFrom(projectDependency: ProjectDependency) {
-        // Extract path from ProjectDependency (Gradle 8.11+ non-deprecated API)
-        // Then resolve it to the actual Project instance using our injected project reference
-        val projectPath = projectDependency.path
-        val resolvedProject = project.project(projectPath)
-        collectFrom.set(resolvedProject)
+        collectFrom.set(project.project(projectDependency.path))
     }
 }

@@ -107,9 +107,6 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             }
         }
 
-        // Add runtime dependency to test configurations (both modes need this)
-        addRuntimeDependencies(target)
-
         target.logger.info("Fakt: Applied Gradle plugin to project ${target.name}")
     }
 
@@ -159,29 +156,20 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         val project = kotlinCompilation.project
         val extension = project.extensions.findByType(FaktPluginExtension::class.java)
 
-        // Skip compiler plugin in collector mode
-        if (extension?.collectFrom?.isPresent == true) {
+        if (extension == null) return false
+
+        if (extension.collectFrom.isPresent) {
             project.logger.info(
                 "Fakt: Skipping compiler plugin for '${kotlinCompilation.name}' (collector mode)",
             )
             return false
         }
 
-        // Apply to main compilations where @Fake annotations are defined
-        // - JVM/Android projects: "main" compilation
-        // - KMP projects: "jvmMain", "jsMain", "iosMain", "commonMain", "metadata", etc.
         val compilationName = kotlinCompilation.name.lowercase()
 
-        val isMainCompilation =
-            compilationName == "main" ||
-                    compilationName.endsWith("main") ||
-                    compilationName == "metadata" // ✅ FIX: Include metadata compilation for KMP
-
-        project.logger.info(
-            "Fakt: Checking compilation '${kotlinCompilation.name}' - applicable: $isMainCompilation",
-        )
-
-        return isMainCompilation
+        return compilationName == "main" ||
+                compilationName.endsWith("main") ||
+                compilationName == "metadata"
     }
 
     override fun getCompilerPluginId(): String = PLUGIN_ID
@@ -216,7 +204,7 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
      * ```
      * -P plugin:com.rsicarelli.fakt:enabled=true
      * -P plugin:com.rsicarelli.fakt:logLevel=INFO
-     * -P plugin:com.rsicarelli.fakt:sourceSetContext=eyJjb21waWxhdGlvbk5hbWUiOi4uLg==
+     * -P plugin:com.rsicarelli.fakt:sourceSetContext={hash}
      * -P plugin:com.rsicarelli.fakt:outputDir=/path/to/build/generated/fakt/test/kotlin
      * ```
      *
@@ -237,11 +225,7 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 add(SubpluginOption(key = "enabled", value = extension.enabled.get().toString()))
                 add(SubpluginOption(key = "logLevel", value = extension.logLevel.get().name))
 
-                // Build complete source set context using modern API
-                val buildDir =
-                    project.layout.buildDirectory
-                        .get()
-                        .asFile.absolutePath
+                val buildDir = project.layout.buildDirectory.get().asFile.absolutePath
                 val context = SourceSetDiscovery.buildContext(kotlinCompilation, buildDir)
 
                 // Serialize context to Base64-encoded JSON for compiler plugin
@@ -254,27 +238,6 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 add(SubpluginOption(key = "outputDir", value = context.outputDirectory))
 
                 project.logger.info("Fakt: Configured compiler plugin with $size options")
-            }
-        }
-    }
-
-    /**
-     * Add runtime dependency to test configurations automatically.
-     */
-    private fun addRuntimeDependencies(project: Project) {
-        // Add runtime dependency to all test-related configurations
-        project.configurations.configureEach { configuration ->
-            val configName = configuration.name.lowercase()
-
-            if (configName.contains("test") &&
-                (configName.endsWith("implementation") || configName.endsWith("api"))
-            ) {
-                project.dependencies.add(
-                    configuration.name,
-                    "${PLUGIN_GROUP_ID}:runtime:${PLUGIN_VERSION}",
-                )
-
-                project.logger.info("Fakt: Added runtime dependency to configuration ${configuration.name}")
             }
         }
     }
