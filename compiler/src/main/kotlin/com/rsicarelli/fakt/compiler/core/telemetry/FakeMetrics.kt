@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.core.telemetry
 
+import com.rsicarelli.fakt.compiler.api.TimeFormatter
 import com.rsicarelli.fakt.compiler.ir.analysis.GenericPattern
 
 /**
@@ -57,22 +58,6 @@ data class FakeMetrics(
         get() = analysisTimeNanos + generationTimeNanos
 
     /**
-     * Indicates if this fake is slow (took longer than threshold).
-     *
-     * Threshold: 100ms (100_000_000 nanoseconds) total time
-     *
-     * @return true if fake took >100ms to process
-     */
-    fun isSlow(): Boolean = totalTimeNanos > 100_000_000
-
-    /**
-     * Returns a visual indicator for slow fakes.
-     *
-     * @return "⚠️" if slow, "" otherwise
-     */
-    fun slowIndicator(): String = if (isSlow()) " ⚠️" else ""
-
-    /**
      * Formats duration as human-readable string with smart unit selection.
      *
      * Automatically chooses the most appropriate unit:
@@ -82,29 +67,6 @@ data class FakeMetrics(
      *
      * @return Formatted duration string (e.g., "234µs", "45ms", "1.2s")
      */
-    fun formattedDuration(): String =
-        com.rsicarelli.fakt.compiler.api.TimeFormatter
-            .format(totalTimeNanos)
+    fun formattedDuration(): String = TimeFormatter.format(totalTimeNanos)
 
-    /**
-     * Formats fake metrics as a one-line summary.
-     *
-     * Format: "FakeName (duration) - Pattern [warning]"
-     *
-     * Examples:
-     * - "PredicateCombiner (234µs) - NoGenerics"
-     * - "PairMapper (150ms) - ClassLevel ⚠️"
-     *
-     * @return Formatted summary string
-     */
-    fun formatSummary(): String {
-        val patternName =
-            when (pattern) {
-                is GenericPattern.NoGenerics -> "NoGenerics"
-                is GenericPattern.ClassLevelGenerics -> "ClassLevel"
-                is GenericPattern.MethodLevelGenerics -> "MethodLevel"
-                is GenericPattern.MixedGenerics -> "Mixed"
-            }
-        return "$name (${formattedDuration()}) - $patternName${slowIndicator()}"
-    }
 }

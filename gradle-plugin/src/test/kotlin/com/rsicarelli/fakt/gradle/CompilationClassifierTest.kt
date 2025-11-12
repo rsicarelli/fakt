@@ -35,7 +35,7 @@ class CompilationClassifierTest {
             )
 
         // WHEN
-        val result = CompilationClassifier.isTestCompilation(compilation)
+        val result = compilation.isTestCompilation
 
         // THEN
         assertTrue(result, "Standard 'test' compilation should be classified as test")
@@ -50,7 +50,7 @@ class CompilationClassifierTest {
             )
 
         // WHEN
-        val result = CompilationClassifier.isTestCompilation(compilation)
+        val result = compilation.isTestCompilation
 
         // THEN
         assertFalse(result, "Main compilation should not be classified as test")
@@ -62,7 +62,7 @@ class CompilationClassifierTest {
         val compilation = FakeKotlinCompilation(name = "integrationTest")
 
         // WHEN
-        val result = CompilationClassifier.isTestCompilation(compilation)
+        val result = compilation.isTestCompilation
 
         // THEN
         assertTrue(
@@ -77,7 +77,7 @@ class CompilationClassifierTest {
         val compilation = FakeKotlinCompilation(name = "e2eTest")
 
         // WHEN
-        val result = CompilationClassifier.isTestCompilation(compilation)
+        val result = compilation.isTestCompilation
 
         // THEN
         assertTrue(result, "e2eTest should be classified as test")
@@ -89,7 +89,7 @@ class CompilationClassifierTest {
         val compilation = FakeKotlinCompilation(name = "performanceTest")
 
         // WHEN
-        val result = CompilationClassifier.isTestCompilation(compilation)
+        val result = compilation.isTestCompilation
 
         // THEN
         assertTrue(result, "performanceTest should be classified as test")
@@ -101,7 +101,7 @@ class CompilationClassifierTest {
         val compilation = FakeKotlinCompilation(name = "benchmark")
 
         // WHEN
-        val result = CompilationClassifier.isTestCompilation(compilation)
+        val result = compilation.isTestCompilation
 
         // THEN
         assertFalse(result, "benchmark (without Test suffix) should not be classified as test")
@@ -118,7 +118,7 @@ class CompilationClassifierTest {
             )
 
         // WHEN
-        val result = CompilationClassifier.isTestCompilation(custom)
+        val result = custom.isTestCompilation
 
         // THEN
         assertTrue(
@@ -137,7 +137,7 @@ class CompilationClassifierTest {
             )
 
         // WHEN
-        val result = CompilationClassifier.isTestCompilation(compilation)
+        val result = compilation.isTestCompilation
 
         // THEN
         assertFalse(
@@ -152,7 +152,7 @@ class CompilationClassifierTest {
         val compilation = FakeKotlinCompilation(name = "androidUnitTest")
 
         // WHEN
-        val result = CompilationClassifier.isTestCompilation(compilation)
+        val result = compilation.isTestCompilation
 
         // THEN
         assertTrue(result, "androidUnitTest should be classified as test")
@@ -164,7 +164,7 @@ class CompilationClassifierTest {
         val compilation = FakeKotlinCompilation(name = "debugTest")
 
         // WHEN
-        val result = CompilationClassifier.isTestCompilation(compilation)
+        val result = compilation.isTestCompilation
 
         // THEN
         assertTrue(result, "debugTest (Android variant) should be classified as test")
@@ -176,7 +176,7 @@ class CompilationClassifierTest {
         val compilation = FakeKotlinCompilation(name = "releaseTest")
 
         // WHEN
-        val result = CompilationClassifier.isTestCompilation(compilation)
+        val result = compilation.isTestCompilation
 
         // THEN
         assertTrue(result, "releaseTest (Android variant) should be classified as test")
@@ -188,7 +188,7 @@ class CompilationClassifierTest {
         val compilation = FakeKotlinCompilation(name = "debug")
 
         // WHEN
-        val result = CompilationClassifier.isTestCompilation(compilation)
+        val result = compilation.isTestCompilation
 
         // THEN
         assertFalse(result, "debug (Android variant) should not be classified as test")
@@ -200,7 +200,7 @@ class CompilationClassifierTest {
         val compilation = FakeKotlinCompilation(name = "release")
 
         // WHEN
-        val result = CompilationClassifier.isTestCompilation(compilation)
+        val result = compilation.isTestCompilation
 
         // THEN
         assertFalse(result, "release (Android variant) should not be classified as test")
@@ -212,7 +212,7 @@ class CompilationClassifierTest {
         val compilation = FakeKotlinCompilation(name = "integrationtest")
 
         // WHEN
-        val result = CompilationClassifier.isTestCompilation(compilation)
+        val result = compilation.isTestCompilation
 
         // THEN
         assertTrue(result, "Should handle case-insensitive 'test' suffix")
@@ -288,8 +288,10 @@ private class FakeKotlinCompilation(
     override fun source(sourceSet: KotlinSourceSet) = error("Not used")
 
     @Suppress("OVERRIDE_DEPRECATION")
-    override fun kotlinOptions(configure: org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions.() -> Unit) = error("Not used")
+    override fun kotlinOptions(configure: org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions.() -> Unit) =
+        error("Not used")
 
     @Suppress("OVERRIDE_DEPRECATION")
-    override fun kotlinOptions(configure: Action<org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions>) = error("Not used")
+    override fun kotlinOptions(configure: Action<org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions>) =
+        error("Not used")
 }

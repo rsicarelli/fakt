@@ -17,7 +17,6 @@ atomicfu = "0.29.0"
 autoService = "1.1.1"
 binaryCompatibilityValidator = "0.18.1"
 detekt = "1.23.8"
-dokka = "2.1.0"
 gjf = "1.28.0"
 jdk = "21"
 junit5 = "5.13.4"
@@ -46,7 +45,6 @@ fakt-runtime = { module = "com.rsicarelli.fakt:runtime", version.ref = "fakt-com
 # Gradle Plugins (for build-logic classpath)
 binaryCompatibilityValidator-gradlePlugin = { module = "org.jetbrains.kotlinx.binary-compatibility-validator:org.jetbrains.kotlinx.binary-compatibility-validator.gradle.plugin", version.ref = "binaryCompatibilityValidator" }
 detekt-gradlePlugin = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detekt" }
-dokka-gradlePlugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
 kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-gradlePlugin-api = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin-api", version.ref = "kotlin" }
 ktlint-gradlePlugin = { module = "org.jlleitschuh.gradle.ktlint:org.jlleitschuh.gradle.ktlint.gradle.plugin", version.ref = "ktlint-gradle" }

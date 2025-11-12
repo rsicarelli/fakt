@@ -32,6 +32,7 @@ import org.jetbrains.kotlin.name.ClassId
  * @property inheritedProperties Properties inherited from super-interfaces
  * @property inheritedFunctions Functions inherited from super-interfaces
  * @property sourceLocation Location in source code for error reporting
+ * @property validationTimeNanos Time spent validating this interface in FIR phase (nanoseconds)
  */
 data class ValidatedFakeInterface(
     val classId: ClassId,
@@ -43,6 +44,7 @@ data class ValidatedFakeInterface(
     val inheritedProperties: List<FirPropertyInfo>,
     val inheritedFunctions: List<FirFunctionInfo>,
     val sourceLocation: FirSourceLocation,
+    val validationTimeNanos: Long,
 )
 
 /**
@@ -59,6 +61,7 @@ data class ValidatedFakeInterface(
  * @property abstractMethods Abstract methods requiring implementation
  * @property openMethods Open methods that can be overridden
  * @property sourceLocation Location in source code
+ * @property validationTimeNanos Time spent validating this class in FIR phase (nanoseconds)
  */
 data class ValidatedFakeClass(
     val classId: ClassId,
@@ -70,6 +73,7 @@ data class ValidatedFakeClass(
     val abstractMethods: List<FirFunctionInfo>,
     val openMethods: List<FirFunctionInfo>,
     val sourceLocation: FirSourceLocation,
+    val validationTimeNanos: Long,
 )
 
 /**

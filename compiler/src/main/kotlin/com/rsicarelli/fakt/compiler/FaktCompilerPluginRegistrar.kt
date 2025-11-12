@@ -3,11 +3,12 @@
 package com.rsicarelli.fakt.compiler
 
 import com.rsicarelli.fakt.compiler.core.config.FaktOptions
+import com.rsicarelli.fakt.compiler.core.context.FaktSharedContext
+import com.rsicarelli.fakt.compiler.core.optimization.CompilerOptimizations
+import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.fir.FaktFirExtensionRegistrar
 import com.rsicarelli.fakt.compiler.fir.metadata.FirMetadataStorage
 import com.rsicarelli.fakt.compiler.ir.generation.UnifiedFaktIrGenerationExtension
-import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
-import com.rsicarelli.fakt.compiler.core.context.FaktSharedContext
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
@@ -46,56 +47,96 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
         val logger = FaktLogger(messageCollector, options.logLevel)
 
         if (!options.enabled) {
-            logger.trace("Plugin disabled, skipping registration")
+            logger.info("Plugin disabled, skipping registration")
             return
         }
 
-        // Create shared context for FIR→IR communication (Metro pattern)
-        val sharedContext =
-            FaktSharedContext(
-                fakeAnnotations = FaktSharedContext.DEFAULT_FAKE_ANNOTATIONS,
+        // Initialize compiler optimizations for caching and incremental compilation
+        val fakeAnnotations = FaktSharedContext.DEFAULT_FAKE_ANNOTATIONS
+        val optimizations = CompilerOptimizations(
+            fakeAnnotations = fakeAnnotations,
+            outputDir = options.outputDir,
+            logger = logger
+        ).also {
+            logPluginInitialization(
+                logger = logger,
                 options = options,
-                metadataStorage = FirMetadataStorage(),
+                fakeAnnotations = fakeAnnotations,
+                optimizations = it
             )
+        }
 
-        registerFirExtension(logger, sharedContext)
-        registerIrExtension(logger, sharedContext)
+        val sharedContext = FaktSharedContext(
+            fakeAnnotations = fakeAnnotations,
+            options = options,
+            metadataStorage = FirMetadataStorage(),
+            logger = logger,
+            optimizations = optimizations,
+        )
+
+        registerFirExtension(sharedContext)
+        registerIrExtension(sharedContext)
     }
 
     /**
      * Registers the FIR extension for @Fake annotation detection in the FIR phase.
      *
-     * Following Metro pattern: Pass shared context to FIR extension.
+     * Following Metro pattern: Pass shared context (with logger and telemetry) to FIR extension.
      *
-     * @param logger The FaktLogger for logging
      * @param sharedContext Shared context for FIR→IR communication
      */
     private fun ExtensionStorage.registerFirExtension(
-        logger: FaktLogger,
         sharedContext: FaktSharedContext,
     ) {
-        logger.trace("Registering FIR extension")
+        sharedContext.logger.trace("Registering FIR extension")
         FirExtensionRegistrarAdapter.registerExtension(FaktFirExtensionRegistrar(sharedContext))
     }
 
     /**
      * Registers the unified IR generation extension for fake implementation generation.
      *
-     * Following Metro pattern: Pass shared context to IR extension for FIR metadata access.
+     * Following Metro pattern: Pass shared context (with logger and telemetry) to IR extension.
      *
-     * @param logger The FaktLogger for logging
      * @param sharedContext Shared context for FIR→IR communication
      */
     private fun ExtensionStorage.registerIrExtension(
-        logger: FaktLogger,
         sharedContext: FaktSharedContext,
     ) {
-        logger.trace("Registering IR extension with FIR metadata access")
+        sharedContext.logger.trace("Registering IR extension with FIR metadata access")
         IrGenerationExtension.registerExtension(
-            UnifiedFaktIrGenerationExtension(
-                logger = logger,
-                sharedContext = sharedContext,
-            ),
+            UnifiedFaktIrGenerationExtension(sharedContext),
         )
+    }
+
+    /**
+     * Logs plugin initialization details at TRACE level.
+     *
+     * This is called BEFORE FIR/IR extension registration to ensure linear, sequential logging.
+     *
+     * @param logger Logger instance for output
+     * @param options Compiler plugin options
+     * @param fakeAnnotations List of configured @Fake annotation FQNs
+     * @param optimizations Compiler optimizations for cache size reporting
+     */
+    private fun logPluginInitialization(
+        logger: FaktLogger,
+        options: FaktOptions,
+        fakeAnnotations: List<String>,
+        optimizations: CompilerOptimizations,
+    ) {
+        logger.trace("════════════════════════════════════════════════════════════")
+        logger.trace("Fakt Plugin initialized")
+        logger.trace("├─ enabled: true")
+        logger.trace("├─ logLevel: ${options.logLevel}")
+        logger.trace("├─ detectedAnnotations: ${fakeAnnotations.joinToString(", ")}")
+        if (options.outputDir != null) {
+            val simplifiedPath =
+                options.outputDir
+                    .substringAfter("/ktfakes/samples/", "")
+                    .ifEmpty { options.outputDir }
+            logger.trace("├─ output: $simplifiedPath")
+        }
+        logger.trace("└─ cache: ${optimizations.cacheSize()} signatures loaded")
+        logger.trace("════════════════════════════════════════════════════════════")
     }
 }

@@ -353,8 +353,7 @@ Use `--info` logging to verify output directory.
 # Tests
 ./gradlew :gradle-plugin:test
 
-# Documentation
-./gradlew :gradle-plugin:dokkaGenerate
+# Documentation (see docs/ for MkDocs site)
 ```
 
 ## 📖 Additional Resources

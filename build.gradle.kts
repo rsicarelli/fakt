@@ -7,10 +7,3 @@ plugins {
     alias(libs.plugins.mavenPublish) apply false
     alias(libs.plugins.atomicfu) apply false
 }
-
-// Dokka 2.x multi-module aggregation
-dependencies {
-    dokka(projects.runtime)
-    dokka(projects.compiler)
-    dokka(projects.gradlePlugin)
-}

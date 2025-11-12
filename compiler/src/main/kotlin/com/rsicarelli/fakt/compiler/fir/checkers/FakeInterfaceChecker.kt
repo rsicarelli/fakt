@@ -2,10 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.fir.checkers
 
-import com.rsicarelli.fakt.compiler.fir.metadata.*
-import com.rsicarelli.fakt.compiler.fir.rendering.*
-
 import com.rsicarelli.fakt.compiler.core.context.FaktSharedContext
+import com.rsicarelli.fakt.compiler.core.telemetry.measureTimeNanos
+import com.rsicarelli.fakt.compiler.fir.metadata.FirFunctionInfo
+import com.rsicarelli.fakt.compiler.fir.metadata.FirParameterInfo
+import com.rsicarelli.fakt.compiler.fir.metadata.FirPropertyInfo
+import com.rsicarelli.fakt.compiler.fir.metadata.FirSourceLocation
+import com.rsicarelli.fakt.compiler.fir.metadata.FirTypeParameterInfo
+import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeInterface
+import com.rsicarelli.fakt.compiler.fir.rendering.renderDefaultValue
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
@@ -48,11 +53,14 @@ import org.jetbrains.kotlin.name.FqName
  * This follows the same validation pattern as Metro's InjectConstructorChecker,
  * adapting it for @Fake annotation validation.
  *
- * @property sharedContext Shared context with metadata storage
+ * @property sharedContext Shared context with metadata storage and logger
  */
 internal class FakeInterfaceChecker(
     private val sharedContext: FaktSharedContext,
 ) : FirClassChecker(MppCheckerKind.Common) {
+
+    private val logger = sharedContext.logger
+
     companion object {
         // @Fake annotation ClassId
         private val FAKE_ANNOTATION_CLASS_ID = ClassId.topLevel(FqName("com.rsicarelli.fakt.Fake"))
@@ -61,6 +69,8 @@ internal class FakeInterfaceChecker(
     context(context: CheckerContext, reporter: DiagnosticReporter)
     override fun check(declaration: FirClass) {
         val session = context.session
+        val classId = declaration.classId
+        val simpleName = classId.shortClassName.asString()
 
         // Check if class has @Fake annotation
         if (!declaration.hasAnnotation(FAKE_ANNOTATION_CLASS_ID, session)) return
@@ -72,76 +82,76 @@ internal class FakeInterfaceChecker(
 
         // Validate not sealed
         if (declaration.modality == Modality.SEALED) {
-            // Report error with source location
+            logger.debug("Skipped $simpleName: sealed interface not supported")
             reportError(FirFaktErrors.FAKE_CANNOT_BE_SEALED)
             return // Skip sealed interfaces
         }
 
         // Validate not local
         if (declaration.symbol.classId.isLocal) {
-            // Report error with source location
+            logger.debug("Skipped $simpleName: local interface not supported")
             reportError(FirFaktErrors.FAKE_CANNOT_BE_LOCAL)
             return // Skip local interfaces
         }
 
         // Validate not expect (KMP multiplatform)
         if (declaration.status.isExpect) {
+            logger.debug("Skipped $simpleName: expect interface not supported")
             reportError(FirFaktErrors.FAKE_CANNOT_BE_EXPECT)
             return // Skip expect interfaces
         }
 
         // Validate not external
         if (declaration.status.isExternal) {
+            logger.debug("Skipped $simpleName: external interface not supported")
             reportError(FirFaktErrors.FAKE_CANNOT_BE_EXTERNAL)
             return // Skip external interfaces
         }
 
-        // ✅ Validation passed - analyze and store metadata
-        analyzeAndStoreMetadata(declaration, session)
+        // ✅ Validation passed - analyze and store metadata with timing
+        val timedResult = measureTimeNanos {
+            analyzeMetadata(declaration, session, simpleName)
+        }
+
+        // Store metadata with validation timing for consolidated logging in IR phase
+        val metadataWithTiming =
+            timedResult.result.copy(validationTimeNanos = timedResult.durationNanos)
+        sharedContext.metadataStorage.storeInterface(metadataWithTiming)
     }
 
     /**
-     * Analyze validated interface and store metadata for IR generation.
+     * Analyze validated interface and create metadata for IR generation.
      *
      * This is where we extract all the information that IR phase will need:
      * - Type parameters
      * - Properties
      * - Functions
-     * - Generic pattern classification
+     * - Inherited members
+     *
+     * Note: Validation timing is added by caller after this returns.
      *
      * @param declaration Validated FIR class declaration
      * @param session FIR session for type resolution
+     * @param simpleName Simple name for logging
+     * @return Validated metadata (timing will be added by caller)
      */
-    private fun analyzeAndStoreMetadata(
+    private fun analyzeMetadata(
         declaration: FirClass,
         session: FirSession,
-    ) {
+        simpleName: String,
+    ): ValidatedFakeInterface {
         val classId = declaration.classId
-        val simpleName = classId.shortClassName.asString()
         val packageName = classId.packageFqName.asString()
-
-        // Extract type parameters from FIR
         val typeParameters = extractTypeParameters(declaration)
-
-        // Extract properties from FIR
         val properties = extractProperties(declaration)
-
-        // Extract functions from FIR
         val functions = extractFunctions(declaration)
-
-        // Extract source location from FIR
         val sourceLocation = extractSourceLocation(declaration)
-
-        // Extract inherited members from super-interfaces
         val (inheritedProperties, inheritedFunctions) = extractInheritedMembers(
-            declaration,
-            session
+            declaration = declaration,
+            session = session
         )
 
-        // Create and store validated metadata
-        // GenericPattern will be reconstructed in IR phase from typeParameters + functions
-        // Now includes inherited members
-        val metadata = ValidatedFakeInterface(
+        return ValidatedFakeInterface(
             classId = classId,
             simpleName = simpleName,
             packageName = packageName,
@@ -151,9 +161,8 @@ internal class FakeInterfaceChecker(
             inheritedProperties = inheritedProperties,
             inheritedFunctions = inheritedFunctions,
             sourceLocation = sourceLocation,
+            validationTimeNanos = 0L, // Will be set by caller after timing measurement
         )
-
-        sharedContext.metadataStorage.storeInterface(metadata)
     }
 
     /**
@@ -444,7 +453,9 @@ internal class FakeInterfaceChecker(
         val classId = firClass.symbol.classId
 
         // Skip if already visited (handles diamond inheritance)
-        if (classId in visitedInterfaces) return
+        if (classId in visitedInterfaces) {
+            return
+        }
         visitedInterfaces.add(classId)
 
         // Extract members from this interface
@@ -480,23 +491,22 @@ internal class FakeInterfaceChecker(
     }
 
     /**
-     * Report compilation error (Simplified approach).
+     * Report compilation error via structured logging.
      *
-     * **Note**: FIR-level error reporting requires complex diagnostic factory setup
-     * that varies by Kotlin version. For now, we use simpler error logging
-     * that ensures validation stops invalid declarations from being processed.
+     * Uses FaktLogger for consistent error reporting across FIR and IR phases.
+     * Errors are displayed during compilation through Kotlin's MessageCollector.
      *
-     * The key goal: Detect and reject invalid @Fake usage early in FIR phase.
-     * Full diagnostic integration can be added in future enhancements if needed.
+     * **Note**: FIR-level diagnostic factory integration could be added in future
+     * enhancements for IDE integration and precise source location highlighting.
      *
      * @param message Error message to display
      */
     private fun reportError(
         message: String,
     ) {
-        // Log error to stderr (visible during compilation)
-        // This ensures developers see validation errors immediately
-        System.err.println("ERROR: $message")
+        // Log error through FaktLogger (routes to Kotlin's MessageCollector)
+        // This ensures developers see validation errors with proper severity
+        logger.error(message)
 
         // Note: The key behavior is that we return early from check(),
         // preventing invalid declarations from being stored in metadata.

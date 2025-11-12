@@ -3,7 +3,12 @@
 package com.rsicarelli.fakt.compiler.fir.checkers
 
 
-import com.rsicarelli.fakt.compiler.fir.metadata.*
+import com.rsicarelli.fakt.compiler.fir.metadata.FirFunctionInfo
+import com.rsicarelli.fakt.compiler.fir.metadata.FirParameterInfo
+import com.rsicarelli.fakt.compiler.fir.metadata.FirPropertyInfo
+import com.rsicarelli.fakt.compiler.fir.metadata.FirSourceLocation
+import com.rsicarelli.fakt.compiler.fir.metadata.FirTypeParameterInfo
+import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeClass
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
@@ -444,7 +449,13 @@ class FakeClassCheckerTest {
                                 name = "sort",
                                 parameters =
                                     listOf(
-                                        FirParameterInfo("items", "kotlin.collections.List<R>", false, null, false),
+                                        FirParameterInfo(
+                                            "items",
+                                            "kotlin.collections.List<R>",
+                                            false,
+                                            null,
+                                            false
+                                        ),
                                     ),
                                 returnType = "kotlin.collections.List<R>",
                                 isSuspend = false,
@@ -521,8 +532,20 @@ class FakeClassCheckerTest {
                                 name = "transformList",
                                 parameters =
                                     listOf(
-                                        FirParameterInfo("items", "kotlin.collections.List<T>", false, null, false),
-                                        FirParameterInfo("transformer", "kotlin.Function1<T, R>", false, null, false),
+                                        FirParameterInfo(
+                                            "items",
+                                            "kotlin.collections.List<T>",
+                                            false,
+                                            null,
+                                            false
+                                        ),
+                                        FirParameterInfo(
+                                            "transformer",
+                                            "kotlin.Function1<T, R>",
+                                            false,
+                                            null,
+                                            false
+                                        ),
                                         FirParameterInfo("default", "R?", true, null, false),
                                     ),
                                 returnType = "kotlin.collections.List<R>?",
@@ -575,6 +598,7 @@ class FakeClassCheckerTest {
             abstractMethods = abstractMethods,
             openMethods = openMethods,
             sourceLocation = FirSourceLocation.UNKNOWN,
+            validationTimeNanos = 0L,
         )
     }
 }

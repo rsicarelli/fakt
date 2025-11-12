@@ -2,10 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.fir.checkers
 
-import com.rsicarelli.fakt.compiler.fir.metadata.*
-import com.rsicarelli.fakt.compiler.fir.rendering.*
-
 import com.rsicarelli.fakt.compiler.core.context.FaktSharedContext
+import com.rsicarelli.fakt.compiler.core.telemetry.measureTimeNanos
+import com.rsicarelli.fakt.compiler.fir.metadata.FirFunctionInfo
+import com.rsicarelli.fakt.compiler.fir.metadata.FirParameterInfo
+import com.rsicarelli.fakt.compiler.fir.metadata.FirPropertyInfo
+import com.rsicarelli.fakt.compiler.fir.metadata.FirSourceLocation
+import com.rsicarelli.fakt.compiler.fir.metadata.FirTypeParameterInfo
+import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeClass
+import com.rsicarelli.fakt.compiler.fir.rendering.renderDefaultValue
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
@@ -39,11 +44,14 @@ import org.jetbrains.kotlin.name.FqName
  * The primary use case is interfaces, but we support abstract classes
  * for compatibility with existing code patterns.
  *
- * @property sharedContext Shared context with metadata storage
+ * @property sharedContext Shared context with metadata storage and logger
  */
 internal class FakeClassChecker(
     private val sharedContext: FaktSharedContext,
 ) : FirClassChecker(MppCheckerKind.Common) {
+    // Extract logger from shared context for performance tracking and debugging
+    private val logger = sharedContext.logger
+
     companion object {
         // @Fake annotation ClassId
         private val FAKE_ANNOTATION_CLASS_ID = ClassId.topLevel(FqName("com.rsicarelli.fakt.Fake"))
@@ -52,71 +60,87 @@ internal class FakeClassChecker(
     context(context: CheckerContext, reporter: DiagnosticReporter)
     override fun check(declaration: FirClass) {
         val session = context.session
+        val classId = declaration.classId
+        val simpleName = classId.shortClassName.asString()
 
         // Check if class has @Fake annotation
         if (!declaration.hasAnnotation(FAKE_ANNOTATION_CLASS_ID, session)) return
 
         // Skip if already validated as interface (FakeInterfaceChecker handles it)
-        if (declaration.classKind == ClassKind.INTERFACE) return
+        if (declaration.classKind == ClassKind.INTERFACE) {
+            return
+        }
 
         // Validate it's a class
         if (declaration.classKind != ClassKind.CLASS) {
-            // Objects, enum classes, etc. cannot be faked
-            reportError(FirFaktErrors.FAKE_CLASS_MUST_BE_ABSTRACT)
+            logger.debug("Skipped $simpleName: not a class (classKind=${declaration.classKind})")
+            logger.error(FirFaktErrors.FAKE_CLASS_MUST_BE_ABSTRACT)
             return // Skip non-classes
         }
 
         // Validate class modality (abstract or open)
         when (declaration.modality) {
             Modality.ABSTRACT -> {
-                // Allow abstract classes (existing behavior)
+                // Allow abstract classes
             }
 
             Modality.OPEN -> {
                 // Allow open classes if they have open members
                 if (!hasOpenMembers(declaration)) {
-                    reportError(FirFaktErrors.FAKE_OPEN_CLASS_NO_OPEN_MEMBERS)
+                    logger.debug("Skipped $simpleName: open class with no open members")
+                    logger.error(FirFaktErrors.FAKE_OPEN_CLASS_NO_OPEN_MEMBERS)
                     return
                 }
             }
 
             Modality.FINAL -> {
-                reportError(FirFaktErrors.FAKE_CLASS_CANNOT_BE_FINAL)
+                logger.debug("Skipped $simpleName: final class not supported")
+                logger.error(FirFaktErrors.FAKE_CLASS_CANNOT_BE_FINAL)
                 return
             }
 
             Modality.SEALED -> {
-                reportError(FirFaktErrors.FAKE_CLASS_CANNOT_BE_SEALED)
+                logger.debug("Skipped $simpleName: sealed class not supported")
+                logger.error(FirFaktErrors.FAKE_CLASS_CANNOT_BE_SEALED)
                 return
             }
 
             null -> {
-                // Treat null modality as FINAL
-                reportError(FirFaktErrors.FAKE_CLASS_CANNOT_BE_FINAL)
+                logger.debug("Skipped $simpleName: null modality (treated as final)")
+                logger.error(FirFaktErrors.FAKE_CLASS_CANNOT_BE_FINAL)
                 return
             }
         }
 
         // Validate not local
         if (declaration.symbol.classId.isLocal) {
-            reportError(FirFaktErrors.FAKE_CANNOT_BE_LOCAL)
+            logger.debug("Skipped $simpleName: local class not supported")
+            logger.error(FirFaktErrors.FAKE_CANNOT_BE_LOCAL)
             return
         }
 
         // Validate not expect (KMP multiplatform)
         if (declaration.status.isExpect) {
-            reportError(FirFaktErrors.FAKE_CANNOT_BE_EXPECT)
+            logger.debug("Skipped $simpleName: expect class not supported")
+            logger.error(FirFaktErrors.FAKE_CANNOT_BE_EXPECT)
             return
         }
 
         // Validate not external
         if (declaration.status.isExternal) {
-            reportError(FirFaktErrors.FAKE_CANNOT_BE_EXTERNAL)
+            logger.debug("Skipped $simpleName: external class not supported")
+            logger.error(FirFaktErrors.FAKE_CANNOT_BE_EXTERNAL)
             return
         }
 
-        // ✅ Validation passed - analyze and store metadata
-        analyzeAndStoreMetadata(declaration)
+        val timedResult = measureTimeNanos {
+            analyzeMetadata(declaration, simpleName)
+        }
+
+        // Store metadata with validation timing for consolidated logging in IR phase
+        val metadataWithTiming =
+            timedResult.result.copy(validationTimeNanos = timedResult.durationNanos)
+        sharedContext.metadataStorage.storeClass(metadataWithTiming)
     }
 
     /**
@@ -152,19 +176,23 @@ internal class FakeClassChecker(
     }
 
     /**
-     * Analyze validated class and store metadata for IR generation.
+     * Analyze validated class and create metadata for IR generation.
      *
      * Similar to interface analysis but separates:
      * - Abstract properties/methods (must be implemented)
      * - Open properties/methods (can be overridden)
      *
+     * Note: Validation timing is added by caller after this returns.
+     *
      * @param declaration Validated FIR class declaration
+     * @param simpleName Simple name for logging
+     * @return Validated metadata (timing will be added by caller)
      */
-    private fun analyzeAndStoreMetadata(
+    private fun analyzeMetadata(
         declaration: FirClass,
-    ) {
+        simpleName: String,
+    ): ValidatedFakeClass {
         val classId = declaration.classId
-        val simpleName = classId.shortClassName.asString()
         val packageName = classId.packageFqName.asString()
 
         // Extract type parameters (same as interface)
@@ -174,21 +202,19 @@ internal class FakeClassChecker(
         val (abstractProps, openProps) = extractProperties(declaration)
         val (abstractMethods, openMethods) = extractMethods(declaration)
 
-        // Create and store validated metadata
-        val metadata =
-            ValidatedFakeClass(
-                classId = classId,
-                simpleName = simpleName,
-                packageName = packageName,
-                typeParameters = typeParameters,
-                abstractProperties = abstractProps,
-                openProperties = openProps,
-                abstractMethods = abstractMethods,
-                openMethods = openMethods,
-                sourceLocation = FirSourceLocation.UNKNOWN, // source location extraction
-            )
-
-        sharedContext.metadataStorage.storeClass(metadata)
+        // Create validated metadata (timing will be added by caller)
+        return ValidatedFakeClass(
+            classId = classId,
+            simpleName = simpleName,
+            packageName = packageName,
+            typeParameters = typeParameters,
+            abstractProperties = abstractProps,
+            openProperties = openProps,
+            abstractMethods = abstractMethods,
+            openMethods = openMethods,
+            sourceLocation = FirSourceLocation.UNKNOWN, // source location extraction
+            validationTimeNanos = 0L, // Will be set by caller after timing measurement
+        )
     }
 
     /**
@@ -354,29 +380,5 @@ internal class FakeClassChecker(
         }
 
         return Pair(abstractMethods, openMethods)
-    }
-
-    /**
-     * Report compilation error (Simplified approach).
-     *
-     * **Note**: FIR-level error reporting requires complex diagnostic factory setup
-     * that varies by Kotlin version. For now, we use simpler error logging
-     * that ensures validation stops invalid declarations from being processed.
-     *
-     * The key goal: Detect and reject invalid @Fake usage early in FIR phase.
-     * Full diagnostic integration can be added in future phases if needed.
-     *
-     * @param message Error message to display
-     */
-    private fun reportError(
-        message: String,
-    ) {
-        // Log error to stderr (visible during compilation)
-        // This ensures developers see validation errors immediately
-        System.err.println("ERROR: $message")
-
-        // Note: The key behavior is that we return early from check(),
-        // preventing invalid declarations from being stored in metadata.
-        // This stops fake generation for invalid interfaces/classes.
     }
 }

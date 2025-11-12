@@ -145,44 +145,6 @@ fakt {
 - **DEBUG**: Troubleshooting generation issues (~5-10ms overhead)
 - **TRACE**: Deep debugging, bug reports (~20-50ms overhead)
 
-### **Slash Commands (Claude Code)**
-
-Fakt includes 16 specialized slash commands for compiler plugin development:
-
-```bash
-# 🏗️ Environment & Setup
-/setup-development-environment [--full|--quick|--validate]  # Complete dev environment setup
-
-# 🔬 IR & Compiler Debugging
-/debug-ir-generation <interface_name>                       # Step-by-step IR generation debugging
-/consult-kotlin-api <api_class>                             # Query Kotlin compiler source
-
-# 📊 Validation & Testing
-/validate-compilation [--interface=<name>|--all|--verbose]  # Compilation validation
-/run-bdd-tests [pattern|all|compiler]                       # Execute BDD GIVEN-WHEN-THEN tests
-
-# 🔍 Analysis Tools
-/analyze-interface-structure <interface_name>               # Deep interface structural analysis
-/analyze-compilation-error [--type=<error_type>]            # Systematic error analysis
-/analyze-generic-scoping [interface_name|all]               # Generic type scoping analysis
-/analyze-and-test                                           # Behavior analysis & test generation
-
-# 📈 Progress & Status
-/check-implementation-status [phase1|phase2|detailed]       # Monitor implementation progress
-
-# 🚀 Advanced Features
-/plan-generic-implementation [strategy]                     # Generic type implementation planning
-
-# 📚 Documentation
-/document [target]                                          # Professional KDoc documentation system
-
-# 🛠️ Roadmap Management
-/execute-roadmap [phase|feature]                            # Execute roadmap with TDD RED-GREEN
-/resume-and-update-generics                                 # Resume generic implementation
-```
-
-**Note**: Most commands automatically invoke relevant Skills when needed. See Skills System section below.
-
 ### **Skills System (Auto-Activation)**
 
 Fakt includes 12 specialized skills that **automatically activate** based on your prompts and context:
@@ -255,18 +217,18 @@ User: "Debug IR generation for UserService interface"
 ❌ Mocks (use fakes)
 ❌ @BeforeEach/@AfterEach (use isolated instances)
 
-### **✅ SEMPRE FAZER:**
+### **✅ ALWAYS DO:**
 
 1. **🏆 Follow compiler plugin best practices**
    - Use industry-standard two-phase FIR → IR compilation patterns
    - Reference: `.claude/docs/` for architectural guidance
 
-2. **🎯 Validar com Kotlin compiler source**
-   - APIs do compilador mudam entre versões
-   - Use `/consult-kotlin-api <class>` para verificar
-   - Referência: `kotlin/compiler/` (local source copy)
+2. **🎯 Validate with Kotlin compiler source**
+   - Compiler APIs change between versions
+   - Use `kotlin-api-consultant` skill to verify
+   - Reference: `kotlin/compiler/` (local source copy)
 
-3. **⚡ TDD com vanilla JUnit5**
+3. **⚡ TDD with vanilla JUnit5**
    - BDD naming: `GIVEN x WHEN y THEN z`
    - Isolated instances per test
    - Compilation validation: generated code MUST compile
@@ -277,32 +239,32 @@ User: "Debug IR generation for UserService interface"
    - Use `--info` flag to debug compiler options
 
 5. **📋 MAP quality standards**
-   - Minimum Awesome Product sempre
+   - Minimum Awesome Product always
    - Type-safe code generation
    - Professional error messages
    - Zero compilation errors
 
 ---
 
-### **❌ JAMAIS FAZER:**
+### **❌ NEVER DO:**
 
-1. **🚨 Ignorar Metro patterns**
-   - Sempre check Metro solutions first
-   - Two-phase FIR → IR é obrigatório
-   - Context patterns devem ser seguidos
+1. **🚨 Ignore Metro patterns**
+   - Always check Metro solutions first
+   - Two-phase FIR → IR is mandatory
+   - Context patterns must be followed
 
 2. **🚨 Skip Kotlin API validation**
-   - APIs marcadas como `@UnsafeApi` podem mudar
-   - Sempre verificar com `/consult-kotlin-api`
+   - APIs marked as `@UnsafeApi` can change
+   - Always verify with `kotlin-api-consultant` skill
    - Test against multiple Kotlin versions when possible
 
 3. **🚨 Marketing over reality**
-   - Real technical status sempre
+   - Real technical status always
    - Document known issues openly
-   - Progress metrics devem ser honestos
+   - Progress metrics must be honest
 
 4. **🚨 Skip compilation testing**
-   - Generated code deve compilar sem erros
+   - Generated code must compile without errors
    - Test both single-module and KMP scenarios
    - Verify output in correct source set (test vs main)
 
@@ -320,7 +282,7 @@ User: "Debug IR generation for UserService interface"
 - **🧪 Metro testing approach** - compiler-tests/ structure (future)
 - **📊 Metro quality standards** - Binary compatibility, API validation
 
-## 📚 Referências Críticas
+## 📚 Critical References
 
 ### **Metro Source Code (Local)**
 - **Compiler Plugin**: `metro/compiler/src/main/kotlin/dev/zacsweers/metro/compiler/`
@@ -336,8 +298,8 @@ User: "Debug IR generation for UserService interface"
 ### **Fakt Documentation**
 - **Testing Guidelines**: `.claude/docs/validation/testing-guidelines.md` ⭐
 - **Metro Alignment**: `.claude/docs/development/metro-alignment.md`
-- **Current Status**: `.claude/docs/implementation/current-status.md`
-- **Architecture**: `.claude/docs/architecture/unified-ir-native.md`
+- **Current Status**: `.claude/docs/implementation/roadmap.md`
+- **Architecture**: `.claude/docs/architecture/ARCHITECTURE.md`
 - **Decision Tree**: `.claude/docs/development/decision-tree.md`
 
 ### **Quick Reference**
@@ -347,7 +309,7 @@ User: "Debug IR generation for UserService interface"
 
 ## 🎯 Do's and Don'ts
 
-### **✅ SEMPRE FAZER**
+### **✅ ALWAYS DO**
 
 #### **Development**
 - ✅ Use `make` commands from project root (avoid `cd ktfake/` constantly)
@@ -361,7 +323,7 @@ User: "Debug IR generation for UserService interface"
 
 #### **Architecture**
 - ✅ Consult Metro patterns before major decisions
-- ✅ Validate Kotlin API usage with `/consult-kotlin-api`
+- ✅ Validate Kotlin API usage with `kotlin-api-consultant` skill
 - ✅ Keep FIR and IR phases separate
 - ✅ Use modular design (analysis → generation → output)
 - ✅ Generate code in test source sets only
@@ -375,7 +337,7 @@ User: "Debug IR generation for UserService interface"
 
 ---
 
-### **❌ JAMAIS FAZER**
+### **❌ NEVER DO**
 
 #### **Development**
 - ❌ Skip compilation testing
@@ -424,7 +386,7 @@ User: "Debug IR generation for UserService interface"
 - ❌ Generate unnecessary code
 - ❌ Ignore build performance
 
-## 📄 Convenções de Código
+## 📄 Code Conventions
 
 ### **Naming Conventions**
 
@@ -606,9 +568,9 @@ ktfake/samples/kmp-single-module/              # Working KMP example project
    - Architectural inspiration and patterns
    - When to consult Metro source
 
-3. **Current Status**
-   - `.claude/docs/implementation/current-status.md`
-   - Real progress tracking (no marketing)
+3. **Implementation Roadmap**
+   - `.claude/docs/implementation/roadmap.md`
+   - Current progress and phase tracking
    - Known issues and limitations
 
 4. **Makefile Commands**

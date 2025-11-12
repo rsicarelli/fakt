@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.fir.metadata
 
-import com.rsicarelli.fakt.compiler.ir.analysis.GenericPattern
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
@@ -190,6 +189,7 @@ class FirMetadataStorageTest {
             inheritedProperties = emptyList(),
             inheritedFunctions = emptyList(),
             sourceLocation = FirSourceLocation.UNKNOWN,
+            validationTimeNanos = 0L,
         )
     }
 
@@ -208,6 +208,7 @@ class FirMetadataStorageTest {
             abstractMethods = emptyList(),
             openMethods = emptyList(),
             sourceLocation = FirSourceLocation.UNKNOWN,
+            validationTimeNanos = 0L,
         )
     }
 }
