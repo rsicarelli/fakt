@@ -1,10 +1,48 @@
-# Performance Optimization - MAP Implementation Guide
+# Performance Optimization Vision (FUTURE DESIGN)
 
-> **Status**: In Progress - compiler-runtime module creation
-> **Date**: September 2025
-> **Approach**: TDD-driven simplification from enterprise complexity to MAP essentials
+> ⚠️ **This is a DESIGN VISION document with partial implementation**  
+> **For current implementation, see**: `.claude/docs/architecture/compiler-optimizations.md`
+>
+> **Status**: Partially implemented (file-based caching exists, separate module does NOT)  
+> **Date**: September 2025  
+> **Reality**: Optimizations implemented as `CompilerOptimizations` class, not separate `compiler-runtime/` module  
+> **Purpose**: Historical record of design thinking and potential future enhancements
 
-## 🎯 **Performance Optimization Strategy**
+## ✅ What Was Actually Implemented
+
+Instead of creating a separate `compiler-runtime/` module, optimizations were implemented directly in the compiler:
+
+**Location**: `compiler/src/main/kotlin/.../core/optimization/`
+```
+✅ CompilerOptimizations.kt    # File-based caching, custom annotations
+✅ SignatureBuilder.kt         # MD5 signature generation from source files
+```
+
+**Key Features Implemented:**
+- ✅ File-based signature caching (80-94% cache hit rates)
+- ✅ Incremental compilation (skip unchanged interfaces)
+- ✅ Custom annotation support (company-owned annotations)
+- ✅ MD5 hash-based change detection
+- ✅ Thread-safe cache writes
+- ✅ Graceful error handling
+
+**What This Document Proposed But Wasn't Built:**
+- ❌ Separate `compiler-runtime/` module
+- ❌ `TypeAnalysisCache` as standalone class
+- ❌ `MemoryOptimizedIrGenerator` with object pooling
+- ❌ `IncrementalCompilationManager` as separate component
+- ❌ Complex benchmarking infrastructure
+- ❌ Gradle plugin performance reporting DSL
+
+**Why the Simpler Approach?**
+- MAP philosophy: Keep only essential optimizations
+- Avoid over-engineering
+- File-based caching provides 80-94% speedup without complexity
+- No need for separate module for ~300 lines of code
+
+---
+
+## 🎯 **Original Performance Optimization Strategy** (Vision)
 
 ### **MAP Philosophy: Essential Optimization Only**
 - **Keep**: What provides real performance value

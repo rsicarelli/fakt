@@ -220,6 +220,6 @@ fakeRepo.configureSave { user ->
 
 ## References
 
-- Generic Scoping Analysis: `.claude/docs/analysis/generic-scoping-analysis.md`
-- Phase 2 Roadmap: `.claude/docs/implementation/generics/phase2-code-generation.md`
+- Generic Technical Reference: `.claude/docs/implementation/generics/technical-reference.md`
+- Generic Strategies: `.claude/docs/implementation/generics/complex-generics-strategy.md`
 - IrTypeSubstitutor API: Consult with `/consult-kotlin-api IrTypeSubstitutor`

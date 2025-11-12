@@ -1,22 +1,22 @@
 # Kotlin API Reference Guide - Compiler Source Consultation
 
-> **Purpose**: Como consultar o Kotlin compiler source para validação técnica
-> **Location**: `/kotlin/compiler/` - Clone do Kotlin compiler para referência
-> **Usage**: Validar APIs, entender patterns, verificar compatibilidade
+> **Purpose**: How to consult the Kotlin compiler source for technical validation
+> **Location**: `/kotlin/compiler/` - Clone of Kotlin compiler for reference
+> **Usage**: Validate APIs, understand patterns, verify compatibility
 
-## 🎯 **Quando Consultar Kotlin Source**
+## 🎯 **When to Consult Kotlin Source**
 
-### **✅ SEMPRE consultar para:**
-- **API validation** - Verificar se métodos/classes ainda existem
-- **Pattern verification** - Como Kotlin internamente resolve problemas similares
-- **Type system understanding** - Como generics são handled internamente
-- **Breaking change detection** - APIs deprecated ou mudanças
+### **✅ ALWAYS consult for:**
+- **API validation** - Check if methods/classes still exist
+- **Pattern verification** - How Kotlin internally resolves similar problems
+- **Type system understanding** - How generics are handled internally
+- **Breaking change detection** - Deprecated APIs or changes
 
-### **🔍 Estrutura do Kotlin Compiler Source**
+### **🔍 Kotlin Compiler Source Structure**
 
 ```
 /kotlin/compiler/
-├── ir/                          # 🎯 IR system - nossa main reference
+├── ir/                          # 🎯 IR system - our main reference
 │   ├── backend.common/          # IrGenerationExtension, extensions
 │   ├── ir.tree/                 # IrElement, IrClass, IrFunction hierarchy
 │   └── ir.serialization.common/ # Cross-module serialization

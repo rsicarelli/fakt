@@ -455,7 +455,7 @@ This Skill composes with:
 
 **For detailed patterns, consult:**
 - `resources/testing-patterns.md` - When implementing specific test types
-- `.claude/docs/validation/testing-guidelines.md` - For THE ABSOLUTE STANDARD
+- `.claude/docs/development/validation/testing-guidelines.md` - For THE ABSOLUTE STANDARD
 
 ## Success Criteria
 

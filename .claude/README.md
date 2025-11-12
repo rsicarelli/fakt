@@ -1,24 +1,66 @@
 # KtFakes Claude Code Documentation Structure
 
-> **Purpose**: Comprehensive documentation and command structure optimized for Claude Code development workflow
+> **Purpose**: Comprehensive documentation and skills system optimized for Claude Code development workflow
 > **Philosophy**: MAP (Minimum Awesome Product) - Production quality documentation
 > **Testing Standard**: [📋 Testing Guidelines](docs/validation/testing-guidelines.md)
 
 ## 🎯 **Navigation Index**
 
-### **📋 Core Implementation Status**
-- **[📊 Current Status](docs/implementation/current-status.md)** - Phase 1 breakthrough complete, 75% critical issues resolved
-- **[🚀 Implementation Roadmap](docs/implementation/roadmap.md)** - Phase 2 generic scoping architecture plan
-- **[🔍 Generic Scoping Analysis](docs/analysis/generic-scoping-analysis.md)** - Deep dive into core architectural challenge
+### **🌳 Start Here**
+- **[🌳 Decision Tree](docs/development/decision-tree.md)** - Navigate to the right documentation based on your context
 
-### **🏗️ Architecture & Development**
+### **🏗️ Architecture & Implementation**
+- **[📐 Architecture Overview](docs/implementation/architecture/ARCHITECTURE.md)** - Overall Fakt architecture
+- **[� Gradle Plugin](docs/implementation/architecture/gradle-plugin.md)** - Plugin implementation and extension DSL
+- **[⚡ Compiler Optimizations](docs/implementation/architecture/compiler-optimizations.md)** - Caching and incremental compilation
+- **[🎯 KMP Optimization Strategy](docs/implementation/architecture/kmp-optimization-strategy.md)** - Multi-platform optimization
+
+### **💻 Code Generation**
+- **[🚀 Codegen V2](docs/implementation/codegen-v2/README.md)** - Type-safe code generation DSL (production-ready)
+- **[🎨 Basic Fake Generation](docs/implementation/patterns/basic-fake-generation.md)** - Core fake generation patterns
+- **[⚡ Suspend Functions](docs/implementation/patterns/suspend-function-handling.md)** - Coroutine support
+
+### **🧬 Generic Type Handling**
+- **[� Technical Reference](docs/implementation/generics/technical-reference.md)** - IrTypeSubstitutor deep dive
+- **[🎯 Complex Generics Strategy](docs/implementation/generics/complex-generics-strategy.md)** - Advanced generic handling
+
+### **📦 Multi-Module & Source Sets**
+- **[🔧 Collector Task](docs/implementation/multi-module/collector-task-implementation.md)** - FakeCollectorTask implementation
+- **[📂 Source Sets Guide](docs/implementation/source_sets/README.md)** - KMP source set handling
+
+### **📋 API & Specifications**
+- **[📝 API Specifications](docs/implementation/api/specifications.md)** - API contracts and interfaces
+- **[�️ Annotations](docs/implementation/api/annotations.md)** - @Fake annotation system
+- **[🔍 Generated API](docs/implementation/api/generated-api.md)** - Generated code structure
+
+### **🔬 Development Resources**
 - **[⚙️ Metro Alignment](docs/development/metro-alignment.md)** - Following Metro architectural patterns
 - **[📚 Kotlin API Reference](docs/development/kotlin-api-reference.md)** - IR API usage and validation
+- **[🔧 Kotlin Compiler IR API](docs/development/kotlin-compiler-ir-api.md)** - Compiler API deep dive
+- **[📐 Metro FIR/IR Specs](docs/development/metro-fir-ir-specifications.md)** - Metro framework specifications
 
 ### **✅ Validation & Testing**
-- **[📋 Testing Guidelines](docs/validation/testing-guidelines.md)** - THE ABSOLUTE TESTING STANDARD (GIVEN-WHEN-THEN)
-- **[🔧 Compilation Validation](docs/validation/compilation-validation.md)** - Ensure generated code compiles
-- **[🛡️ Type Safety Validation](docs/validation/type-safety-validation.md)** - Generic handling and type preservation
+- **[📋 Testing Guidelines](docs/development/validation/testing-guidelines.md)** - THE ABSOLUTE TESTING STANDARD (GIVEN-WHEN-THEN)
+- **[🔧 Compilation Validation](docs/development/validation/compilation-validation.md)** - Ensure generated code compiles
+- **[🛡️ Type Safety Validation](docs/development/validation/type-safety-validation.md)** - Generic handling and type preservation
+- **[🧪 Skills Activation Tests](docs/development/validation/SKILLS-ACTIVATION-TESTS.md)** - 40+ test prompts for Skills
+
+### **📚 Examples & Contexts**
+- **[🚀 Quick Start Demo](docs/development/examples/quick-start-demo.md)** - Get started quickly
+- **[💡 Working Examples](docs/development/examples/working-examples.md)** - Real-world examples
+- **[👨‍💻 For Kotlin Developers](docs/development/contexts/kotlin-developers.md)** - Context for Kotlin devs
+- **[🧪 For TDD Practitioners](docs/development/contexts/tdd-practitioners.md)** - Context for TDD users
+
+### **🔮 Future Vision Documents**
+- **[🎯 Gradle Plugin Vision](docs/development/future/gradle-plugin-vision.md)** - Future enhancement proposals
+- **[⚡ Performance Optimization Vision](docs/development/future/performance-optimization-vision.md)** - Future optimization ideas
+- **[🔧 Explicit Backing Fields](docs/development/future/explicit-backing-fields-refactoring.md)** - Refactoring proposal
+
+### **🛠️ Troubleshooting**
+- **[⚠️ Common Issues](docs/troubleshooting/common-issues.md)** - Solutions to frequent problems
+
+### **📝 Migration & Patterns**
+- **[🔄 Migration Patterns](docs/development/MIGRATION-PATTERNS.md)** - Skills migration patterns
 
 ## 🔧 **Available Skills**
 
@@ -46,16 +88,6 @@ Fakt uses Claude Code Skills for autonomous, context-aware development assistanc
 ### **Development Tools**
 - **skill-creator** - Creates new Claude Code Skills following best practices
 
-### **Legacy Slash Commands (Deprecated)**
-For backward compatibility, slash commands still work but Skills are preferred:
-```bash
-/debug-ir-generation <interface>      # → Use kotlin-ir-debugger Skill
-/analyze-generic-scoping [interface]  # → Use generic-scoping-analyzer Skill
-/check-implementation-status [phase]  # → Use implementation-tracker Skill
-/run-bdd-tests [pattern]              # → Use bdd-test-runner Skill
-/validate-metro-alignment [component] # → Use metro-pattern-validator Skill
-```
-
 ## 📁 **Documentation Structure**
 
 ```
@@ -80,96 +112,136 @@ For backward compatibility, slash commands still work but Skills are preferred:
 │   └── development/                  # Development utilities
 │       └── skill-creator/
 ├── docs/
-│   ├── validation/                   # Testing and validation strategies
-│   │   ├── testing-guidelines.md    # THE ABSOLUTE TESTING STANDARD ⭐
-│   │   ├── compilation-validation.md # Generated code must compile
-│   │   ├── type-safety-validation.md # Generic handling validation
-│   │   └── SKILLS-ACTIVATION-TESTS.md # 40+ test prompts for Skills
-│   ├── development/                  # Technical development guides
+│   ├── development/                  # Development resources and guides
+│   │   ├── decision-tree.md         # 🌳 Master navigation guide
 │   │   ├── metro-alignment.md       # Metro architectural patterns
 │   │   ├── kotlin-api-reference.md  # IR API usage validation
-│   │   └── MIGRATION-PATTERNS.md    # Skills migration patterns
-│   ├── implementation/               # Status and roadmap tracking
-│   │   ├── current-status.md        # Phase 1 breakthrough status ⭐
-│   │   ├── roadmap.md               # Phase 2 implementation plan ⭐
-│   │   └── DAY1-SUMMARY.md          # Skills migration progress
-│   ├── analysis/                     # Deep technical analysis
-│   │   └── generic-scoping-analysis.md # Core architectural challenge ⭐
-│   ├── architecture/                 # [Future] Architecture docs
-│   ├── examples/                     # [Future] Code examples and demos
-│   └── api/                         # [Future] API specifications
-└── commands/                         # Legacy slash commands (deprecated)
-    ├── debug-ir-generation.md       # → kotlin-ir-debugger Skill
-    ├── analyze-generic-scoping.md   # → generic-scoping-analyzer Skill
-    ├── check-implementation-status.md # → implementation-tracker Skill
-    ├── run-bdd-tests.md             # → bdd-test-runner Skill
-    └── validate-metro-alignment.md  # → metro-pattern-validator Skill
+│   │   ├── kotlin-compiler-ir-api.md # Compiler API deep dive
+│   │   ├── metro-fir-ir-specifications.md
+│   │   ├── MIGRATION-PATTERNS.md    # Skills migration patterns
+│   │   ├── validation/              # Testing and validation
+│   │   │   ├── testing-guidelines.md    # THE ABSOLUTE TESTING STANDARD ⭐
+│   │   │   ├── compilation-validation.md
+│   │   │   ├── type-safety-validation.md
+│   │   │   └── SKILLS-ACTIVATION-TESTS.md
+│   │   ├── examples/                # Quick start and demos
+│   │   │   ├── quick-start-demo.md
+│   │   │   └── working-examples.md
+│   │   ├── contexts/                # Persona-based guides
+│   │   │   ├── kotlin-developers.md
+│   │   │   └── tdd-practitioners.md
+│   │   └── future/                  # Future vision documents
+│   │       ├── gradle-plugin-vision.md
+│   │       ├── performance-optimization-vision.md
+│   │       └── explicit-backing-fields-refactoring.md
+│   ├── implementation/              # Implementation details
+│   │   ├── architecture/            # Core architecture docs
+│   │   │   ├── ARCHITECTURE.md      # ⭐ Main architecture overview
+│   │   │   ├── gradle-plugin.md
+│   │   │   ├── compiler-optimizations.md
+│   │   │   └── kmp-optimization-strategy.md
+│   │   ├── codegen-v2/              # Code generation DSL
+│   │   │   ├── README.md            # ⭐ Codegen V2 overview
+│   │   │   └── ADR.md               # Architecture decisions
+│   │   ├── patterns/                # Implementation patterns
+│   │   │   ├── basic-fake-generation.md
+│   │   │   └── suspend-function-handling.md
+│   │   ├── generics/                # Generic type handling
+│   │   │   ├── technical-reference.md
+│   │   │   └── complex-generics-strategy.md
+│   │   ├── multi-module/            # Multi-module support
+│   │   │   └── collector-task-implementation.md
+│   │   ├── source_sets/             # KMP source sets
+│   │   │   ├── README.md
+│   │   │   ├── ARCHITECTURE.md
+│   │   │   ├── API-REFERENCE.md
+│   │   │   └── CODE-PATTERNS.md
+│   │   └── api/                     # API specifications
+│   │       ├── specifications.md
+│   │       ├── annotations.md
+│   │       └── generated-api.md
+│   └── troubleshooting/             # Problem resolution
+│       └── common-issues.md
 ```
 
-## 🎯 **Current Focus Areas**
+## 🎯 **Key Documentation Highlights**
 
-### **✅ Completed (Phase 1 Breakthrough)**
-- **Generic Type Parameter Detection** - `<T>` parameters preserved in method signatures
-- **Smart Default Value System** - Zero TODO compilation blockers
-- **Function Type Resolution** - Perfect `(T) -> R` lambda syntax generation
-- **Testing Standards** - GIVEN-WHEN-THEN patterns enforced across all docs
+### **🌟 Must-Read Documents**
+1. **[🌳 Decision Tree](docs/development/decision-tree.md)** - Start here! Navigate based on your context
+2. **[📐 Architecture Overview](docs/implementation/architecture/ARCHITECTURE.md)** - System architecture and design
+3. **[🚀 Codegen V2](docs/implementation/codegen-v2/README.md)** - Type-safe code generation (production-ready)
+4. **[📋 Testing Guidelines](docs/development/validation/testing-guidelines.md)** - GIVEN-WHEN-THEN standard
+5. **[� Collector Task](docs/implementation/multi-module/collector-task-implementation.md)** - Multi-module implementation
 
-### **🔍 Current Priority (Phase 2A)**
-- **Generic Type Scoping Solution** - Dynamic casting with identity functions
-- **Implementation Timeline** - 2-3 weeks for method-level generic support
-- **Success Target** - 85% → 95% compilation success rate
+### **📚 Learning Paths**
 
-### **🔮 Future Work (Phase 2B+)**
-- **Generic Class Generation** - Full type safety for class-level generics
-- **Technical Debt Cleanup** - Remove MVP placeholders
-- **Advanced Features** - Import generation, call tracking, performance optimization
+**New to Fakt?**
+1. [Quick Start Demo](docs/development/examples/quick-start-demo.md)
+2. [Working Examples](docs/development/examples/working-examples.md)
+3. [Basic Fake Generation](docs/implementation/patterns/basic-fake-generation.md)
 
-## 📊 **Success Metrics Dashboard**
+**Working with Generics?**
+1. [Technical Reference](docs/implementation/generics/technical-reference.md)
+2. [Complex Generics Strategy](docs/implementation/generics/complex-generics-strategy.md)
 
-### **Phase 1 Achievements**
-- ✅ **Compilation Success Rate**: 60% → 85%
-- ✅ **TODO Elimination**: 100% → 0%
-- ✅ **Function Type Generation**: Perfect syntax
-- ✅ **Infrastructure**: Production-ready build system
+**Building Multi-Module Support?**
+1. [Collector Task Implementation](docs/implementation/multi-module/collector-task-implementation.md)
+2. [Source Sets Guide](docs/implementation/source_sets/README.md)
+3. [KMP Optimization Strategy](docs/implementation/architecture/kmp-optimization-strategy.md)
 
-### **Phase 2 Targets**
-- 🎯 **Compilation Success Rate**: 85% → 95%
-- 🎯 **Generic Coverage**: All method-level generics working
-- 🎯 **Type Safety**: Controlled Any? casting with safe defaults
-- 🎯 **Developer Experience**: Clear patterns and documentation
+**Understanding Compiler Integration?**
+1. [Gradle Plugin](docs/implementation/architecture/gradle-plugin.md)
+2. [Compiler Optimizations](docs/implementation/architecture/compiler-optimizations.md)
+3. [Metro Alignment](docs/development/metro-alignment.md)
 
 ## 🚀 **Quick Start for Development**
 
-### **Understanding Current State**
-1. **Read Status**: [📊 Current Status](docs/implementation/current-status.md)
-2. **Check Progress**: `/check-implementation-status`
-3. **Analyze Challenge**: [🔍 Generic Scoping](docs/analysis/generic-scoping-analysis.md)
+### **First Time Setup**
+1. **Navigate**: [🌳 Decision Tree](docs/development/decision-tree.md) - Find your context
+2. **Quick Start**: [🚀 Quick Start Demo](docs/development/examples/quick-start-demo.md)
+3. **Examples**: [� Working Examples](docs/development/examples/working-examples.md)
 
-### **Working on Phase 2A**
-1. **Analyze Scoping**: `/analyze-generic-scoping AsyncDataService`
-2. **Debug Generation**: `/debug-ir-generation <interface>`
-3. **Validate Changes**: `/run-bdd-tests`
-4. **Check Alignment**: `/validate-metro-alignment`
+### **Development Workflow**
+1. **Debug IR**: `/debug-ir-generation <interface>`
+2. **Run Tests**: `/run-bdd-tests`
+3. **Validate Metro**: `/validate-metro-alignment`
+4. **Check Compilation**: `/validate-compilation`
 
 ### **Testing Requirements**
-1. **Follow Standards**: [📋 Testing Guidelines](docs/validation/testing-guidelines.md)
+1. **Follow Standards**: [📋 Testing Guidelines](docs/development/validation/testing-guidelines.md)
 2. **Use GIVEN-WHEN-THEN**: Always uppercase, @TestInstance required
-3. **Validate Compilation**: [🔧 Compilation Strategy](docs/validation/compilation-validation.md)
-4. **Ensure Type Safety**: [🛡️ Type Validation](docs/validation/type-safety-validation.md)
+3. **Validate Compilation**: [🔧 Compilation Validation](docs/development/validation/compilation-validation.md)
+4. **Ensure Type Safety**: [🛡️ Type Safety](docs/development/validation/type-safety-validation.md)
 
 ## 🔗 **External References**
 
-### **Original Project Documentation**
-- **ktfake/docs/** - Original 18 technical documents
-- **ktfake/CLAUDE.md** - Main project context file
-- **Metro Framework** - Architectural inspiration source
-- **Kotlin Compiler** - IR API reference implementation
+### **Project Documentation**
+- **[ktfake/docs/](../docs/)** - User-facing documentation (MkDocs)
+- **[ktfake/CLAUDE.md](../CLAUDE.md)** - Main project context file
+- **[Metro Framework](https://github.com/kotlinx/metro)** - Architectural inspiration
+- **[Kotlin Compiler](https://github.com/JetBrains/kotlin)** - IR API reference
 
-### **Development Workflow**
-- **Build**: `./gradlew :compiler:shadowJar`
-- **Test**: `cd test-sample && ../gradlew compileKotlinJvm`
-- **Validate**: `/check-implementation-status`
+### **Development Commands**
+```bash
+# Build compiler plugin
+./gradlew :compiler:shadowJar
+
+# Run tests
+./gradlew :compiler:test
+
+# Test in sample project
+cd test-sample && ../gradlew compileKotlinJvm
+
+# Build documentation
+mkdocs serve
+```
+
+### **Skill Commands**
+- `/debug-ir-generation` - Debug IR generation for interface
+- `/run-bdd-tests` - Execute GIVEN-WHEN-THEN tests
+- `/validate-metro-alignment` - Check Metro pattern compliance
+- `/validate-compilation` - Ensure generated code compiles
 
 ---
 
-**This structure provides comprehensive support for KtFakes development with Claude Code, following MAP quality standards and focusing on the critical Phase 2 generic scoping implementation.**
+**This documentation structure supports comprehensive Fakt development with Claude Code, organized by implementation concerns and providing clear learning paths for different development contexts.**

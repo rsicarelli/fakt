@@ -507,6 +507,6 @@ sealed interface Command {
 
 ## References
 
-- **Phase Roadmap**: `.claude/docs/implementation/generics/ROADMAP.md`
-- **Generic Scoping**: `.claude/docs/analysis/generic-scoping-analysis.md`
-- **Testing Patterns**: `.claude/docs/validation/testing-guidelines.md`
+- **Generic Strategies**: `.claude/docs/implementation/generics/complex-generics-strategy.md`
+- **Generic Scoping**: `.claude/docs/implementation/generics/technical-reference.md`
+- **Testing Patterns**: `.claude/docs/development/validation/testing-guidelines.md`

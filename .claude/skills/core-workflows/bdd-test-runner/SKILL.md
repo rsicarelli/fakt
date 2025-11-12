@@ -160,7 +160,7 @@ Coverage gaps identified: {count}
 Missing coverage for:
 - {list of files without tests}
 
-📚 Reference: `.claude/docs/validation/testing-guidelines.md`
+📚 Reference: `.claude/docs/development/validation/testing-guidelines.md`
 ```
 
 ### 6. Metro Pattern Validation
@@ -244,8 +244,8 @@ Based on test results:
 **If user requests, update status files:**
 ```bash
 # Update test metrics in current-status.md (optional)
-echo "Last test run: $(date)" >> .claude/docs/implementation/test-status.md
-echo "Tests passed: 53/53" >> .claude/docs/implementation/test-status.md
+# Test status tracking can be done via test output or CI
+# No need to maintain separate test-status.md file
 ```
 
 ## Supporting Files
@@ -307,7 +307,7 @@ This Skill composes with:
 
 ## Known Testing Standards
 
-From `.claude/docs/validation/testing-guidelines.md`:
+From `.claude/docs/development/validation/testing-guidelines.md`:
 
 - ✅ **GIVEN-WHEN-THEN** naming (uppercase, mandatory)
 - ✅ **@TestInstance(PER_CLASS)** lifecycle (required)

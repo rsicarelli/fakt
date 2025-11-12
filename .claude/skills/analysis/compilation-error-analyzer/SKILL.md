@@ -301,7 +301,7 @@ Solution:
 
 For details:
 - Consult: generic-scoping-analyzer Skill
-- Reference: .claude/docs/analysis/generic-scoping-analysis.md
+- Reference: .claude/docs/implementation/generics/technical-reference.md
 ```
 
 ### 7. Analyze Generated Code Errors

@@ -30,34 +30,37 @@ Provides comprehensive status tracking of Fakt implementation including phase co
 
 ### 2. Read Current Status Documentation
 
-**Primary status file:**
+**Primary architecture and implementation docs:**
 ```bash
-Read .claude/docs/implementation/current-status.md
+Read .claude/docs/implementation/architecture/ARCHITECTURE.md
+Read .claude/docs/implementation/codegen-v2/README.md
+Read .claude/docs/implementation/generics/technical-reference.md
 ```
 
-**If doesn't exist, analyze from:**
+**Analyze current status from:**
 - Test files (count passing tests)
 - Generated code (count successful fakes)
 - Compiler output (compilation success rate)
-- Phase CHANGELOGs
+- Architecture documentation
 
-### 3. Analyze Phase 1 Status
+### 3. Analyze Core Implementation Status
 
-**Phase 1: Core Infrastructure (MAP Foundation)**
+**Core Features (Foundation)**
 
-**Read Phase 1 docs:**
+**Read implementation docs:**
 ```bash
-Read .claude/docs/implementation/phase1-performance-dominance/README.md
-Read .claude/docs/implementation/phase1-performance-dominance/CHANGELOG.md
+Read .claude/docs/implementation/patterns/basic-fake-generation.md
+Read .claude/docs/implementation/patterns/suspend-function-handling.md
+Read .claude/docs/implementation/codegen-v2/README.md
 ```
 
-**Check Phase 1 completeness:**
+**Check core feature completeness:**
 - [ ] Core IR generation working
-- [ ] Smart default system implemented
+- [ ] Smart default system implemented (Codegen V2)
 - [ ] Function type resolution working
+- [ ] Suspend function support
 - [ ] GIVEN-WHEN-THEN tests in place
-- [ ] Zero TODO compilation blockers
-- [ ] 85%+ compilation success rate
+- [ ] Compilation success rate tracked
 
 **Metrics to gather:**
 ```bash
@@ -71,32 +74,32 @@ grep -r "TODO" compiler/src/main/kotlin/ | wc -l
 find samples/*/build/generated/fakt -name "*.kt" 2>/dev/null | wc -l
 ```
 
-**Phase 1 completion criteria:**
+**Core feature completion criteria:**
 ```
 ✅ Basic fake generation working
-✅ Smart defaults for all types
-✅ Function types with perfect syntax
-✅ Zero TODO blockers
-✅ 85% compilation success
-✅ 53+ GIVEN-WHEN-THEN tests
+✅ Smart defaults for all types (Codegen V2 DSL)
+✅ Function types with proper syntax
+✅ Suspend function support
+✅ Multi-module support (FakeCollectorTask)
+✅ Comprehensive GIVEN-WHEN-THEN tests
 ```
 
-### 4. Analyze Phase 2 Status
+### 4. Analyze Generic Type Support Status
 
-**Phase 2: Generic Type Support**
+**Generic Type Support**
 
-**Read Phase 2 docs:**
+**Read generic implementation docs:**
 ```bash
-Read .claude/docs/implementation/generics/README.md
-Read .claude/docs/implementation/generics/ROADMAP.md
-Read .claude/docs/implementation/generics/CHANGELOG.md
+Read .claude/docs/implementation/generics/technical-reference.md
+Read .claude/docs/implementation/generics/complex-generics-strategy.md
 ```
 
-**Check Phase 2 progress:**
+**Check generic support progress:**
 
-**Phase 2A: Method-Level Generics**
-- [ ] Identity function pattern implemented
-- [ ] Safe casting with @Suppress
+**Method-Level Generics**
+- [ ] Type parameter preservation
+- [ ] IrTypeSubstitutor integration
+- [ ] Safe type casting patterns
 - [ ] Function types with generics working
 - [ ] Tests for method-level generics
 
@@ -196,16 +199,16 @@ success_rate=$((generated_count * 100 / interface_count))
 
 **Identify blockers:**
 
-**From current-status.md:**
+**From troubleshooting docs:**
 ```bash
-# Look for BLOCKER or TODO sections
-grep -A 5 "BLOCKER\|TODO\|Known Issues" .claude/docs/implementation/current-status.md
+# Check common issues
+Read .claude/docs/troubleshooting/common-issues.md
 ```
 
-**From issue tracking:**
+**From implementation docs:**
 ```bash
-# Check for unresolved issues in docs
-grep -r "❌\|⚠️\|FIXME" .claude/docs/implementation/
+# Check for unresolved issues and limitations
+grep -r "❌\|⚠️\|FIXME\|TODO\|Limitation" .claude/docs/implementation/
 ```
 
 **Categorize blockers:**
@@ -330,10 +333,11 @@ Upcoming:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📚 REFERENCES:
-- Status Doc: .claude/docs/implementation/current-status.md
-- Phase 1: .claude/docs/implementation/phase1-performance-dominance/
-- Phase 2: .claude/docs/implementation/generics/
-- Roadmap: .claude/docs/implementation/roadmap.md
+- Architecture: .claude/docs/implementation/architecture/ARCHITECTURE.md
+- Codegen V2: .claude/docs/implementation/codegen-v2/README.md
+- Generics: .claude/docs/implementation/generics/technical-reference.md
+- Multi-Module: .claude/docs/implementation/multi-module/collector-task-implementation.md
+- Troubleshooting: .claude/docs/troubleshooting/common-issues.md
 
 ═══════════════════════════════════════════════════
 ```
@@ -342,9 +346,9 @@ Upcoming:
 
 **Based on status:**
 
-**If Phase 1 incomplete:**
+**If core features incomplete:**
 ```
-🎯 FOCUS: Complete Phase 1 Foundation
+🎯 FOCUS: Complete Core Foundation
 - Address remaining blockers
 - Reach 90%+ compilation success
 - Ensure all core tests pass
