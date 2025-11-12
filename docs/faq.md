@@ -13,7 +13,7 @@ Common questions about Fakt, answered with honesty and technical context.
 **Longer answer**: Fakt follows a two-phase FIR → IR compilation architecture inspired by production compiler plugins like [Metro](https://github.com/ZacSweers/metro). While the Kotlin compiler plugin API is not a stable API (marked `@UnsafeApi`), Fakt:
 
 - Generates code at compile-time with **zero runtime dependencies**
-- Has been tested across Kotlin 2.2.10+ and all KMP targets
+- Has been tested across Kotlin 2.2.20+ and all KMP targets
 - Uses forward compatibility patterns (N+.2 version support)
 - Is versioned as **1.0.0-SNAPSHOT** to signal pre-1.0 status
 
@@ -265,7 +265,7 @@ dependencies {
 
 This usually means:
 
-1. **Kotlin version mismatch**: Ensure you're on Kotlin 2.2.10+
+1. **Kotlin version mismatch**: Ensure you're on Kotlin 2.2.20+
 2. **Fakt version incompatibility**: Update Fakt to match your Kotlin version
 
 See [Compatibility](reference/compatibility.md) for version requirements.

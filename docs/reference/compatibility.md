@@ -8,7 +8,7 @@ Platform and version requirements.
 
 | Fakt Version     | Kotlin Version Support |
 |------------------|------------------------|
-| 1.0.0-SNAPSHOT   | 2.2.10 - 2.2.30        |
+| 1.0.0-SNAPSHOT   | 2.2.20 - 2.2.30        |
 
 Fakt follows forward compatibility on a best-effort basis (usually N+.2 minor versions).
 

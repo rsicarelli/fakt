@@ -5,7 +5,7 @@
 [![Build](https://img.shields.io/github/actions/workflow/status/rsicarelli/fakt/ci.yml)](https://github.com/rsicarelli/fakt/actions)
 [![Maven Central](https://img.shields.io/maven-central/v/com.rsicarelli.fakt/runtime)](https://search.maven.org/search?q=g:com.rsicarelli.fakt)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.2.10%2B-blue)](https://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.2.20%2B-blue)](https://kotlinlang.org)
 [![Documentation](https://img.shields.io/badge/docs-mkdocs-blue)](https://rsicarelli.github.io/fakt/)
 
 ---
@@ -237,7 +237,7 @@ For architectural deep dives, see [`.claude/docs/architecture/`](/.claude/docs/a
 ```toml
 [versions]
 fakt = "1.0.0-SNAPSHOT"
-kotlin = "2.2.10"
+kotlin = "2.2.20"
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -432,7 +432,7 @@ fakt {
 
 ## Requirements
 
-- **Kotlin:** 2.2.10+
+- **Kotlin:** 2.2.20+
 - **Gradle:** 8.0+
 - **JVM:** 11+
 

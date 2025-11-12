@@ -1,12 +1,11 @@
 # 🤖 CLAUDE.md - Fakt Compiler Plugin
 
 > **Production-ready Kotlin compiler plugin for type-safe fake generation**
-> **Status**: MAP (Minimum Awesome Product) - Core architecture complete, final polish in progress
-> **Last Updated**: January 2025
+> **Last Updated**: November 2025
 
 ## 🎯 What is Fakt?
 
-**Fakt** (formerly ktfakes-prototype) is a Kotlin compiler plugin that generates type-safe test fakes at compile time using the `@Fake` annotation. Fakt follows a two-phase FIR → IR compilation approach to analyze interfaces and generate production-quality fake implementations.
+**Fakt** is a Kotlin compiler plugin that generates type-safe test fakes at compile time using the `@Fake` annotation. Fakt follows a two-phase FIR → IR compilation approach to analyze interfaces and generate production-quality fake implementations.
 
 **Problem Solved:**
 Writing test fakes manually is tedious and error-prone. Fakt generates type-safe fakes automatically with a clean DSL for configuring behavior, eliminating boilerplate while maintaining compile-time safety.
@@ -110,38 +109,11 @@ Fakt includes a professional telemetry system with 3 verbosity levels for troubl
 import com.rsicarelli.fakt.compiler.api.LogLevel
 
 fakt {
-    logLevel.set(LogLevel.INFO)    // ✅ Type-safe! (default - concise summary)
-    logLevel.set(LogLevel.DEBUG)   // ✅ IDE autocomplete, detailed output
-    logLevel.set(LogLevel.QUIET)   // ✅ Compile-time validation
+    logLevel.set(LogLevel.INFO)
+    logLevel.set(LogLevel.DEBUG)
+    logLevel.set(LogLevel.QUIET)
 }
 ```
-
-**Log Level Outputs:**
-
-**INFO (default) - Concise summary:**
-```
-✅ 10 fakes generated in 1.2s (6 cached)
-   Discovery: 120ms | Analysis: 340ms | Generation: 580ms | I/O: 160ms
-   Cache hit rate: 40% (6/15)
-📁 build/generated/fakt/commonTest/kotlin
-```
-
-**DEBUG - Detailed breakdown with FIR + IR details:**
-```
-[DISCOVERY] 120ms - 15 interfaces, 3 classes
-[FILTERING] 85ms - Cache hits: 6/15 (40%)
-[ANALYSIS] 340ms
-  ├─ PredicateCombiner (18ms) - NoGenerics
-  ├─ PairMapper<T,U,K,V> (42ms) ⚠️ - ClassLevel
-[GENERATION] 580ms (avg 58ms/interface)
-  ├─ FIR + IR node inspection, type resolution steps
-  ├─ Import resolution, source set mapping
-```
-
-**When to use each level:**
-- **QUIET**: CI/CD builds (zero overhead)
-- **INFO**: Normal development (default, <1ms overhead)
-- **DEBUG**: Troubleshooting, deep debugging, bug reports (~5-10ms overhead)
 
 ### **Skills System (Auto-Activation)**
 
@@ -172,18 +144,6 @@ Fakt includes 12 specialized skills that **automatically activate** based on you
 - **Priority Levels**: Critical (IR debugging, compilation) → High (API consultation, testing) → Medium → Low
 - **Manual Invocation**: Use the Skill tool with skill name (e.g., "kotlin-api-consultant")
 - **Configuration**: `.claude/skills/skill-rules.json` defines triggers and priorities
-
-**Example Auto-Activation:**
-```
-User: "Check if IrGenerationExtension API changed"
-→ Triggers: kotlin-api-consultant (high priority)
-
-User: "Run tests and validate BDD compliance"
-→ Triggers: bdd-test-runner (high priority)
-
-User: "Debug IR generation for UserService interface"
-→ Triggers: kotlin-ir-debugger (critical priority)
-```
 
 ### **Summary: Critical Testing Practices**
 
@@ -272,13 +232,6 @@ User: "Debug IR generation for UserService interface"
    - Follow GIVEN-WHEN-THEN standard absolutely
 
 ---
-
-### **🎯 Metro Alignment Rules:**
-
-- **📐 Follow Metro architecture** - FIR → IR two-phase compilation
-- **🔧 Use Metro patterns** - CompilerPluginRegistrar, IrGenerationExtension
-- **🧪 Metro testing approach** - compiler-tests/ structure (future)
-- **📊 Metro quality standards** - Binary compatibility, API validation
 
 ## 📚 Critical References
 
@@ -418,38 +371,6 @@ interface UserService {
 // Formatting: ktfmt Google style
 // Max line length: 100 characters
 // Import order: Standard Kotlin → Third-party → Project
-```
-
-### **Generated Code Patterns**
-
-```kotlin
-// Implementation class pattern
-class Fake{Interface}Impl : {Interface} {
-    // Behavior properties for each method/property
-    private var {method}Behavior: ({params}) -> {return} = { default }
-
-    // Override interface members
-    override fun {method}({params}): {return} = {method}Behavior({params})
-
-    // Internal configuration methods
-    internal fun configure{Method}(behavior: ({params}) -> {return}) {
-        {method}Behavior = behavior
-    }
-}
-
-// Factory function pattern
-fun fake{Interface}(configure: Fake{Interface}Config.() -> Unit = {}): {Interface} {
-    return Fake{Interface}Impl().apply {
-        Fake{Interface}Config(this).configure()
-    }
-}
-
-// Configuration DSL pattern
-class Fake{Interface}Config(private val fake: Fake{Interface}Impl) {
-    fun {method}(behavior: ({params}) -> {return}) {
-        fake.configure{Method}(behavior)
-    }
-}
 ```
 
 ## 🔄 Development Workflow

@@ -409,7 +409,7 @@ Before reporting issues, verify:
 - [ ] Consumer depends on collector module
 - [ ] Gradle synced in IDE
 - [ ] Using Fakt 1.0.0-SNAPSHOT+
-- [ ] Kotlin 2.2.10+
+- [ ] Kotlin 2.2.20+
 
 ---
 
