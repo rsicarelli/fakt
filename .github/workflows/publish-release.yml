@@ -12,6 +12,15 @@ on:
           - major
           - minor
           - patch
+      release_type:
+        required: true
+        type: choice
+        description: 'Release type'
+        default: 'alpha'
+        options:
+          - alpha
+          - beta
+          - stable
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -83,20 +92,24 @@ jobs:
       - name: Bump Version
         id: bump
         run: |
-          kotlin .github/scripts/bump-version.main.kts ${{ inputs.bump }}
+          kotlin .github/scripts/bump-version.main.kts ${{ inputs.bump }} ${{ inputs.release_type }}
+
+      - name: Sync Documentation Versions
+        run: |
+          kotlin .github/scripts/sync-docs-version.main.kts ${{ steps.bump.outputs.version_new }}
 
       - name: Publish to Maven Central
-        uses: ./.github/actions/publish-maven-central
-        with:
-          version: ${{ steps.bump.outputs.version_new }}
-          maven-central-username: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-          maven-central-password: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
-          signing-key: ${{ secrets.GPG_SIGNING_KEY }}
-          signing-password: ${{ secrets.GPG_SIGNING_PASSWORD }}
+        run: |
+          ./gradlew publishAllPublicationsToMavenCentralRepository --no-daemon
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_SIGNING_PASSWORD }}
 
       - name: Commit Version Bump
         run: |
-          git add gradle.properties
+          git add gradle.properties gradle/libs.versions.toml docs/ samples/ README.md gradle-plugin/README.md
           git commit -m "chore: release ${{ steps.bump.outputs.version_new }}"
 
       - name: Create and Push Tag

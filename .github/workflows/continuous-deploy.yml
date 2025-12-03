@@ -1,0 +1,60 @@
+name: Continuous Deploy
+
+on:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - '.github/workflows/docs.yml'
+      - '.claude/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IS_CI: yes
+
+jobs:
+  publish-snapshot:
+    name: Publish SNAPSHOT
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip if commit message contains [skip ci]
+        if: contains(github.event.head_commit.message, '[skip ci]')
+        run: |
+          echo "Skipping CI due to [skip ci] in commit message"
+          exit 0
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Validate SNAPSHOT version
+        run: |
+          VERSION=$(grep "VERSION_NAME=" gradle.properties | cut -d'=' -f2)
+          if [[ ! "$VERSION" =~ -SNAPSHOT$ ]]; then
+            echo "ERROR: Cannot publish non-SNAPSHOT version via continuous deploy"
+            echo "Current version: $VERSION"
+            echo "Use manual release workflow for non-SNAPSHOT versions"
+            exit 1
+          fi
+          echo "✅ Publishing SNAPSHOT version: $VERSION"
+
+      - name: Publish SNAPSHOT to Maven Central
+        run: |
+          ./gradlew publishAllPublicationsToMavenCentralRepository --no-daemon
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_SIGNING_PASSWORD }}
+
+      - name: Report success
+        run: |
+          VERSION=$(grep "VERSION_NAME=" gradle.properties | cut -d'=' -f2)
+          echo "🚀 Successfully published $VERSION to Maven Central"
+          echo "No GitHub Release created for SNAPSHOT versions"
