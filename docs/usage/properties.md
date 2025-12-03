@@ -52,4 +52,4 @@ assertEquals(1, fake.setThemeCallCount.value)
 ## Next Steps
 
 - [Call Tracking](call-tracking.md) - Advanced StateFlow patterns
-- [Multi-Module](multi-module.md) - Cross-module fakes
+- [Multi-Module](../multi-module/index.md) - Cross-module fakes

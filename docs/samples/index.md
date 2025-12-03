@@ -60,5 +60,5 @@ cd fakt/samples/kmp-single-module
 
 ## Next Steps
 
-- [Multi-Module Usage](../usage/multi-module.md) - Cross-module fakes
+- [Multi-Module Usage](../multi-module/index.md) - Cross-module fakes
 - [Contributing](../contributing.md) - Add your own samples
