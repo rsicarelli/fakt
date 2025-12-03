@@ -40,4 +40,4 @@ fakt {
 ## Next Steps
 
 - [Performance](../guides/performance.md) - Telemetry details
-- [Multi-Module](../usage/multi-module.md) - Cross-module fakes
+- [Multi-Module](../multi-module/index.md) - Cross-module fakes

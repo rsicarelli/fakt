@@ -97,5 +97,5 @@ fun `GIVEN fake WHEN calling from multiple threads THEN counts correctly`() = ru
 
 ## Next Steps
 
-- [Multi-Module](multi-module.md) - Cross-module fakes
+- [Multi-Module](../multi-module/index.md) - Cross-module fakes
 - [Testing Patterns](../guides/testing-patterns.md) - Best practices
