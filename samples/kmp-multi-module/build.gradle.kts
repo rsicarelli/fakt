@@ -6,5 +6,5 @@
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform) apply false
-    id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT" apply false
+    alias(libs.plugins.fakt) apply false
 }

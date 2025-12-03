@@ -67,18 +67,22 @@ jobs:
         run: |
           kotlin .github/scripts/bump-version.main.kts patch
 
+      - name: Sync Documentation Versions
+        run: |
+          kotlin .github/scripts/sync-docs-version.main.kts ${{ steps.bump.outputs.version_new }}
+
       - name: Publish to Maven Central
-        uses: ./.github/actions/publish-maven-central
-        with:
-          version: ${{ steps.bump.outputs.version_new }}
-          maven-central-username: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-          maven-central-password: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
-          signing-key: ${{ secrets.GPG_SIGNING_KEY }}
-          signing-password: ${{ secrets.GPG_SIGNING_PASSWORD }}
+        run: |
+          ./gradlew publishAllPublicationsToMavenCentralRepository --no-daemon
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_SIGNING_PASSWORD }}
 
       - name: Commit Version Bump
         run: |
-          git add gradle.properties
+          git add gradle.properties docs/ samples/ README.md gradle-plugin/README.md
           git commit -m "chore: hotfix ${{ steps.bump.outputs.version_new }}"
 
       - name: Create and Push Tag

@@ -36,7 +36,7 @@ gradlePlugin {
             displayName = "Fakt Plugin"
             description =
                 "High-performance fake generator for Kotlin test environments using FIR + IR compiler plugin architecture"
-            version = "1.0.0-SNAPSHOT"
+            // Version inherited from PublishingConvention (gradle.properties:VERSION_NAME)
         }
     }
 }
