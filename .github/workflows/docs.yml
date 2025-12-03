@@ -79,9 +79,12 @@ jobs:
 
       - name: Deploy SNAPSHOT Docs with mike
         if: ${{ success() && contains(steps.version.outputs.FAKT_VERSION, 'SNAPSHOT') }}
-        run: mike deploy --update-aliases --push ${{ steps.version.outputs.FAKT_VERSION }} snapshot
+        run: |
+          mike deploy --update-aliases --push ${{ steps.version.outputs.FAKT_VERSION }} snapshot
+          mike set-default --push snapshot
 
       - name: Deploy Release Docs with mike
         if: ${{ success() && !contains(steps.version.outputs.FAKT_VERSION, 'SNAPSHOT') }}
         run: |
           mike deploy --update-aliases --push ${{ steps.version.outputs.FAKT_VERSION }} latest
+          mike set-default --push latest
