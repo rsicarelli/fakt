@@ -31,6 +31,9 @@ dependencies {
 }
 
 gradlePlugin {
+    website.set("https://github.com/rsicarelli/fakt")
+    vcsUrl.set("https://github.com/rsicarelli/fakt.git")
+
     plugins {
         create("faktPlugin") {
             id = "com.rsicarelli.fakt"
@@ -38,6 +41,7 @@ gradlePlugin {
             displayName = "Fakt Plugin"
             description =
                 "High-performance fake generator for Kotlin test environments using FIR + IR compiler plugin architecture"
+            tags.set(listOf("kotlin", "compiler-plugin", "testing", "fake", "mock"))
             // Version inherited from PublishingConvention (gradle.properties:VERSION_NAME)
         }
     }
