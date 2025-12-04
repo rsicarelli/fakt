@@ -20,9 +20,6 @@ import org.gradle.api.Project
  */
 class FaktKotlinJvmPlugin : Plugin<Project> {
     override fun apply(target: Project) {
-        // Apply publishing convention first (sets group/version)
-        target.applyPublishingConvention()
-
         // Apply Kotlin JVM plugin
         target.pluginManager.apply("org.jetbrains.kotlin.jvm")
 

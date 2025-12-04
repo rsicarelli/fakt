@@ -6,6 +6,7 @@ import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 // SPDX-License-Identifier: Apache-2.0
 plugins {
     id("fakt-multiplatform")
+    id("fakt-publishing")
     id("fakt-spotless")
     id("fakt-ktlint")
     id("fakt-detekt")
