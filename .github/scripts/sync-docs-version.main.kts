@@ -22,10 +22,10 @@ import kotlin.system.exitProcess
 
 fun readCurrentVersion(gradlePropertiesFile: File): String {
     val content = gradlePropertiesFile.readText()
-    val versionLine = content.lines().find { it.startsWith("VERSION_NAME=") }
-        ?: error("VERSION_NAME not found in gradle.properties")
+    val versionLine = content.lines().find { it.startsWith("version=") }
+        ?: error("version not found in gradle.properties")
 
-    return versionLine.substringAfter("VERSION_NAME=").trim()
+    return versionLine.substringAfter("version=").trim()
 }
 
 fun syncVersionCatalog(projectDir: File, newVersion: String) {
@@ -42,12 +42,27 @@ fun syncVersionCatalog(projectDir: File, newVersion: String) {
     }
 }
 
+fun syncFaktGradlePlugin(projectDir: File, newVersion: String) {
+    val pluginFile = File(projectDir, "gradle-plugin/src/main/kotlin/com/rsicarelli/fakt/gradle/FaktGradleSubplugin.kt")
+    if (!pluginFile.exists()) return
+
+    var content = pluginFile.readText()
+    val pattern = Regex("""(public const val PLUGIN_VERSION: String = )"[^"]*"""")
+
+    if (pattern.containsMatchIn(content)) {
+        content = content.replace(pattern, """$1"$newVersion" // Using project version""")
+        pluginFile.writeText(content)
+        println("✅ Updated FaktGradleSubplugin.kt")
+    }
+}
+
 fun syncDocumentationVersions(projectDir: File, newVersion: String) {
     var filesUpdated = 0
     var totalReplacements = 0
 
-    // First, sync version catalog
+    // First, sync version catalog and plugin
     syncVersionCatalog(projectDir, newVersion)
+    syncFaktGradlePlugin(projectDir, newVersion)
 
     // Files to update
     val filesToUpdate = mutableListOf<File>()
