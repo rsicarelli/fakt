@@ -11,7 +11,7 @@ dependencies {
     implementation(libs.kotlin.gradlePlugin.api)
 
     // Convention Plugins (for module conventions)
-    compileOnly(libs.mavenPublish.gradlePlugin)
+    implementation(libs.mavenPublish.gradlePlugin)
     implementation(libs.spotless.gradlePlugin)
     implementation(libs.ktlint.gradlePlugin)
     implementation(libs.detekt.gradlePlugin)

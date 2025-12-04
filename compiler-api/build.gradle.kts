@@ -6,7 +6,6 @@ plugins {
     id("fakt-ktlint")
     id("fakt-detekt")
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.mavenPublish)
 }
 
 description = "Fakt compiler API for plugin configuration and telemetry"

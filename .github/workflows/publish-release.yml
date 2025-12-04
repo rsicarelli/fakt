@@ -28,6 +28,7 @@ concurrency:
 
 env:
   IS_CI: yes
+  ORG_GRADLE_PROJECT_RELEASE_MODE: true
 
 jobs:
   validation:

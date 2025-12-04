@@ -15,6 +15,7 @@ concurrency:
 
 env:
   IS_CI: yes
+  ORG_GRADLE_PROJECT_RELEASE_MODE: false
 
 jobs:
   publish-snapshot:

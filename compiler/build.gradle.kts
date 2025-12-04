@@ -5,7 +5,6 @@ plugins {
     id("fakt-spotless")
     id("fakt-ktlint")
     id("fakt-detekt")
-    alias(libs.plugins.mavenPublish)
     alias(libs.plugins.shadow)
 }
 
