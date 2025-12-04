@@ -39,7 +39,7 @@ jobs:
       - name: Extract Fakt version from gradle.properties
         id: version
         run: |
-          FAKT_VERSION=$(grep "VERSION_NAME=" gradle.properties | cut -d'=' -f2)
+          FAKT_VERSION=$(grep "version=" gradle.properties | cut -d'=' -f2)
           echo "FAKT_VERSION=$FAKT_VERSION" >> $GITHUB_OUTPUT
           echo "Extracted version: $FAKT_VERSION"
 
@@ -49,13 +49,13 @@ jobs:
 
           # Check if version is empty
           if [[ -z "$VERSION" ]]; then
-            echo "ERROR: VERSION_NAME is empty in gradle.properties"
+            echo "ERROR: version is empty in gradle.properties"
             exit 1
           fi
 
           # Check if version matches x.y.z or x.y.z-SNAPSHOT pattern
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?$ ]]; then
-            echo "ERROR: VERSION_NAME '$VERSION' does not match expected format:"
+            echo "ERROR: version '$VERSION' does not match expected format:"
             echo "   Expected: x.y.z or x.y.z-SNAPSHOT (e.g., 1.0.0 or 1.0.0-SNAPSHOT)"
             echo "   Actual: $VERSION"
             exit 1

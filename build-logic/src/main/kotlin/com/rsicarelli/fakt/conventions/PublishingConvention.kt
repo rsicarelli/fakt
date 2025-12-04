@@ -11,7 +11,7 @@ import org.gradle.api.Project
  * configures vanniktech plugin with centralized Maven Central publishing.
  *
  * **gradle.properties values:**
- * - GROUP=com.rsicarelli.fakt
+ * - GROUP=com.rsicarelli
  * - VERSION_NAME=1.0.0-SNAPSHOT
  *
  * **Environment Variables:**
@@ -26,23 +26,25 @@ import org.gradle.api.Project
  * See: https://vanniktech.github.io/gradle-maven-publish-plugin/central/
  */
 fun Project.applyPublishingConvention() {
-    // Read from gradle.properties (inherited from root project)
-    val groupId = findProperty("GROUP") as String? ?: "com.rsicarelli.fakt"
-    val versionName = findProperty("VERSION_NAME") as String? ?: "1.0.0-SNAPSHOT"
+    // Check if already configured
+    val alreadyConfigured = extensions.findByName("faktPublishingConfigured")
+    if (alreadyConfigured != null) {
+        logger.info("Fakt: Publishing already configured for ${project.name}")
+        return
+    }
 
-    // Apply to project
-    group = groupId
-    version = versionName
+    // Mark as configured
+    extensions.add("faktPublishingConfigured", true)
 
-    // Apply and configure vanniktech plugin
+    // Apply vanniktech plugin and configure with coordination (using withPlugin)
     pluginManager.apply("com.vanniktech.maven.publish")
 
-    // Use afterEvaluate to ensure plugin is fully configured
-    afterEvaluate {
+    // Configure after plugin is applied and available
+    pluginManager.withPlugin("com.vanniktech.maven.publish") {
         configureMavenCentralPublishing()
     }
 
-    logger.info("Fakt: Applied publishing convention - group=$group, version=$version")
+    logger.info("Fakt: Applied publishing convention")
 }
 
 /**
@@ -58,18 +60,12 @@ private fun Project.configureMavenCentralPublishing() {
     // Configure using the mavenPublishing DSL extension
     extensions.findByType(com.vanniktech.maven.publish.MavenPublishBaseExtension::class.java)
         ?.apply {
-            try {
-                publishToMavenCentral(automaticRelease = isReleaseMode)
-                signAllPublications()
-            } catch (e: IllegalStateException) {
-                // Plugin already configured, skip
-                logger.info("Fakt: Maven Central publishing already configured")
-                return
-            }
+            publishToMavenCentral(automaticRelease = isReleaseMode)
+            signAllPublications()
 
             coordinates(
                 groupId = project.group.toString(),
-                artifactId = project.name,
+                artifactId = "fakt-${project.name}",
                 version = project.version.toString()
             )
 

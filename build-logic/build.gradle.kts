@@ -43,5 +43,9 @@ gradlePlugin {
             id = "fakt-sample"
             implementationClass = "FaktSamplePlugin"
         }
+        register("fakt-publishing") {
+            id = "fakt-publishing"
+            implementationClass = "FaktPublishingPlugin"
+        }
     }
 }

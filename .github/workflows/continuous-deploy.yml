@@ -36,7 +36,7 @@ jobs:
 
       - name: Validate SNAPSHOT version
         run: |
-          VERSION=$(grep "VERSION_NAME=" gradle.properties | cut -d'=' -f2)
+          VERSION=$(grep "version=" gradle.properties | cut -d'=' -f2)
           if [[ ! "$VERSION" =~ -SNAPSHOT$ ]]; then
             echo "ERROR: Cannot publish non-SNAPSHOT version via continuous deploy"
             echo "Current version: $VERSION"
@@ -56,6 +56,6 @@ jobs:
 
       - name: Report success
         run: |
-          VERSION=$(grep "VERSION_NAME=" gradle.properties | cut -d'=' -f2)
+          VERSION=$(grep "version=" gradle.properties | cut -d'=' -f2)
           echo "🚀 Successfully published $VERSION to Maven Central"
           echo "No GitHub Release created for SNAPSHOT versions"

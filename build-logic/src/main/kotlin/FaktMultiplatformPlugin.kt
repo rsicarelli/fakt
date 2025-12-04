@@ -20,9 +20,6 @@ import org.gradle.api.Project
  */
 class FaktMultiplatformPlugin : Plugin<Project> {
     override fun apply(target: Project) {
-        // Apply publishing convention first (sets group/version)
-        target.applyPublishingConvention()
-
         // Apply Kotlin Multiplatform plugin
         target.pluginManager.apply("org.jetbrains.kotlin.multiplatform")
 
