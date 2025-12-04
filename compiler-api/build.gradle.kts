@@ -9,6 +9,8 @@ plugins {
     alias(libs.plugins.mavenPublish)
 }
 
+description = "Fakt compiler API for plugin configuration and telemetry"
+
 dependencies {
     implementation(libs.kotlinx.serialization.json)
 

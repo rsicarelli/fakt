@@ -7,17 +7,19 @@ import org.gradle.api.Project
 /**
  * Publishing convention for Fakt modules.
  *
- * Applies project coordinates (group, version) from gradle.properties.
- * These are required by maven-publish plugin to publish artifacts correctly.
+ * Applies project coordinates (group, version) from gradle.properties and
+ * configures vanniktech plugin with required Maven Central metadata.
  *
  * **gradle.properties values:**
  * - GROUP=com.rsicarelli.fakt
  * - VERSION_NAME=1.0.0-SNAPSHOT
  *
- * **Note:** The vanniktech/gradle-maven-publish-plugin is configured via
- * gradle.properties and automatically picks up POM metadata.
+ * **Maven Central Requirements:**
+ * - Complete POM metadata (description, URL, licenses, developers)
+ * - GPG signing for all artifacts
+ * - Sources and Javadoc JARs
  *
- * See: https://vanniktech.github.io/gradle-maven-publish-plugin/
+ * See: https://vanniktech.github.io/gradle-maven-publish-plugin/central/
  */
 fun Project.applyPublishingConvention() {
     // Read from gradle.properties (inherited from root project)

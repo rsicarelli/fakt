@@ -198,11 +198,14 @@ All releases are automatically signed using GPG keys stored as GitHub Secrets:
 
 ```yaml
 # Required Secrets
-MAVEN_CENTRAL_USERNAME    # Sonatype Central Portal token
-MAVEN_CENTRAL_PASSWORD    # Sonatype Central Portal password
-GPG_SIGNING_KEY          # GPG private key (Base64 encoded)
+MAVEN_CENTRAL_USERNAME    # Sonatype Central Portal user token
+MAVEN_CENTRAL_PASSWORD    # Sonatype Central Portal user token password
+GPG_SIGNING_KEY          # GPG private key (ASCII armor format)
 GPG_SIGNING_PASSWORD     # GPG key passphrase
 ```
+
+> **🚨 Setup Required**: If you're encountering GPG signing errors, follow the complete setup guide:
+> **[Maven Central Setup Guide](maven-central-setup.md)**
 
 ### **Artifact Verification**
 
@@ -256,6 +259,20 @@ git push origin feature/awesome-feature
 # Create PR → Merge → SNAPSHOT automatically published
 ```
 
+### **Testing Publishing Setup**
+
+Before releasing, test your Maven Central configuration:
+
+```bash
+# Run the validation script
+./scripts/test-maven-central.sh
+
+# Manual testing (requires environment variables)
+./gradlew publishToMavenCentral --dry-run
+```
+
+> **📋 Full Setup Guide**: [Maven Central Setup](maven-central-setup.md)
+
 ### **For Maintainers**
 
 ```bash
@@ -287,9 +304,14 @@ git push origin feature/awesome-feature
 
 **Release workflow fails with signing errors**:
 ```bash
-# Verify GPG secrets are correctly configured
-# Check GPG_SIGNING_KEY is properly Base64 encoded
-# Ensure GPG_SIGNING_PASSWORD matches the key
+# Common error: "secret key ring doesn't start with secret key tag"
+# Solution: Follow the complete Maven Central setup guide
+
+# Quick check
+./scripts/test-maven-central.sh
+
+# Complete setup
+docs/deployment/maven-central-setup.md
 ```
 
 **SNAPSHOT not appearing in Maven Central**:
