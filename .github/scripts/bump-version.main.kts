@@ -79,18 +79,18 @@ data class SemanticVersion(
 
 fun readCurrentVersion(gradlePropertiesFile: File): SemanticVersion {
     val content = gradlePropertiesFile.readText()
-    val versionLine = content.lines().find { it.startsWith("VERSION_NAME=") }
-        ?: error("VERSION_NAME not found in gradle.properties")
+    val versionLine = content.lines().find { it.startsWith("version=") }
+        ?: error("version not found in gradle.properties")
 
-    val versionString = versionLine.substringAfter("VERSION_NAME=").trim()
+    val versionString = versionLine.substringAfter("version=").trim()
     return SemanticVersion.parse(versionString)
 }
 
 fun updateGradleProperties(gradlePropertiesFile: File, newVersion: SemanticVersion) {
     val content = gradlePropertiesFile.readText()
     val updatedContent = content.lines().joinToString("\n") { line ->
-        if (line.startsWith("VERSION_NAME=")) {
-            "VERSION_NAME=$newVersion"
+        if (line.startsWith("version=")) {
+            "version=$newVersion"
         } else {
             line
         }

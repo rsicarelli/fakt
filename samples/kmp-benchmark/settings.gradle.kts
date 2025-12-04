@@ -13,6 +13,11 @@ pluginManagement {
     repositories {
         mavenLocal()  // ✅ Use published plugin from mavenLocal
         mavenCentral()
+        // Maven Central Snapshots Repository for plugins
+        maven {
+            name = "Central Portal Snapshots"
+            url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+        }
         google()
         gradlePluginPortal()
     }
@@ -22,6 +27,11 @@ dependencyResolutionManagement {
     repositories {
         mavenLocal()  // ✅ Use published runtime from mavenLocal
         mavenCentral()
+        // Maven Central Snapshots Repository
+        maven {
+            name = "Central Portal Snapshots"
+            url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+        }
         google()
     }
 
