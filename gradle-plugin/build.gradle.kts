@@ -6,7 +6,6 @@ plugins {
     id("fakt-ktlint")
     id("fakt-detekt")
     `java-gradle-plugin`
-    alias(libs.plugins.mavenPublish)
 }
 
 description = "Fakt Gradle plugin for seamless build integration"

@@ -9,7 +9,6 @@ plugins {
     id("fakt-spotless")
     id("fakt-ktlint")
     id("fakt-detekt")
-    alias(libs.plugins.mavenPublish)
 }
 
 description = "Fakt runtime annotations for type-safe fake generation"
