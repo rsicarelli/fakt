@@ -100,7 +100,7 @@ jobs:
 
       - name: Publish to Maven Central
         run: |
-          ./gradlew publishAllPublicationsToMavenCentralRepository --no-daemon
+          ./gradlew publishAndReleaseToMavenCentral --no-daemon
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
@@ -122,6 +122,14 @@ jobs:
         with:
           tag: ${{ steps.bump.outputs.tag }}
           github-token: ${{ steps.app-token.outputs.token }}
+
+      - name: Deploy Release Documentation
+        run: |
+          pip install --requirement .github/workflows/mkdocs-requirements.txt
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          mike deploy --update-aliases --push ${{ steps.bump.outputs.version_new }} latest
+          mike set-default --push latest
 
       - name: Bump to Next SNAPSHOT
         id: bump-snapshot

@@ -9,6 +9,8 @@ plugins {
     alias(libs.plugins.shadow)
 }
 
+description = "Fakt Kotlin compiler plugin for automatic fake generation using FIR + IR phases"
+
 kotlin {
     compilerOptions {
         optIn.addAll(

@@ -87,7 +87,8 @@ fun syncDocumentationVersions(projectDir: File, newVersion: String) {
         Regex("""(coroutines\s*=\s*)"[^"]*"(\s*)""") to """$1"${versions["coroutines"]}"$2""",
 
         // Maven coordinates (supports alpha/beta/stable formats)
-        Regex("""(com\.rsicarelli\.fakt:[\w-]+:)[^"\s]*""") to """$1$newVersion""",
+        Regex("""(com\.rsicarelli\.fakt:[\w-]+:)"[^"]*"""") to """$1"$newVersion"""",
+        Regex("""(com\.rsicarelli\.fakt:[\w-]+:)[^"\s)]+(?=\s|\)|$)""") to """$1$newVersion""",
 
         // Documentation examples (supports alpha/beta/stable + optional)
         Regex("""(- \*\*Fakt\*\*:\s+)[^\s+]+(\+?\s*)""") to """$1$newVersion+$2""",

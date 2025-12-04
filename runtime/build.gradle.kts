@@ -12,6 +12,8 @@ plugins {
     alias(libs.plugins.mavenPublish)
 }
 
+description = "Fakt runtime annotations for type-safe fake generation"
+
 kotlin {
     applyDefaultHierarchyTemplate()
 

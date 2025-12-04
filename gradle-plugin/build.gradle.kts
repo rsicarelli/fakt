@@ -9,6 +9,8 @@ plugins {
     alias(libs.plugins.mavenPublish)
 }
 
+description = "Fakt Gradle plugin for seamless build integration"
+
 dependencies {
     // Compiler API for SourceSetContext serialization
     implementation(projects.compilerApi)
