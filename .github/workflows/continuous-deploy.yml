@@ -47,10 +47,11 @@ jobs:
 
       - name: Publish SNAPSHOT to Maven Central
         run: |
-          ./gradlew publishToMavenCentral --no-daemon
+          ./gradlew publishAllPublicationsToMavenCentralRepository --no-daemon
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          # GPG signing variables (not required for SNAPSHOT but keeping for safety)
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_SIGNING_PASSWORD }}
 

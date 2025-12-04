@@ -56,12 +56,18 @@ fun Project.applyPublishingConvention() {
  */
 private fun Project.configureMavenCentralPublishing() {
     val isReleaseMode = findProperty("RELEASE_MODE")?.toString()?.toBoolean() ?: false
+    val isSnapshot = project.version.toString().endsWith("-SNAPSHOT")
 
     // Configure using the mavenPublishing DSL extension
     extensions.findByType(com.vanniktech.maven.publish.MavenPublishBaseExtension::class.java)
         ?.apply {
             publishToMavenCentral(automaticRelease = isReleaseMode)
-            signAllPublications()
+
+            // Only sign non-SNAPSHOT versions
+            // Snapshots don't require GPG signing according to Maven Central docs
+            if (!isSnapshot) {
+                signAllPublications()
+            }
 
             coordinates(
                 groupId = project.group.toString(),
