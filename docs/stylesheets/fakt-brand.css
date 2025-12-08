@@ -11,6 +11,16 @@
    LIGHT THEME (fakt-light)
    ======================================== */
 [data-md-color-scheme="fakt-light"] {
+  /* Base Colors - Page Background & Text */
+  --md-default-fg-color: #000000;              /* Main text color - black */
+  --md-default-fg-color--light: #5f5f5f;       /* Secondary text - gray */
+  --md-default-fg-color--lighter: #9e9e9e;     /* Tertiary text - light gray */
+  --md-default-fg-color--lightest: #c9c9c9;    /* Borders, dividers */
+  --md-default-bg-color: #ffffff;              /* Main page background - white */
+  --md-default-bg-color--light: #f5f5f5;       /* Secondary background */
+  --md-default-bg-color--lighter: #fafafa;     /* Tertiary background */
+  --md-default-bg-color--lightest: #fcfcfc;    /* Hover backgrounds */
+
   /* Primary Colors - Green Brand */
   --md-primary-fg-color: #27AF4E;              /* Main green - header, links */
   --md-primary-fg-color--light: #5FC77E;       /* Lighter green - hover states */
@@ -47,6 +57,20 @@
    DARK THEME (fakt-dark)
    ======================================== */
 [data-md-color-scheme="fakt-dark"] {
+  /* Base Colors - Page Background & Text */
+  --md-default-fg-color: #ffffff;              /* Main text color - white */
+  --md-default-fg-color--light: #b3b3b3;       /* Secondary text - light gray */
+  --md-default-fg-color--lighter: #808080;     /* Tertiary text - gray */
+  --md-default-fg-color--lightest: #5f5f5f;    /* Borders, dividers */
+  --md-default-bg-color: #1a1a1a;              /* Main page background - dark */
+  --md-default-bg-color--light: #242424;       /* Secondary background */
+  --md-default-bg-color--lighter: #2d2d2d;     /* Tertiary background */
+  --md-default-bg-color--lightest: #363636;    /* Hover backgrounds */
+
+  /* Typography Colors */
+  --md-typeset-color: #ffffff;                 /* Body text color - white */
+  --md-typeset-a-color: #5FC77E;               /* Link color - light green */
+
   /* Primary Colors - Lighter Green for Dark Backgrounds */
   --md-primary-fg-color: #5FC77E;              /* Lighter green - better contrast */
   --md-primary-fg-color--light: #7FD799;       /* Even lighter - hover states */
@@ -67,9 +91,6 @@
   --md-code-hl-number-color: #D6FC63;          /* Yellow for numbers */
   --md-code-hl-keyword-color: #5FC77E;         /* Light green for keywords */
   --md-code-hl-string-color: #D6FC63;          /* Yellow for strings */
-
-  /* Links */
-  --md-typeset-a-color: #5FC77E;               /* Light green links */
 
   /* Admonitions & Call-outs */
   --md-admonition-fg-color: #7FD799;
