@@ -33,7 +33,7 @@ mavenPublish = "0.35.0"
 spotless = "7.2.1"
 turbine = "1.2.0"
 # Fakt version (auto-synced with gradle.properties:VERSION_NAME)
-fakt = "1.0.0-alpha-SNAPSHOT"
+fakt = "1.0.0-alpha01"
 
 # Dependencies used in samples and documentation
 coroutines = "1.10.2"

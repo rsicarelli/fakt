@@ -50,7 +50,7 @@ fun syncFaktGradlePlugin(projectDir: File, newVersion: String) {
     val pattern = Regex("""(public const val PLUGIN_VERSION: String = )"[^"]*"""")
 
     if (pattern.containsMatchIn(content)) {
-        content = content.replace(pattern, """$1"$newVersion" // Using project version""")
+        content = content.replace(pattern, """$1"$newVersion"""")
         pluginFile.writeText(content)
         println("✅ Updated FaktGradleSubplugin.kt")
     }
@@ -112,9 +112,8 @@ fun syncDocumentationVersions(projectDir: File, newVersion: String) {
         // Multiplatform version examples
         Regex("""(kotlin\("multiplatform"\)\s+version\s+)"[^"]*"(\s*)""") to """$1"${versions["kotlin"]}"$2""",
 
-        // Alpha/Beta/Stable specific patterns
+        // Alpha/Beta/Stable specific patterns (more specific to avoid @OptIn collisions)
         Regex("""(fakt.*version.*)"[^"]*"(\s*)""") to """$1"$newVersion"$2""",
-        Regex("""(Fakt.*:\s*)[^\s,\]]+""") to """$1$newVersion""",
     )
 
     filesToUpdate.forEach { file ->

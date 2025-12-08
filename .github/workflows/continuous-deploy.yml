@@ -34,16 +34,24 @@ jobs:
       - name: Setup Environment
         uses: ./.github/actions/setup-environment
 
-      - name: Validate SNAPSHOT version
+      - name: Convert version to SNAPSHOT
         run: |
-          VERSION=$(grep "version=" gradle.properties | cut -d'=' -f2)
-          if [[ ! "$VERSION" =~ -SNAPSHOT$ ]]; then
-            echo "ERROR: Cannot publish non-SNAPSHOT version via continuous deploy"
-            echo "Current version: $VERSION"
-            echo "Use manual release workflow for non-SNAPSHOT versions"
+          # Read current version (e.g., 1.0.0-alpha01)
+          CURRENT_VERSION=$(grep "version=" gradle.properties | cut -d'=' -f2)
+          echo "📦 Original version: $CURRENT_VERSION"
+
+          # Convert to SNAPSHOT using our script
+          kotlin .github/scripts/bump-version.main.kts snapshot
+
+          # Verify SNAPSHOT was added
+          SNAPSHOT_VERSION=$(grep "version=" gradle.properties | cut -d'=' -f2)
+          echo "🔄 SNAPSHOT version: $SNAPSHOT_VERSION"
+
+          if [[ ! "$SNAPSHOT_VERSION" =~ -SNAPSHOT$ ]]; then
+            echo "❌ ERROR: Failed to add SNAPSHOT suffix"
             exit 1
           fi
-          echo "✅ Publishing SNAPSHOT version: $VERSION"
+          echo "✅ Ready to publish SNAPSHOT version: $SNAPSHOT_VERSION"
 
       - name: Publish SNAPSHOT to Maven Central
         run: |
