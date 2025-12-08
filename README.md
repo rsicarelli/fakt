@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="FAKT_logo.png" alt="Fakt Logo" width="200">
+</div>
+
 # Fakt
 
 **Compile-time type-safe test fakes for Kotlin Multiplatform**
