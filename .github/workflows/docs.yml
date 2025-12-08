@@ -53,10 +53,11 @@ jobs:
             exit 1
           fi
 
-          # Check if version matches x.y.z or x.y.z-SNAPSHOT pattern
-          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?$ ]]; then
-            echo "ERROR: version '$VERSION' does not match expected format:"
-            echo "   Expected: x.y.z or x.y.z-SNAPSHOT (e.g., 1.0.0 or 1.0.0-SNAPSHOT)"
+          # Check if version matches semantic versioning (semver) pattern
+          # Supports: x.y.z, x.y.z-SNAPSHOT, x.y.z-alpha01, x.y.z-beta01, x.y.z-rc01, etc.
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "ERROR: version '$VERSION' does not match semantic versioning format:"
+            echo "   Expected: x.y.z or x.y.z-prerelease (e.g., 1.0.0, 1.0.0-SNAPSHOT, 1.0.0-alpha01)"
             echo "   Actual: $VERSION"
             exit 1
           fi
