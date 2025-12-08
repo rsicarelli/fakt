@@ -51,6 +51,8 @@ jobs:
     name: Publish Hotfix to Maven Central
     runs-on: ubuntu-latest
     needs: validation
+    outputs:
+      version_new: ${{ steps.bump.outputs.version_new }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -97,14 +99,15 @@ jobs:
           tag: ${{ steps.bump.outputs.tag }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Deploy Hotfix Documentation
-        run: |
-          pip install --requirement .github/workflows/mkdocs-requirements.txt
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          mike deploy --update-aliases --push ${{ steps.bump.outputs.version_new }} latest
-          mike set-default --push latest
-
       - name: Push Hotfix Branch
         run: |
           git push origin HEAD
+
+  deploy-docs:
+    name: Deploy Hotfix Documentation
+    needs: publish
+    uses: ./.github/workflows/deploy-docs.yml
+    with:
+      version: ${{ needs.publish.outputs.version_new }}
+      alias: 'latest'
+      set-default: true
