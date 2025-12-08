@@ -1,10 +1,110 @@
-# Quick Start
+# Getting Started
 
-Get your first Fakt fake running in 5 minutes.
+Get Fakt up and running in your project and create your first fake in 5 minutes.
 
 ---
 
-## Step 1: Annotate an Interface
+## Prerequisites
+
+| Requirement      | Version    |
+|------------------|------------|
+| **Kotlin**       | 2.2.20+    |
+| **Gradle**       | 8.0+       |
+| **JVM**          | 11+        |
+
+---
+
+## Installation
+
+### Multiplatform Projects
+
+**Version Catalog (`gradle/libs.versions.toml`):**
+
+```toml
+[versions]
+fakt = "1.0.0-SNAPSHOT"
+kotlin = "2.2.20"
+
+[plugins]
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+fakt = { id = "com.rsicarelli.fakt", version.ref = "fakt" }
+
+[libraries]
+fakt-runtime = { module = "com.rsicarelli.fakt:runtime", version.ref = "fakt" }
+```
+
+**Root `build.gradle.kts`:**
+
+```kotlin
+plugins {
+    alias(libs.plugins.kotlin.multiplatform) apply false
+    alias(libs.plugins.fakt) apply false
+}
+```
+
+**Module `build.gradle.kts`:**
+
+```kotlin
+plugins {
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.fakt)
+}
+
+kotlin {
+    // Your KMP targets
+    jvm()
+    iosArm64()
+    iosX64()
+    iosSimulatorArm64()
+
+    sourceSets {
+        commonMain.dependencies {
+            implementation(libs.fakt.runtime)
+        }
+    }
+}
+```
+
+**…and that's it!**
+
+---
+
+### Single-Platform Projects
+
+Fakt works with single-platform Kotlin projects too:
+
+**JVM-Only:**
+
+```kotlin
+plugins {
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.fakt)
+}
+
+dependencies {
+    implementation(libs.fakt.runtime)
+}
+```
+
+**Android-Only:**
+
+```kotlin
+plugins {
+    id("com.android.library")
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.fakt)
+}
+
+dependencies {
+    implementation(libs.fakt.runtime)
+}
+```
+
+---
+
+## Your First Fake (5 Minutes)
+
+### Step 1: Annotate an Interface
 
 Create an interface and mark it with `@Fake`:
 
@@ -22,7 +122,7 @@ interface Analytics {
 
 ---
 
-## Step 2: Build Your Project
+### Step 2: Build Your Project
 
 Run Gradle build to generate the fake:
 
@@ -34,7 +134,7 @@ Fakt generates `FakeAnalyticsImpl` in `build/generated/fakt/commonTest/kotlin/co
 
 ---
 
-## Step 3: Use in Tests
+### Step 3: Use in Tests
 
 The generated fake includes a factory function and DSL:
 
@@ -64,9 +164,9 @@ class AnalyticsTest {
 
 ---
 
-## What Just Happened?
+## Understanding Generated Code
 
-Fakt generated three things for you:
+Fakt generates three components for each `@Fake` interface:
 
 ### 1. Implementation Class
 
@@ -111,7 +211,7 @@ class FakeAnalyticsConfig(private val fake: FakeAnalyticsImpl) {
 
 ## Generated Code Location
 
-Fakt generates code in test source sets:
+Fakt generates code in test source sets only:
 
 | Source Set          | Generated Output                                |
 |---------------------|-------------------------------------------------|
@@ -127,7 +227,7 @@ Fakt generates code in test source sets:
 
 ## More Complex Example
 
-Here's a more realistic interface with suspend functions and generics:
+Here's a realistic interface with suspend functions and generics:
 
 ```kotlin
 @Fake
@@ -173,9 +273,32 @@ class UserRepositoryTest {
 
 ---
 
+## IDE Support
+
+Fakt-generated code appears in `build/generated/fakt/` and is automatically indexed by IntelliJ IDEA and Android Studio.
+
+!!! tip "K2 IDE Mode"
+    Enable K2 mode for better autocomplete of generated factories:
+
+    **Settings → Languages & Frameworks → Kotlin → Enable K2 mode**
+
+---
+
+## Kotlin Version Compatibility
+
+| Fakt Version     | Kotlin Version Support |
+|------------------|------------------------|
+| 1.0.0-SNAPSHOT   | 2.2.20 - 2.2.30        |
+
+Fakt follows forward compatibility on a best-effort basis (usually N+.2 minor versions).
+
+---
+
 ## Next Steps
 
-- [Basic Usage](../usage/basic-usage.md) - More examples
-- [Suspend Functions](../usage/suspend-functions.md) - Async support
-- [Call Tracking](../usage/call-tracking.md) - StateFlow patterns
-- [Testing Patterns](../guides/testing-patterns.md) - Best practices
+- **[Features](features.md)** - Complete feature reference
+- **[Basic Usage](../usage/basic-usage.md)** - Common patterns and examples
+- **[Suspend Functions](../usage/suspend-functions.md)** - Async/coroutine support
+- **[Call Tracking](../usage/call-tracking.md)** - StateFlow-based reactive counters
+- **[Testing Patterns](../guides/testing-patterns.md)** - Best practices
+- **[Configuration](../guides/configuration.md)** - Plugin options (coming soon)

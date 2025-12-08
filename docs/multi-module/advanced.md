@@ -8,48 +8,101 @@ Deep technical details for power users and complex multi-module setups.
 
 Fakt's `FakeCollectorTask` automatically detects target platforms by analyzing package structures.
 
-### How It Works
-
-**Algorithm**:
-1. Extract package declaration from generated fake file
-2. Split package into segments (e.g., `com.example.ios.auth` → `["com", "example", "ios", "auth"]`)
-3. Match segments against available KMP source sets
-4. Prioritize shortest match (most general)
-5. Fallback to `commonMain` if no match
-
-**Examples**:
+### Algorithm
 
 ```kotlin
-// Input: package com.example.jvm.database
-// Available: [commonMain, jvmMain, iosMain]
-// Matches: jvmMain (from "jvm" segment)
-// Output: jvmMain/kotlin/com/example/jvm/database/FakeDatabaseImpl.kt
+fun determinePlatformSourceSet(
+    fileContent: String,
+    availableSourceSets: Set<String>
+): String {
+    // 1. Extract package declaration (first 10 lines)
+    val packageDeclaration = fileContent
+        .lines()
+        .take(10)
+        .firstOrNull { it.trim().startsWith("package ") }
+        ?.removePrefix("package ")
+        ?.trim()
+        ?: return "commonMain"
 
-// Input: package com.example.ios.camera  
-// Available: [commonMain, iosMain, iosArm64Main, iosX64Main]
-// Matches: iosMain (7 chars), iosArm64Main (13 chars), iosX64Main (10 chars)
-// Selected: iosMain (shortest = most general)
-// Output: iosMain/kotlin/com/example/ios/camera/FakeCameraImpl.kt
+    // 2. Split into segments
+    val segments = packageDeclaration.split(".")
 
-// Input: package com.example.shared.network
-// Available: [commonMain, jvmMain, jsMain]
-// Matches: (none - "shared" doesn't match any source set)
-// Output: commonMain/kotlin/com/example/shared/network/FakeNetworkImpl.kt (fallback)
+    // 3. Find matching source sets
+    val matches = segments.flatMap { segment ->
+        availableSourceSets
+            .filter { sourceSet ->
+                sourceSet.startsWith(segment, ignoreCase = true) &&
+                sourceSet.endsWith("Main")
+            }
+            .map { it to segment }
+    }.distinct()
+
+    // 4. Return shortest match (most general)
+    return matches.minByOrNull { (sourceSet, _) -> sourceSet.length }?.first
+        ?: "commonMain"
+}
+```
+
+### Examples
+
+```kotlin
+// JVM-Specific Package
+package com.example.jvm.database
+→ segments = ["com", "example", "jvm", "database"]
+→ "jvm" matches "jvmMain"
+→ Output: jvmMain/kotlin/
+
+// iOS with Multiple Variants
+package com.example.ios.camera
+→ "ios" matches: iosMain (7), iosArm64Main (13), iosX64Main (10)
+→ Shortest: iosMain
+→ Output: iosMain/kotlin/
+
+// No Match (Fallback)
+package com.example.business.logic
+→ No segment matches
+→ Output: commonMain/kotlin/ (fallback)
 ```
 
 ### Package Naming Conventions
 
-Use platform identifiers in package names for automatic detection:
+| Platform | Package Segment | Example |
+|----------|-----------------|---------|
+| JVM | `jvm.*` | `com.example.jvm.database` |
+| Android | `android.*` | `com.example.android.storage` |
+| iOS | `ios.*` | `com.example.ios.camera` |
+| JS | `js.*` | `com.example.js.browser` |
+| Native | `native.*` | `com.example.native.file` |
+| WASM | `wasm.*` | `com.example.wasm.api` |
+| Common | `shared.*`, `common.*` | `com.example.shared.logger` |
 
-| Platform     | Package Segment | Example |
-|--------------|-----------------|---------|
-| **JVM**      | `jvm.*`         | `com.example.jvm.database` |
-| **Android**  | `android.*`     | `com.example.android.storage` |
-| **iOS**      | `ios.*`         | `com.example.ios.camera` |
-| **JS**       | `js.*`          | `com.example.js.browser` |
-| **Native**   | `native.*`      | `com.example.native.file` |
-| **WASM**     | `wasm.*`        | `com.example.wasm.api` |
-| **Common**   | `shared.*`, `common.*` | `com.example.shared.logger` (fallback) |
+---
+
+## FakeCollectorTask API
+
+The core component responsible for collecting generated fakes from producer modules.
+
+### Task Properties
+
+```kotlin
+abstract class FakeCollectorTask : DefaultTask() {
+    @Input abstract val sourceProjectPath: Property<String>
+    @Internal abstract val sourceGeneratedDir: DirectoryProperty
+    @OutputDirectory abstract val destinationDir: DirectoryProperty
+    @Input abstract val availableSourceSets: SetProperty<String>
+    @Input abstract val logLevel: Property<LogLevel>
+}
+```
+
+**sourceProjectPath**: Gradle path to producer module (e.g., `":core:analytics"`)
+
+**sourceGeneratedDir**: Root directory of generated fakes in producer (`core/analytics/build/generated/fakt/`)
+
+**destinationDir**: Root directory for collected fakes in collector (`core/analytics-fakes/build/generated/collected-fakes/`)
+
+**availableSourceSets**: All KMP source sets available in collector module (e.g., `["commonMain", "jvmMain", "iosMain"]`)
+
+**logLevel**: Logging verbosity (`QUIET`, `INFO`, `DEBUG`, `TRACE`)
 
 ---
 
@@ -422,8 +475,34 @@ Use when producer supports many platforms but you only test on a subset.
 
 ---
 
+## API Reference
+
+### collectFakesFrom()
+
+Extension method on `FaktPluginExtension` for configuring multi-module collection.
+
+**Type-safe project accessor** (recommended):
+```kotlin
+fakt {
+    @OptIn(ExperimentalFaktMultiModule::class)
+    collectFakesFrom(projects.core.analytics)
+}
+```
+
+**Traditional project reference**:
+```kotlin
+fakt {
+    @OptIn(ExperimentalFaktMultiModule::class)
+    collectFakesFrom(project(":core:analytics"))
+}
+```
+
+Both approaches are equally valid. Type-safe accessors provide better IDE support but require `enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")` in `settings.gradle.kts`.
+
+---
+
 ## Next Steps
 
-- [Troubleshooting](troubleshooting.md) - Debug common issues
-- [Technical Reference](reference.md) - FakeCollectorTask deep dive
+- [Getting Started](getting-started.md) - Step-by-step tutorial
+- [Troubleshooting](../troubleshooting.md) - Debug common issues
 - [Migration Guide](migration.md) - Single-module → Multi-module

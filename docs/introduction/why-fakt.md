@@ -4,6 +4,35 @@ The story behind building a compile-time fake generator for Kotlin testing.
 
 ---
 
+## Introduction
+
+Fakt is a Kotlin compiler plugin that eliminates the boilerplate of writing test fakes by generating them at compile-time.
+
+Add `@Fake` annotation. Fakt generates everything automatically:
+
+```kotlin
+@Fake
+interface AnalyticsService {
+    fun track(event: String)
+}
+
+// Generated factory + DSL (zero boilerplate)
+val fake = fakeAnalyticsService {
+    track { event -> println("Tracked: $event") }
+}
+
+fake.track("user_signup")
+assertEquals(1, fake.trackCallCount.value)
+```
+
+**What Fakt generates:**
+
+1. **Implementation class** with thread-safe StateFlow call tracking
+2. **Factory function** with clean DSL (`fakeXxx {}`)
+3. **Configuration DSL** for behavior setup
+
+---
+
 ## The Problem: Manual Fakes Are Tedious, Mocks Are Costly
 
 Modern Kotlin development faces a testing dilemma. Writing test doubles (fakes, mocks, stubs) manually is time-consuming and error-prone. Runtime mocking frameworks solve the boilerplate problem but introduce severe performance penalties and architectural limitations. Fakt was created to address both challenges.
@@ -614,6 +643,74 @@ assertEquals(1, fake.getUserCallCount.value) // Thread-safe StateFlow
 - No concurrent test flakiness
 - Reactive (works with Turbine for Flow testing)
 
+**Smart Defaults**:
+
+Fakt generates sensible default behaviors for unconfigured methods:
+
+| Type                | Default Behavior                          |
+|---------------------|-------------------------------------------|
+| `Unit`              | `{ }`                                     |
+| `Boolean`           | `{ false }`                               |
+| `Int`, `Long`, etc. | `{ 0 }`                                   |
+| `String`            | `{ "" }`                                  |
+| `List<T>`           | `{ emptyList() }`                         |
+| `Result<T>`         | `{ Result.failure(NotImplementedError)}` |
+| Generic `T -> T`    | `{ it }` (identity function)              |
+| Nullable `T?`       | `{ null }`                                |
+
+---
+
+## Fakes vs. Mocks: Quick Comparison
+
+| Feature | MockK/Mockito | Fakt |
+|---------|---------------|------|
+| **KMP Support** | Limited (JVM only) | Universal (all targets) |
+| **Compile-time Safety** | ❌ | ✅ |
+| **Runtime Overhead** | Heavy (reflection) | Zero |
+| **Type Safety** | Partial (`any()` matchers) | Complete |
+| **Learning Curve** | Steep (complex DSL) | Gentle (typed functions) |
+| **Call Tracking** | Manual (`verify { }`) | Built-in (StateFlow) |
+| **Thread Safety** | Not guaranteed | StateFlow-based |
+| **Debuggability** | Reflection (opaque) | Generated `.kt` files |
+
+### Migration Example
+
+**Before (MockK):**
+```kotlin
+@Test
+fun `test user service`() = runTest {
+    val mockService = mockk<UserService>()
+
+    every { mockService.getUser(any()) } returns User("123", "Mock User")
+
+    val result = mockService.getUser("123")
+
+    verify { mockService.getUser("123") }
+    assertEquals("Mock User", result.name)
+}
+```
+
+**After (Fakt):**
+```kotlin
+@Test
+fun `GIVEN fake service WHEN getting user THEN returns configured user`() = runTest {
+    val fake = fakeUserService {
+        getUser { id -> User(id, "Test User") }
+    }
+
+    val result = fake.getUser("123")
+
+    assertEquals(1, fake.getUserCallCount.value)
+    assertEquals("Test User", result.name)
+}
+```
+
+**Key improvements**:
+1. **No magic strings** - `any()` replaced with typed lambda
+2. **Explicit behavior** - Clear what's returned for which input
+3. **Type-safe verification** - Compiler catches `getUserCallCount` typos
+4. **Readable intent** - GIVEN-WHEN-THEN structure
+
 ---
 
 ## When NOT to Use Fakes
@@ -637,6 +734,38 @@ Fakt isn't a silver bullet. Some scenarios favor other tools:
 
 ---
 
+## What Fakt Supports
+
+**Class Types:**
+- ✅ Interfaces
+- ✅ Abstract classes
+- ✅ Open classes (overridable members only)
+
+**Type System:**
+- ✅ Full generics (class-level, method-level, constraints, variance)
+- ✅ Nullable types
+- ✅ Complex stdlib types (`Result<T>`, `List<T>`, etc.)
+
+**Kotlin Features:**
+- ✅ Suspend functions
+- ✅ Properties (`val`, `var`)
+- ✅ Methods with parameters
+- ✅ Inheritance
+
+---
+
+## Current Limitations
+
+Fakt is honest about what it doesn't support (yet):
+
+- ❌ Data classes as `@Fake` targets (work fine as parameter/return types)
+- ❌ Sealed hierarchies as `@Fake` targets
+- ❌ Default parameters in interface methods
+
+See [Limitations](../reference/limitations.md) for details and workarounds.
+
+---
+
 ## The Path Forward
 
 Fakt represents the convergence of:
@@ -652,10 +781,11 @@ For JVM-only teams, Fakt delivers 40% faster test suites[^1] and more resilient 
 
 ## Next Steps
 
-- [Installation](installation.md) - Add Fakt to your project in 5 minutes
-- [Quick Start](quick-start.md) - Generate your first fake
-- [Testing Patterns](../guides/testing-patterns.md) - Hybrid strategies and best practices
-- [Migration Guide](../guides/migration.md) - Moving from MockK/Mockito
+- [Getting Started](getting-started.md) - Install Fakt and create your first fake in 5 minutes
+- [Features](features.md) - Complete feature reference
+- [Basic Usage](../usage/basic-usage.md) - Common patterns and examples
+- [Testing Patterns](../guides/testing-patterns.md) - Best practices and strategies
+- [Migration from Mocks](../guides/migration-from-mocks.md) - Moving from MockK/Mockito to Fakt
 
 ---
 

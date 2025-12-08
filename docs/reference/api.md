@@ -78,6 +78,6 @@ com.example.services.Analytics (@Fake)
 
 ## Next Steps
 
-- [Configuration](configuration.md) - Plugin options
+- [Configuration](../guides/configuration.md) - Plugin options
 - [Compatibility](compatibility.md) - Kotlin versions
 - [Limitations](limitations.md) - Known issues
