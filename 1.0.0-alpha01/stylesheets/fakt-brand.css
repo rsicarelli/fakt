@@ -1,0 +1,94 @@
+/* Fakt Brand Colors for Material Theme
+ *
+ * Brand Palette:
+ * - Green (primary): #27AF4E
+ * - Dark Green: #0C6B25
+ * - Yellow (accent): #D6FC63
+ * - Teal (gradient): #00A69C
+ */
+
+/* ========================================
+   LIGHT THEME (fakt-light)
+   ======================================== */
+[data-md-color-scheme="fakt-light"] {
+  /* Primary Colors - Green Brand */
+  --md-primary-fg-color: #27AF4E;              /* Main green - header, links */
+  --md-primary-fg-color--light: #5FC77E;       /* Lighter green - hover states */
+  --md-primary-fg-color--dark: #0C6B25;        /* Dark green - active states */
+  --md-primary-bg-color: #ffffff;              /* Background - white */
+  --md-primary-bg-color--light: #f5f5f5;       /* Light background */
+
+  /* Accent Colors - Yellow Highlight */
+  --md-accent-fg-color: #D6FC63;               /* Main yellow - buttons, highlights */
+  --md-accent-fg-color--transparent: #D6FC6310;/* Transparent yellow */
+  --md-accent-bg-color: #ffffff;               /* Background for accented elements */
+  --md-accent-bg-color--light: #fffef5;        /* Subtle yellow tint */
+
+  /* Code Blocks */
+  --md-code-fg-color: #0C6B25;                 /* Dark green for inline code */
+  --md-code-bg-color: #f5faf7;                 /* Subtle green background */
+  --md-code-hl-color: rgba(39, 175, 78, 0.15); /* Green highlight */
+  --md-code-hl-number-color: #0C6B25;          /* Dark green for numbers */
+  --md-code-hl-keyword-color: #27AF4E;         /* Green for keywords */
+  --md-code-hl-string-color: #D6FC63;          /* Yellow for strings */
+
+  /* Links */
+  --md-typeset-a-color: #27AF4E;               /* Link color - green */
+
+  /* Admonitions & Call-outs */
+  --md-admonition-fg-color: #0C6B25;
+  --md-admonition-bg-color: #f5faf7;
+
+  /* Search */
+  --md-typeset-mark-color: rgba(214, 252, 99, 0.5); /* Yellow highlight */
+}
+
+/* ========================================
+   DARK THEME (fakt-dark)
+   ======================================== */
+[data-md-color-scheme="fakt-dark"] {
+  /* Primary Colors - Lighter Green for Dark Backgrounds */
+  --md-primary-fg-color: #5FC77E;              /* Lighter green - better contrast */
+  --md-primary-fg-color--light: #7FD799;       /* Even lighter - hover states */
+  --md-primary-fg-color--dark: #27AF4E;        /* Original green - active states */
+  --md-primary-bg-color: #1a1a1a;              /* Dark background */
+  --md-primary-bg-color--light: #2d2d2d;       /* Slightly lighter */
+
+  /* Accent Colors - Yellow (vibrant on dark) */
+  --md-accent-fg-color: #D6FC63;               /* Yellow remains vibrant */
+  --md-accent-fg-color--transparent: #D6FC6320;/* Transparent yellow */
+  --md-accent-bg-color: #1a1a1a;               /* Dark background */
+  --md-accent-bg-color--light: #2d2d2d;        /* Slightly lighter */
+
+  /* Code Blocks */
+  --md-code-fg-color: #7FD799;                 /* Light green for code */
+  --md-code-bg-color: #0f1f14;                 /* Dark green-tinted background */
+  --md-code-hl-color: rgba(95, 199, 126, 0.15);/* Light green highlight */
+  --md-code-hl-number-color: #D6FC63;          /* Yellow for numbers */
+  --md-code-hl-keyword-color: #5FC77E;         /* Light green for keywords */
+  --md-code-hl-string-color: #D6FC63;          /* Yellow for strings */
+
+  /* Links */
+  --md-typeset-a-color: #5FC77E;               /* Light green links */
+
+  /* Admonitions & Call-outs */
+  --md-admonition-fg-color: #7FD799;
+  --md-admonition-bg-color: #0f1f14;
+
+  /* Search */
+  --md-typeset-mark-color: rgba(214, 252, 99, 0.4); /* Yellow highlight */
+}
+
+/* ========================================
+   OPTIONAL: Teal Accents
+   ======================================== */
+/* Uncomment to use teal (#00A69C) for specific elements */
+/*
+[data-md-color-scheme="fakt-light"] {
+  --md-accent-fg-color: #00A69C;
+}
+
+[data-md-color-scheme="fakt-dark"] {
+  --md-accent-fg-color: #00A69C;
+}
+*/
