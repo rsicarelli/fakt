@@ -26,13 +26,7 @@ Generated fakes are production-quality code that compiles to native binaries wit
 
 ### Why "1.0.0-SNAPSHOT" instead of "1.0.0"?
 
-We're following semantic versioning strictly:
-
-- **SNAPSHOT** signals that we're still validating real-world usage patterns
-- **1.0.0** will be released after community feedback and battle-testing
-- The compiler plugin API is functionally complete and stable for production testing
-
-We prioritize **honesty over marketing**. SNAPSHOT doesn't mean "broken"—it means "we're listening to feedback before declaring 1.0."
+**SNAPSHOT** signals real-world validation in progress, not "broken." The API is functionally complete and production-ready. We prioritize honesty over marketing—1.0.0 will follow community feedback and battle-testing.
 
 ---
 
@@ -40,25 +34,17 @@ We prioritize **honesty over marketing**. SNAPSHOT doesn't mean "broken"—it me
 
 ### Why not use MockK or Mockito?
 
-MockK and Mockito are **runtime mocking frameworks** that use reflection. This limits them to JVM/Android targets and adds runtime overhead.
+MockK and Mockito are **runtime mocking frameworks** using reflection (JVM/Android only). Fakt generates fakes at **compile-time** using Kotlin IR:
 
-Fakt generates fakes at **compile-time** using Kotlin IR, which means:
+- ✅ Works on ALL KMP targets (iOS, Native, JS, WASM) without reflection
+- ✅ Zero runtime cost, compile-time type safety
+- ✅ Generated code you can read and debug
 
-- ✅ Works on **ALL KMP targets** (iOS, Native, JS, WASM) without reflection
-- ✅ **Zero runtime cost** (no reflection proxy overhead)
-- ✅ **Compile-time type safety** (refactoring breaks tests immediately)
-- ✅ **Generated code you can read and debug**
+**Use MockK/Mockito when:** You need dynamic mocking or are on JVM-only projects.
 
-**Use MockK/Mockito when:**
-- You need dynamic mocking (testing framework internals)
-- You're mocking concrete classes with complex inheritance
-- You're on JVM-only projects and don't need KMP
+**Use Fakt when:** Building Kotlin Multiplatform projects or want zero-runtime-cost test doubles.
 
-**Use Fakt when:**
-- You're building Kotlin Multiplatform projects
-- You want type-safe, cross-platform test doubles
-- You prefer explicit, readable fake implementations
-- You want zero runtime cost and no reflection
+See [Why Fakt](introduction/why-fakt.md) for detailed comparison.
 
 ---
 
@@ -82,93 +68,19 @@ Fakt doesn't replace hand-written fakes for complex scenarios (stateful mocks, p
 
 ### Does Fakt support generics?
 
-**Yes**. Fakt fully supports:
-
-- ✅ Class-level generics (`interface Repository<T>`)
-- ✅ Method-level generics (`fun <T> transform(value: T): T`)
-- ✅ Generic constraints (`<T : Comparable<T>>`)
-- ✅ Variance (`out T`, `in T`)
-
-Generated fakes preserve type parameters and use smart defaults:
-
-```kotlin
-@Fake
-interface Repository<T> {
-    fun save(item: T): Result<Unit>
-    fun <R> transform(item: T, mapper: (T) -> R): R
-}
-
-// Generated fake works as expected
-val fake = fakeRepository<User> {
-    save { item -> Result.success(Unit) }
-    transform { item, mapper -> mapper(item) }
-}
-```
-
-**Current limitation**: Some complex nested generics with multiple constraints may require manual implementation. We track edge cases in [GitHub issues](https://github.com/rsicarelli/fakt/issues).
-
----
+**Yes**. Class-level, method-level, generic constraints, and variance are all supported. See [Features: Generics](introduction/features.md#-generics) for detailed examples.
 
 ### Does Fakt support suspend functions?
 
-**Yes**. Suspend functions are fully supported:
-
-```kotlin
-@Fake
-interface ApiClient {
-    suspend fun fetchData(id: String): Result<Data>
-}
-
-val fake = fakeApiClient {
-    fetchData { id ->
-        delay(100) // Suspends correctly
-        Result.success(Data(id))
-    }
-}
-```
-
-Fakt preserves coroutine semantics—no weird `runBlocking` wrappers needed.
-
----
+**Yes**. Suspend functions preserve coroutine semantics. See [Suspend Functions](usage/suspend-functions.md#-suspend-functions) for details.
 
 ### Does Fakt support properties (val/var)?
 
-**Yes**. Both read-only (`val`) and mutable (`var`) properties are supported:
-
-```kotlin
-@Fake
-interface Settings {
-    val theme: String
-    var fontSize: Int
-}
-
-val fake = fakeSettings {
-    theme { "dark" }
-    fontSize { 14 }
-}
-
-assertEquals("dark", fake.theme)
-assertEquals(1, fake.themeCallCount.value)
-
-fake.fontSize = 16
-assertEquals(1, fake.setFontSizeCallCount.value)
-```
-
-Mutable properties generate **both** getter and setter call counters.
-
----
+**Yes**. Both read-only (`val`) and mutable (`var`) properties with call tracking. See [Features: Properties](introduction/features.md#-properties) for examples.
 
 ### Can I fake data classes or sealed classes?
 
-**No**. Fakt only generates fakes for:
-
-- ✅ Interfaces
-- ✅ Abstract classes
-- ✅ Open classes (overridable members only)
-
-Data classes and sealed classes work fine as **parameter/return types**, but you can't put `@Fake` on them directly.
-
-**Why**: Data classes have fixed implementations (compiler-generated). Faking them would be misleading—use builders or copy() instead.
+**No**. Fakt only generates fakes for interfaces, abstract classes, and open classes. Data/sealed classes work fine as parameter/return types. See [Limitations](reference/limitations.md) for details and workarounds.
 
 ---
 
@@ -239,36 +151,12 @@ dependencies {
 
 ## Troubleshooting
 
-### Generated fakes aren't appearing in my IDE
+For common issues and solutions, see the [Troubleshooting Guide](troubleshooting.md):
 
-**Solutions:**
-
-1. **Rebuild the project**: `./gradlew clean build`
-2. **Invalidate IDE caches**: File → Invalidate Caches → Invalidate and Restart
-3. **Check build directory**: Fakes are in `build/generated/fakt/commonTest/kotlin/`
-4. **Verify Gradle sync**: Ensure Gradle sync completed successfully
-
----
-
-### I'm getting "Unresolved reference: fakeXxx"
-
-**Common causes:**
-
-1. **Missing build step**: Run `./gradlew build` first
-2. **Wrong source set**: Import from test code (`src/commonTest/`), not main
-3. **Package mismatch**: Generated fakes are in the same package as the interface
-4. **Gradle sync issue**: Re-sync Gradle in your IDE
-
----
-
-### Compilation fails with "IrTypeAliasSymbol not found"
-
-This usually means:
-
-1. **Kotlin version mismatch**: Ensure you're on Kotlin 2.2.20+
-2. **Fakt version incompatibility**: Update Fakt to match your Kotlin version
-
-See [Compatibility](reference/compatibility.md) for version requirements.
+- [Generated fakes not appearing in IDE](troubleshooting.md#generated-fakes-not-appearing)
+- [Unresolved reference: fakeXxx](troubleshooting.md#unresolved-reference-fakexxx)
+- [Compilation errors](troubleshooting.md#compilation-fails-with-irtypealiassymbol-not-found)
+- [Multi-module issues](troubleshooting.md#multi-module-issues)
 
 ---
 

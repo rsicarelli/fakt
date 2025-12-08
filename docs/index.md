@@ -7,157 +7,83 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.2.20%2B-blue)](https://kotlinlang.org)
 
----
-
-Fakt is a Kotlin compiler plugin that generates test fakes at compile-time. No runtime reflection. No production dependencies. Just type-safe fakes that break when your interfaces change.
+Fakt generates type-safe test fakes at compile-time. No reflection. No production dependencies. Just clean fakes that break when your interfaces change.
 
 ```kotlin
 @Fake
-interface AnalyticsService {
+interface Analytics {
     fun track(event: String)
 }
 
-// Use in tests
-val fake = fakeAnalyticsService {
+val fake = fakeAnalytics {
     track { event -> println("Tracked: $event") }
 }
-
-fake.track("user_signup")
-assertEquals(1, fake.trackCallCount.value)
 ```
 
 ---
 
 ## Why Fakt?
 
-Writing test fakes manually is tedious and error-prone. Fakt generates type-safe fakes automatically at compile-time, eliminating boilerplate while maintaining compile-time safety.
+Writing test fakes manually is tedious and error-prone. You write 50+ lines of boilerplate for every interface, manage non-thread-safe call counters, and refactoring interfaces won't break tests at compile-time. Runtime mocking frameworks like MockK and Mockito avoid the boilerplate but introduce severe performance penalties and don't work on Native/WASM targets.
 
-**The problem with manual fakes:**
+Fakt solves both problems with compile-time code generation that works everywhere Kotlin compiles.
 
-- Repetitive boilerplate for every interface
-- Manual call tracking (non-thread-safe)
-- Refactoring breaks nothing at compile-time
-- Maintenance burden scales with codebase
-
-**How Fakt solves this:**
-
-- **Compile-time generation**: Zero reflection, works on ALL KMP targets
-- **Type safety**: Refactoring breaks tests immediately
-- **StateFlow tracking**: Thread-safe, reactive call counting
-- **Zero overhead**: No production dependencies, test-only code
-- **Clean DSL**: Intuitive configuration interface
+**[Read the full story →](introduction/why-fakt.md)**
 
 ---
 
-## Key Features
+## ✨ Features
 
-### ✅ Universal Multiplatform Support
+- ✅ **Universal KMP support** - Works on all Kotlin targets without reflection
+- ✅ **Zero production overhead** - Test-only code generation, no runtime dependencies
+- ✅ **Thread-safe call tracking** - Built-in StateFlow-based reactive counters
+- ✅ **Full language support** - Suspend functions, generics, properties, inheritance
+- ✅ **Smart defaults** - Identity functions for generics, Result.success for Results
+- ✅ **IR-level generation** - Direct compiler plugin for performance and compatibility
 
-Works on **all Kotlin targets** without reflection: JVM, Android, iOS, Native, JavaScript, WebAssembly.
-
-Unlike runtime mocking frameworks (MockK, Mockito), Fakt generates code at the IR level—native compilation everywhere.
-
-### ✅ Zero Production Overhead
-
-Fakt has **zero runtime cost** and **zero production dependencies**:
-
-- Annotation-only runtime (BINARY retention, no dependencies)
-- Test-only generation (generated in test source sets)
-- No production leakage
-- IR-level generation (not text-based)
-
-### ✅ Built-In StateFlow Call Tracking
-
-Every generated fake includes reactive, thread-safe call tracking via Kotlin `StateFlow`:
-
-```kotlin
-val fake = fakeUserRepository()
-
-fake.getUser("123")
-fake.getUser("456")
-
-// Thread-safe, reactive call counting
-assertEquals(2, fake.getUserCallCount.value)
-```
-
-### ✅ Full Language Support
-
-- **Suspend functions**: Full coroutine support
-- **Generics**: Class-level, method-level, constraints, variance
-- **Properties**: val/var with getter/setter tracking
-- **Smart defaults**: Identity functions for generics, sensible primitives
+**[Complete feature reference →](introduction/features.md)**
 
 ---
 
-## Quick Example
+## 🚀 Getting Started
 
-**1. Annotate an interface:**
+**Quick Start:**
 
-```kotlin
-import com.rsicarelli.fakt.Fake
+1. **[Getting Started](introduction/getting-started.md)** - Install Fakt and create your first fake in 5 minutes
+2. **[Basic Usage](usage/basic-usage.md)** - Core patterns and techniques
+3. **[Testing Patterns](guides/testing-patterns.md)** - Best practices for using fakes in tests
 
-@Fake
-interface UserRepository {
-    suspend fun getUser(id: String): Result<User>
-    suspend fun saveUser(user: User): Result<Unit>
-}
-```
+**Usage Guides:**
 
-**2. Build your project:**
+- **[Suspend Functions](usage/suspend-functions.md)** - Working with coroutines and async code
+- **[Generics](usage/generics.md)** - Generic interfaces and type parameters
+- **[Properties](usage/properties.md)** - Faking val and var properties
+- **[Call Tracking](usage/call-tracking.md)** - StateFlow-based reactive counters
 
-```bash
-./gradlew build
-```
+**Advanced Topics:**
 
-**3. Use in tests:**
+- **[Multi-Module Setup](multi-module/index.md)** - Cross-module fakes with collector modules
+- **[Configuration](guides/configuration.md)** - Plugin configuration and log levels
+- **[Performance](guides/performance.md)** - Build times, caching, and optimization
+- **[Migration from Mocks](guides/migration-from-mocks.md)** - Migrating from MockK or Mockito
 
-```kotlin
-import kotlinx.coroutines.test.runTest
-import kotlin.test.Test
+**Reference:**
 
-class UserRepositoryTest {
-    @Test
-    fun `GIVEN fake repository WHEN saving user THEN returns success`() = runTest {
-        val fake = fakeUserRepository {
-            saveUser { user -> Result.success(Unit) }
-        }
-
-        val result = fake.saveUser(User("123", "Alice"))
-
-        assertTrue(result.isSuccess)
-        assertEquals(1, fake.saveUserCallCount.value)
-    }
-}
-```
+- **[API Reference](reference/api.md)** - Complete generated API documentation
+- **[Limitations](reference/limitations.md)** - Known limitations and workarounds
+- **[Compatibility](reference/compatibility.md)** - Platform and version requirements
+- **[FAQ](faq.md)** - Frequently asked questions
+- **[Troubleshooting](troubleshooting.md)** - Common issues and solutions
 
 ---
 
-## Get Started
+## 🌐 Platform Support
 
-Ready to eliminate test boilerplate?
+Fakt works on **all Kotlin Multiplatform targets** without reflection: JVM, Android, iOS, macOS, Linux, Windows, JavaScript, WebAssembly, watchOS, tvOS.
 
-- [Installation](introduction/installation.md) - Add Fakt to your project
-- [Quick Start](introduction/quick-start.md) - Your first fake in 5 minutes
-- [Features](introduction/features.md) - What Fakt supports
+Single-platform projects (JVM-only, Android-only) are fully supported.
 
----
-
-## Platform Support
-
-| Platform         | Targets                                                     | Status |
-|------------------|-------------------------------------------------------------|--------|
-| **JVM**          | `jvm()`                                                     | ✅      |
-| **Android**      | `androidTarget()`                                           | ✅      |
-| **iOS**          | `iosArm64()`, `iosX64()`, `iosSimulatorArm64()`             | ✅      |
-| **macOS**        | `macosArm64()`, `macosX64()`                                | ✅      |
-| **Linux**        | `linuxArm64()`, `linuxX64()`                                | ✅      |
-| **Windows**      | `mingwX64()`                                                | ✅      |
-| **JavaScript**   | `js(IR)` - Browser & Node.js                                | ✅      |
-| **WebAssembly**  | `wasmJs()`                                                  | ✅      |
-| **watchOS**      | `watchosArm64()`, `watchosX64()`, `watchosSimulatorArm64()` | ✅      |
-| **tvOS**         | `tvosArm64()`, `tvosX64()`, `tvosSimulatorArm64()`          | ✅      |
-
-**Single-platform projects** (JVM-only, Android-only) are fully supported.
+**[Full compatibility matrix →](reference/compatibility.md)**
 
 ---
 
@@ -171,11 +97,20 @@ Ready to eliminate test boilerplate?
 
 ## License
 
-Fakt is licensed under the Apache License 2.0. See [LICENSE](https://github.com/rsicarelli/fakt/blob/main/LICENSE) for details.
+Fakt is licensed under the Apache License 2.0.
 
 ```
 Copyright (C) 2025 Rodrigo Sicarelli
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 ```

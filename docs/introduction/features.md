@@ -162,33 +162,9 @@ val fake = fakeUserService {
 
 ### ✅ Complex Standard Library Types
 
-Fakt handles common stdlib types with smart defaults:
+Fakt handles common stdlib types (`Result<T>`, `List<T>`, `Map<K,V>`, `Set<T>`, etc.) with smart empty defaults.
 
-| Type                     | Default Behavior                         |
-|--------------------------|------------------------------------------|
-| `Result<T>`              | `Result.failure(NotImplementedError())`  |
-| `List<T>`                | `emptyList()`                            |
-| `Set<T>`                 | `emptySet()`                             |
-| `Map<K, V>`              | `emptyMap()`                             |
-| `Sequence<T>`            | `emptySequence()`                        |
-| `Array<T>`               | `emptyArray()`                           |
-| `Pair<A, B>`             | `Pair(defaultA, defaultB)`               |
-| `Triple<A, B, C>`        | `Triple(defaultA, defaultB, defaultC)`   |
-
-**Example:**
-
-```kotlin
-@Fake
-interface DataRepository {
-    suspend fun fetchItems(): Result<List<Item>>
-    fun getCache(): Map<String, Item>
-}
-
-val fake = fakeDataRepository {
-    fetchItems { Result.success(listOf(Item("test"))) }
-    getCache { emptyMap() }  // Default
-}
-```
+For complete default behavior reference, see [Why Fakt: Smart Defaults](why-fakt.md#technical-advantages).
 
 ---
 
@@ -196,32 +172,9 @@ val fake = fakeDataRepository {
 
 ### ✅ Suspend Functions
 
-Full coroutine support—no weird `runBlocking` wrappers:
+Full coroutine support—no weird `runBlocking` wrappers. Suspend functions work naturally in `runTest` blocks with proper coroutine context handling.
 
-```kotlin
-@Fake
-interface ApiClient {
-    suspend fun login(username: String, password: String): Result<Token>
-    suspend fun fetchData(): List<Data>
-}
-
-val fake = fakeApiClient {
-    login { username, password ->
-        delay(100)  // Suspends correctly
-        Result.success(Token("fake-token"))
-    }
-    fetchData {
-        delay(50)
-        emptyList()
-    }
-}
-
-// Use in tests
-runTest {
-    val result = fake.login("alice", "pass123")
-    assertTrue(result.isSuccess)
-}
-```
+For detailed examples and testing patterns, see [Suspend Functions Guide](../usage/suspend-functions.md).
 
 ---
 
@@ -352,90 +305,27 @@ assertEquals(1, fake.sessionIdCallCount.value)
 
 ### Reactive Testing
 
-StateFlow counters work with Kotlin Flow test utilities:
+StateFlow counters work seamlessly with Kotlin Flow test utilities like Turbine.
 
-```kotlin
-import app.cash.turbine.test
-
-@Test
-fun `GIVEN fake WHEN calling method THEN counter updates reactively`() = runTest {
-    val fake = fakeRepository()
-
-    fake.getUserCallCount.test {
-        assertEquals(0, awaitItem())
-
-        fake.getUser("123")
-        assertEquals(1, awaitItem())
-
-        fake.getUser("456")
-        assertEquals(2, awaitItem())
-    }
-}
-```
+See [Call Tracking Guide](../usage/call-tracking.md) for reactive testing patterns.
 
 ---
 
 ## Code Generation Patterns
 
-### Smart Default Behaviors
+Fakt generates production-quality code with smart defaults, type-safe DSLs, and factory functions. For details on default behaviors, see [Why Fakt: Technical Advantages](why-fakt.md#technical-advantages).
 
-Fakt generates sensible defaults based on return type:
+### Type-Safe DSL
 
-| Return Type         | Generated Default                        |
-|---------------------|------------------------------------------|
-| `Unit`              | `{ }`                                    |
-| `Boolean`           | `{ false }`                              |
-| `Int`, `Long`, etc. | `{ 0 }`                                  |
-| `Double`, `Float`   | `{ 0.0 }`                                |
-| `String`            | `{ "" }`                                 |
-| `List<T>`           | `{ emptyList() }`                        |
-| `T?` (nullable)     | `{ null }`                               |
-| `T -> T` (identity) | `{ it }`                                 |
-| `Result<T>`         | `{ Result.failure(NotImplementedError)}` |
+Every fake includes a type-safe configuration DSL where lambdas match the original method signatures. The compiler catches type errors at build time.
 
----
-
-### Configuration DSL
-
-Every fake gets a type-safe DSL for configuration:
-
-```kotlin
-@Fake
-interface UserRepository {
-    suspend fun getUser(id: String): Result<User>
-    suspend fun saveUser(user: User): Result<Unit>
-}
-
-// Generated DSL
-val fake = fakeUserRepository {
-    getUser { id ->  // Type-safe lambda
-        Result.success(User(id, "Alice"))
-    }
-    saveUser { user ->  // Compiler knows parameter types
-        Result.success(Unit)
-    }
-}
-```
-
----
+See [Getting Started](getting-started.md) for examples and [Basic Usage](../usage/basic-usage.md) for patterns.
 
 ### Factory Functions
 
-Generated factory functions follow Kotlin conventions:
+Generated factory functions follow Kotlin naming conventions: `fake{InterfaceName}` (e.g., `fakeUserRepository`, `fakeApiClient`).
 
-```kotlin
-// For interface UserRepository:
-fun fakeUserRepository(
-    configure: FakeUserRepositoryConfig.() -> Unit = {}
-): FakeUserRepositoryImpl
-
-// For interface ApiClient:
-fun fakeApiClient(
-    configure: FakeApiClientConfig.() -> Unit = {}
-): FakeApiClientImpl
-```
-
-Naming: `fake{InterfaceName}` (camelCase from interface name)
+See [API Reference](../reference/api.md) for complete naming rules and generated code structure.
 
 ---
 

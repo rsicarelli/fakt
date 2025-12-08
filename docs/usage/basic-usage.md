@@ -404,69 +404,13 @@ fun `GIVEN fake WHEN reconfiguring behavior THEN uses new behavior`() {
 
 ---
 
-## Best Practices
-
-### ✅ One Fake Per Test
-
-Create a new fake for each test to avoid shared state:
-
-```kotlin
-@Test
-fun `test case 1`() {
-    val fake = fakeRepository {  // Fresh fake
-        getUser { id -> User(id, "Alice") }
-    }
-    // Test with Alice
-}
-
-@Test
-fun `test case 2`() {
-    val fake = fakeRepository {  // Fresh fake
-        getUser { id -> User(id, "Bob") }
-    }
-    // Test with Bob
-}
-```
-
-### ✅ Configure Only What You Need
-
-Don't configure methods you don't use in the test:
-
-```kotlin
-@Test
-fun `GIVEN repository WHEN getting user THEN returns user`() {
-    val fake = fakeRepository {
-        getUser { id -> User(id, "Alice") }
-        // Don't configure saveUser, deleteUser, etc. if not used
-    }
-
-    val user = fake.getUser("123")
-    assertEquals("Alice", user.name)
-}
-```
-
-### ✅ Use Call Counters for Verification
-
-Verify method calls using built-in counters:
-
-```kotlin
-@Test
-fun `GIVEN service WHEN processing THEN calls dependencies correctly`() {
-    val fakeRepo = fakeRepository()
-    val service = UserService(fakeRepo)
-
-    service.processUser("123")
-
-    assertEquals(1, fakeRepo.getUserCallCount.value)
-    assertEquals(1, fakeRepo.saveUserCallCount.value)
-}
-```
-
----
-
 ## Next Steps
 
-- [Suspend Functions](suspend-functions.md) - Async/coroutine support
-- [Generics](generics.md) - Generic type handling
-- [Properties](properties.md) - val/var faking
-- [Call Tracking](call-tracking.md) - Advanced StateFlow patterns
+**Learn More:**
+- **[Suspend Functions](suspend-functions.md)** - Async/coroutine support
+- **[Generics](generics.md)** - Generic type handling
+- **[Properties](properties.md)** - val/var faking
+- **[Call Tracking](call-tracking.md)** - Advanced StateFlow patterns
+
+**Best Practices:**
+- **[Testing Patterns](../guides/testing-patterns.md)** - GIVEN-WHEN-THEN, isolated fakes, verification strategies

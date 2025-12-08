@@ -83,10 +83,8 @@ extra:
 nav:
   - 'Home': index.md
   - 'Introduction':
-      - 'Overview': introduction/overview.md
+      - 'Getting Started': introduction/getting-started.md
       - 'Why Fakt?': introduction/why-fakt.md
-      - 'Installation': introduction/installation.md
-      - 'Quick Start': introduction/quick-start.md
       - 'Features': introduction/features.md
   - 'Usage':
       - 'Basic Usage': usage/basic-usage.md
@@ -96,20 +94,16 @@ nav:
       - 'Call Tracking': usage/call-tracking.md
   - 'Guides':
       - 'Testing Patterns': guides/testing-patterns.md
-      - 'Migration from MockK/Mockito': guides/migration.md
+      - 'Configuration': guides/configuration.md
+      - 'Migration from Mocks': guides/migration-from-mocks.md
       - 'Performance': guides/performance.md
   - 'Multi-Module':
       - 'Overview': multi-module/index.md
       - 'Getting Started': multi-module/getting-started.md
       - 'Advanced Topics': multi-module/advanced.md
-      - 'Troubleshooting': multi-module/troubleshooting.md
       - 'Migration Guide': multi-module/migration.md
-      - 'Technical Reference': multi-module/reference.md
   - 'Reference':
       - 'API': reference/api.md
-      - 'Code Generation Strategy': reference/codegen-strategy.md
-      - 'Fakes Over Mocks': reference/fakes-over-mocks.md
-      - 'Configuration': reference/configuration.md
       - 'Compatibility': reference/compatibility.md
       - 'Limitations': reference/limitations.md
   - 'Samples': samples/index.md
