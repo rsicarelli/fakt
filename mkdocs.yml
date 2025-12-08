@@ -18,16 +18,16 @@ theme:
   favicon: assets/logo.png
   palette:
     - media: '(prefers-color-scheme: light)'
-      scheme: default
-      primary: 'deep purple'
-      accent: 'purple'
+      scheme: fakt-light
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - media: '(prefers-color-scheme: dark)'
-      scheme: slate
-      primary: 'deep purple'
-      accent: 'purple'
+      scheme: fakt-dark
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
@@ -77,6 +77,9 @@ markdown_extensions:
   - attr_list
   - md_in_html
   - nl2br
+
+extra_css:
+  - stylesheets/fakt-brand.css
 
 extra:
   version:

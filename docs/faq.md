@@ -68,15 +68,15 @@ Fakt doesn't replace hand-written fakes for complex scenarios (stateful mocks, p
 
 ### Does Fakt support generics?
 
-**Yes**. Class-level, method-level, generic constraints, and variance are all supported. See [Features: Generics](introduction/features.md#-generics) for detailed examples.
+**Yes**. Class-level, method-level, generic constraints, and variance are all supported. See [Features: Generics](introduction/features.md#generics) for detailed examples.
 
 ### Does Fakt support suspend functions?
 
-**Yes**. Suspend functions preserve coroutine semantics. See [Suspend Functions](usage/suspend-functions.md#-suspend-functions) for details.
+**Yes**. Suspend functions preserve coroutine semantics. See [Suspend Functions](usage/suspend-functions.md) for details.
 
 ### Does Fakt support properties (val/var)?
 
-**Yes**. Both read-only (`val`) and mutable (`var`) properties with call tracking. See [Features: Properties](introduction/features.md#-properties) for examples.
+**Yes**. Both read-only (`val`) and mutable (`var`) properties with call tracking. See [Features: Properties](introduction/features.md#properties) for examples.
 
 ### Can I fake data classes or sealed classes?
 
