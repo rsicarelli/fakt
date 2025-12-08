@@ -12,13 +12,9 @@
         <meta name="author" content="Rodrigo Sicarelli">
       
       
-        <link rel="canonical" href="https://rsicarelli.github.io/fakt/1.0.0-alpha01/guides/performance.html">
+        <link rel="canonical" href="https://rsicarelli.github.io/fakt/1.0.0-alpha01/deployment/maven-central-setup.html">
       
       
-        <link rel="prev" href="migration-from-mocks.html">
-      
-      
-        <link rel="next" href="../multi-module/index.html">
       
       
       <link rel="icon" href="../assets/logo.png">
@@ -26,7 +22,7 @@
     
     
       
-        <title>Performance - Fakt</title>
+        <title>Maven Central Setup Guide - Fakt</title>
       
     
     
@@ -63,11 +59,11 @@
       
         <meta  property="og:type"  content="website" >
       
-        <meta  property="og:title"  content="Performance - Fakt" >
+        <meta  property="og:title"  content="Maven Central Setup Guide - Fakt" >
       
         <meta  property="og:description"  content="Compile-time type-safe test fakes for Kotlin Multiplatform" >
       
-        <meta  property="og:image"  content="https://rsicarelli.github.io/fakt/1.0.0-alpha01/assets/images/social/guides/performance.png" >
+        <meta  property="og:image"  content="https://rsicarelli.github.io/fakt/1.0.0-alpha01/assets/images/social/deployment/maven-central-setup.png" >
       
         <meta  property="og:image:type"  content="image/png" >
       
@@ -75,15 +71,15 @@
       
         <meta  property="og:image:height"  content="630" >
       
-        <meta  property="og:url"  content="https://rsicarelli.github.io/fakt/1.0.0-alpha01/guides/performance.html" >
+        <meta  property="og:url"  content="https://rsicarelli.github.io/fakt/1.0.0-alpha01/deployment/maven-central-setup.html" >
       
         <meta  name="twitter:card"  content="summary_large_image" >
       
-        <meta  name="twitter:title"  content="Performance - Fakt" >
+        <meta  name="twitter:title"  content="Maven Central Setup Guide - Fakt" >
       
         <meta  name="twitter:description"  content="Compile-time type-safe test fakes for Kotlin Multiplatform" >
       
-        <meta  name="twitter:image"  content="https://rsicarelli.github.io/fakt/1.0.0-alpha01/assets/images/social/guides/performance.png" >
+        <meta  name="twitter:image"  content="https://rsicarelli.github.io/fakt/1.0.0-alpha01/assets/images/social/deployment/maven-central-setup.png" >
       
     
     
@@ -106,7 +102,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#performance" class="md-skip">
+        <a href="#maven-central-setup-guide" class="md-skip">
           Skip to content
         </a>
       
@@ -143,7 +139,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Performance
+              Maven Central Setup Guide
             
           </span>
         </div>
@@ -313,13 +309,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="testing-patterns.html" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../guides/testing-patterns.html" class="md-tabs__link">
           
   
   
@@ -824,31 +818,28 @@
       
   
   
-    
   
   
-  
     
     
     
     
-      
-        
-        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -861,7 +852,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             Guides
@@ -875,7 +866,7 @@
   
   
     <li class="md-nav__item">
-      <a href="testing-patterns.html" class="md-nav__link">
+      <a href="../guides/testing-patterns.html" class="md-nav__link">
         
   
   
@@ -898,7 +889,7 @@
   
   
     <li class="md-nav__item">
-      <a href="configuration.html" class="md-nav__link">
+      <a href="../guides/configuration.html" class="md-nav__link">
         
   
   
@@ -921,7 +912,7 @@
   
   
     <li class="md-nav__item">
-      <a href="migration-from-mocks.html" class="md-nav__link">
+      <a href="../guides/migration-from-mocks.html" class="md-nav__link">
         
   
   
@@ -941,32 +932,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    Performance
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="performance.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../guides/performance.html" class="md-nav__link">
         
   
   
@@ -977,110 +946,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#build-time-impact" class="md-nav__link">
-    <span class="md-ellipsis">
-      Build Time Impact
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#telemetry-configuration" class="md-nav__link">
-    <span class="md-ellipsis">
-      Telemetry Configuration
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Telemetry Configuration">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#log-level-outputs" class="md-nav__link">
-    <span class="md-ellipsis">
-      Log Level Outputs
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#cache-strategy" class="md-nav__link">
-    <span class="md-ellipsis">
-      Cache Strategy
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#best-practices" class="md-nav__link">
-    <span class="md-ellipsis">
-      Best Practices
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Best Practices">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#use-quiet-in-cicd" class="md-nav__link">
-    <span class="md-ellipsis">
-      ✅ Use QUIET in CI/CD
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#use-debug-for-troubleshooting" class="md-nav__link">
-    <span class="md-ellipsis">
-      ✅ Use DEBUG for Troubleshooting
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      Next Steps
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1488,98 +1353,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#build-time-impact" class="md-nav__link">
-    <span class="md-ellipsis">
-      Build Time Impact
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#telemetry-configuration" class="md-nav__link">
-    <span class="md-ellipsis">
-      Telemetry Configuration
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Telemetry Configuration">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#log-level-outputs" class="md-nav__link">
-    <span class="md-ellipsis">
-      Log Level Outputs
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#cache-strategy" class="md-nav__link">
-    <span class="md-ellipsis">
-      Cache Strategy
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#best-practices" class="md-nav__link">
-    <span class="md-ellipsis">
-      Best Practices
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Best Practices">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#use-quiet-in-cicd" class="md-nav__link">
-    <span class="md-ellipsis">
-      ✅ Use QUIET in CI/CD
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#use-debug-for-troubleshooting" class="md-nav__link">
-    <span class="md-ellipsis">
-      ✅ Use DEBUG for Troubleshooting
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      Next Steps
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -1597,73 +1370,21 @@
   
 
 
-<h1 id="performance">Performance<a class="headerlink" href="#performance" title="Permanent link">&para;</a></h1>
-<p>Fakt&rsquo;s compile-time impact and telemetry system.</p>
+<h1 id="maven-central-setup-guide">Maven Central Setup Guide<a class="headerlink" href="#maven-central-setup-guide" title="Permanent link">&para;</a></h1>
+<div class="admonition info">
+<p class="admonition-title">Coming Soon</p>
+<p>Detailed Maven Central setup guide is under development.</p>
+</div>
+<p>For now, refer to:<br />
+- <a href="../multi-module/advanced.html#publishing-fake-modules">Publishing Fake Modules</a> for basic publishing setup<br />
+- <a href="https://central.sonatype.org/publish/publish-guide/">Sonatype OSSRH Guide</a> for Maven Central requirements</p>
 <hr />
-<h2 id="build-time-impact">Build Time Impact<a class="headerlink" href="#build-time-impact" title="Permanent link">&para;</a></h2>
-<p>Fakt uses intelligent caching across KMP targets:</p>
-<p><strong>First target compilation:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>DISCOVERY: 1ms (100 interfaces, 21 classes)
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>GENERATION: 39ms (121 new fakes, avg 333µs/fake)
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>TOTAL: 40ms
-</code></pre></div>
-<p><strong>Subsequent targets (cached):</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>compileKotlinJvm:     1ms (121 from cache)
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>compileKotlinAndroid: 1ms (121 from cache)
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>compileKotlinIosX64:  1ms (121 from cache)
-</code></pre></div>
-<hr />
-<h2 id="telemetry-configuration">Telemetry Configuration<a class="headerlink" href="#telemetry-configuration" title="Permanent link">&para;</a></h2>
-<p>Four log levels for debugging and performance analysis:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">import</span><span class="w"> </span><span class="nn">com.rsicarelli.fakt.compiler.api.LogLevel</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="n">logLevel</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">LogLevel</span><span class="p">.</span><span class="na">INFO</span><span class="p">)</span><span class="w">   </span><span class="c1">// Default: concise summary</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="c1">// LogLevel.QUIET  - Zero output (CI/CD)</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="c1">// LogLevel.DEBUG  - Detailed breakdown with FIR + IR details</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">}</span>
-</code></pre></div>
-<h3 id="log-level-outputs">Log Level Outputs<a class="headerlink" href="#log-level-outputs" title="Permanent link">&para;</a></h3>
-<p><strong>INFO (default):</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>✅ 10 fakes generated in 1.2s (6 cached)
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>   Discovery: 120ms | Analysis: 340ms | Generation: 580ms
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>   Cache hit rate: 40% (6/15)
-</code></pre></div>
-<p><strong>DEBUG:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>[DISCOVERY] 120ms - 15 interfaces, 3 classes
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>[FILTERING] 85ms - Cache hits: 6/15 (40%)
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>[ANALYSIS] 340ms
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>  ├─ UserRepository (18ms)
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>  ├─ Analytics (42ms)
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>  ├─ FIR + IR node inspection, type resolution
-</code></pre></div>
-<p>Includes full FIR + IR details, type resolution, etc. (~5-10ms overhead)</p>
-<hr />
-<h2 id="cache-strategy">Cache Strategy<a class="headerlink" href="#cache-strategy" title="Permanent link">&para;</a></h2>
-<p>Fakt caches generated code across:</p>
-<ul>
-<li>KMP targets (jvm, ios, android, etc.)</li>
-<li>Incremental compilation runs</li>
-<li>Clean builds (invalidates cache)</li>
-</ul>
-<hr />
-<h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
-<h3 id="use-quiet-in-cicd">✅ Use QUIET in CI/CD<a class="headerlink" href="#use-quiet-in-cicd" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="n">logLevel</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">LogLevel</span><span class="p">.</span><span class="na">QUIET</span><span class="p">)</span><span class="w">  </span><span class="c1">// Zero overhead</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="p">}</span>
-</code></pre></div>
-<h3 id="use-debug-for-troubleshooting">✅ Use DEBUG for Troubleshooting<a class="headerlink" href="#use-debug-for-troubleshooting" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="n">logLevel</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">LogLevel</span><span class="p">.</span><span class="na">DEBUG</span><span class="p">)</span><span class="w">  </span><span class="c1">// ~5-10ms overhead</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="p">}</span>
-</code></pre></div>
-<hr />
-<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
-<ul>
-<li><a href="configuration.html">Configuration</a> - Plugin options</li>
-<li><a href="../troubleshooting.html">Troubleshooting</a> - Common issues</li>
-</ul>
+<p><strong>Temporary placeholder</strong> - This guide will cover:<br />
+- GPG key generation and configuration<br />
+- OSSRH account setup<br />
+- Gradle publishing configuration<br />
+- Signing setup<br />
+- Release process automation</p>
 
 
 
