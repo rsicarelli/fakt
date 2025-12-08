@@ -97,5 +97,5 @@ fakt {
 
 ## Next Steps
 
-- [Configuration](../reference/configuration.md) - Plugin options
+- [Configuration](configuration.md) - Plugin options
 - [Troubleshooting](../troubleshooting.md) - Common issues
