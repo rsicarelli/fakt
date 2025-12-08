@@ -69,6 +69,8 @@ jobs:
     name: Publish to Maven Central
     runs-on: ubuntu-latest
     needs: validation
+    outputs:
+      version_new: ${{ steps.bump.outputs.version_new }}
     steps:
       - name: Create GitHub App Token
         uses: actions/create-github-app-token@v1
@@ -124,14 +126,6 @@ jobs:
           tag: ${{ steps.bump.outputs.tag }}
           github-token: ${{ steps.app-token.outputs.token }}
 
-      - name: Deploy Release Documentation
-        run: |
-          pip install --requirement .github/workflows/mkdocs-requirements.txt
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          mike deploy --update-aliases --push ${{ steps.bump.outputs.version_new }} latest
-          mike set-default --push latest
-
       - name: Bump to Next SNAPSHOT
         id: bump-snapshot
         run: |
@@ -148,3 +142,12 @@ jobs:
           git add gradle.properties
           git commit -m "chore: bump to ${{ steps.bump-snapshot.outputs.next_snapshot }} [skip ci]"
           git push origin HEAD
+
+  deploy-docs:
+    name: Deploy Release Documentation
+    needs: publish
+    uses: ./.github/workflows/deploy-docs.yml
+    with:
+      version: ${{ needs.publish.outputs.version_new }}
+      alias: 'latest'
+      set-default: true

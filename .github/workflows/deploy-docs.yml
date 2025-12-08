@@ -1,0 +1,73 @@
+# Reusable workflow for deploying documentation with Mike versioning
+name: Deploy Documentation
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+        description: 'Version to deploy (e.g., 1.0.0, 1.0.0-SNAPSHOT)'
+      alias:
+        required: true
+        type: string
+        description: 'Alias for this version (snapshot or latest)'
+      set-default:
+        required: false
+        type: boolean
+        default: true
+        description: 'Set this version as default'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'deploy-docs'
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.alias }} documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for mike
+
+      - name: Fetch gh-pages branch
+        run: |
+          git fetch origin gh-pages:gh-pages || echo "First deployment - gh-pages branch doesn't exist yet"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install MkDocs dependencies
+        run: |
+          pip install --requirement .github/workflows/mkdocs-requirements.txt
+
+      - name: Configure Git for Mike
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Show current Mike versions
+        run: |
+          echo "Current Mike versions available:"
+          mike list || echo "No docs site versions found (likely first deployment)"
+
+      - name: Deploy documentation with mike
+        run: |
+          mike deploy --update-aliases --push \
+            ${{ inputs.version }} \
+            ${{ inputs.alias }}
+
+      - name: Set default version
+        if: inputs.set-default
+        run: |
+          mike set-default --push ${{ inputs.alias }}

@@ -6,7 +6,6 @@ on:
     paths-ignore:
       - 'docs/**'
       - '*.md'
-      - '.github/workflows/docs.yml'
       - '.claude/**'
 
 concurrency:
@@ -21,6 +20,8 @@ jobs:
   publish-snapshot:
     name: Publish SNAPSHOT
     runs-on: ubuntu-latest
+    outputs:
+      snapshot_version: ${{ steps.version.outputs.snapshot_version }}
     steps:
       - name: Skip if commit message contains [skip ci]
         if: contains(github.event.head_commit.message, '[skip ci]')
@@ -68,3 +69,19 @@ jobs:
           VERSION=$(grep "version=" gradle.properties | cut -d'=' -f2)
           echo "🚀 Successfully published $VERSION to Maven Central"
           echo "No GitHub Release created for SNAPSHOT versions"
+
+      - name: Extract SNAPSHOT version
+        id: version
+        run: |
+          SNAPSHOT_VERSION=$(grep "version=" gradle.properties | cut -d'=' -f2)
+          echo "snapshot_version=$SNAPSHOT_VERSION" >> $GITHUB_OUTPUT
+          echo "📚 Will deploy docs for version: $SNAPSHOT_VERSION"
+
+  deploy-docs:
+    name: Deploy SNAPSHOT Documentation
+    needs: publish-snapshot
+    uses: ./.github/workflows/deploy-docs.yml
+    with:
+      version: ${{ needs.publish-snapshot.outputs.snapshot_version }}
+      alias: 'snapshot'
+      set-default: true
