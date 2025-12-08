@@ -67,6 +67,10 @@
   --md-default-bg-color--lighter: #2d2d2d;     /* Tertiary background */
   --md-default-bg-color--lightest: #363636;    /* Hover backgrounds */
 
+  /* Typography Colors */
+  --md-typeset-color: #ffffff;                 /* Body text color - white */
+  --md-typeset-a-color: #5FC77E;               /* Link color - light green */
+
   /* Primary Colors - Lighter Green for Dark Backgrounds */
   --md-primary-fg-color: #5FC77E;              /* Lighter green - better contrast */
   --md-primary-fg-color--light: #7FD799;       /* Even lighter - hover states */
@@ -87,9 +91,6 @@
   --md-code-hl-number-color: #D6FC63;          /* Yellow for numbers */
   --md-code-hl-keyword-color: #5FC77E;         /* Light green for keywords */
   --md-code-hl-string-color: #D6FC63;          /* Yellow for strings */
-
-  /* Links */
-  --md-typeset-a-color: #5FC77E;               /* Light green links */
 
   /* Admonitions & Call-outs */
   --md-admonition-fg-color: #7FD799;
