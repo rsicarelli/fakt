@@ -35,5 +35,5 @@ kotlin {
 }
 
 fakt {
-    logLevel.set(com.rsicarelli.fakt.compiler.api.LogLevel.TRACE)
+    logLevel.set(com.rsicarelli.fakt.compiler.api.LogLevel.DEBUG)
 }
