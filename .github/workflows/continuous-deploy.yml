@@ -80,6 +80,10 @@ jobs:
   deploy-docs:
     name: Deploy SNAPSHOT Documentation
     needs: publish-snapshot
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
     uses: ./.github/workflows/deploy-docs.yml
     with:
       version: ${{ needs.publish-snapshot.outputs.snapshot_version }}
