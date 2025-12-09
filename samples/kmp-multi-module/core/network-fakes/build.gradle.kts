@@ -23,7 +23,7 @@ kotlin {
 
 // Configure Fakt plugin in COLLECTOR MODE
 fakt {
-logLevel.set(com.rsicarelli.fakt.compiler.api.LogLevel.TRACE)
+    logLevel.set(com.rsicarelli.fakt.compiler.api.LogLevel.DEBUG)
     @OptIn(com.rsicarelli.fakt.gradle.ExperimentalFaktMultiModule::class)
     collectFakesFrom(projects.core.network)
 }
