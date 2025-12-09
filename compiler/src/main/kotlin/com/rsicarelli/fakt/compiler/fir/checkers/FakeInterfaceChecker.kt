@@ -65,8 +65,8 @@ internal class FakeInterfaceChecker(
         private val FAKE_ANNOTATION_CLASS_ID = ClassId.topLevel(FqName("com.rsicarelli.fakt.Fake"))
     }
 
-    context(context: CheckerContext, reporter: DiagnosticReporter)
-    @Suppress("ReturnCount") // Validation logic: early returns are idiomatic guard clauses
+    @Suppress("ReturnCount")
+    context(context: CheckerContext, reporter: DiagnosticReporter) // Validation logic: early returns are idiomatic guard clauses
     override fun check(declaration: FirClass) {
         val session = context.session
         val classId = declaration.classId
