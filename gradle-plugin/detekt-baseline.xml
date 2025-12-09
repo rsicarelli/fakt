@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ReturnCount:FaktGradleSubplugin.kt$FaktGradleSubplugin$override fun isApplicable(kotlinCompilation: KotlinCompilation&lt;*&gt;): Boolean</ID>
+  </CurrentIssues>
+</SmellBaseline>
