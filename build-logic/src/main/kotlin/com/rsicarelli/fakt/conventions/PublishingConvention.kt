@@ -59,7 +59,8 @@ private fun Project.configureMavenCentralPublishing() {
     val isSnapshot = project.version.toString().endsWith("-SNAPSHOT")
 
     // Configure using the mavenPublishing DSL extension
-    extensions.findByType(com.vanniktech.maven.publish.MavenPublishBaseExtension::class.java)
+    extensions
+        .findByType(com.vanniktech.maven.publish.MavenPublishBaseExtension::class.java)
         ?.apply {
             publishToMavenCentral(automaticRelease = isReleaseMode)
 
@@ -72,7 +73,7 @@ private fun Project.configureMavenCentralPublishing() {
             coordinates(
                 groupId = project.group.toString(),
                 artifactId = "fakt-${project.name}",
-                version = project.version.toString()
+                version = project.version.toString(),
             )
 
             pom {
@@ -83,11 +84,11 @@ private fun Project.configureMavenCentralPublishing() {
                 licenses {
                     license {
                         name.set(
-                            findProperty("POM_LICENCE_NAME") as String? ?: "Apache License 2.0"
+                            findProperty("POM_LICENCE_NAME") as String? ?: "Apache License 2.0",
                         )
                         url.set(
                             findProperty("POM_LICENCE_URL") as String?
-                                ?: "https://www.apache.org/licenses/LICENSE-2.0"
+                                ?: "https://www.apache.org/licenses/LICENSE-2.0",
                         )
                         distribution.set(findProperty("POM_LICENCE_DIST") as String? ?: "repo")
                     }
@@ -97,12 +98,12 @@ private fun Project.configureMavenCentralPublishing() {
                     developer {
                         id.set(findProperty("POM_DEVELOPER_ID") as String? ?: "rsicarelli")
                         name.set(
-                            findProperty("POM_DEVELOPER_NAME") as String? ?: "Rodrigo Sicarelli"
+                            findProperty("POM_DEVELOPER_NAME") as String? ?: "Rodrigo Sicarelli",
                         )
                         email.set("rodrigo.sicarelli@gmail.com")
                         url.set(
                             findProperty("POM_DEVELOPER_URL") as String?
-                                ?: "https://github.com/rsicarelli"
+                                ?: "https://github.com/rsicarelli",
                         )
                     }
                 }
@@ -110,15 +111,15 @@ private fun Project.configureMavenCentralPublishing() {
                 scm {
                     connection.set(
                         findProperty("POM_SCM_CONNECTION") as String?
-                            ?: "scm:git:git://github.com/rsicarelli/fakt.git"
+                            ?: "scm:git:git://github.com/rsicarelli/fakt.git",
                     )
                     developerConnection.set(
                         findProperty("POM_SCM_DEV_CONNECTION") as String?
-                            ?: "scm:git:ssh://git@github.com/rsicarelli/fakt.git"
+                            ?: "scm:git:ssh://git@github.com/rsicarelli/fakt.git",
                     )
                     url.set(
                         findProperty("POM_SCM_URL") as String?
-                            ?: "https://github.com/rsicarelli/fakt"
+                            ?: "https://github.com/rsicarelli/fakt",
                     )
                 }
             }

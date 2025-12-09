@@ -168,8 +168,8 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         val compilationName = kotlinCompilation.name.lowercase()
 
         return compilationName == "main" ||
-                compilationName.endsWith("main") ||
-                compilationName == "metadata"
+            compilationName.endsWith("main") ||
+            compilationName == "metadata"
     }
 
     override fun getCompilerPluginId(): String = PLUGIN_ID
@@ -225,7 +225,10 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 add(SubpluginOption(key = "enabled", value = extension.enabled.get().toString()))
                 add(SubpluginOption(key = "logLevel", value = extension.logLevel.get().name))
 
-                val buildDir = project.layout.buildDirectory.get().asFile.absolutePath
+                val buildDir =
+                    project.layout.buildDirectory
+                        .get()
+                        .asFile.absolutePath
                 val context = SourceSetDiscovery.buildContext(kotlinCompilation, buildDir)
 
                 // Serialize context to Base64-encoded JSON for compiler plugin

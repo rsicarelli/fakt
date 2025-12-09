@@ -96,13 +96,19 @@ public fun CodeClass.renderTo(builder: CodeBuilder) {
     val modifiersStr = modifiers.joinToString(" ") { it.name.lowercase() }
     val modifierPrefix = if (modifiersStr.isNotEmpty()) "$modifiersStr " else ""
 
-    val typeParamsStr = if (typeParameters.isNotEmpty()) {
-        "<${typeParameters.joinToString { it.render() }}>"
-    } else ""
+    val typeParamsStr =
+        if (typeParameters.isNotEmpty()) {
+            "<${typeParameters.joinToString { it.render() }}>"
+        } else {
+            ""
+        }
 
-    val superTypesStr = if (superTypes.isNotEmpty()) {
-        " : ${superTypes.joinToString { it.render() }}"
-    } else ""
+    val superTypesStr =
+        if (superTypes.isNotEmpty()) {
+            " : ${superTypes.joinToString { it.render() }}"
+        } else {
+            ""
+        }
 
     val whereClauseStr = whereClause?.let { " where $it" } ?: ""
 
@@ -125,18 +131,22 @@ public fun CodeClass.renderTo(builder: CodeBuilder) {
  * @param builder The [CodeBuilder] to write to
  */
 public fun CodeFunction.renderTo(builder: CodeBuilder) {
-    val modifiersStr = buildString(capacity = 50) {
-        if (modifiers.isNotEmpty()) {
-            append(modifiers.joinToString(" ") { it.name.lowercase() })
-            append(" ")
+    val modifiersStr =
+        buildString(capacity = 50) {
+            if (modifiers.isNotEmpty()) {
+                append(modifiers.joinToString(" ") { it.name.lowercase() })
+                append(" ")
+            }
+            if (isSuspend) append("suspend ")
+            if (isInline) append("inline ")
         }
-        if (isSuspend) append("suspend ")
-        if (isInline) append("inline ")
-    }
 
-    val typeParamsStr = if (typeParameters.isNotEmpty()) {
-        "<${typeParameters.joinToString { it.render() }}> "
-    } else ""
+    val typeParamsStr =
+        if (typeParameters.isNotEmpty()) {
+            "<${typeParameters.joinToString { it.render() }}> "
+        } else {
+            ""
+        }
 
     val receiverStr = receiverType?.let { "${it.render()}." } ?: ""
 
@@ -146,7 +156,7 @@ public fun CodeFunction.renderTo(builder: CodeBuilder) {
     when (body) {
         is CodeBlock.Expression -> {
             builder.appendLine(
-                "${modifiersStr}fun $typeParamsStr$receiverStr$name($paramsStr)$returnTypeStr = ${(body as CodeBlock.Expression).expr.render()}"
+                "${modifiersStr}fun $typeParamsStr$receiverStr$name($paramsStr)$returnTypeStr = ${(body as CodeBlock.Expression).expr.render()}",
             )
         }
 
@@ -214,7 +224,7 @@ public fun CodeProperty.renderTo(builder: CodeBuilder) {
 
         initializer != null -> {
             builder.appendLine(
-                "$modifierPrefix$varOrVal $name: $typeStr = ${initializer!!.render()}"
+                "$modifierPrefix$varOrVal $name: $typeStr = ${initializer!!.render()}",
             )
         }
 
@@ -231,64 +241,68 @@ public fun CodeProperty.renderTo(builder: CodeBuilder) {
  *
  * @return Type as Kotlin source string
  */
-public fun CodeType.render(): String = when (this) {
-    is CodeType.Simple -> name
-    is CodeType.Generic -> "$name<${arguments.joinToString { it.render() }}>"
-    is CodeType.Nullable -> "${inner.render()}?"
-    is CodeType.Lambda -> {
-        val params = parameters.joinToString { it.render() }
-        val suspend = if (isSuspend) "suspend " else ""
-        "$suspend($params) -> ${returnType.render()}"
+public fun CodeType.render(): String =
+    when (this) {
+        is CodeType.Simple -> name
+        is CodeType.Generic -> "$name<${arguments.joinToString { it.render() }}>"
+        is CodeType.Nullable -> "${inner.render()}?"
+        is CodeType.Lambda -> {
+            val params = parameters.joinToString { it.render() }
+            val suspend = if (isSuspend) "suspend " else ""
+            "$suspend($params) -> ${returnType.render()}"
+        }
     }
-}
 
 /**
  * Renders [CodeTypeParameter] to string.
  *
  * @return Type parameter as Kotlin source string
  */
-public fun CodeTypeParameter.render(): String = buildString(capacity = 40) {
-    if (variance != CodeTypeParameter.Variance.INVARIANT) {
-        append("${variance.name.lowercase()} ")
+public fun CodeTypeParameter.render(): String =
+    buildString(capacity = 40) {
+        if (variance != CodeTypeParameter.Variance.INVARIANT) {
+            append("${variance.name.lowercase()} ")
+        }
+        if (isReified) append("reified ")
+        append(name)
+        if (constraints.isNotEmpty()) {
+            append(" : ${constraints.first()}")
+        }
     }
-    if (isReified) append("reified ")
-    append(name)
-    if (constraints.isNotEmpty()) {
-        append(" : ${constraints.first()}")
-    }
-}
 
 /**
  * Renders [CodeParameter] to string.
  *
  * @return Parameter as Kotlin source string
  */
-public fun CodeParameter.render(): String = buildString(capacity = 50) {
-    if (isVararg) append("vararg ")
-    append("$name: ${type.render()}")
-    defaultValue?.let { append(" = ${it.render()}") }
-}
+public fun CodeParameter.render(): String =
+    buildString(capacity = 50) {
+        if (isVararg) append("vararg ")
+        append("$name: ${type.render()}")
+        defaultValue?.let { append(" = ${it.render()}") }
+    }
 
 /**
  * Renders [CodeExpression] to string.
  *
  * @return Expression as Kotlin source string
  */
-public fun CodeExpression.render(): String = when (this) {
-    is CodeExpression.StringLiteral -> "\"$value\""
-    is CodeExpression.NumberLiteral -> value
-    is CodeExpression.Lambda -> {
-        val params = if (parameters.isEmpty()) "" else "${parameters.joinToString()} -> "
-        "{ $params$body }"
-    }
+public fun CodeExpression.render(): String =
+    when (this) {
+        is CodeExpression.StringLiteral -> "\"$value\""
+        is CodeExpression.NumberLiteral -> value
+        is CodeExpression.Lambda -> {
+            val params = if (parameters.isEmpty()) "" else "${parameters.joinToString()} -> "
+            "{ $params$body }"
+        }
 
-    is CodeExpression.FunctionCall -> {
-        val args = arguments.joinToString { it.render() }
-        "$name($args)"
-    }
+        is CodeExpression.FunctionCall -> {
+            val args = arguments.joinToString { it.render() }
+            "$name($args)"
+        }
 
-    is CodeExpression.Raw -> code
-}
+        is CodeExpression.Raw -> code
+    }
 
 /**
  * Escapes package name segments (keywords, digits).
@@ -311,9 +325,34 @@ private fun String.escapePackageName(): String {
 /**
  * Set of Kotlin keywords that must be escaped in package names.
  */
-private val KOTLIN_KEYWORDS = setOf(
-    "as", "break", "class", "continue", "do", "else", "false", "for",
-    "fun", "if", "in", "interface", "is", "null", "object", "package",
-    "return", "super", "this", "throw", "true", "try", "typealias",
-    "typeof", "val", "var", "when", "while"
-)
+private val KOTLIN_KEYWORDS =
+    setOf(
+        "as",
+        "break",
+        "class",
+        "continue",
+        "do",
+        "else",
+        "false",
+        "for",
+        "fun",
+        "if",
+        "in",
+        "interface",
+        "is",
+        "null",
+        "object",
+        "package",
+        "return",
+        "super",
+        "this",
+        "throw",
+        "true",
+        "try",
+        "typealias",
+        "typeof",
+        "val",
+        "var",
+        "when",
+        "while",
+    )

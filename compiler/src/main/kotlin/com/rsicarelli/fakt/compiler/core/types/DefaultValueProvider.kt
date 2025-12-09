@@ -53,7 +53,7 @@ internal class DefaultValueProvider(
                 irType.isMarkedNullable() -> "null"
                 irType is IrSimpleType && irType.classifier.owner is IrTypeParameter -> "Any()"
                 functionTypeHandler.isFunction(irType) ||
-                        functionTypeHandler.isSuspendFunction(irType) -> generateFunctionDefault(irType)
+                    functionTypeHandler.isSuspendFunction(irType) -> generateFunctionDefault(irType)
 
                 else -> handleClassDefault(irType)
             }
@@ -104,7 +104,9 @@ internal class DefaultValueProvider(
      * Handles default values for class types with intelligent defaults.
      */
     private fun handleClassDefault(irType: IrType): String {
-        val irClass = irType.getClass() ?: return "error(\"Unknown type requires explicit configuration. Configure behavior via fake factory DSL.\") as Nothing"
+        val irClass =
+            irType.getClass()
+                ?: return "error(\"Unknown type requires explicit configuration. Configure behavior via fake factory DSL.\") as Nothing"
         val className = irClass.name.asString()
         val packageName = irClass.kotlinFqName.parent().asString()
 
@@ -114,7 +116,10 @@ internal class DefaultValueProvider(
                 ClassKind.CLASS -> "null"
                 ClassKind.INTERFACE -> "null"
                 ClassKind.ENUM_CLASS -> handleEnumDefault(irClass, className)
-                else -> "error(\"Type '$className' requires explicit configuration. Fakt prioritizes type-safety over auto-mocking. Configure behavior via fake factory DSL.\") as Nothing"
+                else ->
+                    "error(\"Type '$className' requires explicit configuration. " +
+                        "Fakt prioritizes type-safety over auto-mocking. " +
+                        "Configure behavior via fake factory DSL.\") as Nothing"
             }
     }
 
@@ -136,7 +141,9 @@ internal class DefaultValueProvider(
             className == "Array" -> "emptyArray()"
             className == "Pair" -> "Pair(null, null)"
             className == "Triple" -> "Triple(null, null, null)"
-            className.startsWith("Function") -> "{ error(\"Function type requires explicit configuration. Configure behavior via fake factory DSL.\") }"
+            className.startsWith(
+                "Function",
+            ) -> "{ error(\"Function type requires explicit configuration. Configure behavior via fake factory DSL.\") }"
             else -> null
         }
     }

@@ -15,7 +15,6 @@ import kotlin.test.assertTrue
  * - Clean, fluent API
  */
 class CodeBuilderTest {
-
     @Test
     fun `GIVEN CodeBuilder WHEN appending line at level 0 THEN no indentation`() {
         // GIVEN
@@ -54,12 +53,13 @@ class CodeBuilderTest {
         builder.appendLine("}")
 
         // THEN
-        val expected = """
+        val expected =
+            """
             class Foo {
                 val x = 1
             }
 
-        """.trimIndent()
+            """.trimIndent()
         assertEquals(expected, builder.build())
     }
 
@@ -76,14 +76,15 @@ class CodeBuilderTest {
         }
 
         // THEN
-        val expected = """
+        val expected =
+            """
             class Outer {
                 class Inner {
                     val x = 1
                 }
             }
 
-        """.trimIndent()
+            """.trimIndent()
         assertEquals(expected, builder.build())
     }
 
@@ -98,12 +99,13 @@ class CodeBuilderTest {
         }
 
         // THEN
-        val expected = """
+        val expected =
+            """
             fun test() {
                 return 42
             }
 
-        """.trimIndent()
+            """.trimIndent()
         assertEquals(expected, builder.build())
     }
 
@@ -157,14 +159,15 @@ class CodeBuilderTest {
         builder.appendLine("back to level 0")
 
         // THEN
-        val expected = """
+        val expected =
+            """
             level 0
                 level 1
                     level 2
                 back to level 1
             back to level 0
 
-        """.trimIndent()
+            """.trimIndent()
         assertEquals(expected, builder.build())
     }
 

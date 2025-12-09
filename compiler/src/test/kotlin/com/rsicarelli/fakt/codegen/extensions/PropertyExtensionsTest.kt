@@ -16,20 +16,20 @@ import kotlin.test.assertContains
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PropertyExtensionsTest {
-
     @Test
     fun `GIVEN stateFlowProperty WHEN generating THEN creates backing MutableStateFlow and override getter`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            klass("FakeUserStoreImpl") {
-                implements("UserStore")
-                stateFlowProperty(
-                    name = "users",
-                    elementType = "List<User>",
-                    defaultValue = "emptyList()"
-                )
+        val file =
+            codeFile("com.example") {
+                klass("FakeUserStoreImpl") {
+                    implements("UserStore")
+                    stateFlowProperty(
+                        name = "users",
+                        elementType = "List<User>",
+                        defaultValue = "emptyList()",
+                    )
+                }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -45,16 +45,17 @@ class PropertyExtensionsTest {
     @Test
     fun `GIVEN behaviorProperty WHEN no parameters THEN creates zero-arg function type`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            klass("FakeServiceImpl") {
-                behaviorProperty(
-                    methodName = "getValue",
-                    paramTypes = emptyList(),
-                    returnType = "String",
-                    defaultValue = "{ \"\" }"
-                )
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    behaviorProperty(
+                        methodName = "getValue",
+                        paramTypes = emptyList(),
+                        returnType = "String",
+                        defaultValue = "{ \"\" }",
+                    )
+                }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -68,16 +69,17 @@ class PropertyExtensionsTest {
     @Test
     fun `GIVEN behaviorProperty WHEN multiple parameters THEN creates multi-arg function type`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            klass("FakeServiceImpl") {
-                behaviorProperty(
-                    methodName = "compute",
-                    paramTypes = listOf("Int", "String", "Boolean"),
-                    returnType = "Result<Unit>",
-                    defaultValue = "{ _, _, _ -> Result.success(Unit) }"
-                )
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    behaviorProperty(
+                        methodName = "compute",
+                        paramTypes = listOf("Int", "String", "Boolean"),
+                        returnType = "Result<Unit>",
+                        defaultValue = "{ _, _, _ -> Result.success(Unit) }",
+                    )
+                }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -91,16 +93,17 @@ class PropertyExtensionsTest {
     @Test
     fun `GIVEN suspendBehaviorProperty WHEN no parameters THEN creates suspend function type`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            klass("FakeAsyncServiceImpl") {
-                suspendBehaviorProperty(
-                    methodName = "fetchData",
-                    paramTypes = emptyList(),
-                    returnType = "Data?",
-                    defaultValue = "{ null }"
-                )
+        val file =
+            codeFile("com.example") {
+                klass("FakeAsyncServiceImpl") {
+                    suspendBehaviorProperty(
+                        methodName = "fetchData",
+                        paramTypes = emptyList(),
+                        returnType = "Data?",
+                        defaultValue = "{ null }",
+                    )
+                }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -114,16 +117,17 @@ class PropertyExtensionsTest {
     @Test
     fun `GIVEN suspendBehaviorProperty WHEN with parameters THEN creates suspend multi-arg function type`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            klass("FakeAsyncServiceImpl") {
-                suspendBehaviorProperty(
-                    methodName = "saveUser",
-                    paramTypes = listOf("User", "Boolean"),
-                    returnType = "Result<Unit>",
-                    defaultValue = "{ _, _ -> Result.success(Unit) }"
-                )
+        val file =
+            codeFile("com.example") {
+                klass("FakeAsyncServiceImpl") {
+                    suspendBehaviorProperty(
+                        methodName = "saveUser",
+                        paramTypes = listOf("User", "Boolean"),
+                        returnType = "Result<Unit>",
+                        defaultValue = "{ _, _ -> Result.success(Unit) }",
+                    )
+                }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -137,15 +141,16 @@ class PropertyExtensionsTest {
     @Test
     fun `GIVEN mutableProperty WHEN generating THEN creates private var with initializer`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            klass("FakeCounterImpl") {
-                mutableProperty(
-                    name = "count",
-                    type = "Int",
-                    defaultValue = "0"
-                )
+        val file =
+            codeFile("com.example") {
+                klass("FakeCounterImpl") {
+                    mutableProperty(
+                        name = "count",
+                        type = "Int",
+                        defaultValue = "0",
+                    )
+                }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -159,14 +164,15 @@ class PropertyExtensionsTest {
     @Test
     fun `GIVEN asBehavior extension WHEN applied THEN configures as private mutable`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            klass("FakeServiceImpl") {
-                property("testBehavior", "() -> Unit") {
-                    asBehavior()
-                    initializer = "{}"
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    property("testBehavior", "() -> Unit") {
+                        asBehavior()
+                        initializer = "{}"
+                    }
                 }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -180,14 +186,15 @@ class PropertyExtensionsTest {
     @Test
     fun `GIVEN asStateFlowBacking extension WHEN applied THEN configures as private val`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            klass("FakeServiceImpl") {
-                property("stateValue", "StateFlow<Int>") {
-                    asStateFlowBacking()
-                    initializer = "MutableStateFlow(0)"
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    property("stateValue", "StateFlow<Int>") {
+                        asStateFlowBacking()
+                        initializer = "MutableStateFlow(0)"
+                    }
                 }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -201,13 +208,14 @@ class PropertyExtensionsTest {
     @Test
     fun `GIVEN asOverrideWithGetter extension WHEN applied THEN configures as override with getter`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            klass("FakeServiceImpl") {
-                property("state", "StateFlow<Int>") {
-                    asOverrideWithGetter("stateValue")
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    property("state", "StateFlow<Int>") {
+                        asOverrideWithGetter("stateValue")
+                    }
                 }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -222,20 +230,21 @@ class PropertyExtensionsTest {
     @Test
     fun `GIVEN complete StateFlow pattern WHEN using stateFlowProperty THEN generates full implementation`() {
         // GIVEN
-        val file = codeFile("com.example.test") {
-            import("kotlinx.coroutines.flow.StateFlow")
-            import("kotlinx.coroutines.flow.MutableStateFlow")
+        val file =
+            codeFile("com.example.test") {
+                import("kotlinx.coroutines.flow.StateFlow")
+                import("kotlinx.coroutines.flow.MutableStateFlow")
 
-            klass("FakeUserStoreImpl") {
-                implements("UserStore")
+                klass("FakeUserStoreImpl") {
+                    implements("UserStore")
 
-                stateFlowProperty(
-                    name = "currentUser",
-                    elementType = "User?",
-                    defaultValue = "null"
-                )
+                    stateFlowProperty(
+                        name = "currentUser",
+                        elementType = "User?",
+                        defaultValue = "null",
+                    )
+                }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()

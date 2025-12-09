@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.core.types
 
-import java.util.concurrent.ConcurrentHashMap
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
@@ -23,6 +22,7 @@ import org.jetbrains.kotlin.ir.types.isShort
 import org.jetbrains.kotlin.ir.types.isString
 import org.jetbrains.kotlin.ir.types.isUnit
 import org.jetbrains.kotlin.ir.types.makeNotNull
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Renders IR types to Kotlin string representations.
@@ -42,6 +42,7 @@ internal class TypeRenderer(
      * Value: Rendered string representation
      */
     private val typeStringCache = ConcurrentHashMap<Pair<IrType, Boolean>, String>()
+
     /**
      * Renders IR type to Kotlin string representation with optional type parameter preservation.
      *
@@ -54,38 +55,39 @@ internal class TypeRenderer(
     fun render(
         irType: IrType,
         preserveTypeParameters: Boolean,
-    ): String = typeStringCache.getOrPut(irType to preserveTypeParameters) {
-        when {
-            // Handle nullable types
-            irType.isMarkedNullable() -> {
-                val baseType = render(irType.makeNotNull(), preserveTypeParameters)
-                val nonNullType = irType.makeNotNull()
+    ): String =
+        typeStringCache.getOrPut(irType to preserveTypeParameters) {
+            when {
+                // Handle nullable types
+                irType.isMarkedNullable() -> {
+                    val baseType = render(irType.makeNotNull(), preserveTypeParameters)
+                    val nonNullType = irType.makeNotNull()
 
-                // Function types need parentheses when nullable: ((Int, Int) -> Unit)?
-                if (functionTypeHandler.isFunction(nonNullType) ||
-                    functionTypeHandler.isSuspendFunction(nonNullType)
-                ) {
-                    "($baseType)?"
-                } else {
-                    "$baseType?"
+                    // Function types need parentheses when nullable: ((Int, Int) -> Unit)?
+                    if (functionTypeHandler.isFunction(nonNullType) ||
+                        functionTypeHandler.isSuspendFunction(nonNullType)
+                    ) {
+                        "($baseType)?"
+                    } else {
+                        "$baseType?"
+                    }
                 }
-            }
 
-            // Handle primitive types
-            else ->
-                irType.asPrimitiveName()
-                    ?: handleComplexType(irType, preserveTypeParameters)
+                // Handle primitive types
+                else ->
+                    irType.asPrimitiveName()
+                        ?: handleComplexType(irType, preserveTypeParameters)
+            }
         }
-    }
 
     /**
      * Check if a type is primitive and doesn't need imports.
      */
     fun isPrimitive(irType: IrType): Boolean =
         irType.isString() || irType.isInt() || irType.isBoolean() ||
-                irType.isUnit() || irType.isLong() || irType.isFloat() ||
-                irType.isDouble() || irType.isChar() || irType.isByte() ||
-                irType.isShort()
+            irType.isUnit() || irType.isLong() || irType.isFloat() ||
+            irType.isDouble() || irType.isChar() || irType.isByte() ||
+            irType.isShort()
 
     /**
      * Returns primitive type name or null if not primitive.
@@ -121,7 +123,7 @@ internal class TypeRenderer(
                 functionTypeHandler.renderFunctionType(
                     irType,
                     preserveTypeParameters,
-                    this::render
+                    this::render,
                 )
 
             // Handle suspending function types
@@ -130,7 +132,7 @@ internal class TypeRenderer(
                     functionTypeHandler.renderFunctionType(
                         irType,
                         preserveTypeParameters,
-                        this::render
+                        this::render,
                     )
                 "suspend $baseFunctionType"
             }

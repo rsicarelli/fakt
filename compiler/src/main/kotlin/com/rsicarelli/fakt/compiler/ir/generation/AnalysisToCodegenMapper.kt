@@ -4,12 +4,12 @@ package com.rsicarelli.fakt.compiler.ir.generation
 
 import com.rsicarelli.fakt.codegen.extensions.MethodSpec
 import com.rsicarelli.fakt.codegen.extensions.PropertySpec
+import com.rsicarelli.fakt.compiler.core.types.TypeResolution
 import com.rsicarelli.fakt.compiler.ir.analysis.FunctionAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.PropertyAnalysis
-import com.rsicarelli.fakt.compiler.core.types.TypeResolution
 
-/**
+/*
  * Maps IR analysis models to codegen DSL models.
  *
  * Bridges the gap between IR/FIR compiler analysis and type-safe code generation.
@@ -22,10 +22,11 @@ import com.rsicarelli.fakt.compiler.core.types.TypeResolution
  */
 internal fun FunctionAnalysis.toMethodSpec(typeResolver: TypeResolution): MethodSpec {
     // Map parameters to (name, type, isVararg) triples
-    val paramTriples = parameters.map { param ->
-        val typeStr = typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
-        Triple(param.name, typeStr, param.isVararg)
-    }
+    val paramTriples =
+        parameters.map { param ->
+            val typeStr = typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+            Triple(param.name, typeStr, param.isVararg)
+        }
 
     val returnTypeStr = typeResolver.irTypeToKotlinString(returnType, preserveTypeParameters = true)
 
@@ -34,16 +35,18 @@ internal fun FunctionAnalysis.toMethodSpec(typeResolver: TypeResolution): Method
 
     // Format method-level type parameters with bounds
     // E.g., ["T"] or ["R : TValue"] or ["T", "R : Comparable<R>"]
-    val formattedTypeParams = typeParameters.map { typeParam ->
-        // If bounds exist in the map, include them
-        val bound = typeParameterBounds[typeParam]
-        if (bound != null) "$typeParam : $bound" else typeParam
-    }
+    val formattedTypeParams =
+        typeParameters.map { typeParam ->
+            // If bounds exist in the map, include them
+            val bound = typeParameterBounds[typeParam]
+            if (bound != null) "$typeParam : $bound" else typeParam
+        }
 
     // Extract extension receiver type if present
-    val extensionReceiverTypeStr = extensionReceiverType?.let {
-        typeResolver.irTypeToKotlinString(it, preserveTypeParameters = true)
-    }
+    val extensionReceiverTypeStr =
+        extensionReceiverType?.let {
+            typeResolver.irTypeToKotlinString(it, preserveTypeParameters = true)
+        }
 
     return MethodSpec(
         name = name,
@@ -53,7 +56,7 @@ internal fun FunctionAnalysis.toMethodSpec(typeResolver: TypeResolution): Method
         isVararg = isVararg,
         typeParameters = formattedTypeParams,
         isOperator = isOperator,
-        extensionReceiverType = extensionReceiverTypeStr
+        extensionReceiverType = extensionReceiverTypeStr,
     )
 }
 
@@ -72,7 +75,7 @@ internal fun PropertyAnalysis.toPropertySpec(typeResolver: TypeResolution): Prop
         name = name,
         type = typeStr,
         isStateFlow = isStateFlow,
-        isMutable = isMutable
+        isMutable = isMutable,
     )
 }
 
@@ -81,9 +84,7 @@ internal fun PropertyAnalysis.toPropertySpec(typeResolver: TypeResolution): Prop
  *
  * @return Pair of (methods, properties) ready for generateCompleteFake()
  */
-internal fun InterfaceAnalysis.toCodegenSpecs(
-    typeResolver: TypeResolution
-): Pair<List<MethodSpec>, List<PropertySpec>> {
+internal fun InterfaceAnalysis.toCodegenSpecs(typeResolver: TypeResolution): Pair<List<MethodSpec>, List<PropertySpec>> {
     val methodSpecs = functions.map { it.toMethodSpec(typeResolver) }
     val propertySpecs = properties.map { it.toPropertySpec(typeResolver) }
 

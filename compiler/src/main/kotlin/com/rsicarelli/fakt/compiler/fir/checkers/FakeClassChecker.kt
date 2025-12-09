@@ -133,9 +133,10 @@ internal class FakeClassChecker(
             return
         }
 
-        val timedResult = measureTimeNanos {
-            analyzeMetadata(declaration, simpleName)
-        }
+        val timedResult =
+            measureTimeNanos {
+                analyzeMetadata(declaration, simpleName)
+            }
 
         // Store metadata with validation timing for consolidated logging in IR phase
         val metadataWithTiming =

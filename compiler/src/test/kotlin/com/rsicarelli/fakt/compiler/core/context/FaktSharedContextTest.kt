@@ -28,15 +28,17 @@ class FaktSharedContextTest {
     fun `GIVEN default fake annotation WHEN checking if configured THEN returns true`() =
         runTest {
             // GIVEN
-            val context = FaktSharedContext(
-                fakeAnnotations = listOf("com.rsicarelli.fakt.Fake"),
-                options = FaktOptions(enabled = true),
-                metadataStorage = FirMetadataStorage(),
-                logger = FaktLogger.quiet(),
-                optimizations = CompilerOptimizations(
-                    logger = FaktLogger.quiet()
+            val context =
+                FaktSharedContext(
+                    fakeAnnotations = listOf("com.rsicarelli.fakt.Fake"),
+                    options = FaktOptions(enabled = true),
+                    metadataStorage = FirMetadataStorage(),
+                    logger = FaktLogger.quiet(),
+                    optimizations =
+                        CompilerOptimizations(
+                            logger = FaktLogger.quiet(),
+                        ),
                 )
-            )
 
             // WHEN
             val result = context.isConfiguredAnnotation("com.rsicarelli.fakt.Fake")
@@ -55,9 +57,10 @@ class FaktSharedContextTest {
                     options = FaktOptions(enabled = true),
                     metadataStorage = FirMetadataStorage(),
                     logger = FaktLogger.quiet(),
-                    optimizations = CompilerOptimizations(
-                        logger = FaktLogger.quiet()
-                    )
+                    optimizations =
+                        CompilerOptimizations(
+                            logger = FaktLogger.quiet(),
+                        ),
                 )
 
             // WHEN
@@ -84,9 +87,10 @@ class FaktSharedContextTest {
                     options = FaktOptions(enabled = true),
                     metadataStorage = FirMetadataStorage(),
                     logger = FaktLogger.quiet(),
-                    optimizations = CompilerOptimizations(
-                        logger = FaktLogger.quiet()
-                    )
+                    optimizations =
+                        CompilerOptimizations(
+                            logger = FaktLogger.quiet(),
+                        ),
                 )
 
             // WHEN & THEN
@@ -107,9 +111,10 @@ class FaktSharedContextTest {
                     options = FaktOptions(enabled = true),
                     metadataStorage = storage,
                     logger = FaktLogger.quiet(),
-                    optimizations = CompilerOptimizations(
-                        logger = FaktLogger.quiet()
-                    )
+                    optimizations =
+                        CompilerOptimizations(
+                            logger = FaktLogger.quiet(),
+                        ),
                 )
 
             // WHEN
@@ -135,9 +140,10 @@ class FaktSharedContextTest {
                     options = options,
                     metadataStorage = FirMetadataStorage(),
                     logger = FaktLogger.quiet(),
-                    optimizations = CompilerOptimizations(
-                        logger = FaktLogger.quiet()
-                    )
+                    optimizations =
+                        CompilerOptimizations(
+                            logger = FaktLogger.quiet(),
+                        ),
                 )
 
             // WHEN

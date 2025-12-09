@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.fir
 
-import com.rsicarelli.fakt.compiler.fir.checkers.FaktFirCheckers
 import com.rsicarelli.fakt.compiler.core.context.FaktSharedContext
+import com.rsicarelli.fakt.compiler.fir.checkers.FaktFirCheckers
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
 
@@ -18,7 +18,9 @@ import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
 class FaktFirExtensionRegistrar(
     private val sharedContext: FaktSharedContext,
 ) : FirExtensionRegistrar() {
-
+    @Suppress("ktlint:standard:curly-spacing")
     override fun ExtensionRegistrarContext.configurePlugin() =
-        +{ session: FirSession -> FaktFirCheckers.create(session, sharedContext) }
+        +{ session: FirSession ->
+            FaktFirCheckers.create(session, sharedContext)
+        }
 }

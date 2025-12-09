@@ -14,21 +14,21 @@ import kotlin.test.assertTrue
  * Tests follow GIVEN-WHEN-THEN pattern and use vanilla JUnit5 + kotlin-test.
  */
 class UnifiedMetricsTreeTest {
-
     @Test
     fun `GIVEN single interface WHEN converting to tree THEN should format with proper branching`() =
         runTest {
             // GIVEN: Single interface metrics
-            val interfaceMetrics = listOf(
-                UnifiedFakeMetrics(
-                    name = "UserService",
-                    firTimeNanos = 45_000, // 45µs
-                    firTypeParamCount = 0,
-                    firMemberCount = 5,
-                    irTimeNanos = 535_000, // 535µs
-                    irLOC = 73
+            val interfaceMetrics =
+                listOf(
+                    UnifiedFakeMetrics(
+                        name = "UserService",
+                        firTimeNanos = 45_000, // 45µs
+                        firTypeParamCount = 0,
+                        firMemberCount = 5,
+                        irTimeNanos = 535_000, // 535µs
+                        irLOC = 73,
+                    ),
                 )
-            )
             val tree = UnifiedMetricsTree(interfaces = interfaceMetrics, classes = emptyList())
 
             // WHEN: Converting to tree string
@@ -49,24 +49,25 @@ class UnifiedMetricsTreeTest {
     fun `GIVEN multiple interfaces WHEN converting to tree THEN should show all with correct branching`() =
         runTest {
             // GIVEN: Multiple interface metrics
-            val interfaceMetrics = listOf(
-                UnifiedFakeMetrics(
-                    name = "UserService",
-                    firTimeNanos = 45_000,
-                    firTypeParamCount = 0,
-                    firMemberCount = 5,
-                    irTimeNanos = 535_000,
-                    irLOC = 73
-                ),
-                UnifiedFakeMetrics(
-                    name = "DataCache",
-                    firTimeNanos = 40_000,
-                    firTypeParamCount = 1,
-                    firMemberCount = 3,
-                    irTimeNanos = 300_000,
-                    irLOC = 58
+            val interfaceMetrics =
+                listOf(
+                    UnifiedFakeMetrics(
+                        name = "UserService",
+                        firTimeNanos = 45_000,
+                        firTypeParamCount = 0,
+                        firMemberCount = 5,
+                        irTimeNanos = 535_000,
+                        irLOC = 73,
+                    ),
+                    UnifiedFakeMetrics(
+                        name = "DataCache",
+                        firTimeNanos = 40_000,
+                        firTypeParamCount = 1,
+                        firMemberCount = 3,
+                        irTimeNanos = 300_000,
+                        irLOC = 58,
+                    ),
                 )
-            )
             val tree = UnifiedMetricsTree(interfaces = interfaceMetrics, classes = emptyList())
 
             // WHEN: Converting to tree string
@@ -87,26 +88,28 @@ class UnifiedMetricsTreeTest {
     fun `GIVEN interfaces and classes WHEN converting to tree THEN should show both sections`() =
         runTest {
             // GIVEN: Both interface and class metrics
-            val interfaceMetrics = listOf(
-                UnifiedFakeMetrics(
-                    name = "UserService",
-                    firTimeNanos = 45_000,
-                    firTypeParamCount = 0,
-                    firMemberCount = 5,
-                    irTimeNanos = 535_000,
-                    irLOC = 73
+            val interfaceMetrics =
+                listOf(
+                    UnifiedFakeMetrics(
+                        name = "UserService",
+                        firTimeNanos = 45_000,
+                        firTypeParamCount = 0,
+                        firMemberCount = 5,
+                        irTimeNanos = 535_000,
+                        irLOC = 73,
+                    ),
                 )
-            )
-            val classMetrics = listOf(
-                UnifiedFakeMetrics(
-                    name = "DataHolder",
-                    firTimeNanos = 30_000,
-                    firTypeParamCount = 1,
-                    firMemberCount = 2,
-                    irTimeNanos = 90_000,
-                    irLOC = 45
+            val classMetrics =
+                listOf(
+                    UnifiedFakeMetrics(
+                        name = "DataHolder",
+                        firTimeNanos = 30_000,
+                        firTypeParamCount = 1,
+                        firMemberCount = 2,
+                        irTimeNanos = 90_000,
+                        irLOC = 45,
+                    ),
                 )
-            )
             val tree = UnifiedMetricsTree(interfaces = interfaceMetrics, classes = classMetrics)
 
             // WHEN: Converting to tree string
@@ -125,24 +128,25 @@ class UnifiedMetricsTreeTest {
     fun `GIVEN multiple classes WHEN converting to tree THEN should show correct branching`() =
         runTest {
             // GIVEN: Multiple class metrics
-            val classMetrics = listOf(
-                UnifiedFakeMetrics(
-                    name = "DataHolder",
-                    firTimeNanos = 30_000,
-                    firTypeParamCount = 1,
-                    firMemberCount = 2,
-                    irTimeNanos = 90_000,
-                    irLOC = 45
-                ),
-                UnifiedFakeMetrics(
-                    name = "ConfigWrapper",
-                    firTimeNanos = 25_000,
-                    firTypeParamCount = 0,
-                    firMemberCount = 3,
-                    irTimeNanos = 80_000,
-                    irLOC = 38
+            val classMetrics =
+                listOf(
+                    UnifiedFakeMetrics(
+                        name = "DataHolder",
+                        firTimeNanos = 30_000,
+                        firTypeParamCount = 1,
+                        firMemberCount = 2,
+                        irTimeNanos = 90_000,
+                        irLOC = 45,
+                    ),
+                    UnifiedFakeMetrics(
+                        name = "ConfigWrapper",
+                        firTimeNanos = 25_000,
+                        firTypeParamCount = 0,
+                        firMemberCount = 3,
+                        irTimeNanos = 80_000,
+                        irLOC = 38,
+                    ),
                 )
-            )
             val tree = UnifiedMetricsTree(interfaces = emptyList(), classes = classMetrics)
 
             // WHEN: Converting to tree string
@@ -173,26 +177,28 @@ class UnifiedMetricsTreeTest {
     fun `GIVEN metrics WHEN computing totals THEN should sum correctly`() =
         runTest {
             // GIVEN: Interface and class metrics
-            val interfaceMetrics = listOf(
-                UnifiedFakeMetrics(
-                    name = "UserService",
-                    firTimeNanos = 45_000,
-                    firTypeParamCount = 0,
-                    firMemberCount = 5,
-                    irTimeNanos = 535_000,
-                    irLOC = 73
+            val interfaceMetrics =
+                listOf(
+                    UnifiedFakeMetrics(
+                        name = "UserService",
+                        firTimeNanos = 45_000,
+                        firTypeParamCount = 0,
+                        firMemberCount = 5,
+                        irTimeNanos = 535_000,
+                        irLOC = 73,
+                    ),
                 )
-            )
-            val classMetrics = listOf(
-                UnifiedFakeMetrics(
-                    name = "DataHolder",
-                    firTimeNanos = 30_000,
-                    firTypeParamCount = 1,
-                    firMemberCount = 2,
-                    irTimeNanos = 90_000,
-                    irLOC = 45
+            val classMetrics =
+                listOf(
+                    UnifiedFakeMetrics(
+                        name = "DataHolder",
+                        firTimeNanos = 30_000,
+                        firTypeParamCount = 1,
+                        firMemberCount = 2,
+                        irTimeNanos = 90_000,
+                        irLOC = 45,
+                    ),
                 )
-            )
             val tree = UnifiedMetricsTree(interfaces = interfaceMetrics, classes = classMetrics)
 
             // WHEN: Computing totals
@@ -210,16 +216,17 @@ class UnifiedMetricsTreeTest {
     fun `GIVEN custom target column WHEN formatting THEN should right-align at specified column`() =
         runTest {
             // GIVEN: Simple metrics
-            val interfaceMetrics = listOf(
-                UnifiedFakeMetrics(
-                    name = "Short",
-                    firTimeNanos = 10_000,
-                    firTypeParamCount = 0,
-                    firMemberCount = 1,
-                    irTimeNanos = 50_000,
-                    irLOC = 10
+            val interfaceMetrics =
+                listOf(
+                    UnifiedFakeMetrics(
+                        name = "Short",
+                        firTimeNanos = 10_000,
+                        firTypeParamCount = 0,
+                        firMemberCount = 1,
+                        irTimeNanos = 50_000,
+                        irLOC = 10,
+                    ),
                 )
-            )
             val tree = UnifiedMetricsTree(interfaces = interfaceMetrics, classes = emptyList())
 
             // WHEN: Formatting with custom target column
@@ -236,16 +243,17 @@ class UnifiedMetricsTreeTest {
     fun `GIVEN long interface names WHEN formatting THEN should handle overflow gracefully`() =
         runTest {
             // GIVEN: Interface with very long name
-            val interfaceMetrics = listOf(
-                UnifiedFakeMetrics(
-                    name = "VeryLongInterfaceNameThatWillDefinitelyOverflowTheTargetColumnWidth",
-                    firTimeNanos = 45_000,
-                    firTypeParamCount = 0,
-                    firMemberCount = 5,
-                    irTimeNanos = 535_000,
-                    irLOC = 73
+            val interfaceMetrics =
+                listOf(
+                    UnifiedFakeMetrics(
+                        name = "VeryLongInterfaceNameThatWillDefinitelyOverflowTheTargetColumnWidth",
+                        firTimeNanos = 45_000,
+                        firTypeParamCount = 0,
+                        firMemberCount = 5,
+                        irTimeNanos = 535_000,
+                        irLOC = 73,
+                    ),
                 )
-            )
             val tree = UnifiedMetricsTree(interfaces = interfaceMetrics, classes = emptyList())
 
             // WHEN: Converting to tree string
@@ -260,24 +268,25 @@ class UnifiedMetricsTreeTest {
     fun `GIVEN various time values WHEN formatting THEN should use appropriate units`() =
         runTest {
             // GIVEN: Metrics with different time scales
-            val interfaceMetrics = listOf(
-                UnifiedFakeMetrics(
-                    name = "FastInterface",
-                    firTimeNanos = 500, // Microseconds
-                    firTypeParamCount = 0,
-                    firMemberCount = 1,
-                    irTimeNanos = 800, // Microseconds
-                    irLOC = 10
-                ),
-                UnifiedFakeMetrics(
-                    name = "SlowInterface",
-                    firTimeNanos = 5_000_000, // Milliseconds
-                    firTypeParamCount = 0,
-                    firMemberCount = 5,
-                    irTimeNanos = 10_000_000, // Milliseconds
-                    irLOC = 100
+            val interfaceMetrics =
+                listOf(
+                    UnifiedFakeMetrics(
+                        name = "FastInterface",
+                        firTimeNanos = 500, // Microseconds
+                        firTypeParamCount = 0,
+                        firMemberCount = 1,
+                        irTimeNanos = 800, // Microseconds
+                        irLOC = 10,
+                    ),
+                    UnifiedFakeMetrics(
+                        name = "SlowInterface",
+                        firTimeNanos = 5_000_000, // Milliseconds
+                        firTypeParamCount = 0,
+                        firMemberCount = 5,
+                        irTimeNanos = 10_000_000, // Milliseconds
+                        irLOC = 100,
+                    ),
                 )
-            )
             val tree = UnifiedMetricsTree(interfaces = interfaceMetrics, classes = emptyList())
 
             // WHEN: Converting to tree string
@@ -293,24 +302,25 @@ class UnifiedMetricsTreeTest {
     fun `GIVEN metrics tree WHEN each line is unique THEN should avoid Gradle filtering`() =
         runTest {
             // GIVEN: Multiple interfaces with similar FIR analysis lines
-            val interfaceMetrics = listOf(
-                UnifiedFakeMetrics(
-                    name = "Interface1",
-                    firTimeNanos = 45_000,
-                    firTypeParamCount = 0,
-                    firMemberCount = 5,
-                    irTimeNanos = 535_000,
-                    irLOC = 73
-                ),
-                UnifiedFakeMetrics(
-                    name = "Interface2",
-                    firTimeNanos = 45_000,
-                    firTypeParamCount = 0,
-                    firMemberCount = 5,
-                    irTimeNanos = 535_000,
-                    irLOC = 73
+            val interfaceMetrics =
+                listOf(
+                    UnifiedFakeMetrics(
+                        name = "Interface1",
+                        firTimeNanos = 45_000,
+                        firTypeParamCount = 0,
+                        firMemberCount = 5,
+                        irTimeNanos = 535_000,
+                        irLOC = 73,
+                    ),
+                    UnifiedFakeMetrics(
+                        name = "Interface2",
+                        firTimeNanos = 45_000,
+                        firTypeParamCount = 0,
+                        firMemberCount = 5,
+                        irTimeNanos = 535_000,
+                        irLOC = 73,
+                    ),
                 )
-            )
             val tree = UnifiedMetricsTree(interfaces = interfaceMetrics, classes = emptyList())
 
             // WHEN: Converting to tree (single string output)
@@ -319,13 +329,22 @@ class UnifiedMetricsTreeTest {
 
             // THEN: All lines should be present (no filtering)
             // Both interfaces should be visible (check for branch patterns to avoid matching FakeXxxImpl lines)
-            assertEquals(1, lines.count { it.contains("├─ Interface1") || it.contains("└─ Interface1") },
-                "Interface1 should appear once in tree structure")
-            assertEquals(1, lines.count { it.contains("├─ Interface2") || it.contains("└─ Interface2") },
-                "Interface2 should appear once in tree structure")
+            assertEquals(
+                1,
+                lines.count { it.contains("├─ Interface1") || it.contains("└─ Interface1") },
+                "Interface1 should appear once in tree structure",
+            )
+            assertEquals(
+                1,
+                lines.count { it.contains("├─ Interface2") || it.contains("└─ Interface2") },
+                "Interface2 should appear once in tree structure",
+            )
 
             // Both FIR analysis lines should be present (this was the bug!)
-            assertEquals(2, lines.count { it.contains("FIR analysis: 0 type parameters, 5 members") },
-                "Both FIR analysis lines should be present")
+            assertEquals(
+                2,
+                lines.count { it.contains("FIR analysis: 0 type parameters, 5 members") },
+                "Both FIR analysis lines should be present",
+            )
         }
 }

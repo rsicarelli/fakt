@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.fir.checkers
 
-
-import com.rsicarelli.fakt.compiler.fir.metadata.*
+import com.rsicarelli.fakt.compiler.fir.metadata.FirFaktErrors
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.assertContains

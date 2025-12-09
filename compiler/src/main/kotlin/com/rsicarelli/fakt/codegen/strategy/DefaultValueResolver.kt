@@ -40,15 +40,15 @@ import com.rsicarelli.fakt.codegen.model.CodeType
  * ```
  */
 public class DefaultValueResolver(
-    private val classLevelTypeParams: Set<String> = emptySet()
+    private val classLevelTypeParams: Set<String> = emptySet(),
 ) {
-
-    private val strategies = listOf(
-        NullableDefaultStrategy(),
-        PrimitiveDefaultStrategy(),
-        StdlibDefaultStrategy(),
-        CollectionDefaultStrategy(classLevelTypeParams)
-    )
+    private val strategies =
+        listOf(
+            NullableDefaultStrategy(),
+            PrimitiveDefaultStrategy(),
+            StdlibDefaultStrategy(),
+            CollectionDefaultStrategy(classLevelTypeParams),
+        )
 
     /**
      * Resolves a default value expression for the given type.
@@ -70,8 +70,8 @@ public class DefaultValueResolver(
         // Design choice: Explicit configuration over auto-mocking for type-safety
         return CodeExpression.Raw(
             "error(\"Type '$type' requires explicit configuration. \" + " +
-            "\"Fakt prioritizes type-safety over auto-mocking. \" + " +
-            "\"Configure behavior via fake factory DSL.\") as Nothing"
+                "\"Fakt prioritizes type-safety over auto-mocking. \" + " +
+                "\"Configure behavior via fake factory DSL.\") as Nothing",
         )
     }
 }

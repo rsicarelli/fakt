@@ -4,10 +4,10 @@ package com.rsicarelli.fakt.compiler.ir.generation
 
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.api.SourceSetInfo
+import com.rsicarelli.fakt.compiler.core.context.ImportResolver
+import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.core.types.TypeResolution
 import com.rsicarelli.fakt.compiler.core.types.createTypeResolution
-import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
-import com.rsicarelli.fakt.compiler.core.context.ImportResolver
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -52,21 +52,23 @@ class CodeGenerationModulesContractTest {
     fun `GIVEN SourceSetContext module WHEN creating THEN should validate correctly`() {
         // GIVEN
         val defaultSourceSet = SourceSetInfo(name = "jvmTest", parents = listOf("commonTest"))
-        val allSourceSets = listOf(
-            defaultSourceSet,
-            SourceSetInfo(name = "commonTest", parents = emptyList())
-        )
+        val allSourceSets =
+            listOf(
+                defaultSourceSet,
+                SourceSetInfo(name = "commonTest", parents = emptyList()),
+            )
 
         // WHEN
-        val sourceSetContext = SourceSetContext(
-            compilationName = "test",
-            targetName = "jvm",
-            platformType = "jvm",
-            isTest = true,
-            defaultSourceSet = defaultSourceSet,
-            allSourceSets = allSourceSets,
-            outputDirectory = "/tmp/test/generated/fakt/jvmTest/kotlin"
-        )
+        val sourceSetContext =
+            SourceSetContext(
+                compilationName = "test",
+                targetName = "jvm",
+                platformType = "jvm",
+                isTest = true,
+                defaultSourceSet = defaultSourceSet,
+                allSourceSets = allSourceSets,
+                outputDirectory = "/tmp/test/generated/fakt/jvmTest/kotlin",
+            )
 
         // THEN - Should exist and have expected properties
         assertNotNull(sourceSetContext, "SourceSetContext should be instantiable")
@@ -109,18 +111,20 @@ class CodeGenerationModulesContractTest {
 
         // Create SourceSetContext for testing
         val defaultSourceSet = SourceSetInfo(name = "jvmTest", parents = listOf("commonTest"))
-        val sourceSetContext = SourceSetContext(
-            compilationName = "test",
-            targetName = "jvm",
-            platformType = "jvm",
-            isTest = true,
-            defaultSourceSet = defaultSourceSet,
-            allSourceSets = listOf(
-                defaultSourceSet,
-                SourceSetInfo(name = "commonTest", parents = emptyList())
-            ),
-            outputDirectory = "/tmp/test/generated/fakt/jvmTest/kotlin"
-        )
+        val sourceSetContext =
+            SourceSetContext(
+                compilationName = "test",
+                targetName = "jvm",
+                platformType = "jvm",
+                isTest = true,
+                defaultSourceSet = defaultSourceSet,
+                allSourceSets =
+                    listOf(
+                        defaultSourceSet,
+                        SourceSetInfo(name = "commonTest", parents = emptyList()),
+                    ),
+                outputDirectory = "/tmp/test/generated/fakt/jvmTest/kotlin",
+            )
 
         val implementationGenerator = ImplementationGenerator(typeResolution)
         val factoryGenerator = FactoryGenerator()

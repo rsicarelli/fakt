@@ -12,29 +12,29 @@ import kotlin.test.assertTrue
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class IrGenerationTraceLoggingTest {
-
     @Test
     fun `GIVEN interfaces only WHEN logging trace THEN last interface closes with └─`() {
         // GIVEN
         val logger = TestLogger(LogLevel.DEBUG)
-        val interfaceMetrics = listOf(
-            UnifiedFakeMetrics(
-                name = "UserService",
-                firTimeNanos = 100,
-                firTypeParamCount = 0,
-                firMemberCount = 3,
-                irTimeNanos = 200,
-                irLOC = 50,
-            ),
-            UnifiedFakeMetrics(
-                name = "Repository",
-                firTimeNanos = 150,
-                firTypeParamCount = 1,
-                firMemberCount = 5,
-                irTimeNanos = 300,
-                irLOC = 80,
-            ),
-        )
+        val interfaceMetrics =
+            listOf(
+                UnifiedFakeMetrics(
+                    name = "UserService",
+                    firTimeNanos = 100,
+                    firTypeParamCount = 0,
+                    firMemberCount = 3,
+                    irTimeNanos = 200,
+                    irLOC = 50,
+                ),
+                UnifiedFakeMetrics(
+                    name = "Repository",
+                    firTimeNanos = 150,
+                    firTypeParamCount = 1,
+                    firMemberCount = 5,
+                    irTimeNanos = 300,
+                    irLOC = 80,
+                ),
+            )
         val classMetrics = emptyList<UnifiedFakeMetrics>()
 
         // WHEN
@@ -67,24 +67,25 @@ class IrGenerationTraceLoggingTest {
         // GIVEN
         val logger = TestLogger(LogLevel.DEBUG)
         val interfaceMetrics = emptyList<UnifiedFakeMetrics>()
-        val classMetrics = listOf(
-            UnifiedFakeMetrics(
-                name = "KeyValueCache",
-                firTimeNanos = 100,
-                firTypeParamCount = 2,
-                firMemberCount = 5,
-                irTimeNanos = 200,
-                irLOC = 72,
-            ),
-            UnifiedFakeMetrics(
-                name = "FileRepository",
-                firTimeNanos = 150,
-                firTypeParamCount = 0,
-                firMemberCount = 4,
-                irTimeNanos = 300,
-                irLOC = 59,
-            ),
-        )
+        val classMetrics =
+            listOf(
+                UnifiedFakeMetrics(
+                    name = "KeyValueCache",
+                    firTimeNanos = 100,
+                    firTypeParamCount = 2,
+                    firMemberCount = 5,
+                    irTimeNanos = 200,
+                    irLOC = 72,
+                ),
+                UnifiedFakeMetrics(
+                    name = "FileRepository",
+                    firTimeNanos = 150,
+                    firTypeParamCount = 0,
+                    firMemberCount = 4,
+                    irTimeNanos = 300,
+                    irLOC = 59,
+                ),
+            )
 
         // WHEN
         logUnifiedTraceTestable(logger, interfaceMetrics, classMetrics)
@@ -109,50 +110,52 @@ class IrGenerationTraceLoggingTest {
     fun `GIVEN both interfaces and classes WHEN logging trace THEN tree structure is correct`() {
         // GIVEN
         val logger = TestLogger(LogLevel.DEBUG)
-        val interfaceMetrics = listOf(
-            UnifiedFakeMetrics(
-                name = "UserService",
-                firTimeNanos = 100,
-                firTypeParamCount = 0,
-                firMemberCount = 3,
-                irTimeNanos = 200,
-                irLOC = 50,
-            ),
-            UnifiedFakeMetrics(
-                name = "Repository",
-                firTimeNanos = 150,
-                firTypeParamCount = 1,
-                firMemberCount = 5,
-                irTimeNanos = 300,
-                irLOC = 80,
-            ),
-            UnifiedFakeMetrics(
-                name = "AsyncDataService",
-                firTimeNanos = 200,
-                firTypeParamCount = 0,
-                firMemberCount = 3,
-                irTimeNanos = 400,
-                irLOC = 49,
-            ),
-        )
-        val classMetrics = listOf(
-            UnifiedFakeMetrics(
-                name = "KeyValueCache",
-                firTimeNanos = 100,
-                firTypeParamCount = 2,
-                firMemberCount = 5,
-                irTimeNanos = 200,
-                irLOC = 72,
-            ),
-            UnifiedFakeMetrics(
-                name = "FileRepository",
-                firTimeNanos = 150,
-                firTypeParamCount = 0,
-                firMemberCount = 4,
-                irTimeNanos = 300,
-                irLOC = 59,
-            ),
-        )
+        val interfaceMetrics =
+            listOf(
+                UnifiedFakeMetrics(
+                    name = "UserService",
+                    firTimeNanos = 100,
+                    firTypeParamCount = 0,
+                    firMemberCount = 3,
+                    irTimeNanos = 200,
+                    irLOC = 50,
+                ),
+                UnifiedFakeMetrics(
+                    name = "Repository",
+                    firTimeNanos = 150,
+                    firTypeParamCount = 1,
+                    firMemberCount = 5,
+                    irTimeNanos = 300,
+                    irLOC = 80,
+                ),
+                UnifiedFakeMetrics(
+                    name = "AsyncDataService",
+                    firTimeNanos = 200,
+                    firTypeParamCount = 0,
+                    firMemberCount = 3,
+                    irTimeNanos = 400,
+                    irLOC = 49,
+                ),
+            )
+        val classMetrics =
+            listOf(
+                UnifiedFakeMetrics(
+                    name = "KeyValueCache",
+                    firTimeNanos = 100,
+                    firTypeParamCount = 2,
+                    firMemberCount = 5,
+                    irTimeNanos = 200,
+                    irLOC = 72,
+                ),
+                UnifiedFakeMetrics(
+                    name = "FileRepository",
+                    firTimeNanos = 150,
+                    firTypeParamCount = 0,
+                    firMemberCount = 4,
+                    irTimeNanos = 300,
+                    irLOC = 59,
+                ),
+            )
 
         // WHEN
         logUnifiedTraceTestable(logger, interfaceMetrics, classMetrics)
@@ -187,16 +190,17 @@ class IrGenerationTraceLoggingTest {
     fun `GIVEN interfaces with metadata WHEN logging trace THEN shows type parameters and members`() {
         // GIVEN
         val logger = TestLogger(LogLevel.DEBUG)
-        val interfaceMetrics = listOf(
-            UnifiedFakeMetrics(
-                name = "DataCache",
-                firTimeNanos = 100,
-                firTypeParamCount = 1,
-                firMemberCount = 6,
-                irTimeNanos = 200,
-                irLOC = 83,
-            ),
-        )
+        val interfaceMetrics =
+            listOf(
+                UnifiedFakeMetrics(
+                    name = "DataCache",
+                    firTimeNanos = 100,
+                    firTypeParamCount = 1,
+                    firMemberCount = 6,
+                    irTimeNanos = 200,
+                    irLOC = 83,
+                ),
+            )
         val classMetrics = emptyList<UnifiedFakeMetrics>()
 
         // WHEN
@@ -221,10 +225,11 @@ class IrGenerationTraceLoggingTest {
     ) {
         if (logger.logLevel < LogLevel.DEBUG) return
 
-        val tree = UnifiedMetricsTree(
-            interfaces = interfaceMetrics,
-            classes = classMetrics
-        )
+        val tree =
+            UnifiedMetricsTree(
+                interfaces = interfaceMetrics,
+                classes = classMetrics,
+            )
 
         logger.debug(tree.toTreeString())
     }
@@ -253,9 +258,13 @@ class IrGenerationTraceLoggingTest {
     /**
      * Test logger wrapper
      */
-    private class TestLogger(logLevel: LogLevel) {
+    private class TestLogger(
+        logLevel: LogLevel,
+    ) {
         private val collector = TestMessageCollector()
-        private val logger = com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger(collector, logLevel)
+        private val logger =
+            com.rsicarelli.fakt.compiler.core.telemetry
+                .FaktLogger(collector, logLevel)
 
         val debugMessages: List<String>
             get() = collector.messages

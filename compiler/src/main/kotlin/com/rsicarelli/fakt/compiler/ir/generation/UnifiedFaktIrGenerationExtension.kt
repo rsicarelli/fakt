@@ -8,7 +8,6 @@ import com.rsicarelli.fakt.compiler.core.context.FaktSharedContext
 import com.rsicarelli.fakt.compiler.core.context.ImportResolver
 import com.rsicarelli.fakt.compiler.core.optimization.buildSignature
 import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
-import com.rsicarelli.fakt.compiler.core.telemetry.GeneratedFakeMetrics
 import com.rsicarelli.fakt.compiler.core.telemetry.UnifiedFakeMetrics
 import com.rsicarelli.fakt.compiler.core.telemetry.UnifiedMetricsTree
 import com.rsicarelli.fakt.compiler.core.telemetry.measureTimeNanos
@@ -73,8 +72,9 @@ class UnifiedFaktIrGenerationExtension(
     private val optimizations = sharedContext.optimizations
 
     // Get SourceSetContext from compiler options (provided by Gradle plugin)
-    private val sourceSetContext = sharedContext.options.sourceSetContext
-        ?: error("SourceSetContext is required. Ensure Gradle plugin version matches compiler plugin.")
+    private val sourceSetContext =
+        sharedContext.options.sourceSetContext
+            ?: error("SourceSetContext is required. Ensure Gradle plugin version matches compiler plugin.")
 
     // Extracted modules following DRY principles
     private val typeResolver = createTypeResolution()
@@ -141,9 +141,7 @@ class UnifiedFaktIrGenerationExtension(
      * @see processInterfacesFromMetadata for generation without re-analysis
      * @see processClassesFromMetadata for class generation
      */
-    private fun generateFromFirMetadata(
-        moduleFragment: IrModuleFragment,
-    ) {
+    private fun generateFromFirMetadata(moduleFragment: IrModuleFragment) {
         // Load validated interfaces from FIR phase
         val validatedInterfaces = sharedContext.metadataStorage.getAllInterfaces()
         val validatedClasses = sharedContext.metadataStorage.getAllClasses()
@@ -162,58 +160,66 @@ class UnifiedFaktIrGenerationExtension(
         // Transform FIR metadata → IrGenerationMetadata (NO re-analysis!)
         val transformer = FirToIrTransformer()
 
-        val (interfaceMetadata, interfaceTransformTime) = measureTimeNanos {
-            validatedInterfaces.mapNotNull { firInterface ->
-                val irClass = irClassMap[firInterface.classId]
-                if (irClass == null) {
-                    logger.warn("Could not find IrClass for validated interface: ${firInterface.classId.asFqNameString()}")
-                    null
-                } else {
-                    transformer.transform(firInterface, irClass)
+        val (interfaceMetadata, interfaceTransformTime) =
+            measureTimeNanos {
+                validatedInterfaces.mapNotNull { firInterface ->
+                    val irClass = irClassMap[firInterface.classId]
+                    if (irClass == null) {
+                        logger.warn("Could not find IrClass for validated interface: ${firInterface.classId.asFqNameString()}")
+                        null
+                    } else {
+                        transformer.transform(firInterface, irClass)
+                    }
                 }
             }
-        }
 
         logger.debug(
             "FIR→IR Transformation (interfaces: ${interfaceMetadata.size}/${validatedInterfaces.size}, took ${
                 TimeFormatter.format(
-                    interfaceTransformTime
+                    interfaceTransformTime,
                 )
-            })"
+            })",
         )
 
         // Transform classes using FirToIrTransformer
-        val (classMetadata, classTransformTime) = measureTimeNanos {
-            validatedClasses.mapNotNull { firClassMetadata ->
-                val irClass = irClassMap[firClassMetadata.classId]
-                if (irClass == null) {
-                    logger.warn(
-                        "IrClass not found for ${firClassMetadata.simpleName}. " +
+        val (classMetadata, classTransformTime) =
+            measureTimeNanos {
+                validatedClasses.mapNotNull { firClassMetadata ->
+                    val irClass = irClassMap[firClassMetadata.classId]
+                    if (irClass == null) {
+                        logger.warn(
+                            "IrClass not found for ${firClassMetadata.simpleName}. " +
                                 "Skipping class transformation.",
-                    )
-                    null
-                } else {
-                    transformer.transformClass(firClassMetadata, irClass)
+                        )
+                        null
+                    } else {
+                        transformer.transformClass(firClassMetadata, irClass)
+                    }
                 }
             }
-        }
 
         logger.debug(
             "FIR→IR Transformation (classes: ${classMetadata.size}/${validatedClasses.size}, took ${
                 TimeFormatter.format(
-                    classTransformTime
+                    classTransformTime,
                 )
-            })"
+            })",
         )
 
         // Collect unified metrics (FIR + IR) for batch logging
-        val interfaceMetrics = if (interfaceMetadata.isNotEmpty()) {
-            processInterfacesFromMetadata(interfaceMetadata, moduleFragment, firMetricsMap)
-        } else emptyList()
+        val interfaceMetrics =
+            if (interfaceMetadata.isNotEmpty()) {
+                processInterfacesFromMetadata(interfaceMetadata, moduleFragment, firMetricsMap)
+            } else {
+                emptyList()
+            }
 
-        val classMetrics = if (classMetadata.isNotEmpty()) {
-            processClassesFromMetadata(classMetadata, moduleFragment, firMetricsMap)
-        } else emptyList()
+        val classMetrics =
+            if (classMetadata.isNotEmpty()) {
+                processClassesFromMetadata(classMetadata, moduleFragment, firMetricsMap)
+            } else {
+                emptyList()
+            }
 
         // Log consolidated unified trace (FIR + IR combined)
         logUnifiedTrace(interfaceMetrics, classMetrics)
@@ -252,20 +258,22 @@ class UnifiedFaktIrGenerationExtension(
 
         moduleFragment.files.forEach { file ->
             file.declarations.filterIsInstance<IrClass>().forEach { irClass ->
-                val classId = ClassId(
-                    packageFqName = irClass.packageFqName ?: FqName.ROOT,
-                    relativeClassName = FqName(irClass.name.asString()),
-                    isLocal = false,
-                )
+                val classId =
+                    ClassId(
+                        packageFqName = irClass.packageFqName ?: FqName.ROOT,
+                        relativeClassName = FqName(irClass.name.asString()),
+                        isLocal = false,
+                    )
                 map[classId] = irClass
 
                 // Also add nested classes
                 irClass.declarations.filterIsInstance<IrClass>().forEach { nestedClass ->
-                    val nestedClassId = ClassId(
-                        packageFqName = irClass.packageFqName ?: FqName.ROOT,
-                        relativeClassName = FqName("${irClass.name.asString()}.${nestedClass.name.asString()}"),
-                        isLocal = false,
-                    )
+                    val nestedClassId =
+                        ClassId(
+                            packageFqName = irClass.packageFqName ?: FqName.ROOT,
+                            relativeClassName = FqName("${irClass.name.asString()}.${nestedClass.name.asString()}"),
+                            isLocal = false,
+                        )
                     map[nestedClassId] = nestedClass
                 }
             }
@@ -293,31 +301,35 @@ class UnifiedFaktIrGenerationExtension(
 
         // Collect interface FIR metrics
         validatedInterfaces.forEach { firInterface ->
-            val memberCount = firInterface.properties.size +
-                            firInterface.functions.size +
-                            firInterface.inheritedProperties.size +
-                            firInterface.inheritedFunctions.size
+            val memberCount =
+                firInterface.properties.size +
+                    firInterface.functions.size +
+                    firInterface.inheritedProperties.size +
+                    firInterface.inheritedFunctions.size
 
-            val firMetrics = FirMetrics(
-                validationTimeNanos = firInterface.validationTimeNanos,
-                typeParamCount = firInterface.typeParameters.size,
-                memberCount = memberCount,
-            )
+            val firMetrics =
+                FirMetrics(
+                    validationTimeNanos = firInterface.validationTimeNanos,
+                    typeParamCount = firInterface.typeParameters.size,
+                    memberCount = memberCount,
+                )
             map[firInterface.simpleName] = firMetrics
         }
 
         // Collect class FIR metrics
         validatedClasses.forEach { firClass ->
-            val memberCount = firClass.abstractProperties.size +
-                            firClass.openProperties.size +
-                            firClass.abstractMethods.size +
-                            firClass.openMethods.size
+            val memberCount =
+                firClass.abstractProperties.size +
+                    firClass.openProperties.size +
+                    firClass.abstractMethods.size +
+                    firClass.openMethods.size
 
-            map[firClass.simpleName] = FirMetrics(
-                validationTimeNanos = firClass.validationTimeNanos,
-                typeParamCount = firClass.typeParameters.size,
-                memberCount = memberCount,
-            )
+            map[firClass.simpleName] =
+                FirMetrics(
+                    validationTimeNanos = firClass.validationTimeNanos,
+                    typeParamCount = firClass.typeParameters.size,
+                    memberCount = memberCount,
+                )
         }
 
         return map
@@ -392,66 +404,72 @@ class UnifiedFaktIrGenerationExtension(
             // Check cache: file exists AND signature matches
             val isCacheHit = outputFile.exists() && !optimizations.needsRegeneration(typeInfo)
 
-            val (irTimeNanos, loc) = if (isCacheHit) {
-                // Cache hit - minimal IR time for file existence check (~5-50µs)
-                val (_, checkTime) = measureTimeNanos {
-                    outputFile.exists() // Simulate cache check overhead
-                }
-                // Read LOC from existing file for metrics
-                val existingLoc = if (outputFile.exists()) {
-                    outputFile.readLines().size
+            val (irTimeNanos, loc) =
+                if (isCacheHit) {
+                    // Cache hit - minimal IR time for file existence check (~5-50µs)
+                    val (_, checkTime) =
+                        measureTimeNanos {
+                            outputFile.exists() // Simulate cache check overhead
+                        }
+                    // Read LOC from existing file for metrics
+                    val existingLoc =
+                        if (outputFile.exists()) {
+                            outputFile.readLines().size
+                        } else {
+                            0
+                        }
+                    checkTime to existingLoc
                 } else {
-                    0
-                }
-                checkTime to existingLoc
-            } else {
-                // Cache miss - check if file exists with different signature
-                if (outputFile.exists()) {
-                    logger.debug("Signature changed: Deleting old fake for $interfaceName")
-                    outputFile.delete()
-                }
+                    // Cache miss - check if file exists with different signature
+                    if (outputFile.exists()) {
+                        logger.debug("Signature changed: Deleting old fake for $interfaceName")
+                        outputFile.delete()
+                    }
 
-                // Convert to InterfaceAnalysis using adapter (NO re-analysis!)
-                val (interfaceAnalysis, analysisTime) = measureTimeNanos {
-                    metadata.toInterfaceAnalysis()
-                }
+                    // Convert to InterfaceAnalysis using adapter (NO re-analysis!)
+                    val (interfaceAnalysis, analysisTime) =
+                        measureTimeNanos {
+                            metadata.toInterfaceAnalysis()
+                        }
 
-                // Validate pattern (reuses existing validation logic)
-                validateAndLogGenericPattern(
-                    interfaceAnalysis = interfaceAnalysis,
-                    fakeInterface = metadata.sourceInterface,
-                    interfaceName = interfaceName,
-                    logger = logger
-                )
-
-                // Track generation timing and capture generated code
-                val (generatedCode, generationTime) = measureTimeNanos {
-                    codeGenerator.generateWorkingFakeImplementation(
-                        sourceInterface = metadata.sourceInterface,
-                        analysis = interfaceAnalysis,
-                        moduleFragment = moduleFragment,
+                    // Validate pattern (reuses existing validation logic)
+                    validateAndLogGenericPattern(
+                        interfaceAnalysis = interfaceAnalysis,
+                        fakeInterface = metadata.sourceInterface,
+                        interfaceName = interfaceName,
+                        logger = logger,
                     )
+
+                    // Track generation timing and capture generated code
+                    val (generatedCode, generationTime) =
+                        measureTimeNanos {
+                            codeGenerator.generateWorkingFakeImplementation(
+                                sourceInterface = metadata.sourceInterface,
+                                analysis = interfaceAnalysis,
+                                moduleFragment = moduleFragment,
+                            )
+                        }
+
+                    // Calculate LOC
+                    val generatedLoc = generatedCode.calculateTotalLOC()
+
+                    // Record successful generation in cache
+                    optimizations.recordGeneration(typeInfo)
+
+                    // Return IR time (analysis + generation) and LOC
+                    (analysisTime + generationTime) to generatedLoc
                 }
-
-                // Calculate LOC
-                val generatedLoc = generatedCode.calculateTotalLOC()
-
-                // Record successful generation in cache
-                optimizations.recordGeneration(typeInfo)
-
-                // Return IR time (analysis + generation) and LOC
-                (analysisTime + generationTime) to generatedLoc
-            }
 
             // Collect unified metrics (FIR + IR) for batch logging
-            val unifiedMetrics = UnifiedFakeMetrics(
-                name = interfaceName,
-                firTimeNanos = firMetrics.validationTimeNanos,
-                firTypeParamCount = firMetrics.typeParamCount,
-                firMemberCount = firMetrics.memberCount,
-                irTimeNanos = irTimeNanos,
-                irLOC = loc,
-            )
+            val unifiedMetrics =
+                UnifiedFakeMetrics(
+                    name = interfaceName,
+                    firTimeNanos = firMetrics.validationTimeNanos,
+                    firTypeParamCount = firMetrics.typeParamCount,
+                    firMemberCount = firMetrics.memberCount,
+                    irTimeNanos = irTimeNanos,
+                    irLOC = loc,
+                )
             metrics.add(unifiedMetrics)
         }
 
@@ -515,48 +533,53 @@ class UnifiedFaktIrGenerationExtension(
             // Check cache: file exists AND signature matches
             val isCacheHit = outputFile.exists() && !optimizations.needsRegeneration(typeInfo)
 
-            val (irTimeNanos, loc) = if (isCacheHit) {
-                // Cache hit - minimal IR time for file existence check (~5-50µs)
-                val (_, checkTime) = measureTimeNanos {
-                    outputFile.exists() // Simulate cache check overhead
-                }
-                // Read LOC from existing file for metrics
-                val existingLoc = if (outputFile.exists()) {
-                    outputFile.readLines().size
+            val (irTimeNanos, loc) =
+                if (isCacheHit) {
+                    // Cache hit - minimal IR time for file existence check (~5-50µs)
+                    val (_, checkTime) =
+                        measureTimeNanos {
+                            outputFile.exists() // Simulate cache check overhead
+                        }
+                    // Read LOC from existing file for metrics
+                    val existingLoc =
+                        if (outputFile.exists()) {
+                            outputFile.readLines().size
+                        } else {
+                            0
+                        }
+                    checkTime to existingLoc
                 } else {
-                    0
+                    // Cache miss - check if file exists with different signature
+                    if (outputFile.exists()) {
+                        logger.debug("Signature changed: Deleting old fake for class $className")
+                        outputFile.delete()
+                    }
+
+                    // Convert to ClassAnalysis using adapter (preserves abstract/open distinction)
+                    val (classAnalysis, analysisTime) =
+                        measureTimeNanos {
+                            metadata.toClassAnalysis()
+                        }
+
+                    // Track generation timing and capture generated code
+                    val (generatedCode, generationTime) =
+                        measureTimeNanos {
+                            codeGenerator.generateWorkingClassFake(
+                                sourceClass = metadata.sourceClass,
+                                analysis = classAnalysis,
+                                moduleFragment = moduleFragment,
+                            )
+                        }
+
+                    // Calculate LOC
+                    val generatedLoc = generatedCode.calculateTotalLOC()
+
+                    // Record successful generation in cache
+                    optimizations.recordGeneration(typeInfo)
+
+                    // Return IR time (analysis + generation) and LOC
+                    (analysisTime + generationTime) to generatedLoc
                 }
-                checkTime to existingLoc
-            } else {
-                // Cache miss - check if file exists with different signature
-                if (outputFile.exists()) {
-                    logger.debug("Signature changed: Deleting old fake for class $className")
-                    outputFile.delete()
-                }
-
-                // Convert to ClassAnalysis using adapter (preserves abstract/open distinction)
-                val (classAnalysis, analysisTime) = measureTimeNanos {
-                    metadata.toClassAnalysis()
-                }
-
-                // Track generation timing and capture generated code
-                val (generatedCode, generationTime) = measureTimeNanos {
-                    codeGenerator.generateWorkingClassFake(
-                        sourceClass = metadata.sourceClass,
-                        analysis = classAnalysis,
-                        moduleFragment = moduleFragment,
-                    )
-                }
-
-                // Calculate LOC
-                val generatedLoc = generatedCode.calculateTotalLOC()
-
-                // Record successful generation in cache
-                optimizations.recordGeneration(typeInfo)
-
-                // Return IR time (analysis + generation) and LOC
-                (analysisTime + generationTime) to generatedLoc
-            }
 
             // Collect unified metrics (FIR + IR) for batch logging
             metrics.add(
@@ -567,38 +590,13 @@ class UnifiedFaktIrGenerationExtension(
                     firMemberCount = firMetrics.memberCount,
                     irTimeNanos = irTimeNanos,
                     irLOC = loc,
-                )
+                ),
             )
         }
 
         return metrics
     }
 
-    /**
-     * Logs consolidated unified FIR + IR trace with all generated fakes.
-     *
-     * Outputs tree-style format at DEBUG level matching FIR phase style.
-     * Replaces per-fake logging with batch output for cleaner logs.
-     *
-     * **Example Output (DEBUG level):**
-     * ```
-     * i: Fakt: IR Generation Trace (took 45ms)
-     * i: Fakt: ├─ Interfaces: 101
-     * i: Fakt: │  ├─ MutableListHandler                19µs
-     * i: Fakt: │  │     ├─ 1 type parameters, 1 members
-     * i: Fakt: │  │     └─ FakeMutableListHandlerImpl 23 LOC
-     * i: Fakt: │  ├─ CallbackHandler                   5µs
-     * i: Fakt: │  │     ├─ 1 type parameters, 1 members
-     * i: Fakt: │  │     └─ FakeCallbackHandlerImpl 23 LOC
-     * i: Fakt: └─ Classes: 21
-     * i: Fakt:    ├─ AsyncDataFetcher                  735µs
-     * i: Fakt:    │     ├─ 2 type parameters, 4 members
-     * i: Fakt:    │     └─ FakeAsyncDataFetcherImpl 45 LOC
-     * ```
-     *
-     * @param interfaceMetrics List of metrics for generated interfaces
-     * @param classMetrics List of metrics for generated classes
-     */
     /**
      * Log unified FIR + IR trace showing both analysis and generation metrics in one tree.
      *
@@ -633,12 +631,12 @@ class UnifiedFaktIrGenerationExtension(
     ) {
         if (logger.logLevel < LogLevel.DEBUG) return
 
-        val tree = UnifiedMetricsTree(
-            interfaces = interfaceMetrics,
-            classes = classMetrics
-        )
+        val tree =
+            UnifiedMetricsTree(
+                interfaces = interfaceMetrics,
+                classes = classMetrics,
+            )
 
         logger.debug(tree.toTreeString())
     }
-
 }

@@ -19,7 +19,6 @@ import kotlin.test.assertEquals
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ComplexInterfaceFakeGenerationTest : IntegrationTestBase() {
-
     private val resolver = DefaultValueResolver()
 
     @Test
@@ -126,39 +125,40 @@ class ComplexInterfaceFakeGenerationTest : IntegrationTestBase() {
     @Test
     fun `GIVEN complex repository interface WHEN generating fake THEN produces complete implementation`() {
         // GIVEN - Repository with collections and complex types
-        val file = codeFile("com.example") {
-            import("com.example.User")
-            import("kotlinx.coroutines.flow.StateFlow")
-            import("kotlinx.coroutines.flow.MutableStateFlow")
+        val file =
+            codeFile("com.example") {
+                import("com.example.User")
+                import("kotlinx.coroutines.flow.StateFlow")
+                import("kotlinx.coroutines.flow.MutableStateFlow")
 
-            klass("FakeRepositoryImpl") {
-                implements("Repository")
+                klass("FakeRepositoryImpl") {
+                    implements("Repository")
 
-                // Method: fun findAll(): List<User>
-                property("findAllBehavior", "() -> List<User>") {
-                    private()
-                    mutable()
-                    initializer = "{ emptyList() }"
-                }
+                    // Method: fun findAll(): List<User>
+                    property("findAllBehavior", "() -> List<User>") {
+                        private()
+                        mutable()
+                        initializer = "{ emptyList() }"
+                    }
 
-                function("findAll") {
-                    override()
-                    returns("List<User>")
-                    body = "return findAllBehavior()"
-                }
+                    function("findAll") {
+                        override()
+                        returns("List<User>")
+                        body = "return findAllBehavior()"
+                    }
 
-                // Property: val users: StateFlow<List<User>>
-                property("usersValue", "StateFlow<List<User>>") {
-                    private()
-                    initializer = "MutableStateFlow(emptyList())"
-                }
+                    // Property: val users: StateFlow<List<User>>
+                    property("usersValue", "StateFlow<List<User>>") {
+                        private()
+                        initializer = "MutableStateFlow(emptyList())"
+                    }
 
-                property("users", "StateFlow<List<User>>") {
-                    override()
-                    getter = "usersValue"
+                    property("users", "StateFlow<List<User>>") {
+                        override()
+                        getter = "usersValue"
+                    }
                 }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -172,18 +172,18 @@ class ComplexInterfaceFakeGenerationTest : IntegrationTestBase() {
         assertContains(
             "Behavior property",
             "private var findAllBehavior: () -> List<User> = { emptyList() }",
-            result
+            result,
         )
         assertContains("Override method", "override fun findAll(): List<User>", result)
         assertContains(
             "StateFlow property",
             "private val usersValue: StateFlow<List<User>> = MutableStateFlow(emptyList())",
-            result
+            result,
         )
         assertContains(
             "Override property with getter",
             "override val users: StateFlow<List<User>>",
-            result
+            result,
         )
     }
 
@@ -215,16 +215,17 @@ class ComplexInterfaceFakeGenerationTest : IntegrationTestBase() {
     @Test
     fun `GIVEN Map with complex value type WHEN rendering THEN preserves all type arguments`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            klass("FakeCacheImpl") {
-                function("get") {
-                    override()
-                    parameter("key", "String")
-                    returns("Map<String, List<User>>")
-                    body = "return getBehavior(key)"
+        val file =
+            codeFile("com.example") {
+                klass("FakeCacheImpl") {
+                    function("get") {
+                        override()
+                        parameter("key", "String")
+                        returns("Map<String, List<User>>")
+                        body = "return getBehavior(key)"
+                    }
                 }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()

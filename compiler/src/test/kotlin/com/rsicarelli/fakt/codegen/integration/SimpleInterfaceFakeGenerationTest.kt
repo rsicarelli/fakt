@@ -20,32 +20,32 @@ import kotlin.test.assertEquals
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SimpleInterfaceFakeGenerationTest : IntegrationTestBase() {
-
     private val resolver = DefaultValueResolver()
 
     @Test
     fun `GIVEN simple method WHEN generating fake THEN creates behavior property and override`() {
         // GIVEN - Interface: fun getUser(id: String): User?
-        val file = codeFile("com.example") {
-            klass("FakeUserServiceImpl") {
-                implements("UserService")
+        val file =
+            codeFile("com.example") {
+                klass("FakeUserServiceImpl") {
+                    implements("UserService")
 
-                // Behavior property
-                property("getUserBehavior", "(String) -> User?") {
-                    private()
-                    mutable()
-                    initializer = "{ null }"
-                }
+                    // Behavior property
+                    property("getUserBehavior", "(String) -> User?") {
+                        private()
+                        mutable()
+                        initializer = "{ null }"
+                    }
 
-                // Override method
-                function("getUser") {
-                    override()
-                    parameter("id", "String")
-                    returns("User?")
-                    body = "return getUserBehavior(id)"
+                    // Override method
+                    function("getUser") {
+                        override()
+                        parameter("id", "String")
+                        returns("User?")
+                        body = "return getUserBehavior(id)"
+                    }
                 }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -71,24 +71,25 @@ class SimpleInterfaceFakeGenerationTest : IntegrationTestBase() {
     @Test
     fun `GIVEN property WHEN generating fake THEN creates backing field and override`() {
         // GIVEN - Interface: val userCount: Int
-        val file = codeFile("com.example") {
-            klass("FakeUserServiceImpl") {
-                implements("UserService")
+        val file =
+            codeFile("com.example") {
+                klass("FakeUserServiceImpl") {
+                    implements("UserService")
 
-                // Backing field
-                property("userCountValue", "Int") {
-                    private()
-                    mutable()
-                    initializer = "0"
-                }
+                    // Backing field
+                    property("userCountValue", "Int") {
+                        private()
+                        mutable()
+                        initializer = "0"
+                    }
 
-                // Override property
-                property("userCount", "Int") {
-                    override()
-                    getter = "userCountValue"
+                    // Override property
+                    property("userCount", "Int") {
+                        override()
+                        getter = "userCountValue"
+                    }
                 }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -137,39 +138,40 @@ class SimpleInterfaceFakeGenerationTest : IntegrationTestBase() {
     @Test
     fun `GIVEN complete simple interface WHEN generating fake THEN produces valid class`() {
         // GIVEN - Complete UserService interface
-        val file = codeFile("com.example.test") {
-            import("com.example.User")
+        val file =
+            codeFile("com.example.test") {
+                import("com.example.User")
 
-            klass("FakeUserServiceImpl") {
-                implements("UserService")
+                klass("FakeUserServiceImpl") {
+                    implements("UserService")
 
-                // Method: getUser(id: String): User?
-                property("getUserBehavior", "(String) -> User?") {
-                    private()
-                    mutable()
-                    initializer = "{ null }"
-                }
+                    // Method: getUser(id: String): User?
+                    property("getUserBehavior", "(String) -> User?") {
+                        private()
+                        mutable()
+                        initializer = "{ null }"
+                    }
 
-                function("getUser") {
-                    override()
-                    parameter("id", "String")
-                    returns("User?")
-                    body = "return getUserBehavior(id)"
-                }
+                    function("getUser") {
+                        override()
+                        parameter("id", "String")
+                        returns("User?")
+                        body = "return getUserBehavior(id)"
+                    }
 
-                // Property: userCount: Int
-                property("userCountValue", "Int") {
-                    private()
-                    mutable()
-                    initializer = "0"
-                }
+                    // Property: userCount: Int
+                    property("userCountValue", "Int") {
+                        private()
+                        mutable()
+                        initializer = "0"
+                    }
 
-                property("userCount", "Int") {
-                    override()
-                    getter = "userCountValue"
+                    property("userCount", "Int") {
+                        override()
+                        getter = "userCountValue"
+                    }
                 }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -188,18 +190,19 @@ class SimpleInterfaceFakeGenerationTest : IntegrationTestBase() {
     @Test
     fun `GIVEN method with multiple parameters WHEN generating THEN preserves all parameters`() {
         // GIVEN - fun create(name: String, age: Int, active: Boolean): User
-        val file = codeFile("com.example") {
-            klass("FakeUserServiceImpl") {
-                function("create") {
-                    override()
-                    parameter("name", "String")
-                    parameter("age", "Int")
-                    parameter("active", "Boolean")
-                    returns("User")
-                    body = "return createBehavior(name, age, active)"
+        val file =
+            codeFile("com.example") {
+                klass("FakeUserServiceImpl") {
+                    function("create") {
+                        override()
+                        parameter("name", "String")
+                        parameter("age", "Int")
+                        parameter("active", "Boolean")
+                        returns("User")
+                        body = "return createBehavior(name, age, active)"
+                    }
                 }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -213,15 +216,16 @@ class SimpleInterfaceFakeGenerationTest : IntegrationTestBase() {
     @Test
     fun `GIVEN method with no parameters WHEN generating THEN creates parameterless function`() {
         // GIVEN - fun getAllUsers(): List<User>
-        val file = codeFile("com.example") {
-            klass("FakeUserServiceImpl") {
-                function("getAllUsers") {
-                    override()
-                    returns("List<User>")
-                    body = "return getAllUsersBehavior()"
+        val file =
+            codeFile("com.example") {
+                klass("FakeUserServiceImpl") {
+                    function("getAllUsers") {
+                        override()
+                        returns("List<User>")
+                        body = "return getAllUsersBehavior()"
+                    }
                 }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()

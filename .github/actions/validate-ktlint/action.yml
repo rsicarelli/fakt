@@ -6,4 +6,4 @@ runs:
   steps:
     - name: Run ktlint
       shell: bash
-      run: ./gradlew lintKotlin --no-daemon
+      run: ./gradlew ktlintCheck --no-daemon

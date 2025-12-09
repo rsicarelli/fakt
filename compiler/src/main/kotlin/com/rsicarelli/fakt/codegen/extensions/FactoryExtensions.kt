@@ -37,11 +37,12 @@ fun generateFactoryFunction(
     val typeParamNames = typeParameters.map { it.substringBefore(" :").trim() }
 
     // Build type arguments string for usage
-    val typeArgs = if (typeParamNames.isNotEmpty()) {
-        "<${typeParamNames.joinToString(", ")}>"
-    } else {
-        ""
-    }
+    val typeArgs =
+        if (typeParamNames.isNotEmpty()) {
+            "<${typeParamNames.joinToString(", ")}>"
+        } else {
+            ""
+        }
 
     // Parse type parameters into header format and where clause
     val (headerParams, whereClause) = parseTypeParametersForFactory(typeParameters)
@@ -50,14 +51,15 @@ fun generateFactoryFunction(
         // Function signature
         if (hasGenerics) {
             // inline fun <reified T : Bound> fakeInterface(...)
-            val typeParamsStr = headerParams.joinToString(", ") { param ->
-                val parts = param.split(" : ")
-                if (parts.size > 1) {
-                    "reified ${parts[0]} : ${parts[1]}"
-                } else {
-                    "reified $param"
+            val typeParamsStr =
+                headerParams.joinToString(", ") { param ->
+                    val parts = param.split(" : ")
+                    if (parts.size > 1) {
+                        "reified ${parts[0]} : ${parts[1]}"
+                    } else {
+                        "reified $param"
+                    }
                 }
-            }
             append("inline fun <$typeParamsStr> $factoryName")
         } else {
             append("fun $factoryName")

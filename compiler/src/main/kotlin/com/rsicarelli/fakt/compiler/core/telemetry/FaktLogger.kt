@@ -35,7 +35,6 @@ class FaktLogger(
     private val messageCollector: MessageCollector?,
     val logLevel: LogLevel,
 ) {
-
     fun info(message: String) {
         if (logLevel >= LogLevel.INFO) {
             messageCollector?.report(CompilerMessageSeverity.INFO, message)
@@ -66,13 +65,10 @@ class FaktLogger(
     }
 
     companion object {
-        fun quiet(messageCollector: MessageCollector? = null): FaktLogger =
-            FaktLogger(messageCollector, LogLevel.QUIET)
+        fun quiet(messageCollector: MessageCollector? = null): FaktLogger = FaktLogger(messageCollector, LogLevel.QUIET)
 
-        fun info(messageCollector: MessageCollector?): FaktLogger =
-            FaktLogger(messageCollector, LogLevel.INFO)
+        fun info(messageCollector: MessageCollector?): FaktLogger = FaktLogger(messageCollector, LogLevel.INFO)
 
-        fun debug(messageCollector: MessageCollector?): FaktLogger =
-            FaktLogger(messageCollector, LogLevel.DEBUG)
+        fun debug(messageCollector: MessageCollector?): FaktLogger = FaktLogger(messageCollector, LogLevel.DEBUG)
     }
 }

@@ -23,7 +23,7 @@ data class CodeFile(
     val packageName: String,
     val imports: Set<String> = emptySet(),
     val declarations: List<CodeDeclaration> = emptyList(),
-    val header: String? = null
+    val header: String? = null,
 ) {
     /**
      * Adds a top-level declaration.
@@ -31,8 +31,7 @@ data class CodeFile(
      *
      * TODO Phase 10: Alternative mutation API (currently builders are preferred).
      */
-    fun addDeclaration(declaration: CodeDeclaration): CodeFile =
-        copy(declarations = declarations + declaration)
+    fun addDeclaration(declaration: CodeDeclaration): CodeFile = copy(declarations = declarations + declaration)
 
     /**
      * Adds an import statement.
@@ -41,8 +40,7 @@ data class CodeFile(
      *
      * TODO Phase 10: Alternative mutation API (currently builders are preferred).
      */
-    fun addImport(fqName: String): CodeFile =
-        copy(imports = imports + fqName)
+    fun addImport(fqName: String): CodeFile = copy(imports = imports + fqName)
 }
 
 /**
@@ -71,7 +69,7 @@ data class CodeClass(
     val superTypes: List<CodeType> = emptyList(),
     val modifiers: Set<CodeModifier> = emptySet(),
     val members: List<CodeMember> = emptyList(),
-    val whereClause: String? = null
+    val whereClause: String? = null,
 ) : CodeDeclaration {
     /**
      * Adds a member to this class.
@@ -79,8 +77,7 @@ data class CodeClass(
      *
      * TODO Phase 10: Alternative mutation API (currently ClassBuilder is preferred).
      */
-    fun addMember(member: CodeMember): CodeClass =
-        copy(members = members + member)
+    fun addMember(member: CodeMember): CodeClass = copy(members = members + member)
 }
 
 /**
@@ -105,8 +102,9 @@ data class CodeFunction(
     val typeParameters: List<CodeTypeParameter> = emptyList(),
     val isSuspend: Boolean = false,
     val isInline: Boolean = false,
-    val receiverType: CodeType? = null  // Extension receiver type (e.g., Vector for fun Vector.plus())
-) : CodeDeclaration, CodeMember
+    val receiverType: CodeType? = null, // Extension receiver type (e.g., Vector for fun Vector.plus())
+) : CodeDeclaration,
+    CodeMember
 
 /**
  * Represents a Kotlin property (top-level or member).
@@ -126,8 +124,9 @@ data class CodeProperty(
     val initializer: CodeExpression? = null,
     val getter: CodeBlock? = null,
     val setter: CodeBlock? = null,
-    val isMutable: Boolean = false
-) : CodeDeclaration, CodeMember
+    val isMutable: Boolean = false,
+) : CodeDeclaration,
+    CodeMember
 
 /**
  * Function/property parameter.
@@ -141,7 +140,7 @@ data class CodeParameter(
     val name: String,
     val type: CodeType,
     val defaultValue: CodeExpression? = null,
-    val isVararg: Boolean = false
+    val isVararg: Boolean = false,
 )
 
 /**
@@ -161,7 +160,7 @@ data class CodeTypeParameter(
     val name: String,
     val constraints: List<String> = emptyList(),
     val isReified: Boolean = false,
-    val variance: Variance = Variance.INVARIANT
+    val variance: Variance = Variance.INVARIANT,
 ) {
     enum class Variance { IN, OUT, INVARIANT }
 }
@@ -179,20 +178,24 @@ sealed interface CodeType {
     /**
      * Simple type reference (e.g., String, User, Int).
      */
-    data class Simple(val name: String) : CodeType
+    data class Simple(
+        val name: String,
+    ) : CodeType
 
     /**
      * Generic type with type arguments (e.g., List<String>, Map<String, Int>).
      */
     data class Generic(
         val name: String,
-        val arguments: List<CodeType>
+        val arguments: List<CodeType>,
     ) : CodeType
 
     /**
      * Nullable type (e.g., String?, User?).
      */
-    data class Nullable(val inner: CodeType) : CodeType
+    data class Nullable(
+        val inner: CodeType,
+    ) : CodeType
 
     /**
      * Lambda/function type (e.g., (String) -> Int, suspend (User) -> Unit).
@@ -202,7 +205,7 @@ sealed interface CodeType {
     data class Lambda(
         val parameters: List<CodeType>,
         val returnType: CodeType,
-        val isSuspend: Boolean = false
+        val isSuspend: Boolean = false,
     ) : CodeType
 }
 
@@ -210,9 +213,18 @@ sealed interface CodeType {
  * Code modifiers (public, private, override, etc).
  */
 enum class CodeModifier {
-    PUBLIC, PRIVATE, INTERNAL, PROTECTED,
-    OVERRIDE, OPEN, ABSTRACT, FINAL,
-    SUSPEND, INLINE, OPERATOR, INFIX
+    PUBLIC,
+    PRIVATE,
+    INTERNAL,
+    PROTECTED,
+    OVERRIDE,
+    OPEN,
+    ABSTRACT,
+    FINAL,
+    SUSPEND,
+    INLINE,
+    OPERATOR,
+    INFIX,
 }
 
 /**
@@ -222,12 +234,16 @@ sealed interface CodeBlock {
     /**
      * Single expression: `= value`
      */
-    data class Expression(val expr: CodeExpression) : CodeBlock
+    data class Expression(
+        val expr: CodeExpression,
+    ) : CodeBlock
 
     /**
      * Statement block: `{ statements }`
      */
-    data class Statements(val statements: List<String>) : CodeBlock
+    data class Statements(
+        val statements: List<String>,
+    ) : CodeBlock
 
     /**
      * Empty block (for abstract members).
@@ -242,19 +258,23 @@ sealed interface CodeExpression {
     /**
      * String literal: "hello"
      */
-    data class StringLiteral(val value: String) : CodeExpression
+    data class StringLiteral(
+        val value: String,
+    ) : CodeExpression
 
     /**
      * Number literal: 42, 3.14
      */
-    data class NumberLiteral(val value: String) : CodeExpression
+    data class NumberLiteral(
+        val value: String,
+    ) : CodeExpression
 
     /**
      * Lambda: { it -> it * 2 }
      */
     data class Lambda(
         val parameters: List<String>,
-        val body: String
+        val body: String,
     ) : CodeExpression
 
     /**
@@ -262,11 +282,13 @@ sealed interface CodeExpression {
      */
     data class FunctionCall(
         val name: String,
-        val arguments: List<CodeExpression> = emptyList()
+        val arguments: List<CodeExpression> = emptyList(),
     ) : CodeExpression
 
     /**
      * Raw code (escape hatch).
      */
-    data class Raw(val code: String) : CodeExpression
+    data class Raw(
+        val code: String,
+    ) : CodeExpression
 }

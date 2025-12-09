@@ -20,8 +20,8 @@ import com.rsicarelli.fakt.codegen.model.CodeType
  * @param typeString The type as a string
  * @return Parsed [CodeType]
  */
-internal fun parseType(typeString: String): CodeType {
-    return when {
+internal fun parseType(typeString: String): CodeType =
+    when {
         typeString.endsWith("?") ->
             CodeType.Nullable(parseType(typeString.dropLast(1)))
 
@@ -35,16 +35,18 @@ internal fun parseType(typeString: String): CodeType {
 
         typeString.contains("<") -> {
             val name = typeString.substringBefore("<")
-            val argsString = typeString.substringAfter("<")
-                .substringBeforeLast(">")
-            val args = splitTypeArguments(argsString)
-                .map { parseType(it.trim()) }
+            val argsString =
+                typeString
+                    .substringAfter("<")
+                    .substringBeforeLast(">")
+            val args =
+                splitTypeArguments(argsString)
+                    .map { parseType(it.trim()) }
             CodeType.Generic(name, args)
         }
 
         else -> CodeType.Simple(typeString)
     }
-}
 
 /**
  * Splits generic type arguments by comma, respecting nested generics.

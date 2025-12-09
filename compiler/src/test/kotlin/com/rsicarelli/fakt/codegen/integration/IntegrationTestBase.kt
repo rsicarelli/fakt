@@ -12,7 +12,6 @@ import kotlin.test.assertEquals
  * Builder → Model → Renderer → Strategy.
  */
 abstract class IntegrationTestBase {
-
     /**
      * Asserts that generated code matches expected output.
      *
@@ -25,7 +24,7 @@ abstract class IntegrationTestBase {
     protected fun assertGeneratedCode(
         description: String,
         expected: String,
-        actual: String
+        actual: String,
     ) {
         val normalizedExpected = expected.trimIndent().trim()
         val normalizedActual = actual.trim()
@@ -33,7 +32,7 @@ abstract class IntegrationTestBase {
         assertEquals(
             normalizedExpected,
             normalizedActual,
-            "Generated code mismatch for: $description"
+            "Generated code mismatch for: $description",
         )
     }
 
@@ -49,13 +48,13 @@ abstract class IntegrationTestBase {
     protected fun assertContains(
         description: String,
         expectedSubstring: String,
-        actual: String
+        actual: String,
     ) {
         if (!actual.contains(expectedSubstring)) {
             throw AssertionError(
                 "Generated code for '$description' does not contain expected substring.\n" +
-                "Expected to find: $expectedSubstring\n" +
-                "Actual code:\n$actual"
+                    "Expected to find: $expectedSubstring\n" +
+                    "Actual code:\n$actual",
             )
         }
     }

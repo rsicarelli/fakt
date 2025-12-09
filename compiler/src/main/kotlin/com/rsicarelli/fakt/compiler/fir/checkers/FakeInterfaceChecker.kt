@@ -58,7 +58,6 @@ import org.jetbrains.kotlin.name.FqName
 internal class FakeInterfaceChecker(
     private val sharedContext: FaktSharedContext,
 ) : FirClassChecker(MppCheckerKind.Common) {
-
     private val logger = sharedContext.logger
 
     companion object {
@@ -109,9 +108,10 @@ internal class FakeInterfaceChecker(
         }
 
         // ✅ Validation passed - analyze and store metadata with timing
-        val timedResult = measureTimeNanos {
-            analyzeMetadata(declaration, session, simpleName)
-        }
+        val timedResult =
+            measureTimeNanos {
+                analyzeMetadata(declaration, session, simpleName)
+            }
 
         // Store metadata with validation timing for consolidated logging in IR phase
         val metadataWithTiming =
@@ -146,10 +146,11 @@ internal class FakeInterfaceChecker(
         val properties = extractProperties(declaration)
         val functions = extractFunctions(declaration)
         val sourceLocation = extractSourceLocation(declaration)
-        val (inheritedProperties, inheritedFunctions) = extractInheritedMembers(
-            declaration = declaration,
-            session = session
-        )
+        val (inheritedProperties, inheritedFunctions) =
+            extractInheritedMembers(
+                declaration = declaration,
+                session = session,
+            )
 
         return ValidatedFakeInterface(
             classId = classId,
@@ -194,10 +195,11 @@ internal class FakeInterfaceChecker(
             // FirTypeParameter.bounds contains List<FirTypeRef> representing constraints
             // e.g., `<T : Comparable<T>>` has bounds = [Comparable<T>]
             // e.g., `<T : A, B>` has bounds = [A, B] (multiple bounds via 'where' clause)
-            val bounds = typeParam.bounds.map { boundRef ->
-                // Render FirTypeRef to String using ConeType representation
-                boundRef.coneType.toString()
-            }
+            val bounds =
+                typeParam.bounds.map { boundRef ->
+                    // Render FirTypeRef to String using ConeType representation
+                    boundRef.coneType.toString()
+                }
 
             FirTypeParameterInfo(
                 name = name,
@@ -282,15 +284,16 @@ internal class FakeInterfaceChecker(
 
                 // Extract parameters
                 // Extract default value expressions and render to code strings
-                val parameters = function.valueParameters.map { param ->
-                    FirParameterInfo(
-                        name = param.name.asString(),
-                        type = param.returnTypeRef.coneType.toString(),
-                        hasDefaultValue = param.defaultValue != null,
-                        defaultValueCode = param.defaultValue?.let(::renderDefaultValue),
-                        isVararg = param.isVararg,
-                    )
-                }
+                val parameters =
+                    function.valueParameters.map { param ->
+                        FirParameterInfo(
+                            name = param.name.asString(),
+                            type = param.returnTypeRef.coneType.toString(),
+                            hasDefaultValue = param.defaultValue != null,
+                            defaultValueCode = param.defaultValue?.let(::renderDefaultValue),
+                            isVararg = param.isVararg,
+                        )
+                    }
 
                 // Extract return type
                 val returnType = function.returnTypeRef.coneType.toString()
@@ -314,9 +317,10 @@ internal class FakeInterfaceChecker(
                 // Format: Map<"T", "Comparable<T>"> for single bound
                 // Note: Kotlin doesn't support multiple bounds for same param in this format,
                 // but FirTypeParameterInfo.bounds handles it correctly as List<String>
-                val typeParameterBounds = typeParameters.associate { typeParam ->
-                    typeParam.name to typeParam.bounds.firstOrNull().orEmpty()
-                }
+                val typeParameterBounds =
+                    typeParameters.associate { typeParam ->
+                        typeParam.name to typeParam.bounds.firstOrNull().orEmpty()
+                    }
 
                 functions.add(
                     FirFunctionInfo(
@@ -501,9 +505,7 @@ internal class FakeInterfaceChecker(
      *
      * @param message Error message to display
      */
-    private fun reportError(
-        message: String,
-    ) {
+    private fun reportError(message: String) {
         // Log error through FaktLogger (routes to Kotlin's MessageCollector)
         // This ensures developers see validation errors with proper severity
         logger.error(message)

@@ -9,9 +9,9 @@ internal fun calculateLOC(code: String): Int =
     code.lines().count { line ->
         val trimmed = line.trim()
         trimmed.isNotEmpty() &&
-                !trimmed.startsWith("//") &&
-                !trimmed.startsWith("/*") &&
-                !trimmed.startsWith("*")
+            !trimmed.startsWith("//") &&
+            !trimmed.startsWith("/*") &&
+            !trimmed.startsWith("*")
     }
 
 /**

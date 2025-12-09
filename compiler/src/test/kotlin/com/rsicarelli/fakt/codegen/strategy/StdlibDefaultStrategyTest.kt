@@ -18,7 +18,6 @@ import kotlin.test.assertTrue
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class StdlibDefaultStrategyTest {
-
     private val strategy = StdlibDefaultStrategy()
 
     @Test

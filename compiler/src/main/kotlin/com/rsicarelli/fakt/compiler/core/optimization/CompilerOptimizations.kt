@@ -101,10 +101,13 @@ interface CompilerOptimizations {
                     outputDir?.let { dir ->
                         // Use parent directory (build/generated/fakt) to store cache
                         // This ensures the cache is shared across all source sets
-                        File(dir).parentFile?.resolve("fakt-cache")
-                            ?.resolve("generated-signatures.txt")?.also {
-                            it.parentFile?.mkdirs()
-                        }
+                        File(dir)
+                            .parentFile
+                            ?.resolve("fakt-cache")
+                            ?.resolve("generated-signatures.txt")
+                            ?.also {
+                                it.parentFile?.mkdirs()
+                            }
                     }
 
                 // Load previously generated signatures from file
@@ -141,8 +144,7 @@ interface CompilerOptimizations {
                     }
                 }
 
-                override fun isConfiguredFor(annotation: String): Boolean =
-                    annotation in fakeAnnotations
+                override fun isConfiguredFor(annotation: String): Boolean = annotation in fakeAnnotations
 
                 override fun indexType(type: TypeInfo) {
                     indexedTypes.add(type)

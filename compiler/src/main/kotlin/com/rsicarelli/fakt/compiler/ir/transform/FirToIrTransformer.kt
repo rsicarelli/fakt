@@ -80,12 +80,13 @@ internal class FirToIrTransformer {
             }
 
         // 2. Resolve directly declared functions (FIR strings → IrTypes + IR nodes)
-        val declaredFunctions = firMetadata.functions.map { firFunction ->
-            resolveFunction(
-                firFunction = firFunction,
-                irClass = irClass
-            )
-        }
+        val declaredFunctions =
+            firMetadata.functions.map { firFunction ->
+                resolveFunction(
+                    firFunction = firFunction,
+                    irClass = irClass,
+                )
+            }
 
         // Resolve inherited members
         // Inherited members need to be resolved against the IR class as well
@@ -94,12 +95,13 @@ internal class FirToIrTransformer {
                 resolveProperty(firProperty, irClass)
             }
 
-        val inheritedFunctions = firMetadata.inheritedFunctions.map { firFunction ->
-            resolveFunction(
-                firFunction = firFunction,
-                irClass = irClass
-            )
-        }
+        val inheritedFunctions =
+            firMetadata.inheritedFunctions.map { firFunction ->
+                resolveFunction(
+                    firFunction = firFunction,
+                    irClass = irClass,
+                )
+            }
 
         // Combine declared and inherited members for code generation
         // The fake implementation needs to provide implementations for ALL members
@@ -221,7 +223,7 @@ internal class FirToIrTransformer {
                 .firstOrNull { it.name.asString() == firProperty.name }
                 ?: error(
                     "IrProperty '${firProperty.name}' not found in ${irClass.name}. " +
-                            "FIR validation should have ensured this exists.",
+                        "FIR validation should have ensured this exists.",
                 )
 
         // Resolve IrType from IR node
@@ -230,7 +232,7 @@ internal class FirToIrTransformer {
                 ?: irProperty.backingField?.type
                 ?: error(
                     "IrProperty '${firProperty.name}' has no type. " +
-                            "This should not happen for valid properties.",
+                        "This should not happen for valid properties.",
                 )
 
         return IrPropertyMetadata(
@@ -292,7 +294,7 @@ internal class FirToIrTransformer {
                 .firstOrNull { it.name.asString() == firFunction.name }
                 ?: error(
                     "IrSimpleFunction '${firFunction.name}' not found in ${irClass.name}. " +
-                            "FIR validation should have ensured this exists.",
+                        "FIR validation should have ensured this exists.",
                 )
 
         // Resolve parameters (match by position - FIR guarantees same order)
@@ -301,7 +303,7 @@ internal class FirToIrTransformer {
         if (irRegularParams.size != firFunction.parameters.size) {
             error(
                 "Parameter count mismatch for '${firFunction.name}'. " +
-                        "FIR: ${firFunction.parameters.size}, IR: ${irRegularParams.size}",
+                    "FIR: ${firFunction.parameters.size}, IR: ${irRegularParams.size}",
             )
         }
 
