@@ -1,38 +1,38 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" ?>
 <SmellBaseline>
-  <!--
-    ARCHITECTURAL BASELINE FOR FAKT COMPILER
-
-    This baseline documents 13 legitimate complexity issues that have been reviewed
-    and accepted as necessary architectural decisions.
-
-    Total suppressed: 13 issues
-    Reduction achieved: 51.9% (from 27 initial issues to 13 accepted)
-
-    Categories:
-    - Error Boundaries (2): Top-level plugin exception handlers
-    - Type System (5): Kotlin type resolution complexity
-    - Platform Mapping (2): Multiplatform source set handling
-    - Code Generation (1): Default value generation for all Kotlin types
-    - At Threshold (2): Classes with exactly 11 functions (threshold)
-    - Pattern Detection (1): Generic pattern transformation analysis
-
-    Maintenance: Review this baseline when making architectural changes.
-  -->
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>CyclomaticComplexMethod:SourceSetMapper.kt$SourceSetMapper$private fun mapToTestSourceSet(moduleName: String): String</ID>
-    <ID>CyclomaticComplexMethod:TypeResolver.kt$TypeResolver$private fun handleFunctionType( irType: IrType, preserveTypeParameters: Boolean, ): String</ID>
-    <ID>CyclomaticComplexMethod:TypeResolver.kt$TypeResolver$private fun handleGenericType( irType: IrSimpleType, preserveTypeParameters: Boolean, ): String</ID>
-    <ID>NestedBlockDepth:GenericPatternAnalyzer.kt$GenericPatternAnalyzer$private fun detectTransformationPatterns(function: IrSimpleFunction): List&lt;TransformationPattern></ID>
-    <ID>NestedBlockDepth:ImportResolver.kt$ImportResolver$private fun collectImportsFromType( irType: IrType, currentPackage: String, imports: MutableSet&lt;String>, )</ID>
-    <ID>NestedBlockDepth:TypeResolver.kt$TypeResolver$private fun handleFunctionType( irType: IrType, preserveTypeParameters: Boolean, ): String</ID>
+    <ID>CyclomaticComplexMethod:CollectionDefaultStrategy.kt$CollectionDefaultStrategy$override fun defaultValue(type: CodeType): CodeExpression</ID>
+    <ID>CyclomaticComplexMethod:FakeGenerator.kt$fun generateCompleteFake( packageName: String, interfaceName: String, methods: List&lt;MethodSpec&gt; = emptyList(), properties: List&lt;PropertySpec&gt; = emptyList(), imports: List&lt;String&gt; = emptyList(), header: String? = null, typeParameters: List&lt;String&gt; = emptyList(), isClass: Boolean = false, ): CodeFile</ID>
+    <ID>CyclomaticComplexMethod:FakeGenerator.kt$private fun generateMethodBehaviorProperty( classBuilder: ClassBuilder, method: MethodSpec, resolver: DefaultValueResolver, isClass: Boolean = false, className: String = "", )</ID>
+    <ID>CyclomaticComplexMethod:FirExpressionRenderer.kt$private fun renderLiteral(literal: FirLiteralExpression): String?</ID>
+    <ID>CyclomaticComplexMethod:FunctionTypeHandler.kt$FunctionTypeHandler$fun renderFunctionType( irType: IrType, preserveTypeParameters: Boolean, typeRenderer: (IrType, Boolean) -&gt; String, ): String</ID>
+    <ID>CyclomaticComplexMethod:GenericTypeHandler.kt$GenericTypeHandler$fun renderGenericType( irType: IrSimpleType, preserveTypeParameters: Boolean, typeRenderer: (IrType, Boolean) -&gt; String, ): String</ID>
+    <ID>CyclomaticComplexMethod:MethodExtensions.kt$fun ClassBuilder.overrideMethod( name: String, params: List&lt;Triple&lt;String, String, Boolean&gt;&gt;, returnType: String, isSuspend: Boolean = false, typeParameters: List&lt;String&gt; = emptyList(), useSuperDelegation: Boolean = false, extensionReceiverType: String? = null, isOperator: Boolean = false, )</ID>
+    <ID>CyclomaticComplexMethod:Rendering.kt$public fun CodeProperty.renderTo(builder: CodeBuilder)</ID>
+    <ID>LongMethod:FakeClassChecker.kt$FakeClassChecker$@OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class) private fun extractMethods(declaration: FirClass): Pair&lt;List&lt;FirFunctionInfo&gt;, List&lt;FirFunctionInfo&gt;&gt;</ID>
+    <ID>LongMethod:FakeClassChecker.kt$FakeClassChecker$@Suppress("ReturnCount") // Validation logic: early returns are idiomatic guard clauses override fun check(declaration: FirClass)</ID>
+    <ID>LongMethod:FakeGenerator.kt$fun generateCompleteFake( packageName: String, interfaceName: String, methods: List&lt;MethodSpec&gt; = emptyList(), properties: List&lt;PropertySpec&gt; = emptyList(), imports: List&lt;String&gt; = emptyList(), header: String? = null, typeParameters: List&lt;String&gt; = emptyList(), isClass: Boolean = false, ): CodeFile</ID>
+    <ID>LongMethod:FakeGenerator.kt$private fun generateMethodBehaviorProperty( classBuilder: ClassBuilder, method: MethodSpec, resolver: DefaultValueResolver, isClass: Boolean = false, className: String = "", )</ID>
+    <ID>LongMethod:MethodExtensions.kt$fun ClassBuilder.overrideMethod( name: String, params: List&lt;Triple&lt;String, String, Boolean&gt;&gt;, returnType: String, isSuspend: Boolean = false, typeParameters: List&lt;String&gt; = emptyList(), useSuperDelegation: Boolean = false, extensionReceiverType: String? = null, isOperator: Boolean = false, )</ID>
+    <ID>LongMethod:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension$private fun generateFromFirMetadata(moduleFragment: IrModuleFragment)</ID>
+    <ID>LongMethod:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension$private fun processClassesFromMetadata( classMetadata: List&lt;IrClassGenerationMetadata&gt;, firMetricsMap: Map&lt;String, FirMetrics&gt;, ): List&lt;UnifiedFakeMetrics&gt;</ID>
+    <ID>LongMethod:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension$private fun processInterfacesFromMetadata( interfaceMetadata: List&lt;IrGenerationMetadata&gt;, firMetricsMap: Map&lt;String, FirMetrics&gt;, ): List&lt;UnifiedFakeMetrics&gt;</ID>
+    <ID>LongParameterList:FakeGenerator.kt$( packageName: String, interfaceName: String, methods: List&lt;MethodSpec&gt; = emptyList(), properties: List&lt;PropertySpec&gt; = emptyList(), imports: List&lt;String&gt; = emptyList(), header: String? = null, typeParameters: List&lt;String&gt; = emptyList(), isClass: Boolean = false, )</ID>
+    <ID>LongParameterList:IrGenerationMetadata.kt$IrClassGenerationMetadata$( val className: String, val packageName: String, val typeParameters: List&lt;String&gt;, val abstractProperties: List&lt;IrPropertyMetadata&gt;, val openProperties: List&lt;IrPropertyMetadata&gt;, val abstractMethods: List&lt;IrFunctionMetadata&gt;, val openMethods: List&lt;IrFunctionMetadata&gt;, val sourceClass: IrClass, private val patternAnalyzer: GenericPatternAnalyzer, )</ID>
+    <ID>LongParameterList:IrGenerationMetadata.kt$IrGenerationMetadata$( val interfaceName: String, val packageName: String, val typeParameters: List&lt;String&gt;, val properties: List&lt;IrPropertyMetadata&gt;, val functions: List&lt;IrFunctionMetadata&gt;, val sourceInterface: IrClass, private val patternAnalyzer: GenericPatternAnalyzer, )</ID>
+    <ID>LongParameterList:MethodExtensions.kt$( name: String, params: List&lt;Triple&lt;String, String, Boolean&gt;&gt;, returnType: String, isSuspend: Boolean = false, typeParameters: List&lt;String&gt; = emptyList(), useSuperDelegation: Boolean = false, extensionReceiverType: String? = null, isOperator: Boolean = false, )</ID>
+    <ID>LongParameterList:MethodExtensions.kt$( name: String, varargName: String, varargType: String, returnType: String, useSuperDelegation: Boolean = false, extensionReceiverType: String? = null, isOperator: Boolean = false, )</ID>
+    <ID>NestedBlockDepth:CompilerOptimizations.kt$CompilerOptimizations.Companion$operator fun invoke( fakeAnnotations: List&lt;String&gt; = listOf("com.rsicarelli.fakt.Fake"), outputDir: String? = null, logger: FaktLogger, ): CompilerOptimizations</ID>
+    <ID>NestedBlockDepth:FakeInterfaceChecker.kt$FakeInterfaceChecker$@OptIn(SymbolInternals::class) private fun collectInheritedMembers( firClass: FirClass, session: FirSession, visitedInterfaces: MutableSet&lt;ClassId&gt;, propertiesAccumulator: MutableList&lt;FirPropertyInfo&gt;, functionsAccumulator: MutableList&lt;FirFunctionInfo&gt;, )</ID>
+    <ID>NestedBlockDepth:FakeInterfaceChecker.kt$FakeInterfaceChecker$@OptIn(SymbolInternals::class) private fun extractInheritedMembers( declaration: FirClass, session: FirSession, ): Pair&lt;List&lt;FirPropertyInfo&gt;, List&lt;FirFunctionInfo&gt;&gt;</ID>
+    <ID>NestedBlockDepth:FunctionTypeHandler.kt$FunctionTypeHandler$fun renderFunctionType( irType: IrType, preserveTypeParameters: Boolean, typeRenderer: (IrType, Boolean) -&gt; String, ): String</ID>
+    <ID>NestedBlockDepth:ImportResolver.kt$ImportResolver$private fun collectImportsFromType( irType: IrType, currentPackage: String, imports: MutableSet&lt;String&gt;, )</ID>
     <ID>TooGenericExceptionCaught:CodeGenerator.kt$CodeGenerator$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CompilerOptimizations.kt$CompilerOptimizations.Companion.&lt;no name provided&gt;$e: Exception</ID>
     <ID>TooGenericExceptionCaught:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension$e: Exception</ID>
-    <ID>TooManyFunctions:GenericPatternAnalyzer.kt$GenericPatternAnalyzer</ID>
-    <ID>TooManyFunctions:ImplementationGenerator.kt$ImplementationGenerator</ID>
-    <ID>TooManyFunctions:IncrementalCompiler.kt$IncrementalCompiler : CompilerOptimizations</ID>
-    <ID>TooManyFunctions:SourceSetMapper.kt$SourceSetMapper</ID>
-    <ID>TooManyFunctions:TypeResolver.kt$TypeResolver</ID>
+    <ID>TooManyFunctions:ConfigurationDslGenerator.kt$ConfigurationDslGenerator</ID>
+    <ID>TooManyFunctions:FakeGenerator.kt$com.rsicarelli.fakt.codegen.extensions.FakeGenerator.kt</ID>
+    <ID>TooManyFunctions:Rendering.kt$com.rsicarelli.fakt.codegen.renderer.Rendering.kt</ID>
   </CurrentIssues>
 </SmellBaseline>
