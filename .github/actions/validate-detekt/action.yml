@@ -6,4 +6,4 @@ runs:
   steps:
     - name: Run Detekt
       shell: bash
-      run: ./gradlew detekt --no-daemon
+      run: ./gradlew detekt

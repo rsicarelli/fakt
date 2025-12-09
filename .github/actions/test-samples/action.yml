@@ -4,29 +4,31 @@ description: Test all sample projects to validate end-to-end functionality
 runs:
   using: composite
   steps:
-    # Note: Samples use includeBuild("../..") which automatically builds
-    # the compiler module (including shadowJar) before running tests.
-    # The shadowJar is configured as the main artifact in compiler/build.gradle.kts,
-    # so composite build automatically uses it.
-    #
+    # Publish Fakt plugin to Maven Local so samples can use it
+    # Samples reference the plugin by ID and version (com.rsicarelli.fakt:1.0.0-alpha01)
+    # which requires the plugin to be published before sample tests can run
+    - name: Publish Fakt plugin to Maven Local
+      shell: bash
+      run: ./gradlew publishToMavenLocal
+
     # Using 'allTests' to ensure ALL KMP targets are tested (jvmTest, jsTest, etc.)
     # Then 'check' for additional validations (apiCheck, compilation validation).
 
     - name: Test kmp-single-module sample (all targets)
       shell: bash
-      run: ./gradlew -p samples/kmp-single-module allTests --continue --no-daemon
+      run: ./gradlew -p samples/kmp-single-module allTests --continue
 
     - name: Check kmp-single-module sample (validations)
       shell: bash
-      run: ./gradlew -p samples/kmp-single-module check --no-daemon
+      run: ./gradlew -p samples/kmp-single-module check
 
     - name: Test kmp-multi-module sample (all targets)
       shell: bash
-      run: ./gradlew -p samples/kmp-multi-module allTests --continue --no-daemon
+      run: ./gradlew -p samples/kmp-multi-module allTests --continue
 
     - name: Check kmp-multi-module sample (validations)
       shell: bash
-      run: ./gradlew -p samples/kmp-multi-module check --no-daemon
+      run: ./gradlew -p samples/kmp-multi-module check
 
     - name: Publish sample test results
       if: success() || failure()

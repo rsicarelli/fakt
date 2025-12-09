@@ -6,4 +6,4 @@ runs:
   steps:
     - name: Run Spotless Check
       shell: bash
-      run: ./gradlew spotlessCheck --no-daemon
+      run: ./gradlew spotlessCheck
