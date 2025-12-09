@@ -274,8 +274,9 @@ class DefaultValueResolverTest {
         // THEN
         assertTrue(result is CodeExpression.Raw)
         val code = result.code
-        assertTrue(code.contains("TODO"))
+        assertTrue(code.contains("error("))
         assertTrue(code.contains("CustomUnknownType"))
+        assertTrue(code.contains("requires explicit configuration"))
     }
 
     @Test
@@ -289,6 +290,7 @@ class DefaultValueResolverTest {
         // THEN
         assertTrue(result is CodeExpression.Raw)
         val code = result.code
-        assertTrue(code.contains("TODO"))
+        assertTrue(code.contains("error("))
+        assertTrue(code.contains("requires explicit configuration"))
     }
 }

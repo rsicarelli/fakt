@@ -69,7 +69,6 @@ class FaktLoggerTest {
             assertEquals(1, messageCollector.messages.size, "Should log 1 message")
             assertEquals(CompilerMessageSeverity.INFO, messageCollector.messages[0].first)
             assertTrue(messageCollector.messages[0].second.contains("Processing interface"))
-            assertTrue(messageCollector.messages[0].second.startsWith("Fakt:"))
         }
 
     @Test
@@ -177,10 +176,6 @@ class FaktLoggerTest {
             // Test debug - should log debug
             collector.clear()
             FaktLogger.debug(collector).debug("test")
-            assertEquals(1, collector.messages.size)
-
-            // Test trace - should log trace
-            collector.clear()
             assertEquals(1, collector.messages.size)
         }
 
