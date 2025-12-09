@@ -66,6 +66,7 @@ internal class FakeInterfaceChecker(
     }
 
     context(context: CheckerContext, reporter: DiagnosticReporter)
+    @Suppress("ReturnCount") // Validation logic: early returns are idiomatic guard clauses
     override fun check(declaration: FirClass) {
         val session = context.session
         val classId = declaration.classId
@@ -145,7 +146,7 @@ internal class FakeInterfaceChecker(
         val typeParameters = extractTypeParameters(declaration)
         val properties = extractProperties(declaration)
         val functions = extractFunctions(declaration)
-        val sourceLocation = extractSourceLocation(declaration)
+        val sourceLocation = extractSourceLocation()
         val (inheritedProperties, inheritedFunctions) =
             extractInheritedMembers(
                 declaration = declaration,
@@ -351,14 +352,15 @@ internal class FakeInterfaceChecker(
      * - Accessing underlying PsiElement or LighterASTNode safely
      * - Converting offsets to line/column using KtSourceFileLinesMapping
      *
+     * @suppress ForbiddenComment
      * TODO: Implement full source location extraction using proper KtSourceElement API
      * Current impact: Error messages will not include exact source locations (non-critical)
      *
-     * @param declaration FIR class declaration with source information
      * @return Source location metadata (UNKNOWN for now)
      */
-    private fun extractSourceLocation(declaration: FirClass): FirSourceLocation {
-        // TODO: Implement proper source location extraction
+    private fun extractSourceLocation(): FirSourceLocation {
+        @Suppress("ForbiddenComment")
+        // TODO: Implement proper source location extraction from FirClass
         // This requires investigating KtSourceElement type hierarchy and safe access patterns
         // For now, returning UNKNOWN allows the plugin to proceed without blocking on this non-critical feature
         return FirSourceLocation.UNKNOWN

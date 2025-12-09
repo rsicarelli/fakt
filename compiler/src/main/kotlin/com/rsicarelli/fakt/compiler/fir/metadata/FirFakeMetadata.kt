@@ -82,7 +82,10 @@ data class ValidatedFakeClass(
  * Examples:
  * - Simple: `T` → FirTypeParameterInfo("T", emptyList())
  * - Bounded: `T : Comparable<T>` → FirTypeParameterInfo("T", listOf("Comparable<T>"))
- * - Multiple bounds: `T : Comparable<T>, Serializable` → FirTypeParameterInfo("T", listOf("Comparable<T>", "Serializable"))
+ * - Multiple bounds: `T : Comparable<T>, Serializable` →
+ *     FirTypeParameterInfo("T", listOf("Comparable<T>", "Serializable"))
+ *
+ * Note: The multiple bounds example shows how constraints are represented as a list of strings.
  *
  * @property name Type parameter name (e.g., "T", "K", "V")
  * @property bounds Upper bounds/constraints (empty for unbounded, e.g., `T : Any` is implicit)

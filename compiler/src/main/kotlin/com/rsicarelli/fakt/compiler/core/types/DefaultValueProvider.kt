@@ -106,7 +106,10 @@ internal class DefaultValueProvider(
     private fun handleClassDefault(irType: IrType): String {
         val irClass =
             irType.getClass()
-                ?: return "error(\"Unknown type requires explicit configuration. Configure behavior via fake factory DSL.\") as Nothing"
+                ?: return "error(" +
+                    "\"Unknown type requires explicit configuration. " +
+                    "Configure behavior via fake factory DSL.\"" +
+                    ") as Nothing"
         val className = irClass.name.asString()
         val packageName = irClass.kotlinFqName.parent().asString()
 
@@ -143,7 +146,11 @@ internal class DefaultValueProvider(
             className == "Triple" -> "Triple(null, null, null)"
             className.startsWith(
                 "Function",
-            ) -> "{ error(\"Function type requires explicit configuration. Configure behavior via fake factory DSL.\") }"
+            ) ->
+                "{ error(" +
+                    "\"Function type requires explicit configuration. " +
+                    "Configure behavior via fake factory DSL.\"" +
+                    ") }"
             else -> null
         }
     }

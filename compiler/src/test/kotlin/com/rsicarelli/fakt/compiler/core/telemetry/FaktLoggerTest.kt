@@ -49,7 +49,10 @@ class FaktLoggerTest {
             logger.info("Test info message")
 
             // THEN: Should not log anything
-            assertTrue(messageCollector.messages.isEmpty(), "QUIET level should not log INFO messages")
+            assertTrue(
+                messageCollector.messages.isEmpty(),
+                "QUIET level should not log INFO messages",
+            )
         }
 
     @Test
@@ -80,7 +83,10 @@ class FaktLoggerTest {
             logger.debug("Debug details")
 
             // THEN: Should not log (INFO < DEBUG)
-            assertTrue(messageCollector.messages.isEmpty(), "INFO level should not log DEBUG messages")
+            assertTrue(
+                messageCollector.messages.isEmpty(),
+                "INFO level should not log DEBUG messages",
+            )
         }
 
     @Test
@@ -95,7 +101,11 @@ class FaktLoggerTest {
             logger.debug("Debug message")
 
             // THEN: Should log both messages
-            assertEquals(2, messageCollector.messages.size, "DEBUG level should log both INFO and DEBUG")
+            assertEquals(
+                2,
+                messageCollector.messages.size,
+                "DEBUG level should log both INFO and DEBUG",
+            )
             assertTrue(messageCollector.messages[0].second.contains("Info message"))
             assertTrue(messageCollector.messages[1].second.contains("Debug message"))
         }
@@ -151,12 +161,6 @@ class FaktLoggerTest {
     @Test
     fun `GIVEN factory methods WHEN creating loggers THEN should create with correct levels`() =
         runTest {
-            // GIVEN: Using factory methods
-            val quietLogger = FaktLogger.quiet()
-            val infoLogger = FaktLogger.info(null)
-            val debugLogger = FaktLogger.debug(null)
-            val traceLogger = FaktLogger.trace(null)
-
             // WHEN: Creating loggers via factories
             // THEN: Loggers should have correct levels (verified by trying to log)
             val collector = TestMessageCollector()
@@ -177,7 +181,6 @@ class FaktLoggerTest {
 
             // Test trace - should log trace
             collector.clear()
-            FaktLogger.trace(collector).trace("test")
             assertEquals(1, collector.messages.size)
         }
 

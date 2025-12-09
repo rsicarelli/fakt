@@ -155,8 +155,10 @@ public fun CodeFunction.renderTo(builder: CodeBuilder) {
 
     when (body) {
         is CodeBlock.Expression -> {
+            val expressionBody = (body as CodeBlock.Expression).expr.render()
             builder.appendLine(
-                "${modifiersStr}fun $typeParamsStr$receiverStr$name($paramsStr)$returnTypeStr = ${(body as CodeBlock.Expression).expr.render()}",
+                "${modifiersStr}fun $typeParamsStr$receiverStr$name($paramsStr)$returnTypeStr = " +
+                    expressionBody,
             )
         }
 

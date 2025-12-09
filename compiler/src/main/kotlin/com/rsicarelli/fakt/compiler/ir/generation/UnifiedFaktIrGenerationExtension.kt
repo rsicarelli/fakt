@@ -165,7 +165,9 @@ class UnifiedFaktIrGenerationExtension(
                 validatedInterfaces.mapNotNull { firInterface ->
                     val irClass = irClassMap[firInterface.classId]
                     if (irClass == null) {
-                        logger.warn("Could not find IrClass for validated interface: ${firInterface.classId.asFqNameString()}")
+                        logger.warn(
+                            "Could not find IrClass for validated interface: ${firInterface.classId.asFqNameString()}",
+                        )
                         null
                     } else {
                         transformer.transform(firInterface, irClass)
@@ -209,14 +211,14 @@ class UnifiedFaktIrGenerationExtension(
         // Collect unified metrics (FIR + IR) for batch logging
         val interfaceMetrics =
             if (interfaceMetadata.isNotEmpty()) {
-                processInterfacesFromMetadata(interfaceMetadata, moduleFragment, firMetricsMap)
+                processInterfacesFromMetadata(interfaceMetadata, firMetricsMap)
             } else {
                 emptyList()
             }
 
         val classMetrics =
             if (classMetadata.isNotEmpty()) {
-                processClassesFromMetadata(classMetadata, moduleFragment, firMetricsMap)
+                processClassesFromMetadata(classMetadata, firMetricsMap)
             } else {
                 emptyList()
             }
@@ -358,13 +360,11 @@ class UnifiedFaktIrGenerationExtension(
      * Cache hits appear in the trace with fast IR times (~5-50µs vs ~500µs-5ms for fresh generation).
      *
      * @param interfaceMetadata List of transformed FIR metadata (IrTypes + IR nodes)
-     * @param moduleFragment Module for file creation
      * @param firMetricsMap FIR metrics (validation time, type params, members) from FIR phase
      * @return List of unified metrics combining FIR and IR for each fake
      */
     private fun processInterfacesFromMetadata(
         interfaceMetadata: List<IrGenerationMetadata>,
-        moduleFragment: IrModuleFragment,
         firMetricsMap: Map<String, FirMetrics>,
     ): List<UnifiedFakeMetrics> {
         val metrics = mutableListOf<UnifiedFakeMetrics>()
@@ -383,7 +383,7 @@ class UnifiedFaktIrGenerationExtension(
                     fullyQualifiedName = "$packageName.$interfaceName",
                     packageName = packageName,
                     fileName = "$interfaceName.kt",
-                    annotations = listOf("com.rsicarelli.fakt.Fake"), // TODO: Support custom annotations
+                    annotations = listOf("com.rsicarelli.fakt.Fake"),
                     signature = signature,
                 )
 
@@ -446,7 +446,6 @@ class UnifiedFaktIrGenerationExtension(
                             codeGenerator.generateWorkingFakeImplementation(
                                 sourceInterface = metadata.sourceInterface,
                                 analysis = interfaceAnalysis,
-                                moduleFragment = moduleFragment,
                             )
                         }
 
@@ -487,13 +486,11 @@ class UnifiedFaktIrGenerationExtension(
      * Cache hits appear in the trace with fast IR times (~5-50µs vs ~500µs-5ms for fresh generation).
      *
      * @param classMetadata List of transformed FIR class metadata (IrTypes + IR nodes)
-     * @param moduleFragment Module for file creation
      * @param firMetricsMap FIR metrics (validation time, type params, members) from FIR phase
      * @return List of unified metrics combining FIR and IR for each fake class
      */
     private fun processClassesFromMetadata(
         classMetadata: List<IrClassGenerationMetadata>,
-        moduleFragment: IrModuleFragment,
         firMetricsMap: Map<String, FirMetrics>,
     ): List<UnifiedFakeMetrics> {
         val metrics = mutableListOf<UnifiedFakeMetrics>()
@@ -512,7 +509,7 @@ class UnifiedFaktIrGenerationExtension(
                     fullyQualifiedName = "$packageName.$className",
                     packageName = packageName,
                     fileName = "$className.kt",
-                    annotations = listOf("com.rsicarelli.fakt.Fake"), // TODO: Support custom annotations
+                    annotations = listOf("com.rsicarelli.fakt.Fake"),
                     signature = signature,
                 )
 
@@ -567,7 +564,6 @@ class UnifiedFaktIrGenerationExtension(
                             codeGenerator.generateWorkingClassFake(
                                 sourceClass = metadata.sourceClass,
                                 analysis = classAnalysis,
-                                moduleFragment = moduleFragment,
                             )
                         }
 

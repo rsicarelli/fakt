@@ -123,7 +123,9 @@ interface CompilerOptimizations {
                                 }
                             }
                         } catch (e: Exception) {
-                            logger.warn("Cache unavailable: Failed to load signatures from ${cacheFile.name}: ${e.message}")
+                            logger.warn(
+                                "Cache unavailable: Failed to load signatures from ${cacheFile.name}: ${e.message}",
+                            )
                             logger.debug("Full cache load error: ${e.stackTraceToString()}")
                         }
                     }

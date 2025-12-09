@@ -25,7 +25,10 @@ class SourceSetResolver(
      * @param sourceSetName The name of the source set to resolve
      * @return SourceSetInfo if found, null otherwise
      */
-    fun resolveSourceSet(sourceSetName: String): SourceSetInfo? = context.allSourceSets.firstOrNull { it.name == sourceSetName }
+    fun resolveSourceSet(sourceSetName: String): SourceSetInfo? =
+        context.allSourceSets.firstOrNull {
+            it.name == sourceSetName
+        }
 
     /**
      * Gets the default source set for this compilation.
