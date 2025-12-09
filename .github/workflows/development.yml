@@ -11,6 +11,11 @@ concurrency:
 env:
   IS_CI: yes
 
+permissions:
+  checks: write        # Required for publishing test results
+  pull-requests: write # Required for PR comments (if enabled later)
+  contents: read       # Required for checkout
+
 jobs:
   validate-ktlint:
     name: Validate Ktlint
