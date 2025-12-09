@@ -7,8 +7,11 @@ runs:
     # Publish Fakt plugin to Maven Local so samples can use it
     # Samples reference the plugin by ID and version (com.rsicarelli.fakt:1.0.0-alpha01)
     # which requires the plugin to be published before sample tests can run
+    # Skip signing since we're only publishing locally for testing (no GPG credentials needed)
     - name: Publish Fakt plugin to Maven Local
       shell: bash
+      env:
+        ORG_GRADLE_PROJECT_SKIP_SIGNING: true
       run: ./gradlew publishToMavenLocal
 
     # Using 'allTests' to ensure ALL KMP targets are tested (jvmTest, jsTest, etc.)

@@ -57,6 +57,7 @@ fun Project.applyPublishingConvention() {
 private fun Project.configureMavenCentralPublishing() {
     val isReleaseMode = findProperty("RELEASE_MODE")?.toString()?.toBoolean() ?: false
     val isSnapshot = project.version.toString().endsWith("-SNAPSHOT")
+    val skipSigning = findProperty("SKIP_SIGNING")?.toString()?.toBoolean() ?: false
 
     // Configure using the mavenPublishing DSL extension
     extensions
@@ -64,9 +65,10 @@ private fun Project.configureMavenCentralPublishing() {
         ?.apply {
             publishToMavenCentral(automaticRelease = isReleaseMode)
 
-            // Only sign non-SNAPSHOT versions
+            // Only sign non-SNAPSHOT versions AND when signing is not explicitly skipped
+            // Skip signing for local development (publishToMavenLocal) to avoid requiring GPG credentials
             // Snapshots don't require GPG signing according to Maven Central docs
-            if (!isSnapshot) {
+            if (!isSnapshot && !skipSigning) {
                 signAllPublications()
             }
 
