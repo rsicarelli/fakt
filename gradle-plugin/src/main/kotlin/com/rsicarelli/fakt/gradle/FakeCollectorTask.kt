@@ -116,8 +116,8 @@ public abstract class FakeCollectorTask : DefaultTask() {
             val srcProjectName = sourceProjectPath.orNull?.substringAfterLast(":") ?: "unknown"
             faktLogger.warn(
                 "No fakes found in source module '$srcProjectName'. " +
-                        "Verify that source module has @Fake annotated interfaces, " +
-                        "or remove this collector module if not needed.",
+                    "Verify that source module has @Fake annotated interfaces, " +
+                    "or remove this collector module if not needed.",
             )
             return
         }
@@ -165,7 +165,7 @@ public abstract class FakeCollectorTask : DefaultTask() {
             val sourceSetDuration = System.nanoTime() - sourceSetStartTime
             faktLogger.debug(
                 "Collected ${result.collectedCount} fake(s) from ${sourceSetDir.name} " +
-                        "(${TimeFormatter.format(sourceSetDuration)})",
+                    "(${TimeFormatter.format(sourceSetDuration)})",
             )
         }
 
@@ -177,7 +177,7 @@ public abstract class FakeCollectorTask : DefaultTask() {
         faktLogger.info(
             "✅ $totalCollected fake(s) collected from $srcProjectName | ${
                 TimeFormatter.format(
-                    totalDuration
+                    totalDuration,
                 )
             }",
         )
@@ -277,10 +277,9 @@ public abstract class FakeCollectorTask : DefaultTask() {
                                 // - "wasmJs" matches "wasmJsMain"
                                 sourceSet.startsWith(
                                     segment,
-                                    ignoreCase = true
+                                    ignoreCase = true,
                                 ) && sourceSet.endsWith("Main")
-                            }
-                            .map { sourceSet -> sourceSet to segment } // Keep track of which segment matched
+                            }.map { sourceSet -> sourceSet to segment } // Keep track of which segment matched
                     }.distinct()
 
             // If no matches, fallback to commonMain
@@ -425,7 +424,7 @@ public abstract class FakeCollectorTask : DefaultTask() {
                     it.dependsOn(
                         srcProject.tasks.matching { task ->
                             task.name.contains("compile", ignoreCase = true) &&
-                                    !task.name.contains("test", ignoreCase = true)
+                                !task.name.contains("test", ignoreCase = true)
                         },
                     )
                 }
@@ -447,18 +446,21 @@ public abstract class FakeCollectorTask : DefaultTask() {
                     // Wire task dependencies: ensure compilation tasks depend on collectFakes
                     // This guarantees fakes are collected before any compilation that uses them
                     // Uses type-based matching for robustness (only Kotlin tasks, not Java/Groovy)
-                    project.tasks.matching { compileTask ->
-                        // Type-based: only Kotlin compilation tasks
-                        (compileTask is KotlinCompile ||
-                                compileTask is Kotlin2JsCompile ||
-                                compileTask is KotlinNativeCompile) &&
+                    project.tasks
+                        .matching { compileTask ->
+                            // Type-based: only Kotlin compilation tasks
+                            (
+                                compileTask is KotlinCompile ||
+                                    compileTask is Kotlin2JsCompile ||
+                                    compileTask is KotlinNativeCompile
+                            ) &&
                                 // Name-based: match source set name
                                 compileTask.name.contains(sourceSet.name, ignoreCase = true) &&
                                 // Safety: avoid test compilations
                                 !compileTask.name.contains("test", ignoreCase = true)
-                    }.configureEach { compileTask ->
-                        compileTask.dependsOn(task)
-                    }
+                        }.configureEach { compileTask ->
+                            compileTask.dependsOn(task)
+                        }
                 }
         }
 
@@ -494,38 +496,40 @@ public abstract class FakeCollectorTask : DefaultTask() {
         ) {
             val srcProject = extension.collectFrom.orNull ?: return
 
-            val task = project.tasks.register("collectFakes", FakeCollectorTask::class.java) {
-                it.sourceProjectPath.set(srcProject.path)
+            val task =
+                project.tasks.register("collectFakes", FakeCollectorTask::class.java) {
+                    it.sourceProjectPath.set(srcProject.path)
 
-                // Point to root fakt directory - task will auto-discover subdirectories
-                it.sourceGeneratedDir.set(
-                    srcProject.layout.buildDirectory.dir("generated/fakt"),
-                )
+                    // Point to root fakt directory - task will auto-discover subdirectories
+                    it.sourceGeneratedDir.set(
+                        srcProject.layout.buildDirectory.dir("generated/fakt"),
+                    )
 
-                it.destinationDir.set(
-                    project.layout.buildDirectory.dir("generated/collected-fakes/kotlin"),
-                )
+                    it.destinationDir.set(
+                        project.layout.buildDirectory.dir("generated/collected-fakes/kotlin"),
+                    )
 
-                // Wire logLevel from extension for consistent telemetry
-                it.logLevel.set(extension.logLevel)
+                    // Wire logLevel from extension for consistent telemetry
+                    it.logLevel.set(extension.logLevel)
 
-                // Add dependency on source project's MAIN compilation tasks only
-                // Avoid test compilations to prevent circular dependencies
-                // (test compilations may depend on -fakes modules)
-                it.dependsOn(
-                    srcProject.tasks.matching { task ->
-                        task.name.contains("compile", ignoreCase = true) &&
+                    // Add dependency on source project's MAIN compilation tasks only
+                    // Avoid test compilations to prevent circular dependencies
+                    // (test compilations may depend on -fakes modules)
+                    it.dependsOn(
+                        srcProject.tasks.matching { task ->
+                            task.name.contains("compile", ignoreCase = true) &&
                                 !task.name.contains("test", ignoreCase = true)
-                    },
-                )
-            }
+                        },
+                    )
+                }
 
             // Register collected fakes directory as source and wire task dependencies
             val collectedDir = project.layout.buildDirectory.dir("generated/collected-fakes/kotlin")
 
             // === JVM Projects ===
             project.plugins.withId("org.jetbrains.kotlin.jvm") {
-                project.extensions.findByType(KotlinJvmProjectExtension::class.java)
+                project.extensions
+                    .findByType(KotlinJvmProjectExtension::class.java)
                     ?.apply {
                         sourceSets.getByName("main").kotlin.srcDir(collectedDir)
 

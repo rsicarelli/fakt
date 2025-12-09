@@ -12,7 +12,6 @@ import kotlin.test.assertTrue
  * Tests for code model immutability and structure.
  */
 class CodeModelTest {
-
     @Test
     fun `GIVEN CodeFile WHEN adding declaration THEN returns new instance with preserved immutability`() {
         // GIVEN
@@ -34,9 +33,11 @@ class CodeModelTest {
         val file = CodeFile("com.example")
 
         // WHEN
-        val updated = file.addImport("kotlin.collections.List")
-            .addImport("com.example.User")
-            .addImport("kotlin.collections.List") // Duplicate
+        val updated =
+            file
+                .addImport("kotlin.collections.List")
+                .addImport("com.example.User")
+                .addImport("kotlin.collections.List") // Duplicate
 
         // THEN
         assertEquals(2, updated.imports.size)
@@ -70,11 +71,12 @@ class CodeModelTest {
         assertEquals(1, generic.arguments.size)
 
         // Lambda type
-        val lambda = CodeType.Lambda(
-            parameters = listOf(CodeType.Simple("String")),
-            returnType = CodeType.Simple("Int"),
-            isSuspend = false
-        )
+        val lambda =
+            CodeType.Lambda(
+                parameters = listOf(CodeType.Simple("String")),
+                returnType = CodeType.Simple("Int"),
+                isSuspend = false,
+            )
         assertTrue(true)
         assertFalse(lambda.isSuspend)
     }
@@ -82,15 +84,17 @@ class CodeModelTest {
     @Test
     fun `GIVEN CodeFunction WHEN creating with parameters THEN structure is correct`() {
         // GIVEN
-        val function = CodeFunction(
-            name = "findById",
-            parameters = listOf(
-                CodeParameter("id", CodeType.Simple("String"))
-            ),
-            returnType = CodeType.Nullable(CodeType.Simple("User")),
-            body = CodeBlock.Statements(listOf("return null")),
-            modifiers = setOf(CodeModifier.OVERRIDE)
-        )
+        val function =
+            CodeFunction(
+                name = "findById",
+                parameters =
+                    listOf(
+                        CodeParameter("id", CodeType.Simple("String")),
+                    ),
+                returnType = CodeType.Nullable(CodeType.Simple("User")),
+                body = CodeBlock.Statements(listOf("return null")),
+                modifiers = setOf(CodeModifier.OVERRIDE),
+            )
 
         // THEN
         assertEquals("findById", function.name)
@@ -103,13 +107,14 @@ class CodeModelTest {
     @Test
     fun `GIVEN CodeProperty WHEN creating mutable property THEN structure is correct`() {
         // GIVEN
-        val property = CodeProperty(
-            name = "count",
-            type = CodeType.Simple("Int"),
-            modifiers = setOf(CodeModifier.PRIVATE),
-            initializer = CodeExpression.NumberLiteral("0"),
-            isMutable = true
-        )
+        val property =
+            CodeProperty(
+                name = "count",
+                type = CodeType.Simple("Int"),
+                modifiers = setOf(CodeModifier.PRIVATE),
+                initializer = CodeExpression.NumberLiteral("0"),
+                isMutable = true,
+            )
 
         // THEN
         assertEquals("count", property.name)

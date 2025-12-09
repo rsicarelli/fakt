@@ -20,6 +20,7 @@ object FaktPluginExtensionSamples {
      */
     fun basicConfiguration() {
         // In build.gradle.kts:
+
         /*
         plugins {
             kotlin("multiplatform") version "2.2.20"
@@ -29,7 +30,7 @@ object FaktPluginExtensionSamples {
         fakt {
             // All settings optional - defaults are production-ready
         }
-        */
+         */
     }
 
     /**
@@ -37,11 +38,12 @@ object FaktPluginExtensionSamples {
      */
     fun enabledConfiguration() {
         // In build.gradle.kts:
+
         /*
         fakt {
             enabled.set(true)  // Explicitly enable (default)
         }
-        */
+         */
     }
 
     /**
@@ -49,11 +51,12 @@ object FaktPluginExtensionSamples {
      */
     fun disabledConfiguration() {
         // In build.gradle.kts:
+
         /*
         fakt {
             enabled.set(false)  // Disable fake generation
         }
-        */
+         */
     }
 
     /**
@@ -61,6 +64,7 @@ object FaktPluginExtensionSamples {
      */
     fun logLevelConfiguration() {
         // In build.gradle.kts:
+
         /*
         import com.rsicarelli.fakt.compiler.api.LogLevel
 
@@ -70,7 +74,7 @@ object FaktPluginExtensionSamples {
             // logLevel.set(LogLevel.TRACE)   // Deep debugging - exhaustive details
             // logLevel.set(LogLevel.QUIET)   // CI/CD - minimal output
         }
-        */
+         */
     }
 
     /**
@@ -78,13 +82,14 @@ object FaktPluginExtensionSamples {
      */
     fun developmentConfiguration() {
         // In build.gradle.kts:
+
         /*
         import com.rsicarelli.fakt.compiler.api.LogLevel
 
         fakt {
             logLevel.set(LogLevel.DEBUG)  // Detailed output for development
         }
-        */
+         */
     }
 
     /**
@@ -92,13 +97,14 @@ object FaktPluginExtensionSamples {
      */
     fun cicdConfiguration() {
         // In build.gradle.kts:
+
         /*
         import com.rsicarelli.fakt.compiler.api.LogLevel
 
         fakt {
             logLevel.set(LogLevel.QUIET)  // Zero overhead for CI/CD
         }
-        */
+         */
     }
 
     /**
@@ -109,13 +115,14 @@ object FaktPluginExtensionSamples {
     @OptIn(ExperimentalFaktMultiModule::class)
     fun collectorModeConfiguration() {
         // In collector-module/build.gradle.kts:
+
         /*
         @file:OptIn(ExperimentalFaktMultiModule::class)
 
         fakt {
             collectFakesFrom(project(":source-module"))
         }
-        */
+         */
     }
 
     /**
@@ -127,18 +134,20 @@ object FaktPluginExtensionSamples {
     @OptIn(ExperimentalFaktMultiModule::class)
     fun collectorModeWithTypeSafeAccessor() {
         // First, enable in settings.gradle.kts:
+
         /*
         enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
-        */
+         */
 
         // Then in collector-module/build.gradle.kts:
+
         /*
         @file:OptIn(ExperimentalFaktMultiModule::class)
 
         fakt {
             collectFakesFrom(projects.core.analytics)  // ✅ Type-safe with IDE autocomplete!
         }
-        */
+         */
     }
 
     /**
@@ -152,6 +161,7 @@ object FaktPluginExtensionSamples {
     @OptIn(ExperimentalFaktMultiModule::class)
     fun multiModulePattern() {
         // Project structure:
+
         /*
         root/
         ├── foundation/
@@ -176,7 +186,7 @@ object FaktPluginExtensionSamples {
                 dependencies {
                     testImplementation(project(":foundation-fakes"))  // Use collected fakes
                 }
-        */
+         */
     }
 
     /**
@@ -184,6 +194,7 @@ object FaktPluginExtensionSamples {
      */
     fun conditionalConfiguration() {
         // In build.gradle.kts:
+
         /*
         val isCI = System.getenv("CI") == "true"
 
@@ -193,7 +204,7 @@ object FaktPluginExtensionSamples {
                 if (isCI) LogLevel.QUIET else LogLevel.INFO
             )
         }
-        */
+         */
     }
 
     /**
@@ -202,6 +213,7 @@ object FaktPluginExtensionSamples {
     @OptIn(ExperimentalFaktMultiModule::class)
     fun completeConfiguration() {
         // In build.gradle.kts:
+
         /*
         @file:OptIn(ExperimentalFaktMultiModule::class)
 
@@ -218,6 +230,6 @@ object FaktPluginExtensionSamples {
             // Type-safe accessor:
             // collectFakesFrom(projects.sourceModule)
         }
-        */
+         */
     }
 }

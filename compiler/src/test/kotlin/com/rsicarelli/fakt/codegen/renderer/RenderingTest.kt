@@ -21,7 +21,6 @@ import kotlin.test.assertTrue
  * Rendering converts our model to actual Kotlin source code.
  */
 class RenderingTest {
-
     @Test
     fun `GIVEN Simple CodeType WHEN rendering THEN returns name`() {
         // GIVEN
@@ -37,10 +36,11 @@ class RenderingTest {
     @Test
     fun `GIVEN Generic CodeType WHEN rendering THEN formats with arguments`() {
         // GIVEN
-        val type = CodeType.Generic(
-            "List",
-            listOf(CodeType.Simple("String"))
-        )
+        val type =
+            CodeType.Generic(
+                "List",
+                listOf(CodeType.Simple("String")),
+            )
 
         // WHEN
         val rendered = type.render()
@@ -64,11 +64,12 @@ class RenderingTest {
     @Test
     fun `GIVEN Lambda CodeType WHEN rendering THEN formats function type`() {
         // GIVEN
-        val type = CodeType.Lambda(
-            parameters = listOf(CodeType.Simple("String")),
-            returnType = CodeType.Simple("Int"),
-            isSuspend = false
-        )
+        val type =
+            CodeType.Lambda(
+                parameters = listOf(CodeType.Simple("String")),
+                returnType = CodeType.Simple("Int"),
+                isSuspend = false,
+            )
 
         // WHEN
         val rendered = type.render()
@@ -80,11 +81,12 @@ class RenderingTest {
     @Test
     fun `GIVEN suspend Lambda WHEN rendering THEN includes suspend modifier`() {
         // GIVEN
-        val type = CodeType.Lambda(
-            parameters = listOf(CodeType.Simple("User")),
-            returnType = CodeType.Simple("Unit"),
-            isSuspend = true
-        )
+        val type =
+            CodeType.Lambda(
+                parameters = listOf(CodeType.Simple("User")),
+                returnType = CodeType.Simple("Unit"),
+                isSuspend = true,
+            )
 
         // WHEN
         val rendered = type.render()
@@ -96,11 +98,12 @@ class RenderingTest {
     @Test
     fun `GIVEN simple property WHEN rendering THEN formats correctly`() {
         // GIVEN
-        val property = CodeProperty(
-            name = "value",
-            type = CodeType.Simple("String"),
-            initializer = CodeExpression.StringLiteral("")
-        )
+        val property =
+            CodeProperty(
+                name = "value",
+                type = CodeType.Simple("String"),
+                initializer = CodeExpression.StringLiteral(""),
+            )
         val builder = CodeBuilder()
 
         // WHEN
@@ -113,13 +116,14 @@ class RenderingTest {
     @Test
     fun `GIVEN private mutable property WHEN rendering THEN includes modifiers`() {
         // GIVEN
-        val property = CodeProperty(
-            name = "count",
-            type = CodeType.Simple("Int"),
-            modifiers = setOf(CodeModifier.PRIVATE),
-            initializer = CodeExpression.NumberLiteral("0"),
-            isMutable = true
-        )
+        val property =
+            CodeProperty(
+                name = "count",
+                type = CodeType.Simple("Int"),
+                modifiers = setOf(CodeModifier.PRIVATE),
+                initializer = CodeExpression.NumberLiteral("0"),
+                isMutable = true,
+            )
         val builder = CodeBuilder()
 
         // WHEN
@@ -132,38 +136,42 @@ class RenderingTest {
     @Test
     fun `GIVEN simple function WHEN rendering THEN formats correctly`() {
         // GIVEN
-        val function = CodeFunction(
-            name = "test",
-            returnType = CodeType.Simple("Unit"),
-            body = CodeBlock.Statements(listOf("println(\"hello\")"))
-        )
+        val function =
+            CodeFunction(
+                name = "test",
+                returnType = CodeType.Simple("Unit"),
+                body = CodeBlock.Statements(listOf("println(\"hello\")")),
+            )
         val builder = CodeBuilder()
 
         // WHEN
         function.renderTo(builder)
 
         // THEN
-        val expected = """
+        val expected =
+            """
             fun test(): Unit {
                 println("hello")
             }
 
-        """.trimIndent()
+            """.trimIndent()
         assertEquals(expected, builder.build())
     }
 
     @Test
     fun `GIVEN override function WHEN rendering THEN includes override modifier`() {
         // GIVEN
-        val function = CodeFunction(
-            name = "getUser",
-            parameters = listOf(
-                CodeParameter("id", CodeType.Simple("String"))
-            ),
-            returnType = CodeType.Nullable(CodeType.Simple("User")),
-            body = CodeBlock.Statements(listOf("return null")),
-            modifiers = setOf(CodeModifier.OVERRIDE)
-        )
+        val function =
+            CodeFunction(
+                name = "getUser",
+                parameters =
+                    listOf(
+                        CodeParameter("id", CodeType.Simple("String")),
+                    ),
+                returnType = CodeType.Nullable(CodeType.Simple("User")),
+                body = CodeBlock.Statements(listOf("return null")),
+                modifiers = setOf(CodeModifier.OVERRIDE),
+            )
         val builder = CodeBuilder()
 
         // WHEN
@@ -179,38 +187,42 @@ class RenderingTest {
     @Test
     fun `GIVEN simple class WHEN rendering THEN formats structure`() {
         // GIVEN
-        val clazz = CodeClass(
-            name = "Simple",
-            members = listOf(
-                CodeProperty(
-                    name = "value",
-                    type = CodeType.Simple("String"),
-                    initializer = CodeExpression.StringLiteral("")
-                )
+        val clazz =
+            CodeClass(
+                name = "Simple",
+                members =
+                    listOf(
+                        CodeProperty(
+                            name = "value",
+                            type = CodeType.Simple("String"),
+                            initializer = CodeExpression.StringLiteral(""),
+                        ),
+                    ),
             )
-        )
         val builder = CodeBuilder()
 
         // WHEN
         clazz.renderTo(builder)
 
         // THEN
-        val expected = """
+        val expected =
+            """
             class Simple {
                 val value: String = ""
             }
 
-        """.trimIndent()
+            """.trimIndent()
         assertEquals(expected, builder.build())
     }
 
     @Test
     fun `GIVEN class with interface WHEN rendering THEN includes implements`() {
         // GIVEN
-        val clazz = CodeClass(
-            name = "Impl",
-            superTypes = listOf(CodeType.Simple("Interface"))
-        )
+        val clazz =
+            CodeClass(
+                name = "Impl",
+                superTypes = listOf(CodeType.Simple("Interface")),
+            )
         val builder = CodeBuilder()
 
         // WHEN
@@ -223,16 +235,17 @@ class RenderingTest {
     @Test
     fun `GIVEN complete file WHEN rendering THEN produces valid Kotlin`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            header = "Generated by Fakt"
-            import("com.example.User")
+        val file =
+            codeFile("com.example") {
+                header = "Generated by Fakt"
+                import("com.example.User")
 
-            klass("Simple") {
-                property("value", "String") {
-                    initializer = "\"\""
+                klass("Simple") {
+                    property("value", "String") {
+                        initializer = "\"\""
+                    }
                 }
             }
-        }
         val builder = CodeBuilder()
 
         // WHEN

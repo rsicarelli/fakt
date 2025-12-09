@@ -288,10 +288,8 @@ private class FakeKotlinCompilation(
     override fun source(sourceSet: KotlinSourceSet) = error("Not used")
 
     @Suppress("OVERRIDE_DEPRECATION")
-    override fun kotlinOptions(configure: org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions.() -> Unit) =
-        error("Not used")
+    override fun kotlinOptions(configure: org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions.() -> Unit) = error("Not used")
 
     @Suppress("OVERRIDE_DEPRECATION")
-    override fun kotlinOptions(configure: Action<org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions>) =
-        error("Not used")
+    override fun kotlinOptions(configure: Action<org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions>) = error("Not used")
 }

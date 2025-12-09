@@ -18,7 +18,6 @@ import kotlin.test.assertTrue
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class NullableDefaultStrategyTest {
-
     private val strategy = NullableDefaultStrategy()
 
     @Test
@@ -88,9 +87,10 @@ class NullableDefaultStrategyTest {
     @Test
     fun `GIVEN nullable generic type WHEN checking support THEN returns true`() {
         // GIVEN
-        val type = CodeType.Nullable(
-            CodeType.Generic("List", listOf(CodeType.Simple("String")))
-        )
+        val type =
+            CodeType.Nullable(
+                CodeType.Generic("List", listOf(CodeType.Simple("String"))),
+            )
 
         // WHEN
         val result = strategy.supports(type)
@@ -102,9 +102,10 @@ class NullableDefaultStrategyTest {
     @Test
     fun `GIVEN nullable List type WHEN generating default THEN returns null`() {
         // GIVEN
-        val type = CodeType.Nullable(
-            CodeType.Generic("List", listOf(CodeType.Simple("String")))
-        )
+        val type =
+            CodeType.Nullable(
+                CodeType.Generic("List", listOf(CodeType.Simple("String"))),
+            )
 
         // WHEN
         val result = strategy.defaultValue(type)

@@ -32,7 +32,7 @@ import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
  * The plugin is only enabled when explicitly configured and supports K2 compilation.
  */
 @OptIn(ExperimentalCompilerApi::class)
-public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
+class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
     override val supportsK2: Boolean = true
 
     override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
@@ -53,26 +53,28 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
 
         // Initialize compiler optimizations for caching and incremental compilation
         val fakeAnnotations = FaktSharedContext.DEFAULT_FAKE_ANNOTATIONS
-        val optimizations = CompilerOptimizations(
-            fakeAnnotations = fakeAnnotations,
-            outputDir = options.outputDir,
-            logger = logger
-        ).also {
-            logPluginInitialization(
-                logger = logger,
-                options = options,
+        val optimizations =
+            CompilerOptimizations(
                 fakeAnnotations = fakeAnnotations,
-                optimizations = it
-            )
-        }
+                outputDir = options.outputDir,
+                logger = logger,
+            ).also {
+                logPluginInitialization(
+                    logger = logger,
+                    options = options,
+                    fakeAnnotations = fakeAnnotations,
+                    optimizations = it,
+                )
+            }
 
-        val sharedContext = FaktSharedContext(
-            fakeAnnotations = fakeAnnotations,
-            options = options,
-            metadataStorage = FirMetadataStorage(),
-            logger = logger,
-            optimizations = optimizations,
-        )
+        val sharedContext =
+            FaktSharedContext(
+                fakeAnnotations = fakeAnnotations,
+                options = options,
+                metadataStorage = FirMetadataStorage(),
+                logger = logger,
+                optimizations = optimizations,
+            )
 
         registerFirExtension(sharedContext)
         registerIrExtension(sharedContext)
@@ -85,9 +87,7 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
      *
      * @param sharedContext Shared context for FIR→IR communication
      */
-    private fun ExtensionStorage.registerFirExtension(
-        sharedContext: FaktSharedContext,
-    ) {
+    private fun ExtensionStorage.registerFirExtension(sharedContext: FaktSharedContext) {
         sharedContext.logger.debug("Registering FIR extension")
         FirExtensionRegistrarAdapter.registerExtension(FaktFirExtensionRegistrar(sharedContext))
     }
@@ -99,9 +99,7 @@ public class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
      *
      * @param sharedContext Shared context for FIR→IR communication
      */
-    private fun ExtensionStorage.registerIrExtension(
-        sharedContext: FaktSharedContext,
-    ) {
+    private fun ExtensionStorage.registerIrExtension(sharedContext: FaktSharedContext) {
         sharedContext.logger.debug("Registering IR extension with FIR metadata access")
         IrGenerationExtension.registerExtension(
             UnifiedFaktIrGenerationExtension(sharedContext),

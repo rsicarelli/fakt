@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.fir.checkers
 
-import com.rsicarelli.fakt.compiler.fir.metadata.*
-import com.rsicarelli.fakt.compiler.fir.rendering.*
-
 /**
  * FIR diagnostic errors for @Fake annotation validation for @Fake validation.
  *

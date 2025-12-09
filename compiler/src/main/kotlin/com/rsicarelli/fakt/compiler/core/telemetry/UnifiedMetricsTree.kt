@@ -85,27 +85,28 @@ data class UnifiedMetricsTree(
      * @param targetColumn Column for right-aligning time values (default: 80)
      * @return Multi-line tree-formatted string ready for logging
      */
-    fun toTreeString(targetColumn: Int = 80): String = buildString {
-        appendLine("FIR + IR trace")
-        appendLine(formatLine("├─ Total FIR time", TimeFormatter.format(totalFirTimeNanos), targetColumn))
-        appendLine(formatLine("├─ Total IR time", TimeFormatter.format(totalIrTimeNanos), targetColumn))
-        appendLine(formatLine("├─ Total time", TimeFormatter.format(totalTimeNanos), targetColumn))
-        appendLine("├─ Interfaces: ${interfaces.size}")
+    fun toTreeString(targetColumn: Int = 80): String =
+        buildString {
+            appendLine("FIR + IR trace")
+            appendLine(formatLine("├─ Total FIR time", TimeFormatter.format(totalFirTimeNanos), targetColumn))
+            appendLine(formatLine("├─ Total IR time", TimeFormatter.format(totalIrTimeNanos), targetColumn))
+            appendLine(formatLine("├─ Total time", TimeFormatter.format(totalTimeNanos), targetColumn))
+            appendLine("├─ Interfaces: ${interfaces.size}")
 
-        interfaces.forEachIndexed { index, metric ->
-            // If there are classes coming after, no interface should close the branch
-            val isLast = index == interfaces.size - 1 && classes.isEmpty()
-            appendMetricTree(metric, isLast, isTopLevel = false, targetColumn)
-        }
-
-        if (classes.isNotEmpty()) {
-            appendLine("└─ Classes: ${classes.size}")
-            classes.forEachIndexed { index, metric ->
-                val isLast = index == classes.size - 1
-                appendMetricTree(metric, isLast, isTopLevel = true, targetColumn)
+            interfaces.forEachIndexed { index, metric ->
+                // If there are classes coming after, no interface should close the branch
+                val isLast = index == interfaces.size - 1 && classes.isEmpty()
+                appendMetricTree(metric, isLast, isTopLevel = false, targetColumn)
             }
-        }
-    }.trimEnd() // Remove trailing newline for cleaner output
+
+            if (classes.isNotEmpty()) {
+                appendLine("└─ Classes: ${classes.size}")
+                classes.forEachIndexed { index, metric ->
+                    val isLast = index == classes.size - 1
+                    appendMetricTree(metric, isLast, isTopLevel = true, targetColumn)
+                }
+            }
+        }.trimEnd() // Remove trailing newline for cleaner output
 
     /**
      * Appends a single metric's tree structure (3 lines: header + FIR + IR).
@@ -119,22 +120,24 @@ data class UnifiedMetricsTree(
         metric: UnifiedFakeMetrics,
         isLast: Boolean,
         isTopLevel: Boolean,
-        targetColumn: Int
+        targetColumn: Int,
     ) {
         // Determine prefixes based on position
-        val prefix = when {
-            isTopLevel && isLast -> "   └─"
-            isTopLevel -> "   ├─"
-            isLast -> "│  └─"
-            else -> "│  ├─"
-        }
+        val prefix =
+            when {
+                isTopLevel && isLast -> "   └─"
+                isTopLevel -> "   ├─"
+                isLast -> "│  └─"
+                else -> "│  ├─"
+            }
 
-        val detailPrefix = when {
-            isTopLevel && isLast -> "      "
-            isTopLevel -> "   │  "
-            isLast -> "      "
-            else -> "│  │  "
-        }
+        val detailPrefix =
+            when {
+                isTopLevel && isLast -> "      "
+                isTopLevel -> "   │  "
+                isLast -> "      "
+                else -> "│  │  "
+            }
 
         // Format time values
         val totalTime = TimeFormatter.format(metric.totalTimeNanos)
@@ -145,11 +148,11 @@ data class UnifiedMetricsTree(
         appendLine(formatLine("$prefix ${metric.name}", totalTime, targetColumn))
 
         // Line 2: FIR analysis details
-        val firLine = "${detailPrefix}├─ FIR analysis: ${metric.firTypeParamCount} type parameters, ${metric.firMemberCount} members"
+        val firLine = "$detailPrefix├─ FIR analysis: ${metric.firTypeParamCount} type parameters, ${metric.firMemberCount} members"
         appendLine(formatLine(firLine, firTime, targetColumn))
 
         // Line 3: IR generation details
-        val irLine = "${detailPrefix}└─ IR generation: Fake${metric.name}Impl ${metric.irLOC} LOC"
+        val irLine = "$detailPrefix└─ IR generation: Fake${metric.name}Impl ${metric.irLOC} LOC"
         appendLine(formatLine(irLine, irTime, targetColumn))
     }
 
@@ -173,7 +176,11 @@ data class UnifiedMetricsTree(
      * @param targetColumn Column position for right-aligning the time value
      * @return Formatted line with right-aligned time
      */
-    private fun formatLine(text: String, time: String, targetColumn: Int): String {
+    private fun formatLine(
+        text: String,
+        time: String,
+        targetColumn: Int,
+    ): String {
         val timeWithPadding = time.padStart(10) // Reserve 10 chars for time value
         val availableSpace = targetColumn - timeWithPadding.length
         return if (text.length >= availableSpace) {

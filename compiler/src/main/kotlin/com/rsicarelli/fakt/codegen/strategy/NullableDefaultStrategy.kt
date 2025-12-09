@@ -25,10 +25,7 @@ import com.rsicarelli.fakt.codegen.model.CodeType
  * ```
  */
 public class NullableDefaultStrategy : DefaultValueStrategy {
-
-    override fun supports(type: CodeType): Boolean {
-        return type is CodeType.Nullable
-    }
+    override fun supports(type: CodeType): Boolean = type is CodeType.Nullable
 
     override fun defaultValue(type: CodeType): CodeExpression {
         require(supports(type)) {

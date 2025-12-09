@@ -52,7 +52,8 @@ internal class SourceSetConfigurator(
      * This ensures generated fakes are accessible from test source sets.
      */
     fun configureSourceSets() =
-        project.extensions.findByType(KotlinMultiplatformExtension::class.java)
+        project.extensions
+            .findByType(KotlinMultiplatformExtension::class.java)
             ?.let(::configureKmpSourceSets)
             ?: configureJvmSourceSets()
 
@@ -66,7 +67,10 @@ internal class SourceSetConfigurator(
      * - etc.
      */
     private fun configureKmpSourceSets(kotlin: KotlinMultiplatformExtension) {
-        val buildDir = project.layout.buildDirectory.get().asFile
+        val buildDir =
+            project.layout.buildDirectory
+                .get()
+                .asFile
 
         kotlin.sourceSets.configureEach { sourceSet ->
             // Add generated directory to ALL test source sets using consistent naming
@@ -85,16 +89,19 @@ internal class SourceSetConfigurator(
         // For JVM-only projects, add generated sources to test source sets
         project.tasks.withType(KotlinCompile::class.java) { task ->
             if (task.name.contains("Test", ignoreCase = true)) {
-                val generatedDir = File(
-                    project.layout.buildDirectory.get().asFile,
-                    "generated/fakt/test/kotlin",
-                )
+                val generatedDir =
+                    File(
+                        project.layout.buildDirectory
+                            .get()
+                            .asFile,
+                        "generated/fakt/test/kotlin",
+                    )
 
                 task.source(generatedDir)
 
                 project.logger.info(
                     "Fakt: Configured test compilation task '${task.name}' " +
-                            "to include generated sources",
+                        "to include generated sources",
                 )
             }
         }

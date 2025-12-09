@@ -15,24 +15,25 @@ import kotlin.test.assertContains
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FakeGeneratorTest {
-
     @Test
     fun `GIVEN generateCompleteFake WHEN simple method THEN generates complete implementation`() {
         // GIVEN
-        val methods = listOf(
-            MethodSpec(
-                name = "getUser",
-                params = listOf(Triple("id", "String", false)),
-                returnType = "User?"
+        val methods =
+            listOf(
+                MethodSpec(
+                    name = "getUser",
+                    params = listOf(Triple("id", "String", false)),
+                    returnType = "User?",
+                ),
             )
-        )
 
         // WHEN
-        val file = generateCompleteFake(
-            packageName = "com.example",
-            interfaceName = "UserService",
-            methods = methods
-        )
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "UserService",
+                methods = methods,
+            )
         val builder = CodeBuilder()
         file.renderTo(builder)
         val result = builder.build()
@@ -49,21 +50,23 @@ class FakeGeneratorTest {
     @Test
     fun `GIVEN generateCompleteFake WHEN suspend method THEN generates suspend implementation`() {
         // GIVEN
-        val methods = listOf(
-            MethodSpec(
-                name = "saveUser",
-                params = listOf(Triple("user", "User", false)),
-                returnType = "Result<Unit>",
-                isSuspend = true
+        val methods =
+            listOf(
+                MethodSpec(
+                    name = "saveUser",
+                    params = listOf(Triple("user", "User", false)),
+                    returnType = "Result<Unit>",
+                    isSuspend = true,
+                ),
             )
-        )
 
         // WHEN
-        val file = generateCompleteFake(
-            packageName = "com.example",
-            interfaceName = "UserService",
-            methods = methods
-        )
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "UserService",
+                methods = methods,
+            )
         val builder = CodeBuilder()
         file.renderTo(builder)
         val result = builder.build()
@@ -78,21 +81,23 @@ class FakeGeneratorTest {
     @Test
     fun `GIVEN generateCompleteFake WHEN vararg method THEN generates vararg implementation`() {
         // GIVEN
-        val methods = listOf(
-            MethodSpec(
-                name = "process",
-                params = listOf(Triple("items", "String", false)),
-                returnType = "Int",
-                isVararg = true
+        val methods =
+            listOf(
+                MethodSpec(
+                    name = "process",
+                    params = listOf(Triple("items", "String", false)),
+                    returnType = "Int",
+                    isVararg = true,
+                ),
             )
-        )
 
         // WHEN
-        val file = generateCompleteFake(
-            packageName = "com.example",
-            interfaceName = "Service",
-            methods = methods
-        )
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "Service",
+                methods = methods,
+            )
         val builder = CodeBuilder()
         file.renderTo(builder)
         val result = builder.build()
@@ -105,20 +110,22 @@ class FakeGeneratorTest {
     @Test
     fun `GIVEN generateCompleteFake WHEN StateFlow property THEN generates StateFlow with backing`() {
         // GIVEN
-        val properties = listOf(
-            PropertySpec(
-                name = "users",
-                type = "StateFlow<List<User>>",
-                isStateFlow = true
+        val properties =
+            listOf(
+                PropertySpec(
+                    name = "users",
+                    type = "StateFlow<List<User>>",
+                    isStateFlow = true,
+                ),
             )
-        )
 
         // WHEN
-        val file = generateCompleteFake(
-            packageName = "com.example",
-            interfaceName = "UserStore",
-            properties = properties
-        )
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "UserStore",
+                properties = properties,
+            )
         val builder = CodeBuilder()
         file.renderTo(builder)
         val result = builder.build()
@@ -134,20 +141,22 @@ class FakeGeneratorTest {
     @Test
     fun `GIVEN generateCompleteFake WHEN simple property THEN generates property with backing`() {
         // GIVEN
-        val properties = listOf(
-            PropertySpec(
-                name = "count",
-                type = "Int",
-                isStateFlow = false
+        val properties =
+            listOf(
+                PropertySpec(
+                    name = "count",
+                    type = "Int",
+                    isStateFlow = false,
+                ),
             )
-        )
 
         // WHEN
-        val file = generateCompleteFake(
-            packageName = "com.example",
-            interfaceName = "Counter",
-            properties = properties
-        )
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "Counter",
+                properties = properties,
+            )
         val builder = CodeBuilder()
         file.renderTo(builder)
         val result = builder.build()
@@ -161,18 +170,20 @@ class FakeGeneratorTest {
     @Test
     fun `GIVEN generateCompleteFake WHEN multiple methods THEN generates all implementations`() {
         // GIVEN
-        val methods = listOf(
-            MethodSpec("getUser", listOf(Triple("id", "String", false)), "User?"),
-            MethodSpec("saveUser", listOf(Triple("user", "User", false)), "Result<Unit>", isSuspend = true),
-            MethodSpec("deleteUser", listOf(Triple("id", "String", false)), "Unit")
-        )
+        val methods =
+            listOf(
+                MethodSpec("getUser", listOf(Triple("id", "String", false)), "User?"),
+                MethodSpec("saveUser", listOf(Triple("user", "User", false)), "Result<Unit>", isSuspend = true),
+                MethodSpec("deleteUser", listOf(Triple("id", "String", false)), "Unit"),
+            )
 
         // WHEN
-        val file = generateCompleteFake(
-            packageName = "com.example",
-            interfaceName = "UserService",
-            methods = methods
-        )
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "UserService",
+                methods = methods,
+            )
         val builder = CodeBuilder()
         file.renderTo(builder)
         val result = builder.build()
@@ -189,18 +200,20 @@ class FakeGeneratorTest {
     @Test
     fun `GIVEN generateCompleteFake WHEN custom imports THEN includes all imports`() {
         // GIVEN
-        val imports = listOf(
-            "com.example.domain.User",
-            "com.example.domain.Result"
-        )
+        val imports =
+            listOf(
+                "com.example.domain.User",
+                "com.example.domain.Result",
+            )
 
         // WHEN
-        val file = generateCompleteFake(
-            packageName = "com.example.test",
-            interfaceName = "UserService",
-            methods = emptyList(),
-            imports = imports
-        )
+        val file =
+            generateCompleteFake(
+                packageName = "com.example.test",
+                interfaceName = "UserService",
+                methods = emptyList(),
+                imports = imports,
+            )
         val builder = CodeBuilder()
         file.renderTo(builder)
         val result = builder.build()
@@ -216,12 +229,13 @@ class FakeGeneratorTest {
         val header = "Generated by Fakt"
 
         // WHEN
-        val file = generateCompleteFake(
-            packageName = "com.example",
-            interfaceName = "Service",
-            methods = emptyList(),
-            header = header
-        )
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "Service",
+                methods = emptyList(),
+                header = header,
+            )
         val builder = CodeBuilder()
         file.renderTo(builder)
         val result = builder.build()
@@ -235,12 +249,13 @@ class FakeGeneratorTest {
         // GIVEN - no methods or properties
 
         // WHEN
-        val file = generateCompleteFake(
-            packageName = "com.example",
-            interfaceName = "EmptyService",
-            methods = emptyList(),
-            properties = emptyList()
-        )
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "EmptyService",
+                methods = emptyList(),
+                properties = emptyList(),
+            )
         val builder = CodeBuilder()
         file.renderTo(builder)
         val result = builder.build()
@@ -254,31 +269,35 @@ class FakeGeneratorTest {
     @Test
     fun `GIVEN generateCompleteFake WHEN complete interface THEN generates full fake implementation`() {
         // GIVEN
-        val methods = listOf(
-            MethodSpec("getUser", listOf(Triple("id", "String", false)), "User?"),
-            MethodSpec("getAllUsers", emptyList(), "List<User>"),
-            MethodSpec("saveUser", listOf(Triple("user", "User", false)), "Result<Unit>", isSuspend = true)
-        )
+        val methods =
+            listOf(
+                MethodSpec("getUser", listOf(Triple("id", "String", false)), "User?"),
+                MethodSpec("getAllUsers", emptyList(), "List<User>"),
+                MethodSpec("saveUser", listOf(Triple("user", "User", false)), "Result<Unit>", isSuspend = true),
+            )
 
-        val properties = listOf(
-            PropertySpec("users", "StateFlow<List<User>>", isStateFlow = true),
-            PropertySpec("count", "Int", isStateFlow = false)
-        )
+        val properties =
+            listOf(
+                PropertySpec("users", "StateFlow<List<User>>", isStateFlow = true),
+                PropertySpec("count", "Int", isStateFlow = false),
+            )
 
-        val imports = listOf(
-            "com.example.domain.User",
-            "com.example.domain.Result"
-        )
+        val imports =
+            listOf(
+                "com.example.domain.User",
+                "com.example.domain.Result",
+            )
 
         // WHEN
-        val file = generateCompleteFake(
-            packageName = "com.example.test",
-            interfaceName = "UserService",
-            methods = methods,
-            properties = properties,
-            imports = imports,
-            header = "Generated by Fakt"
-        )
+        val file =
+            generateCompleteFake(
+                packageName = "com.example.test",
+                interfaceName = "UserService",
+                methods = methods,
+                properties = properties,
+                imports = imports,
+                header = "Generated by Fakt",
+            )
         val builder = CodeBuilder()
         file.renderTo(builder)
         val result = builder.build()

@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.generation
 
+import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.ir.analysis.GenericPatternAnalyzer
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
-import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
 import org.jetbrains.kotlin.ir.declarations.IrClass
 
 /**

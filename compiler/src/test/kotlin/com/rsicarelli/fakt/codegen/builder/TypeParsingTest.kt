@@ -15,7 +15,6 @@ import kotlin.test.assertTrue
  * into structured CodeType instances.
  */
 class TypeParsingTest {
-
     // ========================================
     // Simple Types
     // ========================================

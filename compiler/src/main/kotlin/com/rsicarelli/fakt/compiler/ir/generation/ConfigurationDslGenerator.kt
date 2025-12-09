@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.generation
 
+import com.rsicarelli.fakt.compiler.core.types.TypeResolution
 import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.FunctionAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.ParameterAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.PropertyAnalysis
-import com.rsicarelli.fakt.compiler.core.types.TypeResolution
 
 /**
  * Generates configuration DSL classes for fake implementations.
@@ -46,7 +46,7 @@ internal class ConfigurationDslGenerator(
                     typeParameters,
                     fakeClassName,
                     typeParameterNames,
-                    whereClause
+                    whereClause,
                 ),
             )
             append(generateFunctionConfigurators(analysis.functions))
@@ -64,7 +64,7 @@ internal class ConfigurationDslGenerator(
     ): String =
         if (whereClause.isNotEmpty()) {
             "class $configClassName$typeParameters(" +
-                    "private val fake: $fakeClassName$typeParameterNames) where $whereClause {"
+                "private val fake: $fakeClassName$typeParameterNames) where $whereClause {"
         } else {
             "class $configClassName$typeParameters(private val fake: $fakeClassName$typeParameterNames) {"
         }
@@ -94,35 +94,37 @@ internal class ConfigurationDslGenerator(
                             // Keep full signature - no erasure!
                             typeResolver.irTypeToKotlinString(
                                 param.type,
-                                preserveTypeParameters = true
+                                preserveTypeParameters = true,
                             )
                         }
                     }
                 }
 
             // For extension functions, prepend receiver type to parameter list
-            val parameterTypes = if (function.extensionReceiverType != null) {
-                val receiverTypeStr = typeResolver.irTypeToKotlinString(function.extensionReceiverType, preserveTypeParameters = true)
-                if (regularParamTypes.isEmpty()) {
-                    receiverTypeStr
+            val parameterTypes =
+                if (function.extensionReceiverType != null) {
+                    val receiverTypeStr = typeResolver.irTypeToKotlinString(function.extensionReceiverType, preserveTypeParameters = true)
+                    if (regularParamTypes.isEmpty()) {
+                        receiverTypeStr
+                    } else {
+                        "$receiverTypeStr, $regularParamTypes"
+                    }
                 } else {
-                    "$receiverTypeStr, $regularParamTypes"
+                    regularParamTypes
                 }
-            } else {
-                regularParamTypes
-            }
 
             // Keep original return type (including method-level generics)
-            val returnType = typeResolver.irTypeToKotlinString(
-                function.returnType,
-                preserveTypeParameters = true
-            )
+            val returnType =
+                typeResolver.irTypeToKotlinString(
+                    function.returnType,
+                    preserveTypeParameters = true,
+                )
 
             val suspendModifier = if (function.isSuspend) "suspend " else ""
 
             "    fun $methodTypeParams${function.name}(" +
-                    "behavior: $suspendModifier($parameterTypes) -> $returnType) " +
-                    "{ fake.configure${function.name.capitalize()}(behavior) }\n"
+                "behavior: $suspendModifier($parameterTypes) -> $returnType) " +
+                "{ fake.configure${function.name.capitalize()}(behavior) }\n"
         }
 
     private fun generatePropertyConfigurators(properties: List<PropertyAnalysis>): String =
@@ -133,14 +135,14 @@ internal class ConfigurationDslGenerator(
             buildString {
                 append(
                     "    fun ${property.name}(behavior: () -> $propertyType) " +
-                            "{ fake.configure${property.name.capitalize()}(behavior) }\n",
+                        "{ fake.configure${property.name.capitalize()}(behavior) }\n",
                 )
 
                 // For mutable properties, add setter configuration
                 if (property.isMutable) {
                     append(
                         "    fun set${property.name.capitalize()}(behavior: ($propertyType) -> Unit) " +
-                                "{ fake.configureSet${property.name.capitalize()}(behavior) }\n",
+                            "{ fake.configureSet${property.name.capitalize()}(behavior) }\n",
                     )
                 }
             }
@@ -259,13 +261,13 @@ internal class ConfigurationDslGenerator(
             if (whereClause.isNotEmpty()) {
                 appendLine(
                     "class $configClassName$typeParameters(" +
-                            "private val fake: $fakeClassName$typeArguments" +
-                            ") where $whereClause {",
+                        "private val fake: $fakeClassName$typeArguments" +
+                        ") where $whereClause {",
                 )
             } else {
                 appendLine(
                     "class $configClassName$typeParameters(" +
-                            "private val fake: $fakeClassName$typeArguments) {",
+                        "private val fake: $fakeClassName$typeArguments) {",
                 )
             }
 
@@ -307,14 +309,14 @@ internal class ConfigurationDslGenerator(
             // Getter configuration
             appendLine(
                 "    fun $propertyName(behavior: () -> $returnTypeString) " +
-                        "{ fake.configure$capitalizedName(behavior) }",
+                    "{ fake.configure$capitalizedName(behavior) }",
             )
 
             // Setter configuration for mutable properties
             if (property.isMutable) {
                 appendLine(
                     "    fun set$capitalizedName(behavior: ($returnTypeString) -> Unit) " +
-                            "{ fake.configureSet$capitalizedName(behavior) }",
+                        "{ fake.configureSet$capitalizedName(behavior) }",
                 )
             }
         }.trimEnd() // Remove trailing newline so caller can control formatting
@@ -353,16 +355,17 @@ internal class ConfigurationDslGenerator(
             }
 
         // For extension functions, prepend receiver type to parameter list
-        val parameterTypes = if (function.extensionReceiverType != null) {
-            val receiverTypeStr = typeResolver.irTypeToKotlinString(function.extensionReceiverType, preserveTypeParameters = true)
-            if (regularParamTypes.isEmpty()) {
-                receiverTypeStr
+        val parameterTypes =
+            if (function.extensionReceiverType != null) {
+                val receiverTypeStr = typeResolver.irTypeToKotlinString(function.extensionReceiverType, preserveTypeParameters = true)
+                if (regularParamTypes.isEmpty()) {
+                    receiverTypeStr
+                } else {
+                    "$receiverTypeStr, $regularParamTypes"
+                }
             } else {
-                "$receiverTypeStr, $regularParamTypes"
+                regularParamTypes
             }
-        } else {
-            regularParamTypes
-        }
 
         // Keep original return type (including method-level generics)
         val returnType =
@@ -447,11 +450,16 @@ internal class ConfigurationDslGenerator(
         collectionPrefixes.forEach { prefix ->
             if (typeString.startsWith(prefix)) {
                 val innerType = extractFirstTypeParameter(typeString)
-                val convertedInner = if (containsMethodTypeParam(
-                        innerType,
-                        methodTypeParamNames
-                    )
-                ) "Any?" else innerType
+                val convertedInner =
+                    if (containsMethodTypeParam(
+                            innerType,
+                            methodTypeParamNames,
+                        )
+                    ) {
+                        "Any?"
+                    } else {
+                        innerType
+                    }
                 return "$prefix$convertedInner>"
             }
         }

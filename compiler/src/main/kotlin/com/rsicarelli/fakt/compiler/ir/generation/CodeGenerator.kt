@@ -5,11 +5,11 @@ package com.rsicarelli.fakt.compiler.ir.generation
 import com.rsicarelli.fakt.codegen.renderer.CodeBuilder
 import com.rsicarelli.fakt.codegen.renderer.renderTo
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
+import com.rsicarelli.fakt.compiler.core.context.ImportResolver
+import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.core.telemetry.calculateLOC
 import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
-import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
-import com.rsicarelli.fakt.compiler.core.context.ImportResolver
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.util.packageFqName
@@ -108,18 +108,20 @@ internal class CodeGenerator(
             val requiredImports = importResolver.collectRequiredImports(analysis, packageName)
 
             // Generate implementation + factory
-            val generated = generators.implementation.generateImplementation(
-                analysis,
-                packageName,
-                requiredImports.toList()
-            )
+            val generated =
+                generators.implementation.generateImplementation(
+                    analysis,
+                    packageName,
+                    requiredImports.toList(),
+                )
 
             // Render CodeFile to string with capacity estimation for performance
-            val estimatedCapacity = estimateCodeSize(
-                methodCount = analysis.functions.size,
-                propertyCount = analysis.properties.size,
-                importCount = requiredImports.size
-            )
+            val estimatedCapacity =
+                estimateCodeSize(
+                    methodCount = analysis.functions.size,
+                    propertyCount = analysis.properties.size,
+                    importCount = requiredImports.size,
+                )
             val builder = CodeBuilder(builder = StringBuilder(estimatedCapacity))
             generated.implementationFile.renderTo(builder)
             val implementationCode = builder.build()
@@ -129,10 +131,11 @@ internal class CodeGenerator(
                 GeneratedCode(
                     implementation = implementationCode, // Complete file with package + imports
                     factory = generated.factoryFunction,
-                    configDsl = generators.configDsl.generateConfigurationDsl(
-                        analysis,
-                        fakeClassName
-                    ),
+                    configDsl =
+                        generators.configDsl.generateConfigurationDsl(
+                            analysis,
+                            fakeClassName,
+                        ),
                     importCount = 0, // TODO: Remove (imports now in implementationCode)
                 )
 
@@ -180,20 +183,22 @@ internal class CodeGenerator(
             val requiredImports = importResolver.collectRequiredImportsForClass(analysis, packageName)
 
             // Generate implementation + factory
-            val generated = generators.implementation.generateClassFake(
-                analysis,
-                packageName,
-                requiredImports.toList()
-            )
+            val generated =
+                generators.implementation.generateClassFake(
+                    analysis,
+                    packageName,
+                    requiredImports.toList(),
+                )
 
             // Render CodeFile to string with capacity estimation for performance
             val totalMethods = analysis.abstractMethods.size + analysis.openMethods.size
             val totalProperties = analysis.abstractProperties.size + analysis.openProperties.size
-            val estimatedCapacity = estimateCodeSize(
-                methodCount = totalMethods,
-                propertyCount = totalProperties,
-                importCount = requiredImports.size
-            )
+            val estimatedCapacity =
+                estimateCodeSize(
+                    methodCount = totalMethods,
+                    propertyCount = totalProperties,
+                    importCount = requiredImports.size,
+                )
             val builder = CodeBuilder(builder = StringBuilder(estimatedCapacity))
             generated.implementationFile.renderTo(builder)
             val implementationCode = builder.build()
@@ -203,10 +208,11 @@ internal class CodeGenerator(
                 GeneratedCode(
                     implementation = implementationCode, // Complete file with package + imports
                     factory = generated.factoryFunction,
-                    configDsl = generators.configDsl.generateConfigurationDsl(
-                        analysis,
-                        fakeClassName
-                    ),
+                    configDsl =
+                        generators.configDsl.generateConfigurationDsl(
+                            analysis,
+                            fakeClassName,
+                        ),
                     importCount = 0, // TODO: Remove (imports now in implementationCode)
                 )
 
@@ -411,7 +417,7 @@ internal class CodeGenerator(
     private fun estimateCodeSize(
         methodCount: Int,
         propertyCount: Int,
-        importCount: Int
+        importCount: Int,
     ): Int {
         val baseOverhead = 500
         val perMethod = 200
@@ -419,8 +425,8 @@ internal class CodeGenerator(
         val perImport = 30
 
         return baseOverhead +
-                (methodCount * perMethod) +
-                (propertyCount * perProperty) +
-                (importCount * perImport)
+            (methodCount * perMethod) +
+            (propertyCount * perProperty) +
+            (importCount * perImport)
     }
 }

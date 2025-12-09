@@ -7,7 +7,7 @@ import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.types.IrType
 
-/**
+/*
  * Analysis models used by both FIR and IR phases.
  *
  * These data classes represent the analyzed structure of interfaces and classes

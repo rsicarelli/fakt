@@ -30,17 +30,15 @@ import com.rsicarelli.fakt.codegen.model.CodeType
  * ```
  */
 public class StdlibDefaultStrategy : DefaultValueStrategy {
-
     private val primitiveStrategy = PrimitiveDefaultStrategy()
     private val collectionStrategy = CollectionDefaultStrategy()
 
-    override fun supports(type: CodeType): Boolean {
-        return when (type) {
+    override fun supports(type: CodeType): Boolean =
+        when (type) {
             is CodeType.Simple -> type.name == "Unit"
             is CodeType.Generic -> type.name in STDLIB_TYPES
             else -> false
         }
-    }
 
     override fun defaultValue(type: CodeType): CodeExpression {
         require(supports(type)) {
@@ -86,25 +84,26 @@ public class StdlibDefaultStrategy : DefaultValueStrategy {
      * Supports recursive resolution for nested stdlib types (e.g., Result<StateFlow<Int>>).
      * Falls back to error() for unsupported types (design choice: explicit config over auto-mocking).
      */
-    private fun resolveNestedDefault(type: CodeType): CodeExpression {
-        return when {
+    private fun resolveNestedDefault(type: CodeType): CodeExpression =
+        when {
             primitiveStrategy.supports(type) -> primitiveStrategy.defaultValue(type)
-            supports(type) -> defaultValue(type)  // Recursive: handles nested stdlib types
+            supports(type) -> defaultValue(type) // Recursive: handles nested stdlib types
             collectionStrategy.supports(type) -> collectionStrategy.defaultValue(type)
-            else -> CodeExpression.Raw(
-                "error(\"Type '$type' requires explicit configuration. \" + " +
-                "\"Fakt prioritizes type-safety over auto-mocking. \" + " +
-                "\"Configure behavior via fake factory DSL.\") as Nothing"
-            )
+            else ->
+                CodeExpression.Raw(
+                    "error(\"Type '$type' requires explicit configuration. \" + " +
+                        "\"Fakt prioritizes type-safety over auto-mocking. \" + " +
+                        "\"Configure behavior via fake factory DSL.\") as Nothing",
+                )
         }
-    }
 
     private companion object {
-        private val STDLIB_TYPES = setOf(
-            "Flow",
-            "StateFlow",
-            "MutableStateFlow",
-            "Result"
-        )
+        private val STDLIB_TYPES =
+            setOf(
+                "Flow",
+                "StateFlow",
+                "MutableStateFlow",
+                "Result",
+            )
     }
 }

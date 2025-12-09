@@ -15,17 +15,15 @@ import kotlin.test.assertTrue
  * Verifies strategy pattern contract for default value generation.
  */
 class DefaultValueStrategyTest {
-
     @Test
     fun `GIVEN strategy implementation WHEN checking supported type THEN returns true`() {
         // GIVEN
-        val strategy = object : DefaultValueStrategy {
-            override fun supports(type: CodeType): Boolean =
-                type is CodeType.Simple && type.name == "String"
+        val strategy =
+            object : DefaultValueStrategy {
+                override fun supports(type: CodeType): Boolean = type is CodeType.Simple && type.name == "String"
 
-            override fun defaultValue(type: CodeType): CodeExpression =
-                CodeExpression.StringLiteral("")
-        }
+                override fun defaultValue(type: CodeType): CodeExpression = CodeExpression.StringLiteral("")
+            }
         val stringType = CodeType.Simple("String")
 
         // WHEN
@@ -38,13 +36,12 @@ class DefaultValueStrategyTest {
     @Test
     fun `GIVEN strategy implementation WHEN checking unsupported type THEN returns false`() {
         // GIVEN
-        val strategy = object : DefaultValueStrategy {
-            override fun supports(type: CodeType): Boolean =
-                type is CodeType.Simple && type.name == "String"
+        val strategy =
+            object : DefaultValueStrategy {
+                override fun supports(type: CodeType): Boolean = type is CodeType.Simple && type.name == "String"
 
-            override fun defaultValue(type: CodeType): CodeExpression =
-                CodeExpression.StringLiteral("")
-        }
+                override fun defaultValue(type: CodeType): CodeExpression = CodeExpression.StringLiteral("")
+            }
         val intType = CodeType.Simple("Int")
 
         // WHEN
@@ -57,13 +54,12 @@ class DefaultValueStrategyTest {
     @Test
     fun `GIVEN supported type WHEN requesting default value THEN returns expression`() {
         // GIVEN
-        val strategy = object : DefaultValueStrategy {
-            override fun supports(type: CodeType): Boolean =
-                type is CodeType.Simple && type.name == "String"
+        val strategy =
+            object : DefaultValueStrategy {
+                override fun supports(type: CodeType): Boolean = type is CodeType.Simple && type.name == "String"
 
-            override fun defaultValue(type: CodeType): CodeExpression =
-                CodeExpression.StringLiteral("")
-        }
+                override fun defaultValue(type: CodeType): CodeExpression = CodeExpression.StringLiteral("")
+            }
         val stringType = CodeType.Simple("String")
 
         // WHEN

@@ -16,19 +16,19 @@ import kotlin.test.assertContains
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MethodExtensionsTest {
-
     @Test
     fun `GIVEN overrideMethod WHEN no parameters THEN generates zero-arg override`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            klass("FakeServiceImpl") {
-                overrideMethod(
-                    name = "getValue",
-                    params = emptyList(),
-                    returnType = "String"
-                )
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    overrideMethod(
+                        name = "getValue",
+                        params = emptyList(),
+                        returnType = "String",
+                    )
+                }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -43,15 +43,16 @@ class MethodExtensionsTest {
     @Test
     fun `GIVEN overrideMethod WHEN multiple parameters THEN generates multi-param override`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            klass("FakeServiceImpl") {
-                overrideMethod(
-                    name = "compute",
-                    params = listOf(Triple("x", "Int", false), Triple("y", "String", false), Triple("flag", "Boolean", false)),
-                    returnType = "Result<Unit>"
-                )
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    overrideMethod(
+                        name = "compute",
+                        params = listOf(Triple("x", "Int", false), Triple("y", "String", false), Triple("flag", "Boolean", false)),
+                        returnType = "Result<Unit>",
+                    )
+                }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -66,15 +67,16 @@ class MethodExtensionsTest {
     @Test
     fun `GIVEN overrideMethod WHEN Unit return type THEN omits return keyword`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            klass("FakeServiceImpl") {
-                overrideMethod(
-                    name = "doSomething",
-                    params = listOf(Triple("value", "String", false)),
-                    returnType = "Unit"
-                )
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    overrideMethod(
+                        name = "doSomething",
+                        params = listOf(Triple("value", "String", false)),
+                        returnType = "Unit",
+                    )
+                }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -90,16 +92,17 @@ class MethodExtensionsTest {
     @Test
     fun `GIVEN overrideMethod WHEN isSuspend true THEN generates suspend function`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            klass("FakeAsyncServiceImpl") {
-                overrideMethod(
-                    name = "fetchUser",
-                    params = listOf(Triple("id", "String", false)),
-                    returnType = "User?",
-                    isSuspend = true
-                )
+        val file =
+            codeFile("com.example") {
+                klass("FakeAsyncServiceImpl") {
+                    overrideMethod(
+                        name = "fetchUser",
+                        params = listOf(Triple("id", "String", false)),
+                        returnType = "User?",
+                        isSuspend = true,
+                    )
+                }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -114,16 +117,17 @@ class MethodExtensionsTest {
     @Test
     fun `GIVEN overrideVarargMethod WHEN generating THEN creates vararg parameter`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            klass("FakeServiceImpl") {
-                overrideVarargMethod(
-                    name = "process",
-                    varargName = "items",
-                    varargType = "String",
-                    returnType = "Int"
-                )
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    overrideVarargMethod(
+                        name = "process",
+                        varargName = "items",
+                        varargType = "String",
+                        returnType = "Int",
+                    )
+                }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -138,16 +142,17 @@ class MethodExtensionsTest {
     @Test
     fun `GIVEN overrideVarargMethod WHEN Unit return THEN omits return keyword`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            klass("FakeServiceImpl") {
-                overrideVarargMethod(
-                    name = "log",
-                    varargName = "messages",
-                    varargType = "String",
-                    returnType = "Unit"
-                )
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    overrideVarargMethod(
+                        name = "log",
+                        varargName = "messages",
+                        varargType = "String",
+                        returnType = "Unit",
+                    )
+                }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -162,15 +167,16 @@ class MethodExtensionsTest {
     @Test
     fun `GIVEN configureMethod WHEN regular function THEN generates internal configure method`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            klass("FakeServiceImpl") {
-                configureMethod(
-                    methodName = "getValue",
-                    paramTypes = listOf("String"),
-                    returnType = "User?"
-                )
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    configureMethod(
+                        methodName = "getValue",
+                        paramTypes = listOf("String"),
+                        returnType = "User?",
+                    )
+                }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -185,16 +191,17 @@ class MethodExtensionsTest {
     @Test
     fun `GIVEN configureMethod WHEN suspend function THEN generates suspend function type`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            klass("FakeAsyncServiceImpl") {
-                configureMethod(
-                    methodName = "saveUser",
-                    paramTypes = listOf("User"),
-                    returnType = "Result<Unit>",
-                    isSuspend = true
-                )
+        val file =
+            codeFile("com.example") {
+                klass("FakeAsyncServiceImpl") {
+                    configureMethod(
+                        methodName = "saveUser",
+                        paramTypes = listOf("User"),
+                        returnType = "Result<Unit>",
+                        isSuspend = true,
+                    )
+                }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -209,15 +216,16 @@ class MethodExtensionsTest {
     @Test
     fun `GIVEN configureMethod WHEN no parameters THEN generates zero-arg function type`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            klass("FakeServiceImpl") {
-                configureMethod(
-                    methodName = "getData",
-                    paramTypes = emptyList(),
-                    returnType = "String"
-                )
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    configureMethod(
+                        methodName = "getData",
+                        paramTypes = emptyList(),
+                        returnType = "String",
+                    )
+                }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -231,16 +239,17 @@ class MethodExtensionsTest {
     @Test
     fun `GIVEN delegateToBehavior extension WHEN applied THEN generates delegation body`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            klass("FakeServiceImpl") {
-                function("getUser") {
-                    override()
-                    parameter("id", "String")
-                    returns("User?")
-                    delegateToBehavior("getUserBehavior", listOf("id"))
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    function("getUser") {
+                        override()
+                        parameter("id", "String")
+                        returns("User?")
+                        delegateToBehavior("getUserBehavior", listOf("id"))
+                    }
                 }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -255,14 +264,15 @@ class MethodExtensionsTest {
     @Test
     fun `GIVEN asSimpleOverride extension WHEN applied THEN generates inline body`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            klass("FakeServiceImpl") {
-                function("getValue") {
-                    returns("String")
-                    asSimpleOverride("return \"test\"")
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    function("getValue") {
+                        returns("String")
+                        asSimpleOverride("return \"test\"")
+                    }
                 }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -277,15 +287,16 @@ class MethodExtensionsTest {
     @Test
     fun `GIVEN overridePropertyGetter WHEN generating THEN creates property with getter`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            klass("FakeServiceImpl") {
-                overridePropertyGetter(
-                    name = "users",
-                    type = "StateFlow<List<User>>",
-                    backingPropertyName = "usersValue"
-                )
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    overridePropertyGetter(
+                        name = "users",
+                        type = "StateFlow<List<User>>",
+                        backingPropertyName = "usersValue",
+                    )
+                }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()
@@ -300,33 +311,34 @@ class MethodExtensionsTest {
     @Test
     fun `GIVEN complete method pattern WHEN using extensions THEN generates full implementation`() {
         // GIVEN
-        val file = codeFile("com.example") {
-            klass("FakeUserServiceImpl") {
-                implements("UserService")
+        val file =
+            codeFile("com.example") {
+                klass("FakeUserServiceImpl") {
+                    implements("UserService")
 
-                // Behavior property
-                behaviorProperty(
-                    methodName = "getUser",
-                    paramTypes = listOf("String"),
-                    returnType = "User?",
-                    defaultValue = "{ null }"
-                )
+                    // Behavior property
+                    behaviorProperty(
+                        methodName = "getUser",
+                        paramTypes = listOf("String"),
+                        returnType = "User?",
+                        defaultValue = "{ null }",
+                    )
 
-                // Override method
-                overrideMethod(
-                    name = "getUser",
-                    params = listOf(Triple("id", "String", false)),
-                    returnType = "User?"
-                )
+                    // Override method
+                    overrideMethod(
+                        name = "getUser",
+                        params = listOf(Triple("id", "String", false)),
+                        returnType = "User?",
+                    )
 
-                // Configure method
-                configureMethod(
-                    methodName = "getUser",
-                    paramTypes = listOf("String"),
-                    returnType = "User?"
-                )
+                    // Configure method
+                    configureMethod(
+                        methodName = "getUser",
+                        paramTypes = listOf("String"),
+                        returnType = "User?",
+                    )
+                }
             }
-        }
 
         // WHEN
         val builder = CodeBuilder()

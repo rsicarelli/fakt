@@ -68,5 +68,4 @@ data class FakeMetrics(
      * @return Formatted duration string (e.g., "234µs", "45ms", "1.2s")
      */
     fun formattedDuration(): String = TimeFormatter.format(totalTimeNanos)
-
 }

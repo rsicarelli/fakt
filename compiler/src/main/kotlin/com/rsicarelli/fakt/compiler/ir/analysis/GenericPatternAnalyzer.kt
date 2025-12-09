@@ -224,14 +224,14 @@ class GenericPatternAnalyzer {
 
                 is GenericPattern.ClassLevelGenerics ->
                     "Class-level generics: ${pattern.typeParameters.size} type parameters, " +
-                            "${pattern.constraints.size} constraints"
+                        "${pattern.constraints.size} constraints"
 
                 is GenericPattern.MethodLevelGenerics ->
                     "Method-level generics: ${pattern.genericMethods.size} generic methods"
 
                 is GenericPattern.MixedGenerics ->
                     "Mixed generics: ${pattern.classTypeParameters.size} class type parameters, " +
-                            "${pattern.genericMethods.size} generic methods"
+                        "${pattern.genericMethods.size} generic methods"
             }
     }
 }

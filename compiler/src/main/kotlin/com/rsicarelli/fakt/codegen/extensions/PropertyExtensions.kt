@@ -56,11 +56,12 @@ fun ClassBuilder.behaviorProperty(
     returnType: String,
     defaultValue: String,
 ) {
-    val functionType = if (paramTypes.isEmpty()) {
-        "() -> $returnType"
-    } else {
-        "(${paramTypes.joinToString(", ")}) -> $returnType"
-    }
+    val functionType =
+        if (paramTypes.isEmpty()) {
+            "() -> $returnType"
+        } else {
+            "(${paramTypes.joinToString(", ")}) -> $returnType"
+        }
 
     property("${methodName}Behavior", functionType) {
         private()
@@ -88,11 +89,12 @@ fun ClassBuilder.suspendBehaviorProperty(
     returnType: String,
     defaultValue: String,
 ) {
-    val functionType = if (paramTypes.isEmpty()) {
-        "suspend () -> $returnType"
-    } else {
-        "suspend (${paramTypes.joinToString(", ")}) -> $returnType"
-    }
+    val functionType =
+        if (paramTypes.isEmpty()) {
+            "suspend () -> $returnType"
+        } else {
+            "suspend (${paramTypes.joinToString(", ")}) -> $returnType"
+        }
 
     property("${methodName}Behavior", functionType) {
         private()
@@ -120,11 +122,12 @@ fun ClassBuilder.nullableBehaviorProperty(
     paramTypes: List<String>,
     returnType: String,
 ) {
-    val functionType = if (paramTypes.isEmpty()) {
-        "(() -> $returnType)?"
-    } else {
-        "((${paramTypes.joinToString(", ")}) -> $returnType)?"
-    }
+    val functionType =
+        if (paramTypes.isEmpty()) {
+            "(() -> $returnType)?"
+        } else {
+            "((${paramTypes.joinToString(", ")}) -> $returnType)?"
+        }
 
     property("${methodName}Behavior", functionType) {
         private()
@@ -152,11 +155,12 @@ fun ClassBuilder.nullableSuspendBehaviorProperty(
     paramTypes: List<String>,
     returnType: String,
 ) {
-    val functionType = if (paramTypes.isEmpty()) {
-        "(suspend () -> $returnType)?"
-    } else {
-        "(suspend (${paramTypes.joinToString(", ")}) -> $returnType)?"
-    }
+    val functionType =
+        if (paramTypes.isEmpty()) {
+            "(suspend () -> $returnType)?"
+        } else {
+            "(suspend (${paramTypes.joinToString(", ")}) -> $returnType)?"
+        }
 
     property("${methodName}Behavior", functionType) {
         private()

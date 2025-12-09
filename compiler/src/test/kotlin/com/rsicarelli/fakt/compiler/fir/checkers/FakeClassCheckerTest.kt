@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.fir.checkers
 
-
 import com.rsicarelli.fakt.compiler.fir.metadata.FirFunctionInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirParameterInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirPropertyInfo
@@ -454,7 +453,7 @@ class FakeClassCheckerTest {
                                             "kotlin.collections.List<R>",
                                             false,
                                             null,
-                                            false
+                                            false,
                                         ),
                                     ),
                                 returnType = "kotlin.collections.List<R>",
@@ -537,14 +536,14 @@ class FakeClassCheckerTest {
                                             "kotlin.collections.List<T>",
                                             false,
                                             null,
-                                            false
+                                            false,
                                         ),
                                         FirParameterInfo(
                                             "transformer",
                                             "kotlin.Function1<T, R>",
                                             false,
                                             null,
-                                            false
+                                            false,
                                         ),
                                         FirParameterInfo("default", "R?", true, null, false),
                                     ),

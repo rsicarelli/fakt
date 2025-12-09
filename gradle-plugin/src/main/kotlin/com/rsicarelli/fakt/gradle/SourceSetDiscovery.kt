@@ -230,9 +230,8 @@ public val KotlinCompilation<*>.isTestCompilation: Boolean
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         val associatedCompilations = this.allAssociatedCompilations
         return this.name.endsWith("Test", ignoreCase = true) ||
-                associatedCompilations.any { it.name == KotlinCompilation.MAIN_COMPILATION_NAME }
+            associatedCompilations.any { it.name == KotlinCompilation.MAIN_COMPILATION_NAME }
     }
-
 
 /**
  * Traverse the dependsOn graph upwards using BFS to find all parent source sets.

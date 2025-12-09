@@ -35,7 +35,7 @@ public class CodeBuilder(
     internal val builder: StringBuilder = StringBuilder(),
     @PublishedApi
     internal var indentLevel: Int = 0,
-    public val indentSize: Int = 4
+    public val indentSize: Int = 4,
 ) {
     /**
      * Current indentation string (spaces per level based on indentSize).
@@ -101,7 +101,10 @@ public class CodeBuilder(
      * @param header The header line (e.g., "class Foo", "fun test()")
      * @param body Code block to execute inside the braces
      */
-    public inline fun block(header: String, body: CodeBuilder.() -> Unit) {
+    public inline fun block(
+        header: String,
+        body: CodeBuilder.() -> Unit,
+    ) {
         appendLine("$header {")
         indent(body)
         appendLine("}")

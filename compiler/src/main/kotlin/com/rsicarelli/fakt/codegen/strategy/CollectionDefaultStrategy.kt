@@ -32,12 +32,9 @@ import com.rsicarelli.fakt.codegen.model.CodeType
  * ```
  */
 public class CollectionDefaultStrategy(
-    private val classLevelTypeParams: Set<String> = emptySet()
+    private val classLevelTypeParams: Set<String> = emptySet(),
 ) : DefaultValueStrategy {
-
-    override fun supports(type: CodeType): Boolean {
-        return type is CodeType.Generic && type.name in COLLECTION_TYPES
-    }
+    override fun supports(type: CodeType): Boolean = type is CodeType.Generic && type.name in COLLECTION_TYPES
 
     override fun defaultValue(type: CodeType): CodeExpression {
         require(supports(type)) {
@@ -49,16 +46,18 @@ public class CollectionDefaultStrategy(
         // Special handling for Array with class-level generics
         if (typeName == "Array" && type.arguments.isNotEmpty()) {
             val elementType = type.arguments[0]
-            val elementTypeName = when (elementType) {
-                is CodeType.Simple -> elementType.name
-                is CodeType.Generic -> elementType.name
-                is CodeType.Nullable -> when (val inner = elementType.inner) {
-                    is CodeType.Simple -> inner.name
-                    is CodeType.Generic -> inner.name
+            val elementTypeName =
+                when (elementType) {
+                    is CodeType.Simple -> elementType.name
+                    is CodeType.Generic -> elementType.name
+                    is CodeType.Nullable ->
+                        when (val inner = elementType.inner) {
+                            is CodeType.Simple -> inner.name
+                            is CodeType.Generic -> inner.name
+                            else -> null
+                        }
                     else -> null
                 }
-                else -> null
-            }
 
             if (elementTypeName != null && classLevelTypeParams.contains(elementTypeName)) {
                 // Use emptyArray<Any>() for class-level generics (not reified)
@@ -66,31 +65,33 @@ public class CollectionDefaultStrategy(
             }
         }
 
-        val functionName = when (typeName) {
-            "Collection" -> "emptyList"  // Collection is abstract, use List as concrete impl
-            "List" -> "emptyList"
-            "Set" -> "emptySet"
-            "Map" -> "emptyMap"
-            "Array" -> "emptyArray"
-            "MutableList" -> "mutableListOf"
-            "MutableSet" -> "mutableSetOf"
-            "MutableMap" -> "mutableMapOf"
-            else -> error("Unsupported collection type: $typeName")
-        }
+        val functionName =
+            when (typeName) {
+                "Collection" -> "emptyList" // Collection is abstract, use List as concrete impl
+                "List" -> "emptyList"
+                "Set" -> "emptySet"
+                "Map" -> "emptyMap"
+                "Array" -> "emptyArray"
+                "MutableList" -> "mutableListOf"
+                "MutableSet" -> "mutableSetOf"
+                "MutableMap" -> "mutableMapOf"
+                else -> error("Unsupported collection type: $typeName")
+            }
 
         return CodeExpression.FunctionCall(functionName)
     }
 
     private companion object {
-        private val COLLECTION_TYPES = setOf(
-            "Collection",  // Abstract collection interface
-            "List",
-            "Set",
-            "Map",
-            "Array",
-            "MutableList",
-            "MutableSet",
-            "MutableMap"
-        )
+        private val COLLECTION_TYPES =
+            setOf(
+                "Collection", // Abstract collection interface
+                "List",
+                "Set",
+                "Map",
+                "Array",
+                "MutableList",
+                "MutableSet",
+                "MutableMap",
+            )
     }
 }

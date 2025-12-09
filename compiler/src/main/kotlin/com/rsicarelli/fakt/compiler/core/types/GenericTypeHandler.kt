@@ -46,25 +46,25 @@ internal class GenericTypeHandler {
 
             // NoGenerics pattern: Use specific type erasure rules for common types
             packageName == "kotlin.collections" && className in
-                    listOf(
-                        "List",
-                        "MutableList",
-                    )
-                -> "List<Any>"
+                listOf(
+                    "List",
+                    "MutableList",
+                )
+            -> "List<Any>"
 
             packageName == "kotlin.collections" && className in
-                    listOf(
-                        "Set",
-                        "MutableSet",
-                    )
-                -> "Set<Any>"
+                listOf(
+                    "Set",
+                    "MutableSet",
+                )
+            -> "Set<Any>"
 
             packageName == "kotlin.collections" && className in
-                    listOf(
-                        "Map",
-                        "MutableMap",
-                    )
-                -> "Map<Any, Any>"
+                listOf(
+                    "Map",
+                    "MutableMap",
+                )
+            -> "Map<Any, Any>"
 
             packageName == "kotlin.collections" && className == "Collection" -> "Collection<Any>"
             packageName == "kotlin" && className == "Result" -> "Result<Any>"

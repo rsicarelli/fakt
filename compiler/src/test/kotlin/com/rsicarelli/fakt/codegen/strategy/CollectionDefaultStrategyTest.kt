@@ -18,7 +18,6 @@ import kotlin.test.assertTrue
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CollectionDefaultStrategyTest {
-
     private val strategy = CollectionDefaultStrategy()
 
     @Test
@@ -75,10 +74,11 @@ class CollectionDefaultStrategyTest {
     @Test
     fun `GIVEN Map type WHEN checking support THEN returns true`() {
         // GIVEN
-        val type = CodeType.Generic(
-            "Map",
-            listOf(CodeType.Simple("String"), CodeType.Simple("Int"))
-        )
+        val type =
+            CodeType.Generic(
+                "Map",
+                listOf(CodeType.Simple("String"), CodeType.Simple("Int")),
+            )
 
         // WHEN
         val result = strategy.supports(type)
@@ -90,10 +90,11 @@ class CollectionDefaultStrategyTest {
     @Test
     fun `GIVEN Map type WHEN generating default THEN returns emptyMap call`() {
         // GIVEN
-        val type = CodeType.Generic(
-            "Map",
-            listOf(CodeType.Simple("String"), CodeType.Simple("Int"))
-        )
+        val type =
+            CodeType.Generic(
+                "Map",
+                listOf(CodeType.Simple("String"), CodeType.Simple("Int")),
+            )
 
         // WHEN
         val result = strategy.defaultValue(type)
@@ -169,10 +170,11 @@ class CollectionDefaultStrategyTest {
     @Test
     fun `GIVEN MutableMap type WHEN generating default THEN returns mutableMapOf call`() {
         // GIVEN
-        val type = CodeType.Generic(
-            "MutableMap",
-            listOf(CodeType.Simple("String"), CodeType.Simple("Int"))
-        )
+        val type =
+            CodeType.Generic(
+                "MutableMap",
+                listOf(CodeType.Simple("String"), CodeType.Simple("Int")),
+            )
 
         // WHEN
         val result = strategy.defaultValue(type)
@@ -209,9 +211,10 @@ class CollectionDefaultStrategyTest {
     @Test
     fun `GIVEN nullable collection WHEN checking support THEN returns false`() {
         // GIVEN
-        val type = CodeType.Nullable(
-            CodeType.Generic("List", listOf(CodeType.Simple("String")))
-        )
+        val type =
+            CodeType.Nullable(
+                CodeType.Generic("List", listOf(CodeType.Simple("String"))),
+            )
 
         // WHEN
         val result = strategy.supports(type)

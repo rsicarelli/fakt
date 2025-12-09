@@ -28,11 +28,11 @@ data class MethodSpec(
     val params: List<Triple<String, String, Boolean>>, // (name, type, isVararg)
     val returnType: String,
     val isSuspend: Boolean = false,
-    val isVararg: Boolean = false,  // Kept for backward compatibility, use params[].third
+    val isVararg: Boolean = false, // Kept for backward compatibility, use params[].third
     val typeParameters: List<String> = emptyList(),
-    val isAbstract: Boolean = false,  // true for abstract methods, false for open methods
-    val isOperator: Boolean = false,  // true for operator functions (plus, get, etc.)
-    val extensionReceiverType: String? = null,  // Extension receiver type for extension functions
+    val isAbstract: Boolean = false, // true for abstract methods, false for open methods
+    val isOperator: Boolean = false, // true for operator functions (plus, get, etc.)
+    val extensionReceiverType: String? = null, // Extension receiver type for extension functions
 )
 
 /**
@@ -49,7 +49,7 @@ data class PropertySpec(
     val type: String,
     val isStateFlow: Boolean = false,
     val isMutable: Boolean = false,
-    val isAbstract: Boolean = false,  // true for abstract properties, false for open properties
+    val isAbstract: Boolean = false, // true for abstract properties, false for open properties
 )
 
 /**
@@ -66,9 +66,11 @@ private fun String.eraseMethodTypeParameters(typeParameters: List<String>): Stri
     if (typeParameters.isEmpty()) return this
 
     // Extract just the type parameter names (remove constraints)
-    val typeParamNames = typeParameters.map { param ->
-        param.substringBefore(" :").trim()
-    }.toSet()
+    val typeParamNames =
+        typeParameters
+            .map { param ->
+                param.substringBefore(" :").trim()
+            }.toSet()
 
     var result = this
     typeParamNames.forEach { paramName ->
@@ -130,15 +132,18 @@ fun generateCompleteFake(
     val className = "Fake${interfaceName}Impl"
 
     // Extract type parameter names for interface type arguments
-    val typeParamNames = typeParameters.map { param ->
-        // Extract name from "T", "out T", "T : Bound", "out T : Bound", etc.
-        param.trim()
-            .removePrefix("out").removePrefix("in")
-            .trim()
-            .substringBefore(" :")
-            .substringBefore(",")
-            .trim()
-    }
+    val typeParamNames =
+        typeParameters.map { param ->
+            // Extract name from "T", "out T", "T : Bound", "out T : Bound", etc.
+            param
+                .trim()
+                .removePrefix("out")
+                .removePrefix("in")
+                .trim()
+                .substringBefore(" :")
+                .substringBefore(",")
+                .trim()
+        }
 
     // Create resolver with class-level type parameters for Array<T> handling
     val resolver = DefaultValueResolver(classLevelTypeParams = typeParamNames.toSet())
@@ -171,9 +176,11 @@ fun generateCompleteFake(
                 val constraintsStr = if (parts.size > 1) parts[1].trim() else null
 
                 // Extract name without variance
-                val name = nameWithVariance
-                    .removePrefix("out").removePrefix("in")
-                    .trim()
+                val name =
+                    nameWithVariance
+                        .removePrefix("out")
+                        .removePrefix("in")
+                        .trim()
 
                 if (constraintsStr != null) {
                     // Check if there are multiple constraints (comma-separated)
@@ -184,7 +191,7 @@ fun generateCompleteFake(
                         typeParam(name, constraints[0])
                     } else {
                         // Multiple constraints: add to where clause
-                        typeParam(name)  // Just the name, no constraints
+                        typeParam(name) // Just the name, no constraints
                         constraints.forEach { constraint ->
                             whereClauses.add("$name : $constraint")
                         }
@@ -200,10 +207,11 @@ fun generateCompleteFake(
             }
 
             // Extends class or implements interface with type arguments
-            val superType = when {
-                typeParamNames.isNotEmpty() -> "$interfaceName<${typeParamNames.joinToString(", ")}>"
-                else -> interfaceName
-            }
+            val superType =
+                when {
+                    typeParamNames.isNotEmpty() -> "$interfaceName<${typeParamNames.joinToString(", ")}>"
+                    else -> interfaceName
+                }
             // Classes need constructor call: ClassName() or ClassName<T>()
             // Interfaces don't: InterfaceName or InterfaceName<T>
             val superTypeWithConstructor = if (isClass) "$superType()" else superType
@@ -321,7 +329,7 @@ private fun generateStateFlowProperty(
     classBuilder.stateFlowProperty(
         name = prop.name,
         elementType = elementType,
-        defaultValue = defaultExpr
+        defaultValue = defaultExpr,
     )
 }
 
@@ -439,33 +447,35 @@ private fun generateSimpleProperty(
             override()
             mutable()
             // Getter with call tracking and behavior invocation
-            getter = if (isOpenProperty) {
-                // Open property: nullable invoke with super delegation
-                listOf(
-                    "_${prop.name}CallCount.update { it + 1 }",
-                    "return ${prop.name}Getter?.invoke() ?: super.${prop.name}"
-                ).joinToString("\n")
-            } else {
-                // Abstract/interface: direct call
-                listOf(
-                    "_${prop.name}CallCount.update { it + 1 }",
-                    "return ${prop.name}Getter()"
-                ).joinToString("\n")
-            }
+            getter =
+                if (isOpenProperty) {
+                    // Open property: nullable invoke with super delegation
+                    listOf(
+                        "_${prop.name}CallCount.update { it + 1 }",
+                        "return ${prop.name}Getter?.invoke() ?: super.${prop.name}",
+                    ).joinToString("\n")
+                } else {
+                    // Abstract/interface: direct call
+                    listOf(
+                        "_${prop.name}CallCount.update { it + 1 }",
+                        "return ${prop.name}Getter()",
+                    ).joinToString("\n")
+                }
             // Setter with call tracking and behavior invocation
-            setter = if (isOpenProperty) {
-                // Open property: nullable invoke with super delegation
-                listOf(
-                    "_set${capitalizedName}CallCount.update { it + 1 }",
-                    "${prop.name}Setter?.invoke(value) ?: run { super.${prop.name} = value }"
-                ).joinToString("\n")
-            } else {
-                // Abstract/interface: direct call
-                listOf(
-                    "_set${capitalizedName}CallCount.update { it + 1 }",
-                    "${prop.name}Setter(value)"
-                ).joinToString("\n")
-            }
+            setter =
+                if (isOpenProperty) {
+                    // Open property: nullable invoke with super delegation
+                    listOf(
+                        "_set${capitalizedName}CallCount.update { it + 1 }",
+                        "${prop.name}Setter?.invoke(value) ?: run { super.${prop.name} = value }",
+                    ).joinToString("\n")
+                } else {
+                    // Abstract/interface: direct call
+                    listOf(
+                        "_set${capitalizedName}CallCount.update { it + 1 }",
+                        "${prop.name}Setter(value)",
+                    ).joinToString("\n")
+                }
         }
 
         // Configure method for getter
@@ -506,19 +516,20 @@ private fun generateSimpleProperty(
         classBuilder.property(prop.name, prop.type) {
             override()
             // Getter with call tracking and behavior invocation
-            getter = if (isOpenProperty) {
-                // Open property: nullable invoke with super delegation
-                listOf(
-                    "_${prop.name}CallCount.update { it + 1 }",
-                    "return ${prop.name}Behavior?.invoke() ?: super.${prop.name}"
-                ).joinToString("\n")
-            } else {
-                // Abstract/interface: direct call
-                listOf(
-                    "_${prop.name}CallCount.update { it + 1 }",
-                    "return ${prop.name}Behavior()"
-                ).joinToString("\n")
-            }
+            getter =
+                if (isOpenProperty) {
+                    // Open property: nullable invoke with super delegation
+                    listOf(
+                        "_${prop.name}CallCount.update { it + 1 }",
+                        "return ${prop.name}Behavior?.invoke() ?: super.${prop.name}",
+                    ).joinToString("\n")
+                } else {
+                    // Abstract/interface: direct call
+                    listOf(
+                        "_${prop.name}CallCount.update { it + 1 }",
+                        "return ${prop.name}Behavior()",
+                    ).joinToString("\n")
+                }
         }
 
         // Configure method
@@ -598,9 +609,11 @@ private fun detectIdentityFunction(method: MethodSpec): String? {
     if (method.params.size != 1) return null
 
     // Extract type parameter names (e.g., "T", "R")
-    val typeParamNames = method.typeParameters.map { param ->
-        param.substringBefore(" :").trim()
-    }.toSet()
+    val typeParamNames =
+        method.typeParameters
+            .map { param ->
+                param.substringBefore(" :").trim()
+            }.toSet()
 
     // Method must return a type parameter
     if (!typeParamNames.any { method.returnType.contains(Regex("\\b$it\\b")) }) {
@@ -622,9 +635,10 @@ private fun detectIdentityFunction(method: MethodSpec): String? {
 
     // Check if return type contains a type parameter
     val returnPart = funcSignature.substringAfter("->").trim()
-    val returnsTypeParam = typeParamNames.any { typeParam ->
-        returnPart.contains(Regex("\\b$typeParam\\b"))
-    }
+    val returnsTypeParam =
+        typeParamNames.any { typeParam ->
+            returnPart.contains(Regex("\\b$typeParam\\b"))
+        }
     if (!returnsTypeParam) return null
 
     // CRITICAL: Method return type must EXACTLY match function return type
@@ -661,11 +675,12 @@ private fun generateMethod(
     // Generate lambda with correct arity
     // For extension functions, prepend receiver parameter name
     val baseParamNames = method.params.mapIndexed { i, _ -> "p$i" }
-    val paramNames = if (method.extensionReceiverType != null) {
-        listOf("p_receiver") + baseParamNames
-    } else {
-        baseParamNames
-    }
+    val paramNames =
+        if (method.extensionReceiverType != null) {
+            listOf("p_receiver") + baseParamNames
+        } else {
+            baseParamNames
+        }
     val lambdaParams = if (paramNames.isEmpty()) "" else "${paramNames.joinToString(", ")} -> "
 
     // Priority order for default values:
@@ -675,48 +690,54 @@ private fun generateMethod(
     // 4. Typed defaults (null, emptyList(), etc.)
 
     // Generate default behavior with correct priority
-    val behaviorDefault = when {
-        isClass && method.isAbstract -> {
-            // Abstract method in class: ALWAYS throw error (highest priority)
-            val methodSignature = "${method.name}(${method.params.joinToString { it.second }}): ${method.returnType}"
-            val errorMessage = "Abstract method '$methodSignature' in class '$className' must be configured. " +
-                    "Use the DSL: fake${className.replaceFirstChar { it.uppercase() }} { ${method.name} { ... } }"
-            "{ ${lambdaParams}error(\"$errorMessage\") }"
-        }
-        else -> {
-            // For interfaces, check special patterns first
-            val functionInvocationDefault = detectIdentityFunction(method)
-            val identityDefault = if (functionInvocationDefault == null) {
-                shouldUseIdentityDefault(method)
-            } else null
+    val behaviorDefault =
+        when {
+            isClass && method.isAbstract -> {
+                // Abstract method in class: ALWAYS throw error (highest priority)
+                val methodSignature = "${method.name}(${method.params.joinToString { it.second }}): ${method.returnType}"
+                val errorMessage =
+                    "Abstract method '$methodSignature' in class '$className' must be configured. " +
+                        "Use the DSL: fake${className.replaceFirstChar { it.uppercase() }} { ${method.name} { ... } }"
+                "{ ${lambdaParams}error(\"$errorMessage\") }"
+            }
+            else -> {
+                // For interfaces, check special patterns first
+                val functionInvocationDefault = detectIdentityFunction(method)
+                val identityDefault =
+                    if (functionInvocationDefault == null) {
+                        shouldUseIdentityDefault(method)
+                    } else {
+                        null
+                    }
 
-            when {
-                functionInvocationDefault != null -> {
-                    // Function invocation: <T> method(func: () -> T): T → { func -> func() }
-                    functionInvocationDefault
-                }
-                identityDefault != null -> {
-                    // Universal identity: (T) -> T → { it }
-                    identityDefault
-                }
-                else -> {
-                    // Interface method or default: use typed default
-                    "{ $lambdaParams$defaultExpr }"
+                when {
+                    functionInvocationDefault != null -> {
+                        // Function invocation: <T> method(func: () -> T): T → { func -> func() }
+                        functionInvocationDefault
+                    }
+                    identityDefault != null -> {
+                        // Universal identity: (T) -> T → { it }
+                        identityDefault
+                    }
+                    else -> {
+                        // Interface method or default: use typed default
+                        "{ $lambdaParams$defaultExpr }"
+                    }
                 }
             }
         }
-    }
 
     // For varargs, add 'out' variance to Array types for behavior properties
     // vararg messages: String -> behavior: (Array<out String>) -> ReturnType
-    val behaviorParamTypes = method.params.map { (_, paramType, isVararg) ->
-        if (isVararg && paramType.startsWith("Array<")) {
-            // Replace Array<T> with Array<out T>
-            paramType.replace("Array<", "Array<out ")
-        } else {
-            paramType
+    val behaviorParamTypes =
+        method.params.map { (_, paramType, isVararg) ->
+            if (isVararg && paramType.startsWith("Array<")) {
+                // Replace Array<T> with Array<out T>
+                paramType.replace("Array<", "Array<out ")
+            } else {
+                paramType
+            }
         }
-    }
 
     // Erase method-level type parameters to Any? for behavior properties
     // Properties cannot have type parameters, so we use type erasure
@@ -725,19 +746,21 @@ private fun generateMethod(
 
     // For extension functions, prepend receiver type to behavior parameter list
     // Extension: fun Vector.plus(other: Vector) -> behavior: (Vector, Vector) -> Vector
-    val behaviorFinalParamTypes = if (method.extensionReceiverType != null) {
-        val erasedReceiverType = method.extensionReceiverType.eraseMethodTypeParameters(method.typeParameters)
-        listOf(erasedReceiverType) + erasedParamTypes
-    } else {
-        erasedParamTypes
-    }
+    val behaviorFinalParamTypes =
+        if (method.extensionReceiverType != null) {
+            val erasedReceiverType = method.extensionReceiverType.eraseMethodTypeParameters(method.typeParameters)
+            listOf(erasedReceiverType) + erasedParamTypes
+        } else {
+            erasedParamTypes
+        }
 
     // Configuration method uses non-erased types with receiver prepended
-    val configureFinalParamTypes = if (method.extensionReceiverType != null) {
-        listOf(method.extensionReceiverType) + behaviorParamTypes
-    } else {
-        behaviorParamTypes
-    }
+    val configureFinalParamTypes =
+        if (method.extensionReceiverType != null) {
+            listOf(method.extensionReceiverType) + behaviorParamTypes
+        } else {
+            behaviorParamTypes
+        }
 
     // Generate call tracking StateFlow property
     classBuilder.callTrackingProperty(method.name)
@@ -751,13 +774,13 @@ private fun generateMethod(
             classBuilder.nullableSuspendBehaviorProperty(
                 methodName = method.name,
                 paramTypes = behaviorFinalParamTypes,
-                returnType = erasedReturnType
+                returnType = erasedReturnType,
             )
         } else {
             classBuilder.nullableBehaviorProperty(
                 methodName = method.name,
                 paramTypes = behaviorFinalParamTypes,
-                returnType = erasedReturnType
+                returnType = erasedReturnType,
             )
         }
     } else {
@@ -767,14 +790,14 @@ private fun generateMethod(
                 methodName = method.name,
                 paramTypes = behaviorFinalParamTypes,
                 returnType = erasedReturnType,
-                defaultValue = behaviorDefault
+                defaultValue = behaviorDefault,
             )
         } else {
             classBuilder.behaviorProperty(
                 methodName = method.name,
                 paramTypes = behaviorFinalParamTypes,
                 returnType = erasedReturnType,
-                defaultValue = behaviorDefault
+                defaultValue = behaviorDefault,
             )
         }
     }
@@ -790,7 +813,7 @@ private fun generateMethod(
             returnType = method.returnType,
             useSuperDelegation = isOpenMethod,
             extensionReceiverType = method.extensionReceiverType,
-            isOperator = method.isOperator
+            isOperator = method.isOperator,
         )
     } else {
         classBuilder.overrideMethod(
@@ -801,7 +824,7 @@ private fun generateMethod(
             typeParameters = method.typeParameters,
             useSuperDelegation = isOpenMethod,
             extensionReceiverType = method.extensionReceiverType,
-            isOperator = method.isOperator
+            isOperator = method.isOperator,
         )
     }
 
@@ -811,7 +834,7 @@ private fun generateMethod(
         paramTypes = configureFinalParamTypes,
         returnType = method.returnType,
         isSuspend = method.isSuspend,
-        typeParameters = method.typeParameters
+        typeParameters = method.typeParameters,
     )
 }
 
@@ -865,64 +888,72 @@ private fun generateMethodBehaviorProperty(
     val defaultExpr = defaultValue.render()
 
     val baseParamNames = method.params.mapIndexed { i, _ -> "p$i" }
-    val paramNames = if (method.extensionReceiverType != null) {
-        listOf("p_receiver") + baseParamNames
-    } else {
-        baseParamNames
-    }
+    val paramNames =
+        if (method.extensionReceiverType != null) {
+            listOf("p_receiver") + baseParamNames
+        } else {
+            baseParamNames
+        }
     val lambdaParams = if (paramNames.isEmpty()) "" else "${paramNames.joinToString(", ")} -> "
 
-    val behaviorDefault = when {
-        isClass && method.isAbstract -> {
-            val methodSignature = "${method.name}(${method.params.joinToString { it.second }}): ${method.returnType}"
-            val errorMessage = "Abstract method '$methodSignature' in class '$className' must be configured. " +
-                    "Use the DSL: fake${className.replaceFirstChar { it.uppercase() }} { ${method.name} { ... } }"
-            "{ ${lambdaParams}error(\"$errorMessage\") }"
-        }
-        else -> {
-            val functionInvocationDefault = detectIdentityFunction(method)
-            val identityDefault = if (functionInvocationDefault == null) {
-                shouldUseIdentityDefault(method)
-            } else null
+    val behaviorDefault =
+        when {
+            isClass && method.isAbstract -> {
+                val methodSignature = "${method.name}(${method.params.joinToString { it.second }}): ${method.returnType}"
+                val errorMessage =
+                    "Abstract method '$methodSignature' in class '$className' must be configured. " +
+                        "Use the DSL: fake${className.replaceFirstChar { it.uppercase() }} { ${method.name} { ... } }"
+                "{ ${lambdaParams}error(\"$errorMessage\") }"
+            }
+            else -> {
+                val functionInvocationDefault = detectIdentityFunction(method)
+                val identityDefault =
+                    if (functionInvocationDefault == null) {
+                        shouldUseIdentityDefault(method)
+                    } else {
+                        null
+                    }
 
-            when {
-                functionInvocationDefault != null -> functionInvocationDefault
-                identityDefault != null -> identityDefault
-                else -> "{ $lambdaParams$defaultExpr }"
+                when {
+                    functionInvocationDefault != null -> functionInvocationDefault
+                    identityDefault != null -> identityDefault
+                    else -> "{ $lambdaParams$defaultExpr }"
+                }
             }
         }
-    }
 
-    val behaviorParamTypes = method.params.map { (_, paramType, isVararg) ->
-        if (isVararg && paramType.startsWith("Array<")) {
-            paramType.replace("Array<", "Array<out ")
-        } else {
-            paramType
+    val behaviorParamTypes =
+        method.params.map { (_, paramType, isVararg) ->
+            if (isVararg && paramType.startsWith("Array<")) {
+                paramType.replace("Array<", "Array<out ")
+            } else {
+                paramType
+            }
         }
-    }
 
     val erasedParamTypes = behaviorParamTypes.map { it.eraseMethodTypeParameters(method.typeParameters) }
     val erasedReturnType = method.returnType.eraseMethodTypeParameters(method.typeParameters)
 
-    val behaviorFinalParamTypes = if (method.extensionReceiverType != null) {
-        val erasedReceiverType = method.extensionReceiverType.eraseMethodTypeParameters(method.typeParameters)
-        listOf(erasedReceiverType) + erasedParamTypes
-    } else {
-        erasedParamTypes
-    }
+    val behaviorFinalParamTypes =
+        if (method.extensionReceiverType != null) {
+            val erasedReceiverType = method.extensionReceiverType.eraseMethodTypeParameters(method.typeParameters)
+            listOf(erasedReceiverType) + erasedParamTypes
+        } else {
+            erasedParamTypes
+        }
 
     if (isOpenMethod) {
         if (method.isSuspend) {
             classBuilder.nullableSuspendBehaviorProperty(
                 methodName = method.name,
                 paramTypes = behaviorFinalParamTypes,
-                returnType = erasedReturnType
+                returnType = erasedReturnType,
             )
         } else {
             classBuilder.nullableBehaviorProperty(
                 methodName = method.name,
                 paramTypes = behaviorFinalParamTypes,
-                returnType = erasedReturnType
+                returnType = erasedReturnType,
             )
         }
     } else {
@@ -931,14 +962,14 @@ private fun generateMethodBehaviorProperty(
                 methodName = method.name,
                 paramTypes = behaviorFinalParamTypes,
                 returnType = erasedReturnType,
-                defaultValue = behaviorDefault
+                defaultValue = behaviorDefault,
             )
         } else {
             classBuilder.behaviorProperty(
                 methodName = method.name,
                 paramTypes = behaviorFinalParamTypes,
                 returnType = erasedReturnType,
-                defaultValue = behaviorDefault
+                defaultValue = behaviorDefault,
             )
         }
     }
@@ -1020,7 +1051,7 @@ private fun generateMethodOverride(
             returnType = method.returnType,
             useSuperDelegation = isOpenMethod,
             extensionReceiverType = method.extensionReceiverType,
-            isOperator = method.isOperator
+            isOperator = method.isOperator,
         )
     } else {
         classBuilder.overrideMethod(
@@ -1031,7 +1062,7 @@ private fun generateMethodOverride(
             typeParameters = method.typeParameters,
             useSuperDelegation = isOpenMethod,
             extensionReceiverType = method.extensionReceiverType,
-            isOperator = method.isOperator
+            isOperator = method.isOperator,
         )
     }
 }
@@ -1052,43 +1083,46 @@ private fun generatePropertyOverride(
         classBuilder.property(prop.name, prop.type) {
             override()
             mutable()
-            getter = if (isOpenProperty) {
-                listOf(
-                    "_${prop.name}CallCount.update { it + 1 }",
-                    "return ${prop.name}Getter?.invoke() ?: super.${prop.name}"
-                ).joinToString("\n")
-            } else {
-                listOf(
-                    "_${prop.name}CallCount.update { it + 1 }",
-                    "return ${prop.name}Getter()"
-                ).joinToString("\n")
-            }
-            setter = if (isOpenProperty) {
-                listOf(
-                    "_set${capitalizedName}CallCount.update { it + 1 }",
-                    "${prop.name}Setter?.invoke(value) ?: run { super.${prop.name} = value }"
-                ).joinToString("\n")
-            } else {
-                listOf(
-                    "_set${capitalizedName}CallCount.update { it + 1 }",
-                    "${prop.name}Setter(value)"
-                ).joinToString("\n")
-            }
+            getter =
+                if (isOpenProperty) {
+                    listOf(
+                        "_${prop.name}CallCount.update { it + 1 }",
+                        "return ${prop.name}Getter?.invoke() ?: super.${prop.name}",
+                    ).joinToString("\n")
+                } else {
+                    listOf(
+                        "_${prop.name}CallCount.update { it + 1 }",
+                        "return ${prop.name}Getter()",
+                    ).joinToString("\n")
+                }
+            setter =
+                if (isOpenProperty) {
+                    listOf(
+                        "_set${capitalizedName}CallCount.update { it + 1 }",
+                        "${prop.name}Setter?.invoke(value) ?: run { super.${prop.name} = value }",
+                    ).joinToString("\n")
+                } else {
+                    listOf(
+                        "_set${capitalizedName}CallCount.update { it + 1 }",
+                        "${prop.name}Setter(value)",
+                    ).joinToString("\n")
+                }
         }
     } else {
         classBuilder.property(prop.name, prop.type) {
             override()
-            getter = if (isOpenProperty) {
-                listOf(
-                    "_${prop.name}CallCount.update { it + 1 }",
-                    "return ${prop.name}Behavior?.invoke() ?: super.${prop.name}"
-                ).joinToString("\n")
-            } else {
-                listOf(
-                    "_${prop.name}CallCount.update { it + 1 }",
-                    "return ${prop.name}Behavior()"
-                ).joinToString("\n")
-            }
+            getter =
+                if (isOpenProperty) {
+                    listOf(
+                        "_${prop.name}CallCount.update { it + 1 }",
+                        "return ${prop.name}Behavior?.invoke() ?: super.${prop.name}",
+                    ).joinToString("\n")
+                } else {
+                    listOf(
+                        "_${prop.name}CallCount.update { it + 1 }",
+                        "return ${prop.name}Behavior()",
+                    ).joinToString("\n")
+                }
         }
     }
 }
@@ -1101,26 +1135,28 @@ private fun generateMethodConfigMethod(
     classBuilder: ClassBuilder,
     method: MethodSpec,
 ) {
-    val behaviorParamTypes = method.params.map { (_, paramType, isVararg) ->
-        if (isVararg && paramType.startsWith("Array<")) {
-            paramType.replace("Array<", "Array<out ")
-        } else {
-            paramType
+    val behaviorParamTypes =
+        method.params.map { (_, paramType, isVararg) ->
+            if (isVararg && paramType.startsWith("Array<")) {
+                paramType.replace("Array<", "Array<out ")
+            } else {
+                paramType
+            }
         }
-    }
 
-    val configureFinalParamTypes = if (method.extensionReceiverType != null) {
-        listOf(method.extensionReceiverType) + behaviorParamTypes
-    } else {
-        behaviorParamTypes
-    }
+    val configureFinalParamTypes =
+        if (method.extensionReceiverType != null) {
+            listOf(method.extensionReceiverType) + behaviorParamTypes
+        } else {
+            behaviorParamTypes
+        }
 
     classBuilder.configureMethod(
         methodName = method.name,
         paramTypes = configureFinalParamTypes,
         returnType = method.returnType,
         isSuspend = method.isSuspend,
-        typeParameters = method.typeParameters
+        typeParameters = method.typeParameters,
     )
 }
 

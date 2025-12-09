@@ -16,7 +16,6 @@ import kotlin.test.assertTrue
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DefaultValueResolverTest {
-
     private val resolver = DefaultValueResolver()
 
     // ===========================================
@@ -51,9 +50,10 @@ class DefaultValueResolverTest {
     @Test
     fun `GIVEN nullable List WHEN resolving THEN returns null not emptyList`() {
         // GIVEN
-        val type = CodeType.Nullable(
-            CodeType.Generic("List", listOf(CodeType.Simple("String")))
-        )
+        val type =
+            CodeType.Nullable(
+                CodeType.Generic("List", listOf(CodeType.Simple("String"))),
+            )
 
         // WHEN
         val result = resolver.resolve(type)
@@ -196,10 +196,11 @@ class DefaultValueResolverTest {
     @Test
     fun `GIVEN Map type WHEN resolving THEN returns emptyMap`() {
         // GIVEN
-        val type = CodeType.Generic(
-            "Map",
-            listOf(CodeType.Simple("String"), CodeType.Simple("Int"))
-        )
+        val type =
+            CodeType.Generic(
+                "Map",
+                listOf(CodeType.Simple("String"), CodeType.Simple("Int")),
+            )
 
         // WHEN
         val result = resolver.resolve(type)
@@ -215,12 +216,13 @@ class DefaultValueResolverTest {
     @Test
     fun `GIVEN StateFlow of List of String WHEN resolving THEN composes correctly`() {
         // GIVEN
-        val type = CodeType.Generic(
-            "StateFlow",
-            listOf(
-                CodeType.Generic("List", listOf(CodeType.Simple("String")))
+        val type =
+            CodeType.Generic(
+                "StateFlow",
+                listOf(
+                    CodeType.Generic("List", listOf(CodeType.Simple("String"))),
+                ),
             )
-        )
 
         // WHEN
         val result = resolver.resolve(type)
@@ -237,12 +239,13 @@ class DefaultValueResolverTest {
     @Test
     fun `GIVEN Result of StateFlow of Int WHEN resolving THEN composes correctly`() {
         // GIVEN
-        val type = CodeType.Generic(
-            "Result",
-            listOf(
-                CodeType.Generic("StateFlow", listOf(CodeType.Simple("Int")))
+        val type =
+            CodeType.Generic(
+                "Result",
+                listOf(
+                    CodeType.Generic("StateFlow", listOf(CodeType.Simple("Int"))),
+                ),
             )
-        )
 
         // WHEN
         val result = resolver.resolve(type)

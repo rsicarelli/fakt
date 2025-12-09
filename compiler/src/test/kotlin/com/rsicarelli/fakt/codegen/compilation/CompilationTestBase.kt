@@ -14,7 +14,6 @@ import kotlin.test.assertEquals
  * integration with the real compiler.
  */
 abstract class CompilationTestBase {
-
     /**
      * Asserts that the given source code compiles successfully.
      *
@@ -26,18 +25,20 @@ abstract class CompilationTestBase {
      */
     protected fun assertCompiles(
         sourceCode: String,
-        description: String = "Generated code"
+        description: String = "Generated code",
     ) {
-        val result = KotlinCompilation().apply {
-            sources = listOf(SourceFile.kotlin("Generated.kt", sourceCode))
-            inheritClassPath = true
-            messageOutputStream = System.out
-        }.compile()
+        val result =
+            KotlinCompilation()
+                .apply {
+                    sources = listOf(SourceFile.kotlin("Generated.kt", sourceCode))
+                    inheritClassPath = true
+                    messageOutputStream = System.out
+                }.compile()
 
         assertEquals(
             KotlinCompilation.ExitCode.OK,
             result.exitCode,
-            "$description failed to compile:\n${result.messages}"
+            "$description failed to compile:\n${result.messages}",
         )
     }
 
@@ -51,18 +52,20 @@ abstract class CompilationTestBase {
      */
     protected fun assertDoesNotCompile(
         sourceCode: String,
-        description: String = "Generated code"
+        description: String = "Generated code",
     ) {
-        val result = KotlinCompilation().apply {
-            sources = listOf(SourceFile.kotlin("Generated.kt", sourceCode))
-            inheritClassPath = true
-            messageOutputStream = System.out
-        }.compile()
+        val result =
+            KotlinCompilation()
+                .apply {
+                    sources = listOf(SourceFile.kotlin("Generated.kt", sourceCode))
+                    inheritClassPath = true
+                    messageOutputStream = System.out
+                }.compile()
 
         assertEquals(
             KotlinCompilation.ExitCode.COMPILATION_ERROR,
             result.exitCode,
-            "$description should not compile but did"
+            "$description should not compile but did",
         )
     }
 }
