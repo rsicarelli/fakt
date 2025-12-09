@@ -84,7 +84,9 @@ internal fun PropertyAnalysis.toPropertySpec(typeResolver: TypeResolution): Prop
  *
  * @return Pair of (methods, properties) ready for generateCompleteFake()
  */
-internal fun InterfaceAnalysis.toCodegenSpecs(typeResolver: TypeResolution): Pair<List<MethodSpec>, List<PropertySpec>> {
+internal fun InterfaceAnalysis.toCodegenSpecs(
+    typeResolver: TypeResolution,
+): Pair<List<MethodSpec>, List<PropertySpec>> {
     val methodSpecs = functions.map { it.toMethodSpec(typeResolver) }
     val propertySpecs = properties.map { it.toPropertySpec(typeResolver) }
 

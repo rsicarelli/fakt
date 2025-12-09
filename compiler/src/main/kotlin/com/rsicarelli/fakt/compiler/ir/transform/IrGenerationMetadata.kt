@@ -32,10 +32,12 @@ import org.jetbrains.kotlin.ir.types.IrType
  *
  * @property interfaceName Simple interface name (e.g., "UserRepository")
  * @property packageName Package name (e.g., "com.example")
- * @property typeParameters Class-level type parameters with bounds (e.g., ["T", "K : Comparable<K>"])
+ * @property typeParameters Class-level type parameters with bounds
+ *     (e.g., ["T", "K : Comparable<K>"])
  * @property properties All interface properties with resolved IrTypes
  * @property functions All interface functions with resolved IrTypes
- * @property genericPattern Classification of generic usage (NoGenerics, ClassLevel, MethodLevel, Mixed) - computed lazily
+ * @property genericPattern Classification of generic usage
+ *     (NoGenerics, ClassLevel, MethodLevel, Mixed) - computed lazily
  * @property sourceInterface Original IrClass for code generation context
  */
 class IrGenerationMetadata internal constructor(
@@ -144,12 +146,14 @@ data class IrParameterMetadata(
  *
  * @property className Simple class name (e.g., "AbstractRepository")
  * @property packageName Package name (e.g., "com.example")
- * @property typeParameters Class-level type parameters with bounds (e.g., ["T", "K : Comparable<K>"])
+ * @property typeParameters Class-level type parameters with bounds
+ *     (e.g., ["T", "K : Comparable<K>"])
  * @property abstractProperties Abstract properties (must be implemented)
  * @property openProperties Open properties (can be overridden)
  * @property abstractMethods Abstract methods (must be implemented)
  * @property openMethods Open methods (can be overridden)
- * @property genericPattern Classification of generic usage (NoGenerics, ClassLevel, MethodLevel, Mixed) - computed lazily
+ * @property genericPattern Classification of generic usage
+ *     (NoGenerics, ClassLevel, MethodLevel, Mixed) - computed lazily
  * @property sourceClass Original IrClass for code generation context
  */
 class IrClassGenerationMetadata internal constructor(

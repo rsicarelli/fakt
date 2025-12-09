@@ -14,12 +14,18 @@ internal fun calculateLOC(code: String): Int =
             !trimmed.startsWith("*")
     }
 
+/** Number of bytes in one kilobyte. */
+private const val BYTES_PER_KB = 1024L
+
+/** Number of bytes in one megabyte. */
+private const val BYTES_PER_MB = 1024L * 1024L
+
 /**
  * Formats byte count into human-readable string.
  */
 internal fun Long.formatBytes(): String =
     when {
-        this < 1024 -> "$this B"
-        this < 1024 * 1024 -> "${this / 1024} KB"
-        else -> "${this / (1024 * 1024)} MB"
+        this < BYTES_PER_KB -> "$this B"
+        this < BYTES_PER_MB -> "${this / BYTES_PER_KB} KB"
+        else -> "${this / BYTES_PER_MB} MB"
     }

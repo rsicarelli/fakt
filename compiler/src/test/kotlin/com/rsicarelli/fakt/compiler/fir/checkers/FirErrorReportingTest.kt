@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.fir.checkers
 
-import com.rsicarelli.fakt.compiler.fir.metadata.FirFaktErrors
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.assertContains
@@ -136,72 +135,4 @@ class FirErrorReportingTest {
         assertContains(message, "external", ignoreCase = true)
         assertContains(message, "cannot", ignoreCase = true)
     }
-
-    /**
-     * Integration Test Documentation:
-     *
-     * The following error scenarios are validated through E2E tests in Phase 3B.5:
-     *
-     * 1. **Non-interface with @Fake**:
-     *    ```kotlin
-     *    @Fake
-     *    class NotAnInterface  // ERROR: [FAKT] @Fake can only be applied to interfaces
-     *    ```
-     *
-     * 2. **Sealed interface with @Fake**:
-     *    ```kotlin
-     *    @Fake
-     *    sealed interface SealedRepo  // ERROR: [FAKT] @Fake cannot be applied to sealed interfaces
-     *    ```
-     *
-     * 3. **Local interface with @Fake**:
-     *    ```kotlin
-     *    fun test() {
-     *        @Fake
-     *        interface LocalRepo  // ERROR: [FAKT] @Fake cannot be applied to local classes or interfaces
-     *    }
-     *    ```
-     *
-     * 4. **Expect interface with @Fake** (KMP multiplatform):
-     *    ```kotlin
-     *    @Fake
-     *    expect interface PlatformService  // ERROR: [FAKT] @Fake cannot be applied to expect declarations (KMP)
-     *    ```
-     *
-     * 5. **External interface with @Fake** (FFI):
-     *    ```kotlin
-     *    @Fake
-     *    external interface NativeInterface  // ERROR: [FAKT] @Fake cannot be applied to external declarations
-     *    ```
-     *
-     * 6. **Non-abstract class with @Fake**:
-     *    ```kotlin
-     *    @Fake
-     *    class ConcreteClass  // ERROR: [FAKT] @Fake class must be abstract
-     *    ```
-     *
-     * 7. **Sealed class with @Fake**:
-     *    ```kotlin
-     *    @Fake
-     *    sealed class SealedBase  // ERROR: [FAKT] @Fake class cannot be sealed
-     *    ```
-     *
-     * 8. **Expect class with @Fake** (KMP multiplatform):
-     *    ```kotlin
-     *    @Fake
-     *    expect abstract class PlatformRepository  // ERROR: [FAKT] @Fake cannot be applied to expect declarations (KMP)
-     *    ```
-     *
-     * 9. **External class with @Fake** (FFI):
-     *    ```kotlin
-     *    @Fake
-     *    external class NativeClass  // ERROR: [FAKT] @Fake cannot be applied to external declarations
-     *    ```
-     *
-     * Verification:
-     * - Run sample build with FIR mode enabled
-     * - Check stderr for error messages
-     * - Verify invalid @Fake usages are rejected
-     * - Verify no fake code is generated for invalid declarations
-     */
 }

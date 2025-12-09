@@ -4,6 +4,9 @@ package com.rsicarelli.fakt.compiler.core.telemetry
 
 import com.rsicarelli.fakt.compiler.api.TimeFormatter
 
+/** Width for time value display in metrics output formatting (characters). */
+private const val TIME_DISPLAY_WIDTH = 10
+
 /**
  * Aggregate metrics combining all FIR and IR data for tree-style logging.
  *
@@ -88,9 +91,27 @@ data class UnifiedMetricsTree(
     fun toTreeString(targetColumn: Int = 80): String =
         buildString {
             appendLine("FIR + IR trace")
-            appendLine(formatLine("├─ Total FIR time", TimeFormatter.format(totalFirTimeNanos), targetColumn))
-            appendLine(formatLine("├─ Total IR time", TimeFormatter.format(totalIrTimeNanos), targetColumn))
-            appendLine(formatLine("├─ Total time", TimeFormatter.format(totalTimeNanos), targetColumn))
+            appendLine(
+                formatLine(
+                    "├─ Total FIR time",
+                    TimeFormatter.format(totalFirTimeNanos),
+                    targetColumn,
+                ),
+            )
+            appendLine(
+                formatLine(
+                    "├─ Total IR time",
+                    TimeFormatter.format(totalIrTimeNanos),
+                    targetColumn,
+                ),
+            )
+            appendLine(
+                formatLine(
+                    "├─ Total time",
+                    TimeFormatter.format(totalTimeNanos),
+                    targetColumn,
+                ),
+            )
             appendLine("├─ Interfaces: ${interfaces.size}")
 
             interfaces.forEachIndexed { index, metric ->
@@ -148,7 +169,9 @@ data class UnifiedMetricsTree(
         appendLine(formatLine("$prefix ${metric.name}", totalTime, targetColumn))
 
         // Line 2: FIR analysis details
-        val firLine = "$detailPrefix├─ FIR analysis: ${metric.firTypeParamCount} type parameters, ${metric.firMemberCount} members"
+        val firLine =
+            "$detailPrefix├─ FIR analysis: ${metric.firTypeParamCount} type parameters, " +
+                "${metric.firMemberCount} members"
         appendLine(formatLine(firLine, firTime, targetColumn))
 
         // Line 3: IR generation details
@@ -181,7 +204,7 @@ data class UnifiedMetricsTree(
         time: String,
         targetColumn: Int,
     ): String {
-        val timeWithPadding = time.padStart(10) // Reserve 10 chars for time value
+        val timeWithPadding = time.padStart(TIME_DISPLAY_WIDTH)
         val availableSpace = targetColumn - timeWithPadding.length
         return if (text.length >= availableSpace) {
             // Text is too long, just append time with single space

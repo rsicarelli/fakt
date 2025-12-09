@@ -48,6 +48,7 @@ fun ClassBuilder.overrideMethod(
             val parts = typeParam.split(" : ", limit = 2)
             val name = parts[0].trim()
             val constraints = if (parts.size > 1) arrayOf(parts[1].trim()) else emptyArray()
+            @Suppress("SpreadOperator") // Necessary for conditional vararg constraints (0 or 1 element)
             typeParam(name, *constraints)
         }
 
@@ -139,7 +140,9 @@ fun ClassBuilder.overrideMethod(
                     "$callTracking\n        $invocation ?: $superCall"
                 } else {
                     if (needsCast) {
-                        "$callTracking\n        @Suppress(\"UNCHECKED_CAST\")\n        return ($invocation ?: $superCall)$returnCast"
+                        "$callTracking\n        " +
+                            "@Suppress(\"UNCHECKED_CAST\")\n        " +
+                            "return ($invocation ?: $superCall)$returnCast"
                     } else {
                         "$callTracking\n        return $invocation ?: $superCall"
                     }
@@ -150,7 +153,9 @@ fun ClassBuilder.overrideMethod(
                     "$callTracking\n        ${name}Behavior($paramNames)"
                 } else {
                     if (needsCast) {
-                        "$callTracking\n        @Suppress(\"UNCHECKED_CAST\")\n        return ${name}Behavior($paramNames)$returnCast"
+                        "$callTracking\n        " +
+                            "@Suppress(\"UNCHECKED_CAST\")\n        " +
+                            "return ${name}Behavior($paramNames)$returnCast"
                     } else {
                         "$callTracking\n        return ${name}Behavior($paramNames)"
                     }
@@ -274,6 +279,7 @@ fun ClassBuilder.configureMethod(
             val parts = typeParam.split(" : ", limit = 2)
             val name = parts[0].trim()
             val constraints = if (parts.size > 1) arrayOf(parts[1].trim()) else emptyArray()
+            @Suppress("SpreadOperator") // Necessary for conditional vararg constraints (0 or 1 element)
             typeParam(name, *constraints)
         }
 

@@ -11,7 +11,6 @@ import com.rsicarelli.fakt.compiler.core.telemetry.calculateLOC
 import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
 import org.jetbrains.kotlin.ir.declarations.IrClass
-import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.util.packageFqName
 
 /**
@@ -33,13 +32,11 @@ internal data class CodeGenerators(
  * @property implementation The generated implementation class code
  * @property factory The generated factory function code
  * @property configDsl The generated configuration DSL code
- * @property importCount The number of imports required for this fake
  */
 internal data class GeneratedCode(
     val implementation: String,
     val factory: String,
     val configDsl: String,
-    val importCount: Int,
 ) {
     /**
      * Calculates total lines of code across all generated components.
@@ -50,13 +47,6 @@ internal data class GeneratedCode(
         val combinedCode = "$implementation\n$factory\n$configDsl"
         return calculateLOC(combinedCode)
     }
-
-    /**
-     * Calculates total file size in bytes.
-     *
-     * @return Total size of all generated code
-     */
-    fun calculateTotalBytes(): Int = implementation.length + factory.length + configDsl.length
 }
 
 /**
@@ -87,17 +77,29 @@ internal class CodeGenerator(
     private val generators: CodeGenerators,
     private val logger: FaktLogger,
 ) {
+    private companion object {
+        /** Base overhead for generated code (package, imports, class header). */
+        const val CODE_SIZE_BASE_OVERHEAD = 500
+
+        /** Estimated characters per method (call tracking + behavior + override + config). */
+        const val CODE_SIZE_PER_METHOD = 200
+
+        /** Estimated characters per property (call tracking + behavior + override + config). */
+        const val CODE_SIZE_PER_PROPERTY = 100
+
+        /** Estimated characters per import statement. */
+        const val CODE_SIZE_PER_IMPORT = 30
+    }
+
     /**
      * Generates complete fake implementation including class, factory, and configuration DSL.
      *
      * @param sourceInterface The interface to generate a fake for
      * @param analysis The analyzed interface metadata
-     * @param moduleFragment The module context for output directory resolution
      */
     fun generateWorkingFakeImplementation(
         sourceInterface: IrClass,
         analysis: InterfaceAnalysis,
-        moduleFragment: IrModuleFragment,
     ): GeneratedCode {
         val interfaceName = analysis.interfaceName
         val fakeClassName = "Fake${interfaceName}Impl"
@@ -136,19 +138,15 @@ internal class CodeGenerator(
                             analysis,
                             fakeClassName,
                         ),
-                    importCount = 0, // TODO: Remove (imports now in implementationCode)
                 )
 
             writeGeneratedCode(
-                sourceInterface = sourceInterface,
-                moduleFragment = moduleFragment,
                 context =
                     WriteContext(
                         packageName = packageName,
                         fakeClassName = fakeClassName,
                         interfaceName = interfaceName,
                     ),
-                analysis = analysis,
                 code = generatedCode,
             )
 
@@ -167,12 +165,10 @@ internal class CodeGenerator(
      *
      * @param sourceClass The class to generate a fake for
      * @param analysis The analyzed class metadata
-     * @param moduleFragment The module context for output directory resolution
      */
     fun generateWorkingClassFake(
         sourceClass: IrClass,
         analysis: ClassAnalysis,
-        moduleFragment: IrModuleFragment,
     ): GeneratedCode {
         val className = analysis.className
         val fakeClassName = "Fake${className}Impl"
@@ -180,7 +176,8 @@ internal class CodeGenerator(
 
         try {
             // Collect required imports for implementation
-            val requiredImports = importResolver.collectRequiredImportsForClass(analysis, packageName)
+            val requiredImports =
+                importResolver.collectRequiredImportsForClass(analysis, packageName)
 
             // Generate implementation + factory
             val generated =
@@ -213,19 +210,15 @@ internal class CodeGenerator(
                             analysis,
                             fakeClassName,
                         ),
-                    importCount = 0, // TODO: Remove (imports now in implementationCode)
                 )
 
             writeGeneratedCodeForClass(
-                sourceClass = sourceClass,
-                moduleFragment = moduleFragment,
                 context =
                     WriteContext(
                         packageName = packageName,
                         fakeClassName = fakeClassName,
                         interfaceName = className, // Reuse interfaceName field for class name
                     ),
-                analysis = analysis,
                 code = generatedCode,
             )
 
@@ -242,15 +235,11 @@ internal class CodeGenerator(
      * Uses Gradle-provided output directory from SourceSetContext (no pattern matching needed).
      */
     private fun writeGeneratedCode(
-        sourceInterface: IrClass,
-        moduleFragment: IrModuleFragment,
         context: WriteContext,
-        analysis: InterfaceAnalysis,
         code: GeneratedCode,
     ) {
         val packageName = context.packageName
         val fakeClassName = context.fakeClassName
-        val interfaceName = context.interfaceName
 
         // Use Gradle-provided output directory (authoritative source from build configuration)
         val outputDir = java.io.File(sourceSetContext.outputDirectory)
@@ -290,15 +279,11 @@ internal class CodeGenerator(
      * Uses Gradle-provided output directory from SourceSetContext (no pattern matching needed).
      */
     private fun writeGeneratedCodeForClass(
-        sourceClass: IrClass,
-        moduleFragment: IrModuleFragment,
         context: WriteContext,
-        analysis: ClassAnalysis,
         code: GeneratedCode,
     ) {
         val packageName = context.packageName
         val fakeClassName = context.fakeClassName
-        val className = context.interfaceName // Reused field name
 
         // Use Gradle-provided output directory (authoritative source from build configuration)
         val outputDir = java.io.File(sourceSetContext.outputDirectory)
@@ -333,71 +318,6 @@ internal class CodeGenerator(
     }
 
     /**
-     * Escapes package name segments that need backticks in Kotlin.
-     *
-     * Package segments need backticks if they:
-     * - Start with a digit (e.g., "3_properties")
-     * - Are Kotlin keywords
-     * - Contain special characters
-     *
-     * @param packageName The fully-qualified package name
-     * @return The package name with properly escaped segments
-     */
-    private fun escapePackageName(packageName: String): String {
-        if (packageName.isEmpty()) return packageName
-
-        return packageName
-            .split('.')
-            .joinToString(".") { segment ->
-                when {
-                    // Check if segment starts with a digit
-                    segment.firstOrNull()?.isDigit() == true -> "`$segment`"
-                    // Check if segment is a Kotlin keyword
-                    segment in KOTLIN_KEYWORDS -> "`$segment`"
-                    // Otherwise, no escaping needed
-                    else -> segment
-                }
-            }
-    }
-
-    companion object {
-        /**
-         * List of Kotlin keywords that need backtick escaping in package names.
-         */
-        private val KOTLIN_KEYWORDS =
-            setOf(
-                "as",
-                "break",
-                "class",
-                "continue",
-                "do",
-                "else",
-                "false",
-                "for",
-                "fun",
-                "if",
-                "in",
-                "interface",
-                "is",
-                "null",
-                "object",
-                "package",
-                "return",
-                "super",
-                "this",
-                "throw",
-                "true",
-                "try",
-                "typealias",
-                "typeof",
-                "val",
-                "var",
-                "when",
-                "while",
-            )
-    }
-
-    /**
      * Estimates the size of generated code for StringBuilder capacity hint.
      *
      * This avoids StringBuilder reallocation during code generation,
@@ -418,15 +338,9 @@ internal class CodeGenerator(
         methodCount: Int,
         propertyCount: Int,
         importCount: Int,
-    ): Int {
-        val baseOverhead = 500
-        val perMethod = 200
-        val perProperty = 100
-        val perImport = 30
-
-        return baseOverhead +
-            (methodCount * perMethod) +
-            (propertyCount * perProperty) +
-            (importCount * perImport)
-    }
+    ): Int =
+        CODE_SIZE_BASE_OVERHEAD +
+            (methodCount * CODE_SIZE_PER_METHOD) +
+            (propertyCount * CODE_SIZE_PER_PROPERTY) +
+            (importCount * CODE_SIZE_PER_IMPORT)
 }

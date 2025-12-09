@@ -103,7 +103,11 @@ internal class ConfigurationDslGenerator(
             // For extension functions, prepend receiver type to parameter list
             val parameterTypes =
                 if (function.extensionReceiverType != null) {
-                    val receiverTypeStr = typeResolver.irTypeToKotlinString(function.extensionReceiverType, preserveTypeParameters = true)
+                    val receiverTypeStr =
+                        typeResolver.irTypeToKotlinString(
+                            function.extensionReceiverType,
+                            preserveTypeParameters = true,
+                        )
                     if (regularParamTypes.isEmpty()) {
                         receiverTypeStr
                     } else {
@@ -357,7 +361,11 @@ internal class ConfigurationDslGenerator(
         // For extension functions, prepend receiver type to parameter list
         val parameterTypes =
             if (function.extensionReceiverType != null) {
-                val receiverTypeStr = typeResolver.irTypeToKotlinString(function.extensionReceiverType, preserveTypeParameters = true)
+                val receiverTypeStr =
+                    typeResolver.irTypeToKotlinString(
+                        function.extensionReceiverType,
+                        preserveTypeParameters = true,
+                    )
                 if (regularParamTypes.isEmpty()) {
                     receiverTypeStr
                 } else {

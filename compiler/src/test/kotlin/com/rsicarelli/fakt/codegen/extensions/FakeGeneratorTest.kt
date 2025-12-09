@@ -72,10 +72,16 @@ class FakeGeneratorTest {
         val result = builder.build()
 
         // THEN
-        assertContains(result, "private var saveUserBehavior: suspend (User) -> Result<Unit> = { Result.success(Unit) }")
+        assertContains(
+            result,
+            "private var saveUserBehavior: suspend (User) -> Result<Unit> = { Result.success(Unit) }",
+        )
         assertContains(result, "override suspend fun saveUser(user: User): Result<Unit> {")
         assertContains(result, "return saveUserBehavior(user)")
-        assertContains(result, "internal fun configureSaveUser(behavior: suspend (User) -> Result<Unit>): Unit {")
+        assertContains(
+            result,
+            "internal fun configureSaveUser(behavior: suspend (User) -> Result<Unit>): Unit {",
+        )
     }
 
     @Test
@@ -133,7 +139,10 @@ class FakeGeneratorTest {
         // THEN
         assertContains(result, "import kotlinx.coroutines.flow.StateFlow")
         assertContains(result, "import kotlinx.coroutines.flow.MutableStateFlow")
-        assertContains(result, "private val usersValue: StateFlow<List<User>> = MutableStateFlow(emptyList())")
+        assertContains(
+            result,
+            "private val usersValue: StateFlow<List<User>> = MutableStateFlow(emptyList())",
+        )
         assertContains(result, "override val users: StateFlow<List<User>>")
         assertContains(result, "get() = usersValue")
     }
@@ -173,7 +182,12 @@ class FakeGeneratorTest {
         val methods =
             listOf(
                 MethodSpec("getUser", listOf(Triple("id", "String", false)), "User?"),
-                MethodSpec("saveUser", listOf(Triple("user", "User", false)), "Result<Unit>", isSuspend = true),
+                MethodSpec(
+                    "saveUser",
+                    listOf(Triple("user", "User", false)),
+                    "Result<Unit>",
+                    isSuspend = true,
+                ),
                 MethodSpec("deleteUser", listOf(Triple("id", "String", false)), "Unit"),
             )
 
@@ -273,7 +287,12 @@ class FakeGeneratorTest {
             listOf(
                 MethodSpec("getUser", listOf(Triple("id", "String", false)), "User?"),
                 MethodSpec("getAllUsers", emptyList(), "List<User>"),
-                MethodSpec("saveUser", listOf(Triple("user", "User", false)), "Result<Unit>", isSuspend = true),
+                MethodSpec(
+                    "saveUser",
+                    listOf(Triple("user", "User", false)),
+                    "Result<Unit>",
+                    isSuspend = true,
+                ),
             )
 
         val properties =
@@ -316,7 +335,10 @@ class FakeGeneratorTest {
         assertContains(result, "class FakeUserServiceImpl : UserService")
 
         // THEN - Properties
-        assertContains(result, "private val usersValue: StateFlow<List<User>> = MutableStateFlow(emptyList())")
+        assertContains(
+            result,
+            "private val usersValue: StateFlow<List<User>> = MutableStateFlow(emptyList())",
+        )
         assertContains(result, "override val users: StateFlow<List<User>>")
         assertContains(result, "private val countValue: Int = 0")
         assertContains(result, "override val count: Int")
@@ -324,14 +346,26 @@ class FakeGeneratorTest {
         // THEN - Methods
         assertContains(result, "private var getUserBehavior: (String) -> User? = { null }")
         assertContains(result, "override fun getUser(id: String): User?")
-        assertContains(result, "private var getAllUsersBehavior: () -> List<User> = { emptyList() }")
+        assertContains(
+            result,
+            "private var getAllUsersBehavior: () -> List<User> = { emptyList() }",
+        )
         assertContains(result, "override fun getAllUsers(): List<User>")
-        assertContains(result, "private var saveUserBehavior: suspend (User) -> Result<Unit> = { Result.success(Unit) }")
+        assertContains(
+            result,
+            "private var saveUserBehavior: suspend (User) -> Result<Unit> = { Result.success(Unit) }",
+        )
         assertContains(result, "override suspend fun saveUser(user: User): Result<Unit>")
 
         // THEN - Configuration methods
         assertContains(result, "internal fun configureGetUser(behavior: (String) -> User?): Unit")
-        assertContains(result, "internal fun configureGetAllUsers(behavior: () -> List<User>): Unit")
-        assertContains(result, "internal fun configureSaveUser(behavior: suspend (User) -> Result<Unit>): Unit")
+        assertContains(
+            result,
+            "internal fun configureGetAllUsers(behavior: () -> List<User>): Unit",
+        )
+        assertContains(
+            result,
+            "internal fun configureSaveUser(behavior: suspend (User) -> Result<Unit>): Unit",
+        )
     }
 }

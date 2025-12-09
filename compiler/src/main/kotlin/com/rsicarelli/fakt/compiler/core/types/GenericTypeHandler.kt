@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.core.types
 
-import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrStarProjection
 import org.jetbrains.kotlin.ir.types.IrType
@@ -39,8 +38,13 @@ internal class GenericTypeHandler {
 
         return when {
             preserveTypeParameters && irType.arguments.isNotEmpty() -> {
+                @Suppress("KotlinConstantConditions")
                 val typeArgsString =
-                    renderTypeArguments(irType.arguments, preserveTypeParameters, typeRenderer)
+                    renderTypeArguments(
+                        arguments = irType.arguments,
+                        preserveTypeParameters = preserveTypeParameters,
+                        typeRenderer = typeRenderer,
+                    )
                 "$className$typeArgsString"
             }
 
