@@ -106,6 +106,10 @@ jobs:
   deploy-docs:
     name: Deploy Hotfix Documentation
     needs: publish
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
     uses: ./.github/workflows/deploy-docs.yml
     with:
       version: ${{ needs.publish.outputs.version_new }}
