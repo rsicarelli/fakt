@@ -1,6 +1,3 @@
 public abstract interface annotation class com/rsicarelli/fakt/Fake : java/lang/annotation/Annotation {
 }
 
-public abstract interface annotation class com/rsicarelli/fakt/GeneratesFake : java/lang/annotation/Annotation {
-}
-
