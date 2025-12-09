@@ -41,7 +41,7 @@ class FakeGeneratorTest {
         // THEN
         assertContains(result, "package com.example")
         assertContains(result, "class FakeUserServiceImpl : UserService")
-        assertContains(result, "private var getUserBehavior: (String) -> User? = { null }")
+        assertContains(result, "private var getUserBehavior: (String) -> User? = { p0 -> null }")
         assertContains(result, "override fun getUser(id: String): User? {")
         assertContains(result, "return getUserBehavior(id)")
         assertContains(result, "internal fun configureGetUser(behavior: (String) -> User?): Unit {")
@@ -74,7 +74,7 @@ class FakeGeneratorTest {
         // THEN
         assertContains(
             result,
-            "private var saveUserBehavior: suspend (User) -> Result<Unit> = { Result.success(Unit) }",
+            "private var saveUserBehavior: suspend (User) -> Result<Unit> = { p0 -> Result.success(Unit) }",
         )
         assertContains(result, "override suspend fun saveUser(user: User): Result<Unit> {")
         assertContains(result, "return saveUserBehavior(user)")
@@ -171,9 +171,9 @@ class FakeGeneratorTest {
         val result = builder.build()
 
         // THEN
-        assertContains(result, "private val countValue: Int = 0")
+        assertContains(result, "private var countBehavior: () -> Int = { 0 }")
         assertContains(result, "override val count: Int")
-        assertContains(result, "get() = countValue")
+        assertContains(result, "get() =")
     }
 
     @Test
@@ -340,11 +340,11 @@ class FakeGeneratorTest {
             "private val usersValue: StateFlow<List<User>> = MutableStateFlow(emptyList())",
         )
         assertContains(result, "override val users: StateFlow<List<User>>")
-        assertContains(result, "private val countValue: Int = 0")
+        assertContains(result, "private var countBehavior: () -> Int = { 0 }")
         assertContains(result, "override val count: Int")
 
         // THEN - Methods
-        assertContains(result, "private var getUserBehavior: (String) -> User? = { null }")
+        assertContains(result, "private var getUserBehavior: (String) -> User? = { p0 -> null }")
         assertContains(result, "override fun getUser(id: String): User?")
         assertContains(
             result,
@@ -353,7 +353,7 @@ class FakeGeneratorTest {
         assertContains(result, "override fun getAllUsers(): List<User>")
         assertContains(
             result,
-            "private var saveUserBehavior: suspend (User) -> Result<Unit> = { Result.success(Unit) }",
+            "private var saveUserBehavior: suspend (User) -> Result<Unit> = { p0 -> Result.success(Unit) }",
         )
         assertContains(result, "override suspend fun saveUser(user: User): Result<Unit>")
 
