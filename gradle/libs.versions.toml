@@ -13,30 +13,20 @@
 # limitations under the License.
 
 [versions]
-atomicfu = "0.29.0"
-autoService = "1.1.1"
+# Fakt version (auto-synced with gradle.properties:VERSION_NAME)
+fakt = "1.0.0-alpha01"
 binaryCompatibilityValidator = "0.18.1"
 detekt = "1.23.8"
-gjf = "1.28.0"
-jdk = "21"
 junit5 = "5.13.4"
-jvmTarget = "21"
 kotlin = "2.2.20"
 kotlin-compile-testing = "0.11.0"
 kotlinx-coroutines = "1.10.2"
 kotlinx-serialization = "1.9.0"
-ksp = "2.2.20-2.0.3"
-ktfmt = "0.56"
 ktlint-gradle = "13.1.0"
-licenseReport = "2.9"
+licenseReport = "3.0.1"
 mavenPublish = "0.35.0"
 spotless = "7.2.1"
 turbine = "1.2.0"
-# Fakt version (auto-synced with gradle.properties:VERSION_NAME)
-fakt = "1.0.0-alpha01"
-
-# Dependencies used in samples and documentation
-coroutines = "1.10.2"
 
 [libraries]
 coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
@@ -45,8 +35,6 @@ turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 
 # Fakt Internal Dependencies (using published Maven Central coordinates)
 fakt-runtime = { module = "com.rsicarelli:fakt-runtime", version.ref = "fakt" }
-fakt-compiler = { module = "com.rsicarelli:fakt-compiler", version.ref = "fakt" }
-fakt-compilerApi = { module = "com.rsicarelli:fakt-compiler-api", version.ref = "fakt" }
 
 # Gradle Plugins (for build-logic classpath)
 binaryCompatibilityValidator-gradlePlugin = { module = "org.jetbrains.kotlinx.binary-compatibility-validator:org.jetbrains.kotlinx.binary-compatibility-validator.gradle.plugin", version.ref = "binaryCompatibilityValidator" }
@@ -67,7 +55,6 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit5" }
 
 [plugins]
-atomicfu = { id = "org.jetbrains.kotlinx.atomicfu", version.ref = "atomicfu" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
