@@ -3,7 +3,6 @@ public final class com/rsicarelli/fakt/compiler/api/LogLevel : java/lang/Enum {
 	public static final field DEBUG Lcom/rsicarelli/fakt/compiler/api/LogLevel;
 	public static final field INFO Lcom/rsicarelli/fakt/compiler/api/LogLevel;
 	public static final field QUIET Lcom/rsicarelli/fakt/compiler/api/LogLevel;
-	public static final field TRACE Lcom/rsicarelli/fakt/compiler/api/LogLevel;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lcom/rsicarelli/fakt/compiler/api/LogLevel;
 	public static fun values ()[Lcom/rsicarelli/fakt/compiler/api/LogLevel;
@@ -77,5 +76,10 @@ public final synthetic class com/rsicarelli/fakt/compiler/api/SourceSetInfo$$ser
 
 public final class com/rsicarelli/fakt/compiler/api/SourceSetInfo$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/rsicarelli/fakt/compiler/api/TimeFormatter {
+	public static final field INSTANCE Lcom/rsicarelli/fakt/compiler/api/TimeFormatter;
+	public final fun format (J)Ljava/lang/String;
 }
 
