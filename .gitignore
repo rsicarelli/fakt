@@ -61,7 +61,6 @@ secrets.properties
 # Node.js / JavaScript (KMP)
 # ================================
 **/node_modules/**
-kotlin-js-store/
 **/build/js/**
 package-lock.json
 yarn.lock
