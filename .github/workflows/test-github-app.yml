@@ -1,0 +1,356 @@
+name: Test GitHub App Integration
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: 'Test mode'
+        required: true
+        type: choice
+        default: 'dry-run'
+        options:
+          - dry-run
+          - create-test-branch
+
+concurrency:
+  group: test-github-app-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  validate-secrets:
+    name: Validate Secrets Configuration
+    runs-on: ubuntu-latest
+    outputs:
+      has_app_id: ${{ steps.check.outputs.has_app_id }}
+      has_private_key: ${{ steps.check.outputs.has_private_key }}
+    steps:
+      - name: Check Required Secrets
+        id: check
+        run: |
+          echo "Checking for required GitHub App secrets..."
+
+          if [ -n "${{ secrets.GH_APP_ID }}" ]; then
+            echo "✅ GH_APP_ID is configured"
+            echo "has_app_id=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ GH_APP_ID is NOT configured"
+            echo "has_app_id=false" >> $GITHUB_OUTPUT
+          fi
+
+          if [ -n "${{ secrets.GH_APP_PRIVATE_KEY }}" ]; then
+            echo "✅ GH_APP_PRIVATE_KEY is configured"
+            echo "has_private_key=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ GH_APP_PRIVATE_KEY is NOT configured"
+            echo "has_private_key=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Fail if Secrets Missing
+        if: steps.check.outputs.has_app_id != 'true' || steps.check.outputs.has_private_key != 'true'
+        run: |
+          echo "::error::Missing required secrets. Please configure:"
+          echo "  - GH_APP_ID: GitHub App ID"
+          echo "  - GH_APP_PRIVATE_KEY: GitHub App private key (PEM format)"
+          echo ""
+          echo "To set up:"
+          echo "1. Go to repository Settings > Secrets and variables > Actions"
+          echo "2. Add the required secrets"
+          exit 1
+
+  test-authentication:
+    name: Test GitHub App Authentication
+    runs-on: ubuntu-latest
+    needs: validate-secrets
+    outputs:
+      token_works: ${{ steps.verify.outputs.token_works }}
+      app_login: ${{ steps.verify.outputs.app_login }}
+    steps:
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - name: Verify Token
+        id: verify
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          echo "Testing GitHub App token..."
+
+          # Test authentication
+          if gh auth status; then
+            echo "✅ GitHub App authentication successful"
+            echo "token_works=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ GitHub App authentication failed"
+            echo "token_works=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          # Get app information
+          APP_LOGIN=$(gh api /app | jq -r '.slug // .name // "unknown"')
+          echo "✅ GitHub App login: $APP_LOGIN"
+          echo "app_login=$APP_LOGIN" >> $GITHUB_OUTPUT
+
+  test-permissions:
+    name: Test GitHub App Permissions
+    runs-on: ubuntu-latest
+    needs: test-authentication
+    steps:
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          fetch-depth: 0
+
+      - name: Test Repository Read Access
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          echo "Testing repository read access..."
+
+          # Test repo info access
+          REPO_INFO=$(gh api repos/${{ github.repository }})
+          echo "✅ Can read repository information"
+
+          # Test branch listing
+          BRANCHES=$(gh api repos/${{ github.repository }}/branches --jq '.[].name' | head -5)
+          echo "✅ Can list branches:"
+          echo "$BRANCHES"
+
+      - name: Test Git Configuration
+        run: |
+          echo "Testing Git configuration..."
+
+          git config --global user.name 'fakt-bot'
+          git config --global user.email 'bot@rsicarelli.dev'
+
+          echo "✅ Git user configured:"
+          git config user.name
+          git config user.email
+
+  test-commit-capability:
+    name: Test Commit and Push Capability
+    runs-on: ubuntu-latest
+    needs: test-permissions
+    if: inputs.test_mode == 'create-test-branch'
+    steps:
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.name 'fakt-bot'
+          git config --global user.email 'bot@rsicarelli.dev'
+
+      - name: Create Test Branch
+        id: branch
+        run: |
+          BRANCH_NAME="test/github-app-$(date +%s)"
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+          git checkout -b "$BRANCH_NAME"
+          echo "✅ Created test branch: $BRANCH_NAME"
+
+      - name: Create Test Commit
+        run: |
+          # Create a test file
+          mkdir -p .github/test
+          echo "GitHub App Test - $(date)" > .github/test/test-commit.txt
+
+          git add .github/test/test-commit.txt
+          git commit -m "test: validate GitHub App commit capability [skip ci]"
+
+          echo "✅ Created test commit"
+
+      - name: Push Test Branch
+        run: |
+          git push origin ${{ steps.branch.outputs.branch_name }}
+          echo "✅ Successfully pushed test branch"
+
+      - name: Verify Push
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          # Verify branch exists on remote
+          BRANCH_EXISTS=$(gh api repos/${{ github.repository }}/branches/${{ steps.branch.outputs.branch_name }} --jq '.name // ""')
+
+          if [ "$BRANCH_EXISTS" = "${{ steps.branch.outputs.branch_name }}" ]; then
+            echo "✅ Branch verified on remote"
+          else
+            echo "❌ Branch not found on remote"
+            exit 1
+          fi
+
+      - name: Clean Up Test Branch
+        if: always()
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          # Delete the test branch
+          gh api repos/${{ github.repository }}/git/refs/heads/${{ steps.branch.outputs.branch_name }} -X DELETE || true
+          echo "✅ Cleaned up test branch"
+
+  test-release-capability:
+    name: Test Release Creation Capability
+    runs-on: ubuntu-latest
+    needs: test-permissions
+    if: inputs.test_mode == 'create-test-branch'
+    steps:
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - name: Create Draft Release
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        id: release
+        run: |
+          echo "Testing draft release creation..."
+
+          TAG_NAME="test-release-$(date +%s)"
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+
+          RELEASE_OUTPUT=$(gh release create "$TAG_NAME" \
+            --title "Test Release - GitHub App Validation" \
+            --notes "This is a test release to validate GitHub App permissions. It will be deleted automatically." \
+            --draft \
+            --repo ${{ github.repository }})
+
+          echo "✅ Draft release created successfully"
+          echo "$RELEASE_OUTPUT"
+
+      - name: Verify Release
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          RELEASE_INFO=$(gh release view ${{ steps.release.outputs.tag_name }} \
+            --repo ${{ github.repository }} \
+            --json isDraft,tagName)
+          IS_DRAFT=$(echo "$RELEASE_INFO" | jq -r '.isDraft')
+
+          if [ "$IS_DRAFT" = "true" ]; then
+            echo "✅ Release verified as draft"
+          else
+            echo "❌ Release is not a draft"
+            exit 1
+          fi
+
+      - name: Clean Up Draft Release
+        if: always()
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh release delete ${{ steps.release.outputs.tag_name }} \
+            --yes \
+            --cleanup-tag \
+            --repo ${{ github.repository }} || true
+          echo "✅ Cleaned up draft release"
+
+  summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [validate-secrets, test-authentication, test-permissions, test-commit-capability, test-release-capability]
+    if: always()
+    steps:
+      - name: Generate Summary
+        run: |
+          echo "# GitHub App Integration Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "## Test Mode: ${{ inputs.test_mode }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "## Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Secrets validation
+          if [ "${{ needs.validate-secrets.result }}" = "success" ]; then
+            echo "✅ **Secrets Configuration**: PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Secrets Configuration**: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Authentication
+          if [ "${{ needs.test-authentication.result }}" = "success" ]; then
+            echo "✅ **Authentication**: PASSED" >> $GITHUB_STEP_SUMMARY
+            echo "   - App Login: ${{ needs.test-authentication.outputs.app_login }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Authentication**: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Repository Access
+          if [ "${{ needs.test-permissions.result }}" = "success" ]; then
+            echo "✅ **Repository Access**: PASSED" >> $GITHUB_STEP_SUMMARY
+            echo "   - Can read repository and list branches" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Repository Access**: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Commit capability (only if create-test-branch mode)
+          if [ "${{ inputs.test_mode }}" = "create-test-branch" ]; then
+            if [ "${{ needs.test-commit-capability.result }}" = "success" ]; then
+              echo "✅ **Commit & Push**: PASSED" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ **Commit & Push**: FAILED" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            if [ "${{ needs.test-release-capability.result }}" = "success" ]; then
+              echo "✅ **Release Creation**: PASSED" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ **Release Creation**: FAILED" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "⏭️  **Commit & Push**: SKIPPED (dry-run mode)" >> $GITHUB_STEP_SUMMARY
+            echo "⏭️  **Release Creation**: SKIPPED (dry-run mode)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.validate-secrets.result }}" = "success" ] && \
+             [ "${{ needs.test-authentication.result }}" = "success" ] && \
+             [ "${{ needs.test-permissions.result }}" = "success" ]; then
+            echo "🎉 All basic tests passed! Your GitHub App is properly configured." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            if [ "${{ inputs.test_mode }}" = "dry-run" ]; then
+              echo "💡 **Tip**: Run this workflow again with mode 'create-test-branch' to test commit/push capabilities." >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ Your GitHub App can commit, push, and create releases." >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "You're ready to use the publish workflow!" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "⚠️  Some tests failed. Please review the logs above and fix the issues." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Common Issues:" >> $GITHUB_STEP_SUMMARY
+            echo "- Missing secrets: Add GH_APP_ID and GH_APP_PRIVATE_KEY in repository settings" >> $GITHUB_STEP_SUMMARY
+            echo "- App not installed: Install the GitHub App on this repository" >> $GITHUB_STEP_SUMMARY
+            echo "- Wrong permissions: Ensure the GitHub App has 'contents: write' permission" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Note:** Write permissions are validated by actually testing commit/push operations in 'create-test-branch' mode." >> $GITHUB_STEP_SUMMARY
+          fi
