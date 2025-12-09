@@ -6,4 +6,4 @@ runs:
   steps:
     - name: Run License Check
       shell: bash
-      run: ./gradlew checkLicense --no-daemon --no-configuration-cache
+      run: ./gradlew checkLicense --no-configuration-cache

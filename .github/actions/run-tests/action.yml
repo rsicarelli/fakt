@@ -8,17 +8,17 @@ runs:
     # Using --continue to proceed even if task doesn't exist in some modules
     - name: Run all KMP tests (all targets)
       shell: bash
-      run: ./gradlew :runtime:allTests --continue --no-daemon --info
+      run: ./gradlew :runtime:allTests --continue
 
     # Run test for JVM-only modules (compiler, compiler-api, gradle-plugin)
     - name: Run JVM module tests
       shell: bash
-      run: ./gradlew :compiler:test :compiler-api:test :gradle-plugin:test --no-daemon --info
+      run: ./gradlew :compiler:test :compiler-api:test :gradle-plugin:test
 
     # Run check for additional validations (apiCheck, binary compatibility, etc.)
     - name: Run all checks (apiCheck, compilation validation)
       shell: bash
-      run: ./gradlew check --no-daemon
+      run: ./gradlew check
 
     - name: Debug - Verify test results were generated
       shell: bash
