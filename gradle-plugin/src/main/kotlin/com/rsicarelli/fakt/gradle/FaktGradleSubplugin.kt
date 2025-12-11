@@ -74,8 +74,8 @@ import java.util.Base64
 public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
     public companion object {
         public const val PLUGIN_ID: String = "com.rsicarelli.fakt"
-        public const val PLUGIN_ARTIFACT_NAME: String = "fakt-compiler"
-        public const val PLUGIN_GROUP_ID: String = "com.rsicarelli"
+        public const val PLUGIN_ARTIFACT_NAME: String = "compiler"
+        public const val PLUGIN_GROUP_ID: String = "com.rsicarelli.fakt"
         public const val PLUGIN_VERSION: String = "1.0.0-alpha01"
     }
 

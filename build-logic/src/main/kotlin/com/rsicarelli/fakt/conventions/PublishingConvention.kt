@@ -11,7 +11,7 @@ import org.gradle.api.Project
  * configures vanniktech plugin with centralized Maven Central publishing.
  *
  * **gradle.properties values:**
- * - GROUP=com.rsicarelli
+ * - GROUP=com.rsicarelli.fakt
  * - VERSION_NAME=1.0.0-SNAPSHOT
  *
  * **Environment Variables:**
@@ -74,7 +74,7 @@ private fun Project.configureMavenCentralPublishing() {
 
             coordinates(
                 groupId = project.group.toString(),
-                artifactId = "fakt-${project.name}",
+                artifactId = project.name,
                 version = project.version.toString(),
             )
 
