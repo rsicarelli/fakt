@@ -48,6 +48,7 @@ Writing test fakes manually is tedious and error-prone:
 - ✅ **Full language support** - Suspend functions, generics, properties, inheritance
 - ✅ **Smart defaults** - Sensible behaviors for all types (identity functions, Result.success)
 - ✅ **IR-level generation** - Direct compiler plugin, not KSP or annotation processing
+- ✅ **Multi-module ready** - Supports collector module pattern for large codebases
 
 **[Complete feature reference →](https://rsicarelli.github.io/fakt/introduction/features/)**
 
@@ -55,23 +56,53 @@ Writing test fakes manually is tedious and error-prone:
 
 ## ⚡ Quick Start
 
-**1. Add plugin** (`build.gradle.kts`):
+**1. Add plugin and dependency** (`build.gradle.kts`):
 ```kotlin
 plugins {
-    id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
+    kotlin("multiplatform")
+    id("com.rsicarelli.fakt") version "x.y.z"
+}
+
+kotlin {
+    jvm()
+    // ... other targets
+
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation("com.rsicarelli.fakt:runtime:x.y.z")
+            }
+        }
+    }
 }
 ```
 
 **2. Annotate interface:**
 ```kotlin
-@Fake interface Analytics
+import com.rsicarelli.fakt.Fake
+
+@Fake
+interface Analytics {
+    suspend fun track(event: String)
+}
 ```
 
-**3. Use in tests:**
+**3. Build the project:**
 ```kotlin
+./gradlew build
+```
+
+**4. Use in tests:**
+```kotlin
+val events = mutableListOf<String>()
 val fake = fakeAnalytics {
-    track { event -> println(event) }
+    track { event -> events.add(event) }
 }
+
+fake.track("user_signup")
+
+assertEquals(listOf("user_signup"), events)
+assertEquals(1, fake.trackCallCount.value)
 ```
 
 **[Full installation guide →](https://rsicarelli.github.io/fakt/introduction/installation/)**
@@ -80,12 +111,7 @@ val fake = fakeAnalytics {
 
 ## 📚 Documentation
 
-| Topic | Guide |
-|-------|-------|
-| **Getting Started** | [Installation](https://rsicarelli.github.io/fakt/introduction/installation/) · [Quick Start](https://rsicarelli.github.io/fakt/introduction/quick-start/) |
-| **Usage** | [Basic Usage](https://rsicarelli.github.io/fakt/usage/basic-usage/) · [Suspend Functions](https://rsicarelli.github.io/fakt/usage/suspend-functions/) · [Generics](https://rsicarelli.github.io/fakt/usage/generics/) |
-| **Guides** | [Multi-Module Setup](https://rsicarelli.github.io/fakt/multi-module/) · [Testing Patterns](https://rsicarelli.github.io/fakt/guides/testing-patterns/) · [Performance](https://rsicarelli.github.io/fakt/guides/performance/) |
-| **Reference** | [API Reference](https://rsicarelli.github.io/fakt/reference/api/) · [Limitations](https://rsicarelli.github.io/fakt/reference/limitations/) · [Compatibility](https://rsicarelli.github.io/fakt/reference/compatibility/) |
+**[Complete documentation →](https://rsicarelli.github.io/fakt/)**
 
 ---
 
