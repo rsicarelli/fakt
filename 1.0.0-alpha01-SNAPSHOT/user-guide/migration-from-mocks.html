@@ -12,26 +12,28 @@
         <meta name="author" content="Rodrigo Sicarelli">
       
       
-        <link rel="canonical" href="https://rsicarelli.github.io/fakt/1.0.0-alpha01-SNAPSHOT/index.html">
+        <link rel="canonical" href="https://rsicarelli.github.io/fakt/1.0.0-alpha01-SNAPSHOT/user-guide/migration-from-mocks.html">
       
       
+        <link rel="prev" href="testing-patterns.html">
       
-        <link rel="next" href="get-started/index.html">
+      
+        <link rel="next" href="multi-module-overview.html">
       
       
-      <link rel="icon" href="assets/logo.png">
+      <link rel="icon" href="../assets/logo.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.16">
     
     
       
-        <title>Fakt</title>
+        <title>Migration from Mocks - Fakt</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.7e37652d.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.7e37652d.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
       
       
 
@@ -50,9 +52,9 @@
       
     
     
-      <link rel="stylesheet" href="stylesheets/fakt-brand.css">
+      <link rel="stylesheet" href="../stylesheets/fakt-brand.css">
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -61,11 +63,11 @@
       
         <meta  property="og:type"  content="website" >
       
-        <meta  property="og:title"  content="Fakt" >
+        <meta  property="og:title"  content="Migration from Mocks - Fakt" >
       
         <meta  property="og:description"  content="Compile-time type-safe test fakes for Kotlin Multiplatform" >
       
-        <meta  property="og:image"  content="https://rsicarelli.github.io/fakt/1.0.0-alpha01-SNAPSHOT/assets/images/social/index.png" >
+        <meta  property="og:image"  content="https://rsicarelli.github.io/fakt/1.0.0-alpha01-SNAPSHOT/assets/images/social/user-guide/migration-from-mocks.png" >
       
         <meta  property="og:image:type"  content="image/png" >
       
@@ -73,15 +75,15 @@
       
         <meta  property="og:image:height"  content="630" >
       
-        <meta  property="og:url"  content="https://rsicarelli.github.io/fakt/1.0.0-alpha01-SNAPSHOT/index.html" >
+        <meta  property="og:url"  content="https://rsicarelli.github.io/fakt/1.0.0-alpha01-SNAPSHOT/user-guide/migration-from-mocks.html" >
       
         <meta  name="twitter:card"  content="summary_large_image" >
       
-        <meta  name="twitter:title"  content="Fakt" >
+        <meta  name="twitter:title"  content="Migration from Mocks - Fakt" >
       
         <meta  name="twitter:description"  content="Compile-time type-safe test fakes for Kotlin Multiplatform" >
       
-        <meta  name="twitter:image"  content="https://rsicarelli.github.io/fakt/1.0.0-alpha01-SNAPSHOT/assets/images/social/index.png" >
+        <meta  name="twitter:image"  content="https://rsicarelli.github.io/fakt/1.0.0-alpha01-SNAPSHOT/assets/images/social/user-guide/migration-from-mocks.png" >
       
     
     
@@ -104,7 +106,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#fakt" class="md-skip">
+        <a href="#migration-from-mockkmockito" class="md-skip">
           Skip to content
         </a>
       
@@ -122,9 +124,9 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="index.html" title="Fakt" class="md-header__button md-logo" aria-label="Fakt" data-md-component="logo">
+    <a href="../index.html" title="Fakt" class="md-header__button md-logo" aria-label="Fakt" data-md-component="logo">
       
-  <img src="assets/logo.png" alt="logo">
+  <img src="../assets/logo.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -141,7 +143,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Home
+              Migration from Mocks
             
           </span>
         </div>
@@ -252,11 +254,9 @@
   
   
   
-    
   
-  
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="index.html" class="md-tabs__link">
+    <li class="md-tabs__item">
+      <a href="../index.html" class="md-tabs__link">
         
   
   
@@ -277,7 +277,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="get-started/index.html" class="md-tabs__link">
+        <a href="../get-started/index.html" class="md-tabs__link">
           
   
   
@@ -293,11 +293,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="user-guide/basic-usage.html" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="basic-usage.html" class="md-tabs__link">
           
   
   
@@ -315,7 +317,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="examples/index.html" class="md-tabs__link">
+      <a href="../examples/index.html" class="md-tabs__link">
         
   
   
@@ -336,7 +338,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="help/faq.html" class="md-tabs__link">
+        <a href="../help/faq.html" class="md-tabs__link">
           
   
   
@@ -356,7 +358,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="about/contributing.html" class="md-tabs__link">
+        <a href="../about/contributing.html" class="md-tabs__link">
           
   
   
@@ -390,9 +392,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="index.html" title="Fakt" class="md-nav__button md-logo" aria-label="Fakt" data-md-component="logo">
+    <a href="../index.html" title="Fakt" class="md-nav__button md-logo" aria-label="Fakt" data-md-component="logo">
       
-  <img src="assets/logo.png" alt="logo">
+  <img src="../assets/logo.png" alt="logo">
 
     </a>
     Fakt
@@ -416,32 +418,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    Home
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="index.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
         
   
   
@@ -452,80 +432,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#why-fakt" class="md-nav__link">
-    <span class="md-ellipsis">
-      Why Fakt?
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#features" class="md-nav__link">
-    <span class="md-ellipsis">
-      ✨ Features
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#getting-started" class="md-nav__link">
-    <span class="md-ellipsis">
-      🚀 Getting Started
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#platform-support" class="md-nav__link">
-    <span class="md-ellipsis">
-      🌐 Platform Support
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#requirements" class="md-nav__link">
-    <span class="md-ellipsis">
-      Requirements
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#license" class="md-nav__link">
-    <span class="md-ellipsis">
-      License
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -582,7 +488,7 @@
   
   
     <li class="md-nav__item">
-      <a href="get-started/index.html" class="md-nav__link">
+      <a href="../get-started/index.html" class="md-nav__link">
         
   
   
@@ -605,7 +511,7 @@
   
   
     <li class="md-nav__item">
-      <a href="get-started/why-fakt.html" class="md-nav__link">
+      <a href="../get-started/why-fakt.html" class="md-nav__link">
         
   
   
@@ -628,7 +534,7 @@
   
   
     <li class="md-nav__item">
-      <a href="get-started/features.html" class="md-nav__link">
+      <a href="../get-started/features.html" class="md-nav__link">
         
   
   
@@ -655,28 +561,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
-        
-          
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -689,7 +598,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             User Guide
@@ -703,7 +612,7 @@
   
   
     <li class="md-nav__item">
-      <a href="user-guide/basic-usage.html" class="md-nav__link">
+      <a href="basic-usage.html" class="md-nav__link">
         
   
   
@@ -726,7 +635,7 @@
   
   
     <li class="md-nav__item">
-      <a href="user-guide/suspend-functions.html" class="md-nav__link">
+      <a href="suspend-functions.html" class="md-nav__link">
         
   
   
@@ -749,7 +658,7 @@
   
   
     <li class="md-nav__item">
-      <a href="user-guide/generics.html" class="md-nav__link">
+      <a href="generics.html" class="md-nav__link">
         
   
   
@@ -772,7 +681,7 @@
   
   
     <li class="md-nav__item">
-      <a href="user-guide/properties.html" class="md-nav__link">
+      <a href="properties.html" class="md-nav__link">
         
   
   
@@ -795,7 +704,7 @@
   
   
     <li class="md-nav__item">
-      <a href="user-guide/call-tracking.html" class="md-nav__link">
+      <a href="call-tracking.html" class="md-nav__link">
         
   
   
@@ -818,7 +727,7 @@
   
   
     <li class="md-nav__item">
-      <a href="user-guide/testing-patterns.html" class="md-nav__link">
+      <a href="testing-patterns.html" class="md-nav__link">
         
   
   
@@ -838,10 +747,32 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="user-guide/migration-from-mocks.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Migration from Mocks
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="migration-from-mocks.html" class="md-nav__link md-nav__link--active">
         
   
   
@@ -852,6 +783,71 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-migrate" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why Migrate?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mockk-fakt" class="md-nav__link">
+    <span class="md-ellipsis">
+      MockK → Fakt
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mockito-fakt" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mockito → Fakt
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      Migration Checklist
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      Next Steps
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -864,7 +860,7 @@
   
   
     <li class="md-nav__item">
-      <a href="user-guide/multi-module-overview.html" class="md-nav__link">
+      <a href="multi-module-overview.html" class="md-nav__link">
         
   
   
@@ -887,7 +883,7 @@
   
   
     <li class="md-nav__item">
-      <a href="user-guide/multi-module-setup.html" class="md-nav__link">
+      <a href="multi-module-setup.html" class="md-nav__link">
         
   
   
@@ -910,7 +906,7 @@
   
   
     <li class="md-nav__item">
-      <a href="user-guide/multi-module-advanced.html" class="md-nav__link">
+      <a href="multi-module-advanced.html" class="md-nav__link">
         
   
   
@@ -933,7 +929,7 @@
   
   
     <li class="md-nav__item">
-      <a href="user-guide/plugin-configuration.html" class="md-nav__link">
+      <a href="plugin-configuration.html" class="md-nav__link">
         
   
   
@@ -956,7 +952,7 @@
   
   
     <li class="md-nav__item">
-      <a href="user-guide/performance.html" class="md-nav__link">
+      <a href="performance.html" class="md-nav__link">
         
   
   
@@ -979,7 +975,7 @@
   
   
     <li class="md-nav__item">
-      <a href="user-guide/generated-code-reference.html" class="md-nav__link">
+      <a href="generated-code-reference.html" class="md-nav__link">
         
   
   
@@ -1002,7 +998,7 @@
   
   
     <li class="md-nav__item">
-      <a href="user-guide/platform-support.html" class="md-nav__link">
+      <a href="platform-support.html" class="md-nav__link">
         
   
   
@@ -1025,7 +1021,7 @@
   
   
     <li class="md-nav__item">
-      <a href="user-guide/known-issues.html" class="md-nav__link">
+      <a href="known-issues.html" class="md-nav__link">
         
   
   
@@ -1055,7 +1051,7 @@
   
   
     <li class="md-nav__item">
-      <a href="examples/index.html" class="md-nav__link">
+      <a href="../examples/index.html" class="md-nav__link">
         
   
   
@@ -1122,7 +1118,7 @@
   
   
     <li class="md-nav__item">
-      <a href="help/faq.html" class="md-nav__link">
+      <a href="../help/faq.html" class="md-nav__link">
         
   
   
@@ -1145,7 +1141,7 @@
   
   
     <li class="md-nav__item">
-      <a href="help/troubleshooting.html" class="md-nav__link">
+      <a href="../help/troubleshooting.html" class="md-nav__link">
         
   
   
@@ -1168,7 +1164,7 @@
   
   
     <li class="md-nav__item">
-      <a href="help/multi-module-migration.html" class="md-nav__link">
+      <a href="../help/multi-module-migration.html" class="md-nav__link">
         
   
   
@@ -1243,7 +1239,7 @@
   
   
     <li class="md-nav__item">
-      <a href="about/contributing.html" class="md-nav__link">
+      <a href="../about/contributing.html" class="md-nav__link">
         
   
   
@@ -1266,7 +1262,7 @@
   
   
     <li class="md-nav__item">
-      <a href="about/changelog.html" class="md-nav__link">
+      <a href="../about/changelog.html" class="md-nav__link">
         
   
   
@@ -1316,54 +1312,45 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#why-fakt" class="md-nav__link">
+  <a href="#why-migrate" class="md-nav__link">
     <span class="md-ellipsis">
-      Why Fakt?
+      Why Migrate?
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#features" class="md-nav__link">
+  <a href="#mockk-fakt" class="md-nav__link">
     <span class="md-ellipsis">
-      ✨ Features
+      MockK → Fakt
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#getting-started" class="md-nav__link">
+  <a href="#mockito-fakt" class="md-nav__link">
     <span class="md-ellipsis">
-      🚀 Getting Started
+      Mockito → Fakt
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#platform-support" class="md-nav__link">
+  <a href="#migration-checklist" class="md-nav__link">
     <span class="md-ellipsis">
-      🌐 Platform Support
+      Migration Checklist
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#requirements" class="md-nav__link">
+  <a href="#next-steps" class="md-nav__link">
     <span class="md-ellipsis">
-      Requirements
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#license" class="md-nav__link">
-    <span class="md-ellipsis">
-      License
+      Next Steps
     </span>
   </a>
   
@@ -1388,97 +1375,117 @@
   
 
 
-<h1 id="fakt">Fakt<a class="headerlink" href="#fakt" title="Permanent link">&para;</a></h1>
-<p><strong>Compile-time type-safe test fakes for Kotlin Multiplatform</strong></p>
-<p><a href="https://github.com/rsicarelli/fakt/actions"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/rsicarelli/fakt/ci.yml" /></a><br />
-<a href="https://search.maven.org/search?q=g:com.rsicarelli.fakt"><img alt="Maven Central" src="https://img.shields.io/maven-central/v/com.rsicarelli.fakt/runtime" /></a><br />
-<a href="https://opensource.org/licenses/Apache-2.0"><img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" /></a><br />
-<a href="https://kotlinlang.org"><img alt="Kotlin" src="https://img.shields.io/badge/Kotlin-2.2.20%2B-blue" /></a></p>
-<p>Fakt generates type-safe test fakes at compile-time. No reflection. No production dependencies. Just clean fakes that break when your interfaces change.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nd">@Fake</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">Analytics</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">track</span><span class="p">(</span><span class="n">event</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">)</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">}</span>
+<h1 id="migration-from-mockkmockito">Migration from MockK/Mockito<a class="headerlink" href="#migration-from-mockkmockito" title="Permanent link">&para;</a></h1>
+<p>Migrating from runtime mocking frameworks to Fakt compile-time fakes.</p>
+<hr />
+<h2 id="why-migrate">Why Migrate?<a class="headerlink" href="#why-migrate" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>MockK/Mockito</th>
+<th>Fakt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Platform Support</strong></td>
+<td>JVM/Android only</td>
+<td>All KMP targets</td>
+</tr>
+<tr>
+<td><strong>Runtime Cost</strong></td>
+<td>Reflection overhead</td>
+<td>Zero (compile-time)</td>
+</tr>
+<tr>
+<td><strong>Type Safety</strong></td>
+<td>Runtime errors</td>
+<td>Compile-time errors</td>
+</tr>
+<tr>
+<td><strong>Debugging</strong></td>
+<td>Proxy magic</td>
+<td>Generated code</td>
+</tr>
+<tr>
+<td><strong>Refactoring</strong></td>
+<td>Silent failures</td>
+<td>Breaks at compile-time</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="mockk-fakt">MockK → Fakt<a class="headerlink" href="#mockk-fakt" title="Permanent link">&para;</a></h2>
+<p><strong>MockK:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nd">@Test</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`test with MockK`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">mock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mockk</span><span class="o">&lt;</span><span class="n">UserRepository</span><span class="o">&gt;</span><span class="p">()</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="n">every</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">mock</span><span class="p">.</span><span class="na">getUser</span><span class="p">(</span><span class="n">any</span><span class="p">())</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="n">returns</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeAnalytics</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="n">track</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">event</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">println</span><span class="p">(</span><span class="s">&quot;Tracked: </span><span class="si">$</span><span class="n">event</span><span class="s">&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="p">}</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">service</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UserService</span><span class="p">(</span><span class="n">mock</span><span class="p">)</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="n">service</span><span class="p">.</span><span class="na">processUser</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="n">verify</span><span class="p">(</span><span class="n">exactly</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">mock</span><span class="p">.</span><span class="na">getUser</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="p">}</span>
 </code></pre></div>
-<hr />
-<h2 id="why-fakt">Why Fakt?<a class="headerlink" href="#why-fakt" title="Permanent link">&para;</a></h2>
-<p>Writing test fakes manually is tedious and error-prone. You write 50+ lines of boilerplate for every interface, manage non-thread-safe call counters, and refactoring interfaces won&rsquo;t break tests at compile-time. Runtime mocking frameworks like MockK and Mockito avoid the boilerplate but introduce severe performance penalties and don&rsquo;t work on Native/WASM targets.</p>
-<p>Fakt solves both problems with compile-time code generation that works everywhere Kotlin compiles.</p>
-<p><strong><a href="get-started/why-fakt.html">Read the full story →</a></strong></p>
-<hr />
-<h2 id="features">✨ Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
-<ul>
-<li>✅ <strong>Universal KMP support</strong> - Works on all Kotlin targets without reflection</li>
-<li>✅ <strong>Zero production overhead</strong> - Test-only code generation, no runtime dependencies</li>
-<li>✅ <strong>Thread-safe call tracking</strong> - Built-in StateFlow-based reactive counters</li>
-<li>✅ <strong>Full language support</strong> - Suspend functions, generics, properties, inheritance</li>
-<li>✅ <strong>Smart defaults</strong> - Identity functions for generics, Result.success for Results</li>
-<li>✅ <strong>IR-level generation</strong> - Direct compiler plugin for performance and compatibility</li>
-</ul>
-<p><strong><a href="get-started/features.html">Complete feature reference →</a></strong></p>
-<hr />
-<h2 id="getting-started">🚀 Getting Started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h2>
-<p><strong>Quick Start:</strong></p>
-<ol>
-<li><strong><a href="get-started/index.html">Getting Started</a></strong> - Install Fakt and create your first fake in 5 minutes</li>
-<li><strong><a href="user-guide/basic-usage.html">Basic Usage</a></strong> - Core patterns and techniques</li>
-<li><strong><a href="user-guide/testing-patterns.html">Testing Patterns</a></strong> - Best practices for using fakes in tests</li>
-</ol>
-<p><strong>Usage Guides:</strong></p>
-<ul>
-<li><strong><a href="user-guide/suspend-functions.html">Suspend Functions</a></strong> - Working with coroutines and async code</li>
-<li><strong><a href="user-guide/generics.html">Generics</a></strong> - Generic interfaces and type parameters</li>
-<li><strong><a href="user-guide/properties.html">Properties</a></strong> - Faking val and var properties</li>
-<li><strong><a href="user-guide/call-tracking.html">Call Tracking</a></strong> - StateFlow-based reactive counters</li>
-</ul>
-<p><strong>Advanced Topics:</strong></p>
-<ul>
-<li><strong><a href="user-guide/multi-module-overview.html">Multi-Module Setup</a></strong> - Cross-module fakes with collector modules</li>
-<li><strong><a href="user-guide/plugin-configuration.html">Configuration</a></strong> - Plugin configuration and log levels</li>
-<li><strong><a href="user-guide/performance.html">Performance</a></strong> - Build times, caching, and optimization</li>
-<li><strong><a href="user-guide/migration-from-mocks.html">Migration from Mocks</a></strong> - Migrating from MockK or Mockito</li>
-</ul>
-<p><strong>Reference:</strong></p>
-<ul>
-<li><strong><a href="user-guide/generated-code-reference.html">API Reference</a></strong> - Complete generated API documentation</li>
-<li><strong><a href="user-guide/known-issues.html">Limitations</a></strong> - Known limitations and workarounds</li>
-<li><strong><a href="user-guide/platform-support.html">Compatibility</a></strong> - Platform and version requirements</li>
-<li><strong><a href="help/faq.html">FAQ</a></strong> - Frequently asked questions</li>
-<li><strong><a href="help/troubleshooting.html">Troubleshooting</a></strong> - Common issues and solutions</li>
-</ul>
-<hr />
-<h2 id="platform-support">🌐 Platform Support<a class="headerlink" href="#platform-support" title="Permanent link">&para;</a></h2>
-<p>Fakt works on <strong>all Kotlin Multiplatform targets</strong> without reflection: JVM, Android, iOS, macOS, Linux, Windows, JavaScript, WebAssembly, watchOS, tvOS.</p>
-<p>Single-platform projects (JVM-only, Android-only) are fully supported.</p>
-<p><strong><a href="user-guide/platform-support.html">Full compatibility matrix →</a></strong></p>
-<hr />
-<h2 id="requirements">Requirements<a class="headerlink" href="#requirements" title="Permanent link">&para;</a></h2>
-<ul>
-<li><strong>Kotlin:</strong> 2.2.20+</li>
-<li><strong>Gradle:</strong> 8.0+</li>
-<li><strong>JVM:</strong> 11+</li>
-</ul>
-<hr />
-<h2 id="license">License<a class="headerlink" href="#license" title="Permanent link">&para;</a></h2>
-<p>Fakt is licensed under the Apache License 2.0.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Copyright (C) 2025 Rodrigo Sicarelli
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>you may not use this file except in compliance with the License.
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>You may obtain a copy of the License at
+<p><strong>Fakt:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nd">@Test</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN fake repository WHEN processing user THEN calls getUser`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">        </span><span class="n">getUser</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>   https://www.apache.org/licenses/LICENSE-2.0
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>Unless required by applicable law or agreed to in writing, software
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>See the License for the specific language governing permissions and
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>limitations under the License.
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">service</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UserService</span><span class="p">(</span><span class="n">fake</span><span class="p">)</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="n">service</span><span class="p">.</span><span class="na">processUser</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">)</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">getUserCallCount</span><span class="p">.</span><span class="na">value</span><span class="p">)</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="p">}</span>
 </code></pre></div>
+<hr />
+<h2 id="mockito-fakt">Mockito → Fakt<a class="headerlink" href="#mockito-fakt" title="Permanent link">&para;</a></h2>
+<p><strong>Mockito:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nd">@Test</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`test with Mockito`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">mock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mock</span><span class="p">(</span><span class="n">UserRepository</span><span class="o">::</span><span class="n">class</span><span class="p">.</span><span class="na">java</span><span class="p">)</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="n">`when`</span><span class="p">(</span><span class="n">mock</span><span class="p">.</span><span class="na">getUser</span><span class="p">(</span><span class="n">anyString</span><span class="p">())).</span><span class="na">thenReturn</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">))</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">service</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UserService</span><span class="p">(</span><span class="n">mock</span><span class="p">)</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="n">service</span><span class="p">.</span><span class="na">processUser</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">)</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="n">verify</span><span class="p">(</span><span class="n">mock</span><span class="p">,</span><span class="w"> </span><span class="n">times</span><span class="p">(</span><span class="m">1</span><span class="p">)).</span><span class="na">getUser</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">)</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>Fakt:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nd">@Test</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN fake repository WHEN processing user THEN calls getUser`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">        </span><span class="n">getUser</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">service</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UserService</span><span class="p">(</span><span class="n">fake</span><span class="p">)</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="n">service</span><span class="p">.</span><span class="na">processUser</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">)</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">getUserCallCount</span><span class="p">.</span><span class="na">value</span><span class="p">)</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="p">}</span>
+</code></pre></div>
+<hr />
+<h2 id="migration-checklist">Migration Checklist<a class="headerlink" href="#migration-checklist" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[ ] Add Fakt plugin to <code>build.gradle.kts</code></li>
+<li>[ ] Annotate interfaces with <code>@Fake</code></li>
+<li>[ ] Build project to generate fakes</li>
+<li>[ ] Replace <code>mockk&lt;T&gt;()</code> / <code>mock(T::class.java)</code> with <code>fakeT {}</code></li>
+<li>[ ] Replace <code>every { }</code> / <code>when()</code> with DSL configuration</li>
+<li>[ ] Replace <code>verify { }</code> with call counter assertions</li>
+<li>[ ] Remove MockK/Mockito dependencies</li>
+</ul>
+<hr />
+<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="testing-patterns.html">Testing Patterns</a> - Best practices</li>
+<li><a href="performance.html">Performance</a> - Build time impact</li>
+</ul>
 
 
 
@@ -1542,10 +1549,10 @@
     
     
       
-      <script id="__config" type="application/json">{"base": ".", "features": ["content.code.copy", "content.code.select", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.tabs.link"], "search": "assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy", "content.code.select", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.tabs.link"], "search": "../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="assets/javascripts/bundle.50899def.min.js"></script>
+      <script src="../assets/javascripts/bundle.50899def.min.js"></script>
       
     
   </body>
