@@ -171,7 +171,7 @@ Contributions are welcome! Please:
 3. Test both single-platform and KMP scenarios
 4. Run `make format` before committing
 
-See [Contributing Guide](contributing.md) for development workflows.
+See [Contributing Guide](../about/contributing.md) for development workflows.
 
 ---
 

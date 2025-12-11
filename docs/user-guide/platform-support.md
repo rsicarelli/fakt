@@ -44,5 +44,5 @@ Single-platform projects (JVM-only, Android-only) are fully supported.
 
 ## Next Steps
 
-- [Getting Started](../introduction/getting-started.md) - Setup guide
-- [Limitations](limitations.md) - Known issues
+- [Getting Started](../get-started/index.md) - Setup guide
+- [Limitations](known-issues.md) - Known issues

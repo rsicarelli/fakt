@@ -185,7 +185,7 @@ dependencies {
 
 The collector exposes both original interfaces (via `api()`) and compiled fakes.
 
-See [Advanced Topics](advanced.md#platform-detection) for platform detection algorithm and [Advanced Topics](advanced.md#fakecollectortask-api) for task details.
+See [Advanced Topics](multi-module-advanced.md#platform-detection) for platform detection algorithm and [Advanced Topics](multi-module-advanced.md#fakecollectortask-api) for task details.
 
 ---
 
@@ -201,12 +201,12 @@ See [Advanced Topics](advanced.md#platform-detection) for platform detection alg
 
 ## Getting Started
 
-Ready to set up multi-module support? Follow the [Getting Started Guide](getting-started.md) for a step-by-step tutorial.
+Ready to set up multi-module support? Follow the [Getting Started Guide](multi-module-setup.md) for a step-by-step tutorial.
 
 **Learn More**:
 
-- **[Getting Started](getting-started.md)** - 15-minute step-by-step tutorial
-- **[Advanced Topics](advanced.md)** - Platform detection, performance, publishing, and API reference
-- **[Samples](../samples/index.md#kmp-multi-module)** - Production-quality kmp-multi-module example (11 modules)
-- **[Troubleshooting](../troubleshooting.md)** - Common issues & solutions
-- **[Migration Guide](migration.md)** - Single-module → Multi-module migration
+- **[Getting Started](multi-module-setup.md)** - 15-minute step-by-step tutorial
+- **[Advanced Topics](multi-module-advanced.md)** - Platform detection, performance, publishing, and API reference
+- **[Samples](../examples/index.md#kmp-multi-module)** - Production-quality kmp-multi-module example (11 modules)
+- **[Troubleshooting](../help/troubleshooting.md)** - Common issues & solutions
+- **[Migration Guide](../help/multi-module-migration.md)** - Single-module → Multi-module migration
