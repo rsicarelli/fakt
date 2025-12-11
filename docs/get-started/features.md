@@ -174,7 +174,7 @@ For complete default behavior reference, see [Why Fakt: Smart Defaults](why-fakt
 
 Full coroutine support—no weird `runBlocking` wrappers. Suspend functions work naturally in `runTest` blocks with proper coroutine context handling.
 
-For detailed examples and testing patterns, see [Suspend Functions Guide](../usage/suspend-functions.md).
+For detailed examples and testing patterns, see [Suspend Functions Guide](../user-guide/suspend-functions.md).
 
 ---
 
@@ -307,7 +307,7 @@ assertEquals(1, fake.sessionIdCallCount.value)
 
 StateFlow counters work seamlessly with Kotlin Flow test utilities like Turbine.
 
-See [Call Tracking Guide](../usage/call-tracking.md) for reactive testing patterns.
+See [Call Tracking Guide](../user-guide/call-tracking.md) for reactive testing patterns.
 
 ---
 
@@ -319,13 +319,11 @@ Fakt generates production-quality code with smart defaults, type-safe DSLs, and 
 
 Every fake includes a type-safe configuration DSL where lambdas match the original method signatures. The compiler catches type errors at build time.
 
-See [Getting Started](getting-started.md) for examples and [Basic Usage](../usage/basic-usage.md) for patterns.
+See [Getting Started](index.md) for examples and [Basic Usage](../user-guide/basic-usage.md) for patterns.
 
 ### Factory Functions
 
 Generated factory functions follow Kotlin naming conventions: `fake{InterfaceName}` (e.g., `fakeUserRepository`, `fakeApiClient`).
-
-See [API Reference](../reference/api.md) for complete naming rules and generated code structure.
 
 ---
 
@@ -352,7 +350,7 @@ dependencies {
 }
 ```
 
-**For complete documentation**, see [Multi-Module Overview](../multi-module/index.md).
+**For complete documentation**, see [Multi-Module Overview](../user-guide/multi-module-overview.md).
 
 ---
 
@@ -379,7 +377,7 @@ fakt {
 }
 ```
 
-See [Performance Guide](../guides/performance.md) for benchmarks.
+See [Performance Guide](../user-guide/performance.md) for benchmarks.
 
 ---
 
@@ -399,7 +397,7 @@ Single-platform projects (JVM-only, Android-only) are fully supported.
 
 ## Next Steps
 
-- [Basic Usage](../usage/basic-usage.md) - Get started with fakes
-- [Suspend Functions](../usage/suspend-functions.md) - Async patterns
-- [Generics](../usage/generics.md) - Generic type handling
-- [Call Tracking](../usage/call-tracking.md) - StateFlow counters
+- [Basic Usage](../user-guide/basic-usage.md) - Get started with fakes
+- [Suspend Functions](../user-guide/suspend-functions.md) - Async patterns
+- [Generics](../user-guide/generics.md) - Generic type handling
+- [Call Tracking](../user-guide/call-tracking.md) - StateFlow counters

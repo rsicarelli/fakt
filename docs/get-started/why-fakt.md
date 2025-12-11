@@ -762,7 +762,6 @@ Fakt is honest about what it doesn't support (yet):
 - ❌ Sealed hierarchies as `@Fake` targets
 - ❌ Default parameters in interface methods
 
-See [Limitations](../reference/limitations.md) for details and workarounds.
 
 ---
 
@@ -781,11 +780,11 @@ For JVM-only teams, Fakt delivers 40% faster test suites[^1] and more resilient 
 
 ## Next Steps
 
-- [Getting Started](getting-started.md) - Install Fakt and create your first fake in 5 minutes
+- [Getting Started](index.md) - Install Fakt and create your first fake in 5 minutes
 - [Features](features.md) - Complete feature reference
-- [Basic Usage](../usage/basic-usage.md) - Common patterns and examples
-- [Testing Patterns](../guides/testing-patterns.md) - Best practices and strategies
-- [Migration from Mocks](../guides/migration-from-mocks.md) - Moving from MockK/Mockito to Fakt
+- [Basic Usage](../user-guide/basic-usage.md) - Common patterns and examples
+- [Testing Patterns](../user-guide/testing-patterns.md) - Best practices and strategies
+- [Migration from Mocks](../user-guide/migration-from-mocks.md) - Moving from MockK/Mockito to Fakt
 
 ---
 
