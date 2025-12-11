@@ -87,32 +87,36 @@ extra:
 
 nav:
   - 'Home': index.md
-  - 'Introduction':
-      - 'Getting Started': introduction/getting-started.md
-      - 'Why Fakt?': introduction/why-fakt.md
-      - 'Features': introduction/features.md
-  - 'Usage':
-      - 'Basic Usage': usage/basic-usage.md
-      - 'Suspend Functions': usage/suspend-functions.md
-      - 'Generics': usage/generics.md
-      - 'Properties': usage/properties.md
-      - 'Call Tracking': usage/call-tracking.md
-  - 'Guides':
-      - 'Testing Patterns': guides/testing-patterns.md
-      - 'Configuration': guides/configuration.md
-      - 'Migration from Mocks': guides/migration-from-mocks.md
-      - 'Performance': guides/performance.md
-  - 'Multi-Module':
-      - 'Overview': multi-module/index.md
-      - 'Getting Started': multi-module/getting-started.md
-      - 'Advanced Topics': multi-module/advanced.md
-      - 'Migration Guide': multi-module/migration.md
-  - 'Reference':
-      - 'API': reference/api.md
-      - 'Compatibility': reference/compatibility.md
-      - 'Limitations': reference/limitations.md
-  - 'Samples': samples/index.md
-  - 'FAQ': faq.md
-  - 'Troubleshooting': troubleshooting.md
-  - 'Contributing': contributing.md
-  - 'Change Log': changelog.md
+  - 'Get Started':
+      - 'Introduction': get-started/index.md
+      - 'Why Fakt?': get-started/why-fakt.md
+      - 'Features': get-started/features.md
+  - 'User Guide':
+      # Getting Started with Fakt
+      - 'Basic Usage': user-guide/basic-usage.md
+      - 'Suspend Functions': user-guide/suspend-functions.md
+      - 'Generics': user-guide/generics.md
+      - 'Properties': user-guide/properties.md
+      - 'Call Tracking': user-guide/call-tracking.md
+      # Testing & Best Practices
+      - 'Testing Patterns': user-guide/testing-patterns.md
+      - 'Migration from Mocks': user-guide/migration-from-mocks.md
+      # Multi-Module Projects
+      - 'Multi-Module Overview': user-guide/multi-module-overview.md
+      - 'Multi-Module Setup': user-guide/multi-module-setup.md
+      - 'Advanced Multi-Module': user-guide/multi-module-advanced.md
+      # Configuration & Optimization
+      - 'Plugin Configuration': user-guide/plugin-configuration.md
+      - 'Performance & Optimization': user-guide/performance.md
+      # Understanding Generated Code
+      - 'Generated Code Reference': user-guide/generated-code-reference.md
+      - 'Platform Support': user-guide/platform-support.md
+      - 'Known Issues': user-guide/known-issues.md
+  - 'Examples': examples/index.md
+  - 'Help':
+      - 'FAQ': help/faq.md
+      - 'Troubleshooting': help/troubleshooting.md
+      - 'When to Use Multi-Module': help/multi-module-migration.md
+  - 'About':
+      - 'Contributing': about/contributing.md
+      - 'Change Log': about/changelog.md

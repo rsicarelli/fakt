@@ -44,7 +44,7 @@ MockK and Mockito are **runtime mocking frameworks** using reflection (JVM/Andro
 
 **Use Fakt when:** Building Kotlin Multiplatform projects or want zero-runtime-cost test doubles.
 
-See [Why Fakt](introduction/why-fakt.md) for detailed comparison.
+See [Why Fakt](../get-started/why-fakt.md) for detailed comparison.
 
 ---
 
@@ -68,19 +68,19 @@ Fakt doesn't replace hand-written fakes for complex scenarios (stateful mocks, p
 
 ### Does Fakt support generics?
 
-**Yes**. Class-level, method-level, generic constraints, and variance are all supported. See [Features: Generics](introduction/features.md#generics) for detailed examples.
+**Yes**. Class-level, method-level, generic constraints, and variance are all supported. See [Features: Generics](../get-started/features.md#generics) for detailed examples.
 
 ### Does Fakt support suspend functions?
 
-**Yes**. Suspend functions preserve coroutine semantics. See [Suspend Functions](usage/suspend-functions.md) for details.
+**Yes**. Suspend functions preserve coroutine semantics. See [Suspend Functions](../user-guide/suspend-functions.md) for details.
 
 ### Does Fakt support properties (val/var)?
 
-**Yes**. Both read-only (`val`) and mutable (`var`) properties with call tracking. See [Features: Properties](introduction/features.md#properties) for examples.
+**Yes**. Both read-only (`val`) and mutable (`var`) properties with call tracking. See [Features: Properties](../get-started/features.md#properties) for examples.
 
 ### Can I fake data classes or sealed classes?
 
-**No**. Fakt only generates fakes for interfaces, abstract classes, and open classes. Data/sealed classes work fine as parameter/return types. See [Limitations](reference/limitations.md) for details and workarounds.
+**No**. Fakt only generates fakes for interfaces, abstract classes, and open classes. Data/sealed classes work fine as parameter/return types.
 
 ---
 
@@ -106,7 +106,7 @@ compileKotlinJvm:     1ms (121 from cache)
 compileKotlinAndroid: 1ms (121 from cache)
 ```
 
-See [Performance Guide](guides/performance.md) for detailed benchmarks and telemetry configuration.
+See [Performance Guide](../user-guide/performance.md) for detailed benchmarks and telemetry configuration.
 
 ---
 
@@ -140,8 +140,8 @@ dependencies {
 ```
 
 **For comprehensive documentation**, see:
-- [Multi-Module Overview](multi-module/index.md) - Architecture and when to use
-- [Getting Started](multi-module/getting-started.md) - Step-by-step setup guide
+- [Multi-Module Overview](../user-guide/multi-module-overview.md) - Architecture and when to use
+- [Getting Started](../user-guide/multi-module-setup.md) - Step-by-step setup guide
 - [kmp-multi-module sample](https://github.com/rsicarelli/fakt/tree/main/samples/kmp-multi-module) - Working example
 
 !!! warning "Experimental Feature"

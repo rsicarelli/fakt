@@ -28,7 +28,7 @@ Writing test fakes manually is tedious and error-prone. You write 50+ lines of b
 
 Fakt solves both problems with compile-time code generation that works everywhere Kotlin compiles.
 
-**[Read the full story →](introduction/why-fakt.md)**
+**[Read the full story →](get-started/why-fakt.md)**
 
 ---
 
@@ -41,7 +41,7 @@ Fakt solves both problems with compile-time code generation that works everywher
 - ✅ **Smart defaults** - Identity functions for generics, Result.success for Results
 - ✅ **IR-level generation** - Direct compiler plugin for performance and compatibility
 
-**[Complete feature reference →](introduction/features.md)**
+**[Complete feature reference →](get-started/features.md)**
 
 ---
 
@@ -49,31 +49,31 @@ Fakt solves both problems with compile-time code generation that works everywher
 
 **Quick Start:**
 
-1. **[Getting Started](introduction/getting-started.md)** - Install Fakt and create your first fake in 5 minutes
-2. **[Basic Usage](usage/basic-usage.md)** - Core patterns and techniques
-3. **[Testing Patterns](guides/testing-patterns.md)** - Best practices for using fakes in tests
+1. **[Getting Started](get-started/index.md)** - Install Fakt and create your first fake in 5 minutes
+2. **[Basic Usage](user-guide/basic-usage.md)** - Core patterns and techniques
+3. **[Testing Patterns](user-guide/testing-patterns.md)** - Best practices for using fakes in tests
 
 **Usage Guides:**
 
-- **[Suspend Functions](usage/suspend-functions.md)** - Working with coroutines and async code
-- **[Generics](usage/generics.md)** - Generic interfaces and type parameters
-- **[Properties](usage/properties.md)** - Faking val and var properties
-- **[Call Tracking](usage/call-tracking.md)** - StateFlow-based reactive counters
+- **[Suspend Functions](user-guide/suspend-functions.md)** - Working with coroutines and async code
+- **[Generics](user-guide/generics.md)** - Generic interfaces and type parameters
+- **[Properties](user-guide/properties.md)** - Faking val and var properties
+- **[Call Tracking](user-guide/call-tracking.md)** - StateFlow-based reactive counters
 
 **Advanced Topics:**
 
-- **[Multi-Module Setup](multi-module/index.md)** - Cross-module fakes with collector modules
-- **[Configuration](guides/configuration.md)** - Plugin configuration and log levels
-- **[Performance](guides/performance.md)** - Build times, caching, and optimization
-- **[Migration from Mocks](guides/migration-from-mocks.md)** - Migrating from MockK or Mockito
+- **[Multi-Module Setup](user-guide/multi-module-overview.md)** - Cross-module fakes with collector modules
+- **[Configuration](user-guide/plugin-configuration.md)** - Plugin configuration and log levels
+- **[Performance](user-guide/performance.md)** - Build times, caching, and optimization
+- **[Migration from Mocks](user-guide/migration-from-mocks.md)** - Migrating from MockK or Mockito
 
 **Reference:**
 
-- **[API Reference](reference/api.md)** - Complete generated API documentation
-- **[Limitations](reference/limitations.md)** - Known limitations and workarounds
-- **[Compatibility](reference/compatibility.md)** - Platform and version requirements
-- **[FAQ](faq.md)** - Frequently asked questions
-- **[Troubleshooting](troubleshooting.md)** - Common issues and solutions
+- **[API Reference](user-guide/generated-code-reference.md)** - Complete generated API documentation
+- **[Limitations](user-guide/known-issues.md)** - Known limitations and workarounds
+- **[Compatibility](user-guide/platform-support.md)** - Platform and version requirements
+- **[FAQ](help/faq.md)** - Frequently asked questions
+- **[Troubleshooting](help/troubleshooting.md)** - Common issues and solutions
 
 ---
 
@@ -83,7 +83,7 @@ Fakt works on **all Kotlin Multiplatform targets** without reflection: JVM, Andr
 
 Single-platform projects (JVM-only, Android-only) are fully supported.
 
-**[Full compatibility matrix →](reference/compatibility.md)**
+**[Full compatibility matrix →](user-guide/platform-support.md)**
 
 ---
 

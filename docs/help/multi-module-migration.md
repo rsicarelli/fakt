@@ -391,6 +391,6 @@ fakt {
 
 ## Next Steps
 
-- [Getting Started](getting-started.md) - Multi-module setup guide
-- [Troubleshooting](../troubleshooting.md) - Common migration issues
-- [Advanced Topics](advanced.md) - Performance optimization
+- [Multi-Module Setup](../user-guide/multi-module-setup.md) - Multi-module setup guide
+- [Troubleshooting](troubleshooting.md) - Common migration issues
+- [Performance](../user-guide/performance.md) - Performance optimization
