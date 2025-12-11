@@ -9,7 +9,7 @@ Set up Fakt multi-module support in 15 minutes with this step-by-step tutorial.
 Before starting, ensure you have:
 
 - ✅ Kotlin Multiplatform or JVM project with multiple Gradle modules
-- ✅ Fakt plugin installed (see [Getting Started](../introduction/getting-started.md))
+- ✅ Fakt plugin installed (see [Getting Started](../get-started/index.md))
 - ✅ Basic understanding of Gradle module structure
 - ✅ Type-safe project accessors enabled in `settings.gradle.kts`
 
@@ -339,7 +339,7 @@ fakt {
 
 **You've successfully set up multi-module support!** 🎉
 
-For troubleshooting, see [Troubleshooting Guide](../troubleshooting.md). Explore advanced topics:
+For troubleshooting, see [Troubleshooting Guide](../help/troubleshooting.md). Explore advanced topics:
 
-- [Advanced Topics](advanced.md) - Platform detection, performance tuning, publishing, and API reference
-- [Migration Guide](migration.md) - Migrate existing single-module projects
+- [Advanced Topics](multi-module-advanced.md) - Platform detection, performance tuning, publishing, and API reference
+- [Migration Guide](../help/multi-module-migration.md) - Migrate existing single-module projects

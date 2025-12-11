@@ -49,5 +49,5 @@ Found a limitation not listed here? [Report it on GitHub](https://github.com/rsi
 
 ## Next Steps
 
-- [FAQ](../faq.md) - Common questions
-- [Troubleshooting](../troubleshooting.md) - Common issues
+- [FAQ](../help/faq.md) - Common questions
+- [Troubleshooting](../help/troubleshooting.md) - Common issues

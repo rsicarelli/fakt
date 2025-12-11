@@ -503,6 +503,6 @@ Both approaches are equally valid. Type-safe accessors provide better IDE suppor
 
 ## Next Steps
 
-- [Getting Started](getting-started.md) - Step-by-step tutorial
-- [Troubleshooting](../troubleshooting.md) - Debug common issues
-- [Migration Guide](migration.md) - Single-module → Multi-module
+- [Getting Started](multi-module-setup.md) - Step-by-step tutorial
+- [Troubleshooting](../help/troubleshooting.md) - Debug common issues
+- [Migration Guide](../help/multi-module-migration.md) - Single-module → Multi-module

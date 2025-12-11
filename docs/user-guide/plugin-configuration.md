@@ -147,7 +147,7 @@ kotlin {
 }
 ```
 
-See **[Multi-Module Guide](../multi-module/index.md)** for architecture details.
+See **[Multi-Module Guide](multi-module-overview.md)** for architecture details.
 
 ---
 
@@ -323,7 +323,7 @@ Shows actual plugin settings used during compilation.
 
 ## Next Steps
 
-- **[Multi-Module Setup](../multi-module/index.md)** - Cross-module fakes
+- **[Multi-Module Setup](multi-module-overview.md)** - Cross-module fakes
 - **[Performance Guide](performance.md)** - Build time optimization
-- **[Troubleshooting](../troubleshooting.md)** - Common configuration issues
-- **[API Reference](../reference/api.md)** - Generated API details
+- **[Troubleshooting](../help/troubleshooting.md)** - Common configuration issues
+- **[API Reference](generated-code-reference.md)** - Generated API details

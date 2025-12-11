@@ -413,4 +413,4 @@ fun `GIVEN fake WHEN reconfiguring behavior THEN uses new behavior`() {
 - **[Call Tracking](call-tracking.md)** - Advanced StateFlow patterns
 
 **Best Practices:**
-- **[Testing Patterns](../guides/testing-patterns.md)** - GIVEN-WHEN-THEN, isolated fakes, verification strategies
+- **[Testing Patterns](testing-patterns.md)** - GIVEN-WHEN-THEN, isolated fakes, verification strategies
