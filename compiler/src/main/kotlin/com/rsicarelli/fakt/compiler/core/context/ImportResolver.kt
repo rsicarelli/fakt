@@ -111,7 +111,10 @@ internal class ImportResolver(
 
         val irClass = irType.getClass()
         if (irClass != null) {
-            val fqName = irClass.kotlinFqName.asString()
+            val resolvedFqName = irClass.kotlinFqName.asString()
+
+            // Map JVM stdlib types to Kotlin equivalents for platform-agnostic code
+            val fqName = mapJvmTypeToKotlin(resolvedFqName)
             val packageName = fqName.substringBeforeLast('.', "")
 
             // Only add import if it's from a different package and not kotlin.* built-ins
@@ -168,5 +171,52 @@ internal class ImportResolver(
                 "kotlin.io",
                 "kotlin.comparisons",
             )
+
+        /**
+         * Maps JVM-specific stdlib types to their Kotlin equivalents.
+         *
+         * The Kotlin compiler resolves typealiases to their platform-specific implementations
+         * (e.g., kotlin.Exception → java.lang.Exception on JVM). This causes problems when
+         * generating code for common source sets (commonMain/commonTest) that must be
+         * platform-agnostic.
+         *
+         * This map ensures we always use kotlin.* types in generated imports, which work
+         * across all Kotlin platforms (JVM, Native, JS, Wasm).
+         */
+        private val JVM_TO_KOTLIN_TYPE_MAP =
+            mapOf(
+                // Exceptions
+                "java.lang.Throwable" to "kotlin.Throwable",
+                "java.lang.Exception" to "kotlin.Exception",
+                "java.lang.RuntimeException" to "kotlin.RuntimeException",
+                "java.lang.Error" to "kotlin.Error",
+                "java.lang.IllegalStateException" to "kotlin.IllegalStateException",
+                "java.lang.IllegalArgumentException" to "kotlin.IllegalArgumentException",
+                "java.lang.IndexOutOfBoundsException" to "kotlin.IndexOutOfBoundsException",
+                "java.lang.UnsupportedOperationException" to "kotlin.UnsupportedOperationException",
+                "java.lang.NumberFormatException" to "kotlin.NumberFormatException",
+                "java.lang.NullPointerException" to "kotlin.NullPointerException",
+                "java.lang.ClassCastException" to "kotlin.ClassCastException",
+                "java.lang.AssertionError" to "kotlin.AssertionError",
+                "java.lang.NoSuchElementException" to "kotlin.NoSuchElementException",
+                "java.lang.ArithmeticException" to "kotlin.ArithmeticException",
+                "java.util.ConcurrentModificationException" to "kotlin.collections.ConcurrentModificationException",
+                // Collections (rare, but possible in function signatures)
+                "java.lang.Comparable" to "kotlin.Comparable",
+                "java.lang.CharSequence" to "kotlin.CharSequence",
+                "java.lang.Appendable" to "kotlin.text.Appendable",
+                "java.lang.Number" to "kotlin.Number",
+            )
     }
+
+    /**
+     * Maps JVM-specific stdlib types to their Kotlin equivalents.
+     *
+     * This ensures generated code uses platform-agnostic kotlin.* types instead of
+     * JVM-specific java.lang.* types, allowing the code to compile on all KMP targets.
+     *
+     * @param fqName The fully qualified name to map (e.g., "java.lang.Exception")
+     * @return Kotlin equivalent if mapped, original FQN otherwise
+     */
+    private fun mapJvmTypeToKotlin(fqName: String): String = JVM_TO_KOTLIN_TYPE_MAP[fqName] ?: fqName
 }
