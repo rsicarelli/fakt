@@ -84,20 +84,15 @@ nav:
   - 'Home': index.md
   - 'Get Started':
       - 'Introduction': get-started/index.md
-      - 'Why Fakt?': get-started/why-fakt.md
       - 'Features': get-started/features.md
+      - 'Why Fakt?': get-started/why-fakt.md
+      - 'Plugin Configuration': user-guide/plugin-configuration.md
   - 'User Guide':
-      # Getting Started with Fakt
       - 'Usage': user-guide/usage.md
-      # Testing & Best Practices
+      - 'Multi-Module': user-guide/multi-module.md
       - 'Testing Patterns': user-guide/testing-patterns.md
       - 'Migration from Mocks': user-guide/migration-from-mocks.md
-      # Multi-Module Projects
-      - 'Multi-Module': user-guide/multi-module.md
-      # Configuration & Optimization
-      - 'Plugin Configuration': user-guide/plugin-configuration.md
       - 'Performance & Optimization': user-guide/performance.md
-      # Understanding Generated Code
       - 'Generated Code Reference': user-guide/generated-code-reference.md
       - 'Platform Support': user-guide/platform-support.md
       - 'Known Issues': user-guide/known-issues.md
@@ -105,4 +100,3 @@ nav:
   - 'Help':
       - 'FAQ': help/faq.md
       - 'Troubleshooting': help/troubleshooting.md
-      - 'When to Use Multi-Module': help/multi-module-migration.md

@@ -470,7 +470,6 @@ The pattern enables teams to maintain clear module boundaries while sharing test
 **Learn More**:
 
 - **[Troubleshooting](../help/troubleshooting.md)** - Common issues & solutions
-- **[Migration Guide](../help/multi-module-migration.md)** - Single-module → Multi-module migration
 - **[Examples](../examples/index.md#kmp-multi-module)** - Production-quality kmp-multi-module example (11 modules)
 - **[Plugin Configuration](plugin-configuration.md)** - Advanced configuration options
 - **[Performance & Optimization](performance.md)** - Build performance tuning
