@@ -180,6 +180,59 @@ data class UnifiedMetricsTree(
     }
 
     /**
+     * Formats metrics as a concise INFO-level summary (4 lines).
+     *
+     * Provides essential compilation metrics without detailed per-fake breakdown:
+     * - Total fakes generated (interfaces + classes)
+     * - Total compilation time (FIR + IR)
+     * - Phase breakdown (FIR vs IR time)
+     * - Cache statistics (estimated based on IR timing heuristic)
+     *
+     * **Output Format:**
+     * ```
+     * Fakt: 3 fakes generated in 1.4ms (0 cached)
+     *   Interfaces: 3 | Classes: 0
+     *   FIR: 115µs | IR: 1.285ms
+     *   Cache: 0/3 (0%)
+     * ```
+     *
+     * This format is designed for normal development builds where developers
+     * want confirmation that fakes were generated without detailed metrics.
+     *
+     * **Cache Detection Heuristic:**
+     * IR time < 100µs per fake indicates cache hit (fresh generation typically 500µs-5ms).
+     *
+     * @return Multi-line INFO summary string ready for logging
+     */
+    fun toInfoSummary(): String {
+        val totalFakes = interfaces.size + classes.size
+        val totalTime = TimeFormatter.format(totalTimeNanos)
+        val firTime = TimeFormatter.format(totalFirTimeNanos)
+        val irTime = TimeFormatter.format(totalIrTimeNanos)
+
+        // Cache detection: IR time < 100µs per fake indicates cache hit
+        // (Fresh generation typically 500µs-5ms, cached ~5-50µs)
+        val avgIrTimePerFake = if (totalFakes > 0) totalIrTimeNanos / totalFakes else 0
+        val estimatedCached = if (avgIrTimePerFake < 100_000) totalFakes else 0
+
+        val cachePercent =
+            if (totalFakes > 0) {
+                (estimatedCached * 100) / totalFakes
+            } else {
+                0
+            }
+
+        return buildString {
+            appendLine(
+                "Fakt: $totalFakes fakes generated in $totalTime ($estimatedCached cached)",
+            )
+            appendLine("  Interfaces: ${interfaces.size} | Classes: ${classes.size}")
+            appendLine("  FIR: $firTime | IR: $irTime")
+            append("  Cache: $estimatedCached/$totalFakes ($cachePercent%)")
+        }
+    }
+
+    /**
      * Formats a line with right-aligned time value at the target column.
      *
      * The time value is padded to 10 characters and right-aligned at the target column.

@@ -5,113 +5,70 @@ package com.rsicarelli.fakt.compiler.api
 /**
  * Logging verbosity levels for the Fakt compiler plugin.
  *
- * Controls how much information is displayed during compilation:
- * - [QUIET]: No output except errors (fastest compilation, minimal noise)
- * - [INFO]: Concise summary with key metrics (default, production-ready)
- * - [DEBUG]: Detailed breakdown with FIR + IR details and type resolution (troubleshooting)
+ * Controls compilation output:
+ * - [QUIET]: No output except errors (CI/CD builds)
+ * - [INFO]: Concise summary with key metrics (default)
+ * - [DEBUG]: Detailed FIR + IR phase timing (troubleshooting)
  *
- * **Usage in build.gradle.kts (Type-Safe!):**
+ * **Usage:**
  * ```kotlin
  * import com.rsicarelli.fakt.compiler.api.LogLevel
  *
  * fakt {
- *     logLevel.set(LogLevel.INFO)    // ✅ Type-safe!
- *     logLevel.set(LogLevel.DEBUG)   // ✅ IDE autocomplete
- *     logLevel.set(LogLevel.QUIET)   // ✅ Compile-time validation
+ *     logLevel.set(LogLevel.INFO)
  * }
  * ```
- *
- * **Performance Impact:**
- * - QUIET: Zero overhead (recommended for CI/CD)
- * - INFO: Negligible overhead (<1ms)
- * - DEBUG: Minor overhead (~5-10ms for detailed logging)
- *
- * The enum is comparable, allowing checks like `currentLevel >= LogLevel.DEBUG`.
  */
 enum class LogLevel {
     /**
-     * No output except errors.
-     *
-     * Use when:
-     * - Running in CI/CD for fast builds
-     * - You don't need compilation feedback
-     * - Minimizing build noise is critical
-     *
-     * Output: Nothing (errors still shown via ERROR severity)
+     * No output except errors. Use for CI/CD pipelines and production builds.
      */
     QUIET,
 
     /**
      * Concise summary with key metrics (default).
      *
-     * Shows:
-     * - Total fakes generated
-     * - Compilation time
-     * - Cache hit rate
-     * - Output directory
+     * Use for local development and monitoring cache effectiveness.
      *
-     * Typical output: 5-10 lines
-     *
-     * Use when:
-     * - Normal development (default)
-     * - You want to know what happened without details
-     * - Production builds with some visibility
+     * **Example output:**
+     * ```
+     * Fakt: 101 fakes generated in 35ms (50 cached)
+     *   Interfaces: 101 | Classes: 0
+     *   FIR: 6ms | IR: 29ms
+     *   Cache: 50/101 (49%)
+     * ```
      */
     INFO,
 
     /**
-     * Detailed breakdown by compilation phase.
+     * Detailed FIR + IR phase timing.
      *
-     * Shows everything from INFO plus:
-     * - Per-phase timing (discovery, analysis, generation, I/O)
-     * - Per-interface summary (name, pattern, timing)
-     * - Cache statistics (hits, misses, reasons)
-     * - Slow operation warnings
-     * - FIR + IR node inspection details
-     * - Type resolution steps
-     * - Generic pattern analysis breakdown
-     * - Import resolution process
-     * - Source set mapping details
-     * - Generated code snippets (first few lines)
+     * Use for troubleshooting, performance analysis, and bug reports.
      *
-     * Typical output: 30-100+ lines
-     *
-     * Use when:
-     * - Troubleshooting generation issues
-     * - Understanding performance bottlenecks
-     * - Investigating why specific interfaces take long
-     * - Deep debugging compiler plugin issues
-     * - Understanding FIR + IR generation internals
-     * - Reporting bugs with full context
-     * - Developing new features
+     * **Example output:**
+     * ```
+     * FIR + IR trace
+     * ├─ Total FIR time: 6ms
+     * ├─ Total IR time: 58ms
+     * │  ├─ FIR analysis: 1 type parameters, 6 members (55µs)
+     * │  └─ IR generation: FakeDataCacheImpl 83 LOC (766µs)
+     * ```
      */
     DEBUG,
     ;
 
     companion object {
         /**
-         * Parses a string into a [LogLevel], with fallback to INFO on invalid input.
+         * Parses a string to [LogLevel] (case-insensitive).
          *
-         * Case-insensitive. Handles common variations:
-         * - "INFO", "info", "Info" → LogLevel.INFO
-         * - "DEBUG", "debug" → LogLevel.DEBUG
-         * - Invalid values → LogLevel.INFO (default)
-         *
-         * @param value The string representation of the log level
-         * @return The corresponding LogLevel, or INFO if parsing fails
-         *
-         * **Example:**
-         * ```kotlin
-         * LogLevel.fromString("DEBUG")  // → LogLevel.DEBUG
-         * LogLevel.fromString("invalid") // → LogLevel.INFO (with fallback)
-         * ```
+         * @return The corresponding LogLevel, or INFO if invalid
          */
         fun fromString(value: String?): LogLevel =
             when (value?.uppercase()) {
                 "QUIET" -> QUIET
                 "INFO" -> INFO
                 "DEBUG" -> DEBUG
-                else -> INFO // Default to INFO on invalid input
+                else -> INFO
             }
     }
 }

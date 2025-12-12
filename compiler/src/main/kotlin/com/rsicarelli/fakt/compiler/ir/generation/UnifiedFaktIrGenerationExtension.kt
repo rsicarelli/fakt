@@ -594,29 +594,29 @@ class UnifiedFaktIrGenerationExtension(
     }
 
     /**
-     * Log unified FIR + IR trace showing both analysis and generation metrics in one tree.
+     * Logs unified FIR + IR metrics in a level-appropriate format.
      *
-     * Shows complete metrics for each fake:
-     * - FIR analysis: validation time, type parameters, members
-     * - IR generation: generation time, LOC
-     *
-     * Cache hits naturally appear with fast total times (~50-200µs vs ~1-10ms for fresh generation).
-     *
-     * Example output:
+     * **INFO Level**: Concise 4-line summary with key metrics:
      * ```
-     * i: Fakt: FIR + IR trace
-     * i: Fakt: ├─ Interfaces: 101
-     * i: Fakt: │  ├─ UserService                                     1ms total
-     * i: Fakt: │  │  ├─ FIR analysis: 0 type parameters, 5 members   45µs
-     * i: Fakt: │  │  └─ IR generation: FakeUserServiceImpl 73 LOC    955µs
-     * i: Fakt: │  ├─ DataCache                                       50µs total ← cache hit!
-     * i: Fakt: │  │  ├─ FIR analysis: 1 type parameters, 6 members   45µs
-     * i: Fakt: │  │  └─ IR generation: FakeDataCacheImpl 83 LOC      5µs
-     * i: Fakt: └─ Classes: 21
-     * i: Fakt:    ├─ KeyValueCache                                   2ms total
-     * i: Fakt:    │  ├─ FIR analysis: 2 type parameters, 5 members   50µs
-     * i: Fakt:    │  └─ IR generation: FakeKeyValueCacheImpl 72 LOC  1.95ms
+     * Fakt: 3 fakes generated in 1.4ms (0 cached)
+     *   Interfaces: 3 | Classes: 0
+     *   FIR: 115µs | IR: 1.285ms
+     *   Cache: 0/3 (0%)
      * ```
+     *
+     * **DEBUG Level**: Detailed tree with per-fake breakdown:
+     * ```
+     * FIR + IR trace
+     * ├─ Total FIR time                                                            234µs
+     * ├─ Total IR time                                                             1.2ms
+     * ├─ Total time                                                                1.4ms
+     * ├─ Interfaces: 3
+     * │  ├─ UserService                                                            580µs
+     * │  │  ├─ FIR analysis: 0 type parameters, 5 members                          45µs
+     * │  │  └─ IR generation: FakeUserServiceImpl 73 LOC                           535µs
+     * ```
+     *
+     * **QUIET**: No output
      *
      * @param interfaceMetrics Unified metrics for interfaces (FIR + IR)
      * @param classMetrics Unified metrics for classes (FIR + IR)
@@ -625,7 +625,8 @@ class UnifiedFaktIrGenerationExtension(
         interfaceMetrics: List<UnifiedFakeMetrics>,
         classMetrics: List<UnifiedFakeMetrics>,
     ) {
-        if (logger.logLevel < LogLevel.DEBUG) return
+        // Skip entirely for QUIET level
+        if (logger.logLevel < LogLevel.INFO) return
 
         val tree =
             UnifiedMetricsTree(
@@ -633,6 +634,15 @@ class UnifiedFaktIrGenerationExtension(
                 classes = classMetrics,
             )
 
-        logger.debug(tree.toTreeString())
+        // INFO: Concise summary (4 lines)
+        if (logger.logLevel == LogLevel.INFO) {
+            logger.info(tree.toInfoSummary())
+            return
+        }
+
+        // DEBUG: Detailed tree breakdown
+        if (logger.logLevel >= LogLevel.DEBUG) {
+            logger.debug(tree.toTreeString())
+        }
     }
 }
