@@ -37,16 +37,11 @@ theme:
   features:
     - content.code.copy
     - content.code.select
-    - navigation.tabs
-    - navigation.sections
-    - navigation.expand
-    - navigation.top
     - search.suggest
     - search.highlight
     - content.tabs.link
 
 plugins:
-  - social
   - search
   - mike
   - callouts
@@ -93,18 +88,12 @@ nav:
       - 'Features': get-started/features.md
   - 'User Guide':
       # Getting Started with Fakt
-      - 'Basic Usage': user-guide/basic-usage.md
-      - 'Suspend Functions': user-guide/suspend-functions.md
-      - 'Generics': user-guide/generics.md
-      - 'Properties': user-guide/properties.md
-      - 'Call Tracking': user-guide/call-tracking.md
+      - 'Usage': user-guide/usage.md
       # Testing & Best Practices
       - 'Testing Patterns': user-guide/testing-patterns.md
       - 'Migration from Mocks': user-guide/migration-from-mocks.md
       # Multi-Module Projects
-      - 'Multi-Module Overview': user-guide/multi-module-overview.md
-      - 'Multi-Module Setup': user-guide/multi-module-setup.md
-      - 'Advanced Multi-Module': user-guide/multi-module-advanced.md
+      - 'Multi-Module': user-guide/multi-module.md
       # Configuration & Optimization
       - 'Plugin Configuration': user-guide/plugin-configuration.md
       - 'Performance & Optimization': user-guide/performance.md
@@ -117,6 +106,3 @@ nav:
       - 'FAQ': help/faq.md
       - 'Troubleshooting': help/troubleshooting.md
       - 'When to Use Multi-Module': help/multi-module-migration.md
-  - 'About':
-      - 'Contributing': about/contributing.md
-      - 'Change Log': about/changelog.md

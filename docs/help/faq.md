@@ -68,15 +68,15 @@ Fakt doesn't replace hand-written fakes for complex scenarios (stateful mocks, p
 
 ### Does Fakt support generics?
 
-**Yes**. Class-level, method-level, generic constraints, and variance are all supported. See [Features: Generics](../get-started/features.md#generics) for detailed examples.
+**Yes**. Class-level, method-level, generic constraints, and variance are all supported. See [Usage Guide: Generics](../user-guide/usage.md#generics) for detailed examples.
 
 ### Does Fakt support suspend functions?
 
-**Yes**. Suspend functions preserve coroutine semantics. See [Suspend Functions](../user-guide/suspend-functions.md) for details.
+**Yes**. Suspend functions preserve coroutine semantics. See [Usage Guide: Suspend Functions](../user-guide/usage.md#suspend-functions) for details.
 
 ### Does Fakt support properties (val/var)?
 
-**Yes**. Both read-only (`val`) and mutable (`var`) properties with call tracking. See [Features: Properties](../get-started/features.md#properties) for examples.
+**Yes**. Both read-only (`val`) and mutable (`var`) properties with call tracking. See [Usage Guide: Properties](../user-guide/usage.md#properties) for examples.
 
 ### Can I fake data classes or sealed classes?
 
@@ -140,8 +140,7 @@ dependencies {
 ```
 
 **For comprehensive documentation**, see:
-- [Multi-Module Overview](../user-guide/multi-module-overview.md) - Architecture and when to use
-- [Getting Started](../user-guide/multi-module-setup.md) - Step-by-step setup guide
+- [Multi-Module](../user-guide/multi-module.md) - Architecture, setup, and implementation details
 - [kmp-multi-module sample](https://github.com/rsicarelli/fakt/tree/main/samples/kmp-multi-module) - Working example
 
 !!! warning "Experimental Feature"
@@ -170,8 +169,6 @@ Contributions are welcome! Please:
 2. Ensure all generated code compiles without errors
 3. Test both single-platform and KMP scenarios
 4. Run `make format` before committing
-
-See [Contributing Guide](../about/contributing.md) for development workflows.
 
 ---
 

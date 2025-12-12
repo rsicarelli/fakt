@@ -297,8 +297,6 @@ Fakt follows forward compatibility on a best-effort basis (usually N+.2 minor ve
 ## Next Steps
 
 - **[Features](features.md)** - Complete feature reference
-- **[Basic Usage](../user-guide/basic-usage.md)** - Common patterns and examples
-- **[Suspend Functions](../user-guide/suspend-functions.md)** - Async/coroutine support
-- **[Call Tracking](../user-guide/call-tracking.md)** - StateFlow-based reactive counters
+- **[Usage Guide](../user-guide/usage.md)** - Common patterns and examples
 - **[Testing Patterns](../user-guide/testing-patterns.md)** - Best practices
 - **[Configuration](../user-guide/plugin-configuration.md)** - Plugin options (coming soon)

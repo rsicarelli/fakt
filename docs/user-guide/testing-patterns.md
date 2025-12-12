@@ -238,4 +238,4 @@ fun `test getUser only`() {
 
 - **[Migration Guide](migration-from-mocks.md)** - From MockK/Mockito to Fakt
 - **[Performance](performance.md)** - Build time impact and optimization
-- **[Basic Usage](basic-usage.md)** - Core patterns and examples
+- **[Usage Guide](usage.md)** - Core patterns and examples
