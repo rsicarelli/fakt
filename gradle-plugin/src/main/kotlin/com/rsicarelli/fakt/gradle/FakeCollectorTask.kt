@@ -271,8 +271,9 @@ public abstract class FakeCollectorTask : DefaultTask() {
                         availableSourceSets
                             .filter { sourceSet ->
                                 // Match if source set name starts with segment (case-insensitive)
+                                // Collector modules expose fakes in MAIN source sets (as libraries)
                                 // Examples:
-                                // - "ios" matches "iosMain", "iosArm64Main", "iosTest"
+                                // - "ios" matches "iosMain", "iosArm64Main"
                                 // - "tvos" matches "tvosMain", "tvosArm64Main"
                                 // - "wasmJs" matches "wasmJsMain"
                                 sourceSet.startsWith(
@@ -282,7 +283,7 @@ public abstract class FakeCollectorTask : DefaultTask() {
                             }.map { sourceSet -> sourceSet to segment } // Keep track of which segment matched
                     }.distinct()
 
-            // If no matches, fallback to commonMain
+            // If no matches, fallback to commonMain (collector modules publish as libraries)
             if (matchedSourceSets.isEmpty()) {
                 return "commonMain"
             }
@@ -430,6 +431,14 @@ public abstract class FakeCollectorTask : DefaultTask() {
                 }
 
             // Register ALL *Main source sets (commonMain, jvmMain, iosMain, etc.)
+            // CRITICAL: Collector modules expose fakes in MAIN source sets so consumer modules
+            // can depend on them. While fakes are test utilities, collector modules act as
+            // LIBRARIES that publish fakes for other modules to use.
+            //
+            // Architecture:
+            //   Source module → generates fakes in TEST (for own tests)
+            //   Collector module → collects fakes and exposes in MAIN (as library)
+            //   Consumer module → depends on collector MAIN (uses fakes in its tests)
             kotlinExtension.sourceSets
                 .matching { sourceSet ->
                     sourceSet.name.endsWith("Main")
@@ -443,9 +452,12 @@ public abstract class FakeCollectorTask : DefaultTask() {
                         }
                     sourceSet.kotlin.srcDir(platformDir)
 
-                    // Wire task dependencies: ensure compilation tasks depend on collectFakes
-                    // This guarantees fakes are collected before any compilation that uses them
-                    // Uses type-based matching for robustness (only Kotlin tasks, not Java/Groovy)
+                    project.logger.info(
+                        "Fakt: Registered collected fakes to ${sourceSet.name}: $platformDir",
+                    )
+
+                    // Wire task dependencies: ensure MAIN compilation tasks depend on collectFakes
+                    // This guarantees fakes are collected before compilation
                     project.tasks
                         .matching { compileTask ->
                             // Type-based: only Kotlin compilation tasks
@@ -456,7 +468,7 @@ public abstract class FakeCollectorTask : DefaultTask() {
                             ) &&
                                 // Name-based: match source set name
                                 compileTask.name.contains(sourceSet.name, ignoreCase = true) &&
-                                // Safety: avoid test compilations
+                                // CRITICAL: Only MAIN compilations (collector modules publish as libraries)
                                 !compileTask.name.contains("test", ignoreCase = true)
                         }.configureEach { compileTask ->
                             compileTask.dependsOn(task)

@@ -167,18 +167,25 @@ internal object SourceSetDiscovery {
         // 7. Generate output directory
         // Always output to test source sets since fakes are only used in tests
         //
-        // CRITICAL: For KMP projects, if commonMain exists in the hierarchy,
-        // ALWAYS generate in commonTest, not platform-specific test source sets.
-        // This ensures fakes are visible to ALL platform tests.
+        // OUTPUT STRATEGY: For KMP projects, ALWAYS output to commonTest if commonMain
+        // exists in the compilation's source set hierarchy. This centralizes all fakes
+        // in one location and relies on KMP's KLIB dependency propagation to make them
+        // visible across all platform tests (jvmTest, iosX64Test, etc.).
         //
-        // Example: Interface in commonMain → generate fake in commonTest
-        //          Tests in commonTest, jvmTest, iosTest can all see it
+        // CRITICAL: Do NOT register commonTest source directory to platform test source
+        // sets in SourceSetConfigurator - this causes "can be a part of only one module"
+        // errors. KMP propagates COMPILED code (KLIBs), not source directories.
+        //
+        // Example:
+        //   - Interfaces in commonMain → Fakes in commonTest → Compiled to KLIB
+        //   - jvmTest depends on commonTest → Can import fakes (via KLIB)
+        //   - iosX64Test depends on commonTest → Can import fakes (via KLIB)
         val hasCommonMain = allSourceSets.any { it.name == "commonMain" }
         val testSourceSet =
             if (hasCommonMain) {
                 "commonTest"
             } else {
-                // Non-KMP or platform-specific interfaces: use platform test source set
+                // Non-KMP or platform-specific: use platform test source set
                 mapToTestSourceSet(defaultSourceSet.name)
             }
         val outputDirectory = "$buildDir/generated/fakt/$testSourceSet/kotlin"

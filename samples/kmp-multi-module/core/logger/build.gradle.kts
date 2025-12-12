@@ -23,23 +23,6 @@ kotlin {
     }
 }
 
-kotlin {
-    sourceSets {
-        commonMain {
-            dependencies {
-                implementation(libs.fakt.runtime)
-            }
-        }
-
-        commonTest {
-            dependencies {
-                implementation(kotlin("test"))
-                implementation(libs.coroutines.test)
-            }
-        }
-    }
-}
-
 fakt {
     logLevel.set(com.rsicarelli.fakt.compiler.api.LogLevel.DEBUG)
 }

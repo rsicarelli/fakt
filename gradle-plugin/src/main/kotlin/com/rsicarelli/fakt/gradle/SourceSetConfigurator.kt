@@ -106,33 +106,24 @@ internal class SourceSetConfigurator(
         val hasCommonTest = kotlin.sourceSets.findByName("commonTest") != null
 
         if (hasCommonTest) {
-            // Collect all test source sets first to determine which are intermediate
-            val allTestSourceSets = kotlin.sourceSets.filter { it.name.endsWith("Test") }
+            project.logger.debug(
+                "Fakt: PASS 2 is disabled - KMP dependency propagation handles code visibility",
+            )
 
-            allTestSourceSets.forEach { sourceSet ->
-                // Skip commonTest itself
-                if (sourceSet.name == "commonTest") return@forEach
-
-                // Check if this is an intermediate source set by seeing if any other test
-                // source set depends on it (making it a parent in the hierarchy)
-                val isIntermediateSourceSet =
-                    allTestSourceSets.any { otherSourceSet ->
-                        otherSourceSet.name != sourceSet.name &&
-                            otherSourceSet.dependsOn.contains(sourceSet)
-                    }
-
-                // Only add commonTest dir to leaf source sets (not intermediate ones)
-                if (!isIntermediateSourceSet) {
-                    sourceSet.kotlin.srcDir(commonTestDir)
-                    project.logger.info(
-                        "Fakt: Added commonTest generated dir to ${sourceSet.name}: $commonTestDir",
-                    )
-                } else {
-                    project.logger.debug(
-                        "Fakt: Skipped adding commonTest dir to intermediate source set: ${sourceSet.name}",
-                    )
-                }
-            }
+            // PASS 2 REMOVED: After extensive testing, we determined that explicitly adding
+            // commonTest source directories to platform test source sets causes
+            // "can be a part of only one module" compilation errors.
+            //
+            // The root cause is that KMP's compilation model propagates COMPILED code
+            // (KLIBs) from dependencies, not SOURCE directories. When we add the same
+            // source directory to multiple source sets, the Kotlin compiler sees the
+            // same files being compiled into multiple modules, which violates the
+            // "files can be a part of only one module" constraint.
+            //
+            // SOLUTION: The compiler plugin should output platform-specific fakes to
+            // platform-specific directories (e.g., iosX64Test instead of commonTest)
+            // when the interface is in a platform source set. This is tracked in
+            // compiler/src/main/kotlin/com/rsicarelli/fakt/compiler/ir/SourceSetDiscovery.kt
         }
     }
 
