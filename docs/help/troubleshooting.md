@@ -34,7 +34,7 @@ Common issues and solutions for single-module and multi-module setups.
 
 **Causes**:
 
-1. **Kotlin version mismatch**: Ensure you're on Kotlin 2.2.20+
+1. **Kotlin version mismatch**: Ensure you're on Kotlin 2.2.21+
 2. **Fakt version incompatibility**: Update Fakt to match your Kotlin version
 
 **Solution**:
@@ -42,8 +42,8 @@ Common issues and solutions for single-module and multi-module setups.
 ```kotlin
 // gradle/libs.versions.toml
 [versions]
-kotlin = "2.2.20"
-fakt = "1.0.0-SNAPSHOT"
+kotlin = "2.2.21"
+fakt = "1.0.0-alpha01"
 ```
 
 ---
@@ -356,7 +356,7 @@ Configuration cache problems found:
 
 **Cause**: Using configuration cache with older Fakt version
 
-**Solution**: Update to Fakt 1.0.0-SNAPSHOT+ (configuration cache compatible)
+**Solution**: Update to Fakt 1.0.0-alpha01+ (configuration cache compatible)
 
 ```kotlin
 // gradle.properties
@@ -462,7 +462,7 @@ Before reporting issues, verify:
 - [ ] Project builds successfully (`./gradlew build`)
 - [ ] Fakes generated (`ls build/generated/fakt/`)
 - [ ] Gradle synced in IDE
-- [ ] Using Kotlin 2.2.20+
+- [ ] Using Kotlin 2.2.21+
 
 **Multi-Module:**
 - [ ] Producer module has `@Fake` annotated interfaces
@@ -473,8 +473,8 @@ Before reporting issues, verify:
 - [ ] Collector declares transitive dependencies
 - [ ] Consumer depends on collector module
 - [ ] Gradle synced in IDE
-- [ ] Using Fakt 1.0.0-SNAPSHOT+
-- [ ] Kotlin 2.2.20+
+- [ ] Using Fakt 1.0.0-alpha01+
+- [ ] Kotlin 2.2.21+
 
 ---
 

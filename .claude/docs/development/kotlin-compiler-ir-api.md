@@ -1,7 +1,7 @@
 # Kotlin Compiler IR API Reference - KtFakes Development Guide
 
 > **Purpose**: Comprehensive reference for Kotlin IR APIs used in KtFakes development
-> **Version**: Based on Kotlin 2.2.20 source code
+> **Version**: Based on Kotlin 2.2.21 source code
 > **Scope**: IR-Native code generation for fake implementation generation
 > **Testing Standard**: [📋 Testing Guidelines](.claude/docs/validation/testing-guidelines.md)
 

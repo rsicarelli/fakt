@@ -92,7 +92,7 @@ Kotlin Compiler invoked with Fakt plugin
 ```kotlin
 // build.gradle.kts
 plugins {
-    kotlin("multiplatform") version "2.2.20"
+    kotlin("multiplatform") version "2.2.21"
     id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
 }
 
@@ -319,8 +319,8 @@ Use `--info` logging to verify output directory.
 ### Kotlin Gradle Plugin (KGP) Compatibility
 
 - **Minimum**: 2.0.0
-- **Recommended**: 2.2.20+
-- **Tested**: 2.2.20
+- **Recommended**: 2.2.21+
+- **Tested**: 2.2.21
 
 ## 🤝 Contributing
 

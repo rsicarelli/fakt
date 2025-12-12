@@ -125,7 +125,7 @@ Error: ClassNotFoundException: com.rsicarelli.fakt.runtime.Fake
 **Solution**: Add to build.gradle.kts:
 ```kotlin
 dependencies {
-    implementation("com.rsicarelli.fakt:runtime:1.0.0-SNAPSHOT")
+    implementation("com.rsicarelli.fakt:runtime:1.0.0-alpha01")
 }
 ```
 
@@ -139,7 +139,7 @@ Error: Dependency resolution failed: conflicting versions
 **Cause**: Mismatched versions between compiler and gradle plugin
 **Solution**: Ensure same version for both:
 ```kotlin
-id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
+id("com.rsicarelli.fakt") version "1.0.0-alpha01"
 ```
 
 ---
@@ -179,7 +179,7 @@ Error: This plugin requires Kotlin 2.0.0+
 **Cause**: Project using Kotlin 1.x
 **Solution**: Update to Kotlin 2.0.0+:
 ```kotlin
-kotlin("jvm") version "2.2.20"
+kotlin("jvm") version "2.2.21"
 ```
 
 ---

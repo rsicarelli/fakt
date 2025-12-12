@@ -23,7 +23,7 @@ object FaktPluginExtensionSamples {
 
         /*
         plugins {
-            kotlin("multiplatform") version "2.2.20"
+            kotlin("multiplatform") version "2.2.21"
             id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
         }
 

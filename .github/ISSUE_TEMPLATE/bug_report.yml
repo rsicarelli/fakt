@@ -22,7 +22,7 @@ body:
     attributes:
       label: Kotlin Version
       description: Which version of Kotlin are you using?
-      placeholder: e.g., 2.2.20
+      placeholder: e.g., 2.2.21
     validations:
       required: true
 

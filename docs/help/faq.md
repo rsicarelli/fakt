@@ -13,9 +13,9 @@ Common questions about Fakt, answered with honesty and technical context.
 **Longer answer**: Fakt follows a two-phase FIR → IR compilation architecture inspired by production compiler plugins like [Metro](https://github.com/ZacSweers/metro). While the Kotlin compiler plugin API is not a stable API (marked `@UnsafeApi`), Fakt:
 
 - Generates code at compile-time with **zero runtime dependencies**
-- Has been tested across Kotlin 2.2.20+ and all KMP targets
+- Has been tested across Kotlin 2.2.21+ and all KMP targets
 - Uses forward compatibility patterns (N+.2 version support)
-- Is versioned as **1.0.0-SNAPSHOT** to signal pre-1.0 status
+- Is versioned as **1.0.0-alpha01** to signal pre-1.0 status
 
 Generated fakes are production-quality code that compiles to native binaries without reflection.
 
@@ -24,7 +24,7 @@ Generated fakes are production-quality code that compiles to native binaries wit
 
 ---
 
-### Why "1.0.0-SNAPSHOT" instead of "1.0.0"?
+### Why "1.0.0-alpha01" instead of "1.0.0"?
 
 **SNAPSHOT** signals real-world validation in progress, not "broken." The API is functionally complete and production-ready. We prioritize honesty over marketing—1.0.0 will follow community feedback and battle-testing.
 
