@@ -785,9 +785,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#why-100-snapshot-instead-of-100" class="md-nav__link">
+  <a href="#why-100-alpha01-instead-of-100" class="md-nav__link">
     <span class="md-ellipsis">
-      Why &ldquo;1.0.0-SNAPSHOT&rdquo; instead of &ldquo;1.0.0&rdquo;?
+      Why &ldquo;1.0.0-alpha01&rdquo; instead of &ldquo;1.0.0&rdquo;?
     </span>
   </a>
   
@@ -1066,9 +1066,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#why-100-snapshot-instead-of-100" class="md-nav__link">
+  <a href="#why-100-alpha01-instead-of-100" class="md-nav__link">
     <span class="md-ellipsis">
-      Why &ldquo;1.0.0-SNAPSHOT&rdquo; instead of &ldquo;1.0.0&rdquo;?
+      Why &ldquo;1.0.0-alpha01&rdquo; instead of &ldquo;1.0.0&rdquo;?
     </span>
   </a>
   
@@ -1290,9 +1290,9 @@
 <p><strong>Longer answer</strong>: Fakt follows a two-phase FIR → IR compilation architecture inspired by production compiler plugins like <a href="https://github.com/ZacSweers/metro">Metro</a>. While the Kotlin compiler plugin API is not a stable API (marked <code>@UnsafeApi</code>), Fakt:</p>
 <ul>
 <li>Generates code at compile-time with <strong>zero runtime dependencies</strong></li>
-<li>Has been tested across Kotlin 2.2.20+ and all KMP targets</li>
+<li>Has been tested across Kotlin 2.2.21+ and all KMP targets</li>
 <li>Uses forward compatibility patterns (N+.2 version support)</li>
-<li>Is versioned as <strong>1.0.0-SNAPSHOT</strong> to signal pre-1.0 status</li>
+<li>Is versioned as <strong>1.0.0-alpha01</strong> to signal pre-1.0 status</li>
 </ul>
 <p>Generated fakes are production-quality code that compiles to native binaries without reflection.</p>
 <div class="admonition warning">
@@ -1300,7 +1300,7 @@
 <p>The Kotlin compiler plugin API can change between Kotlin versions. Fakt is tested against each Kotlin release and updated as needed. Pin your Kotlin version in production CI/CD.</p>
 </div>
 <hr />
-<h3 id="why-100-snapshot-instead-of-100">Why &ldquo;1.0.0-SNAPSHOT&rdquo; instead of &ldquo;1.0.0&rdquo;?<a class="headerlink" href="#why-100-snapshot-instead-of-100" title="Permanent link">&para;</a></h3>
+<h3 id="why-100-alpha01-instead-of-100">Why &ldquo;1.0.0-alpha01&rdquo; instead of &ldquo;1.0.0&rdquo;?<a class="headerlink" href="#why-100-alpha01-instead-of-100" title="Permanent link">&para;</a></h3>
 <p><strong>SNAPSHOT</strong> signals real-world validation in progress, not &ldquo;broken.&rdquo; The API is functionally complete and production-ready. We prioritize honesty over marketing—1.0.0 will follow community feedback and battle-testing.</p>
 <hr />
 <h2 id="comparison-with-other-tools">Comparison with Other Tools<a class="headerlink" href="#comparison-with-other-tools" title="Permanent link">&para;</a></h2>

@@ -1389,14 +1389,14 @@
 <h3 id="compilation-fails-with-irtypealiassymbol-not-found">Compilation Fails with &ldquo;IrTypeAliasSymbol not found&rdquo;<a class="headerlink" href="#compilation-fails-with-irtypealiassymbol-not-found" title="Permanent link">&para;</a></h3>
 <p><strong>Causes</strong>:</p>
 <ol>
-<li><strong>Kotlin version mismatch</strong>: Ensure you&rsquo;re on Kotlin 2.2.20+</li>
+<li><strong>Kotlin version mismatch</strong>: Ensure you&rsquo;re on Kotlin 2.2.21+</li>
 <li><strong>Fakt version incompatibility</strong>: Update Fakt to match your Kotlin version</li>
 </ol>
 <p><strong>Solution</strong>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">// gradle/libs.versions.toml</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="o">[</span><span class="n">versions</span><span class="o">]</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">kotlin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;2.2.20&quot;</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">fakt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1.0.0-SNAPSHOT&quot;</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">kotlin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;2.2.21&quot;</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">fakt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1.0.0-alpha01&quot;</span>
 </code></pre></div>
 <hr />
 <h3 id="build-is-slow">Build is Slow<a class="headerlink" href="#build-is-slow" title="Permanent link">&para;</a></h3>
@@ -1623,7 +1623,7 @@
 <a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>- field &#39;project&#39; from type &#39;FaktGradleSubplugin&#39;
 </code></pre></div></p>
 <p><strong>Cause</strong>: Using configuration cache with older Fakt version</p>
-<p><strong>Solution</strong>: Update to Fakt 1.0.0-SNAPSHOT+ (configuration cache compatible)</p>
+<p><strong>Solution</strong>: Update to Fakt 1.0.0-alpha01+ (configuration cache compatible)</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="c1">// gradle.properties</span>
 <a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="n">org</span><span class="p">.</span><span class="na">gradle</span><span class="p">.</span><span class="na">configuration</span><span class="o">-</span><span class="n">cache</span><span class="o">=</span><span class="kc">true</span>
 </code></pre></div>
@@ -1691,7 +1691,7 @@
 - [ ] Project builds successfully (<code>./gradlew build</code>)<br />
 - [ ] Fakes generated (<code>ls build/generated/fakt/</code>)<br />
 - [ ] Gradle synced in IDE<br />
-- [ ] Using Kotlin 2.2.20+</p>
+- [ ] Using Kotlin 2.2.21+</p>
 <p><strong>Multi-Module:</strong><br />
 - [ ] Producer module has <code>@Fake</code> annotated interfaces<br />
 - [ ] Producer builds successfully (<code>./gradlew :core:analytics:build</code>)<br />
@@ -1701,8 +1701,8 @@
 - [ ] Collector declares transitive dependencies<br />
 - [ ] Consumer depends on collector module<br />
 - [ ] Gradle synced in IDE<br />
-- [ ] Using Fakt 1.0.0-SNAPSHOT+<br />
-- [ ] Kotlin 2.2.20+</p>
+- [ ] Using Fakt 1.0.0-alpha01+<br />
+- [ ] Kotlin 2.2.21+</p>
 <hr />
 <h2 id="getting-help">Getting Help<a class="headerlink" href="#getting-help" title="Permanent link">&para;</a></h2>
 <p>If issues persist:</p>
