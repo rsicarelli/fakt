@@ -373,7 +373,7 @@ fun tryNewApi(): IrClass? {
 
 ### Current Kotlin Version
 ```
-Target: Kotlin 2.2.20
+Target: Kotlin 2.2.21
 Minimum: Kotlin 2.0.0
 ```
 

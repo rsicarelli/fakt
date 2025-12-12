@@ -172,7 +172,7 @@ val repo: Repository<User> = fakeRepository<User> {
    ```kotlin
    // In build.gradle.kts
    plugins {
-       id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
+       id("com.rsicarelli.fakt") version "1.0.0-alpha01"
    }
    ```
 

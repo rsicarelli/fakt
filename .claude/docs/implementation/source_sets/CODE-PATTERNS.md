@@ -593,7 +593,7 @@ class FaktGradlePluginIntegrationTest {
         projectDir.resolve("build.gradle.kts").writeText("""
             plugins {
                 kotlin("multiplatform") version "1.9.24"
-                id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
+                id("com.rsicarelli.fakt") version "1.0.0-alpha01"
             }
 
             kotlin {
@@ -601,7 +601,7 @@ class FaktGradlePluginIntegrationTest {
                 sourceSets {
                     commonMain {
                         dependencies {
-                            implementation("com.rsicarelli.fakt:runtime:1.0.0-SNAPSHOT")
+                            implementation("com.rsicarelli.fakt:runtime:1.0.0-alpha01")
                         }
                     }
                 }

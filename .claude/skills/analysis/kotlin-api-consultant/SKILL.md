@@ -139,7 +139,7 @@ git log -p --all -- **/${API_NAME}.kt | head -100
 **Version compatibility:**
 ```
 🔍 API: ${API_NAME}
-📅 Current Kotlin: 2.2.20 (or detected version)
+📅 Current Kotlin: 2.2.21 (or detected version)
 📋 Changes since 2.0.0: [list]
 
 ⚠️ Breaking changes detected: [yes/no]

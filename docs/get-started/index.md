@@ -8,7 +8,7 @@ Get Fakt up and running in your project and create your first fake in 5 minutes.
 
 | Requirement      | Version    |
 |------------------|------------|
-| **Kotlin**       | 2.2.20+    |
+| **Kotlin**       | 2.2.21+    |
 | **Gradle**       | 8.0+       |
 | **JVM**          | 11+        |
 
@@ -22,8 +22,8 @@ Get Fakt up and running in your project and create your first fake in 5 minutes.
 
 ```toml
 [versions]
-fakt = "1.0.0-SNAPSHOT"
-kotlin = "2.2.20"
+fakt = "1.0.0-alpha01"
+kotlin = "2.2.21"
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -288,7 +288,7 @@ Fakt-generated code appears in `build/generated/fakt/` and is automatically inde
 
 | Fakt Version     | Kotlin Version Support |
 |------------------|------------------------|
-| 1.0.0-SNAPSHOT   | 2.2.20 - 2.2.30        |
+| 1.0.0-alpha01   | 2.2.21 - 2.2.30        |
 
 Fakt follows forward compatibility on a best-effort basis (usually N+.2 minor versions).
 

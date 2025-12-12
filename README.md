@@ -9,7 +9,7 @@
 [![Build](https://img.shields.io/github/actions/workflow/status/rsicarelli/fakt/ci.yml)](https://github.com/rsicarelli/fakt/actions)
 [![Maven Central](https://img.shields.io/maven-central/v/com.rsicarelli.fakt/runtime)](https://search.maven.org/search?q=g:com.rsicarelli.fakt)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.2.20%2B-blue)](https://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.2.21%2B-blue)](https://kotlinlang.org)
 [![Documentation](https://img.shields.io/badge/docs-mkdocs-blue)](https://rsicarelli.github.io/fakt/)
 
 Fakt generates test fakes at compile-time. No runtime reflection. No production dependencies. Just type-safe fakes that break when your interfaces change.
@@ -127,7 +127,7 @@ Single-platform projects (JVM-only, Android-only) are fully supported.
 
 ## Requirements
 
-- **Kotlin:** 2.2.20+
+- **Kotlin:** 2.2.21+
 - **Gradle:** 8.0+
 - **JVM:** 11+
 

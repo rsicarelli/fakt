@@ -27,7 +27,7 @@ Step-by-step procedures for diagnosing Fakt compilation errors.
    ```kotlin
    // build.gradle.kts
    plugins {
-       id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
+       id("com.rsicarelli.fakt") version "1.0.0-alpha01"
    }
 
    fakt {
@@ -279,7 +279,7 @@ Step-by-step procedures for diagnosing Fakt compilation errors.
 2. **Ensure Consistency**
    ```kotlin
    // All should be same version
-   id("com.rsicarelli.fakt") version "1.0.0-SNAPSHOT"
+   id("com.rsicarelli.fakt") version "1.0.0-alpha01"
    ```
 
 3. **Re-publish if Needed**
