@@ -70,6 +70,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: validation
     outputs:
+      version_published: ${{ steps.published.outputs.version }}
       version_new: ${{ steps.bump.outputs.version_new }}
     steps:
       - name: Create GitHub App Token
@@ -101,29 +102,53 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_SIGNING_PASSWORD }}
 
+      - name: Capture Published Version
+        id: published
+        run: |
+          CURRENT=$(grep "version=" gradle.properties | cut -d'=' -f2)
+          echo "version=$CURRENT" >> $GITHUB_OUTPUT
+          echo "tag=v$CURRENT" >> $GITHUB_OUTPUT
+
+      - name: Sync Documentation with Published Version
+        run: |
+          kotlin .github/scripts/sync-docs-version.main.kts ${{ steps.published.outputs.version }}
+
+      - name: Commit Published Version State
+        run: |
+          git add docs/ samples/ README.md gradle-plugin/README.md gradle/libs.versions.toml
+          if ! git diff --cached --quiet; then
+            git commit -m "docs: sync to published version ${{ steps.published.outputs.version }}"
+          else
+            echo "No documentation changes to commit"
+          fi
+
       - name: Bump Version
         id: bump
         run: |
           kotlin .github/scripts/bump-version.main.kts ${{ inputs.bump }} ${{ inputs.release_type }}
 
-      - name: Sync Documentation Versions
+      - name: Sync Documentation for Development
         run: |
           kotlin .github/scripts/sync-docs-version.main.kts ${{ steps.bump.outputs.version_new }}
 
-      - name: Commit Version Bump
+      - name: Commit Next Development Version
         run: |
           git add gradle.properties gradle/libs.versions.toml docs/ samples/ README.md gradle-plugin/README.md
-          git commit -m "chore: release ${{ steps.bump.outputs.version_new }}"
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: bump to next development version ${{ steps.bump.outputs.version_new }}"
+          else
+            echo "No changes to commit"
+          fi
 
       - name: Create and Push Tag
         run: |
-          git tag ${{ steps.bump.outputs.tag }}
-          git push origin ${{ steps.bump.outputs.tag }}
+          git tag ${{ steps.published.outputs.tag }}
+          git push origin ${{ steps.published.outputs.tag }}
 
       - name: Create GitHub Release
         uses: ./.github/actions/create-github-release
         with:
-          tag: ${{ steps.bump.outputs.tag }}
+          tag: ${{ steps.published.outputs.tag }}
           github-token: ${{ steps.app-token.outputs.token }}
 
       - name: Bump to Next SNAPSHOT
@@ -152,6 +177,6 @@ jobs:
       id-token: write
     uses: ./.github/workflows/deploy-docs.yml
     with:
-      version: ${{ needs.publish.outputs.version_new }}
+      version: ${{ needs.publish.outputs.version_published }}
       alias: 'latest'
       set-default: true
