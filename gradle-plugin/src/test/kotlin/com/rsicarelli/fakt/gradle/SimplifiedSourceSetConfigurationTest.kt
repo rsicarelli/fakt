@@ -7,6 +7,7 @@ import com.rsicarelli.fakt.gradle.helpers.evaluate
 import com.rsicarelli.fakt.gradle.helpers.getKotlinExtension
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -156,5 +157,84 @@ class SimplifiedSourceSetConfigurationTest {
         assertTrue(jvmTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/jvmTest/kotlin") })
         assertTrue(jsTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/jsTest/kotlin") })
         assertTrue(iosTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/iosArm64Test/kotlin") })
+    }
+
+    @Test
+    fun `GIVEN KMP project with iOS WHEN configured THEN iosX64Test should include commonTest generated dir`() {
+        // GIVEN
+        val project = createKmpProject()
+        val kotlin = project.getKotlinExtension()
+        kotlin.jvm()
+        kotlin.iosX64()
+
+        // WHEN
+        project.evaluate()
+        val iosX64Test = kotlin.sourceSets.getByName("iosX64Test")
+
+        // THEN - Should include BOTH iosX64Test dir AND commonTest dir
+        assertTrue(
+            iosX64Test.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/iosX64Test/kotlin") },
+            "iosX64Test should have its own generated directory",
+        )
+        assertTrue(
+            iosX64Test.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/commonTest/kotlin") },
+            "iosX64Test should also have access to commonTest generated directory",
+        )
+    }
+
+    @Test
+    fun `GIVEN KMP project WHEN configured THEN commonTest should NOT have duplicate commonTest dir`() {
+        // GIVEN
+        val project = createKmpProject()
+        val kotlin = project.getKotlinExtension()
+        kotlin.jvm()
+
+        // WHEN
+        project.evaluate()
+        val commonTest = kotlin.sourceSets.getByName("commonTest")
+
+        // THEN - commonTest should have exactly ONE occurrence of its directory
+        val commonTestDirs =
+            commonTest.kotlin.srcDirs.filter {
+                it.path.contains("build/generated/fakt/commonTest/kotlin")
+            }
+        assertEquals(
+            1,
+            commonTestDirs.size,
+            "commonTest should have exactly one occurrence of its generated directory",
+        )
+    }
+
+    @Test
+    fun `GIVEN KMP project with all platforms WHEN configured THEN all platform tests should see commonTest`() {
+        // GIVEN
+        val project = createKmpProject()
+        val kotlin = project.getKotlinExtension()
+        kotlin.jvm()
+        kotlin.js { nodejs() }
+        kotlin.iosX64()
+        kotlin.iosArm64()
+        kotlin.iosSimulatorArm64()
+
+        // WHEN
+        project.evaluate()
+
+        // THEN - ALL platform test source sets should include commonTest dir
+        val platformTestSourceSets =
+            listOf(
+                "jvmTest",
+                "jsTest",
+                "iosX64Test",
+                "iosArm64Test",
+                "iosSimulatorArm64Test",
+            )
+
+        platformTestSourceSets.forEach { sourceSetName ->
+            val sourceSet = kotlin.sourceSets.getByName(sourceSetName)
+            assertTrue(
+                sourceSet.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/commonTest/kotlin") },
+                "$sourceSetName should have access to commonTest generated directory",
+            )
+        }
     }
 }
