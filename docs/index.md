@@ -50,19 +50,19 @@ Fakt solves both problems with compile-time code generation that works everywher
 **Quick Start:**
 
 1. **[Getting Started](get-started/index.md)** - Install Fakt and create your first fake in 5 minutes
-2. **[Basic Usage](user-guide/basic-usage.md)** - Core patterns and techniques
+2. **[Usage Guide](user-guide/usage.md)** - Core patterns and techniques
 3. **[Testing Patterns](user-guide/testing-patterns.md)** - Best practices for using fakes in tests
 
-**Usage Guides:**
+**Usage Topics:**
 
-- **[Suspend Functions](user-guide/suspend-functions.md)** - Working with coroutines and async code
-- **[Generics](user-guide/generics.md)** - Generic interfaces and type parameters
-- **[Properties](user-guide/properties.md)** - Faking val and var properties
-- **[Call Tracking](user-guide/call-tracking.md)** - StateFlow-based reactive counters
+- **[Suspend Functions](user-guide/usage.md#suspend-functions)** - Working with coroutines and async code
+- **[Generics](user-guide/usage.md#generics)** - Generic interfaces and type parameters
+- **[Properties](user-guide/usage.md#properties)** - Faking val and var properties
+- **[Call Tracking](user-guide/usage.md#call-tracking)** - StateFlow-based reactive counters
 
 **Advanced Topics:**
 
-- **[Multi-Module Setup](user-guide/multi-module-overview.md)** - Cross-module fakes with collector modules
+- **[Multi-Module Setup](user-guide/multi-module.md)** - Cross-module fakes with collector modules
 - **[Configuration](user-guide/plugin-configuration.md)** - Plugin configuration and log levels
 - **[Performance](user-guide/performance.md)** - Build times, caching, and optimization
 - **[Migration from Mocks](user-guide/migration-from-mocks.md)** - Migrating from MockK or Mockito

@@ -500,6 +500,5 @@ If issues persist:
 ## See Also
 
 - **[FAQ](faq.md)** - Frequently asked questions
-- **[Multi-Module Setup](../user-guide/multi-module-overview.md)** - Multi-module architecture overview
-- **[Multi-Module Getting Started](../user-guide/multi-module-setup.md)** - Setup guide
+- **[Multi-Module](../user-guide/multi-module.md)** - Multi-module architecture and setup guide
 - **[Configuration](../user-guide/plugin-configuration.md)** - Plugin options (coming soon)

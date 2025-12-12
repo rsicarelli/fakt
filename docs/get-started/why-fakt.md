@@ -782,7 +782,7 @@ For JVM-only teams, Fakt delivers 40% faster test suites[^1] and more resilient 
 
 - [Getting Started](index.md) - Install Fakt and create your first fake in 5 minutes
 - [Features](features.md) - Complete feature reference
-- [Basic Usage](../user-guide/basic-usage.md) - Common patterns and examples
+- [Usage Guide](../user-guide/usage.md) - Common patterns and examples
 - [Testing Patterns](../user-guide/testing-patterns.md) - Best practices and strategies
 - [Migration from Mocks](../user-guide/migration-from-mocks.md) - Moving from MockK/Mockito to Fakt
 
