@@ -100,7 +100,6 @@ internal class SourceSetConfigurator(
         // IMPORTANT: We skip intermediate source sets (nativeTest, appleTest, etc.) because
         // they already have a dependency relationship with commonTest through KMP's hierarchy.
         // Adding the directory to them would cause "can be a part of only one module" errors.
-        val commonTestDir = File(buildDir, "generated/fakt/commonTest/kotlin")
 
         // Only register if commonTest exists in the project
         val hasCommonTest = kotlin.sourceSets.findByName("commonTest") != null

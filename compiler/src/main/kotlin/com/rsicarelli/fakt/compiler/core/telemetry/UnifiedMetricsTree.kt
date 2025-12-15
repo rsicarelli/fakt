@@ -8,6 +8,17 @@ import com.rsicarelli.fakt.compiler.api.TimeFormatter
 private const val TIME_DISPLAY_WIDTH = 10
 
 /**
+ * Threshold in nanoseconds for cache hit detection (100µs).
+ *
+ * IR generation times below this threshold indicate cached fakes.
+ * Fresh generation: 500µs-5ms, Cached: ~5-50µs.
+ */
+private const val CACHE_HIT_THRESHOLD_NANOS = 100_000L
+
+/** Multiplier for converting decimal to percentage (e.g., 0.75 * 100 = 75%). */
+private const val PERCENTAGE_MULTIPLIER = 100
+
+/**
  * Aggregate metrics combining all FIR and IR data for tree-style logging.
  *
  * Encapsulates the complete metrics hierarchy (interfaces + classes) and provides
@@ -213,11 +224,11 @@ data class UnifiedMetricsTree(
         // Cache detection: IR time < 100µs per fake indicates cache hit
         // (Fresh generation typically 500µs-5ms, cached ~5-50µs)
         val avgIrTimePerFake = if (totalFakes > 0) totalIrTimeNanos / totalFakes else 0
-        val estimatedCached = if (avgIrTimePerFake < 100_000) totalFakes else 0
+        val estimatedCached = if (avgIrTimePerFake < CACHE_HIT_THRESHOLD_NANOS) totalFakes else 0
 
         val cachePercent =
             if (totalFakes > 0) {
-                (estimatedCached * 100) / totalFakes
+                (estimatedCached * PERCENTAGE_MULTIPLIER) / totalFakes
             } else {
                 0
             }
