@@ -21,8 +21,10 @@ clean:
 	./gradlew clean
 
 format:
-	@echo "✨ Formatting code..."
+	@echo "✨ Formatting code with Spotless..."
 	./gradlew spotlessApply
+	@echo "✨ Formatting code with ktlint..."
+	./gradlew ktlintFormat
 
 # Compiler plugin specific
 shadowJar:
@@ -70,7 +72,7 @@ help:
 	@echo "  test            - Run all tests"
 	@echo "  compile         - Compile Kotlin sources"
 	@echo "  clean           - Clean build artifacts"
-	@echo "  format          - Format code with Spotless"
+	@echo "  format          - Format code with Spotless + ktlint"
 	@echo ""
 	@echo "  shadowJar       - Build compiler plugin JAR"
 	@echo "  test-sample     - Test kmp-single-module sample (composite build)"
