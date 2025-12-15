@@ -1,0 +1,1790 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Compile-time type-safe test fakes for Kotlin Multiplatform">
+      
+      
+        <meta name="author" content="Rodrigo Sicarelli">
+      
+      
+        <link rel="canonical" href="https://rsicarelli.github.io/fakt/1.0.0-alpha01-SNAPSHOT/help/troubleshooting.html">
+      
+      
+        <link rel="prev" href="faq.html">
+      
+      
+      
+      <link rel="icon" href="../assets/logo.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.16">
+    
+    
+      
+        <title>Troubleshooting - Fakt</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.7e37652d.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/fakt-brand.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#troubleshooting" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../index.html" title="Fakt" class="md-header__button md-logo" aria-label="Fakt" data-md-component="logo">
+      
+  <img src="../assets/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Fakt
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Troubleshooting
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/rsicarelli/fakt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Fakt
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="Fakt" class="md-nav__button md-logo" aria-label="Fakt" data-md-component="logo">
+      
+  <img src="../assets/logo.png" alt="logo">
+
+    </a>
+    Fakt
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/rsicarelli/fakt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Fakt
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Get Started
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Get Started
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../get-started/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Introduction
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../get-started/features.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Features
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../get-started/why-fakt.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Why Fakt?
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-guide/plugin-configuration.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Plugin Configuration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    User Guide
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            User Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-guide/usage.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Usage
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-guide/multi-module.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Multi-Module
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-guide/testing-patterns.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Testing Patterns
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-guide/migration-from-mocks.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Migration from Mocks
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-guide/performance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Performance & Optimization
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-guide/generated-code-reference.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Generated Code Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-guide/platform-support.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Platform Support
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-guide/known-issues.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Known Issues
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Examples
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Help
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Help
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="faq.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FAQ
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="troubleshooting.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#general-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      General Issues
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="General Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#generated-fakes-not-appearing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Generated Fakes Not Appearing
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unresolved-reference-fakexxx" class="md-nav__link">
+    <span class="md-ellipsis">
+      Unresolved Reference: fakeXxx
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compilation-fails-with-irtypealiassymbol-not-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      Compilation Fails with &ldquo;IrTypeAliasSymbol not found&rdquo;
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build-is-slow" class="md-nav__link">
+    <span class="md-ellipsis">
+      Build is Slow
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi-module-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      Multi-Module Issues
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Multi-Module Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#diagnosis-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Diagnosis Tools
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-1-no-fakes-found-in-source-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue 1: &ldquo;No fakes found in source module&rdquo;
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-2-unresolved-reference-fakexxx-multi-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue 2: &ldquo;Unresolved reference: fakeXxx&rdquo; (Multi-Module)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-3-targets-mismatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue 3: Targets Mismatch
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-4-wrong-platform-placement" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue 4: Wrong Platform Placement
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-5-circular-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue 5: Circular Dependencies
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-6-missing-transitive-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue 6: Missing Transitive Dependencies
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-7-ide-not-finding-fakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue 7: IDE Not Finding Fakes
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-8-configuration-cache-failures" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue 8: Configuration Cache Failures
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-messages-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      Error Messages Reference
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Error Messages Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#source-project-not-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      &ldquo;Source project not found&rdquo;
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#collector-and-producer-targets-mismatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      &ldquo;Collector and producer targets mismatch&rdquo;
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optin-annotation-missing" class="md-nav__link">
+    <span class="md-ellipsis">
+      &ldquo;@OptIn annotation missing&rdquo;
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Advanced Debugging
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Debugging">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enable-trace-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Enable TRACE Logging
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-dependency-visualization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Task Dependency Visualization
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inspect-generated-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      Inspect Generated Code
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verification Checklist
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-help" class="md-nav__link">
+    <span class="md-ellipsis">
+      Getting Help
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      See Also
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#general-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      General Issues
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="General Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#generated-fakes-not-appearing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Generated Fakes Not Appearing
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unresolved-reference-fakexxx" class="md-nav__link">
+    <span class="md-ellipsis">
+      Unresolved Reference: fakeXxx
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compilation-fails-with-irtypealiassymbol-not-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      Compilation Fails with &ldquo;IrTypeAliasSymbol not found&rdquo;
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build-is-slow" class="md-nav__link">
+    <span class="md-ellipsis">
+      Build is Slow
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi-module-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      Multi-Module Issues
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Multi-Module Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#diagnosis-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Diagnosis Tools
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-1-no-fakes-found-in-source-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue 1: &ldquo;No fakes found in source module&rdquo;
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-2-unresolved-reference-fakexxx-multi-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue 2: &ldquo;Unresolved reference: fakeXxx&rdquo; (Multi-Module)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-3-targets-mismatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue 3: Targets Mismatch
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-4-wrong-platform-placement" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue 4: Wrong Platform Placement
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-5-circular-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue 5: Circular Dependencies
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-6-missing-transitive-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue 6: Missing Transitive Dependencies
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-7-ide-not-finding-fakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue 7: IDE Not Finding Fakes
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-8-configuration-cache-failures" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue 8: Configuration Cache Failures
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-messages-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      Error Messages Reference
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Error Messages Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#source-project-not-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      &ldquo;Source project not found&rdquo;
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#collector-and-producer-targets-mismatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      &ldquo;Collector and producer targets mismatch&rdquo;
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optin-annotation-missing" class="md-nav__link">
+    <span class="md-ellipsis">
+      &ldquo;@OptIn annotation missing&rdquo;
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Advanced Debugging
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Debugging">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enable-trace-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Enable TRACE Logging
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-dependency-visualization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Task Dependency Visualization
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inspect-generated-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      Inspect Generated Code
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verification Checklist
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-help" class="md-nav__link">
+    <span class="md-ellipsis">
+      Getting Help
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      See Also
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h1>
+<p>Common issues and solutions for single-module and multi-module setups.</p>
+<hr />
+<h2 id="general-issues">General Issues<a class="headerlink" href="#general-issues" title="Permanent link">&para;</a></h2>
+<h3 id="generated-fakes-not-appearing">Generated Fakes Not Appearing<a class="headerlink" href="#generated-fakes-not-appearing" title="Permanent link">&para;</a></h3>
+<p><strong>Symptoms</strong>: IDE doesn&rsquo;t recognize <code>fakeXxx()</code> factory functions</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li><strong>Rebuild the project</strong>: <code>./gradlew clean build</code></li>
+<li><strong>Invalidate IDE caches</strong>: File → Invalidate Caches → Invalidate and Restart</li>
+<li><strong>Check build directory</strong>: Fakes are in <code>build/generated/fakt/commonTest/kotlin/</code></li>
+<li><strong>Verify Gradle sync</strong>: Ensure Gradle sync completed successfully</li>
+</ol>
+<hr />
+<h3 id="unresolved-reference-fakexxx">Unresolved Reference: fakeXxx<a class="headerlink" href="#unresolved-reference-fakexxx" title="Permanent link">&para;</a></h3>
+<p><strong>Common causes</strong>:</p>
+<ol>
+<li><strong>Missing build step</strong>: Run <code>./gradlew build</code> first</li>
+<li><strong>Wrong source set</strong>: Import from test code (<code>src/commonTest/</code>), not main</li>
+<li><strong>Package mismatch</strong>: Generated fakes are in the same package as the interface</li>
+<li><strong>Gradle sync issue</strong>: Re-sync Gradle in your IDE</li>
+</ol>
+<hr />
+<h3 id="compilation-fails-with-irtypealiassymbol-not-found">Compilation Fails with &ldquo;IrTypeAliasSymbol not found&rdquo;<a class="headerlink" href="#compilation-fails-with-irtypealiassymbol-not-found" title="Permanent link">&para;</a></h3>
+<p><strong>Causes</strong>:</p>
+<ol>
+<li><strong>Kotlin version mismatch</strong>: Ensure you&rsquo;re on Kotlin 2.2.21+</li>
+<li><strong>Fakt version incompatibility</strong>: Update Fakt to match your Kotlin version</li>
+</ol>
+<p><strong>Solution</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">// gradle/libs.versions.toml</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="o">[</span><span class="n">versions</span><span class="o">]</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">kotlin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;2.2.21&quot;</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">fakt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1.0.0-alpha01&quot;</span>
+</code></pre></div>
+<hr />
+<h3 id="build-is-slow">Build is Slow<a class="headerlink" href="#build-is-slow" title="Permanent link">&para;</a></h3>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li>
+<p><strong>Use LogLevel.QUIET in CI/CD</strong>:<br />
+   <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="n">logLevel</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">LogLevel</span><span class="p">.</span><span class="na">QUIET</span><span class="p">)</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="p">}</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Check cache hit rate</strong> with <code>LogLevel.INFO</code></p>
+</li>
+<li>
+<p><strong>Verify incremental compilation</strong> is enabled</p>
+</li>
+</ol>
+<hr />
+<h2 id="multi-module-issues">Multi-Module Issues<a class="headerlink" href="#multi-module-issues" title="Permanent link">&para;</a></h2>
+<h3 id="diagnosis-tools">Diagnosis Tools<a class="headerlink" href="#diagnosis-tools" title="Permanent link">&para;</a></h3>
+<p><strong>Enable Debug Logging:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="n">logLevel</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">com</span><span class="p">.</span><span class="na">rsicarelli</span><span class="p">.</span><span class="na">fakt</span><span class="p">.</span><span class="na">compiler</span><span class="p">.</span><span class="na">api</span><span class="p">.</span><span class="na">LogLevel</span><span class="p">.</span><span class="na">DEBUG</span><span class="p">)</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="p">}</span>
+</code></pre></div>
+<p>Rebuild to see detailed output:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>./gradlew<span class="w"> </span>:core:analytics-fakes:clean<span class="w"> </span>:core:analytics-fakes:build<span class="w"> </span>--info
+</code></pre></div>
+<p><strong>Check Task Execution:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># View task dependency graph</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>./gradlew<span class="w"> </span>:core:analytics-fakes:build<span class="w"> </span>--dry-run
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Use build scans</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>./gradlew<span class="w"> </span>build<span class="w"> </span>--scan
+</code></pre></div>
+<hr />
+<h3 id="issue-1-no-fakes-found-in-source-module">Issue 1: &ldquo;No fakes found in source module&rdquo;<a class="headerlink" href="#issue-1-no-fakes-found-in-source-module" title="Permanent link">&para;</a></h3>
+<p><strong>Error</strong>:<br />
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>No fakes found in source module &#39;analytics&#39;.
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>Verify that source module has @Fake annotated interfaces.
+</code></pre></div></p>
+<p><strong>Causes</strong>:<br />
+1. Source module has no <code>@Fake</code> interfaces<br />
+2. Fakes not generated (compilation failed)<br />
+3. Wrong module path in <code>collectFakesFrom()</code></p>
+<p><strong>Diagnosis</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Check for @Fake annotations</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>grep<span class="w"> </span>-r<span class="w"> </span><span class="s2">&quot;@Fake&quot;</span><span class="w"> </span>core/analytics/src/
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># Verify fakes were generated</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>ls<span class="w"> </span>core/analytics/build/generated/fakt/
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="c1"># Check for compilation errors</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>./gradlew<span class="w"> </span>:core:analytics:build
+</code></pre></div>
+<p><strong>Solutions</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1">// ✅ CORRECT: Collect from producer (has @Fake interfaces)</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">com</span><span class="p">.</span><span class="na">rsicarelli</span><span class="p">.</span><span class="na">fakt</span><span class="p">.</span><span class="na">compiler</span><span class="p">.</span><span class="na">api</span><span class="p">.</span><span class="na">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="p">}</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1">// ❌ WRONG: Collecting from collector (no @Fake interfaces)</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">com</span><span class="p">.</span><span class="na">rsicarelli</span><span class="p">.</span><span class="na">fakt</span><span class="p">.</span><span class="na">compiler</span><span class="p">.</span><span class="na">api</span><span class="p">.</span><span class="na">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analyticsFakes</span><span class="p">)</span><span class="w">  </span><span class="c1">// Wrong!</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="p">}</span>
+</code></pre></div>
+<hr />
+<h3 id="issue-2-unresolved-reference-fakexxx-multi-module">Issue 2: &ldquo;Unresolved reference: fakeXxx&rdquo; (Multi-Module)<a class="headerlink" href="#issue-2-unresolved-reference-fakexxx-multi-module" title="Permanent link">&para;</a></h3>
+<p><strong>Error</strong>:<br />
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1">// In test file</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeAnalytics</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">  </span><span class="c1">// ← Unresolved reference</span>
+</code></pre></div></p>
+<p><strong>Causes</strong>:<br />
+1. Consumer doesn&rsquo;t depend on collector module<br />
+2. Collector module not built<br />
+3. IDE not synced<br />
+4. Wrong import</p>
+<p><strong>Diagnosis</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># Check dependency in consumer</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>grep<span class="w"> </span><span class="s2">&quot;analyticsFakes&quot;</span><span class="w"> </span>app/build.gradle.kts
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="c1"># Verify collector was built</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>ls<span class="w"> </span>core/analytics-fakes/build/generated/collected-fakes/
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="c1"># Check for factory function</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>grep<span class="w"> </span>-r<span class="w"> </span><span class="s2">&quot;fun fakeAnalytics&quot;</span><span class="w"> </span>core/analytics-fakes/build/
+</code></pre></div>
+<p><strong>Solutions</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1">// 1. Add dependency to consumer</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">kotlin</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span><span class="n">sourceSets</span><span class="p">.</span><span class="na">commonTest</span><span class="p">.</span><span class="na">dependencies</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">        </span><span class="n">implementation</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analyticsFakes</span><span class="p">)</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="p">}</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="c1">// 2. Sync Gradle and rebuild</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="p">.</span><span class="o">/</span><span class="n">gradlew</span><span class="w"> </span><span class="o">--</span><span class="n">refresh</span><span class="o">-</span><span class="n">dependencies</span><span class="w"> </span><span class="n">build</span>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="c1">// 3. Invalidate IDE caches</span>
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="c1">// File → Invalidate Caches → Invalidate and Restart</span>
+</code></pre></div>
+<hr />
+<h3 id="issue-3-targets-mismatch">Issue 3: Targets Mismatch<a class="headerlink" href="#issue-3-targets-mismatch" title="Permanent link">&para;</a></h3>
+<p><strong>Error</strong>:<br />
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>Cannot find source set &#39;iosMain&#39; for target &#39;iosX64&#39;
+</code></pre></div></p>
+<p><strong>Cause</strong>: Collector has different targets than producer</p>
+<p><strong>Diagnosis</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1">// Check producer targets</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="c1">// core/analytics/build.gradle.kts</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="n">kotlin</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">    </span><span class="n">jvm</span><span class="p">()</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">    </span><span class="n">iosArm64</span><span class="p">()</span><span class="w">  </span><span class="c1">// ← Producer has this</span>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="p">}</span>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="c1">// Check collector targets</span>
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="c1">// core/analytics-fakes/build.gradle.kts</span>
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="n">kotlin</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="w">    </span><span class="n">jvm</span><span class="p">()</span>
+<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a><span class="w">    </span><span class="c1">// Missing: iosArm64()  ← Collector doesn&#39;t!</span>
+<a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>Solution</strong>: Collector MUST have ALL producer&rsquo;s targets</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1">// core/analytics-fakes/build.gradle.kts</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="n">kotlin</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">    </span><span class="n">jvm</span><span class="p">()</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">    </span><span class="n">iosArm64</span><span class="p">()</span><span class="w">  </span><span class="c1">// ✅ Added</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">    </span><span class="n">iosX64</span><span class="p">()</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">    </span><span class="n">iosSimulatorArm64</span><span class="p">()</span>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="p">}</span>
+</code></pre></div>
+<hr />
+<h3 id="issue-4-wrong-platform-placement">Issue 4: Wrong Platform Placement<a class="headerlink" href="#issue-4-wrong-platform-placement" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom</strong>: Fake ends up in wrong source set (e.g., <code>commonMain</code> instead of <code>jvmMain</code>)</p>
+<p><strong>Cause</strong>: Package doesn&rsquo;t contain platform identifier</p>
+<p><strong>Diagnosis</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1">// Check generated fake&#39;s package</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="c1">// core/analytics/build/generated/fakt/jvmTest/kotlin/DatabaseFake.kt</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="k">package</span><span class="w"> </span><span class="nn">com.example.database</span><span class="w">  </span><span class="c1">// ← No &quot;jvm&quot; segment!</span>
+</code></pre></div>
+<p><strong>Solution</strong>: Use platform identifier in package name</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1">// ✅ CORRECT: Platform in package</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="k">package</span><span class="w"> </span><span class="nn">com.example.jvm.database</span><span class="w">  </span><span class="c1">// → jvmMain/</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="k">package</span><span class="w"> </span><span class="nn">com.example.ios.camera</span><span class="w">    </span><span class="c1">// → iosMain/</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="c1">// ❌ WRONG: No platform identifier</span>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="k">package</span><span class="w"> </span><span class="nn">com.example.database</span><span class="w">  </span><span class="c1">// → commonMain/ (fallback)</span>
+</code></pre></div>
+<hr />
+<h3 id="issue-5-circular-dependencies">Issue 5: Circular Dependencies<a class="headerlink" href="#issue-5-circular-dependencies" title="Permanent link">&para;</a></h3>
+<p><strong>Error</strong>:<br />
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>Circular dependency between:
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>:features:payment
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>:features:user
+</code></pre></div></p>
+<p><strong>Cause</strong>: Feature A fakes need Feature B, Feature B fakes need Feature A</p>
+<p><strong>Solution</strong>: Extract shared interfaces to core modules</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>Before (circular):
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>features/payment → features/user
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>features/user → features/payment
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>After (fixed):
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>core/payment-api @Fake interface PaymentProvider
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>core/user-api @Fake interface UserProvider
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>
+<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a>features/payment → core/payment-api, core/user-api
+<a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a>features/user → core/user-api, core/payment-api
+</code></pre></div>
+<hr />
+<h3 id="issue-6-missing-transitive-dependencies">Issue 6: Missing Transitive Dependencies<a class="headerlink" href="#issue-6-missing-transitive-dependencies" title="Permanent link">&para;</a></h3>
+<p><strong>Error</strong>:<br />
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1">// In test</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeAnalytics</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">  </span><span class="c1">// Compiles</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="c1">// But runtime error:</span>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="n">NoClassDefFoundError</span><span class="p">:</span><span class="w"> </span><span class="n">kotlinx</span><span class="o">/</span><span class="n">coroutines</span><span class="o">/</span><span class="n">CoroutineScope</span>
+</code></pre></div></p>
+<p><strong>Cause</strong>: Collector didn&rsquo;t declare coroutines dependency</p>
+<p><strong>Solution</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1">// core/analytics-fakes/build.gradle.kts</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="n">kotlin</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="w">    </span><span class="n">sourceSets</span><span class="p">.</span><span class="na">commonMain</span><span class="p">.</span><span class="na">dependencies</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="w">        </span><span class="n">api</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="w">        </span><span class="n">implementation</span><span class="p">(</span><span class="n">libs</span><span class="p">.</span><span class="na">coroutines</span><span class="p">)</span><span class="w">  </span><span class="c1">// ✅ Add this</span>
+<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>How to identify needed dependencies</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># Inspect generated code</span>
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>cat<span class="w"> </span>core/analytics-fakes/build/generated/collected-fakes/commonMain/kotlin/FakeAnalyticsImpl.kt
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>
+<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="c1"># Look for imports:</span>
+<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>import<span class="w"> </span>kotlinx.coroutines.*<span class="w">  </span><span class="c1"># → Need coroutines</span>
+<a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>import<span class="w"> </span>kotlinx.serialization.*<span class="w">  </span><span class="c1"># → Need serialization</span>
+</code></pre></div>
+<hr />
+<h3 id="issue-7-ide-not-finding-fakes">Issue 7: IDE Not Finding Fakes<a class="headerlink" href="#issue-7-ide-not-finding-fakes" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom</strong>: Autocomplete doesn&rsquo;t suggest <code>fakeXxx()</code>, but code compiles</p>
+<p><strong>Causes</strong>:<br />
+1. IDE not synced with Gradle<br />
+2. Generated sources not indexed<br />
+3. Stale IDE caches</p>
+<p><strong>Solutions</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1"># 1. Reload Gradle projects</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="c1"># File → Reload All Gradle Projects</span>
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>
+<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="c1"># 2. Invalidate caches</span>
+<a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="c1"># File → Invalidate Caches → Invalidate and Restart</span>
+<a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>
+<a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="c1"># 3. Rebuild project</span>
+<a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a>./gradlew<span class="w"> </span>clean<span class="w"> </span>build
+<a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a>
+<a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a><span class="c1"># 4. Check generated sources are registered</span>
+<a id="__codelineno-21-11" name="__codelineno-21-11" href="#__codelineno-21-11"></a>ls<span class="w"> </span>core/analytics-fakes/build/generated/collected-fakes/
+</code></pre></div>
+<hr />
+<h3 id="issue-8-configuration-cache-failures">Issue 8: Configuration Cache Failures<a class="headerlink" href="#issue-8-configuration-cache-failures" title="Permanent link">&para;</a></h3>
+<p><strong>Error</strong>:<br />
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>Configuration cache problems found:
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>- field &#39;project&#39; from type &#39;FaktGradleSubplugin&#39;
+</code></pre></div></p>
+<p><strong>Cause</strong>: Using configuration cache with older Fakt version</p>
+<p><strong>Solution</strong>: Update to Fakt 1.0.0-alpha01+ (configuration cache compatible)</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="c1">// gradle.properties</span>
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="n">org</span><span class="p">.</span><span class="na">gradle</span><span class="p">.</span><span class="na">configuration</span><span class="o">-</span><span class="n">cache</span><span class="o">=</span><span class="kc">true</span>
+</code></pre></div>
+<hr />
+<h2 id="error-messages-reference">Error Messages Reference<a class="headerlink" href="#error-messages-reference" title="Permanent link">&para;</a></h2>
+<h3 id="source-project-not-found">&ldquo;Source project not found&rdquo;<a class="headerlink" href="#source-project-not-found" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>Source project &#39;:core:analytics&#39; not found.
+<a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>Verify module exists and is included in settings.gradle.kts.
+</code></pre></div>
+<p><strong>Fix</strong>: Add module to <code>settings.gradle.kts</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="n">include</span><span class="p">(</span><span class="s">&quot;:core:analytics&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="collector-and-producer-targets-mismatch">&ldquo;Collector and producer targets mismatch&rdquo;<a class="headerlink" href="#collector-and-producer-targets-mismatch" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>Collector has targets [jvm, js] but producer has [jvm, ios].
+<a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>All producer targets must be present in collector.
+</code></pre></div>
+<p><strong>Fix</strong>: Add missing targets to collector</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="n">kotlin</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="w">    </span><span class="n">jvm</span><span class="p">()</span>
+<a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="w">    </span><span class="n">js</span><span class="p">()</span>
+<a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="w">    </span><span class="n">iosArm64</span><span class="p">()</span><span class="w">  </span><span class="c1">// ✅ Add this</span>
+<a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="optin-annotation-missing">&ldquo;@OptIn annotation missing&rdquo;<a class="headerlink" href="#optin-annotation-missing" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>Multi-module APIs require opt-in with @OptIn(ExperimentalFaktMultiModule::class)
+</code></pre></div>
+<p><strong>Fix</strong>: Add opt-in annotation</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">com</span><span class="p">.</span><span class="na">rsicarelli</span><span class="p">.</span><span class="na">fakt</span><span class="p">.</span><span class="na">compiler</span><span class="p">.</span><span class="na">api</span><span class="p">.</span><span class="na">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
+<a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
+<a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a><span class="p">}</span>
+</code></pre></div>
+<hr />
+<h2 id="advanced-debugging">Advanced Debugging<a class="headerlink" href="#advanced-debugging" title="Permanent link">&para;</a></h2>
+<h3 id="enable-trace-logging">Enable TRACE Logging<a class="headerlink" href="#enable-trace-logging" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="w">    </span><span class="n">logLevel</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">com</span><span class="p">.</span><span class="na">rsicarelli</span><span class="p">.</span><span class="na">fakt</span><span class="p">.</span><span class="na">compiler</span><span class="p">.</span><span class="na">api</span><span class="p">.</span><span class="na">LogLevel</span><span class="p">.</span><span class="na">TRACE</span><span class="p">)</span>
+<a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a><span class="p">}</span>
+</code></pre></div>
+<p>Shows:<br />
+- File-by-file collection<br />
+- Platform detection reasoning<br />
+- IR generation details<br />
+- Task execution timing</p>
+<h3 id="task-dependency-visualization">Task Dependency Visualization<a class="headerlink" href="#task-dependency-visualization" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="c1"># Show task graph</span>
+<a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a>./gradlew<span class="w"> </span>:app:test<span class="w"> </span>--dry-run
+<a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a>
+<a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a><span class="c1"># Execution timeline</span>
+<a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a>./gradlew<span class="w"> </span>:app:test<span class="w"> </span>--scan
+<a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a><span class="c1"># → View timeline in build scan</span>
+</code></pre></div>
+<h3 id="inspect-generated-code">Inspect Generated Code<a class="headerlink" href="#inspect-generated-code" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="c1"># View collected fake</span>
+<a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a>cat<span class="w"> </span>core/analytics-fakes/build/generated/collected-fakes/commonMain/kotlin/com/example/FakeAnalyticsImpl.kt
+<a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a>
+<a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a><span class="c1"># Compare with original</span>
+<a id="__codelineno-32-5" name="__codelineno-32-5" href="#__codelineno-32-5"></a>cat<span class="w"> </span>core/analytics/build/generated/fakt/commonTest/kotlin/com/example/FakeAnalyticsImpl.kt
+</code></pre></div>
+<hr />
+<h2 id="verification-checklist">Verification Checklist<a class="headerlink" href="#verification-checklist" title="Permanent link">&para;</a></h2>
+<p>Before reporting issues, verify:</p>
+<p><strong>Single-Module:</strong><br />
+- [ ] Interface has <code>@Fake</code> annotation<br />
+- [ ] Project builds successfully (<code>./gradlew build</code>)<br />
+- [ ] Fakes generated (<code>ls build/generated/fakt/</code>)<br />
+- [ ] Gradle synced in IDE<br />
+- [ ] Using Kotlin 2.2.21+</p>
+<p><strong>Multi-Module:</strong><br />
+- [ ] Producer module has <code>@Fake</code> annotated interfaces<br />
+- [ ] Producer builds successfully (<code>./gradlew :core:analytics:build</code>)<br />
+- [ ] Fakes generated in producer (<code>ls core/analytics/build/generated/fakt/</code>)<br />
+- [ ] Collector depends on producer with correct path<br />
+- [ ] Collector has ALL producer&rsquo;s KMP targets<br />
+- [ ] Collector declares transitive dependencies<br />
+- [ ] Consumer depends on collector module<br />
+- [ ] Gradle synced in IDE<br />
+- [ ] Using Fakt 1.0.0-alpha01+<br />
+- [ ] Kotlin 2.2.21+</p>
+<hr />
+<h2 id="getting-help">Getting Help<a class="headerlink" href="#getting-help" title="Permanent link">&para;</a></h2>
+<p>If issues persist:</p>
+<ol>
+<li><strong>Enable DEBUG logging</strong> and capture output</li>
+<li><strong>Create minimal reproduction</strong> (single module or producer + collector + consumer)</li>
+<li><strong>Report on GitHub</strong>: <a href="https://github.com/rsicarelli/fakt/issues">github.com/rsicarelli/fakt/issues</a></li>
+</ol>
+<p><strong>Include in report</strong>:<br />
+- Fakt version<br />
+- Kotlin version<br />
+- Gradle version<br />
+- KMP targets (if applicable)<br />
+- Full error message<br />
+- DEBUG/TRACE log output<br />
+- Minimal reproduction repository</p>
+<hr />
+<h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong><a href="faq.html">FAQ</a></strong> - Frequently asked questions</li>
+<li><strong><a href="../user-guide/multi-module.html">Multi-Module</a></strong> - Multi-module architecture and setup guide</li>
+<li><strong><a href="../user-guide/plugin-configuration.html">Configuration</a></strong> - Plugin options (coming soon)</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2025 Rodrigo Sicarelli
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy", "content.code.select", "search.suggest", "search.highlight", "content.tabs.link"], "search": "../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.50899def.min.js"></script>
+      
+    
+  </body>
+</html>
