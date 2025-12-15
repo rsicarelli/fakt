@@ -1,16 +1,21 @@
-<div align="center">
-  <img src="FAKT_logo.png" alt="Fakt Logo" width="200">
-</div>
-
-# Fakt
-
-**Compile-time type-safe test fakes for Kotlin Multiplatform**
-
-[![Build](https://img.shields.io/github/actions/workflow/status/rsicarelli/fakt/ci.yml)](https://github.com/rsicarelli/fakt/actions)
-[![Maven Central](https://img.shields.io/maven-central/v/com.rsicarelli.fakt/runtime)](https://search.maven.org/search?q=g:com.rsicarelli.fakt)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.2.21%2B-blue)](https://kotlinlang.org)
-[![Documentation](https://img.shields.io/badge/docs-mkdocs-blue)](https://rsicarelli.github.io/fakt/)
+<table cellspacing="0" cellpadding="0" border="0">
+  <tr>
+    <td width="100px" align="center" valign="top">
+      <img src="FAKT_logo.png" alt="Fakt Logo" width="80">
+    </td>
+    <td valign="top">
+      <h1>Fakt</h1>
+      <p><strong>Compile-time type-safe test fakes for Kotlin Multiplatform</strong></p>
+      <p>
+        <a href="https://github.com/rsicarelli/fakt/actions/workflows/continuous-deploy.yml"><img src="https://img.shields.io/github/actions/workflow/status/rsicarelli/fakt/continuous-deploy.yml" alt="Build"></a>
+        <a href="https://search.maven.org/search?q=g:com.rsicarelli.fakt"><img src="https://img.shields.io/maven-central/v/com.rsicarelli.fakt/runtime" alt="Maven Central"></a>
+        <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License"></a>
+        <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.2.21%2B-blue" alt="Kotlin"></a>
+        <a href="https://rsicarelli.github.io/fakt/"><img src="https://img.shields.io/badge/docs-mkdocs-blue" alt="Documentation"></a>
+      </p>
+    </td>
+  </tr>
+</table>
 
 Fakt generates test fakes at compile-time. No runtime reflection. No production dependencies. Just type-safe fakes that break when your interfaces change.
 
