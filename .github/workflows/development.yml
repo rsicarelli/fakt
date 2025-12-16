@@ -69,6 +69,19 @@ jobs:
       - name: Run License Check
         uses: ./.github/actions/validate-licenses
 
+  validate-api:
+    name: Validate API
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Run API Check
+        uses: ./.github/actions/validate-api
+
   run-tests:
     name: Run Tests
     runs-on: ubuntu-latest
