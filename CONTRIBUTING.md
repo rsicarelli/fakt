@@ -292,22 +292,31 @@ BREAKING CHANGE: The @Fake annotation now requires explicit target specification
 **Use the bug report template:**
 1. Go to [Issues](https://github.com/rsicarelli/fakt/issues/new)
 2. Select "Bug Report"
-3. Fill out all sections:
-   - Kotlin version
-   - Gradle version
+3. Fill out the required information:
    - Fakt version
+   - Kotlin version
+   - Project type (single/multi-module, KMP)
+   - What's happening (description + expected/actual behavior)
    - Steps to reproduce
-   - Expected vs actual behavior
+   - Build logs & minimal reproduction (with DEBUG logging enabled)
+   - Platform info (if KMP)
 
 ### Suggesting Features
 
+**We love feature requests!** Your ideas directly influence our roadmap.
+
 **Use the feature request template:**
 1. Go to [Issues](https://github.com/rsicarelli/fakt/issues/new)
-2. Select "Feature Request"
+2. Select "💡 Feature Request"
 3. Describe:
-   - Problem statement
-   - Proposed solution
-   - Alternatives considered
+   - What problem this solves
+   - Proposed solution (with code examples)
+   - Alternatives considered (optional)
+   - Your project setup (optional)
+
+**For early-stage ideas:** Consider [starting a discussion](https://github.com/rsicarelli/fakt/discussions) first to get community feedback before creating a formal feature request.
+
+**Recognition:** Feature contributors will be acknowledged in release notes and [CONTRIBUTORS.md](CONTRIBUTORS.md)!
 
 ---
 
