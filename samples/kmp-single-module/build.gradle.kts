@@ -4,7 +4,7 @@
 import com.rsicarelli.fakt.compiler.api.LogLevel
 
 plugins {
-    id("fakt-sample")
+    id("fakt-sample-kmp")
     alias(libs.plugins.fakt)
 }
 

@@ -11,7 +11,7 @@ import org.gradle.kotlin.dsl.the
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 /**
- * Convention plugin for Fakt sample modules.
+ * Convention plugin for Fakt KMP sample modules.
  *
  * Applies:
  * - kotlin-multiplatform plugin
@@ -20,7 +20,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
  * - KLIB duplicate name handling
  * - Common test dependencies
  */
-class FaktSamplePlugin : Plugin<Project> {
+class FaktSampleKmpPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
             // Apply plugins

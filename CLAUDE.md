@@ -64,7 +64,9 @@ fakt/
 │   └── @Fake                             # Main annotation
 ├── gradle-plugin/                     # Gradle integration
 └── samples/
-    ├── kmp-single-module/             # ✅ Working KMP example
+    ├── jvm-single-module/             # ✅ JVM-only sample
+    ├── android-single-module/         # ✅ Android Library sample
+    ├── kmp-single-module/             # ✅ KMP basic sample
     └── kmp-multi-module/              # Complex KMP multi-module
 ```
 

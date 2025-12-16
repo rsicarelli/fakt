@@ -4,6 +4,25 @@ This directory contains comprehensive samples demonstrating Fakt capabilities ac
 
 ## Available Samples
 
+### 🎯 **jvm-single-module**
+A single-platform JVM module demonstrating Fakt for JVM-only projects:
+- **Basic Interfaces**: Simple property and method faking
+- **Suspend Functions**: Async/coroutine support with proper handling
+- **Data Classes**: Value object faking (User, Product models)
+- **Complex Scenarios**: Multi-parameter methods, nullable types, default values
+- **Call Tracking**: Built-in call count tracking with AtomicInteger
+
+**Source Set Targets**: `main` → `test`
+
+### 📱 **android-single-module**
+An Android Library module showcasing Fakt for Android projects:
+- **Android Library Setup**: compileSdk=35, minSdk=24
+- **Unit Tests**: Standard JUnit tests in `src/test/kotlin`
+- **Same Scenarios**: Identical to jvm-single-module for consistency
+- **AGP Compatibility**: Works with Android Gradle Plugin 8.12.3+
+
+**Source Set Targets**: `main` → `test` (unit tests), `androidTest` (instrumented tests supported)
+
 ### 📦 **kmp-single-module**
 A single KMP module demonstrating core Fakt features:
 - **Basic Interfaces**: Simple property and method faking
@@ -53,6 +72,16 @@ Fakt generates fakes at the appropriate test source set level:
 ```bash
 # Option 1: Using composite builds (⭐ recommended for development)
 # Samples auto-rebuild the plugin when needed!
+
+# JVM single-module sample
+cd samples/jvm-single-module
+../../gradlew build
+
+# Android single-module sample
+cd samples/android-single-module
+../../gradlew build
+
+# KMP samples
 cd samples/kmp-single-module
 ../../gradlew build
 
@@ -61,7 +90,7 @@ cd samples/kmp-multi-module
 
 # Option 2: Publishing plugin to local Maven first
 ../../gradlew publishToMavenLocal  # or: make publish-local
-cd samples/kmp-single-module
+cd samples/jvm-single-module
 ../../gradlew build
 
 # Clean and regenerate all fakes
