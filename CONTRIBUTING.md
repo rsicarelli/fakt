@@ -38,9 +38,21 @@ make publish-local
 make test
 # or: ./gradlew test
 
-# Test with samples
-make test-sample
-# or: ./gradlew :samples:kmp-single-module:build
+# Test all samples
+./gradlew :samples:jvm-single-module:build
+./gradlew :samples:android-single-module:build
+./gradlew :samples:kmp-single-module:build
+./gradlew :samples:kmp-multi-module:build
+
+# Or use Makefile shortcuts
+make test-sample  # Tests kmp-single-module by default
+```
+
+**Testing Across Platforms:**
+- `jvm-single-module`: Tests JVM-only compilation and code generation
+- `android-single-module`: Tests Android Library setup and AGP integration
+- `kmp-single-module`: Tests multiplatform code generation and KLIB propagation
+
 ```
 
 ---

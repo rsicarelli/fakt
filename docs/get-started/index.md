@@ -86,6 +86,8 @@ dependencies {
 }
 ```
 
+**💡 See working example:** [`samples/jvm-single-module`](https://github.com/rsicarelli/fakt/tree/main/samples/jvm-single-module)
+
 **Android-Only:**
 
 ```kotlin
@@ -99,6 +101,8 @@ dependencies {
     implementation(libs.fakt.annotations)
 }
 ```
+
+**💡 See working example:** [`samples/android-single-module`](https://github.com/rsicarelli/fakt/tree/main/samples/android-single-module)
 
 ---
 

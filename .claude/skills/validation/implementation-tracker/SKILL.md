@@ -157,9 +157,12 @@ should_count=$(grep -r "fun \`should" compiler/src/test/kotlin/ | wc -l)
 
 **Compilation metrics:**
 ```bash
-# Compile samples and track success
+# Compile samples and track success across all platforms
+./gradlew :samples:jvm-single-module:build 2>&1 | tee compile-jvm.log
+./gradlew :samples:android-single-module:build 2>&1 | tee compile-android.log
+
 cd samples/kmp-single-module
-../../gradlew compileKotlinJvm 2>&1 | tee ../../compile.log
+../../gradlew compileKotlinJvm 2>&1 | tee ../../compile-kmp.log
 
 # Check exit code
 if [ $? -eq 0 ]; then

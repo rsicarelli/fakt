@@ -223,7 +223,14 @@ ls build/generated/fakt/test/kotlin/  # See generated code
 
 ### **Run Tests**
 ```bash
-./gradlew test  # All compiler plugin tests
+# Validate all sample types
+make test  # Runs all core tests
+./gradlew :samples:jvm-single-module:build
+./gradlew :samples:android-single-module:build
+./gradlew :samples:kmp-single-module:build
+
+# All compiler plugin tests
+./gradlew test
 cd samples/kmp-single-module && ../../gradlew jvmTest  # Integration tests
 ```
 

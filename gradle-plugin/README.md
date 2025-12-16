@@ -205,9 +205,17 @@ gradle-plugin/
 # Build and publish to local Maven
 ./gradlew :gradle-plugin:publishToMavenLocal
 
-# Test in a sample project
-cd samples/kmp-single-module
-./gradlew build --info
+# Test in sample projects (see working examples)
+cd samples/jvm-single-module && ./gradlew build --info
+cd samples/android-single-module && ./gradlew build --info
+cd samples/kmp-single-module && ./gradlew build --info
+```
+
+**See working examples:**
+- JVM-only: `samples/jvm-single-module`
+- Android: `samples/android-single-module`
+- KMP: `samples/kmp-single-module`
+
 ```
 
 ### Debugging
@@ -361,7 +369,10 @@ Use `--info` logging to verify output directory.
 - **Main Project README**: `../README.md`
 - **Compiler Plugin**: `../compiler/`
 - **Annotations Module**: `../annotations/`
-- **Samples**: `../samples/kmp-single-module/`
+- **Samples**:
+  - JVM-only: `../samples/jvm-single-module/`
+  - Android: `../samples/android-single-module/`
+  - KMP: `../samples/kmp-single-module/`
 - **Gradle Plugin Guide**: https://docs.gradle.org/current/userguide/custom_plugins.html
 - **Kotlin Compiler Plugins**: https://kotlinlang.org/docs/compiler-plugins.html
 

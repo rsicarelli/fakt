@@ -34,7 +34,12 @@ For each `@Fake` annotated interface, three components are generated:
 
 ## Working Examples
 
-All examples below are from **real generated code** in the kmp-single-module sample project.
+All examples below are from **real generated code** in the sample projects.
+
+Examples can be found in:
+- `samples/jvm-single-module` (JVM-only)
+- `samples/android-single-module` (Android)
+- `samples/kmp-single-module` (KMP)
 
 ### Example 1: Basic Repository Pattern
 

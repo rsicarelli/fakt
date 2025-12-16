@@ -4,6 +4,44 @@ Fakt includes working sample projects demonstrating different use cases.
 
 ---
 
+## jvm-single-module
+
+**Location**: [`samples/jvm-single-module/`](https://github.com/rsicarelli/fakt/tree/main/samples/jvm-single-module)
+
+**Demonstrates**: JVM-only projects with standard kotlin-jvm plugin
+
+**Targets**: JVM only
+
+**Key Examples**:
+
+- UserRepository (CRUD with call tracking)
+- AuthenticationService (suspend functions + Result types)
+- PropertyAndMethodInterface (properties + methods)
+- No platform-specific setup required
+
+**Best for**: Learning Fakt basics without KMP complexity
+
+---
+
+## android-single-module
+
+**Location**: [`samples/android-single-module/`](https://github.com/rsicarelli/fakt/tree/main/samples/android-single-module)
+
+**Demonstrates**: Android Library projects with AGP integration
+
+**Targets**: Android (compileSdk=35, minSdk=24)
+
+**Key Examples**:
+
+- Same scenarios as jvm-single-module for consistency
+- Unit tests in `src/test/kotlin`
+- Instrumented tests support in `src/androidTest/kotlin`
+- Works with Android Gradle Plugin 8.12.3+
+
+**Best for**: Android developers wanting test fakes without KMP
+
+---
+
 ## kmp-single-module
 
 **Location**: [`samples/kmp-single-module/`](https://github.com/rsicarelli/fakt/tree/main/samples/kmp-single-module)
@@ -52,6 +90,16 @@ Clone the repository and build:
 
 ```bash
 git clone https://github.com/rsicarelli/fakt.git
+
+# JVM-only sample
+cd fakt/samples/jvm-single-module
+./gradlew build
+
+# Android sample
+cd fakt/samples/android-single-module
+./gradlew build
+
+# KMP samples
 cd fakt/samples/kmp-single-module
 ./gradlew build
 ```

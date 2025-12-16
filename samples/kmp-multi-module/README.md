@@ -277,7 +277,7 @@ fakt {
 **After (11 lines per module!):**
 ```kotlin
 plugins {
-    id("fakt-sample")           // ← Does everything!
+    id("fakt-sample-kmp")           // ← Does everything!
     id("com.rsicarelli.fakt")
 }
 

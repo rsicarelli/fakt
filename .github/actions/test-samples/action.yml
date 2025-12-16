@@ -14,6 +14,16 @@ runs:
         ORG_GRADLE_PROJECT_SKIP_SIGNING: true
       run: ./gradlew publishToMavenLocal
 
+    # Test JVM-only sample
+    - name: Test jvm-single-module sample
+      shell: bash
+      run: ./gradlew -p samples/jvm-single-module build
+
+    # Test Android sample
+    - name: Test android-single-module sample
+      shell: bash
+      run: ./gradlew -p samples/android-single-module build
+
     # Using 'allTests' to ensure ALL KMP targets are tested (jvmTest, jsTest, etc.)
     # Then 'check' for additional validations (apiCheck, compilation validation).
 

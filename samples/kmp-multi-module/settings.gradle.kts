@@ -7,7 +7,7 @@
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
-    // Include build-logic for convention plugins (fakt-sample, etc.)
+    // Include build-logic for convention plugins (fakt-sample-kmp, etc.)
     includeBuild("../../build-logic")
 
     repositories {

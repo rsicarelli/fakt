@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 plugins {
-    id("fakt-sample")
+    id("fakt-sample-kmp")
     id("com.rsicarelli.fakt")
 }
 
