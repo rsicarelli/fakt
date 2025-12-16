@@ -7,7 +7,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.2.21%2B-blue)](https://kotlinlang.org)
 
-Fakt generates type-safe test fakes at compile-time. No reflection. No production dependencies. Just clean fakes that break when your interfaces change.
+Automate the fake-over-mock pattern. Fakt generates type-safe test doubles that eliminate boilerplate.
 
 ```kotlin
 @Fake
@@ -24,9 +24,12 @@ val fake = fakeAnalytics {
 
 ## Why Fakt?
 
-Writing test fakes manually is tedious and error-prone. You write 50+ lines of boilerplate for every interface, manage non-thread-safe call counters, and refactoring interfaces won't break tests at compile-time. Runtime mocking frameworks like MockK and Mockito avoid the boilerplate but introduce severe performance penalties and don't work on Native/WASM targets.
-
-Fakt solves both problems with compile-time code generation that works everywhere Kotlin compiles.
+- **Manual fakes scale poorly** - Each type needs custom tracking, config, or cleanup code
+- **Manual fakes rot over time** - Behavior diverges from real implementations without compile-time warnings
+- **Mocks verify interactions, not behavior** - Testing how dependencies are called, not what code achieves
+- **Mocks make refactoring painful** - Tests break even when behavior stays correct
+- **[Google explicitly prefers fakes](https://developer.android.com/training/testing/fundamentals/test-doubles)** - Lightweight, framework-free, and resilient to refactoring
+- **Compile-time generation solves both problems** - Automated fakes that never drift from interfaces
 
 **[Read the full story →](get-started/why-fakt.md)**
 
@@ -34,12 +37,12 @@ Fakt solves both problems with compile-time code generation that works everywher
 
 ## ✨ Features
 
-- ✅ **Universal KMP support** - Works on all Kotlin targets without reflection
-- ✅ **Zero production overhead** - Test-only code generation, no runtime dependencies
-- ✅ **Thread-safe call tracking** - Built-in StateFlow-based reactive counters
-- ✅ **Full language support** - Suspend functions, generics, properties, inheritance
-- ✅ **Smart defaults** - Identity functions for generics, Result.success for Results
-- ✅ **IR-level generation** - Direct compiler plugin for performance and compatibility
+- ✅ **Zero boilerplate** - Compiler generates type-safe fakes automatically at build time
+- ✅ **Never drift from real code** - Interface changes cause compile errors, not silent bugs
+- ✅ **Test what matters** - Verify outcomes (state) instead of implementation details (calls)
+- ✅ **Works everywhere** - All KMP targets without reflection, zero production dependencies
+- ✅ **Smart defaults** - Sensible behaviors for all types, configure only what you need
+- ✅ **Real code, not magic** - Generated .kt files are readable, not bytecode magic
 
 **[Complete feature reference →](get-started/features.md)**
 

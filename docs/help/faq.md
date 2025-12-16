@@ -163,24 +163,45 @@ For common issues and solutions, see the [Troubleshooting Guide](troubleshooting
 
 ### How can I contribute to Fakt?
 
-Contributions are welcome! Please:
+Contributions are welcome! See the [Complete Contributing Guide](https://github.com/rsicarelli/fakt/blob/main/CONTRIBUTING.md) for:
+- Development environment setup
+- Project structure and key areas
+- Testing standards (GIVEN-WHEN-THEN pattern)
+- Pull request process and CI checks
+- Commit conventions
 
-1. Follow **GIVEN-WHEN-THEN** testing standard
-2. Ensure all generated code compiles without errors
-3. Test both single-platform and KMP scenarios
-4. Run `make format` before committing
+**Quick ways to contribute:**
+1. 🐛 [Report bugs](https://github.com/rsicarelli/fakt/issues/new?template=bug_report.yml)
+2. 💡 [Suggest features](https://github.com/rsicarelli/fakt/issues/new?template=feature_request.yml) - We love hearing your ideas!
+3. 📖 Improve documentation
+4. 🧪 Add tests or examples
+5. 💬 Help answer questions in [Discussions](https://github.com/rsicarelli/fakt/discussions)
+
+**Your feature requests shape our roadmap!**
 
 ---
 
 ### Where do I report bugs?
 
-Report issues on [GitHub Issues](https://github.com/rsicarelli/fakt/issues). Please include:
+Use our [Bug Report template](https://github.com/rsicarelli/fakt/issues/new?template=bug_report.yml).
 
-- Kotlin version
+**Please include:**
 - Fakt version
-- KMP targets (if applicable)
-- Minimal reproduction (interface + error message)
-- Full compilation logs (`./gradlew build --info`)
+- Kotlin version
+- Project type (single-module, KMP, multi-module)
+- Description of what's happening vs what you expected
+- Steps to reproduce
+- Build logs with DEBUG logging:
+  ```kotlin
+  fakt {
+      logLevel.set(LogLevel.DEBUG)
+  }
+  ```
+- Minimal reproduction code
+
+For KMP projects, also include Gradle version and target platforms.
+
+See [Troubleshooting Guide](troubleshooting.md) for diagnostic steps.
 
 ---
 
