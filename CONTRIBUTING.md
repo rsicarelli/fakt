@@ -283,8 +283,8 @@ BREAKING CHANGE: The @Fake annotation now requires explicit target specification
 
 ### Getting Help
 
-- **GitHub Discussions:** [Ask questions](https://github.com/rsicarelli/fakt/discussions)
-- **Issues:** [Report bugs](https://github.com/rsicarelli/fakt/issues/new?template=bug_report.yml)
+- **Issues:** [Report bugs or suggest features](https://github.com/rsicarelli/fakt/issues/new)
+- **Documentation:** [Read our guides](https://rsicarelli.github.io/fakt/)
 - **Slack:** [Join our channel](#) (coming soon)
 
 ### Reporting Bugs
@@ -313,8 +313,6 @@ BREAKING CHANGE: The @Fake annotation now requires explicit target specification
    - Proposed solution (with code examples)
    - Alternatives considered (optional)
    - Your project setup (optional)
-
-**For early-stage ideas:** Consider [starting a discussion](https://github.com/rsicarelli/fakt/discussions) first to get community feedback before creating a formal feature request.
 
 **Recognition:** Feature contributors will be acknowledged in release notes and [CONTRIBUTORS.md](CONTRIBUTORS.md)!
 

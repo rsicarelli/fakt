@@ -13,7 +13,6 @@ body:
 
         **Before submitting:**
         - 🔍 Search existing issues to avoid duplicates
-        - 💬 For early-stage ideas, consider [starting a discussion](https://github.com/rsicarelli/fakt/discussions) first
 
   - type: textarea
     id: problem

@@ -1,11 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: 💡 Discuss an Idea
-    url: https://github.com/rsicarelli/fakt/discussions/new?category=ideas
-    about: Have an idea but not ready for a formal proposal? Start a discussion first!
-  - name: ❓ Ask a Question
-    url: https://github.com/rsicarelli/fakt/discussions/new?category=q-a
-    about: Questions about using Fakt? Use Discussions instead of issues
   - name: 📖 Read the Docs
     url: https://rsicarelli.github.io/fakt/
     about: Check out our documentation for guides and examples
