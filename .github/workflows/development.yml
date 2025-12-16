@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  IS_CI: yes
+  IS_CI: true
 
 permissions:
   checks: write        # Required for publishing test results
