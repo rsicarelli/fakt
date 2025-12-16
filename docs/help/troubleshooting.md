@@ -480,20 +480,19 @@ Before reporting issues, verify:
 
 ## Getting Help
 
-If issues persist:
+### Before Reporting Issues
 
-1. **Enable DEBUG logging** and capture output
-2. **Create minimal reproduction** (single module or producer + collector + consumer)
-3. **Report on GitHub**: [github.com/rsicarelli/fakt/issues](https://github.com/rsicarelli/fakt/issues)
+Please verify these steps before creating a bug report:
 
-**Include in report**:
-- Fakt version
-- Kotlin version
-- Gradle version
-- KMP targets (if applicable)
-- Full error message
-- DEBUG/TRACE log output
-- Minimal reproduction repository
+1. **Check existing issues:** Search [open issues](https://github.com/rsicarelli/fakt/issues) for duplicates
+2. **Enable DEBUG logging:** Set `logLevel.set(LogLevel.DEBUG)` in your `fakt {}` block
+3. **Collect diagnostic info:** Fakt version, Kotlin version, project type
+4. **Create minimal reproduction:** Simplest code that shows the problem
+5. **Gather build logs:** Run `./gradlew build --info`
+
+**Use our [Bug Report template](https://github.com/rsicarelli/fakt/issues/new?template=bug_report.yml)** - it asks for exactly this information!
+
+For KMP projects, also include your Gradle version and target platforms.
 
 ---
 
