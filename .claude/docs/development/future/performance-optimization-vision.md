@@ -5,12 +5,12 @@
 >
 > **Status**: Partially implemented (file-based caching exists, separate module does NOT)  
 > **Date**: September 2025  
-> **Reality**: Optimizations implemented as `CompilerOptimizations` class, not separate `compiler-runtime/` module  
+> **Reality**: Optimizations implemented as `CompilerOptimizations` class, not separate `compiler-annotations/` module  
 > **Purpose**: Historical record of design thinking and potential future enhancements
 
 ## ✅ What Was Actually Implemented
 
-Instead of creating a separate `compiler-runtime/` module, optimizations were implemented directly in the compiler:
+Instead of creating a separate `compiler-annotations/` module, optimizations were implemented directly in the compiler:
 
 **Location**: `compiler/src/main/kotlin/.../core/optimization/`
 ```
@@ -27,7 +27,7 @@ Instead of creating a separate `compiler-runtime/` module, optimizations were im
 - ✅ Graceful error handling
 
 **What This Document Proposed But Wasn't Built:**
-- ❌ Separate `compiler-runtime/` module
+- ❌ Separate `compiler-annotations/` module
 - ❌ `TypeAnalysisCache` as standalone class
 - ❌ `MemoryOptimizedIrGenerator` with object pooling
 - ❌ `IncrementalCompilationManager` as separate component
@@ -110,8 +110,8 @@ for (file in moduleFragment.files) {
 
 ### **Module Structure (TDD-Driven)**
 ```
-compiler-runtime/
-├── src/main/kotlin/dev/rsicarelli/fakt/runtime/
+compiler-annotations/
+├── src/main/kotlin/dev/rsicarelli/fakt/annotations/
 │   ├── TypeAnalysisCache.kt              # Essential - O(n) optimization
 │   ├── MemoryOptimizedIrGenerator.kt     # Essential - object pooling
 │   ├── IncrementalCompilationManager.kt  # Essential - incremental builds

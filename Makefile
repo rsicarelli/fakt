@@ -19,6 +19,9 @@ compile:
 clean:
 	@echo "🧹 Cleaning build artifacts..."
 	./gradlew clean
+	@echo "🧹 Cleaning samples..."
+	@find samples -maxdepth 2 -type d -name ".gradle" -exec rm -rf {} + 2>/dev/null || true
+	@find samples -maxdepth 2 -type d -name "build" -exec rm -rf {} + 2>/dev/null || true
 
 format:
 	@echo "✨ Formatting code with Spotless..."

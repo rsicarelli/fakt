@@ -601,7 +601,7 @@ class FaktGradlePluginIntegrationTest {
                 sourceSets {
                     commonMain {
                         dependencies {
-                            implementation("com.rsicarelli.fakt:runtime:1.0.0-alpha01")
+                            implementation("com.rsicarelli.fakt:annotations:1.0.0-alpha01")
                         }
                     }
                 }

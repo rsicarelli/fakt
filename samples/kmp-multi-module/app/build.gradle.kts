@@ -9,7 +9,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(libs.fakt.runtime)
+                implementation(libs.fakt.annotations)
 
                 // All feature dependencies
                 implementation(projects.features.login)

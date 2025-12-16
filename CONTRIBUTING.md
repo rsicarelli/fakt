@@ -111,7 +111,7 @@ fakt/
 ├── compiler/           # Main compiler plugin (FIR + IR)
 ├── compiler-api/       # Serialization models
 ├── gradle-plugin/      # Gradle plugin
-├── runtime/            # @Fake annotation (KMP)
+├── annotations/        # @Fake annotation (KMP, zero runtime overhead)
 ├── samples/            # Integration test samples
 └── build-logic/        # Convention plugins
 ```

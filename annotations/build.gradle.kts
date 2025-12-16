@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
-// Copyright (C) 2025 Rodrigo Sicarelli
-// SPDX-License-Identifier: Apache-2.0
 plugins {
     id("fakt-multiplatform")
     id("fakt-publishing")
@@ -12,7 +10,7 @@ plugins {
     id("fakt-detekt")
 }
 
-description = "Fakt runtime annotations for type-safe fake generation"
+description = "Fakt annotations for type-safe fake generation (zero runtime overhead)"
 
 kotlin {
     applyDefaultHierarchyTemplate()

@@ -125,7 +125,7 @@ Error: ClassNotFoundException: com.rsicarelli.fakt.runtime.Fake
 **Solution**: Add to build.gradle.kts:
 ```kotlin
 dependencies {
-    implementation("com.rsicarelli.fakt:runtime:1.0.0-alpha01")
+    implementation("com.rsicarelli.fakt:annotations:1.0.0-alpha01")
 }
 ```
 

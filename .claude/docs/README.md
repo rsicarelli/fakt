@@ -252,7 +252,7 @@ ktfakes-prototype/
 │   │   └── src/main/kotlin/dev/rsicarelli/fakt/compiler/
 │   │       ├── KtFakeCompilerPluginRegistrar.kt    # Plugin entry
 │   │       └── UnifiedKtFakesIrGenerationExtension.kt # Main generator
-│   ├── runtime/                     # Annotations and runtime API
+│   ├── annotations/                     # Annotations and runtime API
 │   ├── gradle-plugin/               # Gradle integration
 │   └── test-sample/                 # Working examples ✅
 │       └── build/generated/fakt/test/kotlin/     # Generated fakes

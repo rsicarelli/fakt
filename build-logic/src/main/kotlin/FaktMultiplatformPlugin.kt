@@ -7,7 +7,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 
 /**
- * Convention plugin for Kotlin Multiplatform modules (runtime).
+ * Convention plugin for Kotlin Multiplatform modules (annotations).
  *
  * Applies:
  * - Publishing convention (group/version from gradle.properties)

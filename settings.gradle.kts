@@ -36,7 +36,7 @@ include(
     ":compiler",
     ":compiler-api",
     ":gradle-plugin",
-    ":runtime",
+    ":annotations",
 )
 
 rootProject.name = "fakt"

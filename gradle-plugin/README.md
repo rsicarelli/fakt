@@ -360,7 +360,7 @@ Use `--info` logging to verify output directory.
 
 - **Main Project README**: `../README.md`
 - **Compiler Plugin**: `../compiler/`
-- **Runtime Module**: `../runtime/`
+- **Annotations Module**: `../annotations/`
 - **Samples**: `../samples/kmp-single-module/`
 - **Gradle Plugin Guide**: https://docs.gradle.org/current/userguide/custom_plugins.html
 - **Kotlin Compiler Plugins**: https://kotlinlang.org/docs/compiler-plugins.html

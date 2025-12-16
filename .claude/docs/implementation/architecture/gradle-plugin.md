@@ -283,7 +283,7 @@ private fun addRuntimeDependencies(project: Project) {
     project.configurations.matching { 
         it.name.endsWith("TestImplementation", ignoreCase = true) 
     }.configureEach {
-        project.dependencies.add(name, "com.rsicarelli.fakt:runtime:$version")
+        project.dependencies.add(name, "com.rsicarelli.fakt:annotations:$version")
     }
 }
 ```

@@ -384,14 +384,14 @@ ktfake {
 #### **Module Dependencies**
 ```
 compiler/                          # Main compiler plugin
-├── uses: compiler-runtime/        # Essential optimizations
+├── uses: compiler-annotations/        # Essential optimizations
 └── configured by: gradle-plugin/  # User-facing DSL
 
 gradle-plugin/                     # User interface + reporting
-├── consumes: compiler-runtime/    # Performance metrics
+├── consumes: compiler-annotations/    # Performance metrics
 └── configures: compiler/          # Compilation options
 
-compiler-runtime/                  # Essential optimizations only
+compiler-annotations/                  # Essential optimizations only
 ├── TypeAnalysisCache             # O(n) optimization
 ├── ObjectPoolOptimizer           # Memory efficiency
 └── IncrementalCompilation        # Skip unchanged interfaces
@@ -400,8 +400,8 @@ compiler-runtime/                  # Essential optimizations only
 #### **Data Flow**
 ```
 1. gradle-plugin/ provides configuration → compiler/
-2. compiler/ uses compiler-runtime/ for optimizations
-3. compiler-runtime/ collects metrics → gradle-plugin/
+2. compiler/ uses compiler-annotations/ for optimizations
+3. compiler-annotations/ collects metrics → gradle-plugin/
 4. gradle-plugin/ generates reports from metrics
 ```
 
