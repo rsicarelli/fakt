@@ -160,7 +160,7 @@ class SimplifiedSourceSetConfigurationTest {
     }
 
     @Test
-    fun `GIVEN KMP project with iOS WHEN configured THEN iosX64Test should include commonTest generated dir`() {
+    fun `GIVEN KMP project with iOS WHEN configured THEN iosX64Test should include its own generated dir`() {
         // GIVEN
         val project = createKmpProject()
         val kotlin = project.getKotlinExtension()
@@ -171,14 +171,11 @@ class SimplifiedSourceSetConfigurationTest {
         project.evaluate()
         val iosX64Test = kotlin.sourceSets.getByName("iosX64Test")
 
-        // THEN - Should include BOTH iosX64Test dir AND commonTest dir
+        // THEN - Should include ONLY iosX64Test dir (not commonTest)
+        // PASS 2 was removed: KMP dependency propagation handles KLIB visibility
         assertTrue(
             iosX64Test.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/iosX64Test/kotlin") },
             "iosX64Test should have its own generated directory",
-        )
-        assertTrue(
-            iosX64Test.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/commonTest/kotlin") },
-            "iosX64Test should also have access to commonTest generated directory",
         )
     }
 
@@ -206,7 +203,7 @@ class SimplifiedSourceSetConfigurationTest {
     }
 
     @Test
-    fun `GIVEN KMP project with all platforms WHEN configured THEN all platform tests should see commonTest`() {
+    fun `GIVEN KMP project with all platforms WHEN configured THEN all platform tests should have own dirs`() {
         // GIVEN
         val project = createKmpProject()
         val kotlin = project.getKotlinExtension()
@@ -219,7 +216,8 @@ class SimplifiedSourceSetConfigurationTest {
         // WHEN
         project.evaluate()
 
-        // THEN - ALL platform test source sets should include commonTest dir
+        // THEN - Each platform test should have its own generated dir (not commonTest)
+        // PASS 2 was removed: KMP dependency propagation handles KLIB visibility
         val platformTestSourceSets =
             listOf(
                 "jvmTest",
@@ -232,8 +230,8 @@ class SimplifiedSourceSetConfigurationTest {
         platformTestSourceSets.forEach { sourceSetName ->
             val sourceSet = kotlin.sourceSets.getByName(sourceSetName)
             assertTrue(
-                sourceSet.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/commonTest/kotlin") },
-                "$sourceSetName should have access to commonTest generated directory",
+                sourceSet.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/$sourceSetName/kotlin") },
+                "$sourceSetName should have its own generated directory",
             )
         }
     }
