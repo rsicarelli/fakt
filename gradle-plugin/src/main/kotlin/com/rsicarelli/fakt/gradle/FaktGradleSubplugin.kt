@@ -165,11 +165,12 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             return false
         }
 
-        val compilationName = kotlinCompilation.name.lowercase()
-
-        return compilationName == "main" ||
-            compilationName.endsWith("main") ||
-            compilationName == "metadata"
+        // Apply to all non-test compilations (covers JVM, KMP, and Android)
+        // This handles:
+        // - JVM: "main"
+        // - KMP: "commonMain", "jvmMain", "iosMain", "metadata", etc.
+        // - Android: "debug", "release", etc.
+        return !kotlinCompilation.isTestCompilation
     }
 
     override fun getCompilerPluginId(): String = PLUGIN_ID

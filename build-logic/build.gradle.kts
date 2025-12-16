@@ -10,6 +10,9 @@ dependencies {
     implementation(libs.kotlin.gradlePlugin)
     implementation(libs.kotlin.gradlePlugin.api)
 
+    // Android Gradle Plugin (for Android samples)
+    implementation(libs.android.gradlePlugin)
+
     // Convention Plugins (for module conventions)
     implementation(libs.mavenPublish.gradlePlugin)
     implementation(libs.spotless.gradlePlugin)
@@ -39,9 +42,17 @@ gradlePlugin {
             id = "fakt-multiplatform"
             implementationClass = "FaktMultiplatformPlugin"
         }
-        register("fakt-sample") {
-            id = "fakt-sample"
-            implementationClass = "FaktSamplePlugin"
+        register("fakt-sample-kmp") {
+            id = "fakt-sample-kmp"
+            implementationClass = "FaktSampleKmpPlugin"
+        }
+        register("fakt-sample-jvm") {
+            id = "fakt-sample-jvm"
+            implementationClass = "FaktSampleJvmPlugin"
+        }
+        register("fakt-sample-android") {
+            id = "fakt-sample-android"
+            implementationClass = "FaktSampleAndroidPlugin"
         }
         register("fakt-publishing") {
             id = "fakt-publishing"

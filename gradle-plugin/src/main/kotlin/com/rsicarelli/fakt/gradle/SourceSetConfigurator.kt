@@ -4,7 +4,7 @@ package com.rsicarelli.fakt.gradle
 
 import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
 import java.io.File
 
 /**
@@ -127,12 +127,16 @@ internal class SourceSetConfigurator(
     }
 
     /**
-     * Configure JVM-only projects.
+     * Configure JVM-only projects and Android projects.
+     *
+     * This method handles both standard JVM and Android compilation tasks by using
+     * AbstractKotlinCompile, which is the parent class for all Kotlin compilation tasks.
      */
     private fun configureJvmSourceSets() {
-        // For JVM-only projects, add generated sources to test source sets
-        project.tasks.withType(KotlinCompile::class.java) { task ->
-            if (task.name.contains("Test", ignoreCase = true)) {
+        // For JVM-only and Android projects, add generated sources to test source sets
+        // Uses AbstractKotlinCompile to catch both JVM (KotlinCompile) and Android tasks
+        project.tasks.withType(AbstractKotlinCompile::class.java) { task ->
+            if (isTestTask(task.name)) {
                 val generatedDir =
                     File(
                         project.layout.buildDirectory
@@ -149,5 +153,25 @@ internal class SourceSetConfigurator(
                 )
             }
         }
+    }
+
+    /**
+     * Determines if a Kotlin compilation task is for tests (unit or instrumented).
+     *
+     * Includes:
+     * - JVM test tasks: compileTestKotlin, compileTestKotlinJvm
+     * - Android unit test tasks: compileDebugUnitTestKotlin, compileReleaseUnitTestKotlin
+     * - Android instrumented tests: compileDebugAndroidTestKotlin, compileReleaseAndroidTestKotlin
+     * - KMP instrumented tests: compileDebugInstrumentedTestKotlin
+     *
+     * Excludes:
+     * - Main/production tasks: compileKotlin, compileDebugKotlin, compileReleaseKotlin
+     *
+     * @param taskName The name of the compilation task
+     * @return true if this is a test compilation task (unit or instrumented), false otherwise
+     */
+    private fun isTestTask(taskName: String): Boolean {
+        val normalized = taskName.lowercase()
+        return normalized.contains("test")
     }
 }

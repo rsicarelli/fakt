@@ -161,8 +161,10 @@ internal object SourceSetDiscovery {
         val defaultSourceSetInfo = sourceSetInfos.first { it.name == defaultSourceSet.name }
 
         // 6. Extract target metadata
-        val targetName = compilation.target.targetName
         val platformType = compilation.target.platformType.name
+        // For JVM-only projects (kotlin-jvm plugin), targetName may be blank
+        // Use platformType as fallback (e.g., "jvm" for JVM-only projects)
+        val targetName = compilation.target.targetName.ifBlank { platformType.lowercase() }
 
         // 7. Generate output directory
         // Always output to test source sets since fakes are only used in tests

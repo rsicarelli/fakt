@@ -15,6 +15,7 @@
 [versions]
 # Fakt version (auto-synced with gradle.properties:VERSION_NAME)
 fakt = "1.0.0-alpha02"
+android-gradle-plugin = "8.12.3"
 binaryCompatibilityValidator = "0.18.1"
 detekt = "1.23.8"
 junit5 = "5.13.4"
@@ -37,6 +38,7 @@ turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 fakt-annotations = { module = "com.rsicarelli.fakt:annotations", version.ref = "fakt" }
 
 # Gradle Plugins (for build-logic classpath)
+android-gradlePlugin = { module = "com.android.tools.build:gradle", version.ref = "android-gradle-plugin" }
 binaryCompatibilityValidator-gradlePlugin = { module = "org.jetbrains.kotlinx.binary-compatibility-validator:org.jetbrains.kotlinx.binary-compatibility-validator.gradle.plugin", version.ref = "binaryCompatibilityValidator" }
 detekt-gradlePlugin = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detekt" }
 kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
