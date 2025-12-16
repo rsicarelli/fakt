@@ -8,7 +8,7 @@ import org.gradle.api.Project
  * Common conventions orchestrator for all Fakt modules.
  *
  * Applies the following conventions in order:
- * 1. JVM toolchain (Java 21)
+ * 1. JVM compilation (explicit Java 11 target, no toolchains)
  * 2. Kotlin compiler settings (progressive mode, JVM target, flags)
  * 3. Explicit API mode (for annotations module only)
  * 4. Test configuration (JUnit 5, parallel execution, memory settings)
@@ -17,7 +17,7 @@ import org.gradle.api.Project
  * All logic is delegated to specific convention functions for modularity.
  */
 fun Project.applyCommonConventions() {
-    applyJvmToolchain()
+    applyJvmCompilation()
     applyKotlinCompiler()
     applyExplicitApiForRuntime()
     applyTestConventions()
