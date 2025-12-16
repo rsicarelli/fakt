@@ -1,98 +1,66 @@
-name: Feature Request
-description: Suggest a new feature or enhancement for Fakt
+name: 💡 Feature Request
+description: Suggest a new feature for Fakt (we love hearing your ideas!)
 title: "[Feature]: "
 labels: ["enhancement", "needs-triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thank you for suggesting a new feature! Please provide detailed information to help us understand your request.
+        ## We Want to Hear Your Ideas! 🚀
+
+        Feature requests from the community often shape our roadmap.
+        Your feedback helps make Fakt better for everyone!
+
+        **Before submitting:**
+        - 🔍 Search existing issues to avoid duplicates
+        - 💬 For early-stage ideas, consider [starting a discussion](https://github.com/rsicarelli/fakt/discussions) first
 
   - type: textarea
     id: problem
     attributes:
-      label: Problem Statement
-      description: What problem does this feature solve? Is your feature request related to a problem?
-      placeholder: I'm always frustrated when...
+      label: What problem does this solve?
+      description: Describe the problem or limitation you're facing
+      placeholder: "I often need to... but currently Fakt doesn't support..."
     validations:
       required: true
 
   - type: textarea
     id: solution
     attributes:
-      label: Proposed Solution
-      description: Describe the solution you'd like to see.
+      label: Proposed solution
+      description: How would you like this to work?
+      render: kotlin
       placeholder: |
-        I would like Fakt to support...
-
-        Example usage:
-        ```kotlin
+        // I'd like to be able to:
         @Fake
-        interface MyInterface {
-            // Your proposed feature here
+        interface MyService<T> {
+            fun get(): T
         }
-        ```
+
+        val fake = fakeMyService<String> {
+            onGet { "test" }
+        }
     validations:
       required: true
 
   - type: textarea
     id: alternatives
     attributes:
-      label: Alternatives Considered
-      description: Describe alternative solutions or features you've considered.
-      placeholder: |
-        Alternative 1: ...
-        Alternative 2: ...
-        Why the proposed solution is better: ...
+      label: Alternatives considered (optional)
+      description: Any other approaches you've thought about?
     validations:
       required: false
 
   - type: dropdown
-    id: impact
+    id: project-context
     attributes:
-      label: Impact
-      description: How important is this feature to you?
+      label: Your Project Setup (optional)
+      description: Helps us understand the scope and priority
       options:
-        - Critical - Blocking my adoption of Fakt
-        - High - Significantly improves my workflow
-        - Medium - Nice to have
-        - Low - Minor improvement
-    validations:
-      required: true
-
-  - type: dropdown
-    id: scope
-    attributes:
-      label: Scope
-      description: Which part of Fakt does this feature affect?
-      options:
-        - Compiler Plugin
-        - Gradle Plugin
-        - Runtime API
-        - Code Generation
-        - Documentation
-        - Build/CI
-        - Other (please specify in additional context)
-    validations:
-      required: true
-
-  - type: textarea
-    id: use-case
-    attributes:
-      label: Use Case
-      description: Describe a specific use case where this feature would be beneficial.
-      placeholder: |
-        In my project, I need to...
-        This feature would help by...
-    validations:
-      required: false
-
-  - type: textarea
-    id: additional-context
-    attributes:
-      label: Additional Context
-      description: Add any other context, screenshots, or examples about the feature request.
-      placeholder: Similar features in other tools...
+        - Single-module JVM/Android
+        - Multiplatform (KMP)
+        - Multi-module setup
+        - Not applicable
     validations:
       required: false
 
@@ -100,11 +68,6 @@ body:
     id: checklist
     attributes:
       label: Checklist
-      description: Please confirm the following
       options:
-        - label: I have searched existing issues/discussions to ensure this is not a duplicate
+        - label: I searched existing issues and didn't find a duplicate
           required: true
-        - label: I have provided a clear problem statement and proposed solution
-          required: true
-        - label: I am willing to contribute a PR for this feature (optional)
-          required: false
