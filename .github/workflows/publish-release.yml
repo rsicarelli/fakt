@@ -59,6 +59,9 @@ jobs:
       - name: Run License Check
         uses: ./.github/actions/validate-licenses
 
+      - name: Run API Check
+        uses: ./.github/actions/validate-api
+
       - name: Run Tests
         uses: ./.github/actions/run-tests
 

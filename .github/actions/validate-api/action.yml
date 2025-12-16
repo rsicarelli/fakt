@@ -1,0 +1,9 @@
+name: Validate API
+description: Run binary compatibility validation (apiCheck)
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run API compatibility check
+      shell: bash
+      run: ./gradlew apiCheck

@@ -65,7 +65,10 @@ validate:
 	@echo "5️⃣ Publishing plugin locally..."
 	./gradlew publishToMavenLocal --no-daemon
 	@echo ""
-	@echo "6️⃣ Testing samples..."
+	@echo "6️⃣ API compatibility check..."
+	./gradlew apiCheck
+	@echo ""
+	@echo "7️⃣ Testing samples..."
 	cd samples/kmp-single-module && ../../gradlew build
 	@echo ""
 	@echo "✅ Full validation complete!"
