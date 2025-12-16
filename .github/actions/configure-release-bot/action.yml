@@ -1,0 +1,23 @@
+name: Configure Release Bot Identity
+description: Configures Git with the release bot credentials for commits
+
+inputs:
+  bot-name:
+    description: 'Release bot name (e.g., fakt-release-bot[bot])'
+    required: true
+  bot-app-id:
+    description: 'GitHub App ID for the release bot'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Configure Git with Release Bot Identity
+      shell: bash
+      env:
+        RELEASE_BOT_NAME: ${{ inputs.bot-name }}
+        RELEASE_BOT_APP_ID: ${{ inputs.bot-app-id }}
+      run: |
+        git config --global user.name "$RELEASE_BOT_NAME"
+        git config --global user.email "${RELEASE_BOT_APP_ID}+${RELEASE_BOT_NAME}@users.noreply.github.com"
+        echo "✅ Git configured with bot identity: $RELEASE_BOT_NAME"

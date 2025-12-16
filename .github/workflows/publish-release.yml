@@ -91,10 +91,11 @@ jobs:
       - name: Setup Environment
         uses: ./.github/actions/setup-environment
 
-      - name: Configure Git
-        run: |
-          git config --global user.name 'fakt-bot'
-          git config --global user.email 'bot@rsicarelli.dev'
+      - name: Configure Release Bot
+        uses: ./.github/actions/configure-release-bot
+        with:
+          bot-name: ${{ vars.RELEASE_BOT_NAME }}
+          bot-app-id: ${{ vars.RELEASE_BOT_APP_ID }}
 
       - name: Publish to Maven Central
         run: |
@@ -112,64 +113,27 @@ jobs:
           echo "version=$CURRENT" >> $GITHUB_OUTPUT
           echo "tag=v$CURRENT" >> $GITHUB_OUTPUT
 
-      - name: Sync Documentation with Published Version
+      - name: Create Tag for Published Version
         run: |
-          kotlin .github/scripts/sync-docs-version.main.kts ${{ steps.published.outputs.version }}
-
-      - name: Commit Published Version State
-        run: |
-          git add docs/ samples/ README.md gradle-plugin/README.md gradle/libs.versions.toml
-          if ! git diff --cached --quiet; then
-            git commit -m "docs: sync to published version ${{ steps.published.outputs.version }}"
-          else
-            echo "No documentation changes to commit"
-          fi
-
-      - name: Bump Version
-        id: bump
-        run: |
-          kotlin .github/scripts/bump-version.main.kts ${{ inputs.bump }} ${{ inputs.release_type }}
-
-      - name: Sync Documentation for Development
-        run: |
-          kotlin .github/scripts/sync-docs-version.main.kts ${{ steps.bump.outputs.version_new }}
-
-      - name: Commit Next Development Version
-        run: |
-          git add gradle.properties gradle/libs.versions.toml docs/ samples/ README.md gradle-plugin/README.md
-          if ! git diff --cached --quiet; then
-            git commit -m "chore: bump to next development version ${{ steps.bump.outputs.version_new }}"
-          else
-            echo "No changes to commit"
-          fi
-
-      - name: Create and Push Tag
-        run: |
-          git tag ${{ steps.published.outputs.tag }}
-          git push origin ${{ steps.published.outputs.tag }}
+          git tag "v${{ steps.published.outputs.version }}"
+          git push origin "v${{ steps.published.outputs.version }}"
 
       - name: Create GitHub Release
         uses: ./.github/actions/create-github-release
         with:
-          tag: ${{ steps.published.outputs.tag }}
+          tag: "v${{ steps.published.outputs.version }}"
           github-token: ${{ steps.app-token.outputs.token }}
 
-      - name: Bump to Next SNAPSHOT
-        id: bump-snapshot
+      - name: Prepare for Next Version
+        id: prepare
         run: |
-          # Read current version (e.g., 1.3.0)
-          CURRENT=$(grep "version=" gradle.properties | cut -d'=' -f2)
-          # Add -SNAPSHOT
-          NEXT="${CURRENT}-SNAPSHOT"
-          # Update gradle.properties
-          sed -i "s/version=$CURRENT/version=$NEXT/" gradle.properties
-          echo "next_snapshot=$NEXT" >> $GITHUB_OUTPUT
+          bash .github/scripts/prepare-next-release.sh \
+            "${{ steps.published.outputs.version }}" \
+            "${{ github.event.inputs.bump }}" \
+            "${{ github.event.inputs.release_type }}"
 
-      - name: Commit Next SNAPSHOT
-        run: |
-          git add gradle.properties
-          git commit -m "chore: bump to ${{ steps.bump-snapshot.outputs.next_snapshot }} [skip ci]"
-          git push origin HEAD
+      - name: Push Changes
+        run: git push origin HEAD
 
   deploy-docs:
     name: Deploy Release Documentation
