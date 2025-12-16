@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 <table cellspacing="0" cellpadding="0" border="0">
   <tr>
     <td width="100px" align="center" valign="top">
@@ -18,6 +19,25 @@
 </table>
 
 Fakt generates test fakes at compile-time. No runtime reflection. No production dependencies. Just type-safe fakes that break when your interfaces change.
+=======
+<div id="user-content-toc">
+  <ul style="list-style: none;">
+    <summary>
+      <img src="FAKT_logo.png" alt="Fakt Logo" width="120" align="left" hspace="20"><h1>Fakt</h1>
+      <p>
+      <a href="https://github.com/rsicarelli/fakt/actions/workflows/continuous-deploy.yml"><img src="https://img.shields.io/github/actions/workflow/status/rsicarelli/fakt/continuous-deploy.yml" alt="Build"></a>
+      <a href="https://search.maven.org/search?q=g:com.rsicarelli.fakt"><img src="https://img.shields.io/maven-central/v/com.rsicarelli.fakt/runtime" alt="Maven Central"></a>
+      <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License"></a>
+      <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.2.21%2B-blue" alt="Kotlin"></a>
+      <a href="https://rsicarelli.github.io/fakt/"><img src="https://img.shields.io/badge/docs-mkdocs-blue" alt="Documentation"></a>
+    </summary>
+  </ul>
+</div>
+
+<br clear="left"/>
+
+Automate the fake-over-mock pattern. Fakt generates type-safe test doubles that eliminate boilerplate.
+>>>>>>> Stashed changes
 
 ```kotlin
 @Fake
@@ -25,52 +45,42 @@ interface UserRepository {
     suspend fun getUser(id: String): User
 }
 
+// Use in tests
 val fake = fakeUserRepository {
     getUser { id -> User(id, "Alice") }
 }
 ```
 
----
+## 🤔 Why Fakt?
 
-## ✅ Why Fakt?
+- **Manual fakes scale poorly** each type needs custom tracking, config, or cleanup code
+- **Manual fakes rot over time** behavior diverges from real implementations without compile-time warnings
+- **Mocks verify interactions, not behavior** testing how dependencies are called, not what code achieves
+- **Mocks make refactoring painful** tests break even when behavior stays correct
+- **[Google explicitly prefers fakes](https://developer.android.com/training/testing/fundamentals/test-doubles)** lightweight, framework-free, and resilient to refactoring
+- **Compile-time generation solves both problems** automated fakes that never drift from interfaces
 
-Writing test fakes manually is tedious and error-prone:
 
-- **Repetitive boilerplate** - 50+ lines per interface with manual call tracking
-- **Silent breakage** - Refactoring interfaces doesn't break tests at compile-time
-- **Thread-safety issues** - Manual counters are non-thread-safe
-- **Maintenance burden** - Scales poorly across large codebases
+## ✨ Key Features
 
-**[Read the full story →](https://rsicarelli.github.io/fakt/introduction/why-fakt/)**
-
----
-
-## 🎯 Key Features
-
-- ✅ **Universal KMP support** - Works on all Kotlin targets without reflection
-- ✅ **Zero production overhead** - Test-only code generation, no runtime dependencies
-- ✅ **Thread-safe call tracking** - Built-in StateFlow-based reactive counters
-- ✅ **Full language support** - Suspend functions, generics, properties, inheritance
-- ✅ **Smart defaults** - Sensible behaviors for all types (identity functions, Result.success)
-- ✅ **IR-level generation** - Direct compiler plugin, not KSP or annotation processing
-- ✅ **Multi-module ready** - Supports collector module pattern for large codebases
-
-**[Complete feature reference →](https://rsicarelli.github.io/fakt/introduction/features/)**
-
----
+- **Zero boilerplate** - Compiler generates type-safe fakes automatically at build time
+- **Never drift from real code** - Interface changes cause compile errors, not silent bugs
+- **Test what matters** - Verify outcomes (state) instead of implementation details (calls)
+- **Works everywhere** - All KMP targets without reflection, zero production dependencies
+- **Smart defaults** - Sensible behaviors for all types, configure only what you need
+- **Real code, not magic** - Generated .kt files are readable, not bytecode magic
 
 ## ⚡ Quick Start
 
 **1. Add plugin and dependency** (`build.gradle.kts`):
 ```kotlin
 plugins {
-    kotlin("multiplatform")
+    kotlin("multiplatform") version "2.2.21" // JVM or Android also works
     id("com.rsicarelli.fakt") version "x.y.z"
 }
 
 kotlin {
-    jvm()
-    // ... other targets
+    // ... your targets
 
     sourceSets {
         commonMain {
@@ -110,25 +120,6 @@ assertEquals(listOf("user_signup"), events)
 assertEquals(1, fake.trackCallCount.value)
 ```
 
-**[Full installation guide →](https://rsicarelli.github.io/fakt/introduction/installation/)**
-
----
-
-## 📚 Documentation
-
-**[Complete documentation →](https://rsicarelli.github.io/fakt/)**
-
----
-
-## 🌐 Platform Support
-
-Works on **all Kotlin Multiplatform targets** without reflection: JVM, Android, iOS, macOS, Linux, Windows, JavaScript, WebAssembly, watchOS, tvOS.
-
-Single-platform projects (JVM-only, Android-only) are fully supported.
-
-**[Full compatibility matrix →](https://rsicarelli.github.io/fakt/reference/compatibility/)**
-
----
 
 ## Requirements
 
@@ -136,13 +127,13 @@ Single-platform projects (JVM-only, Android-only) are fully supported.
 - **Gradle:** 8.0+
 - **JVM:** 11+
 
----
+## 🤝 Contributing
 
-## Contributing
-
-Contributions are welcome! Please follow the **[testing guidelines](https://github.com/rsicarelli/fakt/tree/main/.claude/docs/development/validation/testing-guidelines.md)** and run `make format` before committing.
-
-Run `make help` for available development commands.
+- **Report Bugs:** [Bug Report](https://github.com/rsicarelli/fakt/issues/new?assignees=&labels=bug%2Cneeds-triage&template=bug_report.yml)
+- **Suggest Features:** [Feature Request](https://github.com/rsicarelli/fakt/issues/new?assignees=&labels=enhancement%2Cneeds-triage&template=feature_request.yml) - Your ideas shape our roadmap!
+- **Discuss Ideas:** [GitHub Discussions](https://github.com/rsicarelli/fakt/discussions)
+- **Documentation:** [User Guide](https://rsicarelli.github.io/fakt/)
+- **Contributing:** See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---
 
