@@ -104,7 +104,6 @@ assertEquals(1, fake.trackCallCount.value)
 - **Documentation:** [User Guide](https://rsicarelli.github.io/fakt/)
 - **Contributing:** See [CONTRIBUTING.md](CONTRIBUTING.md)
 
----
 
 ## 🐜 Our Mascot
 
