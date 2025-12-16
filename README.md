@@ -101,7 +101,6 @@ assertEquals(1, fake.trackCallCount.value)
 
 - **Report Bugs:** [Bug Report](https://github.com/rsicarelli/fakt/issues/new?assignees=&labels=bug%2Cneeds-triage&template=bug_report.yml)
 - **Suggest Features:** [Feature Request](https://github.com/rsicarelli/fakt/issues/new?assignees=&labels=enhancement%2Cneeds-triage&template=feature_request.yml) - Your ideas shape our roadmap!
-- **Discuss Ideas:** [GitHub Discussions](https://github.com/rsicarelli/fakt/discussions)
 - **Documentation:** [User Guide](https://rsicarelli.github.io/fakt/)
 - **Contributing:** See [CONTRIBUTING.md](CONTRIBUTING.md)
 
