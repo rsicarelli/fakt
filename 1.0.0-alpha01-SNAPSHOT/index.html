@@ -959,7 +959,7 @@
 <a href="https://search.maven.org/search?q=g:com.rsicarelli.fakt"><img alt="Maven Central" src="https://img.shields.io/maven-central/v/com.rsicarelli.fakt/runtime" /></a><br />
 <a href="https://opensource.org/licenses/Apache-2.0"><img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" /></a><br />
 <a href="https://kotlinlang.org"><img alt="Kotlin" src="https://img.shields.io/badge/Kotlin-2.2.21%2B-blue" /></a></p>
-<p>Fakt generates type-safe test fakes at compile-time. No reflection. No production dependencies. Just clean fakes that break when your interfaces change.</p>
+<p>Automate the fake-over-mock pattern. Fakt generates type-safe test doubles that eliminate boilerplate.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nd">@Fake</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">Analytics</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">track</span><span class="p">(</span><span class="n">event</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">)</span>
@@ -971,18 +971,24 @@
 </code></pre></div>
 <hr />
 <h2 id="why-fakt">Why Fakt?<a class="headerlink" href="#why-fakt" title="Permanent link">&para;</a></h2>
-<p>Writing test fakes manually is tedious and error-prone. You write 50+ lines of boilerplate for every interface, manage non-thread-safe call counters, and refactoring interfaces won&rsquo;t break tests at compile-time. Runtime mocking frameworks like MockK and Mockito avoid the boilerplate but introduce severe performance penalties and don&rsquo;t work on Native/WASM targets.</p>
-<p>Fakt solves both problems with compile-time code generation that works everywhere Kotlin compiles.</p>
+<ul>
+<li><strong>Manual fakes scale poorly</strong> - Each type needs custom tracking, config, or cleanup code</li>
+<li><strong>Manual fakes rot over time</strong> - Behavior diverges from real implementations without compile-time warnings</li>
+<li><strong>Mocks verify interactions, not behavior</strong> - Testing how dependencies are called, not what code achieves</li>
+<li><strong>Mocks make refactoring painful</strong> - Tests break even when behavior stays correct</li>
+<li><strong><a href="https://developer.android.com/training/testing/fundamentals/test-doubles">Google explicitly prefers fakes</a></strong> - Lightweight, framework-free, and resilient to refactoring</li>
+<li><strong>Compile-time generation solves both problems</strong> - Automated fakes that never drift from interfaces</li>
+</ul>
 <p><strong><a href="get-started/why-fakt.html">Read the full story →</a></strong></p>
 <hr />
 <h2 id="features">✨ Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
 <ul>
-<li>✅ <strong>Universal KMP support</strong> - Works on all Kotlin targets without reflection</li>
-<li>✅ <strong>Zero production overhead</strong> - Test-only code generation, no runtime dependencies</li>
-<li>✅ <strong>Thread-safe call tracking</strong> - Built-in StateFlow-based reactive counters</li>
-<li>✅ <strong>Full language support</strong> - Suspend functions, generics, properties, inheritance</li>
-<li>✅ <strong>Smart defaults</strong> - Identity functions for generics, Result.success for Results</li>
-<li>✅ <strong>IR-level generation</strong> - Direct compiler plugin for performance and compatibility</li>
+<li>✅ <strong>Zero boilerplate</strong> - Compiler generates type-safe fakes automatically at build time</li>
+<li>✅ <strong>Never drift from real code</strong> - Interface changes cause compile errors, not silent bugs</li>
+<li>✅ <strong>Test what matters</strong> - Verify outcomes (state) instead of implementation details (calls)</li>
+<li>✅ <strong>Works everywhere</strong> - All KMP targets without reflection, zero production dependencies</li>
+<li>✅ <strong>Smart defaults</strong> - Sensible behaviors for all types, configure only what you need</li>
+<li>✅ <strong>Real code, not magic</strong> - Generated .kt files are readable, not bytecode magic</li>
 </ul>
 <p><strong><a href="get-started/features.html">Complete feature reference →</a></strong></p>
 <hr />

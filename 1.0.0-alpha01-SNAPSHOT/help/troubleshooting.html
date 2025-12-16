@@ -1033,6 +1033,21 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Getting Help">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#before-reporting-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      Before Reporting Issues
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1332,6 +1347,21 @@
       Getting Help
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Getting Help">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#before-reporting-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      Before Reporting Issues
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1705,20 +1735,17 @@
 - [ ] Kotlin 2.2.21+</p>
 <hr />
 <h2 id="getting-help">Getting Help<a class="headerlink" href="#getting-help" title="Permanent link">&para;</a></h2>
-<p>If issues persist:</p>
+<h3 id="before-reporting-issues">Before Reporting Issues<a class="headerlink" href="#before-reporting-issues" title="Permanent link">&para;</a></h3>
+<p>Please verify these steps before creating a bug report:</p>
 <ol>
-<li><strong>Enable DEBUG logging</strong> and capture output</li>
-<li><strong>Create minimal reproduction</strong> (single module or producer + collector + consumer)</li>
-<li><strong>Report on GitHub</strong>: <a href="https://github.com/rsicarelli/fakt/issues">github.com/rsicarelli/fakt/issues</a></li>
+<li><strong>Check existing issues:</strong> Search <a href="https://github.com/rsicarelli/fakt/issues">open issues</a> for duplicates</li>
+<li><strong>Enable DEBUG logging:</strong> Set <code>logLevel.set(LogLevel.DEBUG)</code> in your <code>fakt {}</code> block</li>
+<li><strong>Collect diagnostic info:</strong> Fakt version, Kotlin version, project type</li>
+<li><strong>Create minimal reproduction:</strong> Simplest code that shows the problem</li>
+<li><strong>Gather build logs:</strong> Run <code>./gradlew build --info</code></li>
 </ol>
-<p><strong>Include in report</strong>:<br />
-- Fakt version<br />
-- Kotlin version<br />
-- Gradle version<br />
-- KMP targets (if applicable)<br />
-- Full error message<br />
-- DEBUG/TRACE log output<br />
-- Minimal reproduction repository</p>
+<p><strong>Use our <a href="https://github.com/rsicarelli/fakt/issues/new?template=bug_report.yml">Bug Report template</a></strong> - it asks for exactly this information!</p>
+<p>For KMP projects, also include your Gradle version and target platforms.</p>
 <hr />
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
