@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
 
-import com.rsicarelli.fakt.conventions.applyJvmToolchain
+import com.rsicarelli.fakt.conventions.applyJvmCompilation
 import com.rsicarelli.fakt.conventions.applyTestConventions
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -16,7 +16,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
  * Applies:
  * - kotlin-multiplatform plugin
  * - All runtime targets (jvm, js, native, wasm)
- * - JVM toolchain (Java 21)
+ * - JVM compilation (explicit Java 11 target, no toolchains)
  * - KLIB duplicate name handling
  * - Common test dependencies
  */
@@ -26,8 +26,8 @@ class FaktSamplePlugin : Plugin<Project> {
             // Apply plugins
             pluginManager.apply("org.jetbrains.kotlin.multiplatform")
 
-            // Apply JVM toolchain
-            applyJvmToolchain()
+            // Apply JVM compilation (explicit target, no toolchains)
+            applyJvmCompilation()
 
             // Apply test conventions (JUnit Platform, etc.)
             applyTestConventions()

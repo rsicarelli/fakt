@@ -14,10 +14,11 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
  *
  * Configures:
  * - Progressive mode (catch deprecations early)
- * - JVM target (21) for JVM modules
  * - Compiler flags:
  *   - JVM-specific: strict null safety, context parameters, etc.
  *   - Multiplatform-specific: context parameters only
+ *
+ * Note: JVM target is configured separately by applyJvmCompilation()
  */
 fun Project.applyKotlinCompiler() {
     plugins.withType<KotlinBasePlugin> {
@@ -28,7 +29,7 @@ fun Project.applyKotlinCompiler() {
 
                 // JVM-specific configuration
                 if (this is KotlinJvmCompilerOptions) {
-                    jvmTarget.set(JvmTarget.JVM_21)
+                    // Note: jvmTarget is set by applyJvmCompilation()
 
                     // JVM-specific compiler flags
                     freeCompilerArgs.addAll(
