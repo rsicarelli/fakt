@@ -17,8 +17,32 @@ permissions:
   contents: read       # Required for checkout
 
 jobs:
+  check-code-changes:
+    name: Check Code Changes
+    runs-on: ubuntu-latest
+    outputs:
+      has-changes: ${{ steps.check.outputs.has-changes }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for documentation-only changes
+        uses: actions/github-script@v7
+        id: check
+        with:
+          script: |
+            const checkChangedFiles = require('./.github/scripts/check-changed-files.js');
+            return await checkChangedFiles({
+              github,
+              context,
+              core,
+              skipExtensions: ['.md', '.txt']
+            });
+
   validate-ktlint:
     name: Validate Ktlint
+    needs: [check-code-changes]
+    if: ${{ needs.check-code-changes.outputs.has-changes == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -32,6 +56,8 @@ jobs:
 
   validate-detekt:
     name: Validate Detekt
+    needs: [check-code-changes]
+    if: ${{ needs.check-code-changes.outputs.has-changes == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -45,6 +71,8 @@ jobs:
 
   validate-spotless:
     name: Validate Spotless
+    needs: [check-code-changes]
+    if: ${{ needs.check-code-changes.outputs.has-changes == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -58,6 +86,8 @@ jobs:
 
   validate-licenses:
     name: Validate Licenses
+    needs: [check-code-changes]
+    if: ${{ needs.check-code-changes.outputs.has-changes == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -71,6 +101,8 @@ jobs:
 
   validate-api:
     name: Validate API
+    needs: [check-code-changes]
+    if: ${{ needs.check-code-changes.outputs.has-changes == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -84,6 +116,8 @@ jobs:
 
   run-tests:
     name: Run Tests
+    needs: [check-code-changes]
+    if: ${{ needs.check-code-changes.outputs.has-changes == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -97,6 +131,8 @@ jobs:
 
   test-samples:
     name: Test Samples
+    needs: [check-code-changes]
+    if: ${{ needs.check-code-changes.outputs.has-changes == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -107,3 +143,39 @@ jobs:
 
       - name: Run Sample Tests
         uses: ./.github/actions/test-samples
+
+  ci-summary:
+    name: CI Summary
+    if: always()
+    runs-on: ubuntu-latest
+    needs:
+      - check-code-changes
+      - validate-ktlint
+      - validate-detekt
+      - validate-spotless
+      - validate-licenses
+      - validate-api
+      - run-tests
+      - test-samples
+    steps:
+      - name: Check CI status
+        run: |
+          if [[ "${{ needs.check-code-changes.outputs.has-changes }}" == "false" ]]; then
+            echo "✅ Documentation-only changes - all jobs skipped successfully"
+            exit 0
+          fi
+
+          # Check if any job failed
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            echo "❌ Some CI jobs failed"
+            exit 1
+          fi
+
+          # Check if any job was cancelled
+          if [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "⚠️  Some CI jobs were cancelled"
+            exit 1
+          fi
+
+          echo "✅ All CI jobs passed successfully"
+          exit 0
