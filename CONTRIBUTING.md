@@ -28,7 +28,7 @@ Thank you for your interest in contributing to Fakt! This document provides guid
 ```bash
 # Clone the repository
 git clone https://github.com/rsicarelli/fakt.git
-cd fakt/ktfake
+cd fakt
 
 # Publish plugin locally (⭐ use this for development!)
 make publish-local
@@ -53,7 +53,7 @@ make test-sample
 # Fork the repository on GitHub
 # Clone your fork
 git clone https://github.com/YOUR_USERNAME/fakt.git
-cd fakt/ktfake
+cd fakt
 
 # Add upstream remote
 git remote add upstream https://github.com/rsicarelli/fakt.git
