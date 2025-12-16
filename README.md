@@ -106,6 +106,12 @@ assertEquals(1, fake.trackCallCount.value)
 
 ---
 
+## 🐜 Our Mascot
+
+Meet our mascot, the [Giant Anteater](https://en.wikipedia.org/wiki/Giant_anteater)! Just like they eat bugs in nature, Fakt catches drift bugs at compile-time before they reach production.
+
+---
+
 ## License
 
 ```
