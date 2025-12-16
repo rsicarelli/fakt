@@ -317,7 +317,7 @@ class CompilationSuccessRateTest {
 
 ### **Compiler Test Structure (Future)**
 ```
-ktfake/
+fakt/
 ├── compiler-tests/           # Metro-inspired testing
 │   ├── data/
 │   │   ├── box/             # Full compilation + execution
@@ -329,7 +329,7 @@ ktfake/
 
 ### **Box Test Example**
 ```kotlin
-// ktfake/compiler-tests/data/box/basicFakeGeneration.kt
+// fakt/compiler-tests/data/box/basicFakeGeneration.kt
 import dev.rsicarelli.ktfake.Fake
 
 @Fake

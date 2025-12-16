@@ -470,7 +470,7 @@ private fun reportTypeSafetyIssue(element: IrElement, issue: TypeSafetyIssue) {
 - **Compilation Validation**: `.claude/docs/validation/compilation-validation.md`
 - **Metro Alignment**: `.claude/docs/development/metro-alignment.md`
 - **Kotlin API Reference**: `.claude/docs/development/kotlin-api-reference.md`
-- **Generic Scoping Analysis**: `ktfake/docs/GENERIC_TYPE_SCOPING_ANALYSIS.md`
+- **Generic Scoping Analysis**: `fakt/docs/GENERIC_TYPE_SCOPING_ANALYSIS.md`
 
 ---
 

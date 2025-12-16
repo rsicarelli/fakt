@@ -4,7 +4,6 @@ Thank you for your interest in contributing to Fakt! This document provides guid
 
 ## Table of Contents
 
-- [Code of Conduct](#code-of-conduct)
 - [Getting Started](#getting-started)
 - [Development Setup](#development-setup)
 - [Making Changes](#making-changes)
@@ -12,12 +11,6 @@ Thank you for your interest in contributing to Fakt! This document provides guid
 - [Pull Request Process](#pull-request-process)
 - [Commit Convention](#commit-convention)
 - [Community](#community)
-
----
-
-## Code of Conduct
-
-This project adheres to the Contributor Covenant [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
 
 ---
 
@@ -37,9 +30,9 @@ This project adheres to the Contributor Covenant [Code of Conduct](CODE_OF_CONDU
 git clone https://github.com/rsicarelli/fakt.git
 cd fakt/ktfake
 
-# Build the project
-make shadowJar
-# or: ./gradlew :compiler:shadowJar
+# Publish plugin locally (⭐ use this for development!)
+make publish-local
+# or: ./gradlew publishToMavenLocal
 
 # Run tests
 make test
@@ -80,8 +73,9 @@ git checkout -b feature/my-awesome-feature
 ### 3. Build and Test
 
 ```bash
-# Full build (includes compiler plugin shadowJar)
-make shadowJar
+# Publish plugin locally (⭐ correct workflow for development)
+make publish-local
+# This compiles, generates shadowJar, and publishes to ~/.m2/repository
 
 # Run all validations
 make test              # Tests
@@ -89,14 +83,14 @@ make test              # Tests
 ./gradlew spotlessCheck # Format check
 ./gradlew checkLicense  # License audit
 
-# Test with samples
+# Test with samples (composite builds auto-rebuild plugin!)
 make test-sample       # Single-module sample
 ```
 
 ### 4. IDE Setup
 
 **IntelliJ IDEA (Recommended):**
-1. Open `ktfake/` directory
+1. Open `fakt/` directory
 2. Import as Gradle project
 3. Wait for Gradle sync
 4. Enable Kotlin plugin
@@ -113,7 +107,7 @@ make test-sample       # Single-module sample
 ### Project Structure
 
 ```
-ktfake/
+fakt/
 ├── compiler/           # Main compiler plugin (FIR + IR)
 ├── compiler-api/       # Serialization models
 ├── gradle-plugin/      # Gradle plugin
@@ -194,14 +188,23 @@ val mock = mockk<Service>()
 
 ### 1. Before Submitting
 
-**Run all validations:**
+**Run all validations (single command):**
 ```bash
-./gradlew spotlessApply  # Format code
-./gradlew lintKotlin     # Ktlint
-./gradlew detekt         # Static analysis
-./gradlew test           # All tests
-./gradlew checkLicense   # License audit
+# ⭐ Run all checks like CI does
+make validate
+
+# Or manually format first, then validate
+make format        # Auto-fix formatting issues
+make validate      # Run all validations
 ```
+
+**The `validate` target runs:**
+1. ✅ Format & lint checks (spotless, ktlint)
+2. ✅ Static analysis (detekt)
+3. ✅ License audit
+4. ✅ All tests
+5. ✅ Plugin publishing (local Maven)
+6. ✅ Sample builds (integration test)
 
 ### 2. Commit Your Changes
 
@@ -314,8 +317,6 @@ BREAKING CHANGE: The @Fake annotation now requires explicit target specification
    - Alternatives considered (optional)
    - Your project setup (optional)
 
-**Recognition:** Feature contributors will be acknowledged in release notes and [CONTRIBUTORS.md](CONTRIBUTORS.md)!
-
 ---
 
 ## License
@@ -326,8 +327,6 @@ By contributing to Fakt, you agree that your contributions will be licensed unde
 
 ## Questions?
 
-If you have questions not covered here, feel free to:
-- Open a [Discussion](https://github.com/rsicarelli/fakt/discussions)
-- Reach out to [@rsicarelli](https://github.com/rsicarelli)
+If you have questions not covered here, feel free to reach out to [@rsicarelli](https://github.com/rsicarelli)
 
 Thank you for contributing! 🚀

@@ -206,43 +206,56 @@ class ServiceTest {
 
 ## 🔧 **Development Workflow**
 
-### **Build Plugin**
+### **Build & Publish Plugin Locally**
 ```bash
-./gradlew :compiler:shadowJar
+# ⭐ Correct workflow for development
+./gradlew publishToMavenLocal  # or: make publish-local
+# This compiles, generates shadowJar, and publishes to ~/.m2/repository
+# No GPG signing required locally!
 ```
 
 ### **Test Generation**
 ```bash
-cd test-sample
-../gradlew compileKotlinJvm  # Generates fakes
-ls build/generated/ktfake/test/kotlin/  # See generated code
+cd samples/kmp-single-module
+../../gradlew compileKotlinJvm  # Generates fakes (composite builds auto-rebuild plugin!)
+ls build/generated/fakt/test/kotlin/  # See generated code
 ```
 
 ### **Run Tests**
 ```bash
-./gradlew test  # All tests
-cd test-sample && ../gradlew jvmTest  # Integration tests
+./gradlew test  # All compiler plugin tests
+cd samples/kmp-single-module && ../../gradlew jvmTest  # Integration tests
 ```
 
 ### **Debug Issues**
 ```bash
-# Verbose compilation with KtFakes output
-../gradlew compileKotlinJvm -i | grep -E "(KtFakes|Generated|ERROR)"
+# Verbose compilation with Fakt output
+cd samples/kmp-single-module
+../../gradlew compileKotlinJvm -i | grep -E "(Fakt|Generated|ERROR)"
+
+# Or use the make target
+make debug  # From fakt/ root
+```
+
+### **Quick Development Cycle**
+```bash
+# Samples use composite builds - plugin rebuilds automatically!
+make quick-test  # Clean + rebuild + test sample
 ```
 
 ## 📁 **Project Structure**
 
 ```
 ktfakes-prototype/
-├── ktfake/                          # Core project
+├── fakt/                          # Core project
 │   ├── compiler/                    # Unified IR-native compiler
-│   │   └── src/main/kotlin/dev/rsicarelli/ktfake/compiler/
+│   │   └── src/main/kotlin/dev/rsicarelli/fakt/compiler/
 │   │       ├── KtFakeCompilerPluginRegistrar.kt    # Plugin entry
 │   │       └── UnifiedKtFakesIrGenerationExtension.kt # Main generator
 │   ├── runtime/                     # Annotations and runtime API
 │   ├── gradle-plugin/               # Gradle integration
 │   └── test-sample/                 # Working examples ✅
-│       └── build/generated/ktfake/test/kotlin/     # Generated fakes
+│       └── build/generated/fakt/test/kotlin/     # Generated fakes
 └── .claude/                         # Claude Code documentation
     ├── docs/                        # Technical documentation
     └── commands/                    # Development commands

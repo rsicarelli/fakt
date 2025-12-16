@@ -111,7 +111,7 @@ for (file in moduleFragment.files) {
 ### **Module Structure (TDD-Driven)**
 ```
 compiler-runtime/
-├── src/main/kotlin/dev/rsicarelli/ktfake/runtime/
+├── src/main/kotlin/dev/rsicarelli/fakt/runtime/
 │   ├── TypeAnalysisCache.kt              # Essential - O(n) optimization
 │   ├── MemoryOptimizedIrGenerator.kt     # Essential - object pooling
 │   ├── IncrementalCompilationManager.kt  # Essential - incremental builds

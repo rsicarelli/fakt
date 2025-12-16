@@ -60,7 +60,7 @@ public class MetroCompilerPluginRegistrar : CompilerPluginRegistrar() {
 
 **KtFakes Application:**
 ```kotlin
-// ktfake/compiler/src/main/kotlin/dev/rsicarelli/ktfake/compiler/KtFakeCompilerPluginRegistrar.kt
+// fakt/compiler/src/main/kotlin/dev/rsicarelli/fakt/compiler/KtFakeCompilerPluginRegistrar.kt
 public class KtFakeCompilerPluginRegistrar : CompilerPluginRegistrar() {
     override val supportsK2: Boolean = true
 
@@ -99,7 +99,7 @@ public class MetroIrGenerationExtension(...) : IrGenerationExtension {
 
 **KtFakes Application:**
 ```kotlin
-// ktfake/compiler/src/main/kotlin/.../UnifiedKtFakesIrGenerationExtension.kt
+// fakt/compiler/src/main/kotlin/.../UnifiedKtFakesIrGenerationExtension.kt
 public class UnifiedKtFakesIrGenerationExtension(...) : IrGenerationExtension {
     override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
         // Follow Metro pattern: create context first
@@ -133,9 +133,9 @@ metro/
 **KtFakes Alignment:**
 ```
 ktfakes-prototype/
-├── ktfake/compiler/src/test/         # Legacy tests (some)
-├── ktfake/compiler-tests/ (future)   # JetBrains testing infrastructure
-└── ktfake/test-sample/              # Real-world integration ✅
+├── fakt/compiler/src/test/         # Legacy tests (some)
+├── fakt/compiler-tests/ (future)   # JetBrains testing infrastructure
+└── fakt/test-sample/              # Real-world integration ✅
 ```
 
 **Testing Pattern Application:**
@@ -178,7 +178,7 @@ data class MetroOptions(
 
 **KtFakes Options Application:**
 ```kotlin
-// ktfake/compiler/src/main/kotlin/.../KtFakeOptions.kt
+// fakt/compiler/src/main/kotlin/.../KtFakeOptions.kt
 data class KtFakeOptions(
     val enabled: Boolean = true,
     val debug: Boolean = false,

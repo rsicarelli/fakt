@@ -216,8 +216,8 @@ Fakt uses Claude Code Skills for autonomous, context-aware development assistanc
 ## 🔗 **External References**
 
 ### **Project Documentation**
-- **[ktfake/docs/](../docs/)** - User-facing documentation (MkDocs)
-- **[ktfake/CLAUDE.md](../CLAUDE.md)** - Main project context file
+- **[fakt/docs/](../docs/)** - User-facing documentation (MkDocs)
+- **[fakt/CLAUDE.md](../CLAUDE.md)** - Main project context file
 - **[Metro Framework](https://github.com/kotlinx/metro)** - Architectural inspiration
 - **[Kotlin Compiler](https://github.com/JetBrains/kotlin)** - IR API reference
 

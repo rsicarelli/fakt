@@ -1,5 +1,5 @@
 # Fakt Development Commands
-# Run from ktfake/ directory (cd ktfake && make <command>)
+# Run from fakt/ directory (or from project root)
 
 .PHONY: build test compile clean format shadowJar test-sample validate quick-test full-rebuild
 
@@ -28,8 +28,13 @@ format:
 
 # Compiler plugin specific
 shadowJar:
-	@echo "📦 Building compiler plugin JAR..."
+	@echo "📦 Building compiler plugin JAR (debug only - use publish-local for actual usage)..."
 	./gradlew :compiler:shadowJar
+
+# Local publishing (use this for development!)
+publish-local:
+	@echo "📤 Publishing to Maven Local (no signing required locally)..."
+	./gradlew publishToMavenLocal --no-daemon
 
 # Test samples (now composite builds - auto-rebuild plugin!)
 test-sample:
@@ -41,8 +46,28 @@ test-kmp-multi-module:
 	@echo "🏢 Testing kmp-multi-module sample (composite build)..."
 	cd samples/kmp-multi-module && ./gradlew :app:build
 
-# Comprehensive validation workflow
-validate: shadowJar test-sample test
+# Comprehensive validation workflow (runs all checks like CI)
+validate:
+	@echo "🔍 Running comprehensive validation..."
+	@echo ""
+	@echo "1️⃣ Formatting and linting..."
+	./gradlew spotlessCheck ktlintCheck
+	@echo ""
+	@echo "2️⃣ Static analysis..."
+	./gradlew detekt
+	@echo ""
+	@echo "3️⃣ License audit..."
+	./gradlew checkLicense
+	@echo ""
+	@echo "4️⃣ Running tests..."
+	./gradlew test
+	@echo ""
+	@echo "5️⃣ Publishing plugin locally..."
+	./gradlew publishToMavenLocal --no-daemon
+	@echo ""
+	@echo "6️⃣ Testing samples..."
+	cd samples/kmp-single-module && ../../gradlew build
+	@echo ""
 	@echo "✅ Full validation complete!"
 
 # Quick development cycle (composite build auto-rebuilds plugin!)
@@ -55,7 +80,7 @@ quick-test:
 full-rebuild:
 	@echo "💥 Full rebuild with clean slate..."
 	./gradlew clean --no-build-cache
-	./gradlew :compiler:shadowJar
+	./gradlew publishToMavenLocal --no-daemon
 	cd samples/kmp-single-module && rm -rf build/generated
 	cd samples/kmp-single-module && ./gradlew build
 
@@ -74,11 +99,12 @@ help:
 	@echo "  clean           - Clean build artifacts"
 	@echo "  format          - Format code with Spotless + ktlint"
 	@echo ""
-	@echo "  shadowJar       - Build compiler plugin JAR"
+	@echo "  shadowJar       - Build compiler plugin JAR (debug only)"
+	@echo "  publish-local   - Publish to Maven Local (⭐ use this for development!)"
 	@echo "  test-sample     - Test kmp-single-module sample (composite build)"
 	@echo "  test-kmp-multi-module - Test kmp-multi-module sample (composite build)"
 	@echo ""
-	@echo "  validate        - Full validation workflow"
+	@echo "  validate        - ⭐ Run all validations (format, lint, tests, samples)"
 	@echo "  quick-test      - Quick development cycle (auto-rebuilds plugin!)"
 	@echo "  full-rebuild    - Nuclear rebuild option"
 	@echo "  debug           - Debug compiler plugin output"
@@ -86,3 +112,4 @@ help:
 	@echo "  help            - Show this help"
 	@echo ""
 	@echo "🎯 Note: Samples are now composite builds! Plugin changes auto-rebuild."
+	@echo "💡 Tip: Use 'validate' before committing - runs all checks like CI!"
