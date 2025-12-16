@@ -189,7 +189,9 @@ Solution:
 3. Check JAR contents:
    jar tf compiler/build/libs/compiler-*.jar | grep CompilerPluginRegistrar
 
-4. Re-run compilation:
+4. Re-run compilation across platforms:
+   ./gradlew :samples:jvm-single-module:build
+   ./gradlew :samples:android-single-module:build
    ./gradlew :samples:kmp-single-module:compileKotlinJvm
 
 Verification:

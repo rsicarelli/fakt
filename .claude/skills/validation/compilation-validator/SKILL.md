@@ -59,7 +59,9 @@ cd /Users/rsicarelli/Workspace/Personal/ktfakes-prototype/ktfake
 
 **Compile to generate fakes:**
 ```bash
-# For samples
+# Test across all platforms
+./gradlew :samples:jvm-single-module:build
+./gradlew :samples:android-single-module:build
 ./gradlew :samples:kmp-single-module:compileKotlinJvm --no-build-cache
 
 # Or for specific module

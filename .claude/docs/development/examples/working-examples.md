@@ -8,6 +8,21 @@
 
 This document provides real, working examples of KtFakes usage from basic scenarios to advanced patterns. All examples are tested and validated against the current unified IR-native implementation.
 
+## Quick Reference
+
+**Single-Platform Samples:**
+- `samples/jvm-single-module`: JVM-only, standard kotlin-jvm plugin
+- `samples/android-single-module`: Android Library, AGP 8.12.3+
+
+**Multi-Platform Samples:**
+- `samples/kmp-single-module`: Basic KMP with all targets
+- `samples/kmp-multi-module`: Advanced multi-module KMP architecture
+
+All samples include the same core scenarios for consistency:
+- UserRepository (CRUD + call tracking)
+- AuthenticationService (suspend + Result types)
+- PropertyAndMethodInterface (properties + methods)
+
 ## 🚀 **Quick Start Examples**
 
 ### **Example 1: Basic Service Testing**

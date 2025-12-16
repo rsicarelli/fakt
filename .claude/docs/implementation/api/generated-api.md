@@ -2,7 +2,7 @@
 
 > **Status**: Production-Ready
 > **Last Updated**: January 2025
-> **Source**: Real examples from kmp-single-module sample project
+> **Source**: Real examples from sample projects (jvm-single-module, android-single-module, kmp-single-module)
 
 ## Overview
 
