@@ -30,12 +30,12 @@ val fake = fakeUserRepository {
 
 ## 🤔 Why Fakt?
 
-- **Manual fakes scale poorly** each type needs custom tracking, config, or cleanup code
-- **Manual fakes rot over time** behavior diverges from real implementations without compile-time warnings
-- **Mocks verify interactions, not behavior** testing how dependencies are called, not what code achieves
-- **Mocks make refactoring painful** tests break even when behavior stays correct
-- **[Google explicitly prefers fakes](https://developer.android.com/training/testing/fundamentals/test-doubles)** lightweight, framework-free, and resilient to refactoring
-- **Compile-time generation solves both problems** automated fakes that never drift from interfaces
+- **Manual fakes scale poorly** - Each type needs custom tracking, config, or cleanup code
+- **Manual fakes rot over time** - Behavior diverges from real implementations without compile-time warnings
+- **Mocks verify interactions, not behavior** - Testing how dependencies are called, not what code achieves
+- **Mocks make refactoring painful** - Tests break even when behavior stays correct
+- **[Google explicitly prefers fakes](https://developer.android.com/training/testing/fundamentals/test-doubles)** - Lightweight, framework-free, and resilient to refactoring
+- **Compile-time generation solves both problems** - Automated fakes that never drift from interfaces
 
 
 ## ✨ Key Features
