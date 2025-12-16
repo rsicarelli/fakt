@@ -60,7 +60,7 @@ fakt/
 │   └── types/
 │       ├── TypeResolver.kt                  # Type system handling
 │       └── ImportResolver.kt                # Cross-module imports
-├── runtime/                           # Multiplatform annotations
+├── annotations/                       # Multiplatform annotations (zero runtime overhead)
 │   └── @Fake                             # Main annotation
 ├── gradle-plugin/                     # Gradle integration
 └── samples/

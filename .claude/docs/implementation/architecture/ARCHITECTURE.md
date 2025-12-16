@@ -439,7 +439,7 @@ fakt/
 │           ├── extensions/           # High-level generators
 │           └── strategy/             # Default value strategies
 │
-├── runtime/                          # @Fake annotation (multiplatform)
+├── annotations/                          # @Fake annotation (multiplatform)
 ├── gradle-plugin/                    # Gradle integration
 └── samples/                          # Example projects
 ```

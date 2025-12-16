@@ -4,7 +4,7 @@
       <img src="FAKT_logo.png" alt="Fakt Logo" width="120" align="left" hspace="20"><h1>Fakt</h1>
       <p>
       <a href="https://github.com/rsicarelli/fakt/actions/workflows/continuous-deploy.yml"><img src="https://img.shields.io/github/actions/workflow/status/rsicarelli/fakt/continuous-deploy.yml" alt="Build"></a>
-      <a href="https://search.maven.org/search?q=g:com.rsicarelli.fakt"><img src="https://img.shields.io/maven-central/v/com.rsicarelli.fakt/runtime" alt="Maven Central"></a>
+      <a href="https://search.maven.org/search?q=g:com.rsicarelli.fakt"><img src="https://img.shields.io/maven-central/v/com.rsicarelli.fakt/annotations" alt="Maven Central"></a>
       <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License"></a>
       <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.2.21%2B-blue" alt="Kotlin"></a>
       <a href="https://rsicarelli.github.io/fakt/"><img src="https://img.shields.io/badge/docs-mkdocs-blue" alt="Documentation"></a>
@@ -62,7 +62,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation("com.rsicarelli.fakt:runtime:x.y.z")
+                implementation("com.rsicarelli.fakt:annotations:x.y.z")
             }
         }
     }

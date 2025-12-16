@@ -30,7 +30,7 @@ kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref 
 fakt = { id = "com.rsicarelli.fakt", version.ref = "fakt" }
 
 [libraries]
-fakt-runtime = { module = "com.rsicarelli.fakt:runtime", version.ref = "fakt" }
+fakt-annotations = { module = "com.rsicarelli.fakt:annotations", version.ref = "fakt" }
 ```
 
 **Root `build.gradle.kts`:**
@@ -59,7 +59,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.fakt.runtime)
+            implementation(libs.fakt.annotations)
         }
     }
 }
@@ -82,7 +82,7 @@ plugins {
 }
 
 dependencies {
-    implementation(libs.fakt.runtime)
+    implementation(libs.fakt.annotations)
 }
 ```
 
@@ -96,7 +96,7 @@ plugins {
 }
 
 dependencies {
-    implementation(libs.fakt.runtime)
+    implementation(libs.fakt.annotations)
 }
 ```
 

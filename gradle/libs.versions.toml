@@ -34,7 +34,7 @@ coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", ve
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 
 # Fakt Internal Dependencies (using published Maven Central coordinates)
-fakt-runtime = { module = "com.rsicarelli.fakt:runtime", version.ref = "fakt" }
+fakt-annotations = { module = "com.rsicarelli.fakt:annotations", version.ref = "fakt" }
 
 # Gradle Plugins (for build-logic classpath)
 binaryCompatibilityValidator-gradlePlugin = { module = "org.jetbrains.kotlinx.binary-compatibility-validator:org.jetbrains.kotlinx.binary-compatibility-validator.gradle.plugin", version.ref = "binaryCompatibilityValidator" }

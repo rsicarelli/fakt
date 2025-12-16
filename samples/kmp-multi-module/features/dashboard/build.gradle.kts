@@ -10,7 +10,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(libs.fakt.runtime)
+                implementation(libs.fakt.annotations)
                 implementation(libs.coroutines)
 
                 implementation(projects.core.analytics)
