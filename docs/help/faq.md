@@ -175,7 +175,6 @@ Contributions are welcome! See the [Complete Contributing Guide](https://github.
 2. 💡 [Suggest features](https://github.com/rsicarelli/fakt/issues/new?template=feature_request.yml) - We love hearing your ideas!
 3. 📖 Improve documentation
 4. 🧪 Add tests or examples
-5. 💬 Help answer questions in [Discussions](https://github.com/rsicarelli/fakt/discussions)
 
 **Your feature requests shape our roadmap!**
 
@@ -208,5 +207,4 @@ See [Troubleshooting Guide](troubleshooting.md) for diagnostic steps.
 ## Still Have Questions?
 
 - [Troubleshooting](troubleshooting.md) - Common issues and solutions
-- [GitHub Discussions](https://github.com/rsicarelli/fakt/discussions) - Ask the community
-- [GitHub Issues](https://github.com/rsicarelli/fakt/issues) - Report bugs
+- [GitHub Issues](https://github.com/rsicarelli/fakt/issues) - Report bugs or suggest features
