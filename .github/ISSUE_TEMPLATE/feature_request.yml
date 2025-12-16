@@ -45,23 +45,30 @@ body:
   - type: textarea
     id: alternatives
     attributes:
-      label: Alternatives considered (optional)
+      label: Alternatives considered
       description: Any other approaches you've thought about?
     validations:
       required: false
 
   - type: dropdown
-    id: project-context
+    id: platform
     attributes:
-      label: Your Project Setup (optional)
-      description: Helps us understand the scope and priority
+      label: Platform
+      description: What platform are you targeting?
       options:
-        - Single-module JVM/Android
-        - Multiplatform (KMP)
-        - Multi-module setup
-        - Not applicable
+        - Kotlin Multiplatform (KMP)
+        - JVM only
+        - Android only
     validations:
       required: false
+
+  - type: checkboxes
+    id: module-setup
+    attributes:
+      label: Module Setup
+      options:
+        - label: Single-module
+        - label: Multi-module
 
   - type: checkboxes
     id: checklist
@@ -69,4 +76,3 @@ body:
       label: Checklist
       options:
         - label: I searched existing issues and didn't find a duplicate
-          required: true
