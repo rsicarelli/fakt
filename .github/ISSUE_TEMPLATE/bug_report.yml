@@ -27,82 +27,86 @@ body:
       required: true
 
   - type: dropdown
-    id: project-type
+    id: platform
     attributes:
-      label: Project Type
-      description: How is your project structured?
+      label: Platform
+      description: What platform are you targeting?
       options:
-        - Single-module JVM/Android
-        - Multiplatform (KMP)
-        - Multi-module setup
+        - Kotlin Multiplatform (KMP)
+        - JVM only
+        - Android only
     validations:
       required: true
 
   - type: textarea
-    id: description
+    id: bug-description
     attributes:
-      label: What's happening?
-      description: Describe the bug and what you expected to happen
+      label: Bug Description
+      description: |
+        Describe the issue including:
+        - What's happening vs what you expected
+        - Steps to reproduce
+        - Minimal code example
+        - Error message and build logs (with DEBUG logging if possible)
       placeholder: |
-        When I annotate my interface with @Fake, I expected X but got Y.
+        **What's happening:**
+        When I annotate my interface with @Fake, I expected the fake to compile but the build fails.
 
-        Expected: The fake should compile
-        Actual: Build fails with error...
-    validations:
-      required: true
-
-  - type: textarea
-    id: reproduction
-    attributes:
-      label: How to reproduce
-      description: Steps to reproduce the bug
-      placeholder: |
-        1. Create interface with @Fake
+        **How to reproduce:**
+        1. Create interface with @Fake annotation
         2. Run `./gradlew build`
         3. See error...
-    validations:
-      required: true
 
-  - type: textarea
-    id: platform-info
-    attributes:
-      label: Platform Info (optional)
-      description: For KMP projects - Gradle version and targets
-      placeholder: |
-        Gradle: 8.4
-        Targets: jvm, iosArm64, iosSimulatorArm64
-    validations:
-      required: false
-
-  - type: textarea
-    id: logs-and-reproduction
-    attributes:
-      label: Build Logs & Minimal Reproduction
-      description: |
-        To diagnose the issue, please include:
-        1. Minimal reproduction code (interface + usage)
-        2. Error message / stack trace
-        3. Build logs with DEBUG logging enabled:
-           ```kotlin
-           fakt {
-               logLevel.set(LogLevel.DEBUG)
-           }
-           ```
-        4. Full build output: `./gradlew build --info`
-
-        See [Troubleshooting Guide](https://rsicarelli.github.io/fakt/help/troubleshooting/)
-      render: shell
-      placeholder: |
+        **Code example:**
+        ```kotlin
         @Fake
         interface MyService {
             fun doSomething(): String
         }
+        ```
 
-        // Build output:
+        **Error / Build logs:**
+        ```
         ./gradlew build --info
-        ...
+
+        > Task :compileKotlin FAILED
+        e: Error message here...
+        ```
+
+        **DEBUG logging (optional but helpful):**
+        Add to build.gradle.kts:
+        ```kotlin
+        fakt {
+            logLevel.set(LogLevel.DEBUG)
+        }
+        ```
     validations:
       required: true
+
+  - type: input
+    id: gradle-version
+    attributes:
+      label: Gradle Version
+      placeholder: "e.g., 8.4"
+    validations:
+      required: false
+
+  - type: input
+    id: kmp-targets
+    attributes:
+      label: KMP Targets (if KMP selected above)
+      description: Which KMP targets are you using?
+      placeholder: "e.g., jvm, iosArm64, iosSimulatorArm64, js"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: module-setup
+    attributes:
+      label: Module Setup
+      options:
+        - label: Single-module
+        - label: Multi-module
 
   - type: checkboxes
     id: checklist
@@ -110,4 +114,3 @@ body:
       label: Checklist
       options:
         - label: I searched existing issues and didn't find a duplicate
-          required: true
