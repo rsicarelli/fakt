@@ -10,7 +10,7 @@ Step-by-step procedures for diagnosing Fakt compilation errors.
 
 1. **Verify Plugin Build**
    ```bash
-   cd ktfake
+   cd fakt
    ./gradlew :compiler:shadowJar
    ls -la compiler/build/libs/compiler-*.jar
    ```
@@ -370,7 +370,7 @@ rm -rf ~/.gradle/caches/
 rm -rf ~/.m2/repository/com/rsicarelli/fakt/
 
 # 2. Rebuild from scratch
-cd ktfake
+cd fakt
 ./gradlew :compiler:shadowJar
 ./gradlew :compiler:publishToMavenLocal
 ./gradlew :gradle-plugin:publishToMavenLocal

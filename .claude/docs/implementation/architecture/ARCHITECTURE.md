@@ -395,7 +395,7 @@ class FakeDataServiceImpl : DataService {
 ## File Structure Reference
 
 ```
-ktfake/
+fakt/
 ├── compiler/
 │   └── src/main/kotlin/com/rsicarelli/fakt/
 │       ├── compiler/

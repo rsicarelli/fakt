@@ -180,7 +180,7 @@ Root Cause:
 
 Solution:
 1. Rebuild compiler plugin:
-   cd ktfake
+   cd fakt
    ./gradlew :compiler:clean :compiler:shadowJar
 
 2. Verify JAR exists:
@@ -361,7 +361,7 @@ Root Cause:
 
 Solution:
 1. Publish compiler to local Maven:
-   cd ktfake
+   cd fakt
    ./gradlew :compiler:publishToMavenLocal :gradle-plugin:publishToMavenLocal
 
 2. Check local Maven repository:
@@ -447,7 +447,7 @@ ${command_2}
 # Expected: 2.0.0+
 
 # 2. Check plugin build
-ls -la ktfake/compiler/build/libs/
+ls -la fakt/compiler/build/libs/
 # Should contain compiler-*.jar
 
 # 3. Check local Maven
@@ -558,7 +558,7 @@ This Skill composes with:
 **One-liner checks:**
 ```bash
 # Plugin JAR exists?
-ls -la ktfake/compiler/build/libs/compiler-*.jar
+ls -la fakt/compiler/build/libs/compiler-*.jar
 
 # Published to Maven?
 ls -la ~/.m2/repository/com/rsicarelli/fakt/compiler/

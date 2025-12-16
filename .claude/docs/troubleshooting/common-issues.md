@@ -90,7 +90,7 @@ Class 'FakeServiceImpl' is defined multiple times
 **Solution:**
 1. Clean generated files:
 ```bash
-rm -rf build/generated/ktfake/
+rm -rf build/generated/fakt/
 ./gradlew clean
 ```
 
@@ -320,7 +320,7 @@ interface SharedService { ... } // Duplicate
 ./gradlew :compiler:test :test-sample:jvmTest
 
 # Check generated code location
-ls -la build/generated/ktfake/test/kotlin/
+ls -la build/generated/fakt/test/kotlin/
 
 # Verify plugin registration
 ./gradlew :test-sample:dependencies | grep ktfake

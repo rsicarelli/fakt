@@ -1,7 +1,7 @@
 # Testing Guidelines - KtFakes Compiler Plugin
 
 > **THE BIBLE**: This is our **absolute testing standard**
-> **Source**: Based on `/ktfake/docs/TESTING_GUIDELINES.md`
+> **Source**: Based on `/fakt/docs/TESTING_GUIDELINES.md`
 > **Applies to**: ALL test code in documentation, examples, and implementations
 
 ## 🎯 **Golden Rule**

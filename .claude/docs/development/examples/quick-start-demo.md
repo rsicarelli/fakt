@@ -213,20 +213,24 @@ fun `user registration should work end-to-end`() = runTest {
 
 ## 🔧 **Development Workflow**
 
-### **1. Build the Plugin**
+### **1. Publish Plugin Locally**
 ```bash
-./gradlew :compiler:shadowJar
+# ⭐ Correct workflow for development
+./gradlew publishToMavenLocal  # or: make publish-local
+# Compiles, generates shadowJar, and publishes to ~/.m2/repository
+# No GPG signing required locally!
 ```
 
-### **2. Test Generation**
+### **2. Test Generation (Composite Builds)**
 ```bash
-cd test-sample
-../gradlew compileKotlinJvm  # Generates fakes automatically
+# Samples use composite builds - plugin rebuilds automatically!
+cd samples/kmp-single-module
+../../gradlew compileKotlinJvm  # Generates fakes automatically
 ```
 
 ### **3. Check Generated Code**
 ```bash
-ls build/generated/ktfake/test/kotlin/
+ls build/generated/fakt/test/kotlin/
 # See your generated fakes!
 ```
 

@@ -51,20 +51,24 @@ Fakt generates fakes at the appropriate test source set level:
 ## 🚀 **Running the Samples**
 
 ```bash
-# Build compiler plugin first
-./gradlew :compiler:shadowJar
-
-# Test kmp-single-module sample
+# Option 1: Using composite builds (⭐ recommended for development)
+# Samples auto-rebuild the plugin when needed!
 cd samples/kmp-single-module
 ../../gradlew build
 
-# Test kmp-multi-module sample
 cd samples/kmp-multi-module
+../../gradlew build
+
+# Option 2: Publishing plugin to local Maven first
+../../gradlew publishToMavenLocal  # or: make publish-local
+cd samples/kmp-single-module
 ../../gradlew build
 
 # Clean and regenerate all fakes
 ../../gradlew clean build --no-build-cache
 ```
+
+**💡 Note:** Samples use **composite builds** by default, which automatically rebuild the plugin when source changes. You typically don't need to run `publishToMavenLocal` unless testing published artifacts specifically.
 
 ## 📋 **Sample Validation Checklist**
 

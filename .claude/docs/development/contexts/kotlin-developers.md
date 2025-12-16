@@ -282,7 +282,7 @@ val service = fakeUserService {
 
 ### **Debugging Generated Code**
 ```kotlin
-// Generated code is in build/generated/ktfake/test/kotlin/
+// Generated code is in build/generated/fakt/test/kotlin/
 // You can navigate to generated implementation to understand behavior
 // Set breakpoints in your test configuration lambdas for debugging
 ```

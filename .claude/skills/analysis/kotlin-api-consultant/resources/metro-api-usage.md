@@ -469,5 +469,5 @@ fun `GIVEN interface with @Fake WHEN generating THEN should create implementatio
 ## References
 
 - Metro source: `/metro/compiler/src/main/kotlin/dev/zacsweers/metro/compiler/`
-- Fakt implementation: `ktfake/compiler/src/main/kotlin/com/rsicarelli/fakt/compiler/`
+- Fakt implementation: `fakt/compiler/src/main/kotlin/com/rsicarelli/fakt/compiler/`
 - Metro alignment docs: `.claude/docs/development/metro-alignment.md`

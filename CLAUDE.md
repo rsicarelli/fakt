@@ -45,7 +45,7 @@ Writing test fakes manually is tedious and error-prone. Fakt generates type-safe
 ### **Key Components**
 
 ```kotlin
-ktfake/
+fakt/
 ├── compiler/                          # Main compiler plugin
 │   ├── FaktCompilerPluginRegistrar.kt   # Entry point (Metro pattern)
 │   ├── UnifiedFaktIrGenerationExtension.kt  # IR generation
@@ -73,11 +73,11 @@ ktfake/
 ### **Development Workflow**
 
 ```bash
-# 🏗️ Build compiler plugin
-make shadowJar                                    # or: cd ktfake && ./gradlew :compiler:shadowJar
+# 📤 Publish to Maven Local (⭐ USE THIS for development!)
+make publish-local                                # Compiles + shadowJar + publishes (no signing locally!)
 
 # 🧪 Test working example
-make test-sample                                  # or: cd ktfake && ./gradlew :samples:kmp-single-module:build
+make test-sample                                  # or: cd fakt && ./gradlew :samples:kmp-single-module:build
 
 # ⚡ Quick rebuild cycle (no cache)
 make quick-test                                   # Rebuild plugin + test sample fresh
@@ -89,14 +89,24 @@ make full-rebuild                                 # Clean + rebuild everything
 make debug                                        # Show Fakt-specific logs
 
 # ✨ Format code (required before commits)
-make format                                       # or: cd ktfake && ./gradlew spotlessApply
+make format                                       # or: cd fakt && ./gradlew spotlessApply
 
 # 🧹 Clean build artifacts
-make clean                                        # or: cd ktfake && ./gradlew clean
+make clean                                        # or: cd fakt && ./gradlew clean
+
+# 🏗️ Build shadowJar only (debug/CI only - not needed for local dev!)
+make shadowJar                                    # or: cd fakt && ./gradlew :compiler:shadowJar
 
 # 📚 Show all commands
 make help
 ```
+
+**💡 Important:** `publish-local` (publishToMavenLocal) automatically:
+- Compiles Kotlin sources
+- Generates shadowJar with merged service files
+- Creates sources/javadoc artifacts
+- Publishes to `~/.m2/repository`
+- **Skips signing locally** (no GPG credentials needed)
 
 ### **Logging & Telemetry System**
 
@@ -255,7 +265,7 @@ Fakt includes 12 specialized skills that **automatically activate** based on you
 
 ### **Quick Reference**
 - **Makefile Commands**: `make help`
-- **Gradle Tasks**: `cd ktfake && ./gradlew tasks`
+- **Gradle Tasks**: `cd fakt && ./gradlew tasks`
 - **Debug Compilation**: `make debug` or `--info` flag
 
 ## 🎯 Do's and Don'ts
@@ -263,7 +273,7 @@ Fakt includes 12 specialized skills that **automatically activate** based on you
 ### **✅ ALWAYS DO**
 
 #### **Development**
-- ✅ Use `make` commands from project root (avoid `cd ktfake/` constantly)
+- ✅ Use `make` commands from project root (avoid `cd fakt/` constantly)
 - ✅ Test with `publishToMavenLocal` before claiming success
 - ✅ Verify generated code compiles without errors
 - ✅ Check both single-platform and KMP scenarios
@@ -379,7 +389,7 @@ interface UserService {
 
 ```bash
 # 1. Write failing test first (TDD)
-# In ktfake/compiler/src/test/kotlin/
+# In fakt/compiler/src/test/kotlin/
 @Test
 fun `GIVEN interface with feature X WHEN generating fake THEN should handle correctly`() = runTest {
     // Test implementation
@@ -395,7 +405,7 @@ make shadowJar
 make test-sample
 
 # 4. Verify generated code
-cat ktfake/samples/kmp-single-module/build/generated/fakt/test/kotlin/FakeXxxImpl.kt
+cat fakt/samples/kmp-single-module/build/generated/fakt/test/kotlin/FakeXxxImpl.kt
 
 # 5. Format and validate
 make format
@@ -452,13 +462,13 @@ make test
 
 **Entry Point:**
 ```kotlin
-ktfake/compiler/src/main/kotlin/com/rsicarelli/fakt/compiler/
+fakt/compiler/src/main/kotlin/com/rsicarelli/fakt/compiler/
 └── FaktCompilerPluginRegistrar.kt    # Service Loader entry, FIR + IR registration
 ```
 
 **Core Generation:**
 ```kotlin
-ktfake/compiler/src/main/kotlin/com/rsicarelli/fakt/compiler/
+fakt/compiler/src/main/kotlin/com/rsicarelli/fakt/compiler/
 ├── UnifiedFaktIrGenerationExtension.kt  # Main IR generation logic
 ├── analysis/InterfaceAnalyzer.kt        # Interface metadata extraction
 └── generation/
@@ -470,7 +480,7 @@ ktfake/compiler/src/main/kotlin/com/rsicarelli/fakt/compiler/
 **Testing:**
 ```kotlin
 .claude/docs/validation/testing-guidelines.md  # THE ABSOLUTE STANDARD
-ktfake/samples/kmp-single-module/              # Working KMP example project
+fakt/samples/kmp-single-module/              # Working KMP example project
 ```
 
 ---
@@ -494,4 +504,4 @@ ktfake/samples/kmp-single-module/              # Working KMP example project
 
 4. **Makefile Commands**
    - `make help` - Show all available commands
-   - Root-level commands avoid `cd ktfake/` constantly
+   - Root-level commands avoid `cd fakt/` constantly

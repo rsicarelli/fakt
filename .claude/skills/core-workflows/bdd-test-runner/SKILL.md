@@ -69,17 +69,17 @@ Files to fix:
 
 **All tests:**
 ```bash
-cd ktfake && ./gradlew test
+cd fakt && ./gradlew test
 ```
 
 **Compiler module only:**
 ```bash
-cd ktfake && ./gradlew :compiler:test
+cd fakt && ./gradlew :compiler:test
 ```
 
 **Pattern-based:**
 ```bash
-cd ktfake && ./gradlew :compiler:test --tests "*{Pattern}*"
+cd fakt && ./gradlew :compiler:test --tests "*{Pattern}*"
 
 # Examples:
 ./gradlew :compiler:test --tests "*Generic*"
