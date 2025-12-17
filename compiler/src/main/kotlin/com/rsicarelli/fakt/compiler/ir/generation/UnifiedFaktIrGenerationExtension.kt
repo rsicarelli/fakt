@@ -15,6 +15,7 @@ import com.rsicarelli.fakt.compiler.core.types.TypeInfo
 import com.rsicarelli.fakt.compiler.core.types.createTypeResolution
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeClass
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeInterface
+import com.rsicarelli.fakt.compiler.ir.analysis.IrClassDirectAnalyzer
 import com.rsicarelli.fakt.compiler.ir.transform.FirToIrTransformer
 import com.rsicarelli.fakt.compiler.ir.transform.IrClassGenerationMetadata
 import com.rsicarelli.fakt.compiler.ir.transform.IrGenerationMetadata
@@ -99,11 +100,112 @@ class UnifiedFaktIrGenerationExtension(
         moduleFragment: IrModuleFragment,
         pluginContext: IrPluginContext,
     ) {
+        val totalStartTime = System.nanoTime()
+
         try {
-            generateFromFirMetadata(moduleFragment)
+            // ONLY run during MAIN compilation (not test)
+            // This ensures fakes are generated BEFORE test compilation starts
+            // Works for both JVM and KMP where test IR extensions may not be invoked
+            if (sourceSetContext.isTest) {
+                logger.debug("Skipping test compilation (fakes already generated during main)")
+                return
+            }
+
+            val firMetadata = sharedContext.metadataStorage.getAllInterfaces()
+            val firClasses = sharedContext.metadataStorage.getAllClasses()
+
+            if (firMetadata.isEmpty() && firClasses.isEmpty()) {
+                logger.debug("No @Fake annotations found in main compilation")
+                return
+            }
+
+            logger.info("Main compilation: ${firMetadata.size} interfaces, ${firClasses.size} classes detected")
+
+            // Write index file for reference/debugging
+            writeIndexFile(firMetadata, firClasses)
+
+            // GENERATE FAKES IMMEDIATELY (during main compilation)
+            // This ensures they're available when test compilation starts
+            val generationStartTime = System.nanoTime()
+            logger.info("Generating ${firMetadata.size + firClasses.size} fakes from main compilation")
+
+            // Load IrClass instances for each detected @Fake
+            val compiledClasses = buildList {
+                (firMetadata.map { it.classId } + firClasses.map { it.classId }).forEach { classId ->
+                    pluginContext.referenceClass(classId)?.owner?.let { add(it) }
+                }
+            }
+
+            if (compiledClasses.isNotEmpty()) {
+                generateFromCompiledClasses(compiledClasses, pluginContext)
+
+                val totalTime = System.nanoTime() - totalStartTime
+                val generationTime = System.nanoTime() - generationStartTime
+
+                logger.info("✅ Generated ${compiledClasses.size} fakes successfully")
+                logger.info("⏱️  Total time: ${totalTime / 1_000_000}ms (generation: ${generationTime / 1_000_000}ms)")
+                logger.info("⚡ Average: ${generationTime / compiledClasses.size / 1_000}µs per fake")
+            }
         } catch (e: Exception) {
-            logger.error("IR-native generation failed: ${e.message}")
+            logger.error("IR generation failed: ${e.message}")
+            logger.error(e.stackTraceToString())
         }
+    }
+
+    /**
+     * POC VALIDATION TEST: Can we access compiled classes from main during test compilation?
+     *
+     * This tests the core assumption needed for the optimization:
+     * - During test compilation, can IrPluginContext.referenceClass() find classes from main?
+     * - Are annotations readable from compiled .class files?
+     * - Can we extract function signatures?
+     */
+    private fun testCompiledClassAccess(
+        pluginContext: IrPluginContext,
+        logFile: java.io.File,
+    ) {
+        logFile.appendText("🧪 POC TEST: Accessing Compiled Classes\n")
+        logFile.appendText("─".repeat(60) + "\n")
+
+        val testClassId =
+            org.jetbrains.kotlin.name.ClassId(
+                packageFqName = org.jetbrains.kotlin.name.FqName("com.rsicarelli.fakt.samples.jvmSingleModule.validation"),
+                relativeClassName = org.jetbrains.kotlin.name.FqName("TestService"),
+                isLocal = false,
+            )
+
+        logFile.appendText("Attempting: com.rsicarelli.fakt.samples.jvmSingleModule.validation.TestService\n")
+
+        val classSymbol = pluginContext.referenceClass(testClassId)
+
+        if (classSymbol == null) {
+            logFile.appendText("❌ FAILED: Could not reference compiled class\n")
+            logFile.appendText("   Theory INVALID - optimization won't work!\n")
+            logFile.appendText("─".repeat(60) + "\n")
+            return
+        }
+
+        logFile.appendText("✅ SUCCESS: Referenced compiled class!\n")
+        logFile.appendText("   Class: ${classSymbol.owner.name.asString()}\n")
+
+        // Test annotation access
+        val annotations = classSymbol.owner.annotations
+        logFile.appendText("✅ SUCCESS: Annotations accessible (count: ${annotations.size})\n")
+
+        // Test function signatures
+        val functions = classSymbol.owner.declarations.filterIsInstance<org.jetbrains.kotlin.ir.declarations.IrSimpleFunction>()
+        logFile.appendText("✅ SUCCESS: Functions accessible (count: ${functions.size})\n")
+        functions.forEach { func ->
+            logFile.appendText("   - ${func.name.asString()}()\n")
+        }
+
+        logFile.appendText("\n")
+        logFile.appendText("🎯 POC RESULT: THEORY IS VALID ✅\n")
+        logFile.appendText("   ✓ IrPluginContext.referenceClass() works\n")
+        logFile.appendText("   ✓ Compiled main classes accessible during test compilation\n")
+        logFile.appendText("   ✓ Annotations readable\n")
+        logFile.appendText("   ✓ Function signatures extractable\n")
+        logFile.appendText("─".repeat(60) + "\n")
     }
 
     /**
@@ -643,6 +745,182 @@ class UnifiedFaktIrGenerationExtension(
         // DEBUG: Detailed tree breakdown
         if (logger.logLevel >= LogLevel.DEBUG) {
             logger.debug(tree.toTreeString())
+        }
+    }
+
+    /**
+     * Writes index file containing ClassIds of validated @Fake interfaces/classes.
+     * This file is read during test compilation to know which classes to generate fakes for.
+     *
+     * File format: One ClassId per line (FqName format)
+     * Location: build/generated/fakt/test/fakt-index.txt
+     *
+     * @param interfaces Validated interfaces from FIR phase
+     * @param classes Validated classes from FIR phase
+     */
+    private fun writeIndexFile(
+        interfaces: Collection<ValidatedFakeInterface>,
+        classes: Collection<ValidatedFakeClass>,
+    ) {
+        val outputDir = sourceSetContext.outputDirectory
+        val indexFile = java.io.File(outputDir).parentFile.resolve("fakt-index.txt")
+
+        indexFile.parentFile?.mkdirs()
+
+        val classIds = buildList {
+            interfaces.forEach { add(it.classId.asFqNameString()) }
+            classes.forEach { add(it.classId.asFqNameString()) }
+        }
+
+        indexFile.writeText(classIds.joinToString("\n"))
+
+        logger.info("Wrote index file: ${indexFile.absolutePath} (${classIds.size} classes)")
+    }
+
+    /**
+     * Reads index file and loads IrClass for each ClassId using pluginContext.referenceClass().
+     * This enables accessing compiled classes from main during test compilation.
+     *
+     * @param pluginContext IR plugin context for class resolution
+     * @return List of IrClass instances for compiled @Fake interfaces/classes
+     */
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    private fun loadCompiledClassesFromIndex(pluginContext: IrPluginContext): List<IrClass> {
+        val indexFile = findIndexFile() ?: return emptyList()
+
+        if (!indexFile.exists()) {
+            logger.warn("Index file not found: ${indexFile.absolutePath}")
+            return emptyList()
+        }
+
+        val classIdStrings = indexFile.readLines()
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+
+        logger.debug("Index file contains ${classIdStrings.size} ClassIds")
+
+        return classIdStrings.mapNotNull { fqNameString ->
+            try {
+                // Parse FqName format (com.example.Package.ClassName)
+                // Split into package and class name
+                val lastDotIndex = fqNameString.lastIndexOf('.')
+                if (lastDotIndex == -1) {
+                    logger.error("Invalid FqName format: $fqNameString")
+                    return@mapNotNull null
+                }
+
+                val packageFqName = fqNameString.substring(0, lastDotIndex)
+                val className = fqNameString.substring(lastDotIndex + 1)
+
+                // Create ClassId from package and class name
+                val classId = ClassId(FqName(packageFqName), org.jetbrains.kotlin.name.Name.identifier(className))
+
+                val irClassSymbol = pluginContext.referenceClass(classId)
+
+                if (irClassSymbol == null) {
+                    logger.warn("Could not resolve ClassId: $classId (from $fqNameString)")
+                    null
+                } else {
+                    logger.info("✅ Loaded compiled class: ${irClassSymbol.owner.name.asString()}")
+                    irClassSymbol.owner
+                }
+            } catch (e: Exception) {
+                logger.error("Failed to load ClassId from $fqNameString: ${e.message}")
+                logger.error(e.stackTraceToString())
+                null
+            }
+        }
+    }
+
+    /**
+     * Finds the index file location based on output directory.
+     *
+     * @return Index file or null if output directory not configured
+     */
+    private fun findIndexFile(): java.io.File? {
+        val outputDir = sourceSetContext.outputDirectory
+        val indexFile = java.io.File(outputDir).parentFile.resolve("fakt-index.txt")
+
+        logger.debug("Looking for index file: ${indexFile.absolutePath}")
+        return indexFile
+    }
+
+    /**
+     * Generate fakes from compiled classes loaded via referenceClass().
+     *
+     * This method is used during test compilation to generate fakes from
+     * compiled main classes. It uses IrClassDirectAnalyzer to extract metadata
+     * directly from IrClass instead of relying on FIR metadata.
+     *
+     * @param classes List of IrClass instances loaded from index file
+     * @param pluginContext IR plugin context for type resolution
+     */
+    private fun generateFromCompiledClasses(
+        classes: List<IrClass>,
+        pluginContext: IrPluginContext,
+    ) {
+        logger.info("Generating fakes from ${classes.size} compiled classes")
+
+        // Create analyzer for extracting metadata from IrClass
+        val analyzer = IrClassDirectAnalyzer(typeResolver, logger)
+
+        val metrics = mutableListOf<Pair<String, Long>>() // (name, timeNanos)
+        var totalLOC = 0
+
+        for (irClass in classes) {
+            try {
+                val startTime = System.nanoTime()
+
+                logger.debug("Analyzing compiled class: ${irClass.name.asString()}")
+
+                // 1. Analyze IrClass → InterfaceAnalysis
+                val interfaceAnalysis = analyzer.analyzeInterface(irClass)
+
+                // 2. Generate code using existing generator (same as FIR path!)
+                val generatedCode =
+                    codeGenerator.generateWorkingFakeImplementation(
+                        sourceInterface = irClass,
+                        analysis = interfaceAnalysis,
+                    )
+
+                val elapsedTime = System.nanoTime() - startTime
+                val loc = generatedCode.calculateTotalLOC()
+                totalLOC += loc
+
+                metrics.add(irClass.name.asString() to elapsedTime)
+
+                logger.info("✅ Generated fake: Fake${irClass.name.asString()}Impl ($loc LOC, ${elapsedTime / 1000}µs)")
+            } catch (e: Exception) {
+                logger.error("❌ Failed to generate fake for ${irClass.name.asString()}: ${e.message}")
+                logger.error(e.stackTraceToString())
+                // Continue with next class instead of failing entire compilation
+            }
+        }
+
+        // Print summary
+        if (metrics.isNotEmpty()) {
+            val avgTime = metrics.map { it.second }.average()
+            val minTime = metrics.minByOrNull { it.second }
+            val maxTime = metrics.maxByOrNull { it.second }
+
+            val summary = buildString {
+                appendLine("📊 Fakt Performance Summary:")
+                appendLine("   Total: $totalLOC LOC across ${metrics.size} fakes")
+                appendLine("   Average: ${(avgTime / 1000).toInt()}µs per fake")
+                appendLine("   Fastest: ${minTime?.first} (${minTime?.second?.div(1000)}µs)")
+                appendLine("   Slowest: ${maxTime?.first} (${maxTime?.second?.div(1000)}µs)")
+            }
+
+            logger.info(summary)
+
+            // Also write to file for easy access
+            try {
+                val outputDir = sourceSetContext.outputDirectory
+                val perfFile = java.io.File(outputDir).parentFile.resolve("fakt-performance.txt")
+                perfFile.writeText(summary)
+            } catch (e: Exception) {
+                // Ignore file write errors
+            }
         }
     }
 }

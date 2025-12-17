@@ -20,7 +20,7 @@ package com.rsicarelli.fakt.compiler.core.telemetry
  * )
  *
  * // Total time = 45µs + 1.2ms = 1.245ms
- * println("Total: ${metrics.totalTimeNanos}ns")
+ * System.err.println("Total: ${metrics.totalTimeNanos}ns")
  * ```
  *
  * **Cache Detection:**

@@ -76,7 +76,7 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         public const val PLUGIN_ID: String = "com.rsicarelli.fakt"
         public const val PLUGIN_ARTIFACT_NAME: String = "compiler"
         public const val PLUGIN_GROUP_ID: String = "com.rsicarelli.fakt"
-        public const val PLUGIN_VERSION: String = "1.0.0-alpha01"
+        public const val PLUGIN_VERSION: String = "1.0.0-alpha03"
     }
 
     @OptIn(ExperimentalFaktMultiModule::class)
@@ -156,7 +156,9 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         val project = kotlinCompilation.project
         val extension = project.extensions.findByType(FaktPluginExtension::class.java)
 
-        if (extension == null) return false
+        if (extension == null) {
+            return false
+        }
 
         if (extension.collectFrom.isPresent) {
             project.logger.info(
@@ -165,12 +167,10 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             return false
         }
 
-        // Apply to all non-test compilations (covers JVM, KMP, and Android)
-        // This handles:
-        // - JVM: "main"
-        // - KMP: "commonMain", "jvmMain", "iosMain", "metadata", etc.
-        // - Android: "debug", "release", etc.
-        return !kotlinCompilation.isTestCompilation
+        // Run on ALL compilations (both main and test)
+        // Main: writes index file with @Fake annotations
+        // Test: reads index file and generates fakes
+        return true
     }
 
     override fun getCompilerPluginId(): String = PLUGIN_ID

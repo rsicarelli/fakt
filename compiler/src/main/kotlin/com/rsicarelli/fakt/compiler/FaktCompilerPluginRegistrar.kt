@@ -43,13 +43,21 @@ class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
             )
         val options = FaktOptions.load(configuration)
 
+        // POC: Print to console for visibility
+        println("🔍 POC: registerExtensions() called")
+        println("🔍 POC: enabled=${options.enabled}")
+        println("🔍 POC: outputDir=${options.outputDir}")
+
         // Create FaktLogger with configured log level
         val logger = FaktLogger(messageCollector, options.logLevel)
 
         if (!options.enabled) {
             logger.info("Plugin disabled, skipping registration")
+            println("🔍 POC: Plugin disabled, skipping")
             return
         }
+
+        println("🔍 POC: Plugin enabled - continuing")
 
         // Initialize compiler optimizations for caching and incremental compilation
         val fakeAnnotations = FaktSharedContext.DEFAULT_FAKE_ANNOTATIONS
