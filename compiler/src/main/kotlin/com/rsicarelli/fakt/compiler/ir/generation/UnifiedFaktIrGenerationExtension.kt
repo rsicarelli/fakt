@@ -10,6 +10,7 @@ import com.rsicarelli.fakt.compiler.core.optimization.buildSignature
 import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.core.telemetry.UnifiedFakeMetrics
 import com.rsicarelli.fakt.compiler.core.telemetry.UnifiedMetricsTree
+import com.rsicarelli.fakt.compiler.core.telemetry.calculateLOC
 import com.rsicarelli.fakt.compiler.core.telemetry.measureTimeNanos
 import com.rsicarelli.fakt.compiler.core.types.TypeInfo
 import com.rsicarelli.fakt.compiler.core.types.createTypeResolution
@@ -28,6 +29,29 @@ import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.util.packageFqName
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
+
+/**
+ * Parameters for unified trace logging to reduce parameter count.
+ *
+ * @property interfaceMetrics Unified metrics for interfaces (FIR + IR), empty at INFO level
+ * @property classMetrics Unified metrics for classes (FIR + IR), empty at INFO level
+ * @property interfaceCount Number of interfaces processed
+ * @property classCount Number of classes processed
+ * @property irCacheHits Number of fakes that were IR-cached (skipped generation)
+ * @property transformationTimeNanos Time spent in FIR→IR transformation
+ * @property savedFirTimeNanos FIR time saved by using cache (0 if no cache)
+ * @property aggregateIrTimeNanos Total IR processing time (used when metrics is empty)
+ */
+private data class TraceLogParams(
+    val interfaceMetrics: List<UnifiedFakeMetrics>,
+    val classMetrics: List<UnifiedFakeMetrics>,
+    val interfaceCount: Int,
+    val classCount: Int,
+    val irCacheHits: Int,
+    val transformationTimeNanos: Long,
+    val savedFirTimeNanos: Long,
+    val aggregateIrTimeNanos: Long,
+)
 
 /**
  * FIR-based fake generation following the Metro pattern.
@@ -114,6 +138,10 @@ class UnifiedFaktIrGenerationExtension(
      * 2. IR phase transforms FIR strings → IrTypes and generates code
      * 3. NO redundant analysis or validation occurs
      *
+     * **KMP Cross-Compilation Caching**:
+     * In producer mode (metadata compilation), writes FIR cache after analysis completes.
+     * This enables platform compilations to skip redundant FIR analysis.
+     *
      * **Previous Anti-Pattern (Fixed in v1.3.0)**:
      * - ❌ Converted FIR metadata to IrClass instances
      * - ❌ Passed to processInterfaces() → analyzeInterfaceDynamically()
@@ -142,6 +170,10 @@ class UnifiedFaktIrGenerationExtension(
      * @see processClassesFromMetadata for class generation
      */
     private fun generateFromFirMetadata(moduleFragment: IrModuleFragment) {
+        // KMP optimization: Write cache in producer mode (metadata compilation)
+        // This allows platform compilations to skip FIR analysis
+        writeCacheIfProducer()
+
         // Load validated interfaces from FIR phase
         val validatedInterfaces = sharedContext.metadataStorage.getAllInterfaces()
         val validatedClasses = sharedContext.metadataStorage.getAllClasses()
@@ -151,8 +183,18 @@ class UnifiedFaktIrGenerationExtension(
             return
         }
 
+        // Only collect detailed metrics (LOC, per-fake timing) at DEBUG level
+        // INFO level only needs: totalFakes, totalTimeNanos, irCacheHits
+        val collectDetailedMetrics = logger.logLevel >= LogLevel.DEBUG
+
         // Build FIR metrics map for unified logging (name → FIR metrics)
-        val firMetricsMap = buildFirMetricsMap(validatedInterfaces, validatedClasses)
+        // Skip when not DEBUG - only used for detailed tree output
+        val firMetricsMap =
+            if (collectDetailedMetrics) {
+                buildFirMetricsMap(validatedInterfaces, validatedClasses)
+            } else {
+                emptyMap()
+            }
 
         // Build ClassId → IrClass map for fast lookup
         val irClassMap = buildIrClassMap(moduleFragment)
@@ -175,14 +217,6 @@ class UnifiedFaktIrGenerationExtension(
                 }
             }
 
-        logger.debug(
-            "FIR→IR Transformation (interfaces: ${interfaceMetadata.size}/${validatedInterfaces.size}, took ${
-                TimeFormatter.format(
-                    interfaceTransformTime,
-                )
-            })",
-        )
-
         // Transform classes using FirToIrTransformer
         val (classMetadata, classTransformTime) =
             measureTimeNanos {
@@ -200,31 +234,44 @@ class UnifiedFaktIrGenerationExtension(
                 }
             }
 
-        logger.debug(
-            "FIR→IR Transformation (classes: ${classMetadata.size}/${validatedClasses.size}, took ${
-                TimeFormatter.format(
-                    classTransformTime,
-                )
-            })",
-        )
+        // Track transformation time for unified logging
+        val transformationTimeNanos = interfaceTransformTime + classTransformTime
 
         // Collect unified metrics (FIR + IR) for batch logging
-        val interfaceMetrics =
+        val interfaceResult =
             if (interfaceMetadata.isNotEmpty()) {
-                processInterfacesFromMetadata(interfaceMetadata, firMetricsMap)
+                processInterfacesFromMetadata(interfaceMetadata, firMetricsMap, collectDetailedMetrics)
             } else {
-                emptyList()
+                ProcessingResult(emptyList(), 0)
             }
 
-        val classMetrics =
+        val classResult =
             if (classMetadata.isNotEmpty()) {
-                processClassesFromMetadata(classMetadata, firMetricsMap)
+                processClassesFromMetadata(classMetadata, firMetricsMap, collectDetailedMetrics)
             } else {
-                emptyList()
+                ProcessingResult(emptyList(), 0)
             }
+
+        // Total IR cache hits (interfaces + classes)
+        val totalIrCacheHits = interfaceResult.cacheHits + classResult.cacheHits
+
+        // Get saved FIR time from cache manager (if consumer mode)
+        val savedFirTimeNanos = sharedContext.cacheManager.getSavedFirTimeNanos()
 
         // Log consolidated unified trace (FIR + IR combined)
-        logUnifiedTrace(interfaceMetrics, classMetrics)
+        // At INFO level, metrics lists are empty but we have aggregate times
+        logUnifiedTrace(
+            TraceLogParams(
+                interfaceMetrics = interfaceResult.metrics,
+                classMetrics = classResult.metrics,
+                interfaceCount = interfaceMetadata.size,
+                classCount = classMetadata.size,
+                irCacheHits = totalIrCacheHits,
+                transformationTimeNanos = transformationTimeNanos,
+                savedFirTimeNanos = savedFirTimeNanos,
+                aggregateIrTimeNanos = interfaceResult.totalTimeNanos + classResult.totalTimeNanos,
+            ),
+        )
     }
 
     /**
@@ -281,7 +328,6 @@ class UnifiedFaktIrGenerationExtension(
             }
         }
 
-        logger.debug("Built IR class map with ${map.size} classes")
         return map
     }
 
@@ -351,6 +397,19 @@ class UnifiedFaktIrGenerationExtension(
     )
 
     /**
+     * Result of processing interfaces: metrics and cache statistics.
+     *
+     * @property metrics List of unified metrics for each fake (empty when not DEBUG)
+     * @property cacheHits Number of interfaces that were IR-cached (skipped generation)
+     * @property totalTimeNanos Aggregate processing time (used when metrics is empty)
+     */
+    private data class ProcessingResult(
+        val metrics: List<UnifiedFakeMetrics>,
+        val cacheHits: Int,
+        val totalTimeNanos: Long = 0,
+    )
+
+    /**
      * Process interfaces from IrGenerationMetadata (NO re-analysis).
      *
      * This method replaces the anti-pattern of passing IrClass to processInterfaces(),
@@ -359,15 +418,27 @@ class UnifiedFaktIrGenerationExtension(
      * Collects unified metrics (FIR + IR) for batch logging, including cache hits.
      * Cache hits appear in the trace with fast IR times (~5-50µs vs ~500µs-5ms for fresh generation).
      *
+     * **Performance Optimization**:
+     * When `collectDetailedMetrics` is false (INFO/QUIET level), skips:
+     * - Per-fake `UnifiedFakeMetrics` objects
+     * - LOC calculation (`calculateLOC` / file I/O)
+     * - Per-fake `measureTimeNanos` calls
+     *
+     * Only aggregate time and cache hits are tracked for INFO summary.
+     *
      * @param interfaceMetadata List of transformed FIR metadata (IrTypes + IR nodes)
      * @param firMetricsMap FIR metrics (validation time, type params, members) from FIR phase
-     * @return List of unified metrics combining FIR and IR for each fake
+     * @param collectDetailedMetrics Whether to collect per-fake metrics (DEBUG only)
+     * @return ProcessingResult with metrics and IR cache hit count
      */
     private fun processInterfacesFromMetadata(
         interfaceMetadata: List<IrGenerationMetadata>,
         firMetricsMap: Map<String, FirMetrics>,
-    ): List<UnifiedFakeMetrics> {
-        val metrics = mutableListOf<UnifiedFakeMetrics>()
+        collectDetailedMetrics: Boolean,
+    ): ProcessingResult {
+        val metrics = if (collectDetailedMetrics) mutableListOf<UnifiedFakeMetrics>() else null
+        var irCacheHits = 0
+        val startTime = System.nanoTime()
 
         for (metadata in interfaceMetadata) {
             val interfaceName = metadata.interfaceName
@@ -394,85 +465,74 @@ class UnifiedFaktIrGenerationExtension(
             val fakeClassName = "Fake${interfaceName}Impl"
             val outputFile = packageDir.resolve("$fakeClassName.kt")
 
-            // Get FIR metrics for this interface
-            val firMetrics = firMetricsMap[interfaceName]
-            if (firMetrics == null) {
-                logger.warn("No FIR metrics found for $interfaceName - skipping")
-                continue
-            }
-
             // Check cache: file exists AND signature matches
             val isCacheHit = outputFile.exists() && !optimizations.needsRegeneration(typeInfo)
+            if (isCacheHit) {
+                irCacheHits++
+                continue // Skip all processing for cache hits - no need to show in tree
+            }
 
-            val (irTimeNanos, loc) =
-                if (isCacheHit) {
-                    // Cache hit - minimal IR time for file existence check (~5-50µs)
-                    val (_, checkTime) =
-                        measureTimeNanos {
-                            outputFile.exists() // Simulate cache check overhead
-                        }
-                    // Read LOC from existing file for metrics
-                    val existingLoc =
-                        if (outputFile.exists()) {
-                            outputFile.readLines().size
-                        } else {
-                            0
-                        }
-                    checkTime to existingLoc
-                } else {
-                    // Cache miss - check if file exists with different signature
-                    if (outputFile.exists()) {
-                        logger.debug("Signature changed: Deleting old fake for $interfaceName")
-                        outputFile.delete()
+            // Get FIR metrics for this interface (only needed for detailed metrics)
+            val firMetrics =
+                if (collectDetailedMetrics) {
+                    firMetricsMap[interfaceName] ?: run {
+                        logger.warn("No FIR metrics found for $interfaceName - skipping")
+                        continue
                     }
-
-                    // Convert to InterfaceAnalysis using adapter (NO re-analysis!)
-                    val (interfaceAnalysis, analysisTime) =
-                        measureTimeNanos {
-                            metadata.toInterfaceAnalysis()
-                        }
-
-                    // Validate pattern (reuses existing validation logic)
-                    validateAndLogGenericPattern(
-                        interfaceAnalysis = interfaceAnalysis,
-                        fakeInterface = metadata.sourceInterface,
-                        interfaceName = interfaceName,
-                        logger = logger,
-                    )
-
-                    // Track generation timing and capture generated code
-                    val (generatedCode, generationTime) =
-                        measureTimeNanos {
-                            codeGenerator.generateWorkingFakeImplementation(
-                                sourceInterface = metadata.sourceInterface,
-                                analysis = interfaceAnalysis,
-                            )
-                        }
-
-                    // Calculate LOC
-                    val generatedLoc = generatedCode.calculateTotalLOC()
-
-                    // Record successful generation in cache
-                    optimizations.recordGeneration(typeInfo)
-
-                    // Return IR time (analysis + generation) and LOC
-                    (analysisTime + generationTime) to generatedLoc
+                } else {
+                    null
                 }
 
-            // Collect unified metrics (FIR + IR) for batch logging
-            val unifiedMetrics =
-                UnifiedFakeMetrics(
-                    name = interfaceName,
-                    firTimeNanos = firMetrics.validationTimeNanos,
-                    firTypeParamCount = firMetrics.typeParamCount,
-                    firMemberCount = firMetrics.memberCount,
-                    irTimeNanos = irTimeNanos,
-                    irLOC = loc,
+            // Cache miss - delete old file if signature changed
+            val isRegeneration = outputFile.exists()
+            if (isRegeneration) {
+                logger.info("Signature changed: Regenerating $interfaceName")
+                outputFile.delete()
+            }
+
+            // Convert to InterfaceAnalysis using adapter (NO re-analysis!)
+            val interfaceAnalysis = metadata.toInterfaceAnalysis()
+
+            // Validate pattern (reuses existing validation logic)
+            validateAndLogGenericPattern(
+                interfaceAnalysis = interfaceAnalysis,
+                fakeInterface = metadata.sourceInterface,
+                interfaceName = interfaceName,
+                logger = logger,
+            )
+
+            // Generate fake implementation with timing
+            val (generatedCode, generationTimeNanos) =
+                measureTimeNanos {
+                    codeGenerator.generateWorkingFakeImplementation(
+                        sourceInterface = metadata.sourceInterface,
+                        analysis = interfaceAnalysis,
+                    )
+                }
+
+            // Record successful generation in cache
+            optimizations.recordGeneration(typeInfo)
+
+            // Collect unified metrics only at DEBUG level (only for regenerated fakes)
+            if (collectDetailedMetrics && firMetrics != null) {
+                metrics?.add(
+                    UnifiedFakeMetrics(
+                        name = interfaceName,
+                        firTimeNanos = firMetrics.validationTimeNanos,
+                        firTypeParamCount = firMetrics.typeParamCount,
+                        firMemberCount = firMetrics.memberCount,
+                        irTimeNanos = generationTimeNanos,
+                        irLOC = generatedCode.calculateTotalLOC(),
+                    ),
                 )
-            metrics.add(unifiedMetrics)
+            }
         }
 
-        return metrics
+        return ProcessingResult(
+            metrics = metrics ?: emptyList(),
+            cacheHits = irCacheHits,
+            totalTimeNanos = System.nanoTime() - startTime,
+        )
     }
 
     /**
@@ -485,15 +545,27 @@ class UnifiedFaktIrGenerationExtension(
      * Collects unified metrics (FIR + IR) for batch logging, including cache hits.
      * Cache hits appear in the trace with fast IR times (~5-50µs vs ~500µs-5ms for fresh generation).
      *
+     * **Performance Optimization**:
+     * When `collectDetailedMetrics` is false (INFO/QUIET level), skips:
+     * - Per-fake `UnifiedFakeMetrics` objects
+     * - LOC calculation (`calculateLOC` / file I/O)
+     * - Per-fake `measureTimeNanos` calls
+     *
+     * Only aggregate time and cache hits are tracked for INFO summary.
+     *
      * @param classMetadata List of transformed FIR class metadata (IrTypes + IR nodes)
      * @param firMetricsMap FIR metrics (validation time, type params, members) from FIR phase
-     * @return List of unified metrics combining FIR and IR for each fake class
+     * @param collectDetailedMetrics Whether to collect per-fake metrics (DEBUG only)
+     * @return ProcessingResult with metrics and IR cache hit count
      */
     private fun processClassesFromMetadata(
         classMetadata: List<IrClassGenerationMetadata>,
         firMetricsMap: Map<String, FirMetrics>,
-    ): List<UnifiedFakeMetrics> {
-        val metrics = mutableListOf<UnifiedFakeMetrics>()
+        collectDetailedMetrics: Boolean,
+    ): ProcessingResult {
+        val metrics = if (collectDetailedMetrics) mutableListOf<UnifiedFakeMetrics>() else null
+        var irCacheHits = 0
+        val startTime = System.nanoTime()
 
         for (metadata in classMetadata) {
             val className = metadata.className
@@ -520,118 +592,106 @@ class UnifiedFaktIrGenerationExtension(
             val fakeClassName = "Fake${className}Impl"
             val outputFile = packageDir.resolve("$fakeClassName.kt")
 
-            // Get FIR metrics for this class
-            val firMetrics = firMetricsMap[className]
-            if (firMetrics == null) {
-                logger.warn("No FIR metrics found for class $className - skipping")
-                continue
-            }
-
             // Check cache: file exists AND signature matches
             val isCacheHit = outputFile.exists() && !optimizations.needsRegeneration(typeInfo)
+            if (isCacheHit) {
+                irCacheHits++
+                continue // Skip all processing for cache hits - no need to show in tree
+            }
 
-            val (irTimeNanos, loc) =
-                if (isCacheHit) {
-                    // Cache hit - minimal IR time for file existence check (~5-50µs)
-                    val (_, checkTime) =
-                        measureTimeNanos {
-                            outputFile.exists() // Simulate cache check overhead
-                        }
-                    // Read LOC from existing file for metrics
-                    val existingLoc =
-                        if (outputFile.exists()) {
-                            outputFile.readLines().size
-                        } else {
-                            0
-                        }
-                    checkTime to existingLoc
-                } else {
-                    // Cache miss - check if file exists with different signature
-                    if (outputFile.exists()) {
-                        logger.debug("Signature changed: Deleting old fake for class $className")
-                        outputFile.delete()
+            // Get FIR metrics for this class (only needed for detailed metrics)
+            val firMetrics =
+                if (collectDetailedMetrics) {
+                    firMetricsMap[className] ?: run {
+                        logger.warn("No FIR metrics found for class $className - skipping")
+                        continue
                     }
-
-                    // Convert to ClassAnalysis using adapter (preserves abstract/open distinction)
-                    val (classAnalysis, analysisTime) =
-                        measureTimeNanos {
-                            metadata.toClassAnalysis()
-                        }
-
-                    // Track generation timing and capture generated code
-                    val (generatedCode, generationTime) =
-                        measureTimeNanos {
-                            codeGenerator.generateWorkingClassFake(
-                                sourceClass = metadata.sourceClass,
-                                analysis = classAnalysis,
-                            )
-                        }
-
-                    // Calculate LOC
-                    val generatedLoc = generatedCode.calculateTotalLOC()
-
-                    // Record successful generation in cache
-                    optimizations.recordGeneration(typeInfo)
-
-                    // Return IR time (analysis + generation) and LOC
-                    (analysisTime + generationTime) to generatedLoc
+                } else {
+                    null
                 }
 
-            // Collect unified metrics (FIR + IR) for batch logging
-            metrics.add(
-                UnifiedFakeMetrics(
-                    name = className,
-                    firTimeNanos = firMetrics.validationTimeNanos,
-                    firTypeParamCount = firMetrics.typeParamCount,
-                    firMemberCount = firMetrics.memberCount,
-                    irTimeNanos = irTimeNanos,
-                    irLOC = loc,
-                ),
-            )
+            // Cache miss - delete old file if signature changed
+            val isRegeneration = outputFile.exists()
+            if (isRegeneration) {
+                logger.info("Signature changed: Regenerating $className")
+                outputFile.delete()
+            }
+
+            // Convert to ClassAnalysis using adapter (preserves abstract/open distinction)
+            val classAnalysis = metadata.toClassAnalysis()
+
+            // Generate fake implementation with timing
+            val (generatedCode, generationTimeNanos) =
+                measureTimeNanos {
+                    codeGenerator.generateWorkingClassFake(
+                        sourceClass = metadata.sourceClass,
+                        analysis = classAnalysis,
+                    )
+                }
+
+            // Record successful generation in cache
+            optimizations.recordGeneration(typeInfo)
+
+            // Collect unified metrics only at DEBUG level (only for regenerated fakes)
+            if (collectDetailedMetrics && firMetrics != null) {
+                metrics?.add(
+                    UnifiedFakeMetrics(
+                        name = className,
+                        firTimeNanos = firMetrics.validationTimeNanos,
+                        firTypeParamCount = firMetrics.typeParamCount,
+                        firMemberCount = firMetrics.memberCount,
+                        irTimeNanos = generationTimeNanos,
+                        irLOC = generatedCode.calculateTotalLOC(),
+                    ),
+                )
+            }
         }
 
-        return metrics
+        return ProcessingResult(
+            metrics = metrics ?: emptyList(),
+            cacheHits = irCacheHits,
+            totalTimeNanos = System.nanoTime() - startTime,
+        )
     }
 
     /**
      * Logs unified FIR + IR metrics in a level-appropriate format.
      *
-     * **INFO Level**: Concise 4-line summary with key metrics:
+     * **INFO Level**: Concise summary:
      * ```
-     * Fakt: 3 fakes generated in 1.4ms (0 cached)
-     *   Interfaces: 3 | Classes: 0
-     *   FIR: 115µs | IR: 1.285ms
-     *   Cache: 0/3 (0%)
+     * Fakt: 122 fakes (all cached)
      * ```
      *
-     * **DEBUG Level**: Detailed tree with per-fake breakdown:
+     * **DEBUG Level**: Detailed tree with consolidated metrics:
      * ```
-     * FIR + IR trace
-     * ├─ Total FIR time                                                            234µs
-     * ├─ Total IR time                                                             1.2ms
-     * ├─ Total time                                                                1.4ms
-     * ├─ Interfaces: 3
-     * │  ├─ UserService                                                            580µs
-     * │  │  ├─ FIR analysis: 0 type parameters, 5 members                          45µs
-     * │  │  └─ IR generation: FakeUserServiceImpl 73 LOC                           535µs
+     * Fakt Trace
+     * ├─ Total fakes                                                               122
+     * ├─ FIR→IR: transformation (101 interfaces, 21 classes)                       1ms
+     * ├─ FIR Time (122 from cache saved 6ms)                                       0µs
+     * ├─ IR Time (122 from cache)                                                207µs
+     * └─ Total time                                                                1ms
      * ```
      *
      * **QUIET**: No output
      *
-     * @param interfaceMetrics Unified metrics for interfaces (FIR + IR)
-     * @param classMetrics Unified metrics for classes (FIR + IR)
+     * @param params Parameters for trace logging (see TraceLogParams)
      */
-    private fun logUnifiedTrace(
-        interfaceMetrics: List<UnifiedFakeMetrics>,
-        classMetrics: List<UnifiedFakeMetrics>,
-    ) {
+    private fun logUnifiedTrace(params: TraceLogParams) {
         // Skip entirely for QUIET level
         if (logger.logLevel < LogLevel.INFO) return
 
         val tree =
             UnifiedMetricsTree(
-                interfaces = interfaceMetrics,
-                classes = classMetrics,
+                interfaces = params.interfaceMetrics,
+                classes = params.classMetrics,
+                interfaceCount = params.interfaceCount,
+                classCount = params.classCount,
+                interfaceCacheHits = sharedContext.metadataStorage.interfaceCacheHits,
+                classCacheHits = sharedContext.metadataStorage.classCacheHits,
+                irCacheHits = params.irCacheHits,
+                transformationTimeNanos = params.transformationTimeNanos,
+                savedFirTimeNanos = params.savedFirTimeNanos,
+                aggregateIrTimeNanos = params.aggregateIrTimeNanos,
             )
 
         // INFO: Concise summary (4 lines)
@@ -643,6 +703,40 @@ class UnifiedFaktIrGenerationExtension(
         // DEBUG: Detailed tree breakdown
         if (logger.logLevel >= LogLevel.DEBUG) {
             logger.debug(tree.toTreeString())
+        }
+    }
+
+    /**
+     * Write FIR metadata cache in producer mode.
+     *
+     * **KMP Cross-Compilation Optimization**:
+     * In producer mode (metadata compilation), writes validated FIR metadata to cache file.
+     * Platform compilations can then read this cache and skip redundant FIR analysis.
+     *
+     * **Call Timing**:
+     * Called at the start of IR generation, after FIR analysis has completed
+     * and FirMetadataStorage is fully populated.
+     *
+     * **Producer Mode**: metadataOutputPath is set (writes cache)
+     * **Consumer Mode**: metadataCachePath is set (cache already loaded in FIR phase)
+     * **Non-KMP/Disabled**: Neither path set (no caching)
+     */
+    private fun writeCacheIfProducer() {
+        val cacheManager = sharedContext.cacheManager ?: return
+        if (!cacheManager.isProducerMode) return
+
+        // FIR phase writes cache after each interface/class.
+        // IR phase writes once more (backup) and logs the final summary.
+        try {
+            cacheManager.writeCache(sharedContext.metadataStorage)
+            // Log summary once at end of IR phase
+            cacheManager.getLastWriteResult()?.let { result ->
+                val time = TimeFormatter.format(result.durationNanos)
+                logger.info("Cache written: ${result.interfaceCount} interfaces, ${result.classCount} classes ($time)")
+            }
+        } catch (e: Exception) {
+            // Cache write failure is non-fatal - compilation continues
+            logger.warn("Failed to write KMP cache: ${e.message}")
         }
     }
 }

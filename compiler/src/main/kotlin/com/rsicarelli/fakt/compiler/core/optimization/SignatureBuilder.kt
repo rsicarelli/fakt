@@ -11,66 +11,60 @@ import java.io.File
 import java.security.MessageDigest
 
 /**
- * Builds an MD5 signature (hash) for interface source file.
+ * Builds an MD5 signature (hash) for interface, unique per-fake.
  *
- * Signature is computed from the source file content, detecting any changes:
- * - Properties added/removed/modified
- * - Methods added/removed/modified
- * - Type parameters changed
- * - Comments changed
- * - Formatting changed
+ * Signature includes the interface FQN + source file content, ensuring:
+ * - Each interface has its own unique signature (even if in same file)
+ * - Any source change triggers regeneration
  *
  * Used for file-based caching to detect when regeneration is needed.
  *
- * @return MD5 hash of source file content, or fallback signature if file unavailable
+ * @return MD5 hash of (FQN + source file content), or fallback signature if file unavailable
  */
 fun IrGenerationMetadata.buildSignature(): String {
+    val fqn = "$packageName.$interfaceName"
     val filePath = sourceInterface.getSourceFilePath()
     return if (filePath != null) {
         val sourceFile = File(filePath)
         if (sourceFile.exists()) {
-            sourceFile.readBytes().md5()
+            // Include FQN to make signature unique per-interface (even in same file)
+            "$fqn:${sourceFile.readBytes().md5()}".toByteArray().md5()
         } else {
-            // Fallback if file doesn't exist
-            "interface $packageName.$interfaceName|props:${properties.size}|funs:${functions.size}"
+            "interface $fqn|props:${properties.size}|funs:${functions.size}"
         }
     } else {
-        // Fallback if can't determine file path
-        "interface $packageName.$interfaceName|props:${properties.size}|funs:${functions.size}"
+        "interface $fqn|props:${properties.size}|funs:${functions.size}"
     }
 }
 
 /**
- * Builds an MD5 signature (hash) for class source file.
+ * Builds an MD5 signature (hash) for class, unique per-fake.
  *
- * Signature is computed from the source file content, detecting any changes:
- * - Abstract/open properties added/removed/modified
- * - Abstract/open methods added/removed/modified
- * - Type parameters changed
- * - Comments changed
- * - Formatting changed
+ * Signature includes the class FQN + source file content, ensuring:
+ * - Each class has its own unique signature (even if in same file)
+ * - Any source change triggers regeneration
  *
  * Used for file-based caching to detect when regeneration is needed.
  *
- * @return MD5 hash of source file content, or fallback signature if file unavailable
+ * @return MD5 hash of (FQN + source file content), or fallback signature if file unavailable
  */
 fun IrClassGenerationMetadata.buildSignature(): String {
+    val fqn = "$packageName.$className"
     val filePath = sourceClass.getSourceFilePath()
     return if (filePath != null) {
         val sourceFile = File(filePath)
         if (sourceFile.exists()) {
-            sourceFile.readBytes().md5()
+            // Include FQN to make signature unique per-class (even in same file)
+            "$fqn:${sourceFile.readBytes().md5()}".toByteArray().md5()
         } else {
-            // Fallback if file doesn't exist
             val propCount = abstractProperties.size + openProperties.size
             val funCount = abstractMethods.size + openMethods.size
-            "class $packageName.$className|props:$propCount|funs:$funCount"
+            "class $fqn|props:$propCount|funs:$funCount"
         }
     } else {
-        // Fallback if can't determine file path
         val propCount = abstractProperties.size + openProperties.size
         val funCount = abstractMethods.size + openMethods.size
-        "class $packageName.$className|props:$propCount|funs:$funCount"
+        "class $fqn|props:$propCount|funs:$funCount"
     }
 }
 

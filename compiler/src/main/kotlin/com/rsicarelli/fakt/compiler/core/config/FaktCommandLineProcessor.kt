@@ -86,7 +86,6 @@ class FaktCommandLineProcessor : CommandLineProcessor {
                         MessageCollector.NONE,
                     )
 
-                @Suppress("TooGenericExceptionCaught")
                 try {
                     // Decode Base64
                     val decodedBytes = Base64.getDecoder().decode(value)

@@ -389,7 +389,6 @@ private fun detectIdentityFunction(method: MethodSpec): String? {
  * - Function takes NO arguments: () -> T
  * - Method returns same type T
  */
-@Suppress("ReturnCount") // Validation logic: guard clauses improve readability
 private fun isValidFunctionInvocationPattern(
     method: MethodSpec,
     paramType: String,
