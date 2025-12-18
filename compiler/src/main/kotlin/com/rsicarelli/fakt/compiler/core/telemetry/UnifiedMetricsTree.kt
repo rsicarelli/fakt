@@ -7,6 +7,9 @@ import com.rsicarelli.fakt.compiler.api.TimeFormatter
 /** Width for time value display in metrics output formatting (characters). */
 private const val TIME_DISPLAY_WIDTH = 10
 
+/** Multiplier for converting decimal to percentage. */
+private const val PERCENTAGE_MULTIPLIER = 100
+
 /**
  * Aggregate metrics combining all FIR and IR data for tree-style logging.
  *
@@ -110,7 +113,7 @@ data class UnifiedMetricsTree(
 
     /** Cache hit rate as percentage (0-100). */
     val cacheHitRate: Int
-        get() = if (totalFakes > 0) (irCacheHits * 100) / totalFakes else 0
+        get() = if (totalFakes > 0) (irCacheHits * PERCENTAGE_MULTIPLIER) / totalFakes else 0
 
     /**
      * Formats metrics as a tree-structured string with proper branching.
@@ -128,6 +131,7 @@ data class UnifiedMetricsTree(
      * @param targetColumn Column for right-aligning time values (default: 80)
      * @return Multi-line tree-formatted string ready for logging
      */
+    @Suppress("LongMethod")
     fun toTreeString(targetColumn: Int = 80): String =
         buildString {
             appendLine("Fakt Trace")
@@ -144,8 +148,10 @@ data class UnifiedMetricsTree(
             // Line 2: FIR Time with cache info
             val firLabel =
                 when {
-                    totalFirCacheHits > 0 && savedFirTimeNanos > 0 ->
-                        "   ├─ FIR Time ($totalFirCacheHits from cache saved ${TimeFormatter.format(savedFirTimeNanos)})"
+                    totalFirCacheHits > 0 && savedFirTimeNanos > 0 -> {
+                        val saved = TimeFormatter.format(savedFirTimeNanos)
+                        "   ├─ FIR Time ($totalFirCacheHits from cache saved $saved)"
+                    }
                     totalFirCacheHits > 0 ->
                         "   ├─ FIR Time ($totalFirCacheHits from cache)"
                     else ->
@@ -355,9 +361,4 @@ data class UnifiedMetricsTree(
             text.padEnd(availableSpace) + timeWithPadding
         }
     }
-
-    /**
-     * Formats a number with thousand separators (e.g., 4521 → "4,521").
-     */
-    private fun formatNumber(number: Int): String = "%,d".format(number)
 }

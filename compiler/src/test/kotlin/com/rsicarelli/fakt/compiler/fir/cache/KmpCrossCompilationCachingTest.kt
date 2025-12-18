@@ -3,10 +3,8 @@
 package com.rsicarelli.fakt.compiler.fir.cache
 
 import com.rsicarelli.fakt.compiler.api.FirMetadataCache
-import com.rsicarelli.fakt.compiler.api.LogLevel
 import com.rsicarelli.fakt.compiler.api.SerializableFakeClass
 import com.rsicarelli.fakt.compiler.api.SerializableFakeInterface
-import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.fir.metadata.FirMetadataStorage
 import com.rsicarelli.fakt.compiler.fir.metadata.FirSourceLocation
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeClass
@@ -42,7 +40,6 @@ class KmpCrossCompilationCachingTest {
     private lateinit var cacheFile: File
     private lateinit var sourceFile1: File
     private lateinit var sourceFile2: File
-    private val testLogger = FaktLogger(messageCollector = null, logLevel = LogLevel.INFO)
 
     @BeforeEach
     fun setup() {
@@ -68,7 +65,6 @@ class KmpCrossCompilationCachingTest {
                 MetadataCacheManager(
                     metadataOutputPath = cacheFile.absolutePath,
                     metadataCachePath = null,
-                    logger = testLogger,
                 )
             val storage = FirMetadataStorage()
 
@@ -97,7 +93,6 @@ class KmpCrossCompilationCachingTest {
                 MetadataCacheManager(
                     metadataOutputPath = cacheFile.absolutePath,
                     metadataCachePath = null,
-                    logger = testLogger,
                 )
             val storage = FirMetadataStorage()
 
@@ -130,7 +125,6 @@ class KmpCrossCompilationCachingTest {
                 MetadataCacheManager(
                     metadataOutputPath = null,
                     metadataCachePath = cacheFile.absolutePath,
-                    logger = testLogger,
                 )
             val storage = FirMetadataStorage()
 
@@ -157,7 +151,6 @@ class KmpCrossCompilationCachingTest {
                 MetadataCacheManager(
                     metadataOutputPath = null,
                     metadataCachePath = cacheFile.absolutePath,
-                    logger = testLogger,
                 )
             val storage = FirMetadataStorage()
 
@@ -190,7 +183,6 @@ class KmpCrossCompilationCachingTest {
                 MetadataCacheManager(
                     metadataOutputPath = null,
                     metadataCachePath = cacheFile.absolutePath,
-                    logger = testLogger,
                 )
             val storage = FirMetadataStorage()
 
@@ -215,7 +207,6 @@ class KmpCrossCompilationCachingTest {
                 MetadataCacheManager(
                     metadataOutputPath = null,
                     metadataCachePath = cacheFile.absolutePath,
-                    logger = testLogger,
                 )
             val storage = FirMetadataStorage()
 
@@ -243,7 +234,6 @@ class KmpCrossCompilationCachingTest {
                 MetadataCacheManager(
                     metadataOutputPath = null,
                     metadataCachePath = cacheFile.absolutePath,
-                    logger = testLogger,
                 )
             val storage = FirMetadataStorage()
 
@@ -266,7 +256,6 @@ class KmpCrossCompilationCachingTest {
                 MetadataCacheManager(
                     metadataOutputPath = cacheFile.absolutePath,
                     metadataCachePath = null,
-                    logger = testLogger,
                 )
             val producerStorage = FirMetadataStorage()
 
@@ -286,7 +275,6 @@ class KmpCrossCompilationCachingTest {
                 MetadataCacheManager(
                     metadataOutputPath = null,
                     metadataCachePath = cacheFile.absolutePath,
-                    logger = testLogger,
                 )
             val jvmStorage = FirMetadataStorage()
 
@@ -302,7 +290,6 @@ class KmpCrossCompilationCachingTest {
                 MetadataCacheManager(
                     metadataOutputPath = null,
                     metadataCachePath = cacheFile.absolutePath,
-                    logger = testLogger,
                 )
             val iosStorage = FirMetadataStorage()
 
@@ -326,7 +313,6 @@ class KmpCrossCompilationCachingTest {
                 MetadataCacheManager(
                     metadataOutputPath = cacheFile.absolutePath,
                     metadataCachePath = null,
-                    logger = testLogger,
                 )
             val storage1 = FirMetadataStorage()
             storage1.storeInterface(createValidatedInterface("UserService", sourceFile1))
@@ -340,7 +326,6 @@ class KmpCrossCompilationCachingTest {
                 MetadataCacheManager(
                     metadataOutputPath = null,
                     metadataCachePath = cacheFile.absolutePath,
-                    logger = testLogger,
                 )
             val consumerStorage = FirMetadataStorage()
             val loaded = consumer.tryLoadCache(consumerStorage)
@@ -351,7 +336,6 @@ class KmpCrossCompilationCachingTest {
                 MetadataCacheManager(
                     metadataOutputPath = cacheFile.absolutePath,
                     metadataCachePath = null,
-                    logger = testLogger,
                 )
             val storage2 = FirMetadataStorage()
             storage2.storeInterface(createValidatedInterface("UserService", sourceFile1))
@@ -362,7 +346,6 @@ class KmpCrossCompilationCachingTest {
                 MetadataCacheManager(
                     metadataOutputPath = null,
                     metadataCachePath = cacheFile.absolutePath,
-                    logger = testLogger,
                 )
             val storage3 = FirMetadataStorage()
             val loadedNew = consumer2.tryLoadCache(storage3)

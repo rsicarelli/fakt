@@ -3,9 +3,7 @@
 package com.rsicarelli.fakt.compiler.fir.cache
 
 import com.rsicarelli.fakt.compiler.api.FirMetadataCache
-import com.rsicarelli.fakt.compiler.api.LogLevel
 import com.rsicarelli.fakt.compiler.api.SerializableFakeInterface
-import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.fir.metadata.FirMetadataStorage
 import com.rsicarelli.fakt.compiler.fir.metadata.FirSourceLocation
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeInterface
@@ -33,7 +31,6 @@ class MetadataCacheManagerTest {
 
     private lateinit var cacheFile: File
     private lateinit var sourceFile: File
-    private val testLogger = FaktLogger(messageCollector = null, logLevel = LogLevel.INFO)
 
     @BeforeEach
     fun setup() {
@@ -54,7 +51,6 @@ class MetadataCacheManagerTest {
                 MetadataCacheManager(
                     metadataOutputPath = cacheFile.absolutePath,
                     metadataCachePath = null,
-                    logger = testLogger,
                 )
 
             // WHEN & THEN
@@ -70,7 +66,6 @@ class MetadataCacheManagerTest {
                 MetadataCacheManager(
                     metadataOutputPath = null,
                     metadataCachePath = cacheFile.absolutePath,
-                    logger = testLogger,
                 )
 
             // WHEN & THEN
@@ -86,7 +81,6 @@ class MetadataCacheManagerTest {
                 MetadataCacheManager(
                     metadataOutputPath = null,
                     metadataCachePath = null,
-                    logger = testLogger,
                 )
 
             // WHEN & THEN
@@ -130,7 +124,6 @@ class MetadataCacheManagerTest {
                 MetadataCacheManager(
                     metadataOutputPath = null,
                     metadataCachePath = cacheFile.absolutePath,
-                    logger = testLogger,
                 )
             val storage = FirMetadataStorage()
 
@@ -153,7 +146,6 @@ class MetadataCacheManagerTest {
                 MetadataCacheManager(
                     metadataOutputPath = null,
                     metadataCachePath = "/nonexistent/path/cache.json",
-                    logger = testLogger,
                 )
             val storage = FirMetadataStorage()
 
@@ -174,7 +166,6 @@ class MetadataCacheManagerTest {
                 MetadataCacheManager(
                     metadataOutputPath = null,
                     metadataCachePath = cacheFile.absolutePath,
-                    logger = testLogger,
                 )
             val storage = FirMetadataStorage()
 
@@ -194,7 +185,6 @@ class MetadataCacheManagerTest {
                 MetadataCacheManager(
                     metadataOutputPath = cacheFile.absolutePath,
                     metadataCachePath = null,
-                    logger = testLogger,
                 )
             val storage = FirMetadataStorage()
 
@@ -237,7 +227,6 @@ class MetadataCacheManagerTest {
                 MetadataCacheManager(
                     metadataOutputPath = null,
                     metadataCachePath = cacheFile.absolutePath,
-                    logger = testLogger,
                 )
             val storage = FirMetadataStorage()
 
@@ -286,7 +275,6 @@ class MetadataCacheManagerTest {
                 MetadataCacheManager(
                     metadataOutputPath = null,
                     metadataCachePath = cacheFile.absolutePath,
-                    logger = testLogger,
                 )
             val storage = FirMetadataStorage()
 
@@ -329,7 +317,6 @@ class MetadataCacheManagerTest {
                 MetadataCacheManager(
                     metadataOutputPath = null,
                     metadataCachePath = cacheFile.absolutePath,
-                    logger = testLogger,
                 )
             val storage = FirMetadataStorage()
 
@@ -373,7 +360,6 @@ class MetadataCacheManagerTest {
                 MetadataCacheManager(
                     metadataOutputPath = null,
                     metadataCachePath = cacheFile.absolutePath,
-                    logger = testLogger,
                 )
             val storage = FirMetadataStorage()
 
@@ -417,7 +403,6 @@ class MetadataCacheManagerTest {
                 MetadataCacheManager(
                     metadataOutputPath = null,
                     metadataCachePath = cacheFile.absolutePath,
-                    logger = testLogger,
                 )
             val storage = FirMetadataStorage()
 
@@ -441,7 +426,6 @@ class MetadataCacheManagerTest {
                 MetadataCacheManager(
                     metadataOutputPath = cacheFile.absolutePath,
                     metadataCachePath = null,
-                    logger = testLogger,
                 )
             val storage = FirMetadataStorage()
 
@@ -480,7 +464,6 @@ class MetadataCacheManagerTest {
                 MetadataCacheManager(
                     metadataOutputPath = null,
                     metadataCachePath = cacheFile.absolutePath,
-                    logger = testLogger,
                 )
             val storage = FirMetadataStorage()
             val classId = ClassId.topLevel(FqName("com.example.Test"))
@@ -514,7 +497,6 @@ class MetadataCacheManagerTest {
                 MetadataCacheManager(
                     metadataOutputPath = cacheFile.absolutePath,
                     metadataCachePath = null,
-                    logger = testLogger,
                 )
             val storage = FirMetadataStorage()
 
@@ -574,7 +556,6 @@ class MetadataCacheManagerTest {
                 MetadataCacheManager(
                     metadataOutputPath = null,
                     metadataCachePath = cacheFile.absolutePath,
-                    logger = testLogger,
                 )
             val storage = FirMetadataStorage()
 

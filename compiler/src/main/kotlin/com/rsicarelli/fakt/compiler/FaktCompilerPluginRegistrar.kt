@@ -62,7 +62,7 @@ class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
             )
 
         // Initialize cache manager for KMP cross-compilation caching (if configured)
-        val cacheManager = createCacheManager(options, logger)
+        val cacheManager = createCacheManager(options)
 
         // Determine cache mode for logging
         val cacheMode =
@@ -157,16 +157,11 @@ class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
      * which is the case for non-KMP projects or when caching is disabled.
      *
      * @param options Compiler options containing cache paths
-     * @param logger Logger for cache operation messages
      * @return MetadataCacheManager instance (always created, acts as no-op when caching not configured)
      */
-    private fun createCacheManager(
-        options: FaktOptions,
-        logger: FaktLogger,
-    ): MetadataCacheManager =
+    private fun createCacheManager(options: FaktOptions): MetadataCacheManager =
         MetadataCacheManager(
             metadataOutputPath = options.metadataOutputPath,
             metadataCachePath = options.metadataCachePath,
-            logger = logger,
         )
 }

@@ -31,6 +31,29 @@ import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 
 /**
+ * Parameters for unified trace logging to reduce parameter count.
+ *
+ * @property interfaceMetrics Unified metrics for interfaces (FIR + IR), empty at INFO level
+ * @property classMetrics Unified metrics for classes (FIR + IR), empty at INFO level
+ * @property interfaceCount Number of interfaces processed
+ * @property classCount Number of classes processed
+ * @property irCacheHits Number of fakes that were IR-cached (skipped generation)
+ * @property transformationTimeNanos Time spent in FIR→IR transformation
+ * @property savedFirTimeNanos FIR time saved by using cache (0 if no cache)
+ * @property aggregateIrTimeNanos Total IR processing time (used when metrics is empty)
+ */
+private data class TraceLogParams(
+    val interfaceMetrics: List<UnifiedFakeMetrics>,
+    val classMetrics: List<UnifiedFakeMetrics>,
+    val interfaceCount: Int,
+    val classCount: Int,
+    val irCacheHits: Int,
+    val transformationTimeNanos: Long,
+    val savedFirTimeNanos: Long,
+    val aggregateIrTimeNanos: Long,
+)
+
+/**
  * FIR-based fake generation following the Metro pattern.
  *
  * This implementation follows the "FIR analyzes, IR generates" architectural pattern:
@@ -238,14 +261,16 @@ class UnifiedFaktIrGenerationExtension(
         // Log consolidated unified trace (FIR + IR combined)
         // At INFO level, metrics lists are empty but we have aggregate times
         logUnifiedTrace(
-            interfaceMetrics = interfaceResult.metrics,
-            classMetrics = classResult.metrics,
-            interfaceCount = interfaceMetadata.size,
-            classCount = classMetadata.size,
-            irCacheHits = totalIrCacheHits,
-            transformationTimeNanos = transformationTimeNanos,
-            savedFirTimeNanos = savedFirTimeNanos,
-            aggregateIrTimeNanos = interfaceResult.totalTimeNanos + classResult.totalTimeNanos,
+            TraceLogParams(
+                interfaceMetrics = interfaceResult.metrics,
+                classMetrics = classResult.metrics,
+                interfaceCount = interfaceMetadata.size,
+                classCount = classMetadata.size,
+                irCacheHits = totalIrCacheHits,
+                transformationTimeNanos = transformationTimeNanos,
+                savedFirTimeNanos = savedFirTimeNanos,
+                aggregateIrTimeNanos = interfaceResult.totalTimeNanos + classResult.totalTimeNanos,
+            ),
         )
     }
 
@@ -406,6 +431,7 @@ class UnifiedFaktIrGenerationExtension(
      * @param collectDetailedMetrics Whether to collect per-fake metrics (DEBUG only)
      * @return ProcessingResult with metrics and IR cache hit count
      */
+    @Suppress("LongMethod", "LoopWithTooManyJumpStatements")
     private fun processInterfacesFromMetadata(
         interfaceMetadata: List<IrGenerationMetadata>,
         firMetricsMap: Map<String, FirMetrics>,
@@ -533,6 +559,7 @@ class UnifiedFaktIrGenerationExtension(
      * @param collectDetailedMetrics Whether to collect per-fake metrics (DEBUG only)
      * @return ProcessingResult with metrics and IR cache hit count
      */
+    @Suppress("LongMethod", "LoopWithTooManyJumpStatements")
     private fun processClassesFromMetadata(
         classMetadata: List<IrClassGenerationMetadata>,
         firMetricsMap: Map<String, FirMetrics>,
@@ -649,40 +676,24 @@ class UnifiedFaktIrGenerationExtension(
      *
      * **QUIET**: No output
      *
-     * @param interfaceMetrics Unified metrics for interfaces (FIR + IR), empty at INFO level
-     * @param classMetrics Unified metrics for classes (FIR + IR), empty at INFO level
-     * @param interfaceCount Number of interfaces processed
-     * @param classCount Number of classes processed
-     * @param irCacheHits Number of fakes that were IR-cached (skipped generation)
-     * @param transformationTimeNanos Time spent in FIR→IR transformation
-     * @param savedFirTimeNanos FIR time saved by using cache (0 if no cache)
-     * @param aggregateIrTimeNanos Total IR processing time (used when metrics is empty)
+     * @param params Parameters for trace logging (see TraceLogParams)
      */
-    private fun logUnifiedTrace(
-        interfaceMetrics: List<UnifiedFakeMetrics>,
-        classMetrics: List<UnifiedFakeMetrics>,
-        interfaceCount: Int,
-        classCount: Int,
-        irCacheHits: Int,
-        transformationTimeNanos: Long,
-        savedFirTimeNanos: Long,
-        aggregateIrTimeNanos: Long,
-    ) {
+    private fun logUnifiedTrace(params: TraceLogParams) {
         // Skip entirely for QUIET level
         if (logger.logLevel < LogLevel.INFO) return
 
         val tree =
             UnifiedMetricsTree(
-                interfaces = interfaceMetrics,
-                classes = classMetrics,
-                interfaceCount = interfaceCount,
-                classCount = classCount,
+                interfaces = params.interfaceMetrics,
+                classes = params.classMetrics,
+                interfaceCount = params.interfaceCount,
+                classCount = params.classCount,
                 interfaceCacheHits = sharedContext.metadataStorage.interfaceCacheHits,
                 classCacheHits = sharedContext.metadataStorage.classCacheHits,
-                irCacheHits = irCacheHits,
-                transformationTimeNanos = transformationTimeNanos,
-                savedFirTimeNanos = savedFirTimeNanos,
-                aggregateIrTimeNanos = aggregateIrTimeNanos,
+                irCacheHits = params.irCacheHits,
+                transformationTimeNanos = params.transformationTimeNanos,
+                savedFirTimeNanos = params.savedFirTimeNanos,
+                aggregateIrTimeNanos = params.aggregateIrTimeNanos,
             )
 
         // INFO: Concise summary (4 lines)

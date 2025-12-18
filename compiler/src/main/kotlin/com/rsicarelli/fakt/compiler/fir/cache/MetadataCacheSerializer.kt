@@ -16,10 +16,12 @@ import com.rsicarelli.fakt.compiler.fir.metadata.FirSourceLocation
 import com.rsicarelli.fakt.compiler.fir.metadata.FirTypeParameterInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeClass
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeInterface
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import java.io.File
+import java.io.IOException
 import java.security.MessageDigest
 
 /**
@@ -47,6 +49,7 @@ import java.security.MessageDigest
  * val validated = cache?.interfaces?.map { MetadataCacheSerializer.toValidated(it) }
  * ```
  */
+@Suppress("TooManyFunctions")
 object MetadataCacheSerializer {
     private val json =
         Json {
@@ -208,6 +211,7 @@ object MetadataCacheSerializer {
      * @param cachePath Absolute path to cache JSON file
      * @return Deserialized cache, or null if file doesn't exist or is invalid
      */
+    @Suppress("ReturnCount")
     fun deserialize(cachePath: String): FirMetadataCache? {
         val file = File(cachePath)
         if (!file.exists()) return null
@@ -216,8 +220,12 @@ object MetadataCacheSerializer {
             val content = file.readText()
             if (content.isBlank()) return null
             json.decodeFromString(FirMetadataCache.serializer(), content)
-        } catch (e: Exception) {
-            null // Invalid cache, will regenerate
+        } catch (_: SerializationException) {
+            // Invalid JSON format - cache will be regenerated
+            null
+        } catch (_: IOException) {
+            // File read error - cache will be regenerated
+            null
         }
     }
 
@@ -233,6 +241,7 @@ object MetadataCacheSerializer {
      * @param filePath Absolute path to source file
      * @return MD5 hex string, "missing" if file doesn't exist, "unknown" for special paths
      */
+    @Suppress("ReturnCount")
     fun computeFileSignature(filePath: String): String {
         if (filePath == "<unknown>") return "unknown"
         val file = File(filePath)
@@ -273,9 +282,7 @@ object MetadataCacheSerializer {
      */
     private fun parseClassId(classIdString: String): ClassId {
         val lastSlashIndex = classIdString.lastIndexOf('/')
-        if (lastSlashIndex == -1) {
-            throw IllegalArgumentException("Invalid ClassId string: $classIdString (missing '/')")
-        }
+        require(lastSlashIndex != -1) { "Invalid ClassId string: $classIdString (missing '/')" }
 
         // Package is everything before the last slash, with "/" replaced by "."
         val packagePart = classIdString.substring(0, lastSlashIndex).replace('/', '.')
@@ -296,9 +303,11 @@ object MetadataCacheSerializer {
     // Extension functions for FIR → Serializable conversion
     private fun FirTypeParameterInfo.toSerializable() = SerializableTypeParameterInfo(name, bounds)
 
-    private fun FirPropertyInfo.toSerializable() = SerializablePropertyInfo(name, type, isMutable, isNullable)
+    private fun FirPropertyInfo.toSerializable() =
+        SerializablePropertyInfo(name, type, isMutable, isNullable)
 
-    private fun FirParameterInfo.toSerializable() = SerializableParameterInfo(name, type, hasDefaultValue, defaultValueCode, isVararg)
+    private fun FirParameterInfo.toSerializable() =
+        SerializableParameterInfo(name, type, hasDefaultValue, defaultValueCode, isVararg)
 
     private fun FirFunctionInfo.toSerializable() =
         SerializableFunctionInfo(
@@ -316,7 +325,8 @@ object MetadataCacheSerializer {
 
     private fun SerializablePropertyInfo.toFir() = FirPropertyInfo(name, type, isMutable, isNullable)
 
-    private fun SerializableParameterInfo.toFir() = FirParameterInfo(name, type, hasDefaultValue, defaultValueCode, isVararg)
+    private fun SerializableParameterInfo.toFir() =
+        FirParameterInfo(name, type, hasDefaultValue, defaultValueCode, isVararg)
 
     private fun SerializableFunctionInfo.toFir() =
         FirFunctionInfo(

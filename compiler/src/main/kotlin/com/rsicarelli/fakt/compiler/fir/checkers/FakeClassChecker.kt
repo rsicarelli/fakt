@@ -58,8 +58,9 @@ internal class FakeClassChecker(
         private val FAKE_ANNOTATION_CLASS_ID = ClassId.topLevel(FqName("com.rsicarelli.fakt.Fake"))
     }
 
-    @Suppress("ReturnCount")
-    context(context: CheckerContext, reporter: DiagnosticReporter) // Validation logic: early returns are idiomatic guard clauses
+    // Validation logic: early returns are idiomatic guard clauses
+    context(context: CheckerContext, reporter: DiagnosticReporter)
+    @Suppress("ReturnCount", "CyclomaticComplexMethod", "ComplexMethod", "LongMethod")
     override fun check(declaration: FirClass) {
         val session = context.session
         val classId = declaration.classId
@@ -75,8 +76,7 @@ internal class FakeClassChecker(
 
         // KMP optimization: Try to load cached metadata from metadata compilation
         // If cache is valid and loaded, skip FIR analysis (data already in storage)
-        val cacheManager = sharedContext.cacheManager
-        if (cacheManager != null && cacheManager.tryLoadCache(sharedContext.metadataStorage)) {
+        if (sharedContext.cacheManager.tryLoadCache(sharedContext.metadataStorage)) {
             return // Cache hit - skip FIR analysis (count tracked in MetadataCacheManager)
         }
 

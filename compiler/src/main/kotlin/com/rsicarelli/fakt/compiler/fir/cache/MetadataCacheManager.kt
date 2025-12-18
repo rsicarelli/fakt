@@ -3,7 +3,6 @@
 package com.rsicarelli.fakt.compiler.fir.cache
 
 import com.rsicarelli.fakt.compiler.api.FirMetadataCache
-import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.fir.metadata.FirMetadataStorage
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -47,7 +46,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 class MetadataCacheManager(
     private val metadataOutputPath: String?,
     private val metadataCachePath: String?,
-    private val logger: FaktLogger,
 ) {
     private val cacheLoaded = AtomicBoolean(false)
     private var lastWriteResult: CacheWriteResult? = null
@@ -77,6 +75,7 @@ class MetadataCacheManager(
      * @param storage FirMetadataStorage to populate from cache
      * @return true if cache was loaded successfully and FIR analysis can be skipped
      */
+    @Suppress("ReturnCount")
     fun tryLoadCache(storage: FirMetadataStorage): Boolean {
         if (!isConsumerMode) return false
         if (cacheLoaded.get()) return true // Already loaded - no log needed
@@ -127,6 +126,7 @@ class MetadataCacheManager(
      * @param storage FirMetadataStorage containing validated metadata
      * @return CacheWriteResult with timing info, or null if nothing was cached
      */
+    @Suppress("ReturnCount")
     fun writeCache(storage: FirMetadataStorage): CacheWriteResult? {
         if (!isProducerMode) return null
 
@@ -188,6 +188,7 @@ class MetadataCacheManager(
      * @param cache Deserialized cache to validate
      * @return true if cache is valid and can be used
      */
+    @Suppress("ReturnCount")
     private fun validateCache(cache: FirMetadataCache): Boolean {
         // Version check
         if (cache.version != FirMetadataCache.CURRENT_VERSION) {
