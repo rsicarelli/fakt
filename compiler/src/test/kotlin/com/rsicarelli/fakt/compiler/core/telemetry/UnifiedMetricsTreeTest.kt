@@ -12,12 +12,17 @@ import kotlin.test.assertTrue
  * Tests for UnifiedMetricsTree - tree-formatted metrics aggregation.
  *
  * Tests follow GIVEN-WHEN-THEN pattern and use vanilla JUnit5 + kotlin-test.
+ *
+ * **New Format (v2):**
+ * - Only regenerated/generated fakes appear in tree (cached fakes are hidden)
+ * - Single "Generated:" or "Regenerated:" section (no separate Interfaces/Classes)
+ * - When all cached: just show INFO summary
  */
 class UnifiedMetricsTreeTest {
     @Test
-    fun `GIVEN single interface WHEN converting to tree THEN should format with proper branching`() =
+    fun `GIVEN single regenerated interface WHEN converting to tree THEN should format with proper branching`() =
         runTest {
-            // GIVEN: Single interface metrics
+            // GIVEN: Single interface metrics (represents regenerated fake)
             val interfaceMetrics =
                 listOf(
                     UnifiedFakeMetrics(
@@ -35,20 +40,25 @@ class UnifiedMetricsTreeTest {
             val result = tree.toTreeString()
 
             // THEN: Should format with proper structure
-            assertContains(result, "FIR + IR trace")
-            assertContains(result, "├─ Total FIR time")
-            assertContains(result, "├─ Total IR time")
-            assertContains(result, "├─ Total time")
-            assertContains(result, "├─ Interfaces: 1")
-            assertContains(result, "│  └─ UserService") // Last interface closes branch
-            assertContains(result, "├─ FIR analysis: 0 type parameters, 5 members")
-            assertContains(result, "└─ IR generation: FakeUserServiceImpl 73 LOC")
+            assertContains(result, "Fakt Trace")
+            assertContains(result, "   ├─ FIR→IR cache transformation")
+            assertContains(result, "   ├─ FIR Time")
+            assertContains(result, "   ├─ IR Time")
+            assertContains(result, "   ├─ Total time")
+            assertContains(result, "   ├─ Stats")
+            assertContains(result, "   │  ├─ Total fakes")
+            assertContains(result, "   │  ├─ Avg Time per Fake")
+            assertContains(result, "Cache hit rate")
+            assertContains(result, "   └─ Generated: 1")
+            assertContains(result, "UserService")
+            assertContains(result, "└─ FakeUserServiceImpl")
+            assertContains(result, "73 LOC")
         }
 
     @Test
-    fun `GIVEN multiple interfaces WHEN converting to tree THEN should show all with correct branching`() =
+    fun `GIVEN multiple regenerated fakes WHEN converting to tree THEN should show all with correct branching`() =
         runTest {
-            // GIVEN: Multiple interface metrics
+            // GIVEN: Multiple interface metrics (regenerated fakes)
             val interfaceMetrics =
                 listOf(
                     UnifiedFakeMetrics(
@@ -73,21 +83,20 @@ class UnifiedMetricsTreeTest {
             // WHEN: Converting to tree string
             val result = tree.toTreeString()
 
-            // THEN: Should show both interfaces with proper branching
-            assertContains(result, "├─ Interfaces: 2")
-            assertContains(result, "│  ├─ UserService") // First interface uses ├─
-            assertContains(result, "│  └─ DataCache") // Last interface uses └─
-            assertContains(result, "FakeUserServiceImpl 73 LOC")
-            assertContains(result, "FakeDataCacheImpl 58 LOC")
-            // Verify unique FIR lines (the bug we're fixing)
-            assertContains(result, "0 type parameters, 5 members")
-            assertContains(result, "1 type parameters, 3 members")
+            // THEN: Should show all regenerated fakes in single section
+            assertContains(result, "   └─ Generated: 2") // Fresh build = "Generated"
+            assertContains(result, "UserService")
+            assertContains(result, "DataCache")
+            assertContains(result, "FakeUserServiceImpl")
+            assertContains(result, "73 LOC")
+            assertContains(result, "FakeDataCacheImpl")
+            assertContains(result, "58 LOC")
         }
 
     @Test
-    fun `GIVEN interfaces and classes WHEN converting to tree THEN should show both sections`() =
+    fun `GIVEN interfaces and classes WHEN converting to tree THEN should combine in single section`() =
         runTest {
-            // GIVEN: Both interface and class metrics
+            // GIVEN: Both interface and class metrics (combined in single section)
             val interfaceMetrics =
                 listOf(
                     UnifiedFakeMetrics(
@@ -115,13 +124,14 @@ class UnifiedMetricsTreeTest {
             // WHEN: Converting to tree string
             val result = tree.toTreeString()
 
-            // THEN: Should show both sections with correct structure
-            assertContains(result, "├─ Interfaces: 1")
-            assertContains(result, "│  ├─ UserService") // Interface doesn't close (classes follow)
-            assertContains(result, "└─ Classes: 1") // Classes section closes the tree
-            assertContains(result, "   └─ DataHolder") // Class uses different prefix
+            // THEN: Should show both in single "Generated" section
+            assertContains(result, "   └─ Generated: 2") // Combined count
+            assertContains(result, "UserService")
+            assertContains(result, "DataHolder")
             assertContains(result, "FakeUserServiceImpl")
+            assertContains(result, "73 LOC")
             assertContains(result, "FakeDataHolderImpl")
+            assertContains(result, "45 LOC")
         }
 
     @Test
@@ -152,31 +162,33 @@ class UnifiedMetricsTreeTest {
             // WHEN: Converting to tree string
             val result = tree.toTreeString()
 
-            // THEN: Should show classes with proper branching
-            assertContains(result, "└─ Classes: 2")
-            assertContains(result, "   ├─ DataHolder") // First class uses ├─
-            assertContains(result, "   └─ ConfigWrapper") // Last class uses └─
+            // THEN: Should show classes in Generated section
+            assertContains(result, "   └─ Generated: 2")
+            assertContains(result, "DataHolder")
+            assertContains(result, "ConfigWrapper")
         }
 
     @Test
     fun `GIVEN empty metrics WHEN converting to tree THEN should show zero counts`() =
         runTest {
-            // GIVEN: Empty metrics
+            // GIVEN: Empty metrics (all cached scenario)
             val tree = UnifiedMetricsTree(interfaces = emptyList(), classes = emptyList())
 
             // WHEN: Converting to tree string
             val result = tree.toTreeString()
 
             // THEN: Should show header with zero counts
-            assertContains(result, "FIR + IR trace")
-            assertContains(result, "├─ Interfaces: 0")
+            assertContains(result, "Fakt Trace")
+            assertContains(result, "   ├─ FIR→IR cache transformation")
+            assertContains(result, "   ├─ Stats")
+            assertContains(result, "Total fakes")
             assertContains(result, "0µs") // Zero time
         }
 
     @Test
     fun `GIVEN metrics WHEN computing totals THEN should sum correctly`() =
         runTest {
-            // GIVEN: Interface and class metrics
+            // GIVEN: Interface and class metrics with transformation time
             val interfaceMetrics =
                 listOf(
                     UnifiedFakeMetrics(
@@ -199,17 +211,22 @@ class UnifiedMetricsTreeTest {
                         irLOC = 45,
                     ),
                 )
-            val tree = UnifiedMetricsTree(interfaces = interfaceMetrics, classes = classMetrics)
+            val transformationTimeNanos = 100_000L // 100µs
+            val tree = UnifiedMetricsTree(
+                interfaces = interfaceMetrics,
+                classes = classMetrics,
+                transformationTimeNanos = transformationTimeNanos,
+            )
 
             // WHEN: Computing totals
             val totalFir = tree.totalFirTimeNanos
             val totalIr = tree.totalIrTimeNanos
             val totalTime = tree.totalTimeNanos
 
-            // THEN: Should sum correctly
+            // THEN: Should sum correctly (including transformation time)
             assertEquals(75_000, totalFir, "FIR time = 45µs + 30µs = 75µs")
             assertEquals(625_000, totalIr, "IR time = 535µs + 90µs = 625µs")
-            assertEquals(700_000, totalTime, "Total = 75µs + 625µs = 700µs")
+            assertEquals(800_000, totalTime, "Total = 75µs + 625µs + 100µs = 800µs")
         }
 
     @Test
@@ -301,7 +318,7 @@ class UnifiedMetricsTreeTest {
     @Test
     fun `GIVEN metrics tree WHEN each line is unique THEN should avoid Gradle filtering`() =
         runTest {
-            // GIVEN: Multiple interfaces with similar FIR analysis lines
+            // GIVEN: Multiple interfaces with similar metrics
             val interfaceMetrics =
                 listOf(
                     UnifiedFakeMetrics(
@@ -327,24 +344,78 @@ class UnifiedMetricsTreeTest {
             val result = tree.toTreeString()
             val lines = result.lines()
 
-            // THEN: All lines should be present (no filtering)
-            // Both interfaces should be visible (check for branch patterns to avoid matching FakeXxxImpl lines)
+            // THEN: All fakes should be present
             assertEquals(
                 1,
-                lines.count { it.contains("├─ Interface1") || it.contains("└─ Interface1") },
+                lines.count { it.contains("Interface1") && !it.contains("FakeInterface1Impl") },
                 "Interface1 should appear once in tree structure",
             )
             assertEquals(
                 1,
-                lines.count { it.contains("├─ Interface2") || it.contains("└─ Interface2") },
+                lines.count { it.contains("Interface2") && !it.contains("FakeInterface2Impl") },
                 "Interface2 should appear once in tree structure",
             )
 
-            // Both FIR analysis lines should be present (this was the bug!)
+            // Both fake impl lines should be present
             assertEquals(
-                2,
-                lines.count { it.contains("FIR analysis: 0 type parameters, 5 members") },
-                "Both FIR analysis lines should be present",
+                1,
+                lines.count { it.contains("FakeInterface1Impl") },
+                "FakeInterface1Impl should appear once",
             )
+            assertEquals(
+                1,
+                lines.count { it.contains("FakeInterface2Impl") },
+                "FakeInterface2Impl should appear once",
+            )
+        }
+
+    @Test
+    fun `GIVEN partial cache WHEN converting to tree THEN should show Generated label`() =
+        runTest {
+            // GIVEN: Some fakes generated with cache hits (others cached)
+            val interfaceMetrics =
+                listOf(
+                    UnifiedFakeMetrics(
+                        name = "ChangedService",
+                        firTimeNanos = 45_000,
+                        firTypeParamCount = 0,
+                        firMemberCount = 5,
+                        irTimeNanos = 535_000,
+                        irLOC = 73,
+                    ),
+                )
+            val tree = UnifiedMetricsTree(
+                interfaces = interfaceMetrics,
+                classes = emptyList(),
+                interfaceCount = 10, // Total interfaces
+                classCount = 2, // Total classes
+                irCacheHits = 11, // 11 of 12 from cache
+            )
+
+            // WHEN: Converting to tree string
+            val result = tree.toTreeString()
+
+            // THEN: Should use "Generated" label (covers both new and regenerated)
+            assertContains(result, "   └─ Generated: 1")
+            assertContains(result, "ChangedService")
+        }
+
+    @Test
+    fun `GIVEN all cached WHEN converting to info summary THEN should show concise message`() =
+        runTest {
+            // GIVEN: All fakes cached (empty metrics lists)
+            val tree = UnifiedMetricsTree(
+                interfaces = emptyList(),
+                classes = emptyList(),
+                interfaceCount = 100,
+                classCount = 22,
+                irCacheHits = 122,
+            )
+
+            // WHEN: Converting to info summary
+            val result = tree.toInfoSummary()
+
+            // THEN: Should show all cached message
+            assertContains(result, "Fakt: 122 fakes (all cached)")
         }
 }

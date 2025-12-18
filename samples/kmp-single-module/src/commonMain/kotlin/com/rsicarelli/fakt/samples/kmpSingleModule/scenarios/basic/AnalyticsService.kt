@@ -12,6 +12,7 @@ import com.rsicarelli.fakt.Fake
 @Fake
 interface AnalyticsService {
     fun track(event: String)
+    fun start()
 }
 
 @Fake

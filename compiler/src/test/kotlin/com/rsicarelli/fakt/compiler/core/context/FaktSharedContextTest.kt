@@ -38,6 +38,7 @@ class FaktSharedContextTest {
                         CompilerOptimizations(
                             logger = FaktLogger.quiet(),
                         ),
+                    cacheManager = null,
                 )
 
             // WHEN
@@ -61,6 +62,7 @@ class FaktSharedContextTest {
                         CompilerOptimizations(
                             logger = FaktLogger.quiet(),
                         ),
+                    cacheManager = null,
                 )
 
             // WHEN
@@ -91,6 +93,7 @@ class FaktSharedContextTest {
                         CompilerOptimizations(
                             logger = FaktLogger.quiet(),
                         ),
+                    cacheManager = null,
                 )
 
             // WHEN & THEN
@@ -115,6 +118,7 @@ class FaktSharedContextTest {
                         CompilerOptimizations(
                             logger = FaktLogger.quiet(),
                         ),
+                    cacheManager = null,
                 )
 
             // WHEN
@@ -144,6 +148,7 @@ class FaktSharedContextTest {
                         CompilerOptimizations(
                             logger = FaktLogger.quiet(),
                         ),
+                    cacheManager = null,
                 )
 
             // WHEN

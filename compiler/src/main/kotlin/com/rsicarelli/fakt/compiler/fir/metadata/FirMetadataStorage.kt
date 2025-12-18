@@ -28,6 +28,29 @@ class FirMetadataStorage {
     private val interfaces = ConcurrentHashMap<ClassId, ValidatedFakeInterface>()
     private val classes = ConcurrentHashMap<ClassId, ValidatedFakeClass>()
 
+    /** Count of interfaces loaded from KMP cache (skipped FIR analysis) */
+    @Volatile
+    var interfaceCacheHits: Int = 0
+        private set
+
+    /** Count of classes loaded from KMP cache (skipped FIR analysis) */
+    @Volatile
+    var classCacheHits: Int = 0
+        private set
+
+    /** Total cache hits (interfaces + classes) */
+    val totalCacheHits: Int get() = interfaceCacheHits + classCacheHits
+
+    /** Increment interface cache hit counter (called when loading from KMP cache) */
+    fun incrementInterfaceCacheHits() {
+        interfaceCacheHits++
+    }
+
+    /** Increment class cache hit counter (called when loading from KMP cache) */
+    fun incrementClassCacheHits() {
+        classCacheHits++
+    }
+
     /**
      * Store validated interface metadata from FIR phase.
      *

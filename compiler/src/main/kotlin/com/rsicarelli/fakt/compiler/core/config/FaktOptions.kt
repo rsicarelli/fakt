@@ -11,6 +11,10 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
  * Loaded from Gradle plugin configuration and command line arguments.
  *
  * **Visibility**: Public to allow FIR/IR extensions to access configuration
+ *
+ * **Cross-Compilation Caching** (KMP optimization):
+ * - [metadataOutputPath]: Set for metadata compilation (producer) to write cache
+ * - [metadataCachePath]: Set for platform compilations (consumers) to read cache
  */
 data class FaktOptions(
     val enabled: Boolean = false,
@@ -18,6 +22,32 @@ data class FaktOptions(
     val outputDir: String? = null,
     val sourceSetContext: SourceSetContext? = null,
 ) {
+    /**
+     * Path to write FIR cache (producer mode: metadata compilation only).
+     * Null for platform compilations and non-KMP projects.
+     */
+    val metadataOutputPath: String?
+        get() = sourceSetContext?.metadataOutputPath
+
+    /**
+     * Path to read FIR cache (consumer mode: platform compilations).
+     * Null for metadata compilation and non-KMP projects.
+     */
+    val metadataCachePath: String?
+        get() = sourceSetContext?.metadataCachePath
+
+    /**
+     * True if operating in producer mode (metadata compilation writes cache).
+     */
+    val isProducerMode: Boolean
+        get() = metadataOutputPath != null
+
+    /**
+     * True if operating in consumer mode (platform compilation reads cache).
+     */
+    val isConsumerMode: Boolean
+        get() = metadataCachePath != null
+
     companion object {
         fun load(configuration: CompilerConfiguration): FaktOptions {
             // Load configuration from the command line processor

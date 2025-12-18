@@ -48,8 +48,8 @@ enum class LogLevel {
      * **Example output:**
      * ```
      * FIR + IR trace
-     * ├─ Total FIR time: 6ms
-     * ├─ Total IR time: 58ms
+     * ├─ FIR Time: 6ms
+     * ├─ IR Time: 58ms
      * │  ├─ FIR analysis: 1 type parameters, 6 members (55µs)
      * │  └─ IR generation: FakeDataCacheImpl 83 LOC (766µs)
      * ```

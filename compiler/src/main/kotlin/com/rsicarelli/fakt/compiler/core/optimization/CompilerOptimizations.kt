@@ -99,12 +99,11 @@ interface CompilerOptimizations {
                 // File-based cache for signatures (shared across compilation tasks)
                 private val cacheFile: File? =
                     outputDir?.let { dir ->
-                        // Use parent directory (build/generated/fakt) to store cache
+                        // Use build/generated/fakt/cache/ for all caches
                         // This ensures the cache is shared across all source sets
-                        File(dir)
-                            .parentFile
-                            ?.resolve("fakt-cache")
-                            ?.resolve("generated-signatures.txt")
+                        File(dir).parentFile?.parentFile
+                            ?.resolve("cache")
+                            ?.resolve("ir-signatures.txt")
                             ?.also {
                                 it.parentFile?.mkdirs()
                             }
@@ -164,8 +163,10 @@ interface CompilerOptimizations {
                 }
 
                 override fun recordGeneration(type: TypeInfo) {
-                    generatedSignatures.add(type.signature)
-                    saveSignatureToFile(type.signature)
+                    // Only save to file if this is a new signature (Set.add returns true for new)
+                    if (generatedSignatures.add(type.signature)) {
+                        saveSignatureToFile(type.signature)
+                    }
                 }
 
                 override fun cacheSize(): Int = generatedSignatures.size

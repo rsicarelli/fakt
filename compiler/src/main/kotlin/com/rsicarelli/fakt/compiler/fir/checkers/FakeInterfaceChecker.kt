@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.fir.checkers
 
+import com.rsicarelli.fakt.compiler.api.TimeFormatter
 import com.rsicarelli.fakt.compiler.core.context.FaktSharedContext
 import com.rsicarelli.fakt.compiler.core.telemetry.measureTimeNanos
 import com.rsicarelli.fakt.compiler.fir.metadata.FirFunctionInfo
@@ -80,6 +81,13 @@ internal class FakeInterfaceChecker(
             return // Skip, FakeClassChecker will validate classes
         }
 
+        // KMP optimization: Try to load cached metadata from metadata compilation
+        // If cache is valid and loaded, skip FIR analysis (data already in storage)
+        val cacheManager = sharedContext.cacheManager
+        if (cacheManager != null && cacheManager.tryLoadCache(sharedContext.metadataStorage)) {
+            return // Cache hit - skip FIR analysis (count tracked in MetadataCacheManager)
+        }
+
         // Validate not sealed
         if (declaration.modality == Modality.SEALED) {
             logger.debug("Skipped $simpleName: sealed interface not supported")
@@ -118,6 +126,16 @@ internal class FakeInterfaceChecker(
         val metadataWithTiming =
             timedResult.result.copy(validationTimeNanos = timedResult.durationNanos)
         sharedContext.metadataStorage.storeInterface(metadataWithTiming)
+
+        // Write cache for producer mode (metadata compilation)
+        // This is called after each interface to ensure cache is written even if IR phase doesn't run
+        // (metadata compilation doesn't have IR phase)
+        // Note: Don't log here - writeCache logs the summary on the final write
+        sharedContext.cacheManager?.let { manager ->
+            if (manager.isProducerMode) {
+                manager.writeCache(sharedContext.metadataStorage)
+            }
+        }
     }
 
     /**
