@@ -431,7 +431,6 @@ class UnifiedFaktIrGenerationExtension(
      * @param collectDetailedMetrics Whether to collect per-fake metrics (DEBUG only)
      * @return ProcessingResult with metrics and IR cache hit count
      */
-    @Suppress("LongMethod", "LoopWithTooManyJumpStatements")
     private fun processInterfacesFromMetadata(
         interfaceMetadata: List<IrGenerationMetadata>,
         firMetricsMap: Map<String, FirMetrics>,
@@ -559,7 +558,6 @@ class UnifiedFaktIrGenerationExtension(
      * @param collectDetailedMetrics Whether to collect per-fake metrics (DEBUG only)
      * @return ProcessingResult with metrics and IR cache hit count
      */
-    @Suppress("LongMethod", "LoopWithTooManyJumpStatements")
     private fun processClassesFromMetadata(
         classMetadata: List<IrClassGenerationMetadata>,
         firMetricsMap: Map<String, FirMetrics>,

@@ -131,7 +131,6 @@ data class UnifiedMetricsTree(
      * @param targetColumn Column for right-aligning time values (default: 80)
      * @return Multi-line tree-formatted string ready for logging
      */
-    @Suppress("LongMethod")
     fun toTreeString(targetColumn: Int = 80): String =
         buildString {
             appendLine("Fakt Trace")

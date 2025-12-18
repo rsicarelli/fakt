@@ -75,7 +75,6 @@ class MetadataCacheManager(
      * @param storage FirMetadataStorage to populate from cache
      * @return true if cache was loaded successfully and FIR analysis can be skipped
      */
-    @Suppress("ReturnCount")
     fun tryLoadCache(storage: FirMetadataStorage): Boolean {
         if (!isConsumerMode) return false
         if (cacheLoaded.get()) return true // Already loaded - no log needed
@@ -126,7 +125,6 @@ class MetadataCacheManager(
      * @param storage FirMetadataStorage containing validated metadata
      * @return CacheWriteResult with timing info, or null if nothing was cached
      */
-    @Suppress("ReturnCount")
     fun writeCache(storage: FirMetadataStorage): CacheWriteResult? {
         if (!isProducerMode) return null
 
@@ -188,7 +186,6 @@ class MetadataCacheManager(
      * @param cache Deserialized cache to validate
      * @return true if cache is valid and can be used
      */
-    @Suppress("ReturnCount")
     private fun validateCache(cache: FirMetadataCache): Boolean {
         // Version check
         if (cache.version != FirMetadataCache.CURRENT_VERSION) {

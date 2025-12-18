@@ -49,7 +49,6 @@ import java.security.MessageDigest
  * val validated = cache?.interfaces?.map { MetadataCacheSerializer.toValidated(it) }
  * ```
  */
-@Suppress("TooManyFunctions")
 object MetadataCacheSerializer {
     private val json =
         Json {
@@ -211,7 +210,6 @@ object MetadataCacheSerializer {
      * @param cachePath Absolute path to cache JSON file
      * @return Deserialized cache, or null if file doesn't exist or is invalid
      */
-    @Suppress("ReturnCount")
     fun deserialize(cachePath: String): FirMetadataCache? {
         val file = File(cachePath)
         if (!file.exists()) return null
@@ -241,7 +239,6 @@ object MetadataCacheSerializer {
      * @param filePath Absolute path to source file
      * @return MD5 hex string, "missing" if file doesn't exist, "unknown" for special paths
      */
-    @Suppress("ReturnCount")
     fun computeFileSignature(filePath: String): String {
         if (filePath == "<unknown>") return "unknown"
         val file = File(filePath)
@@ -303,11 +300,9 @@ object MetadataCacheSerializer {
     // Extension functions for FIR → Serializable conversion
     private fun FirTypeParameterInfo.toSerializable() = SerializableTypeParameterInfo(name, bounds)
 
-    private fun FirPropertyInfo.toSerializable() =
-        SerializablePropertyInfo(name, type, isMutable, isNullable)
+    private fun FirPropertyInfo.toSerializable() = SerializablePropertyInfo(name, type, isMutable, isNullable)
 
-    private fun FirParameterInfo.toSerializable() =
-        SerializableParameterInfo(name, type, hasDefaultValue, defaultValueCode, isVararg)
+    private fun FirParameterInfo.toSerializable() = SerializableParameterInfo(name, type, hasDefaultValue, defaultValueCode, isVararg)
 
     private fun FirFunctionInfo.toSerializable() =
         SerializableFunctionInfo(
@@ -325,8 +320,7 @@ object MetadataCacheSerializer {
 
     private fun SerializablePropertyInfo.toFir() = FirPropertyInfo(name, type, isMutable, isNullable)
 
-    private fun SerializableParameterInfo.toFir() =
-        FirParameterInfo(name, type, hasDefaultValue, defaultValueCode, isVararg)
+    private fun SerializableParameterInfo.toFir() = FirParameterInfo(name, type, hasDefaultValue, defaultValueCode, isVararg)
 
     private fun SerializableFunctionInfo.toFir() =
         FirFunctionInfo(

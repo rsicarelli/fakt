@@ -60,7 +60,6 @@ internal class FakeClassChecker(
 
     // Validation logic: early returns are idiomatic guard clauses
     context(context: CheckerContext, reporter: DiagnosticReporter)
-    @Suppress("ReturnCount", "CyclomaticComplexMethod", "ComplexMethod", "LongMethod")
     override fun check(declaration: FirClass) {
         val session = context.session
         val classId = declaration.classId

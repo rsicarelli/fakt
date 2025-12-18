@@ -38,7 +38,6 @@ internal class GenericTypeHandler {
 
         return when {
             preserveTypeParameters && irType.arguments.isNotEmpty() -> {
-                @Suppress("KotlinConstantConditions")
                 val typeArgsString =
                     renderTypeArguments(
                         arguments = irType.arguments,

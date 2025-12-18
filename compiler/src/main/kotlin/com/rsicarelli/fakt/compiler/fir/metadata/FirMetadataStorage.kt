@@ -24,7 +24,6 @@ import java.util.concurrent.ConcurrentHashMap
  * - Fast lookup if IR needs specific interface
  * - Matches Kotlin compiler's internal representation
  */
-@Suppress("TooManyFunctions")
 class FirMetadataStorage {
     private val interfaces = ConcurrentHashMap<ClassId, ValidatedFakeInterface>()
     private val classes = ConcurrentHashMap<ClassId, ValidatedFakeClass>()

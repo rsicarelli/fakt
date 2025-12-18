@@ -66,7 +66,6 @@ internal class FakeInterfaceChecker(
         private val FAKE_ANNOTATION_CLASS_ID = ClassId.topLevel(FqName("com.rsicarelli.fakt.Fake"))
     }
 
-    @Suppress("ReturnCount")
     context(context: CheckerContext, reporter: DiagnosticReporter) // Validation logic: early returns are idiomatic guard clauses
     override fun check(declaration: FirClass) {
         val session = context.session
@@ -375,7 +374,6 @@ internal class FakeInterfaceChecker(
      * @return Source location metadata (UNKNOWN for now)
      */
     private fun extractSourceLocation(): FirSourceLocation {
-        @Suppress("ForbiddenComment")
         // TODO: Implement proper source location extraction from FirClass
         // This requires investigating KtSourceElement type hierarchy and safe access patterns
         // For now, returning UNKNOWN allows the plugin to proceed without blocking on this non-critical feature
