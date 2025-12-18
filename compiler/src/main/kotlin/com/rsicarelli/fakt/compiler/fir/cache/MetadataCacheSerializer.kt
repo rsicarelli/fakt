@@ -48,11 +48,12 @@ import java.security.MessageDigest
  * ```
  */
 object MetadataCacheSerializer {
-    private val json = Json {
-        prettyPrint = false
-        ignoreUnknownKeys = true
-        encodeDefaults = true
-    }
+    private val json =
+        Json {
+            prettyPrint = false
+            ignoreUnknownKeys = true
+            encodeDefaults = true
+        }
 
     // ========================================================================
     // Serialization: ValidatedFakeInterface → SerializableFakeInterface
@@ -132,13 +133,14 @@ object MetadataCacheSerializer {
             functions = serializable.functions.map { it.toFir() },
             inheritedProperties = serializable.inheritedProperties.map { it.toFir() },
             inheritedFunctions = serializable.inheritedFunctions.map { it.toFir() },
-            sourceLocation = FirSourceLocation(
-                filePath = serializable.sourceFilePath,
-                startLine = 0,
-                startColumn = 0,
-                endLine = 0,
-                endColumn = 0,
-            ),
+            sourceLocation =
+                FirSourceLocation(
+                    filePath = serializable.sourceFilePath,
+                    startLine = 0,
+                    startColumn = 0,
+                    endLine = 0,
+                    endColumn = 0,
+                ),
             // Cache hit: no FIR analysis performed in this compilation
             validationTimeNanos = 0L,
         )
@@ -162,13 +164,14 @@ object MetadataCacheSerializer {
             openProperties = serializable.openProperties.map { it.toFir() },
             abstractMethods = serializable.abstractMethods.map { it.toFir() },
             openMethods = serializable.openMethods.map { it.toFir() },
-            sourceLocation = FirSourceLocation(
-                filePath = serializable.sourceFilePath,
-                startLine = 0,
-                startColumn = 0,
-                endLine = 0,
-                endColumn = 0,
-            ),
+            sourceLocation =
+                FirSourceLocation(
+                    filePath = serializable.sourceFilePath,
+                    startLine = 0,
+                    startColumn = 0,
+                    endLine = 0,
+                    endColumn = 0,
+                ),
             // Cache hit: no FIR analysis performed in this compilation
             validationTimeNanos = 0L,
         )
@@ -186,7 +189,10 @@ object MetadataCacheSerializer {
      * @param cache Cache data to serialize
      * @param outputPath Absolute path to output JSON file
      */
-    fun serialize(cache: FirMetadataCache, outputPath: String) {
+    fun serialize(
+        cache: FirMetadataCache,
+        outputPath: String,
+    ) {
         val file = File(outputPath)
         file.parentFile?.mkdirs()
 
@@ -243,9 +249,12 @@ object MetadataCacheSerializer {
      * @param signatures List of individual file signatures
      * @return Combined MD5 signature
      */
-    fun computeCombinedSignature(signatures: List<String>): String {
-        return signatures.sorted().joinToString("|").toByteArray().md5()
-    }
+    fun computeCombinedSignature(signatures: List<String>): String =
+        signatures
+            .sorted()
+            .joinToString("|")
+            .toByteArray()
+            .md5()
 
     // ========================================================================
     // Private Helpers
@@ -286,29 +295,37 @@ object MetadataCacheSerializer {
 
     // Extension functions for FIR → Serializable conversion
     private fun FirTypeParameterInfo.toSerializable() = SerializableTypeParameterInfo(name, bounds)
+
     private fun FirPropertyInfo.toSerializable() = SerializablePropertyInfo(name, type, isMutable, isNullable)
+
     private fun FirParameterInfo.toSerializable() = SerializableParameterInfo(name, type, hasDefaultValue, defaultValueCode, isVararg)
-    private fun FirFunctionInfo.toSerializable() = SerializableFunctionInfo(
-        name = name,
-        parameters = parameters.map { it.toSerializable() },
-        returnType = returnType,
-        isSuspend = isSuspend,
-        isInline = isInline,
-        typeParameters = typeParameters.map { it.toSerializable() },
-        typeParameterBounds = typeParameterBounds,
-    )
+
+    private fun FirFunctionInfo.toSerializable() =
+        SerializableFunctionInfo(
+            name = name,
+            parameters = parameters.map { it.toSerializable() },
+            returnType = returnType,
+            isSuspend = isSuspend,
+            isInline = isInline,
+            typeParameters = typeParameters.map { it.toSerializable() },
+            typeParameterBounds = typeParameterBounds,
+        )
 
     // Extension functions for Serializable → FIR conversion
     private fun SerializableTypeParameterInfo.toFir() = FirTypeParameterInfo(name, bounds)
+
     private fun SerializablePropertyInfo.toFir() = FirPropertyInfo(name, type, isMutable, isNullable)
+
     private fun SerializableParameterInfo.toFir() = FirParameterInfo(name, type, hasDefaultValue, defaultValueCode, isVararg)
-    private fun SerializableFunctionInfo.toFir() = FirFunctionInfo(
-        name = name,
-        parameters = parameters.map { it.toFir() },
-        returnType = returnType,
-        isSuspend = isSuspend,
-        isInline = isInline,
-        typeParameters = typeParameters.map { it.toFir() },
-        typeParameterBounds = typeParameterBounds,
-    )
+
+    private fun SerializableFunctionInfo.toFir() =
+        FirFunctionInfo(
+            name = name,
+            parameters = parameters.map { it.toFir() },
+            returnType = returnType,
+            isSuspend = isSuspend,
+            isInline = isInline,
+            typeParameters = typeParameters.map { it.toFir() },
+            typeParameterBounds = typeParameterBounds,
+        )
 }

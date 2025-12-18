@@ -197,11 +197,12 @@ internal object SourceSetDiscovery {
         // Consumer mode (platform compilations): Reads cache from metadata compilation
         val cacheFilePath = "$buildDir/generated/fakt/cache/fir-metadata.json"
 
-        val (metadataOutputPath, metadataCachePath) = computeCachePaths(
-            platformType = platformType,
-            hasCommonMain = hasCommonMain,
-            cacheFilePath = cacheFilePath,
-        )
+        val (metadataOutputPath, metadataCachePath) =
+            computeCachePaths(
+                platformType = platformType,
+                hasCommonMain = hasCommonMain,
+                cacheFilePath = cacheFilePath,
+            )
 
         // 9. Package into context
         return SourceSetContext(

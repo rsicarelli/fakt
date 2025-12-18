@@ -166,11 +166,12 @@ class UnifiedFaktIrGenerationExtension(
 
         // Build FIR metrics map for unified logging (name → FIR metrics)
         // Skip when not DEBUG - only used for detailed tree output
-        val firMetricsMap = if (collectDetailedMetrics) {
-            buildFirMetricsMap(validatedInterfaces, validatedClasses)
-        } else {
-            emptyMap()
-        }
+        val firMetricsMap =
+            if (collectDetailedMetrics) {
+                buildFirMetricsMap(validatedInterfaces, validatedClasses)
+            } else {
+                emptyMap()
+            }
 
         // Build ClassId → IrClass map for fast lookup
         val irClassMap = buildIrClassMap(moduleFragment)
@@ -422,14 +423,15 @@ class UnifiedFaktIrGenerationExtension(
             val signature = metadata.buildSignature()
 
             // Build TypeInfo for cache operations
-            val typeInfo = TypeInfo(
-                name = interfaceName,
-                fullyQualifiedName = "$packageName.$interfaceName",
-                packageName = packageName,
-                fileName = "$interfaceName.kt",
-                annotations = listOf("com.rsicarelli.fakt.Fake"),
-                signature = signature,
-            )
+            val typeInfo =
+                TypeInfo(
+                    name = interfaceName,
+                    fullyQualifiedName = "$packageName.$interfaceName",
+                    packageName = packageName,
+                    fileName = "$interfaceName.kt",
+                    annotations = listOf("com.rsicarelli.fakt.Fake"),
+                    signature = signature,
+                )
 
             // Build output file path using SourceSetContext (Gradle-provided directory)
             val outputDir = java.io.File(sourceSetContext.outputDirectory)
@@ -446,12 +448,15 @@ class UnifiedFaktIrGenerationExtension(
             }
 
             // Get FIR metrics for this interface (only needed for detailed metrics)
-            val firMetrics = if (collectDetailedMetrics) {
-                firMetricsMap[interfaceName] ?: run {
-                    logger.warn("No FIR metrics found for $interfaceName - skipping")
-                    continue
+            val firMetrics =
+                if (collectDetailedMetrics) {
+                    firMetricsMap[interfaceName] ?: run {
+                        logger.warn("No FIR metrics found for $interfaceName - skipping")
+                        continue
+                    }
+                } else {
+                    null
                 }
-            } else null
 
             // Cache miss - delete old file if signature changed
             val isRegeneration = outputFile.exists()
@@ -472,12 +477,13 @@ class UnifiedFaktIrGenerationExtension(
             )
 
             // Generate fake implementation with timing
-            val (generatedCode, generationTimeNanos) = measureTimeNanos {
-                codeGenerator.generateWorkingFakeImplementation(
-                    sourceInterface = metadata.sourceInterface,
-                    analysis = interfaceAnalysis,
-                )
-            }
+            val (generatedCode, generationTimeNanos) =
+                measureTimeNanos {
+                    codeGenerator.generateWorkingFakeImplementation(
+                        sourceInterface = metadata.sourceInterface,
+                        analysis = interfaceAnalysis,
+                    )
+                }
 
             // Record successful generation in cache
             optimizations.recordGeneration(typeInfo)
@@ -544,14 +550,15 @@ class UnifiedFaktIrGenerationExtension(
             val signature = metadata.buildSignature()
 
             // Build TypeInfo for cache operations
-            val typeInfo = TypeInfo(
-                name = className,
-                fullyQualifiedName = "$packageName.$className",
-                packageName = packageName,
-                fileName = "$className.kt",
-                annotations = listOf("com.rsicarelli.fakt.Fake"),
-                signature = signature,
-            )
+            val typeInfo =
+                TypeInfo(
+                    name = className,
+                    fullyQualifiedName = "$packageName.$className",
+                    packageName = packageName,
+                    fileName = "$className.kt",
+                    annotations = listOf("com.rsicarelli.fakt.Fake"),
+                    signature = signature,
+                )
 
             // Build output file path using SourceSetContext (Gradle-provided directory)
             val outputDir = java.io.File(sourceSetContext.outputDirectory)
@@ -568,12 +575,15 @@ class UnifiedFaktIrGenerationExtension(
             }
 
             // Get FIR metrics for this class (only needed for detailed metrics)
-            val firMetrics = if (collectDetailedMetrics) {
-                firMetricsMap[className] ?: run {
-                    logger.warn("No FIR metrics found for class $className - skipping")
-                    continue
+            val firMetrics =
+                if (collectDetailedMetrics) {
+                    firMetricsMap[className] ?: run {
+                        logger.warn("No FIR metrics found for class $className - skipping")
+                        continue
+                    }
+                } else {
+                    null
                 }
-            } else null
 
             // Cache miss - delete old file if signature changed
             val isRegeneration = outputFile.exists()
@@ -586,12 +596,13 @@ class UnifiedFaktIrGenerationExtension(
             val classAnalysis = metadata.toClassAnalysis()
 
             // Generate fake implementation with timing
-            val (generatedCode, generationTimeNanos) = measureTimeNanos {
-                codeGenerator.generateWorkingClassFake(
-                    sourceClass = metadata.sourceClass,
-                    analysis = classAnalysis,
-                )
-            }
+            val (generatedCode, generationTimeNanos) =
+                measureTimeNanos {
+                    codeGenerator.generateWorkingClassFake(
+                        sourceClass = metadata.sourceClass,
+                        analysis = classAnalysis,
+                    )
+                }
 
             // Record successful generation in cache
             optimizations.recordGeneration(typeInfo)

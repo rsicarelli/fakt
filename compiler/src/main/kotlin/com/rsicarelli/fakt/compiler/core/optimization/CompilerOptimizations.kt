@@ -101,7 +101,9 @@ interface CompilerOptimizations {
                     outputDir?.let { dir ->
                         // Use build/generated/fakt/cache/ for all caches
                         // This ensures the cache is shared across all source sets
-                        File(dir).parentFile?.parentFile
+                        File(dir)
+                            .parentFile
+                            ?.parentFile
                             ?.resolve("cache")
                             ?.resolve("ir-signatures.txt")
                             ?.also {

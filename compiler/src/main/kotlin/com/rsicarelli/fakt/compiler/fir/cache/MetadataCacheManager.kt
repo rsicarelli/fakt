@@ -144,26 +144,29 @@ class MetadataCacheManager(
         val serializableClasses = classes.map { MetadataCacheSerializer.toSerializable(it) }
 
         // Compute combined signature
-        val signatures = serializableInterfaces.map { it.sourceFileSignature } +
+        val signatures =
+            serializableInterfaces.map { it.sourceFileSignature } +
                 serializableClasses.map { it.sourceFileSignature }
         val cacheSignature = MetadataCacheSerializer.computeCombinedSignature(signatures)
 
-        val cache = FirMetadataCache(
-            cacheSignature = cacheSignature,
-            interfaces = serializableInterfaces,
-            classes = serializableClasses,
-        )
+        val cache =
+            FirMetadataCache(
+                cacheSignature = cacheSignature,
+                interfaces = serializableInterfaces,
+                classes = serializableClasses,
+            )
 
         MetadataCacheSerializer.serialize(cache, outputPath)
 
         val durationNanos = System.nanoTime() - startTime
 
-        val result = CacheWriteResult(
-            interfaceCount = interfaces.size,
-            classCount = classes.size,
-            durationNanos = durationNanos,
-            outputPath = outputPath,
-        )
+        val result =
+            CacheWriteResult(
+                interfaceCount = interfaces.size,
+                classCount = classes.size,
+                durationNanos = durationNanos,
+                outputPath = outputPath,
+            )
         lastWriteResult = result
         return result
     }

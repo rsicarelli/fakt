@@ -65,11 +65,12 @@ class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
         val cacheManager = createCacheManager(options, logger)
 
         // Determine cache mode for logging
-        val cacheMode = when {
-            cacheManager.isProducerMode -> "PRODUCER → ${options.metadataOutputPath}"
-            cacheManager.isConsumerMode -> "CONSUMER ← ${options.metadataCachePath}"
-            else -> "disabled"
-        }
+        val cacheMode =
+            when {
+                cacheManager.isProducerMode -> "PRODUCER → ${options.metadataOutputPath}"
+                cacheManager.isConsumerMode -> "CONSUMER ← ${options.metadataCachePath}"
+                else -> "disabled"
+            }
 
         // Log consolidated initialization tree
         logPluginInitialization(
@@ -146,7 +147,7 @@ class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
             appendLine("   ├─ output: ${options.outputDir}")
             appendLine("   ├─ firCacheMode: $cacheMode")
             append("   └─ irCacheSize: ${optimizations.cacheSize()} signatures")
-        }
+        },
     )
 
     /**
@@ -162,9 +163,10 @@ class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
     private fun createCacheManager(
         options: FaktOptions,
         logger: FaktLogger,
-    ): MetadataCacheManager = MetadataCacheManager(
-        metadataOutputPath = options.metadataOutputPath,
-        metadataCachePath = options.metadataCachePath,
-        logger = logger,
-    )
+    ): MetadataCacheManager =
+        MetadataCacheManager(
+            metadataOutputPath = options.metadataOutputPath,
+            metadataCachePath = options.metadataCachePath,
+            logger = logger,
+        )
 }

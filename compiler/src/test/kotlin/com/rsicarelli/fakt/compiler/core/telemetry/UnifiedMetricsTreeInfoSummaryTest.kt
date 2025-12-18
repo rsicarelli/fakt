@@ -268,11 +268,12 @@ class UnifiedMetricsTreeInfoSummaryTest {
                         irLOC = 45,
                     )
                 }
-            val tree = UnifiedMetricsTree(
-                interfaces = interfaces,
-                classes = classes,
-                irCacheHits = 47, // All 47 cached
-            )
+            val tree =
+                UnifiedMetricsTree(
+                    interfaces = interfaces,
+                    classes = classes,
+                    irCacheHits = 47, // All 47 cached
+                )
 
             // WHEN: Formatting as INFO summary
             val summary = tree.toInfoSummary()
@@ -307,11 +308,12 @@ class UnifiedMetricsTreeInfoSummaryTest {
                         irLOC = 45,
                     )
                 }
-            val tree = UnifiedMetricsTree(
-                interfaces = interfaces,
-                classes = classes,
-                irCacheHits = 0,
-            )
+            val tree =
+                UnifiedMetricsTree(
+                    interfaces = interfaces,
+                    classes = classes,
+                    irCacheHits = 0,
+                )
 
             // WHEN: Formatting as INFO summary
             val summary = tree.toInfoSummary()

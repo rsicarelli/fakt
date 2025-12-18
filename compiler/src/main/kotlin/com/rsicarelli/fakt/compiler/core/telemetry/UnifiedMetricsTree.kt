@@ -73,6 +73,7 @@ data class UnifiedMetricsTree(
 
     /** Whether all fakes were IR-cached (nothing regenerated) */
     val allIrCached: Boolean get() = irCacheHits == totalFakes && totalFakes > 0
+
     /**
      * FIR Time across all fakes (interfaces + classes).
      */
@@ -141,14 +142,15 @@ data class UnifiedMetricsTree(
             )
 
             // Line 2: FIR Time with cache info
-            val firLabel = when {
-                totalFirCacheHits > 0 && savedFirTimeNanos > 0 ->
-                    "   ├─ FIR Time ($totalFirCacheHits from cache saved ${TimeFormatter.format(savedFirTimeNanos)})"
-                totalFirCacheHits > 0 ->
-                    "   ├─ FIR Time ($totalFirCacheHits from cache)"
-                else ->
-                    "   ├─ FIR Time"
-            }
+            val firLabel =
+                when {
+                    totalFirCacheHits > 0 && savedFirTimeNanos > 0 ->
+                        "   ├─ FIR Time ($totalFirCacheHits from cache saved ${TimeFormatter.format(savedFirTimeNanos)})"
+                    totalFirCacheHits > 0 ->
+                        "   ├─ FIR Time ($totalFirCacheHits from cache)"
+                    else ->
+                        "   ├─ FIR Time"
+                }
             appendLine(
                 formatLine(
                     firLabel,
@@ -158,11 +160,12 @@ data class UnifiedMetricsTree(
             )
 
             // Line 3: IR Time with cache info
-            val irLabel = if (irCacheHits > 0) {
-                "   ├─ IR Time ($irCacheHits from cache)"
-            } else {
-                "   ├─ IR Time"
-            }
+            val irLabel =
+                if (irCacheHits > 0) {
+                    "   ├─ IR Time ($irCacheHits from cache)"
+                } else {
+                    "   ├─ IR Time"
+                }
             appendLine(
                 formatLine(
                     irLabel,
@@ -356,6 +359,5 @@ data class UnifiedMetricsTree(
     /**
      * Formats a number with thousand separators (e.g., 4521 → "4,521").
      */
-    private fun formatNumber(number: Int): String =
-        "%,d".format(number)
+    private fun formatNumber(number: Int): String = "%,d".format(number)
 }

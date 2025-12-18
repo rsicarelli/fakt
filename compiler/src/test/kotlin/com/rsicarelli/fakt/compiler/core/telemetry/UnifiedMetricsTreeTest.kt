@@ -212,11 +212,12 @@ class UnifiedMetricsTreeTest {
                     ),
                 )
             val transformationTimeNanos = 100_000L // 100µs
-            val tree = UnifiedMetricsTree(
-                interfaces = interfaceMetrics,
-                classes = classMetrics,
-                transformationTimeNanos = transformationTimeNanos,
-            )
+            val tree =
+                UnifiedMetricsTree(
+                    interfaces = interfaceMetrics,
+                    classes = classMetrics,
+                    transformationTimeNanos = transformationTimeNanos,
+                )
 
             // WHEN: Computing totals
             val totalFir = tree.totalFirTimeNanos
@@ -384,13 +385,14 @@ class UnifiedMetricsTreeTest {
                         irLOC = 73,
                     ),
                 )
-            val tree = UnifiedMetricsTree(
-                interfaces = interfaceMetrics,
-                classes = emptyList(),
-                interfaceCount = 10, // Total interfaces
-                classCount = 2, // Total classes
-                irCacheHits = 11, // 11 of 12 from cache
-            )
+            val tree =
+                UnifiedMetricsTree(
+                    interfaces = interfaceMetrics,
+                    classes = emptyList(),
+                    interfaceCount = 10, // Total interfaces
+                    classCount = 2, // Total classes
+                    irCacheHits = 11, // 11 of 12 from cache
+                )
 
             // WHEN: Converting to tree string
             val result = tree.toTreeString()
@@ -404,13 +406,14 @@ class UnifiedMetricsTreeTest {
     fun `GIVEN all cached WHEN converting to info summary THEN should show concise message`() =
         runTest {
             // GIVEN: All fakes cached (empty metrics lists)
-            val tree = UnifiedMetricsTree(
-                interfaces = emptyList(),
-                classes = emptyList(),
-                interfaceCount = 100,
-                classCount = 22,
-                irCacheHits = 122,
-            )
+            val tree =
+                UnifiedMetricsTree(
+                    interfaces = emptyList(),
+                    classes = emptyList(),
+                    interfaceCount = 100,
+                    classCount = 22,
+                    irCacheHits = 122,
+                )
 
             // WHEN: Converting to info summary
             val result = tree.toInfoSummary()
