@@ -48,7 +48,6 @@ fun ClassBuilder.overrideMethod(
             val parts = typeParam.split(" : ", limit = 2)
             val name = parts[0].trim()
             val constraints = if (parts.size > 1) arrayOf(parts[1].trim()) else emptyArray()
-            @Suppress("SpreadOperator") // Necessary for conditional vararg constraints (0 or 1 element)
             typeParam(name, *constraints)
         }
 
@@ -279,7 +278,6 @@ fun ClassBuilder.configureMethod(
             val parts = typeParam.split(" : ", limit = 2)
             val name = parts[0].trim()
             val constraints = if (parts.size > 1) arrayOf(parts[1].trim()) else emptyArray()
-            @Suppress("SpreadOperator") // Necessary for conditional vararg constraints (0 or 1 element)
             typeParam(name, *constraints)
         }
 

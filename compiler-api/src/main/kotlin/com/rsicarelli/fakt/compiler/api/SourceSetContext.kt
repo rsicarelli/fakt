@@ -21,6 +21,11 @@ import kotlinx.serialization.Serializable
  * - Works with Android build variants
  * - Future-proof for new Kotlin targets
  *
+ * **Cross-Compilation Caching** (KMP optimization):
+ * - `metadataOutputPath`: Set for metadata compilation (producer) to write cache
+ * - `metadataCachePath`: Set for platform compilations (consumers) to read cache
+ * - When cache is valid, platform compilations skip redundant FIR analysis
+ *
  * @property compilationName Name of the compilation (e.g., "main", "test", "integrationTest")
  * @property targetName Name of the target (e.g., "jvm", "iosX64", "metadata")
  * @property platformType Platform type identifier (e.g., "jvm", "native", "js", "common")
@@ -28,6 +33,8 @@ import kotlinx.serialization.Serializable
  * @property defaultSourceSet The primary source set for this compilation
  * @property allSourceSets All source sets in the dependsOn hierarchy (including default)
  * @property outputDirectory Absolute path where generated code should be written
+ * @property metadataOutputPath Path to write FIR cache (producer mode: metadata compilation only)
+ * @property metadataCachePath Path to read FIR cache (consumer mode: platform compilations)
  *
  * @see SourceSetInfo
  */
@@ -40,6 +47,8 @@ data class SourceSetContext(
     val defaultSourceSet: SourceSetInfo,
     val allSourceSets: List<SourceSetInfo>,
     val outputDirectory: String,
+    val metadataOutputPath: String? = null,
+    val metadataCachePath: String? = null,
 ) {
     init {
         require(compilationName.isNotBlank()) { "compilationName cannot be blank" }

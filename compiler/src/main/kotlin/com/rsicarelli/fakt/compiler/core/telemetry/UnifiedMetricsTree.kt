@@ -7,15 +7,7 @@ import com.rsicarelli.fakt.compiler.api.TimeFormatter
 /** Width for time value display in metrics output formatting (characters). */
 private const val TIME_DISPLAY_WIDTH = 10
 
-/**
- * Threshold in nanoseconds for cache hit detection (100µs).
- *
- * IR generation times below this threshold indicate cached fakes.
- * Fresh generation: 500µs-5ms, Cached: ~5-50µs.
- */
-private const val CACHE_HIT_THRESHOLD_NANOS = 100_000L
-
-/** Multiplier for converting decimal to percentage (e.g., 0.75 * 100 = 75%). */
+/** Multiplier for converting decimal to percentage. */
 private const val PERCENTAGE_MULTIPLIER = 100
 
 /**
@@ -42,8 +34,8 @@ private const val PERCENTAGE_MULTIPLIER = 100
  * **Output Format:**
  * ```
  * FIR + IR trace
- * ├─ Total FIR time                                                            234µs
- * ├─ Total IR time                                                             1.2ms
+ * ├─ FIR Time                                                            234µs
+ * ├─ IR Time                                                             1.2ms
  * ├─ Total time                                                                1.4ms
  * ├─ Interfaces: 3
  * │  ├─ UserService                                                            580µs
@@ -64,24 +56,64 @@ private const val PERCENTAGE_MULTIPLIER = 100
 data class UnifiedMetricsTree(
     val interfaces: List<UnifiedFakeMetrics>,
     val classes: List<UnifiedFakeMetrics>,
+    /** Interface count (used when metrics lists are empty at INFO level) */
+    val interfaceCount: Int = interfaces.size,
+    /** Class count (used when metrics lists are empty at INFO level) */
+    val classCount: Int = classes.size,
+    val interfaceCacheHits: Int = 0,
+    val classCacheHits: Int = 0,
+    val irCacheHits: Int = 0,
+    val transformationTimeNanos: Long = 0,
+    val savedFirTimeNanos: Long = 0,
+    /** Aggregate IR time (used when metrics lists are empty at INFO level) */
+    val aggregateIrTimeNanos: Long = 0,
 ) {
+    /** Total fakes (interfaces + classes) */
+    val totalFakes: Int get() = interfaceCount + classCount
+
+    /** Total items loaded from KMP cache (skipped FIR analysis) */
+    val totalFirCacheHits: Int get() = interfaceCacheHits + classCacheHits
+
+    /** Whether all fakes were IR-cached (nothing regenerated) */
+    val allIrCached: Boolean get() = irCacheHits == totalFakes && totalFakes > 0
+
     /**
-     * Total FIR time across all fakes (interfaces + classes).
+     * FIR Time across all fakes (interfaces + classes).
      */
     val totalFirTimeNanos: Long
         get() = interfaces.sumOf { it.firTimeNanos } + classes.sumOf { it.firTimeNanos }
 
     /**
-     * Total IR time across all fakes (interfaces + classes).
+     * IR Time across all fakes (interfaces + classes).
+     * Falls back to aggregateIrTimeNanos when metrics lists are empty (INFO level).
      */
     val totalIrTimeNanos: Long
-        get() = interfaces.sumOf { it.irTimeNanos } + classes.sumOf { it.irTimeNanos }
+        get() {
+            val computed = interfaces.sumOf { it.irTimeNanos } + classes.sumOf { it.irTimeNanos }
+            return if (computed > 0) computed else aggregateIrTimeNanos
+        }
 
     /**
-     * Total time (FIR + IR) across all fakes.
+     * Total time (FIR + IR + transformation) across all fakes.
      */
     val totalTimeNanos: Long
-        get() = totalFirTimeNanos + totalIrTimeNanos
+        get() = totalFirTimeNanos + totalIrTimeNanos + transformationTimeNanos
+
+    /** Total lines of code generated across all fakes. */
+    val totalLOC: Int
+        get() = interfaces.sumOf { it.irLOC } + classes.sumOf { it.irLOC }
+
+    /** Average time per fake in nanoseconds. */
+    val avgTimePerFakeNanos: Long
+        get() = if (totalFakes > 0) totalTimeNanos / totalFakes else 0
+
+    /** Average lines of code per fake. */
+    val avgLOCPerFake: Int
+        get() = if (totalFakes > 0) totalLOC / totalFakes else 0
+
+    /** Cache hit rate as percentage (0-100). */
+    val cacheHitRate: Int
+        get() = if (totalFakes > 0) (irCacheHits * PERCENTAGE_MULTIPLIER) / totalFakes else 0
 
     /**
      * Formats metrics as a tree-structured string with proper branching.
@@ -101,40 +133,104 @@ data class UnifiedMetricsTree(
      */
     fun toTreeString(targetColumn: Int = 80): String =
         buildString {
-            appendLine("FIR + IR trace")
+            appendLine("Fakt Trace")
+
+            // Line 1: FIR→IR cache transformation
             appendLine(
                 formatLine(
-                    "├─ Total FIR time",
+                    "   ├─ FIR→IR cache transformation",
+                    TimeFormatter.format(transformationTimeNanos),
+                    targetColumn,
+                ),
+            )
+
+            // Line 2: FIR Time with cache info
+            val firLabel =
+                when {
+                    totalFirCacheHits > 0 && savedFirTimeNanos > 0 -> {
+                        val saved = TimeFormatter.format(savedFirTimeNanos)
+                        "   ├─ FIR Time ($totalFirCacheHits from cache saved $saved)"
+                    }
+                    totalFirCacheHits > 0 ->
+                        "   ├─ FIR Time ($totalFirCacheHits from cache)"
+                    else ->
+                        "   ├─ FIR Time"
+                }
+            appendLine(
+                formatLine(
+                    firLabel,
                     TimeFormatter.format(totalFirTimeNanos),
                     targetColumn,
                 ),
             )
+
+            // Line 3: IR Time with cache info
+            val irLabel =
+                if (irCacheHits > 0) {
+                    "   ├─ IR Time ($irCacheHits from cache)"
+                } else {
+                    "   ├─ IR Time"
+                }
             appendLine(
                 formatLine(
-                    "├─ Total IR time",
+                    irLabel,
                     TimeFormatter.format(totalIrTimeNanos),
                     targetColumn,
                 ),
             )
+
+            // Line 4: Total time
             appendLine(
                 formatLine(
-                    "├─ Total time",
+                    "   ├─ Total time",
                     TimeFormatter.format(totalTimeNanos),
                     targetColumn,
                 ),
             )
-            appendLine("├─ Interfaces: ${interfaces.size}")
 
-            interfaces.forEachIndexed { index, metric ->
-                // If there are classes coming after, no interface should close the branch
-                val isLast = index == interfaces.size - 1 && classes.isEmpty()
-                appendMetricTree(metric, isLast, isTopLevel = false, targetColumn)
+            // Stats section - use └─ when all cached (last section), ├─ otherwise
+            val statsPrefix = if (allIrCached) "└─" else "├─"
+            val statsLinePrefix = if (allIrCached) "   " else "│  "
+            appendLine("   $statsPrefix Stats")
+            appendLine(
+                formatLine(
+                    "   $statsLinePrefix├─ Total fakes",
+                    totalFakes.toString(),
+                    targetColumn,
+                ),
+            )
+            appendLine(
+                formatLine(
+                    "   $statsLinePrefix├─ Avg Time per Fake",
+                    TimeFormatter.format(avgTimePerFakeNanos),
+                    targetColumn,
+                ),
+            )
+            // Combine interfaces and classes metrics (only regenerated/generated fakes)
+            val allMetrics = interfaces + classes
+
+            // Cache hit rate - use └─ if all cached or no metrics, ├─ otherwise
+            val cacheHitCloser = if (allIrCached || allMetrics.isEmpty()) "└─" else "├─"
+            appendLine(
+                formatLine(
+                    "   $statsLinePrefix$cacheHitCloser Cache hit rate",
+                    "$cacheHitRate%",
+                    targetColumn,
+                ),
+            )
+
+            // When all cached, close the tree here
+            if (allIrCached) {
+                return@buildString
             }
 
-            if (classes.isNotEmpty()) {
-                appendLine("└─ Classes: ${classes.size}")
-                classes.forEachIndexed { index, metric ->
-                    val isLast = index == classes.size - 1
+            // Show generated fakes (only when there are metrics)
+            // This includes both new fakes and regenerated ones (signature changed)
+            if (allMetrics.isNotEmpty()) {
+                appendLine("   └─ Generated: ${allMetrics.size}")
+
+                allMetrics.forEachIndexed { index, metric ->
+                    val isLast = index == allMetrics.size - 1
                     appendMetricTree(metric, isLast, isTopLevel = true, targetColumn)
                 }
             }
@@ -154,92 +250,78 @@ data class UnifiedMetricsTree(
         isTopLevel: Boolean,
         targetColumn: Int,
     ) {
-        // Determine prefixes based on position
+        // Determine prefixes based on position (3 spaces for "i: " alignment)
         val prefix =
             when {
-                isTopLevel && isLast -> "   └─"
-                isTopLevel -> "   ├─"
-                isLast -> "│  └─"
-                else -> "│  ├─"
+                isTopLevel && isLast -> "      └─"
+                isTopLevel -> "      ├─"
+                isLast -> "   │  └─"
+                else -> "   │  ├─"
             }
 
         val detailPrefix =
             when {
-                isTopLevel && isLast -> "      "
-                isTopLevel -> "   │  "
-                isLast -> "      "
-                else -> "│  │  "
+                isTopLevel && isLast -> "         "
+                isTopLevel -> "      │  "
+                isLast -> "         "
+                else -> "   │  │  "
             }
 
-        // Format time values
+        // Format time value
         val totalTime = TimeFormatter.format(metric.totalTimeNanos)
-        val firTime = TimeFormatter.format(metric.firTimeNanos)
-        val irTime = TimeFormatter.format(metric.irTimeNanos)
 
         // Line 1: Fake name with total time
         appendLine(formatLine("$prefix ${metric.name}", totalTime, targetColumn))
 
-        // Line 2: FIR analysis details
-        val firLine =
-            "$detailPrefix├─ FIR analysis: ${metric.firTypeParamCount} type parameters, " +
-                "${metric.firMemberCount} members"
-        appendLine(formatLine(firLine, firTime, targetColumn))
-
-        // Line 3: IR generation details
-        val irLine = "$detailPrefix└─ IR generation: Fake${metric.name}Impl ${metric.irLOC} LOC"
-        appendLine(formatLine(irLine, irTime, targetColumn))
+        // Line 2: Generated fake class with LOC
+        val fakeImplLine = "$detailPrefix└─ Fake${metric.name}Impl"
+        appendLine(formatLine(fakeImplLine, "${metric.irLOC} LOC", targetColumn))
     }
 
     /**
      * Formats metrics as a concise INFO-level summary (4 lines).
      *
-     * Provides essential compilation metrics without detailed per-fake breakdown:
-     * - Total fakes generated (interfaces + classes)
-     * - Total compilation time (FIR + IR)
-     * - Phase breakdown (FIR vs IR time)
-     * - Cache statistics (estimated based on IR timing heuristic)
+     * Provides essential compilation metrics without detailed per-fake breakdown.
+     * Uses explicit IR cache hit tracking for accurate cache reporting.
      *
-     * **Output Format:**
+     * **Output Scenarios:**
+     *
+     * All cached (happy path):
      * ```
-     * Fakt: 3 fakes generated in 1.4ms (0 cached)
-     *   Interfaces: 3 | Classes: 0
-     *   FIR: 115µs | IR: 1.285ms
-     *   Cache: 0/3 (0%)
+     * Fakt: 101 fakes (all cached)
+     * ```
+     *
+     * Some regenerated:
+     * ```
+     * Fakt: 101 fakes in 1.2ms (3 regenerated, 98 cached)
+     * ```
+     *
+     * Nothing cached (first build):
+     * ```
+     * Fakt: 101 fakes generated in 234ms
      * ```
      *
      * This format is designed for normal development builds where developers
      * want confirmation that fakes were generated without detailed metrics.
+     * Uses explicit IR cache hit tracking instead of timing heuristic.
      *
-     * **Cache Detection Heuristic:**
-     * IR time < 100µs per fake indicates cache hit (fresh generation typically 500µs-5ms).
-     *
-     * @return Multi-line INFO summary string ready for logging
+     * @return Concise INFO summary string ready for logging
      */
     fun toInfoSummary(): String {
-        val totalFakes = interfaces.size + classes.size
+        // All cached - minimal output
+        if (allIrCached) {
+            return "Fakt: $totalFakes fakes (all cached)"
+        }
+
         val totalTime = TimeFormatter.format(totalTimeNanos)
-        val firTime = TimeFormatter.format(totalFirTimeNanos)
-        val irTime = TimeFormatter.format(totalIrTimeNanos)
+        val regenerated = totalFakes - irCacheHits
 
-        // Cache detection: IR time < 100µs per fake indicates cache hit
-        // (Fresh generation typically 500µs-5ms, cached ~5-50µs)
-        val avgIrTimePerFake = if (totalFakes > 0) totalIrTimeNanos / totalFakes else 0
-        val estimatedCached = if (avgIrTimePerFake < CACHE_HIT_THRESHOLD_NANOS) totalFakes else 0
-
-        val cachePercent =
-            if (totalFakes > 0) {
-                (estimatedCached * PERCENTAGE_MULTIPLIER) / totalFakes
-            } else {
-                0
-            }
-
-        return buildString {
-            appendLine(
-                "Fakt: $totalFakes fakes generated in $totalTime ($estimatedCached cached)",
-            )
-            appendLine("  Interfaces: ${interfaces.size} | Classes: ${classes.size}")
-            appendLine("  FIR: $firTime | IR: $irTime")
-            append("  Cache: $estimatedCached/$totalFakes ($cachePercent%)")
+        // Some cached - show breakdown
+        return if (irCacheHits > 0) {
+            "Fakt: $totalFakes fakes in $totalTime ($regenerated regenerated, $irCacheHits cached)"
+        } else {
+            // Nothing cached - normal generation message
+            "Fakt: $totalFakes fakes generated in $totalTime"
         }
     }
 
@@ -251,8 +333,8 @@ data class UnifiedMetricsTree(
      *
      * **Examples:**
      * ```
-     * formatLine("├─ Total FIR time:", "234µs", 80)
-     * // → "├─ Total FIR time:                                                         234µs"
+     * formatLine("├─ FIR Time:", "234µs", 80)
+     * // → "├─ FIR Time:                                                         234µs"
      *
      * formatLine("│  ├─ UserService", "580µs total", 80)
      * // → "│  ├─ UserService                                                    580µs total"

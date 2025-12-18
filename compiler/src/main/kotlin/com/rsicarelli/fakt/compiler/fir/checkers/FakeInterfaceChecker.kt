@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.fir.checkers
 
+import com.rsicarelli.fakt.compiler.api.TimeFormatter
 import com.rsicarelli.fakt.compiler.core.context.FaktSharedContext
 import com.rsicarelli.fakt.compiler.core.telemetry.measureTimeNanos
 import com.rsicarelli.fakt.compiler.fir.metadata.FirFunctionInfo
@@ -65,7 +66,6 @@ internal class FakeInterfaceChecker(
         private val FAKE_ANNOTATION_CLASS_ID = ClassId.topLevel(FqName("com.rsicarelli.fakt.Fake"))
     }
 
-    @Suppress("ReturnCount")
     context(context: CheckerContext, reporter: DiagnosticReporter) // Validation logic: early returns are idiomatic guard clauses
     override fun check(declaration: FirClass) {
         val session = context.session
@@ -78,6 +78,12 @@ internal class FakeInterfaceChecker(
         // Skip non-interfaces (let FakeClassChecker handle classes)
         if (declaration.classKind != ClassKind.INTERFACE) {
             return // Skip, FakeClassChecker will validate classes
+        }
+
+        // KMP optimization: Try to load cached metadata from metadata compilation
+        // If cache is valid and loaded, skip FIR analysis (data already in storage)
+        if (sharedContext.cacheManager.tryLoadCache(sharedContext.metadataStorage)) {
+            return // Cache hit - skip FIR analysis (count tracked in MetadataCacheManager)
         }
 
         // Validate not sealed
@@ -118,6 +124,14 @@ internal class FakeInterfaceChecker(
         val metadataWithTiming =
             timedResult.result.copy(validationTimeNanos = timedResult.durationNanos)
         sharedContext.metadataStorage.storeInterface(metadataWithTiming)
+
+        // Write cache for producer mode (metadata compilation)
+        // This is called after each interface to ensure cache is written even if IR phase doesn't run
+        // (metadata compilation doesn't have IR phase)
+        // Note: Don't log here - writeCache logs the summary on the final write
+        if (sharedContext.cacheManager.isProducerMode) {
+            sharedContext.cacheManager.writeCache(sharedContext.metadataStorage)
+        }
     }
 
     /**
@@ -359,7 +373,6 @@ internal class FakeInterfaceChecker(
      * @return Source location metadata (UNKNOWN for now)
      */
     private fun extractSourceLocation(): FirSourceLocation {
-        @Suppress("ForbiddenComment")
         // TODO: Implement proper source location extraction from FirClass
         // This requires investigating KtSourceElement type hierarchy and safe access patterns
         // For now, returning UNKNOWN allows the plugin to proceed without blocking on this non-critical feature

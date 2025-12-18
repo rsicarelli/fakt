@@ -6,6 +6,7 @@ import com.rsicarelli.fakt.compiler.api.LogLevel
 import com.rsicarelli.fakt.compiler.core.config.FaktOptions
 import com.rsicarelli.fakt.compiler.core.optimization.CompilerOptimizations
 import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
+import com.rsicarelli.fakt.compiler.fir.cache.MetadataCacheManager
 import com.rsicarelli.fakt.compiler.fir.metadata.FirMetadataStorage
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -38,6 +39,7 @@ class FaktSharedContextTest {
                         CompilerOptimizations(
                             logger = FaktLogger.quiet(),
                         ),
+                    cacheManager = MetadataCacheManager(null, null),
                 )
 
             // WHEN
@@ -61,6 +63,7 @@ class FaktSharedContextTest {
                         CompilerOptimizations(
                             logger = FaktLogger.quiet(),
                         ),
+                    cacheManager = MetadataCacheManager(null, null),
                 )
 
             // WHEN
@@ -91,6 +94,7 @@ class FaktSharedContextTest {
                         CompilerOptimizations(
                             logger = FaktLogger.quiet(),
                         ),
+                    cacheManager = MetadataCacheManager(null, null),
                 )
 
             // WHEN & THEN
@@ -115,6 +119,7 @@ class FaktSharedContextTest {
                         CompilerOptimizations(
                             logger = FaktLogger.quiet(),
                         ),
+                    cacheManager = MetadataCacheManager(null, null),
                 )
 
             // WHEN
@@ -144,6 +149,7 @@ class FaktSharedContextTest {
                         CompilerOptimizations(
                             logger = FaktLogger.quiet(),
                         ),
+                    cacheManager = MetadataCacheManager(null, null),
                 )
 
             // WHEN

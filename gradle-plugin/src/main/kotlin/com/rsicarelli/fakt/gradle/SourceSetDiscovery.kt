@@ -192,7 +192,19 @@ internal object SourceSetDiscovery {
             }
         val outputDirectory = "$buildDir/generated/fakt/$testSourceSet/kotlin"
 
-        // 8. Package into context
+        // 8. Compute KMP cross-compilation cache paths
+        // Producer mode (metadata compilation): Writes cache for platform compilations
+        // Consumer mode (platform compilations): Reads cache from metadata compilation
+        val cacheFilePath = "$buildDir/generated/fakt/cache/fir-metadata.json"
+
+        val (metadataOutputPath, metadataCachePath) =
+            computeCachePaths(
+                platformType = platformType,
+                hasCommonMain = hasCommonMain,
+                cacheFilePath = cacheFilePath,
+            )
+
+        // 9. Package into context
         return SourceSetContext(
             compilationName = compilation.name,
             targetName = targetName,
@@ -201,7 +213,54 @@ internal object SourceSetDiscovery {
             defaultSourceSet = defaultSourceSetInfo,
             allSourceSets = sourceSetInfos,
             outputDirectory = outputDirectory,
+            metadataOutputPath = metadataOutputPath,
+            metadataCachePath = metadataCachePath,
         )
+    }
+
+    /**
+     * Compute cache paths for KMP cross-compilation optimization.
+     *
+     * In KMP projects, the metadata compilation (common platform) performs FIR analysis
+     * and writes a cache file. Platform compilations then read this cache to skip
+     * redundant FIR analysis.
+     *
+     * **Producer Mode** (metadata compilation):
+     * - `platformType` == "common"
+     * - Sets `metadataOutputPath` to write cache
+     * - Returns `metadataCachePath` = null
+     *
+     * **Consumer Mode** (platform compilations):
+     * - `platformType` != "common" AND hasCommonMain == true
+     * - Sets `metadataCachePath` to read cache
+     * - Returns `metadataOutputPath` = null
+     *
+     * **Non-KMP** (single-platform projects):
+     * - Both paths are null (no cross-compilation caching needed)
+     *
+     * @param platformType The platform type (e.g., "common", "jvm", "native")
+     * @param hasCommonMain Whether the project has a commonMain source set
+     * @param cacheFilePath The absolute path to the cache file
+     * @return Pair of (metadataOutputPath, metadataCachePath)
+     */
+    private fun computeCachePaths(
+        platformType: String,
+        hasCommonMain: Boolean,
+        cacheFilePath: String,
+    ): Pair<String?, String?> {
+        // Non-KMP projects: no cross-compilation caching
+        if (!hasCommonMain) {
+            return null to null
+        }
+
+        // KMP project: determine producer vs consumer mode
+        return if (platformType.equals("common", ignoreCase = true)) {
+            // Producer mode: metadata compilation writes cache
+            cacheFilePath to null
+        } else {
+            // Consumer mode: platform compilation reads cache
+            null to cacheFilePath
+        }
     }
 }
 
