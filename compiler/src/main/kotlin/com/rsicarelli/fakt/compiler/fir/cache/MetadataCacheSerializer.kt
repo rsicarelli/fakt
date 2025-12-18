@@ -276,10 +276,15 @@ object MetadataCacheSerializer {
      * Examples:
      * - "com/example/UserService" → ClassId(com.example, UserService)
      * - "com/example/Outer.Inner" → ClassId(com.example, Outer.Inner)
+     * - "ClassName" → ClassId(ROOT, ClassName) (root package)
      */
     private fun parseClassId(classIdString: String): ClassId {
         val lastSlashIndex = classIdString.lastIndexOf('/')
-        require(lastSlashIndex != -1) { "Invalid ClassId string: $classIdString (missing '/')" }
+
+        // Handle root package (no slash in ClassId string)
+        if (lastSlashIndex == -1) {
+            return ClassId(FqName.ROOT, FqName(classIdString), isLocal = false)
+        }
 
         // Package is everything before the last slash, with "/" replaced by "."
         val packagePart = classIdString.substring(0, lastSlashIndex).replace('/', '.')

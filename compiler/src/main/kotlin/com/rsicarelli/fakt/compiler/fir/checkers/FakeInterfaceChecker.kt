@@ -82,8 +82,7 @@ internal class FakeInterfaceChecker(
 
         // KMP optimization: Try to load cached metadata from metadata compilation
         // If cache is valid and loaded, skip FIR analysis (data already in storage)
-        val cacheManager = sharedContext.cacheManager
-        if (cacheManager != null && cacheManager.tryLoadCache(sharedContext.metadataStorage)) {
+        if (sharedContext.cacheManager.tryLoadCache(sharedContext.metadataStorage)) {
             return // Cache hit - skip FIR analysis (count tracked in MetadataCacheManager)
         }
 

@@ -72,6 +72,10 @@ class MetadataCacheManager(
      * Called at the start of FIR phase before analysis.
      * If cache is valid and loaded, FIR analysis can be skipped.
      *
+     * Note: This method is resilient to exceptions - if any error occurs during
+     * cache loading, it returns false and falls back to regular FIR analysis.
+     * This prevents cache issues from crashing the compilation.
+     *
      * @param storage FirMetadataStorage to populate from cache
      * @return true if cache was loaded successfully and FIR analysis can be skipped
      */
@@ -80,31 +84,38 @@ class MetadataCacheManager(
         if (cacheLoaded.get()) return true // Already loaded - no log needed
 
         val cachePath = metadataCachePath ?: return false
-        val cache = MetadataCacheSerializer.deserialize(cachePath) ?: return false
 
-        if (!validateCache(cache)) {
-            return false
+        return try {
+            val cache = MetadataCacheSerializer.deserialize(cachePath) ?: return false
+
+            if (!validateCache(cache)) {
+                return false
+            }
+
+            // Load interfaces into storage and track cache hits
+            cache.interfaces.forEach { serializable ->
+                val validated = MetadataCacheSerializer.toValidated(serializable)
+                storage.storeInterface(validated)
+                storage.incrementInterfaceCacheHits()
+            }
+
+            // Load classes into storage and track cache hits
+            cache.classes.forEach { serializable ->
+                val validated = MetadataCacheSerializer.toValidated(serializable)
+                storage.storeClass(validated)
+                storage.incrementClassCacheHits()
+            }
+
+            // Store saved FIR time for unified logging (will be shown in Fakt Trace tree)
+            savedFirTimeNanos = cache.totalFirTimeNanos
+
+            cacheLoaded.set(true)
+            true
+        } catch (_: Exception) {
+            // Cache loading failed - fall back to regular FIR analysis
+            // This handles malformed cache files, version mismatches, etc.
+            false
         }
-
-        // Load interfaces into storage and track cache hits
-        cache.interfaces.forEach { serializable ->
-            val validated = MetadataCacheSerializer.toValidated(serializable)
-            storage.storeInterface(validated)
-            storage.incrementInterfaceCacheHits()
-        }
-
-        // Load classes into storage and track cache hits
-        cache.classes.forEach { serializable ->
-            val validated = MetadataCacheSerializer.toValidated(serializable)
-            storage.storeClass(validated)
-            storage.incrementClassCacheHits()
-        }
-
-        // Store saved FIR time for unified logging (will be shown in Fakt Trace tree)
-        savedFirTimeNanos = cache.totalFirTimeNanos
-
-        cacheLoaded.set(true)
-        return true
     }
 
     /**
