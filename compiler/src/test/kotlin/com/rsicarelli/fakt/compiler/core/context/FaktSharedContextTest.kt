@@ -6,6 +6,7 @@ import com.rsicarelli.fakt.compiler.api.LogLevel
 import com.rsicarelli.fakt.compiler.core.config.FaktOptions
 import com.rsicarelli.fakt.compiler.core.optimization.CompilerOptimizations
 import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
+import com.rsicarelli.fakt.compiler.fir.cache.MetadataCacheManager
 import com.rsicarelli.fakt.compiler.fir.metadata.FirMetadataStorage
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -38,7 +39,7 @@ class FaktSharedContextTest {
                         CompilerOptimizations(
                             logger = FaktLogger.quiet(),
                         ),
-                    cacheManager = null,
+                    cacheManager = MetadataCacheManager(null, null, FaktLogger.quiet()),
                 )
 
             // WHEN
@@ -62,7 +63,7 @@ class FaktSharedContextTest {
                         CompilerOptimizations(
                             logger = FaktLogger.quiet(),
                         ),
-                    cacheManager = null,
+                    cacheManager = MetadataCacheManager(null, null, FaktLogger.quiet()),
                 )
 
             // WHEN
@@ -93,7 +94,7 @@ class FaktSharedContextTest {
                         CompilerOptimizations(
                             logger = FaktLogger.quiet(),
                         ),
-                    cacheManager = null,
+                    cacheManager = MetadataCacheManager(null, null, FaktLogger.quiet()),
                 )
 
             // WHEN & THEN
@@ -118,7 +119,7 @@ class FaktSharedContextTest {
                         CompilerOptimizations(
                             logger = FaktLogger.quiet(),
                         ),
-                    cacheManager = null,
+                    cacheManager = MetadataCacheManager(null, null, FaktLogger.quiet()),
                 )
 
             // WHEN
@@ -148,7 +149,7 @@ class FaktSharedContextTest {
                         CompilerOptimizations(
                             logger = FaktLogger.quiet(),
                         ),
-                    cacheManager = null,
+                    cacheManager = MetadataCacheManager(null, null, FaktLogger.quiet()),
                 )
 
             // WHEN

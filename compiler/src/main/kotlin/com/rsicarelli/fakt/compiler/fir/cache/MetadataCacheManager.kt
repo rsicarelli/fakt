@@ -64,6 +64,11 @@ class MetadataCacheManager(
     val isConsumerMode: Boolean get() = metadataCachePath != null
 
     /**
+     * True if caching is enabled (either producer or consumer mode).
+     */
+    val isEnabled: Boolean get() = isProducerMode || isConsumerMode
+
+    /**
      * Try to load cached metadata into storage.
      *
      * Called at the start of FIR phase before analysis.

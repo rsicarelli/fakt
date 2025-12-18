@@ -66,8 +66,8 @@ class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
 
         // Determine cache mode for logging
         val cacheMode = when {
-            cacheManager?.isProducerMode == true -> "PRODUCER → ${options.metadataOutputPath}"
-            cacheManager?.isConsumerMode == true -> "CONSUMER ← ${options.metadataCachePath}"
+            cacheManager.isProducerMode -> "PRODUCER → ${options.metadataOutputPath}"
+            cacheManager.isConsumerMode -> "CONSUMER ← ${options.metadataCachePath}"
             else -> "disabled"
         }
 
@@ -157,24 +157,14 @@ class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
      *
      * @param options Compiler options containing cache paths
      * @param logger Logger for cache operation messages
-     * @return MetadataCacheManager if caching is configured, null otherwise
+     * @return MetadataCacheManager instance (always created, acts as no-op when caching not configured)
      */
     private fun createCacheManager(
         options: FaktOptions,
         logger: FaktLogger,
-    ): MetadataCacheManager? {
-        val metadataOutputPath = options.metadataOutputPath
-        val metadataCachePath = options.metadataCachePath
-
-        // Only create cache manager if caching is configured
-        if (metadataOutputPath == null && metadataCachePath == null) {
-            return null
-        }
-
-        return MetadataCacheManager(
-            metadataOutputPath = metadataOutputPath,
-            metadataCachePath = metadataCachePath,
-            logger = logger,
-        )
-    }
+    ): MetadataCacheManager = MetadataCacheManager(
+        metadataOutputPath = options.metadataOutputPath,
+        metadataCachePath = options.metadataCachePath,
+        logger = logger,
+    )
 }

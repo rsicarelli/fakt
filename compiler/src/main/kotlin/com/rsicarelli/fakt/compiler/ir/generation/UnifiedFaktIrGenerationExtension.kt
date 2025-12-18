@@ -232,7 +232,7 @@ class UnifiedFaktIrGenerationExtension(
         val totalIrCacheHits = interfaceResult.cacheHits + classResult.cacheHits
 
         // Get saved FIR time from cache manager (if consumer mode)
-        val savedFirTimeNanos = sharedContext.cacheManager?.getSavedFirTimeNanos() ?: 0L
+        val savedFirTimeNanos = sharedContext.cacheManager.getSavedFirTimeNanos()
 
         // Log consolidated unified trace (FIR + IR combined)
         // At INFO level, metrics lists are empty but we have aggregate times

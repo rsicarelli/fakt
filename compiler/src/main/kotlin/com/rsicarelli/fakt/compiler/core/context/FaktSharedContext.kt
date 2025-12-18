@@ -24,7 +24,7 @@ data class FaktSharedContext(
     val metadataStorage: FirMetadataStorage,
     val logger: FaktLogger,
     val optimizations: CompilerOptimizations,
-    val cacheManager: MetadataCacheManager?,
+    val cacheManager: MetadataCacheManager,
 ) {
     /**
      * Check if specific annotation FQN is configured for fake generation.

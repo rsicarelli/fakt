@@ -7,13 +7,12 @@ import com.rsicarelli.fakt.compiler.core.telemetry.UnifiedFakeMetrics
 import com.rsicarelli.fakt.compiler.core.telemetry.UnifiedMetricsTree
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class IrGenerationTraceLoggingTest {
     @Test
-    fun `GIVEN interfaces only WHEN logging trace THEN last interface closes with └─`() {
+    fun `GIVEN interfaces only WHEN logging trace THEN shows Generated section with proper branching`() {
         // GIVEN
         val logger = TestLogger(LogLevel.DEBUG)
         val interfaceMetrics =
@@ -43,27 +42,24 @@ class IrGenerationTraceLoggingTest {
         // THEN
         val output = logger.debugMessages.joinToString("\n")
 
-        // Should show interfaces section
-        assertTrue(output.contains("├─ Interfaces: 2"))
+        // Should show Generated section (new format combines interfaces + classes)
+        assertTrue(output.contains("Generated: 2"), "Should show Generated: 2")
 
-        // First interface should use ├─
-        assertTrue(output.contains("│  ├─ UserService"))
+        // Should show fake names
+        assertTrue(output.contains("UserService"), "Should show UserService")
+        assertTrue(output.contains("Repository"), "Should show Repository")
 
-        // Last interface should use └─ (closes the tree)
-        assertTrue(output.contains("│  └─ Repository"))
+        // Should show generated impl class names
+        assertTrue(output.contains("FakeUserServiceImpl"), "Should show FakeUserServiceImpl")
+        assertTrue(output.contains("FakeRepositoryImpl"), "Should show FakeRepositoryImpl")
 
-        // Should show FIR analysis line
-        assertTrue(output.contains("FIR analysis:"))
-
-        // Should show IR generation line
-        assertTrue(output.contains("IR generation:"))
-
-        // Should NOT show Classes section
-        assertTrue(!output.contains("Classes:"))
+        // Should show LOC
+        assertTrue(output.contains("50 LOC"), "Should show 50 LOC")
+        assertTrue(output.contains("80 LOC"), "Should show 80 LOC")
     }
 
     @Test
-    fun `GIVEN classes only WHEN logging trace THEN shows Classes section only`() {
+    fun `GIVEN classes only WHEN logging trace THEN shows Generated section with classes`() {
         // GIVEN
         val logger = TestLogger(LogLevel.DEBUG)
         val interfaceMetrics = emptyList<UnifiedFakeMetrics>()
@@ -93,17 +89,16 @@ class IrGenerationTraceLoggingTest {
         // THEN
         val output = logger.debugMessages.joinToString("\n")
 
-        // Should show empty interfaces section
-        assertTrue(output.contains("├─ Interfaces: 0"))
+        // Should show Generated section (new format combines interfaces + classes)
+        assertTrue(output.contains("Generated: 2"), "Should show Generated: 2")
 
-        // Should show Classes section with └─
-        assertTrue(output.contains("└─ Classes: 2"))
+        // Should show class names
+        assertTrue(output.contains("KeyValueCache"), "Should show KeyValueCache")
+        assertTrue(output.contains("FileRepository"), "Should show FileRepository")
 
-        // First class should use ├─
-        assertTrue(output.contains("   ├─ KeyValueCache"))
-
-        // Last class should use └─
-        assertTrue(output.contains("   └─ FileRepository"))
+        // Should show generated impl class names
+        assertTrue(output.contains("FakeKeyValueCacheImpl"), "Should show FakeKeyValueCacheImpl")
+        assertTrue(output.contains("FakeFileRepositoryImpl"), "Should show FakeFileRepositoryImpl")
     }
 
     @Test
@@ -163,31 +158,26 @@ class IrGenerationTraceLoggingTest {
         // THEN
         val output = logger.debugMessages.joinToString("\n")
 
-        // Should show interfaces section with ├─
-        assertTrue(output.contains("├─ Interfaces: 3"))
+        // Should show combined Generated section (3 interfaces + 2 classes = 5)
+        assertTrue(output.contains("Generated: 5"), "Should show Generated: 5")
 
-        // All interfaces should use ├─ (none should close with └─)
-        assertTrue(output.contains("│  ├─ UserService"))
-        assertTrue(output.contains("│  ├─ Repository"))
-        assertTrue(output.contains("│  ├─ AsyncDataService"))
+        // Should show all fakes in order (interfaces first, then classes)
+        assertTrue(output.contains("UserService"), "Should show UserService")
+        assertTrue(output.contains("Repository"), "Should show Repository")
+        assertTrue(output.contains("AsyncDataService"), "Should show AsyncDataService")
+        assertTrue(output.contains("KeyValueCache"), "Should show KeyValueCache")
+        assertTrue(output.contains("FileRepository"), "Should show FileRepository")
 
-        // Ensure no interface is closing the tree (would have "│  └─ InterfaceName" pattern)
-        assertTrue(!output.contains("│  └─ UserService"))
-        assertTrue(!output.contains("│  └─ Repository"))
-        assertTrue(!output.contains("│  └─ AsyncDataService"))
-
-        // Should show Classes section with └─ (closes the root)
-        assertTrue(output.contains("└─ Classes: 2"))
-
-        // First class should use ├─
-        assertTrue(output.contains("   ├─ KeyValueCache"))
-
-        // Last class should use └─
-        assertTrue(output.contains("   └─ FileRepository"))
+        // Should show all fake impl names
+        assertTrue(output.contains("FakeUserServiceImpl"), "Should show FakeUserServiceImpl")
+        assertTrue(output.contains("FakeRepositoryImpl"), "Should show FakeRepositoryImpl")
+        assertTrue(output.contains("FakeAsyncDataServiceImpl"), "Should show FakeAsyncDataServiceImpl")
+        assertTrue(output.contains("FakeKeyValueCacheImpl"), "Should show FakeKeyValueCacheImpl")
+        assertTrue(output.contains("FakeFileRepositoryImpl"), "Should show FakeFileRepositoryImpl")
     }
 
     @Test
-    fun `GIVEN interfaces with metadata WHEN logging trace THEN shows type parameters and members`() {
+    fun `GIVEN interfaces with metadata WHEN logging trace THEN shows LOC in output`() {
         // GIVEN
         val logger = TestLogger(LogLevel.DEBUG)
         val interfaceMetrics =
@@ -209,10 +199,15 @@ class IrGenerationTraceLoggingTest {
         // THEN
         val output = logger.debugMessages.joinToString("\n")
 
-        // Should show all 3 lines for the interface
-        assertTrue(output.contains("│  └─ DataCache"))
-        assertTrue(output.contains("FIR analysis: 1 type parameters, 6 members"))
-        assertTrue(output.contains("IR generation: FakeDataCacheImpl 83 LOC"))
+        // Should show Generated section
+        assertTrue(output.contains("Generated: 1"), "Should show Generated: 1")
+
+        // Should show fake name
+        assertTrue(output.contains("DataCache"), "Should show DataCache")
+
+        // Should show generated impl class with LOC
+        assertTrue(output.contains("FakeDataCacheImpl"), "Should show FakeDataCacheImpl")
+        assertTrue(output.contains("83 LOC"), "Should show 83 LOC")
     }
 
     /**

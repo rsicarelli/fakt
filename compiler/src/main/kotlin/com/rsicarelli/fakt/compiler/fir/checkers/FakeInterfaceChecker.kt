@@ -131,10 +131,8 @@ internal class FakeInterfaceChecker(
         // This is called after each interface to ensure cache is written even if IR phase doesn't run
         // (metadata compilation doesn't have IR phase)
         // Note: Don't log here - writeCache logs the summary on the final write
-        sharedContext.cacheManager?.let { manager ->
-            if (manager.isProducerMode) {
-                manager.writeCache(sharedContext.metadataStorage)
-            }
+        if (sharedContext.cacheManager.isProducerMode) {
+            sharedContext.cacheManager.writeCache(sharedContext.metadataStorage)
         }
     }
 
