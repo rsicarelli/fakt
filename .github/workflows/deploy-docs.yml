@@ -9,9 +9,10 @@ on:
         type: string
         description: 'Version to deploy (e.g., 1.0.0, 1.0.0-SNAPSHOT)'
       alias:
-        required: true
+        required: false
         type: string
-        description: 'Alias for this version (snapshot or latest)'
+        default: ''
+        description: 'Alias for this version (e.g., latest). Optional for self-descriptive versions like snapshot'
       set-default:
         required: false
         type: boolean
@@ -29,7 +30,7 @@ concurrency:
 
 jobs:
   deploy:
-    name: Deploy ${{ inputs.alias }} documentation
+    name: Deploy ${{ inputs.alias || inputs.version }} documentation
     runs-on: ubuntu-latest
 
     steps:
@@ -63,11 +64,13 @@ jobs:
 
       - name: Deploy documentation with mike
         run: |
-          mike deploy --update-aliases --push \
-            ${{ inputs.version }} \
-            ${{ inputs.alias }}
+          if [ -n "${{ inputs.alias }}" ]; then
+            mike deploy --update-aliases --push ${{ inputs.version }} ${{ inputs.alias }}
+          else
+            mike deploy --push ${{ inputs.version }}
+          fi
 
       - name: Set default version
         if: inputs.set-default
         run: |
-          mike set-default --push ${{ inputs.alias }}
+          mike set-default --push ${{ inputs.alias || inputs.version }}

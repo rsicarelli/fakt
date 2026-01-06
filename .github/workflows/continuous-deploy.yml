@@ -87,5 +87,4 @@ jobs:
     uses: ./.github/workflows/deploy-docs.yml
     with:
       version: 'snapshot'
-      alias: 'snapshot'
       set-default: false
