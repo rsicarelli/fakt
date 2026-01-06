@@ -125,13 +125,14 @@ object MetadataCacheSerializer {
      */
     fun toValidated(serializable: SerializableFakeInterface): ValidatedFakeInterface {
         val classId = parseClassId(serializable.classIdString)
-        val sourceLocation = FirSourceLocation(
-            filePath = serializable.sourceFilePath,
-            startLine = 0,
-            startColumn = 0,
-            endLine = 0,
-            endColumn = 0,
-        )
+        val sourceLocation =
+            FirSourceLocation(
+                filePath = serializable.sourceFilePath,
+                startLine = 0,
+                startColumn = 0,
+                endLine = 0,
+                endColumn = 0,
+            )
 
         return ValidatedFakeInterface(
             classId = classId,
@@ -160,13 +161,14 @@ object MetadataCacheSerializer {
      */
     fun toValidated(serializable: SerializableFakeClass): ValidatedFakeClass {
         val classId = parseClassId(serializable.classIdString)
-        val sourceLocation = FirSourceLocation(
-            filePath = serializable.sourceFilePath,
-            startLine = 0,
-            startColumn = 0,
-            endLine = 0,
-            endColumn = 0,
-        )
+        val sourceLocation =
+            FirSourceLocation(
+                filePath = serializable.sourceFilePath,
+                startLine = 0,
+                startColumn = 0,
+                endLine = 0,
+                endColumn = 0,
+            )
 
         return ValidatedFakeClass(
             classId = classId,

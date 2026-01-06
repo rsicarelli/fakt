@@ -15,13 +15,13 @@ import com.rsicarelli.fakt.compiler.fir.rendering.renderDefaultValue
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
+import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirClassChecker
 import org.jetbrains.kotlin.fir.declarations.FirClass
 import org.jetbrains.kotlin.fir.declarations.hasAnnotation
 import org.jetbrains.kotlin.fir.declarations.processAllDeclarations
-import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.declarations.utils.classId
 import org.jetbrains.kotlin.fir.declarations.utils.isInline
 import org.jetbrains.kotlin.fir.declarations.utils.isSuspend
@@ -257,16 +257,20 @@ internal class FakeClassChecker(
      * @param session FIR session for resolving the containing file
      * @return Source location metadata with file path for source set detection
      */
-    private fun extractSourceLocation(declaration: FirClass, session: FirSession): FirSourceLocation {
+    private fun extractSourceLocation(
+        declaration: FirClass,
+        session: FirSession,
+    ): FirSourceLocation {
         // Get the containing FirFile using firProvider
         // This is the proper K2 way to access file information from a FirClass
-        val filePath = try {
-            val firFile = session.firProvider.getFirClassifierContainerFileIfAny(declaration.symbol)
-            // KtSourceFile.path gives us the full file path
-            firFile?.sourceFile?.path ?: "<unknown>"
-        } catch (_: Exception) {
-            "<unknown>"
-        }
+        val filePath =
+            try {
+                val firFile = session.firProvider.getFirClassifierContainerFileIfAny(declaration.symbol)
+                // KtSourceFile.path gives us the full file path
+                firFile?.sourceFile?.path ?: "<unknown>"
+            } catch (_: Exception) {
+                "<unknown>"
+            }
 
         return FirSourceLocation(
             filePath = filePath,

@@ -31,6 +31,9 @@ import org.jetbrains.kotlin.ir.util.packageFqName
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 
+/** Length of "Main" suffix for source set name transformation. */
+private const val MAIN_SUFFIX_LENGTH = 4
+
 /**
  * Parameters for unified trace logging to reduce parameter count.
  *
@@ -792,12 +795,13 @@ class UnifiedFaktIrGenerationExtension(
 
         // Map main source set to test source set
         // e.g., "commonMain" → "commonTest", "iosMain" → "iosTest"
-        val testSourceSet = when {
-            sourceSourceSet.equals("main", ignoreCase = true) -> "test"
-            sourceSourceSet.endsWith("Main", ignoreCase = true) ->
-                sourceSourceSet.dropLast(4) + "Test" // Drop "Main" and add "Test"
-            else -> sourceSourceSet + "Test"
-        }
+        val testSourceSet =
+            when {
+                sourceSourceSet.equals("main", ignoreCase = true) -> "test"
+                sourceSourceSet.endsWith("Main", ignoreCase = true) ->
+                    sourceSourceSet.dropLast(MAIN_SUFFIX_LENGTH) + "Test"
+                else -> sourceSourceSet + "Test"
+            }
 
         // Derive output directory from commonTestOutputDirectory pattern
         // commonTestOutputDirectory = "$buildDir/generated/fakt/commonTest/kotlin"

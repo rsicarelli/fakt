@@ -371,16 +371,20 @@ internal class FakeInterfaceChecker(
      * @param session FIR session for resolving the containing file
      * @return Source location metadata with file path for source set detection
      */
-    private fun extractSourceLocation(declaration: FirClass, session: FirSession): FirSourceLocation {
+    private fun extractSourceLocation(
+        declaration: FirClass,
+        session: FirSession,
+    ): FirSourceLocation {
         // Get the containing FirFile using firProvider
         // This is the proper K2 way to access file information from a FirClass
-        val filePath = try {
-            val firFile = session.firProvider.getFirClassifierContainerFileIfAny(declaration.symbol)
-            // KtSourceFile.path gives us the full file path
-            firFile?.sourceFile?.path ?: "<unknown>"
-        } catch (_: Exception) {
-            "<unknown>"
-        }
+        val filePath =
+            try {
+                val firFile = session.firProvider.getFirClassifierContainerFileIfAny(declaration.symbol)
+                // KtSourceFile.path gives us the full file path
+                firFile?.sourceFile?.path ?: "<unknown>"
+            } catch (_: Exception) {
+                "<unknown>"
+            }
 
         return FirSourceLocation(
             filePath = filePath,

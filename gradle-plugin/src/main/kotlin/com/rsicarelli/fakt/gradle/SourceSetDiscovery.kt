@@ -191,12 +191,13 @@ internal object SourceSetDiscovery {
         // In KMP, interfaces loaded from cache (isFromCache=true) should go to commonTest
         // so they're visible to all platform tests. Platform-specific interfaces go to
         // their respective test source sets (jvmTest, iosTest, etc.)
-        val commonTestOutputDirectory = if (hasCommonMain) {
-            "$buildDir/generated/fakt/commonTest/kotlin"
-        } else {
-            // Non-KMP projects: same directory for all fakes
-            outputDirectory
-        }
+        val commonTestOutputDirectory =
+            if (hasCommonMain) {
+                "$buildDir/generated/fakt/commonTest/kotlin"
+            } else {
+                // Non-KMP projects: same directory for all fakes
+                outputDirectory
+            }
 
         // 8. Compute KMP cross-compilation cache paths
         // Producer mode (metadata compilation): Writes cache for platform compilations

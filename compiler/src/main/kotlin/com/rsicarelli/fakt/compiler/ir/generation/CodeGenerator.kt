@@ -78,6 +78,9 @@ internal class CodeGenerator(
     private val logger: FaktLogger,
 ) {
     private companion object {
+        /** Length of "Main" suffix for source set name transformation. */
+        private const val MAIN_SUFFIX_LENGTH = 4
+
         /** Base overhead for generated code (package, imports, class header). */
         const val CODE_SIZE_BASE_OVERHEAD = 500
 
@@ -114,12 +117,13 @@ internal class CodeGenerator(
 
         // Map main source set to test source set
         // e.g., "commonMain" → "commonTest", "iosMain" → "iosTest"
-        val testSourceSet = when {
-            sourceSourceSet.equals("main", ignoreCase = true) -> "test"
-            sourceSourceSet.endsWith("Main", ignoreCase = true) ->
-                sourceSourceSet.dropLast(4) + "Test" // Drop "Main" and add "Test"
-            else -> sourceSourceSet + "Test"
-        }
+        val testSourceSet =
+            when {
+                sourceSourceSet.equals("main", ignoreCase = true) -> "test"
+                sourceSourceSet.endsWith("Main", ignoreCase = true) ->
+                    sourceSourceSet.dropLast(MAIN_SUFFIX_LENGTH) + "Test"
+                else -> sourceSourceSet + "Test"
+            }
 
         // Derive output directory from commonTestOutputDirectory pattern
         // commonTestOutputDirectory = "$buildDir/generated/fakt/commonTest/kotlin"
