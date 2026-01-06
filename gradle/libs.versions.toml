@@ -14,7 +14,7 @@
 
 [versions]
 # Fakt version (auto-synced with gradle.properties:VERSION_NAME)
-fakt = "1.0.0-alpha02"
+fakt = "1.0.0-alpha03"
 android-gradle-plugin = "8.12.3"
 binaryCompatibilityValidator = "0.18.1"
 detekt = "1.23.8"
