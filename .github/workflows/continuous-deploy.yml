@@ -86,6 +86,6 @@ jobs:
       id-token: write
     uses: ./.github/workflows/deploy-docs.yml
     with:
-      version: ${{ needs.publish-snapshot.outputs.snapshot_version }}
+      version: 'snapshot'
       alias: 'snapshot'
-      set-default: true
+      set-default: false
