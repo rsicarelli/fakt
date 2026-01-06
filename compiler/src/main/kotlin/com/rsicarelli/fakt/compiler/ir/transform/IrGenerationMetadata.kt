@@ -48,6 +48,8 @@ class IrGenerationMetadata internal constructor(
     val functions: List<IrFunctionMetadata>,
     val sourceInterface: IrClass,
     private val patternAnalyzer: GenericPatternAnalyzer,
+    val isFromCache: Boolean = false,
+    val sourceSourceSet: String? = null,
 ) {
     /**
      * Lazy generic pattern analysis - computed on first access only.
@@ -166,6 +168,8 @@ class IrClassGenerationMetadata internal constructor(
     val openMethods: List<IrFunctionMetadata>,
     val sourceClass: IrClass,
     private val patternAnalyzer: GenericPatternAnalyzer,
+    val isFromCache: Boolean = false,
+    val sourceSourceSet: String? = null,
 ) {
     /**
      * Lazy generic pattern analysis - computed on first access only.

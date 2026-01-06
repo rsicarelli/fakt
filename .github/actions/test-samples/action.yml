@@ -35,6 +35,14 @@ runs:
       shell: bash
       run: ./gradlew -p samples/kmp-single-module check
 
+    - name: Test kmp-multi-target sample (hierarchy validation)
+      shell: bash
+      run: ./gradlew -p samples/kmp-multi-target allTests --continue
+
+    - name: Check kmp-multi-target sample (validations)
+      shell: bash
+      run: ./gradlew -p samples/kmp-multi-target check
+
     - name: Test kmp-multi-module sample (all targets)
       shell: bash
       run: ./gradlew -p samples/kmp-multi-module allTests --continue

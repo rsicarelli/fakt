@@ -52,9 +52,9 @@ internal object SourceSetDiscovery {
      * @return The corresponding test source set name in lowercase
      */
     private fun mapToTestSourceSet(compilationName: String): String {
-        // If already a test compilation, return as-is
+        // If already a test compilation, return as-is (preserving case)
         if (compilationName.contains("test", ignoreCase = true)) {
-            return compilationName.lowercase()
+            return compilationName
         }
 
         // Map main compilations to test:
@@ -103,8 +103,8 @@ internal object SourceSetDiscovery {
      *   isTest = false,
      *   defaultSourceSet = SourceSetInfo("jvmMain", parents=["commonMain"]),
      *   allSourceSets = [jvmMain, commonMain],
-     *   outputDirectory = "/path/to/build/generated/fakt/commonTest/kotlin"
-     *   // ^ Note: commonTest because commonMain detected in hierarchy
+     *   outputDirectory = "/path/to/build/generated/fakt/jvmTest/kotlin"
+     *   // ^ Note: jvmTest because this is jvmMain compilation
      * )
      * ```
      *
@@ -169,28 +169,35 @@ internal object SourceSetDiscovery {
         // 7. Generate output directory
         // Always output to test source sets since fakes are only used in tests
         //
-        // OUTPUT STRATEGY: For KMP projects, ALWAYS output to commonTest if commonMain
-        // exists in the compilation's source set hierarchy. This centralizes all fakes
-        // in one location and relies on KMP's KLIB dependency propagation to make them
-        // visible across all platform tests (jvmTest, iosX64Test, etc.).
+        // OUTPUT STRATEGY: Generate fakes to the test counterpart of the current compilation's
+        // default source set. This ensures platform-specific interfaces generate fakes in
+        // their corresponding test source sets:
+        //   - @Fake in commonMain → fakes in commonTest
+        //   - @Fake in jvmMain → fakes in jvmTest
+        //   - @Fake in iosMain → fakes in iosTest
         //
-        // CRITICAL: Do NOT register commonTest source directory to platform test source
-        // sets in SourceSetConfigurator - this causes "can be a part of only one module"
-        // errors. KMP propagates COMPILED code (KLIBs), not source directories.
+        // KMP's KLIB dependency propagation ensures parent fakes are visible:
+        //   - jvmTest depends on commonTest → Can import commonMain fakes
+        //   - iosTest depends on nativeTest → Can import nativeMain fakes
         //
-        // Example:
-        //   - Interfaces in commonMain → Fakes in commonTest → Compiled to KLIB
-        //   - jvmTest depends on commonTest → Can import fakes (via KLIB)
-        //   - iosX64Test depends on commonTest → Can import fakes (via KLIB)
+        // FIR metadata cache prevents duplicate generation:
+        //   - Metadata compilation generates commonMain fakes → writes cache
+        //   - Platform compilations read cache → skip commonMain fakes, generate own
         val hasCommonMain = allSourceSets.any { it.name == "commonMain" }
-        val testSourceSet =
-            if (hasCommonMain) {
-                "commonTest"
-            } else {
-                // Non-KMP or platform-specific: use platform test source set
-                mapToTestSourceSet(defaultSourceSet.name)
-            }
+        val testSourceSet = mapToTestSourceSet(defaultSourceSet.name)
         val outputDirectory = "$buildDir/generated/fakt/$testSourceSet/kotlin"
+
+        // 7b. Compute commonTest output directory for cached (common) interfaces
+        // In KMP, interfaces loaded from cache (isFromCache=true) should go to commonTest
+        // so they're visible to all platform tests. Platform-specific interfaces go to
+        // their respective test source sets (jvmTest, iosTest, etc.)
+        val commonTestOutputDirectory =
+            if (hasCommonMain) {
+                "$buildDir/generated/fakt/commonTest/kotlin"
+            } else {
+                // Non-KMP projects: same directory for all fakes
+                outputDirectory
+            }
 
         // 8. Compute KMP cross-compilation cache paths
         // Producer mode (metadata compilation): Writes cache for platform compilations
@@ -213,6 +220,7 @@ internal object SourceSetDiscovery {
             defaultSourceSet = defaultSourceSetInfo,
             allSourceSets = sourceSetInfos,
             outputDirectory = outputDirectory,
+            commonTestOutputDirectory = commonTestOutputDirectory,
             metadataOutputPath = metadataOutputPath,
             metadataCachePath = metadataCachePath,
         )

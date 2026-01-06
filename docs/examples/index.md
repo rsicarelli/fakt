@@ -84,6 +84,38 @@ Fakt includes working sample projects demonstrating different use cases.
 
 ---
 
+## kmp-multi-target
+
+**Location**: [`samples/kmp-multi-target/`](https://github.com/rsicarelli/fakt/tree/main/samples/kmp-multi-target)
+
+**Demonstrates**: KMP source set hierarchy validation and platform-specific fake generation
+
+**Structure**:
+
+- 6 platform-specific `@Fake` interfaces (one per source set)
+- 11 test classes (6 basic + 5 hierarchy validation)
+- 45+ test cases validating fake generation and hierarchy
+
+**Key Validations**:
+
+- ✅ Platform-specific fake generation (jvmMain → jvmTest, iosMain → iosTest)
+- ✅ Vertical hierarchy (child source sets access parent fakes)
+- ✅ Multi-level inheritance (iOS accesses commonMain + nativeMain + iosMain)
+- ✅ Horizontal isolation (jvmTest cannot access iosFakes)
+
+**Source Sets Tested**:
+
+- `commonMain` → `commonTest` (base for all platforms)
+- `jvmMain` → `jvmTest` (JVM-specific)
+- `iosMain` → `iosTest` (iOS-specific, inherits from nativeMain)
+- `jsMain` → `jsTest` (JavaScript-specific)
+- `wasmJsMain` → `wasmJsTest` (WebAssembly-specific)
+- `nativeMain` → `nativeTest` (shared across all native targets)
+
+**Best for**: Validating Fakt's source set mapping and KMP hierarchy support
+
+---
+
 ## Running Samples
 
 Clone the repository and build:
@@ -102,6 +134,10 @@ cd fakt/samples/android-single-module
 # KMP samples
 cd fakt/samples/kmp-single-module
 ./gradlew build
+
+# KMP hierarchy validation
+cd fakt/samples/kmp-multi-target
+./gradlew allTests
 ```
 
 ---

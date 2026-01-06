@@ -44,6 +44,23 @@ A complex multi-module KMP project showcasing:
 
 **Source Set Targets**: All KMP targets with proper test source set mapping
 
+### 🎯 **kmp-multi-target** ⭐ NEW
+A comprehensive KMP hierarchy validation sample demonstrating:
+- **Platform-Specific Source Sets**: One @Fake interface per source set (jvm, ios, js, wasm, native)
+- **Hierarchy Validation**: Tests that child source sets can access parent fakes
+- **Multi-Level Inheritance**: iOS tests access commonMain + nativeMain + iosMain fakes
+- **Source Set Isolation**: Platform-specific fakes don't leak across siblings
+- **45+ Test Cases**: 30 basic tests + 15 hierarchy validation tests
+- **Complete KMP Coverage**: Validates fake generation for ALL source sets
+
+**Key Validations:**
+- ✅ `commonMain` fakes accessible from ALL child source sets
+- ✅ `nativeMain` fakes accessible from `iosTest` (multi-level)
+- ✅ Platform-specific fakes isolated (jvm ≠ ios ≠ js ≠ wasm)
+- ❌ Horizontal isolation maintained (jvmTest cannot access iosFakes)
+
+**Source Set Targets**: `commonMain`, `jvmMain`, `iosMain`, `jsMain`, `wasmJsMain`, `nativeMain` → corresponding test source sets
+
 ## 🎯 **Testing Philosophy**
 
 Each sample serves as a **battle test** for the Fakt compiler plugin:
@@ -84,6 +101,9 @@ cd samples/android-single-module
 # KMP samples
 cd samples/kmp-single-module
 ../../gradlew build
+
+cd samples/kmp-multi-target  # ⭐ NEW: Hierarchy validation sample
+../../gradlew allTests
 
 cd samples/kmp-multi-module
 ../../gradlew build

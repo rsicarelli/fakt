@@ -17,6 +17,7 @@ object SourceSetTestHelper {
         compilationName: String,
         targetName: String,
         outputDirectory: String,
+        commonTestOutputDirectory: String = outputDirectory.replace("/jvmTest/", "/commonTest/"),
     ): SourceSetContext =
         SourceSetContext(
             compilationName = compilationName,
@@ -30,6 +31,7 @@ object SourceSetTestHelper {
                     SourceSetInfo("commonMain", emptyList()),
                 ),
             outputDirectory = outputDirectory,
+            commonTestOutputDirectory = commonTestOutputDirectory,
         )
 
     /**
@@ -39,6 +41,7 @@ object SourceSetTestHelper {
         compilationName: String,
         targetName: String,
         outputDirectory: String,
+        commonTestOutputDirectory: String = outputDirectory.replace("/jvmMain/", "/commonTest/"),
     ): SourceSetContext =
         SourceSetContext(
             compilationName = compilationName,
@@ -52,6 +55,7 @@ object SourceSetTestHelper {
                     SourceSetInfo("commonMain", emptyList()),
                 ),
             outputDirectory = outputDirectory,
+            commonTestOutputDirectory = commonTestOutputDirectory,
         )
 
     /**
@@ -62,6 +66,7 @@ object SourceSetTestHelper {
         compilationName: String,
         targetName: String,
         outputDirectory: String,
+        commonTestOutputDirectory: String = outputDirectory.replace("/iosX64Main/", "/commonTest/"),
     ): SourceSetContext =
         SourceSetContext(
             compilationName = compilationName,
@@ -78,6 +83,7 @@ object SourceSetTestHelper {
                     SourceSetInfo("commonMain", emptyList()),
                 ),
             outputDirectory = outputDirectory,
+            commonTestOutputDirectory = commonTestOutputDirectory,
         )
 
     /**
@@ -88,6 +94,7 @@ object SourceSetTestHelper {
         compilationName: String,
         targetName: String,
         outputDirectory: String,
+        commonTestOutputDirectory: String = outputDirectory.replace("/appleTest/", "/commonTest/"),
     ): SourceSetContext =
         SourceSetContext(
             compilationName = compilationName,
@@ -103,5 +110,6 @@ object SourceSetTestHelper {
                     SourceSetInfo("commonTest", emptyList()),
                 ),
             outputDirectory = outputDirectory,
+            commonTestOutputDirectory = commonTestOutputDirectory,
         )
 }
