@@ -125,6 +125,13 @@ object MetadataCacheSerializer {
      */
     fun toValidated(serializable: SerializableFakeInterface): ValidatedFakeInterface {
         val classId = parseClassId(serializable.classIdString)
+        val sourceLocation = FirSourceLocation(
+            filePath = serializable.sourceFilePath,
+            startLine = 0,
+            startColumn = 0,
+            endLine = 0,
+            endColumn = 0,
+        )
 
         return ValidatedFakeInterface(
             classId = classId,
@@ -135,16 +142,13 @@ object MetadataCacheSerializer {
             functions = serializable.functions.map { it.toFir() },
             inheritedProperties = serializable.inheritedProperties.map { it.toFir() },
             inheritedFunctions = serializable.inheritedFunctions.map { it.toFir() },
-            sourceLocation =
-                FirSourceLocation(
-                    filePath = serializable.sourceFilePath,
-                    startLine = 0,
-                    startColumn = 0,
-                    endLine = 0,
-                    endColumn = 0,
-                ),
+            sourceLocation = sourceLocation,
             // Cache hit: no FIR analysis performed in this compilation
             validationTimeNanos = 0L,
+            // Mark as from cache to output to commonTest instead of platform test
+            isFromCache = true,
+            // Extract source set from cached file path (e.g., "commonMain" from "src/commonMain/kotlin/...")
+            sourceSourceSet = sourceLocation.extractSourceSetName(),
         )
     }
 
@@ -156,6 +160,13 @@ object MetadataCacheSerializer {
      */
     fun toValidated(serializable: SerializableFakeClass): ValidatedFakeClass {
         val classId = parseClassId(serializable.classIdString)
+        val sourceLocation = FirSourceLocation(
+            filePath = serializable.sourceFilePath,
+            startLine = 0,
+            startColumn = 0,
+            endLine = 0,
+            endColumn = 0,
+        )
 
         return ValidatedFakeClass(
             classId = classId,
@@ -166,16 +177,13 @@ object MetadataCacheSerializer {
             openProperties = serializable.openProperties.map { it.toFir() },
             abstractMethods = serializable.abstractMethods.map { it.toFir() },
             openMethods = serializable.openMethods.map { it.toFir() },
-            sourceLocation =
-                FirSourceLocation(
-                    filePath = serializable.sourceFilePath,
-                    startLine = 0,
-                    startColumn = 0,
-                    endLine = 0,
-                    endColumn = 0,
-                ),
+            sourceLocation = sourceLocation,
             // Cache hit: no FIR analysis performed in this compilation
             validationTimeNanos = 0L,
+            // Mark as from cache to output to commonTest instead of platform test
+            isFromCache = true,
+            // Extract source set from cached file path (e.g., "commonMain" from "src/commonMain/kotlin/...")
+            sourceSourceSet = sourceLocation.extractSourceSetName(),
         )
     }
 

@@ -48,6 +48,7 @@ class CommandLineProcessorTest {
                             SourceSetInfo("commonMain", emptyList()),
                         ),
                     outputDirectory = "/project/build/generated/fakt/test/kotlin",
+                    commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
                 )
 
             val json = Json { prettyPrint = false }
@@ -96,6 +97,7 @@ class CommandLineProcessorTest {
                             SourceSetInfo("commonMain", emptyList()),
                         ),
                     outputDirectory = "/project/build/generated/fakt/main/kotlin",
+                    commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
                 )
 
             val json = Json { prettyPrint = false }

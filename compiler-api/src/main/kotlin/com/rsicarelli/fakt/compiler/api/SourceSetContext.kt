@@ -26,13 +26,20 @@ import kotlinx.serialization.Serializable
  * - `metadataCachePath`: Set for platform compilations (consumers) to read cache
  * - When cache is valid, platform compilations skip redundant FIR analysis
  *
+ * **Per-Interface Output Directory** (KMP source set isolation):
+ * - `outputDirectory`: Platform-specific output (e.g., jvmTest, iosTest)
+ * - `commonTestOutputDirectory`: For cached (common) interfaces (commonTest)
+ * - Interfaces from cache → commonTestOutputDirectory
+ * - Platform-specific interfaces → outputDirectory
+ *
  * @property compilationName Name of the compilation (e.g., "main", "test", "integrationTest")
  * @property targetName Name of the target (e.g., "jvm", "iosX64", "metadata")
  * @property platformType Platform type identifier (e.g., "jvm", "native", "js", "common")
  * @property isTest Whether this is a test compilation (vs production code)
  * @property defaultSourceSet The primary source set for this compilation
  * @property allSourceSets All source sets in the dependsOn hierarchy (including default)
- * @property outputDirectory Absolute path where generated code should be written
+ * @property outputDirectory Absolute path for platform-specific generated code
+ * @property commonTestOutputDirectory Absolute path for cached (common) interfaces
  * @property metadataOutputPath Path to write FIR cache (producer mode: metadata compilation only)
  * @property metadataCachePath Path to read FIR cache (consumer mode: platform compilations)
  *
@@ -47,6 +54,7 @@ data class SourceSetContext(
     val defaultSourceSet: SourceSetInfo,
     val allSourceSets: List<SourceSetInfo>,
     val outputDirectory: String,
+    val commonTestOutputDirectory: String,
     val metadataOutputPath: String? = null,
     val metadataCachePath: String? = null,
 ) {
@@ -55,6 +63,7 @@ data class SourceSetContext(
         require(targetName.isNotBlank()) { "targetName cannot be blank" }
         require(platformType.isNotBlank()) { "platformType cannot be blank" }
         require(outputDirectory.isNotBlank()) { "outputDirectory cannot be blank" }
+        require(commonTestOutputDirectory.isNotBlank()) { "commonTestOutputDirectory cannot be blank" }
         require(allSourceSets.isNotEmpty()) { "allSourceSets cannot be empty" }
         require(allSourceSets.contains(defaultSourceSet)) {
             "allSourceSets must contain defaultSourceSet"

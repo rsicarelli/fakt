@@ -40,6 +40,7 @@ class FaktOptionsTest {
                             SourceSetInfo("commonMain", emptyList()),
                         ),
                     outputDirectory = "/project/build/generated/fakt/test/kotlin",
+                    commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
                 )
 
             val configuration = CompilerConfiguration()
@@ -95,6 +96,7 @@ class FaktOptionsTest {
                             SourceSetInfo("commonMain", emptyList()),
                         ),
                     outputDirectory = "/project/build/generated/fakt/main/kotlin",
+                    commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
                 )
 
             val configuration = CompilerConfiguration()
@@ -150,6 +152,7 @@ class FaktOptionsTest {
                             SourceSetInfo("commonMain", emptyList()),
                         ),
                     outputDirectory = "/project/build/generated/fakt/main/kotlin",
+                    commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
                 )
 
             val configuration = CompilerConfiguration()
@@ -186,6 +189,7 @@ class FaktOptionsTest {
                             SourceSetInfo("commonMain", emptyList()),
                         ),
                     outputDirectory = "/project/build/generated/fakt/test/kotlin",
+                    commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
                 )
 
             val configuration = CompilerConfiguration()

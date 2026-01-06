@@ -44,6 +44,7 @@ class SourceSetResolverTest {
                             SourceSetInfo("commonMain", emptyList()),
                         ),
                     outputDirectory = "/project/build/generated/fakt/test/kotlin",
+                    commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
                 )
 
             // WHEN: Resolving source set
@@ -76,6 +77,7 @@ class SourceSetResolverTest {
                             SourceSetInfo("commonMain", emptyList()),
                         ),
                     outputDirectory = "/project/build/generated/fakt/main/kotlin",
+                    commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
                 )
 
             // WHEN: Resolving each source set
@@ -125,6 +127,7 @@ class SourceSetResolverTest {
                             SourceSetInfo("commonMain", emptyList()),
                         ),
                     outputDirectory = "/project/build/generated/fakt/test/kotlin",
+                    commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
                 )
 
             // WHEN: Resolving non-existent source set
@@ -153,6 +156,7 @@ class SourceSetResolverTest {
                             SourceSetInfo("commonMain", emptyList()),
                         ),
                     outputDirectory = "/project/build/generated/fakt/test/kotlin",
+                    commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
                 )
 
             // WHEN: Getting default source set
@@ -184,6 +188,7 @@ class SourceSetResolverTest {
                             SourceSetInfo("commonMain", emptyList()),
                         ),
                     outputDirectory = "/project/build/generated/fakt/main/kotlin",
+                    commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
                 )
 
             // WHEN: Getting all parents for iosX64Main
@@ -218,6 +223,7 @@ class SourceSetResolverTest {
                             SourceSetInfo("commonMain", emptyList()),
                         ),
                     outputDirectory = "/project/build/generated/fakt/main/kotlin",
+                    commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
                 )
 
             // WHEN: Getting all source sets
@@ -250,6 +256,7 @@ class SourceSetResolverTest {
                             SourceSetInfo("commonMain", emptyList()),
                         ),
                     outputDirectory = "/project/build/generated/fakt/test/kotlin",
+                    commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
                 )
 
             // WHEN: Checking if compilation is test
@@ -279,6 +286,7 @@ class SourceSetResolverTest {
                             SourceSetInfo("commonTest", emptyList()),
                         ),
                     outputDirectory = "/project/build/generated/fakt/test/kotlin",
+                    commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
                 )
 
             // WHEN: Resolving source set with multiple parents

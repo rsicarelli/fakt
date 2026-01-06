@@ -26,6 +26,7 @@ import org.jetbrains.kotlin.fir.declarations.utils.classId
 import org.jetbrains.kotlin.fir.declarations.utils.isInline
 import org.jetbrains.kotlin.fir.declarations.utils.isSuspend
 import org.jetbrains.kotlin.fir.declarations.utils.modality
+import org.jetbrains.kotlin.fir.resolve.providers.firProvider
 import org.jetbrains.kotlin.fir.resolve.toSymbol
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 import org.jetbrains.kotlin.fir.symbols.impl.FirNamedFunctionSymbol
@@ -160,7 +161,7 @@ internal class FakeInterfaceChecker(
         val typeParameters = extractTypeParameters(declaration)
         val properties = extractProperties(declaration)
         val functions = extractFunctions(declaration)
-        val sourceLocation = extractSourceLocation()
+        val sourceLocation = extractSourceLocation(declaration, session)
         val (inheritedProperties, inheritedFunctions) =
             extractInheritedMembers(
                 declaration = declaration,
@@ -178,6 +179,7 @@ internal class FakeInterfaceChecker(
             inheritedFunctions = inheritedFunctions,
             sourceLocation = sourceLocation,
             validationTimeNanos = 0L, // Will be set by caller after timing measurement
+            sourceSourceSet = sourceLocation.extractSourceSetName(),
         )
     }
 
@@ -357,26 +359,36 @@ internal class FakeInterfaceChecker(
     /**
      * Extract source location from FIR class declaration.
      *
-     * Extracts file path, start/end line, and start/end column from the FIR source element.
-     * This information is used for accurate error reporting during IR generation.
+     * Source location is used for:
+     * 1. Error messages (showing where the issue occurred)
+     * 2. IDE navigation (click-through from errors)
+     * 3. **KMP source set detection** (determining which test source set to output to)
      *
-     * **Note**: KtSourceElement API has complex type hierarchy with multiple implementations.
-     * For now, returns UNKNOWN. Complete implementation requires deeper investigation of:
-     * - KtPsiSourceElement vs KtLightSourceElement vs KtFakeSourceElement
-     * - Accessing underlying PsiElement or LighterASTNode safely
-     * - Converting offsets to line/column using KtSourceFileLinesMapping
+     * For KMP, the file path is parsed to determine the source set (e.g., "commonMain", "iosMain")
+     * which then maps to the corresponding test source set for output.
      *
-     * @suppress ForbiddenComment
-     * TODO: Implement full source location extraction using proper KtSourceElement API
-     * Current impact: Error messages will not include exact source locations (non-critical)
-     *
-     * @return Source location metadata (UNKNOWN for now)
+     * @param declaration FIR class declaration to extract source from
+     * @param session FIR session for resolving the containing file
+     * @return Source location metadata with file path for source set detection
      */
-    private fun extractSourceLocation(): FirSourceLocation {
-        // TODO: Implement proper source location extraction from FirClass
-        // This requires investigating KtSourceElement type hierarchy and safe access patterns
-        // For now, returning UNKNOWN allows the plugin to proceed without blocking on this non-critical feature
-        return FirSourceLocation.UNKNOWN
+    private fun extractSourceLocation(declaration: FirClass, session: FirSession): FirSourceLocation {
+        // Get the containing FirFile using firProvider
+        // This is the proper K2 way to access file information from a FirClass
+        val filePath = try {
+            val firFile = session.firProvider.getFirClassifierContainerFileIfAny(declaration.symbol)
+            // KtSourceFile.path gives us the full file path
+            firFile?.sourceFile?.path ?: "<unknown>"
+        } catch (_: Exception) {
+            "<unknown>"
+        }
+
+        return FirSourceLocation(
+            filePath = filePath,
+            startLine = 0,
+            startColumn = 0,
+            endLine = 0,
+            endColumn = 0,
+        )
     }
 
     /**
