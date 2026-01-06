@@ -68,6 +68,7 @@ class CodeGenerationModulesContractTest {
                 defaultSourceSet = defaultSourceSet,
                 allSourceSets = allSourceSets,
                 outputDirectory = "/tmp/test/generated/fakt/jvmTest/kotlin",
+                commonTestOutputDirectory = "/tmp/test/generated/fakt/commonTest/kotlin",
             )
 
         // THEN - Should exist and have expected properties
@@ -124,6 +125,7 @@ class CodeGenerationModulesContractTest {
                         SourceSetInfo(name = "commonTest", parents = emptyList()),
                     ),
                 outputDirectory = "/tmp/test/generated/fakt/jvmTest/kotlin",
+                commonTestOutputDirectory = "/tmp/test/generated/fakt/commonTest/kotlin",
             )
 
         val implementationGenerator = ImplementationGenerator(typeResolution)

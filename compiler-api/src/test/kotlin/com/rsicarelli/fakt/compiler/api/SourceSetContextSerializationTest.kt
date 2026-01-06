@@ -45,6 +45,7 @@ class SourceSetContextSerializationTest {
                             SourceSetInfo(name = "commonMain", parents = emptyList()),
                         ),
                     outputDirectory = "/build/generated/fakt/main/jvm/kotlin",
+                    commonTestOutputDirectory = "/build/generated/fakt/commonTest/kotlin",
                 )
 
             // WHEN
@@ -72,6 +73,7 @@ class SourceSetContextSerializationTest {
                             SourceSetInfo(name = "commonTest", parents = emptyList()),
                         ),
                     outputDirectory = "/build/generated/fakt/test/jvm/kotlin",
+                    commonTestOutputDirectory = "/build/generated/fakt/commonTest/kotlin",
                 )
 
             // WHEN
@@ -108,6 +110,7 @@ class SourceSetContextSerializationTest {
                             SourceSetInfo(name = "commonMain", parents = emptyList()),
                         ),
                     outputDirectory = "/build/generated/fakt/main/iosX64/kotlin",
+                    commonTestOutputDirectory = "/build/generated/fakt/commonTest/kotlin",
                 )
 
             // WHEN
@@ -146,6 +149,7 @@ class SourceSetContextSerializationTest {
                             SourceSetInfo(name = "commonMain", parents = emptyList()),
                         ),
                     outputDirectory = "/build/generated/fakt/test/jvm/kotlin",
+                    commonTestOutputDirectory = "/build/generated/fakt/commonTest/kotlin",
                 )
 
             // WHEN
@@ -178,6 +182,7 @@ class SourceSetContextSerializationTest {
                             SourceSetInfo(name = "commonMain", parents = emptyList()),
                         ),
                     outputDirectory = "/build/generated/fakt/main/metadata/kotlin",
+                    commonTestOutputDirectory = "/build/generated/fakt/commonTest/kotlin",
                 )
 
             // WHEN
@@ -207,6 +212,7 @@ class SourceSetContextSerializationTest {
                             SourceSetInfo(name = "commonMain", parents = emptyList()),
                         ),
                     outputDirectory = "/build/generated/fakt/main/jvm/kotlin",
+                    commonTestOutputDirectory = "/build/generated/fakt/commonTest/kotlin",
                 )
 
             // WHEN

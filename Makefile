@@ -49,6 +49,11 @@ test-kmp-multi-module:
 	@echo "🏢 Testing kmp-multi-module sample (composite build)..."
 	cd samples/kmp-multi-module && ./gradlew :app:build
 
+# KMP multi-target sample (hierarchy validation)
+test-kmp-multi-target:
+	@echo "🎯 Testing kmp-multi-target sample (hierarchy validation)..."
+	cd samples/kmp-multi-target && ./gradlew allTests
+
 # Comprehensive validation workflow (runs all checks like CI)
 validate:
 	@echo "🔍 Running comprehensive validation..."
@@ -73,6 +78,7 @@ validate:
 	@echo ""
 	@echo "7️⃣ Testing samples..."
 	cd samples/kmp-single-module && ../../gradlew build
+	cd samples/kmp-multi-target && ../../gradlew allTests
 	@echo ""
 	@echo "✅ Full validation complete!"
 
@@ -109,6 +115,7 @@ help:
 	@echo "  publish-local   - Publish to Maven Local (⭐ use this for development!)"
 	@echo "  test-sample     - Test kmp-single-module sample (composite build)"
 	@echo "  test-kmp-multi-module - Test kmp-multi-module sample (composite build)"
+	@echo "  test-kmp-multi-target - Test kmp-multi-target sample (hierarchy validation)"
 	@echo ""
 	@echo "  validate        - ⭐ Run all validations (format, lint, tests, samples)"
 	@echo "  quick-test      - Quick development cycle (auto-rebuilds plugin!)"

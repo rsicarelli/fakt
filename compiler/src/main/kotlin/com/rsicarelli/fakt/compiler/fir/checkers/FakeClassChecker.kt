@@ -15,6 +15,7 @@ import com.rsicarelli.fakt.compiler.fir.rendering.renderDefaultValue
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
+import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirClassChecker
@@ -25,6 +26,7 @@ import org.jetbrains.kotlin.fir.declarations.utils.classId
 import org.jetbrains.kotlin.fir.declarations.utils.isInline
 import org.jetbrains.kotlin.fir.declarations.utils.isSuspend
 import org.jetbrains.kotlin.fir.declarations.utils.modality
+import org.jetbrains.kotlin.fir.resolve.providers.firProvider
 import org.jetbrains.kotlin.fir.symbols.impl.FirNamedFunctionSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirPropertySymbol
 import org.jetbrains.kotlin.fir.types.coneType
@@ -143,7 +145,7 @@ internal class FakeClassChecker(
 
         val timedResult =
             measureTimeNanos {
-                analyzeMetadata(declaration, simpleName)
+                analyzeMetadata(declaration, session, simpleName)
             }
 
         // Store metadata with validation timing for consolidated logging in IR phase
@@ -202,11 +204,13 @@ internal class FakeClassChecker(
      * Note: Validation timing is added by caller after this returns.
      *
      * @param declaration Validated FIR class declaration
+     * @param session FIR session for resolving the containing file
      * @param simpleName Simple name for logging
      * @return Validated metadata (timing will be added by caller)
      */
     private fun analyzeMetadata(
         declaration: FirClass,
+        session: FirSession,
         simpleName: String,
     ): ValidatedFakeClass {
         val classId = declaration.classId
@@ -219,6 +223,9 @@ internal class FakeClassChecker(
         val (abstractProps, openProps) = extractProperties(declaration)
         val (abstractMethods, openMethods) = extractMethods(declaration)
 
+        // Extract source location for KMP source set detection
+        val sourceLocation = extractSourceLocation(declaration, session)
+
         // Create validated metadata (timing will be added by caller)
         return ValidatedFakeClass(
             classId = classId,
@@ -229,8 +236,48 @@ internal class FakeClassChecker(
             openProperties = openProps,
             abstractMethods = abstractMethods,
             openMethods = openMethods,
-            sourceLocation = FirSourceLocation.UNKNOWN, // source location extraction
+            sourceLocation = sourceLocation,
             validationTimeNanos = 0L, // Will be set by caller after timing measurement
+            sourceSourceSet = sourceLocation.extractSourceSetName(),
+        )
+    }
+
+    /**
+     * Extract source location from FIR class declaration.
+     *
+     * Source location is used for:
+     * 1. Error messages (showing where the issue occurred)
+     * 2. IDE navigation (click-through from errors)
+     * 3. **KMP source set detection** (determining which test source set to output to)
+     *
+     * For KMP, the file path is parsed to determine the source set (e.g., "commonMain", "iosMain")
+     * which then maps to the corresponding test source set for output.
+     *
+     * @param declaration FIR class declaration to extract source from
+     * @param session FIR session for resolving the containing file
+     * @return Source location metadata with file path for source set detection
+     */
+    private fun extractSourceLocation(
+        declaration: FirClass,
+        session: FirSession,
+    ): FirSourceLocation {
+        // Get the containing FirFile using firProvider
+        // This is the proper K2 way to access file information from a FirClass
+        val filePath =
+            try {
+                val firFile = session.firProvider.getFirClassifierContainerFileIfAny(declaration.symbol)
+                // KtSourceFile.path gives us the full file path
+                firFile?.sourceFile?.path ?: "<unknown>"
+            } catch (_: Exception) {
+                "<unknown>"
+            }
+
+        return FirSourceLocation(
+            filePath = filePath,
+            startLine = 0,
+            startColumn = 0,
+            endLine = 0,
+            endColumn = 0,
         )
     }
 

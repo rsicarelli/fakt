@@ -78,6 +78,9 @@ internal class CodeGenerator(
     private val logger: FaktLogger,
 ) {
     private companion object {
+        /** Length of "Main" suffix for source set name transformation. */
+        private const val MAIN_SUFFIX_LENGTH = 4
+
         /** Base overhead for generated code (package, imports, class header). */
         const val CODE_SIZE_BASE_OVERHEAD = 500
 
@@ -92,14 +95,53 @@ internal class CodeGenerator(
     }
 
     /**
+     * Selects the appropriate output directory based on the source set name.
+     *
+     * In KMP projects, fakes should be generated to the test counterpart of their source set:
+     * - CommonPlatformService (commonMain) → commonTest
+     * - NativeOnlyService (nativeMain) → nativeTest
+     * - JvmOnlyService (jvmMain) → jvmTest
+     * - IosOnlyService (iosMain) → iosTest
+     *
+     * This is more reliable than the cache-based approach because it works regardless
+     * of compilation order and metadata compilation being skipped.
+     *
+     * @param sourceSourceSet Source set name (e.g., "commonMain", "iosMain") or null
+     * @return Absolute path to output directory
+     */
+    private fun selectOutputDirectory(sourceSourceSet: String?): String {
+        // If we don't know the source set, use the default output directory
+        if (sourceSourceSet == null) {
+            return sourceSetContext.outputDirectory
+        }
+
+        // Map main source set to test source set
+        // e.g., "commonMain" → "commonTest", "iosMain" → "iosTest"
+        val testSourceSet =
+            when {
+                sourceSourceSet.equals("main", ignoreCase = true) -> "test"
+                sourceSourceSet.endsWith("Main", ignoreCase = true) ->
+                    sourceSourceSet.dropLast(MAIN_SUFFIX_LENGTH) + "Test"
+                else -> sourceSourceSet + "Test"
+            }
+
+        // Derive output directory from commonTestOutputDirectory pattern
+        // commonTestOutputDirectory = "$buildDir/generated/fakt/commonTest/kotlin"
+        // We replace "commonTest" with our target test source set
+        return sourceSetContext.commonTestOutputDirectory.replace("/commonTest/", "/$testSourceSet/")
+    }
+
+    /**
      * Generates complete fake implementation including class, factory, and configuration DSL.
      *
      * @param sourceInterface The interface to generate a fake for
      * @param analysis The analyzed interface metadata
+     * @param sourceSourceSet Source set name where interface was defined (e.g., "commonMain", "iosMain")
      */
     fun generateWorkingFakeImplementation(
         sourceInterface: IrClass,
         analysis: InterfaceAnalysis,
+        sourceSourceSet: String? = null,
     ): GeneratedCode {
         val interfaceName = analysis.interfaceName
         val fakeClassName = "Fake${interfaceName}Impl"
@@ -148,6 +190,7 @@ internal class CodeGenerator(
                         interfaceName = interfaceName,
                     ),
                 code = generatedCode,
+                sourceSourceSet = sourceSourceSet,
             )
 
             return generatedCode
@@ -165,10 +208,12 @@ internal class CodeGenerator(
      *
      * @param sourceClass The class to generate a fake for
      * @param analysis The analyzed class metadata
+     * @param sourceSourceSet Source set name where class was defined (e.g., "commonMain", "iosMain")
      */
     fun generateWorkingClassFake(
         sourceClass: IrClass,
         analysis: ClassAnalysis,
+        sourceSourceSet: String? = null,
     ): GeneratedCode {
         val className = analysis.className
         val fakeClassName = "Fake${className}Impl"
@@ -220,6 +265,7 @@ internal class CodeGenerator(
                         interfaceName = className, // Reuse interfaceName field for class name
                     ),
                 code = generatedCode,
+                sourceSourceSet = sourceSourceSet,
             )
 
             return generatedCode
@@ -232,17 +278,25 @@ internal class CodeGenerator(
     /**
      * Writes the generated code to the appropriate output file.
      *
-     * Uses Gradle-provided output directory from SourceSetContext (no pattern matching needed).
+     * Uses per-interface output directory selection based on source set for KMP isolation:
+     * - CommonPlatformService (commonMain) → commonTest
+     * - NativeOnlyService (nativeMain) → nativeTest
+     * - IosOnlyService (iosMain) → iosTest
+     *
+     * @param context Write context with package and class names
+     * @param code Generated code to write
+     * @param sourceSourceSet Source set name where interface was defined
      */
     private fun writeGeneratedCode(
         context: WriteContext,
         code: GeneratedCode,
+        sourceSourceSet: String?,
     ) {
         val packageName = context.packageName
         val fakeClassName = context.fakeClassName
 
-        // Use Gradle-provided output directory (authoritative source from build configuration)
-        val outputDir = java.io.File(sourceSetContext.outputDirectory)
+        // Select output directory based on source set for KMP source set isolation
+        val outputDir = java.io.File(selectOutputDirectory(sourceSourceSet))
 
         // Create subdirectories matching the package structure
         val packagePath = packageName.replace('.', '/')
@@ -276,17 +330,25 @@ internal class CodeGenerator(
     /**
      * Writes the generated code for a class fake to the appropriate output file.
      *
-     * Uses Gradle-provided output directory from SourceSetContext (no pattern matching needed).
+     * Uses per-class output directory selection based on source set for KMP isolation:
+     * - CommonService (commonMain) → commonTest
+     * - NativeService (nativeMain) → nativeTest
+     * - IosService (iosMain) → iosTest
+     *
+     * @param context Write context with package and class names
+     * @param code Generated code to write
+     * @param sourceSourceSet Source set name where class was defined
      */
     private fun writeGeneratedCodeForClass(
         context: WriteContext,
         code: GeneratedCode,
+        sourceSourceSet: String?,
     ) {
         val packageName = context.packageName
         val fakeClassName = context.fakeClassName
 
-        // Use Gradle-provided output directory (authoritative source from build configuration)
-        val outputDir = java.io.File(sourceSetContext.outputDirectory)
+        // Select output directory based on source set for KMP source set isolation
+        val outputDir = java.io.File(selectOutputDirectory(sourceSourceSet))
 
         // Create subdirectories matching the package structure
         val packagePath = packageName.replace('.', '/')

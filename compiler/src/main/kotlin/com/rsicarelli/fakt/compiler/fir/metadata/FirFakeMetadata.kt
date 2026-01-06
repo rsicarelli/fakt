@@ -45,6 +45,8 @@ data class ValidatedFakeInterface(
     val inheritedFunctions: List<FirFunctionInfo>,
     val sourceLocation: FirSourceLocation,
     val validationTimeNanos: Long,
+    val isFromCache: Boolean = false,
+    val sourceSourceSet: String? = null,
 )
 
 /**
@@ -74,6 +76,8 @@ data class ValidatedFakeClass(
     val openMethods: List<FirFunctionInfo>,
     val sourceLocation: FirSourceLocation,
     val validationTimeNanos: Long,
+    val isFromCache: Boolean = false,
+    val sourceSourceSet: String? = null,
 )
 
 /**
@@ -182,6 +186,9 @@ data class FirSourceLocation(
                 endLine = 0,
                 endColumn = 0,
             )
+
+        // Regex to extract source set name from path like "src/commonMain/kotlin/..."
+        private val SOURCE_SET_REGEX = Regex("""/src/([^/]+)/kotlin/""")
     }
 
     /**
@@ -190,4 +197,22 @@ data class FirSourceLocation(
      * Example: "UserService.kt:42:15"
      */
     fun toDisplayString(): String = "$filePath:$startLine:$startColumn"
+
+    /**
+     * Extracts the source set name from the file path.
+     *
+     * KMP projects follow the convention: `src/{sourceSetName}/kotlin/...`
+     *
+     * Examples:
+     * - `/path/to/src/commonMain/kotlin/pkg/Service.kt` → "commonMain"
+     * - `/path/to/src/iosMain/kotlin/pkg/Service.kt` → "iosMain"
+     * - `/path/to/src/jvmMain/kotlin/pkg/Service.kt` → "jvmMain"
+     * - `<unknown>` → null
+     *
+     * @return Source set name, or null if cannot be determined
+     */
+    fun extractSourceSetName(): String? {
+        if (filePath == "<unknown>") return null
+        return SOURCE_SET_REGEX.find(filePath)?.groupValues?.get(1)
+    }
 }

@@ -120,6 +120,8 @@ internal class FirToIrTransformer {
             functions = allFunctions,
             sourceInterface = irClass,
             patternAnalyzer = patternAnalyzer,
+            isFromCache = firMetadata.isFromCache,
+            sourceSourceSet = firMetadata.sourceSourceSet,
         )
     }
 
@@ -181,6 +183,8 @@ internal class FirToIrTransformer {
             openMethods = openMethods,
             sourceClass = irClass,
             patternAnalyzer = patternAnalyzer,
+            isFromCache = firMetadata.isFromCache,
+            sourceSourceSet = firMetadata.sourceSourceSet,
         )
     }
 
