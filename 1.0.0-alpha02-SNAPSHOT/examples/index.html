@@ -740,6 +740,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#kmp-multi-target" class="md-nav__link">
+    <span class="md-ellipsis">
+      kmp-multi-target
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#running-samples" class="md-nav__link">
     <span class="md-ellipsis">
       Running Samples
@@ -919,6 +928,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#kmp-multi-target" class="md-nav__link">
+    <span class="md-ellipsis">
+      kmp-multi-target
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#running-samples" class="md-nav__link">
     <span class="md-ellipsis">
       Running Samples
@@ -1015,6 +1033,33 @@
 </ul>
 <p><strong>Best for</strong>: Understanding multi-module setups and scaling Fakt</p>
 <hr />
+<h2 id="kmp-multi-target">kmp-multi-target<a class="headerlink" href="#kmp-multi-target" title="Permanent link">&para;</a></h2>
+<p><strong>Location</strong>: <a href="https://github.com/rsicarelli/fakt/tree/main/samples/kmp-multi-target"><code>samples/kmp-multi-target/</code></a></p>
+<p><strong>Demonstrates</strong>: KMP source set hierarchy validation and platform-specific fake generation</p>
+<p><strong>Structure</strong>:</p>
+<ul>
+<li>6 platform-specific <code>@Fake</code> interfaces (one per source set)</li>
+<li>11 test classes (6 basic + 5 hierarchy validation)</li>
+<li>45+ test cases validating fake generation and hierarchy</li>
+</ul>
+<p><strong>Key Validations</strong>:</p>
+<ul>
+<li>✅ Platform-specific fake generation (jvmMain → jvmTest, iosMain → iosTest)</li>
+<li>✅ Vertical hierarchy (child source sets access parent fakes)</li>
+<li>✅ Multi-level inheritance (iOS accesses commonMain + nativeMain + iosMain)</li>
+<li>✅ Horizontal isolation (jvmTest cannot access iosFakes)</li>
+</ul>
+<p><strong>Source Sets Tested</strong>:</p>
+<ul>
+<li><code>commonMain</code> → <code>commonTest</code> (base for all platforms)</li>
+<li><code>jvmMain</code> → <code>jvmTest</code> (JVM-specific)</li>
+<li><code>iosMain</code> → <code>iosTest</code> (iOS-specific, inherits from nativeMain)</li>
+<li><code>jsMain</code> → <code>jsTest</code> (JavaScript-specific)</li>
+<li><code>wasmJsMain</code> → <code>wasmJsTest</code> (WebAssembly-specific)</li>
+<li><code>nativeMain</code> → <code>nativeTest</code> (shared across all native targets)</li>
+</ul>
+<p><strong>Best for</strong>: Validating Fakt&rsquo;s source set mapping and KMP hierarchy support</p>
+<hr />
 <h2 id="running-samples">Running Samples<a class="headerlink" href="#running-samples" title="Permanent link">&para;</a></h2>
 <p>Clone the repository and build:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/rsicarelli/fakt.git
@@ -1030,6 +1075,10 @@
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="c1"># KMP samples</span>
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="nb">cd</span><span class="w"> </span>fakt/samples/kmp-single-module
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>./gradlew<span class="w"> </span>build
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="c1"># KMP hierarchy validation</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="nb">cd</span><span class="w"> </span>fakt/samples/kmp-multi-target
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>./gradlew<span class="w"> </span>allTests
 </code></pre></div>
 <hr />
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
