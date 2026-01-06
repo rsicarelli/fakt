@@ -10,7 +10,7 @@ Kotlin testing has a problem that gets worse the more successful your project be
 
 Manual test fakes don't scale—each interface requires 60-80 lines of boilerplate that silently drifts from reality during refactoring. Runtime mocking frameworks (MockK, Mockito) solve the boilerplate but introduce severe performance penalties and don't work on Kotlin/Native or WebAssembly. KSP-based tools promised compile-time generation, but Kotlin 2.0 broke them all.
 
-Fakt is a compiler plugin that generates production-quality fakes through deep integration with Kotlin's FIR and IR compilation phases—the same extension points used by [Metro](https://github.com/ZacSweers/metro), a production DI framework from Zac Sweers. No reflection, no runtime overhead, works everywhere Kotlin compiles.
+Fakt is a compiler plugin that generates production-quality fakes through deep integration with Kotlin's FIR and IR compilation phases—the same extension points used by [Metro](https://github.com/ZacSweers/metro), a production DI framework from Zac Sweers.
 
 ---
 
@@ -42,8 +42,6 @@ fake.flush()
 assertEquals(1, fake.trackCallCount.value)
 assertEquals(1, fake.flushCallCount.value)
 ```
-
-No reflection. No runtime overhead. Works on JVM, Native, and WebAssembly.
 
 ---
 
