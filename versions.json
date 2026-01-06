@@ -1,10 +1,15 @@
 [
   {
-    "version": "1.0.0-alpha02-SNAPSHOT",
-    "title": "1.0.0-alpha02-SNAPSHOT",
+    "version": "1.0.0-alpha03-SNAPSHOT",
+    "title": "1.0.0-alpha03-SNAPSHOT",
     "aliases": [
       "snapshot"
     ]
+  },
+  {
+    "version": "1.0.0-alpha02-SNAPSHOT",
+    "title": "1.0.0-alpha02-SNAPSHOT",
+    "aliases": []
   },
   {
     "version": "1.0.0-alpha01-SNAPSHOT",
