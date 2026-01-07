@@ -19,25 +19,3 @@ runs:
     - name: Run all checks (apiCheck, compilation validation)
       shell: bash
       run: ./gradlew check
-
-    - name: Debug - Verify test results were generated
-      shell: bash
-      run: |
-        echo "=== Searching for test-results directories ==="
-        find . -type d -name "test-results" -path "*/build/*" 2>/dev/null || echo "No test-results directories found"
-        echo ""
-        echo "=== Checking specific modules ==="
-        ls -la compiler/build/test-results/ 2>/dev/null || echo "❌ compiler: NO test-results"
-        ls -la compiler-api/build/test-results/ 2>/dev/null || echo "❌ compiler-api: NO test-results"
-        ls -la gradle-plugin/build/test-results/ 2>/dev/null || echo "❌ gradle-plugin: NO test-results"
-        echo ""
-        echo "=== Count of XML files found ==="
-        find . -type f -name "*.xml" -path "*/build/test-results/*" 2>/dev/null | wc -l
-
-    - name: Publish test results
-      if: success() || failure()
-      uses: EnricoMi/publish-unit-test-result-action@v2
-      with:
-        files: '**/build/test-results/**/*.xml'
-        check_name: 'Test Results'
-        comment_mode: off
