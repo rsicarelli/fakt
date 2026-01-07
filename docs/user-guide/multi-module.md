@@ -53,6 +53,64 @@ Fakt's multi-module pattern uses three distinct roles:
   :analytics-test-fixtures, or any name you choose
 ```
 
+### Quick Setup Example
+
+```kotlin
+// ┌─────────────────────────────────────────────────────────────────┐
+// │  PRODUCER: core/analytics/build.gradle.kts                      │
+// └─────────────────────────────────────────────────────────────────┘
+plugins {
+    kotlin("multiplatform")
+    alias(libs.plugins.fakt)
+}
+
+kotlin {
+    jvm()
+    sourceSets.commonMain.dependencies {
+        implementation(libs.fakt.annotations)
+    }
+}
+
+// ┌─────────────────────────────────────────────────────────────────┐
+// │  COLLECTOR: core/analytics-fakes/build.gradle.kts               │
+// └─────────────────────────────────────────────────────────────────┘
+plugins {
+    kotlin("multiplatform")
+    alias(libs.plugins.fakt)
+}
+
+kotlin {
+    jvm()
+    sourceSets.commonMain.dependencies {
+        api(projects.core.analytics)
+    }
+}
+
+fakt {
+    @OptIn(ExperimentalFaktMultiModule::class)
+    collectFakesFrom(projects.core.analytics)
+}
+
+// ┌─────────────────────────────────────────────────────────────────┐
+// │  CONSUMER: app/build.gradle.kts                                 │
+// └─────────────────────────────────────────────────────────────────┘
+plugins {
+    kotlin("multiplatform")
+}
+
+kotlin {
+    jvm()
+    sourceSets {
+        commonMain.dependencies {
+            implementation(projects.core.analytics)
+        }
+        commonTest.dependencies {
+            implementation(projects.core.analyticsFakes)
+        }
+    }
+}
+```
+
 ---
 
 ## When to Use Multi-Module?
