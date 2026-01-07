@@ -287,6 +287,28 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../why-fakt.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Why Fakt?
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     
     
     
@@ -296,10 +318,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
         
           
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
             
   
   
@@ -312,8 +334,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             Get Started
           </label>
@@ -331,7 +353,7 @@
   
   
   <span class="md-ellipsis">
-    Introduction
+    Installation
     
   </span>
   
@@ -355,29 +377,6 @@
   
   <span class="md-ellipsis">
     Features
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../get-started/why-fakt.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Why Fakt?
     
   </span>
   
@@ -433,10 +432,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -449,8 +448,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             User Guide
           </label>
@@ -659,7 +658,7 @@
   
   
   <span class="md-ellipsis">
-    Examples
+    Samples
     
   </span>
   
@@ -686,10 +685,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   
@@ -702,8 +701,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_5">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             Help
           </label>
@@ -779,15 +778,6 @@
   <a href="#is-fakt-safe-to-use-in-production-testing" class="md-nav__link">
     <span class="md-ellipsis">
       Is Fakt safe to use in production testing?
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#why-100-alpha01-instead-of-100" class="md-nav__link">
-    <span class="md-ellipsis">
-      Why &ldquo;1.0.0-alpha01&rdquo; instead of &ldquo;1.0.0&rdquo;?
     </span>
   </a>
   
@@ -1065,15 +1055,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#why-100-alpha01-instead-of-100" class="md-nav__link">
-    <span class="md-ellipsis">
-      Why &ldquo;1.0.0-alpha01&rdquo; instead of &ldquo;1.0.0&rdquo;?
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -1292,16 +1273,12 @@
 <li>Generates code at compile-time with <strong>zero runtime dependencies</strong></li>
 <li>Has been tested across Kotlin 2.2.21+ and all KMP targets</li>
 <li>Uses forward compatibility patterns (N+.2 version support)</li>
-<li>Is versioned as <strong>1.0.0-alpha01</strong> to signal pre-1.0 status</li>
 </ul>
 <p>Generated fakes are production-quality code that compiles to native binaries without reflection.</p>
 <div class="admonition warning">
 <p class="admonition-title">Compiler Plugin API Stability</p>
 <p>The Kotlin compiler plugin API can change between Kotlin versions. Fakt is tested against each Kotlin release and updated as needed. Pin your Kotlin version in production CI/CD.</p>
 </div>
-<hr />
-<h3 id="why-100-alpha01-instead-of-100">Why &ldquo;1.0.0-alpha01&rdquo; instead of &ldquo;1.0.0&rdquo;?<a class="headerlink" href="#why-100-alpha01-instead-of-100" title="Permanent link">&para;</a></h3>
-<p><strong>SNAPSHOT</strong> signals real-world validation in progress, not &ldquo;broken.&rdquo; The API is functionally complete and production-ready. We prioritize honesty over marketing—1.0.0 will follow community feedback and battle-testing.</p>
 <hr />
 <h2 id="comparison-with-other-tools">Comparison with Other Tools<a class="headerlink" href="#comparison-with-other-tools" title="Permanent link">&para;</a></h2>
 <h3 id="why-not-use-mockk-or-mockito">Why not use MockK or Mockito?<a class="headerlink" href="#why-not-use-mockk-or-mockito" title="Permanent link">&para;</a></h3>
@@ -1313,7 +1290,7 @@
 </ul>
 <p><strong>Use MockK/Mockito when:</strong> You need dynamic mocking or are on JVM-only projects.</p>
 <p><strong>Use Fakt when:</strong> Building Kotlin Multiplatform projects or want zero-runtime-cost test doubles.</p>
-<p>See <a href="../get-started/why-fakt.html">Why Fakt</a> for detailed comparison.</p>
+<p>See <a href="../why-fakt.html">Why Fakt</a> for detailed comparison.</p>
 <hr />
 <h3 id="how-does-fakt-compare-to-hand-written-fakes">How does Fakt compare to hand-written fakes?<a class="headerlink" href="#how-does-fakt-compare-to-hand-written-fakes" title="Permanent link">&para;</a></h3>
 <p>Fakt generates the <strong>same code you&rsquo;d write manually</strong>, but faster and without mistakes:</p>

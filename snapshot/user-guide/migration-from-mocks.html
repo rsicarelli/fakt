@@ -287,6 +287,28 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../why-fakt.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Why Fakt?
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     
     
     
@@ -296,10 +318,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
         
           
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
             
   
   
@@ -312,8 +334,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             Get Started
           </label>
@@ -331,7 +353,7 @@
   
   
   <span class="md-ellipsis">
-    Introduction
+    Installation
     
   </span>
   
@@ -355,29 +377,6 @@
   
   <span class="md-ellipsis">
     Features
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../get-started/why-fakt.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Why Fakt?
     
   </span>
   
@@ -435,10 +434,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -451,8 +450,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_3">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             User Guide
           </label>
@@ -790,7 +789,7 @@
   
   
   <span class="md-ellipsis">
-    Examples
+    Samples
     
   </span>
   
@@ -815,10 +814,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   
@@ -831,8 +830,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             Help
           </label>
@@ -1027,10 +1026,13 @@
 <p>Migrating from mocking frameworks (MockK, Mockito, Mokkery, Mockative) to Fakt compile-time fakes.</p>
 <hr />
 <h2 id="why-migrate">Why Migrate?<a class="headerlink" href="#why-migrate" title="Permanent link">&para;</a></h2>
-<p>Runtime mocking frameworks (MockK, Mockito) rely on reflection and bytecode manipulation, which <strong>do not exist on Native or Wasm targets</strong>—they cannot run in <code>commonTest</code> source sets for Kotlin Multiplatform. KSP-based alternatives (Mokkery, Mockative, MocKMP) attempt to solve this through compile-time generation but face critical limitations: Mokkery cannot mock <code>object</code> or <code>sealed</code> types, Mockative broke with Kotlin 2.0 forcing mass migrations, and all impose complex APIs with separate stubbing syntax.</p>
-<p>Mock-based tests couple to implementation details (verifying <em>how</em> methods are called), breaking on valid refactorings. When you change <em>which</em> method is called but the <em>outcome</em> remains the same, mock tests report false failures. This creates brittle test suites that discourage refactoring and accumulate technical debt.</p>
-<p>Fakt follows Google&rsquo;s &ldquo;Now in Android&rdquo; directive: <strong>&ldquo;Don&rsquo;t use mocking frameworks. Instead, use fakes.&rdquo;</strong> Fakt generates clean, type-safe fakes that verify <em>outcomes</em>, work across all KMP targets with zero runtime cost, and use DSL lambdas matching your interface signatures—no separate stubbing APIs to learn.</p>
-<p><a href="../get-started/why-fakt.html">Learn more about Fakt&rsquo;s design philosophy →</a></p>
+<ul>
+<li><strong>KMP compatibility</strong> - Mocks rely on JVM reflection; fakes work everywhere</li>
+<li><strong>Refactor-safe tests</strong> - Verify outcomes, not implementation details</li>
+<li><strong>Zero runtime cost</strong> - Compile-time generation, no reflection overhead</li>
+<li><strong>Simple API</strong> - DSL lambdas match your interface signatures</li>
+</ul>
+<p><strong><a href="../why-fakt.html">Full comparison →</a></strong></p>
 <hr />
 <h2 id="mockk-fakt">MockK → Fakt<a class="headerlink" href="#mockk-fakt" title="Permanent link">&para;</a></h2>
 <h3 id="basic-usage">Basic Usage<a class="headerlink" href="#basic-usage" title="Permanent link">&para;</a></h3>
