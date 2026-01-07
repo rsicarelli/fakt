@@ -140,11 +140,23 @@ fun extractFailures(doc: org.w3c.dom.Document): List<TestFailure> {
     return failures
 }
 
-fun cleanMessage(message: String): String =
-    message
+fun cleanMessage(message: String): String {
+    var cleaned = message
         .replace("\n", " ")
         .replace("\r", "")
         .trim()
+
+    // Remove exception type prefix (e.g., "org.opentest4j.AssertionFailedError: ")
+    val colonIndex = cleaned.indexOf(": ")
+    if (colonIndex > 0 && colonIndex < 60) {
+        val prefix = cleaned.substring(0, colonIndex)
+        if (prefix.contains(".") && !prefix.contains(" ")) {
+            cleaned = cleaned.substring(colonIndex + 2)
+        }
+    }
+
+    return cleaned
+}
 
 // endregion
 
@@ -181,7 +193,7 @@ fun generateMarkdown(title: String, results: List<ModuleResult>): String {
             // Success: minimal output
             appendLine("**$totalTests tests passed** across $moduleCount modules")
         } else {
-            // Failures: detailed output with table
+            // Summary table
             appendLine("| Module | Passed | Failed | Skipped |")
             appendLine("|--------|--------|--------|---------|")
 
@@ -194,39 +206,55 @@ fun generateMarkdown(title: String, results: List<ModuleResult>): String {
             appendLine("---")
             appendLine()
 
-            // Failure details per module (not collapsed)
+            // Failure details per module (Option 2: Table format)
             results.filter { it.failed > 0 && it.failures.isNotEmpty() }.forEach { result ->
-                appendLine("#### ${result.name}")
+                appendLine("#### ${result.name} (${result.failed} failures)")
                 appendLine()
+                appendLine("| Test | Error |")
+                appendLine("|------|-------|")
 
                 result.failures.forEach { failure ->
-                    val testName = if (failure.className.isNotBlank()) {
-                        "${failure.className}.${failure.testName}"
-                    } else {
-                        failure.testName
-                    }
+                    val testName = truncateTestName(failure.testName, 60)
+                    val errorMsg = truncateMessage(failure.message, 50)
+                    appendLine("| `$testName` | $errorMsg |")
+                }
 
-                    appendLine("**$testName**")
-                    appendLine()
-                    appendLine("> ${failure.message}")
+                appendLine()
+
+                // All stacktraces in one collapsible section
+                val stacktraces = result.failures.filter { it.stacktrace != null }
+                if (stacktraces.isNotEmpty()) {
+                    appendLine("<details>")
+                    appendLine("<summary>Stacktraces</summary>")
                     appendLine()
 
-                    // Stacktrace in collapsible section
-                    failure.stacktrace?.let { trace ->
-                        appendLine("<details>")
-                        appendLine("<summary>Stacktrace</summary>")
+                    stacktraces.forEach { failure ->
+                        val shortName = failure.className.ifBlank { "Test" } + "." +
+                            failure.testName.take(40).let { if (failure.testName.length > 40) "$it..." else it }
+                        appendLine("**$shortName**")
                         appendLine()
                         appendLine("```")
-                        appendLine(trace.trim())
+                        appendLine(failure.stacktrace?.trim() ?: "")
                         appendLine("```")
                         appendLine()
-                        appendLine("</details>")
-                        appendLine()
                     }
+
+                    appendLine("</details>")
+                    appendLine()
                 }
             }
         }
     }
+}
+
+fun truncateTestName(name: String, maxLength: Int): String {
+    if (name.length <= maxLength) return name
+    return name.take(maxLength - 3) + "..."
+}
+
+fun truncateMessage(message: String, maxLength: Int): String {
+    if (message.length <= maxLength) return message
+    return message.take(maxLength - 3) + "..."
 }
 
 // endregion
