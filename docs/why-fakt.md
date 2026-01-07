@@ -214,10 +214,10 @@ Fakt and mocking libraries solve overlapping but distinct problems. Choosing bet
 
 ## Get Started
 
-- [Getting Started](index.md) - Install Fakt and create your first fake
-- [Features](features.md) - Complete feature reference
-- [Usage Guide](../user-guide/usage.md) - Common patterns and examples
-- [Migration from Mocks](../user-guide/migration-from-mocks.md) - Moving from MockK/Mockito
+- [Getting Started](get-started/index.md) - Install Fakt and create your first fake
+- [Features](get-started/features.md) - Complete feature reference
+- [Usage Guide](user-guide/usage.md) - Common patterns and examples
+- [Migration from Mocks](user-guide/migration-from-mocks.md) - Moving from MockK/Mockito
 
 ---
 
