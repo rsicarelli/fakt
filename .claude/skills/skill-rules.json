@@ -400,6 +400,61 @@
                     "(read|check|consult).*?(implementation|architecture).*?doc"
                 ]
             }
+        },
+        "git-commit-guardian": {
+            "type": "domain",
+            "enforcement": "block",
+            "priority": "critical",
+            "description": "Enforces Conventional Commits format, validates message quality (72 char subject, 80 char body), and BLOCKS Claude Code pollution (co-author/generated-by). Use when committing or creating commits.",
+            "promptTriggers": {
+                "keywords": [
+                    "commit",
+                    "git commit",
+                    "commit message",
+                    "create commit",
+                    "make commit",
+                    "commit changes",
+                    "commit this",
+                    "commit the changes",
+                    "push changes",
+                    "save to git",
+                    "commit it",
+                    "commit work"
+                ],
+                "intentPatterns": [
+                    "(commit|create commit|make commit).*?(changes|code|files|this|it)",
+                    "(git)\\s*(commit|add.*commit)",
+                    "(push|commit|save).*?(to git|changes|work|this)",
+                    "(done|finished|ready).*?commit"
+                ]
+            }
+        },
+        "pr-creator": {
+            "type": "domain",
+            "enforcement": "block",
+            "priority": "critical",
+            "description": "Creates professional PRs using project template, enforces Conventional Commits title format, always creates drafts via gh CLI. Use when creating PR, opening PR, or submitting changes for review.",
+            "promptTriggers": {
+                "keywords": [
+                    "create pr",
+                    "open pr",
+                    "make pr",
+                    "pr this",
+                    "submit pr",
+                    "pull request",
+                    "create pull request",
+                    "open pull request",
+                    "new pr",
+                    "push for review",
+                    "ready for review"
+                ],
+                "intentPatterns": [
+                    "(create|open|make|submit|new).*?(pr|pull request)",
+                    "(pr|pull request).*?(this|changes|branch)",
+                    "(push|submit|send).*?(for review|to review)",
+                    "(done|finished|ready).*?(pr|pull request|review)"
+                ]
+            }
         }
     },
     "notes": {
