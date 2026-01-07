@@ -6,13 +6,12 @@ Migrating from mocking frameworks (MockK, Mockito, Mokkery, Mockative) to Fakt c
 
 ## Why Migrate?
 
-Runtime mocking frameworks (MockK, Mockito) rely on reflection and bytecode manipulation, which **do not exist on Native or Wasm targets**—they cannot run in `commonTest` source sets for Kotlin Multiplatform. KSP-based alternatives (Mokkery, Mockative, MocKMP) attempt to solve this through compile-time generation but face critical limitations: Mokkery cannot mock `object` or `sealed` types, Mockative broke with Kotlin 2.0 forcing mass migrations, and all impose complex APIs with separate stubbing syntax.
+- **KMP compatibility** - Mocks rely on JVM reflection; fakes work everywhere
+- **Refactor-safe tests** - Verify outcomes, not implementation details
+- **Zero runtime cost** - Compile-time generation, no reflection overhead
+- **Simple API** - DSL lambdas match your interface signatures
 
-Mock-based tests couple to implementation details (verifying *how* methods are called), breaking on valid refactorings. When you change *which* method is called but the *outcome* remains the same, mock tests report false failures. This creates brittle test suites that discourage refactoring and accumulate technical debt.
-
-Fakt follows Google's "Now in Android" directive: **"Don't use mocking frameworks. Instead, use fakes."** Fakt generates clean, type-safe fakes that verify *outcomes*, work across all KMP targets with zero runtime cost, and use DSL lambdas matching your interface signatures—no separate stubbing APIs to learn.
-
-[Learn more about Fakt's design philosophy →](../why-fakt.md)
+**[Full comparison →](../why-fakt.md)**
 
 ---
 

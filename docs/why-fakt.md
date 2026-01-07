@@ -1,11 +1,5 @@
 # Why Fakt?
 
-The story behind building a compile-time fake generator for Kotlin testing.
-
----
-
-## Introduction
-
 Kotlin testing has a problem that gets worse the more successful your project becomes.
 
 Manual test fakes don't scale—each interface requires 60-80 lines of boilerplate that silently drifts from reality during refactoring. Runtime mocking frameworks (MockK, Mockito) solve the boilerplate but introduce severe performance penalties and don't work on Kotlin/Native or WebAssembly. KSP-based tools promised compile-time generation, but Kotlin 2.0 broke them all.
@@ -45,7 +39,7 @@ assertEquals(1, fake.flushCallCount.value)
 
 ---
 
-## The Problem in Detail
+## The Testing Problem
 
 ### Manual Fakes Don't Scale
 
