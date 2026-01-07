@@ -44,7 +44,7 @@ MockK and Mockito are **runtime mocking frameworks** using reflection (JVM/Andro
 
 **Use Fakt when:** Building Kotlin Multiplatform projects or want zero-runtime-cost test doubles.
 
-See [Why Fakt](../get-started/why-fakt.md) for detailed comparison.
+See [Why Fakt](../why-fakt.md) for detailed comparison.
 
 ---
 

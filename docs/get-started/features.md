@@ -358,5 +358,5 @@ dependencies {
 ## Next Steps
 
 - [Usage Guide](../user-guide/usage.md) - Comprehensive usage reference with detailed examples
-- [Why Fakt?](why-fakt.md) - Design philosophy and advantages
+- [Why Fakt?](../why-fakt.md) - Design philosophy and advantages
 - [Multi-Module](../user-guide/multi-module.md) - Cross-module fakes

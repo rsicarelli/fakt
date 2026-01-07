@@ -31,7 +31,7 @@ val fake = fakeAnalytics {
 - **[Google explicitly prefers fakes](https://developer.android.com/training/testing/fundamentals/test-doubles)** - Lightweight, framework-free, and resilient to refactoring
 - **Compile-time generation solves both problems** - Automated fakes that never drift from interfaces
 
-**[Read the full story →](get-started/why-fakt.md)**
+**[Read the full story →](why-fakt.md)**
 
 ---
 

@@ -12,7 +12,7 @@ Mock-based tests couple to implementation details (verifying *how* methods are c
 
 Fakt follows Google's "Now in Android" directive: **"Don't use mocking frameworks. Instead, use fakes."** Fakt generates clean, type-safe fakes that verify *outcomes*, work across all KMP targets with zero runtime cost, and use DSL lambdas matching your interface signatures—no separate stubbing APIs to learn.
 
-[Learn more about Fakt's design philosophy →](../get-started/why-fakt.md)
+[Learn more about Fakt's design philosophy →](../why-fakt.md)
 
 ---
 
