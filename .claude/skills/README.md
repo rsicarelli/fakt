@@ -361,23 +361,17 @@ Simply write natural prompts and skills will auto-suggest:
 
 ### Manual Invocation
 
-Use the Skill tool directly:
+Ask Claude to apply the skill guidelines:
 
-```bash
-# In Claude Code conversation
-Use the Skill tool with "kotlin-api-consultant"
-Use the Skill tool with "compilation-validator"
+```
+"Apply git-commit-guardian guidelines"
+"Use kotlin-api-consultant skill"
+"Follow the bdd-test-runner skill"
 ```
 
-### From Slash Commands
+Claude will automatically read the `.claude/skills/{category}/{skill-name}/SKILL.md` file and apply the guidelines.
 
-Many slash commands automatically use skills:
-
-```bash
-/run-bdd-tests          # Uses: bdd-test-runner
-/validate-compilation   # Uses: compilation-validator
-/consult-kotlin-api     # Uses: kotlin-api-consultant
-```
+**Important**: These are guideline-based skills, NOT registered slash commands or Skill tool invocations. They work by Claude reading and following the SKILL.md documentation.
 
 ---
 

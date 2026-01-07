@@ -159,8 +159,8 @@ async function main() {
                 output += '\n';
             }
 
-            output += '💡 TIP: Follow the guidelines in .claude/skills/ for these skills\n';
-            output += '   These are guideline-based skills - apply their patterns automatically\n';
+            output += '💡 ACTION: Read .claude/skills/{category}/{skill-name}/SKILL.md and apply guidelines\n';
+            output += '   Do NOT use Skill tool or /commands - these are guideline-based skills\n';
             output += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
 
             // Output to stdout (will be injected into Claude's context)
