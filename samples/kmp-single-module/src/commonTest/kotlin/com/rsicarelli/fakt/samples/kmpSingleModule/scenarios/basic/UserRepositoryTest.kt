@@ -27,7 +27,7 @@ class UserRepositoryTest {
 
         // Then
         assertEquals(2, result.size)
-        assertEquals("WRONG_NAME", result[0].name) // TEMP: Force failure for testing
+        assertEquals("Alice", result[0].name)
         assertEquals("Bob", result[1].name)
         // Call tracking validation
         assertEquals(1, fake.usersCallCount.value)
