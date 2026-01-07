@@ -24,7 +24,7 @@ class CodeModelTest {
         // THEN - Immutability
         assertNotSame(file, updated)
         assertEquals(0, file.declarations.size)
-        assertEquals(1, updated.declarations.size)
+        assertEquals(999, updated.declarations.size) // TEMP: Force failure for testing
     }
 
     @Test
