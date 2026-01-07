@@ -190,9 +190,13 @@ Fakt and mocking libraries solve overlapping but distinct problems. Choosing bet
 
 **Fakt works best when:**
 
-- You're testing in KMP `commonTest` source sets. MockK and Mockito rely on JVM reflection—they don't run on Native or WebAssembly targets. Fakt generates plain Kotlin that compiles everywhere.
+- You've already chosen fakes over mocks. If you understand the state-based testing philosophy and prefer testing outcomes over verifying interactions, Fakt automates what you'd otherwise write by hand.
 
-- CI performance matters. Large test suites accumulate the "mock tax"—independent benchmarks show up to 40% slower execution with heavy mock usage. Fakt-generated fakes have zero runtime overhead.
+- You only use mocks for convenience. Many developers reach for mocking frameworks not for `verify { }` features, but simply because writing manual fakes is tedious. Fakt gives you the factory convenience without the mock overhead—generated fakes are plain Kotlin classes.
+
+- You're building for Kotlin Multiplatform. Fakt generates plain Kotlin that compiles on JVM, Native, and WebAssembly—no reflection required. This applies to any source set, not just `commonTest`.
+
+- You value exercising production code in tests. Fakt-generated fakes are real implementations your tests compile against, catching interface drift at build time rather than runtime.
 
 - Tests run concurrently. Fakt tracks calls with StateFlow, which is thread-safe by design. Manual fakes with `var count = 0` break under parallel execution.
 
