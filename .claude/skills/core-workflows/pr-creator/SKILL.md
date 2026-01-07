@@ -55,24 +55,7 @@ git diff main..HEAD --name-only
 - No commits ahead of main
 - Uncommitted changes exist (warn and offer to commit first)
 
-### 3. Ask User for Depth Level (REQUIRED)
-
-**Always prompt before proceeding:**
-
-```
-Which depth level for this PR description?
-
-1. Quick     - Small changes, typos, docs (brief one-liner)
-2. Standard  - Most PRs (2-3 sentences, full checklist)
-3. Comprehensive - Major features, breaking changes (detailed)
-```
-
-**Use AskUserQuestion tool with options:**
-- Quick (Level 1)
-- Standard (Level 2)
-- Comprehensive (Level 3)
-
-### 4. Analyze Changes
+### 3. Analyze Changes
 
 **Determine PR characteristics:**
 
@@ -102,7 +85,7 @@ Which depth level for this PR description?
 - Extract from branch name: `fix/123-description` → #123
 - Extract from commit messages: `Fixes #456`
 
-### 5. Generate PR Title
+### 4. Generate PR Title
 
 **Apply Conventional Commits format:**
 
@@ -125,32 +108,14 @@ docs: update KMP multi-module guide
 refactor(generation)!: restructure factory generation API
 ```
 
-### 6. Populate PR Template
+### 5. Populate PR Template
 
 **Read project template:**
 ```bash
 cat .github/pull_request_template.md
 ```
 
-**Fill sections based on depth level:**
-
-#### Level 1: Quick
-```markdown
-## Description
-{One-liner from commit message or change summary}
-
-## Related Issue
-{Extracted issue or "N/A"}
-
-## Type of Change
-- [x] {Detected type}
-
-## Pre-Submission Checklist
-- [x] Code formatted
-- [x] Tests passing
-```
-
-#### Level 2: Standard
+**Always use Standard format:**
 ```markdown
 ## Description
 {2-3 sentences explaining what changed and why}
@@ -174,47 +139,7 @@ Fixes #{issue}
 {Key implementation details or decisions}
 ```
 
-#### Level 3: Comprehensive
-```markdown
-## Description
-{Detailed explanation:}
-- What problem this solves
-- How it's implemented
-- Key design decisions
-- Migration notes (if breaking)
-
-## Related Issue
-Fixes #{primary_issue}
-Relates to #{related_issues}
-
-## Type of Change
-- [x] {Detected type}
-- [x] Breaking change (if applicable)
-
-## Pre-Submission Checklist
-- [x] Code formatted: `./gradlew spotlessApply`
-- [x] Linter passing: `./gradlew lintKotlin`
-- [x] Static analysis: `./gradlew detekt`
-- [x] Tests added/updated and passing: `./gradlew test`
-- [x] Generated code compiles (verified with sample project)
-- [x] Updated documentation if needed
-- [x] No breaking changes OR breaking changes documented
-
-**Shortcut (if using Makefile):** `make format && make test`
-
-## Additional Context
-{Comprehensive details:}
-- Architecture considerations
-- Performance implications
-- Future work planned
-- Screenshots/examples if relevant
-
-## Breaking Changes
-{If breaking: detailed migration guide}
-{If not breaking: remove this section}
-```
-
-### 7. Validate Before Submission
+### 6. Validate Before Submission
 
 **Check PR is ready:**
 
@@ -234,7 +159,7 @@ make format 2>/dev/null || ./gradlew spotlessCheck
 - Uncommitted changes exist
 - Format check fails
 
-### 8. Create Draft PR
+### 7. Create Draft PR
 
 **Always use draft mode:**
 
@@ -253,7 +178,7 @@ EOF
 - `--title` - Validated Conventional Commits title
 - `--body` - Populated template with proper depth
 
-### 9. Output PR URL and Next Steps
+### 8. Output PR URL and Next Steps
 
 **Success output:**
 
