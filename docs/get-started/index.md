@@ -22,7 +22,7 @@ Install the Fakt plugin, annotate an interface with `@Fake`, and start using typ
 
 ```toml
 [versions]
-fakt = "1.0.0-alpha01"
+fakt = "x.y.z"
 kotlin = "2.2.21"
 
 [plugins]
