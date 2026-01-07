@@ -107,7 +107,7 @@ assertEquals(1, fake.trackCallCount.value)
 
 ## 🐜 Our Mascot
 
-Meet our mascot, the [Tamandua](https://en.wikipedia.org/wiki/Tamandua)! Just like they eat bugs in nature, Fakt catches drift bugs at compile-time before they reach production.
+The [Tamandua](https://en.wikipedia.org/wiki/Tamandua) eats bugs in nature. Fakt catches drift bugs at compile-time before they reach production.
 
 ---
 
