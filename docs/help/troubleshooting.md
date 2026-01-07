@@ -43,7 +43,7 @@ Common issues and solutions for single-module and multi-module setups.
 // gradle/libs.versions.toml
 [versions]
 kotlin = "2.2.21"
-fakt = "1.0.0-alpha01"
+fakt = "x.y.z"  // Check latest version
 ```
 
 ---
@@ -356,7 +356,7 @@ Configuration cache problems found:
 
 **Cause**: Using configuration cache with older Fakt version
 
-**Solution**: Update to Fakt 1.0.0-alpha01+ (configuration cache compatible)
+**Solution**: Update to the latest Fakt version (configuration cache compatible)
 
 ```kotlin
 // gradle.properties
@@ -473,7 +473,7 @@ Before reporting issues, verify:
 - [ ] Collector declares transitive dependencies
 - [ ] Consumer depends on collector module
 - [ ] Gradle synced in IDE
-- [ ] Using Fakt 1.0.0-alpha01+
+- [ ] Using latest Fakt version
 - [ ] Kotlin 2.2.21+
 
 ---

@@ -1,6 +1,6 @@
 # Getting Started
 
-Get Fakt up and running in your project and create your first fake in 5 minutes.
+Install the Fakt plugin, annotate an interface with `@Fake`, and start using type-safe fakes in your tests.
 
 ---
 
@@ -22,11 +22,10 @@ Get Fakt up and running in your project and create your first fake in 5 minutes.
 
 ```toml
 [versions]
-fakt = "1.0.0-alpha01"
+fakt = "x.y.z"
 kotlin = "2.2.21"
 
 [plugins]
-kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 fakt = { id = "com.rsicarelli.fakt", version.ref = "fakt" }
 
 [libraries]
@@ -37,7 +36,7 @@ fakt-annotations = { module = "com.rsicarelli.fakt:annotations", version.ref = "
 
 ```kotlin
 plugins {
-    alias(libs.plugins.kotlin.multiplatform) apply false
+    // ... your plugins
     alias(libs.plugins.fakt) apply false
 }
 ```
@@ -46,7 +45,7 @@ plugins {
 
 ```kotlin
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
+    kotlin("multiplatform")
     alias(libs.plugins.fakt)
 }
 
@@ -77,7 +76,7 @@ Fakt works with single-platform Kotlin projects too:
 
 ```kotlin
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
+    kotlin("jvm")
     alias(libs.plugins.fakt)
 }
 
@@ -93,7 +92,7 @@ dependencies {
 ```kotlin
 plugins {
     id("com.android.library")
-    alias(libs.plugins.kotlin.multiplatform)
+    kotlin("android")
     alias(libs.plugins.fakt)
 }
 
@@ -106,7 +105,7 @@ dependencies {
 
 ---
 
-## Your First Fake (5 Minutes)
+## Your First Fake
 
 ### Step 1: Annotate an Interface
 
@@ -135,6 +134,11 @@ Run Gradle build to generate the fake:
 ```
 
 Fakt generates `FakeAnalyticsImpl` in `build/generated/fakt/commonTest/kotlin/com/example/`.
+
+!!! tip "Compilation Trigger"
+    Fakt hooks into Kotlin compilation tasks. Running any compile task
+    (`:compileKotlin`, `:build`, or IDE build/compile/assemble) triggers
+    Fakt generation automatically.
 
 ---
 
@@ -215,65 +219,34 @@ class FakeAnalyticsConfig(private val fake: FakeAnalyticsImpl) {
 
 ## Generated Code Location
 
-Fakt generates code in test source sets only:
+Fakt generates code in the corresponding **test source set** of the module where the `@Fake` annotated interface lives. The generated package matches the original interface's package.
 
-| Source Set          | Generated Output                                |
-|---------------------|-------------------------------------------------|
-| `commonTest/`       | `build/generated/fakt/commonTest/kotlin/`       |
-| `jvmTest/`          | `build/generated/fakt/jvmTest/kotlin/`          |
-| `iosTest/`          | `build/generated/fakt/iosTest/kotlin/`          |
-| `androidUnitTest/`  | `build/generated/fakt/androidUnitTest/kotlin/`  |
+| Target        | Annotated In         | Generated Output                               |
+|---------------|----------------------|------------------------------------------------|
+| KMP Common    | `commonMain/`        | `build/generated/fakt/commonTest/kotlin/`      |
+| JVM           | `jvmMain/`           | `build/generated/fakt/jvmTest/kotlin/`         |
+| iOS           | `iosMain/`           | `build/generated/fakt/iosTest/kotlin/`         |
+| Android       | `androidMain/`       | `build/generated/fakt/androidUnitTest/kotlin/` |
+| JVM-only      | `main/` (src/main)   | `build/generated/fakt/test/kotlin/`            |
 
 !!! note
     Generated code **never** appears in production builds. Fakt is test-only.
 
 ---
 
-## More Complex Example
+## Multi-Module Setup
 
-Here's a realistic interface with suspend functions and generics:
+For projects with multiple Gradle modules that need to share fakes, Fakt provides a producer-collector-consumer pattern:
 
-```kotlin
-@Fake
-interface UserRepository {
-    suspend fun getUser(id: String): Result<User>
-    suspend fun saveUser(user: User): Result<Unit>
-    val currentUser: User?
-}
+```
+producer (:core:analytics)        → Contains @Fake interfaces
+     ↓
+collector (:core:analytics-fakes) → Collects and exposes fakes
+     ↓
+consumer (:app, :features:*)      → Uses fakes in tests
 ```
 
-**Using it in tests:**
-
-```kotlin
-import kotlinx.coroutines.test.runTest
-import kotlin.test.Test
-import kotlin.test.assertTrue
-
-class UserRepositoryTest {
-    @Test
-    fun `GIVEN fake repository WHEN saving user THEN returns success`() = runTest {
-        val savedUsers = mutableListOf<User>()
-
-        val fake = fakeUserRepository {
-            saveUser { user ->
-                savedUsers.add(user)
-                Result.success(Unit)
-            }
-            getUser { id ->
-                Result.success(User(id, "Alice"))
-            }
-            currentUser { User("123", "Bob") }
-        }
-
-        val result = fake.saveUser(User("456", "Charlie"))
-
-        assertTrue(result.isSuccess)
-        assertEquals(1, savedUsers.size)
-        assertEquals("Charlie", savedUsers.first().name)
-        assertEquals(1, fake.saveUserCallCount.value)
-    }
-}
-```
+**[Full multi-module setup guide →](../user-guide/multi-module.md)**
 
 ---
 
@@ -288,13 +261,34 @@ Fakt-generated code appears in `build/generated/fakt/` and is automatically inde
 
 ---
 
-## Kotlin Version Compatibility
+## Logging & Debugging
 
-| Fakt Version     | Kotlin Version Support |
-|------------------|------------------------|
-| 1.0.0-alpha01   | 2.2.21 - 2.2.30        |
+Fakt provides configurable logging to help troubleshoot code generation:
 
-Fakt follows forward compatibility on a best-effort basis (usually N+.2 minor versions).
+```kotlin
+// build.gradle.kts
+import com.rsicarelli.fakt.compiler.api.LogLevel
+
+fakt {
+    logLevel.set(LogLevel.DEBUG)  // Options: QUIET, INFO, DEBUG
+}
+```
+
+**Example DEBUG output:**
+
+```
+Registering FIR extension
+Registering IR extension with FIR metadata access
+Built IR class map with 149 classes
+FIR→IR Transformation (interfaces: 101/101, took 1ms)
+FIR + IR trace
+├─ Total FIR time: 6ms
+├─ Total IR time: 58ms
+│  ├─ FIR analysis: 1 type parameters, 6 members (55µs)
+│  └─ IR generation: FakeAnalyticsImpl 83 LOC (766µs)
+```
+
+**[Full configuration reference →](../user-guide/plugin-configuration.md)**
 
 ---
 
@@ -303,4 +297,5 @@ Fakt follows forward compatibility on a best-effort basis (usually N+.2 minor ve
 - **[Features](features.md)** - Complete feature reference
 - **[Usage Guide](../user-guide/usage.md)** - Common patterns and examples
 - **[Testing Patterns](../user-guide/testing-patterns.md)** - Best practices
-- **[Configuration](../user-guide/plugin-configuration.md)** - Plugin options (coming soon)
+- **[Multi-Module Setup](../user-guide/multi-module.md)** - Share fakes across Gradle modules
+- **[Configuration](../user-guide/plugin-configuration.md)** - Log levels and plugin options
