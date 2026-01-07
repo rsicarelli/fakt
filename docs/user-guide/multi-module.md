@@ -53,6 +53,64 @@ Fakt's multi-module pattern uses three distinct roles:
   :analytics-test-fixtures, or any name you choose
 ```
 
+### Quick Setup Example
+
+```kotlin
+// ┌─────────────────────────────────────────────────────────────────┐
+// │  PRODUCER: core/analytics/build.gradle.kts                      │
+// └─────────────────────────────────────────────────────────────────┘
+plugins {
+    kotlin("multiplatform")
+    alias(libs.plugins.fakt)
+}
+
+kotlin {
+    jvm()
+    sourceSets.commonMain.dependencies {
+        implementation(libs.fakt.annotations)
+    }
+}
+
+// ┌─────────────────────────────────────────────────────────────────┐
+// │  COLLECTOR: core/analytics-fakes/build.gradle.kts               │
+// └─────────────────────────────────────────────────────────────────┘
+plugins {
+    kotlin("multiplatform")
+    alias(libs.plugins.fakt)
+}
+
+kotlin {
+    jvm()
+    sourceSets.commonMain.dependencies {
+        api(projects.core.analytics)
+    }
+}
+
+fakt {
+    @OptIn(ExperimentalFaktMultiModule::class)
+    collectFakesFrom(projects.core.analytics)
+}
+
+// ┌─────────────────────────────────────────────────────────────────┐
+// │  CONSUMER: app/build.gradle.kts                                 │
+// └─────────────────────────────────────────────────────────────────┘
+plugins {
+    kotlin("multiplatform")
+}
+
+kotlin {
+    jvm()
+    sourceSets {
+        commonMain.dependencies {
+            implementation(projects.core.analytics)
+        }
+        commonTest.dependencies {
+            implementation(projects.core.analyticsFakes)
+        }
+    }
+}
+```
+
 ---
 
 ## When to Use Multi-Module?
@@ -116,8 +174,8 @@ The producer module contains `@Fake` annotated interfaces.
 ```kotlin
 // core/analytics/build.gradle.kts
 plugins {
-    kotlin("multiplatform") version "2.2.21"
-    id("com.rsicarelli.fakt") version "1.0.0-alpha01"
+    kotlin("multiplatform")
+    alias(libs.plugins.fakt)
 }
 
 kotlin {
@@ -125,7 +183,7 @@ kotlin {
     iosArm64()
 
     sourceSets.commonMain.dependencies {
-        implementation("com.rsicarelli.fakt:annotations:1.0.0-alpha01")
+        implementation(libs.fakt.annotations)
     }
 }
 ```
@@ -154,8 +212,8 @@ The collector module collects generated fakes and makes them available to other 
 ```kotlin
 // core/analytics-fakes/build.gradle.kts
 plugins {
-    kotlin("multiplatform") version "2.2.21"
-    id("com.rsicarelli.fakt") version "1.0.0-alpha01"
+    kotlin("multiplatform")
+    alias(libs.plugins.fakt)
 }
 
 kotlin {
@@ -221,7 +279,7 @@ Now use the collected fakes in your app or feature modules.
 ```kotlin
 // app/build.gradle.kts
 plugins {
-    kotlin("multiplatform") version "2.2.21"
+    kotlin("multiplatform")
 }
 
 kotlin {

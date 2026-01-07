@@ -159,8 +159,8 @@ async function main() {
                 output += '\n';
             }
 
-            output += '💡 TIP: Use the Skill tool to load these skills before proceeding\n';
-            output += '   Example: Use Skill tool with skill name (e.g., "kotlin-api-consultant")\n';
+            output += '💡 TIP: Follow the guidelines in .claude/skills/ for these skills\n';
+            output += '   These are guideline-based skills - apply their patterns automatically\n';
             output += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
 
             // Output to stdout (will be injected into Claude's context)

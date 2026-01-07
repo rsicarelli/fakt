@@ -82,10 +82,10 @@ extra:
 
 nav:
   - 'Home': index.md
+  - 'Why Fakt?': why-fakt.md
   - 'Get Started':
-      - 'Introduction': get-started/index.md
+      - 'Installation': get-started/index.md
       - 'Features': get-started/features.md
-      - 'Why Fakt?': get-started/why-fakt.md
       - 'Plugin Configuration': user-guide/plugin-configuration.md
   - 'User Guide':
       - 'Usage': user-guide/usage.md
@@ -96,7 +96,7 @@ nav:
       - 'Generated Code Reference': user-guide/generated-code-reference.md
       - 'Platform Support': user-guide/platform-support.md
       - 'Known Issues': user-guide/known-issues.md
-  - 'Examples': examples/index.md
+  - 'Samples': examples/index.md
   - 'Help':
       - 'FAQ': help/faq.md
       - 'Troubleshooting': help/troubleshooting.md

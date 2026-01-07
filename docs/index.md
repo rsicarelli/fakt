@@ -2,8 +2,8 @@
 
 **Compile-time type-safe test fakes for Kotlin Multiplatform**
 
-[![Build](https://img.shields.io/github/actions/workflow/status/rsicarelli/fakt/ci.yml)](https://github.com/rsicarelli/fakt/actions)
-[![Maven Central](https://img.shields.io/maven-central/v/com.rsicarelli.fakt/runtime)](https://search.maven.org/search?q=g:com.rsicarelli.fakt)
+[![Build](https://img.shields.io/github/actions/workflow/status/rsicarelli/fakt/continuous-deploy.yml)](https://github.com/rsicarelli/fakt/actions/workflows/continuous-deploy.yml)
+[![Maven Central](https://img.shields.io/maven-central/v/com.rsicarelli.fakt/annotations)](https://search.maven.org/search?q=g:com.rsicarelli.fakt)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.2.21%2B-blue)](https://kotlinlang.org)
 
@@ -31,7 +31,7 @@ val fake = fakeAnalytics {
 - **[Google explicitly prefers fakes](https://developer.android.com/training/testing/fundamentals/test-doubles)** - Lightweight, framework-free, and resilient to refactoring
 - **Compile-time generation solves both problems** - Automated fakes that never drift from interfaces
 
-**[Read the full story →](get-started/why-fakt.md)**
+**[Read the full story →](why-fakt.md)**
 
 ---
 

@@ -6,11 +6,11 @@ Platform and version requirements.
 
 ## Kotlin Version Support
 
-| Fakt Version     | Kotlin Version Support |
-|------------------|------------------------|
-| 1.0.0-alpha01   | 2.2.21 - 2.2.30        |
+| Fakt Version | Kotlin Version |
+|--------------|----------------|
+| Latest       | 2.2.21         |
 
-Fakt follows forward compatibility on a best-effort basis (usually N+.2 minor versions).
+Fakt follows forward compatibility on a best-effort basis. Check the [releases page](https://github.com/rsicarelli/fakt/releases) for the latest supported Kotlin version.
 
 ---
 

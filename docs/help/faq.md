@@ -15,18 +15,11 @@ Common questions about Fakt, answered with honesty and technical context.
 - Generates code at compile-time with **zero runtime dependencies**
 - Has been tested across Kotlin 2.2.21+ and all KMP targets
 - Uses forward compatibility patterns (N+.2 version support)
-- Is versioned as **1.0.0-alpha01** to signal pre-1.0 status
 
 Generated fakes are production-quality code that compiles to native binaries without reflection.
 
 !!! warning "Compiler Plugin API Stability"
     The Kotlin compiler plugin API can change between Kotlin versions. Fakt is tested against each Kotlin release and updated as needed. Pin your Kotlin version in production CI/CD.
-
----
-
-### Why "1.0.0-alpha01" instead of "1.0.0"?
-
-**SNAPSHOT** signals real-world validation in progress, not "broken." The API is functionally complete and production-ready. We prioritize honesty over marketing—1.0.0 will follow community feedback and battle-testing.
 
 ---
 
@@ -44,7 +37,7 @@ MockK and Mockito are **runtime mocking frameworks** using reflection (JVM/Andro
 
 **Use Fakt when:** Building Kotlin Multiplatform projects or want zero-runtime-cost test doubles.
 
-See [Why Fakt](../get-started/why-fakt.md) for detailed comparison.
+See [Why Fakt](../why-fakt.md) for detailed comparison.
 
 ---
 
