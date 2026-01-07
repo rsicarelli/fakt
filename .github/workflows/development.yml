@@ -12,9 +12,7 @@ env:
   IS_CI: true
 
 permissions:
-  checks: write        # Required for publishing test results
-  pull-requests: write # Required for PR comments (if enabled later)
-  contents: read       # Required for checkout
+  contents: read # Required for checkout
 
 jobs:
   check-code-changes:
@@ -129,6 +127,16 @@ jobs:
       - name: Execute Tests
         uses: ./.github/actions/run-tests
 
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-compiler
+          path: |
+            **/build/test-results/**/TEST-*.xml
+            !samples/**/build/test-results/**
+          retention-days: 1
+
   test-samples:
     name: Test Samples
     needs: [check-code-changes]
@@ -144,6 +152,14 @@ jobs:
       - name: Run Sample Tests
         uses: ./.github/actions/test-samples
 
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-samples
+          path: samples/**/build/test-results/**/TEST-*.xml
+          retention-days: 1
+
   ci-summary:
     name: CI Summary
     if: always()
@@ -158,6 +174,32 @@ jobs:
       - run-tests
       - test-samples
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Download compiler test results
+        if: needs.check-code-changes.outputs.has-changes == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: test-results-compiler
+          path: test-results
+        continue-on-error: true
+
+      - name: Download sample test results
+        if: needs.check-code-changes.outputs.has-changes == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: test-results-samples
+          path: test-results
+        continue-on-error: true
+
+      - name: Generate test summary
+        if: needs.check-code-changes.outputs.has-changes == 'true'
+        run: kotlin .github/scripts/test-summary.main.kts "test-results" "Test Results"
+
       - name: Check CI status
         run: |
           if [[ "${{ needs.check-code-changes.outputs.has-changes }}" == "false" ]]; then
