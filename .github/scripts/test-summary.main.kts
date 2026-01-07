@@ -31,7 +31,8 @@ import org.w3c.dom.NodeList
 data class TestFailure(
     val testName: String,
     val className: String,
-    val message: String
+    val message: String,
+    val stacktrace: String? = null
 )
 
 data class ModuleResult(
@@ -117,10 +118,10 @@ fun extractFailures(doc: org.w3c.dom.Document): List<TestFailure> {
             val failure = failureNodes.item(0) as Element
             val message = failure.getAttribute("message")
                 .takeIf { it.isNotBlank() }
-                ?: failure.textContent.lines().firstOrNull { it.isNotBlank() }
                 ?: "Test failed"
+            val stacktrace = failure.textContent.takeIf { it.isNotBlank() }
 
-            failures.add(TestFailure(testName, className, truncateMessage(message)))
+            failures.add(TestFailure(testName, className, cleanMessage(message), stacktrace))
         }
 
         // Check for error element
@@ -129,28 +130,21 @@ fun extractFailures(doc: org.w3c.dom.Document): List<TestFailure> {
             val error = errorNodes.item(0) as Element
             val message = error.getAttribute("message")
                 .takeIf { it.isNotBlank() }
-                ?: error.textContent.lines().firstOrNull { it.isNotBlank() }
                 ?: "Test error"
+            val stacktrace = error.textContent.takeIf { it.isNotBlank() }
 
-            failures.add(TestFailure(testName, className, truncateMessage(message)))
+            failures.add(TestFailure(testName, className, cleanMessage(message), stacktrace))
         }
     }
 
     return failures
 }
 
-fun truncateMessage(message: String, maxLength: Int = 100): String {
-    val cleaned = message
+fun cleanMessage(message: String): String =
+    message
         .replace("\n", " ")
         .replace("\r", "")
         .trim()
-
-    return if (cleaned.length > maxLength) {
-        cleaned.take(maxLength) + "..."
-    } else {
-        cleaned
-    }
-}
 
 // endregion
 
@@ -187,7 +181,7 @@ fun generateMarkdown(title: String, results: List<ModuleResult>): String {
             // Success: minimal output
             appendLine("**$totalTests tests passed** across $moduleCount modules")
         } else {
-            // Failures: detailed output
+            // Failures: detailed output with table
             appendLine("| Module | Passed | Failed | Skipped |")
             appendLine("|--------|--------|--------|---------|")
 
@@ -197,23 +191,39 @@ fun generateMarkdown(title: String, results: List<ModuleResult>): String {
             }
 
             appendLine()
+            appendLine("---")
+            appendLine()
 
-            // Failure details per module
+            // Failure details per module (not collapsed)
             results.filter { it.failed > 0 && it.failures.isNotEmpty() }.forEach { result ->
-                appendLine("<details>")
-                appendLine("<summary>${result.failed} failure(s) in ${result.name}</summary>")
+                appendLine("#### ${result.name}")
                 appendLine()
+
                 result.failures.forEach { failure ->
-                    val displayName = if (failure.className.isNotBlank()) {
+                    val testName = if (failure.className.isNotBlank()) {
                         "${failure.className}.${failure.testName}"
                     } else {
                         failure.testName
                     }
-                    appendLine("- `$displayName` - ${failure.message}")
+
+                    appendLine("**$testName**")
+                    appendLine()
+                    appendLine("> ${failure.message}")
+                    appendLine()
+
+                    // Stacktrace in collapsible section
+                    failure.stacktrace?.let { trace ->
+                        appendLine("<details>")
+                        appendLine("<summary>Stacktrace</summary>")
+                        appendLine()
+                        appendLine("```")
+                        appendLine(trace.trim())
+                        appendLine("```")
+                        appendLine()
+                        appendLine("</details>")
+                        appendLine()
+                    }
                 }
-                appendLine()
-                appendLine("</details>")
-                appendLine()
             }
         }
     }
