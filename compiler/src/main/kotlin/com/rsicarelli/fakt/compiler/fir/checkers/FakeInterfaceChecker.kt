@@ -10,6 +10,7 @@ import com.rsicarelli.fakt.compiler.fir.metadata.FirParameterInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirPropertyInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirSourceLocation
 import com.rsicarelli.fakt.compiler.fir.metadata.FirTypeParameterInfo
+import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeInterface
 import com.rsicarelli.fakt.compiler.fir.rendering.renderDefaultValue
 import org.jetbrains.kotlin.descriptors.ClassKind
@@ -168,6 +169,9 @@ internal class FakeInterfaceChecker(
                 session = session,
             )
 
+        // Extract visibility for explicitApi() support
+        val visibility = FirVisibility.from(declaration.status.visibility)
+
         return ValidatedFakeInterface(
             classId = classId,
             simpleName = simpleName,
@@ -180,6 +184,7 @@ internal class FakeInterfaceChecker(
             sourceLocation = sourceLocation,
             validationTimeNanos = 0L, // Will be set by caller after timing measurement
             sourceSourceSet = sourceLocation.extractSourceSetName(),
+            visibility = visibility,
         )
     }
 

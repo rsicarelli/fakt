@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.codegen.extensions
 
+import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
+import com.rsicarelli.fakt.compiler.fir.metadata.toModifier
+
 /**
  * Generates a factory function string for creating fake implementations.
  *
@@ -21,11 +24,13 @@ package com.rsicarelli.fakt.codegen.extensions
  *
  * @param interfaceName The name of the interface being faked
  * @param typeParameters List of type parameters with constraints (e.g., ["T : Comparable<T>"])
+ * @param visibility Visibility for the generated function (PUBLIC, INTERNAL) for explicitApi() support
  * @return Generated factory function code
  */
 fun generateFactoryFunction(
     interfaceName: String,
     typeParameters: List<String> = emptyList(),
+    visibility: FirVisibility = FirVisibility.PUBLIC,
 ): String {
     val fakeClassName = "Fake${interfaceName}Impl"
     val configClassName = "Fake${interfaceName}Config"
@@ -48,9 +53,9 @@ fun generateFactoryFunction(
     val (headerParams, whereClause) = parseTypeParametersForFactory(typeParameters)
 
     return buildString {
-        // Function signature
+        // Function signature with visibility modifier
         if (hasGenerics) {
-            // inline fun <reified T : Bound> fakeInterface(...)
+            // public inline fun <reified T : Bound> fakeInterface(...)
             val typeParamsStr =
                 headerParams.joinToString(", ") { param ->
                     val parts = param.split(" : ")
@@ -60,9 +65,9 @@ fun generateFactoryFunction(
                         "reified $param"
                     }
                 }
-            append("inline fun <$typeParamsStr> $factoryName")
+            append("${visibility.toModifier()}inline fun <$typeParamsStr> $factoryName")
         } else {
-            append("fun $factoryName")
+            append("${visibility.toModifier()}fun $factoryName")
         }
 
         // Parameters

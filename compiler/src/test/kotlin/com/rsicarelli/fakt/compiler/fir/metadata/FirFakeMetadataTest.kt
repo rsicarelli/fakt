@@ -3,6 +3,7 @@
 package com.rsicarelli.fakt.compiler.fir.metadata
 
 import kotlinx.coroutines.test.runTest
+import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.junit.jupiter.api.Test
@@ -279,5 +280,87 @@ class FirFakeMetadataTest {
             assertEquals(1, metadata.abstractMethods.size)
             assertEquals(1, metadata.openMethods.size)
             assertEquals("AbstractRepository", metadata.simpleName)
+        }
+
+    // ==========================================
+    // FirVisibility.from() Tests (Issue #21)
+    // ==========================================
+
+    @Test
+    fun `GIVEN Visibilities Public WHEN converting to FirVisibility THEN returns PUBLIC`() =
+        runTest {
+            // GIVEN
+            val visibility = Visibilities.Public
+
+            // WHEN
+            val firVisibility = FirVisibility.from(visibility)
+
+            // THEN
+            assertEquals(FirVisibility.PUBLIC, firVisibility)
+        }
+
+    @Test
+    fun `GIVEN Visibilities Internal WHEN converting to FirVisibility THEN returns INTERNAL`() =
+        runTest {
+            // GIVEN
+            val visibility = Visibilities.Internal
+
+            // WHEN
+            val firVisibility = FirVisibility.from(visibility)
+
+            // THEN
+            assertEquals(FirVisibility.INTERNAL, firVisibility)
+        }
+
+    @Test
+    fun `GIVEN Visibilities Private WHEN converting to FirVisibility THEN returns PRIVATE`() =
+        runTest {
+            // GIVEN
+            val visibility = Visibilities.Private
+
+            // WHEN
+            val firVisibility = FirVisibility.from(visibility)
+
+            // THEN
+            assertEquals(FirVisibility.PRIVATE, firVisibility)
+        }
+
+    @Test
+    fun `GIVEN Visibilities Protected WHEN converting to FirVisibility THEN returns PROTECTED`() =
+        runTest {
+            // GIVEN
+            val visibility = Visibilities.Protected
+
+            // WHEN
+            val firVisibility = FirVisibility.from(visibility)
+
+            // THEN
+            assertEquals(FirVisibility.PROTECTED, firVisibility)
+        }
+
+    @Test
+    fun `GIVEN FirVisibility toModifier WHEN PUBLIC THEN returns public with space`() =
+        runTest {
+            // GIVEN
+            val visibility = FirVisibility.PUBLIC
+
+            // WHEN
+            val modifier = visibility.toModifier()
+
+            // THEN
+            assertEquals("public ", modifier)
+        }
+
+    @Test
+    fun `GIVEN FirVisibility toModifier WHEN INTERNAL THEN returns internal with space`() =
+        runTest {
+            // GIVEN
+            val visibility = FirVisibility.INTERNAL
+
+            // WHEN
+            val modifier = visibility.toModifier()
+
+            // THEN
+            assertEquals("internal ", modifier)
         }
 }

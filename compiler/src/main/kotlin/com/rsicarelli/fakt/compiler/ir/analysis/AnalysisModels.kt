@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.analysis
 
+import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
@@ -29,6 +30,7 @@ data class InterfaceAnalysis(
     val sourceInterface: IrClass,
     val genericPattern: GenericPattern,
     val debugInfo: StringBuilder = StringBuilder(),
+    val visibility: FirVisibility = FirVisibility.PUBLIC,
 )
 
 /**
@@ -44,6 +46,7 @@ data class ClassAnalysis(
     val abstractProperties: List<PropertyAnalysis>,
     val openProperties: List<PropertyAnalysis>,
     val sourceClass: IrClass,
+    val visibility: FirVisibility = FirVisibility.PUBLIC,
 )
 
 /**

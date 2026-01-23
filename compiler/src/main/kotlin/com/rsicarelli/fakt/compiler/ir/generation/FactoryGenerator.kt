@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.generation
 
+import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
+import com.rsicarelli.fakt.compiler.fir.metadata.toModifier
 import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
 
@@ -54,7 +56,8 @@ internal class FactoryGenerator {
             }
 
         return buildString {
-            val functionSignature = buildFunctionSignature(hasGenerics, typeParameters, factoryFunctionName)
+            val functionSignature =
+                buildFunctionSignature(hasGenerics, typeParameters, factoryFunctionName, analysis.visibility)
             val whereClausePart = if (whereClause.isNotEmpty()) " where $whereClause" else ""
             val returnType = buildReturnType(fakeClassName, typeParameterNames)
 
@@ -123,7 +126,8 @@ internal class FactoryGenerator {
 
         return buildString {
             val hasGenerics = typeParameters.isNotEmpty()
-            val functionSignature = buildFunctionSignature(hasGenerics, typeParameters, factoryFunctionName)
+            val functionSignature =
+                buildFunctionSignature(hasGenerics, typeParameters, factoryFunctionName, analysis.visibility)
             val returnType = buildReturnType(fakeClassName, typeParameterNames)
 
             // Generate factory function signature with where clause if needed
@@ -165,16 +169,22 @@ internal class FactoryGenerator {
 
     /**
      * Builds the function signature for the factory function.
+     *
+     * @param hasGenerics Whether the function has generic type parameters
+     * @param typeParameters The formatted type parameters string
+     * @param factoryFunctionName The name of the factory function
+     * @param visibility The visibility level for explicitApi() support
      */
     private fun buildFunctionSignature(
         hasGenerics: Boolean,
         typeParameters: String,
         factoryFunctionName: String,
+        visibility: FirVisibility,
     ): String =
         if (hasGenerics) {
-            "inline fun $typeParameters $factoryFunctionName"
+            "${visibility.toModifier()}inline fun $typeParameters $factoryFunctionName"
         } else {
-            "fun $factoryFunctionName"
+            "${visibility.toModifier()}fun $factoryFunctionName"
         }
 
     /**

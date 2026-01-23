@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.fir.metadata
 
+import org.jetbrains.kotlin.descriptors.Visibilities
+import org.jetbrains.kotlin.descriptors.Visibility
 import org.jetbrains.kotlin.name.ClassId
 
 /**
@@ -33,6 +35,7 @@ import org.jetbrains.kotlin.name.ClassId
  * @property inheritedFunctions Functions inherited from super-interfaces
  * @property sourceLocation Location in source code for error reporting
  * @property validationTimeNanos Time spent validating this interface in FIR phase (nanoseconds)
+ * @property visibility Visibility of the interface (PUBLIC, INTERNAL, etc.) for explicitApi() support
  */
 data class ValidatedFakeInterface(
     val classId: ClassId,
@@ -47,6 +50,7 @@ data class ValidatedFakeInterface(
     val validationTimeNanos: Long,
     val isFromCache: Boolean = false,
     val sourceSourceSet: String? = null,
+    val visibility: FirVisibility = FirVisibility.PUBLIC,
 )
 
 /**
@@ -64,6 +68,7 @@ data class ValidatedFakeInterface(
  * @property openMethods Open methods that can be overridden
  * @property sourceLocation Location in source code
  * @property validationTimeNanos Time spent validating this class in FIR phase (nanoseconds)
+ * @property visibility Visibility of the class (PUBLIC, INTERNAL, etc.) for explicitApi() support
  */
 data class ValidatedFakeClass(
     val classId: ClassId,
@@ -78,6 +83,7 @@ data class ValidatedFakeClass(
     val validationTimeNanos: Long,
     val isFromCache: Boolean = false,
     val sourceSourceSet: String? = null,
+    val visibility: FirVisibility = FirVisibility.PUBLIC,
 )
 
 /**
@@ -216,3 +222,65 @@ data class FirSourceLocation(
         return SOURCE_SET_REGEX.find(filePath)?.groupValues?.get(1)
     }
 }
+
+/**
+ * Visibility level for generated fakes.
+ *
+ * Extracted from source interface/class visibility to ensure generated fakes
+ * have the same visibility, which is required for `explicitApi()` mode.
+ *
+ * Example:
+ * - `public interface UserService` → FirVisibility.PUBLIC → `public class FakeUserServiceImpl`
+ * - `internal interface InternalService` → FirVisibility.INTERNAL → `internal class FakeInternalServiceImpl`
+ */
+enum class FirVisibility {
+    PUBLIC,
+    INTERNAL,
+    PRIVATE,
+    PROTECTED;
+
+    companion object {
+        /**
+         * Converts Kotlin compiler Visibility to FirVisibility.
+         *
+         * Maps visibility descriptors to our simplified enum:
+         * - DescriptorVisibilities.PUBLIC → PUBLIC
+         * - DescriptorVisibilities.INTERNAL → INTERNAL
+         * - DescriptorVisibilities.PRIVATE → PRIVATE
+         * - DescriptorVisibilities.PROTECTED → PROTECTED
+         * - Other (LOCAL, INHERITED, etc.) → PUBLIC (safe default)
+         *
+         * @param visibility Kotlin compiler visibility descriptor
+         * @return Corresponding FirVisibility enum value
+         */
+        fun from(visibility: Visibility): FirVisibility =
+            when (visibility) {
+                Visibilities.Public -> PUBLIC
+                Visibilities.Internal -> INTERNAL
+                Visibilities.Private -> PRIVATE
+                Visibilities.Protected -> PROTECTED
+                else -> PUBLIC
+            }
+    }
+}
+
+/**
+ * Converts FirVisibility to a Kotlin visibility modifier string for code generation.
+ *
+ * Used by code generators to prepend the correct visibility modifier to generated
+ * classes, functions, and properties for `explicitApi()` compatibility.
+ *
+ * Private and protected are not supported for top-level declarations, so they
+ * fallback to public.
+ *
+ * @return Visibility modifier string with trailing space (e.g., "public ", "internal ")
+ */
+fun FirVisibility.toModifier(): String =
+    when (this) {
+        FirVisibility.PUBLIC,
+        FirVisibility.PRIVATE,
+        FirVisibility.PROTECTED,
+            -> "public "
+
+        FirVisibility.INTERNAL -> "internal "
+    }

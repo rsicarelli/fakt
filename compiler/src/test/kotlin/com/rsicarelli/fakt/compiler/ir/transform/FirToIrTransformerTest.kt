@@ -3,6 +3,7 @@
 package com.rsicarelli.fakt.compiler.ir.transform
 
 import com.rsicarelli.fakt.compiler.fir.metadata.FirTypeParameterInfo
+import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals

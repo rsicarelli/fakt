@@ -10,6 +10,7 @@ import com.rsicarelli.fakt.compiler.fir.metadata.FirParameterInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirPropertyInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirSourceLocation
 import com.rsicarelli.fakt.compiler.fir.metadata.FirTypeParameterInfo
+import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeClass
 import com.rsicarelli.fakt.compiler.fir.rendering.renderDefaultValue
 import org.jetbrains.kotlin.descriptors.ClassKind
@@ -226,6 +227,9 @@ internal class FakeClassChecker(
         // Extract source location for KMP source set detection
         val sourceLocation = extractSourceLocation(declaration, session)
 
+        // Extract visibility for explicitApi() support
+        val visibility = FirVisibility.from(declaration.status.visibility)
+
         // Create validated metadata (timing will be added by caller)
         return ValidatedFakeClass(
             classId = classId,
@@ -239,6 +243,7 @@ internal class FakeClassChecker(
             sourceLocation = sourceLocation,
             validationTimeNanos = 0L, // Will be set by caller after timing measurement
             sourceSourceSet = sourceLocation.extractSourceSetName(),
+            visibility = visibility,
         )
     }
 
