@@ -377,17 +377,19 @@ class FakeGeneratorTest {
     @Test
     fun `GIVEN public visibility WHEN generating fake THEN class has public modifier`() {
         // GIVEN
-        val methods = listOf(
-            MethodSpec("doWork", emptyList(), "String"),
-        )
+        val methods =
+            listOf(
+                MethodSpec("doWork", emptyList(), "String"),
+            )
 
         // WHEN
-        val file = generateCompleteFake(
-            packageName = "com.example",
-            interfaceName = "PublicService",
-            methods = methods,
-            visibility = FirVisibility.PUBLIC,
-        )
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "PublicService",
+                methods = methods,
+                visibility = FirVisibility.PUBLIC,
+            )
         val builder = CodeBuilder()
         file.renderTo(builder)
         val result = builder.build()
@@ -399,17 +401,19 @@ class FakeGeneratorTest {
     @Test
     fun `GIVEN internal visibility WHEN generating fake THEN class has internal modifier`() {
         // GIVEN
-        val methods = listOf(
-            MethodSpec("doWork", emptyList(), "String"),
-        )
+        val methods =
+            listOf(
+                MethodSpec("doWork", emptyList(), "String"),
+            )
 
         // WHEN
-        val file = generateCompleteFake(
-            packageName = "com.example",
-            interfaceName = "InternalService",
-            methods = methods,
-            visibility = FirVisibility.INTERNAL,
-        )
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "InternalService",
+                methods = methods,
+                visibility = FirVisibility.INTERNAL,
+            )
         val builder = CodeBuilder()
         file.renderTo(builder)
         val result = builder.build()
@@ -421,17 +425,19 @@ class FakeGeneratorTest {
     @Test
     fun `GIVEN default visibility WHEN generating fake THEN class has public modifier`() {
         // GIVEN - no explicit visibility (uses default PUBLIC)
-        val methods = listOf(
-            MethodSpec("doWork", emptyList(), "String"),
-        )
+        val methods =
+            listOf(
+                MethodSpec("doWork", emptyList(), "String"),
+            )
 
         // WHEN
-        val file = generateCompleteFake(
-            packageName = "com.example",
-            interfaceName = "DefaultService",
-            methods = methods,
-            // visibility not specified - should default to PUBLIC
-        )
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "DefaultService",
+                methods = methods,
+                // visibility not specified - should default to PUBLIC
+            )
         val builder = CodeBuilder()
         file.renderTo(builder)
         val result = builder.build()
@@ -444,17 +450,19 @@ class FakeGeneratorTest {
     fun `GIVEN private visibility WHEN generating fake THEN class defaults to public`() {
         // GIVEN - private interfaces can't have public implementations,
         // but we default to public for safety
-        val methods = listOf(
-            MethodSpec("doWork", emptyList(), "String"),
-        )
+        val methods =
+            listOf(
+                MethodSpec("doWork", emptyList(), "String"),
+            )
 
         // WHEN
-        val file = generateCompleteFake(
-            packageName = "com.example",
-            interfaceName = "PrivateService",
-            methods = methods,
-            visibility = FirVisibility.PRIVATE,
-        )
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "PrivateService",
+                methods = methods,
+                visibility = FirVisibility.PRIVATE,
+            )
         val builder = CodeBuilder()
         file.renderTo(builder)
         val result = builder.build()
@@ -466,17 +474,19 @@ class FakeGeneratorTest {
     @Test
     fun `GIVEN protected visibility WHEN generating fake THEN class defaults to public`() {
         // GIVEN - protected is not supported for top-level classes
-        val methods = listOf(
-            MethodSpec("doWork", emptyList(), "String"),
-        )
+        val methods =
+            listOf(
+                MethodSpec("doWork", emptyList(), "String"),
+            )
 
         // WHEN
-        val file = generateCompleteFake(
-            packageName = "com.example",
-            interfaceName = "ProtectedService",
-            methods = methods,
-            visibility = FirVisibility.PROTECTED,
-        )
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "ProtectedService",
+                methods = methods,
+                visibility = FirVisibility.PROTECTED,
+            )
         val builder = CodeBuilder()
         file.renderTo(builder)
         val result = builder.build()

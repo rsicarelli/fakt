@@ -237,7 +237,8 @@ enum class FirVisibility {
     PUBLIC,
     INTERNAL,
     PRIVATE,
-    PROTECTED;
+    PROTECTED,
+    ;
 
     companion object {
         /**
@@ -280,7 +281,7 @@ fun FirVisibility.toModifier(): String =
         FirVisibility.PUBLIC,
         FirVisibility.PRIVATE,
         FirVisibility.PROTECTED,
-            -> "public "
+        -> "public "
 
         FirVisibility.INTERNAL -> "internal "
     }

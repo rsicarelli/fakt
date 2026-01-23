@@ -19,7 +19,10 @@ import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
  * @param methodName Name of the method to track
  * @param visibility Visibility modifier to apply to the public getter
  */
-fun ClassBuilder.callTrackingProperty(methodName: String, visibility: FirVisibility) {
+fun ClassBuilder.callTrackingProperty(
+    methodName: String,
+    visibility: FirVisibility,
+) {
     val backingFieldName = "_${methodName}CallCount"
     val publicFieldName = "${methodName}CallCount"
 
@@ -52,7 +55,10 @@ fun ClassBuilder.callTrackingProperty(methodName: String, visibility: FirVisibil
  * @param propertyName Name of the property to track
  * @param visibility Visibility modifier to apply to the public getter
  */
-fun ClassBuilder.propertyGetterTracking(propertyName: String, visibility: FirVisibility) {
+fun ClassBuilder.propertyGetterTracking(
+    propertyName: String,
+    visibility: FirVisibility,
+) {
     val backingFieldName = "_${propertyName}CallCount"
     val publicFieldName = "${propertyName}CallCount"
 
@@ -85,7 +91,10 @@ fun ClassBuilder.propertyGetterTracking(propertyName: String, visibility: FirVis
  * @param propertyName Name of the property to track
  * @param visibility Visibility modifier to apply to the public getter
  */
-fun ClassBuilder.propertySetterTracking(propertyName: String, visibility: FirVisibility) {
+fun ClassBuilder.propertySetterTracking(
+    propertyName: String,
+    visibility: FirVisibility,
+) {
     val capitalizedName = propertyName.replaceFirstChar { it.uppercase() }
     val backingFieldName = "_set${capitalizedName}CallCount"
     val publicFieldName = "set${capitalizedName}CallCount"

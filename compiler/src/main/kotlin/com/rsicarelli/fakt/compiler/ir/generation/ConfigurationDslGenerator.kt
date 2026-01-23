@@ -60,11 +60,11 @@ internal class ConfigurationDslGenerator(
         val visibilityModifier = config.visibility.toModifier()
         return if (config.whereClause.isNotEmpty()) {
             "${visibilityModifier}class ${config.configClassName}${config.typeParameters}(" +
-                    "private val fake: ${config.fakeClassName}${config.typeParameterNames}) " +
-                    "where ${config.whereClause} {"
+                "private val fake: ${config.fakeClassName}${config.typeParameterNames}) " +
+                "where ${config.whereClause} {"
         } else {
             "${visibilityModifier}class ${config.configClassName}${config.typeParameters}(" +
-                    "private val fake: ${config.fakeClassName}${config.typeParameterNames}) {"
+                "private val fake: ${config.fakeClassName}${config.typeParameterNames}) {"
         }
     }
 
@@ -126,8 +126,8 @@ internal class ConfigurationDslGenerator(
             val suspendModifier = if (function.isSuspend) "suspend " else ""
 
             "    fun $methodTypeParams${function.name}(" +
-                    "behavior: $suspendModifier($parameterTypes) -> $returnType) " +
-                    "{ fake.configure${function.name.capitalize()}(behavior) }\n"
+                "behavior: $suspendModifier($parameterTypes) -> $returnType) " +
+                "{ fake.configure${function.name.capitalize()}(behavior) }\n"
         }
 
     private fun generatePropertyConfigurators(properties: List<PropertyAnalysis>): String =
@@ -138,14 +138,14 @@ internal class ConfigurationDslGenerator(
             buildString {
                 append(
                     "    fun ${property.name}(behavior: () -> $propertyType) " +
-                            "{ fake.configure${property.name.capitalize()}(behavior) }\n",
+                        "{ fake.configure${property.name.capitalize()}(behavior) }\n",
                 )
 
                 // For mutable properties, add setter configuration
                 if (property.isMutable) {
                     append(
                         "    fun set${property.name.capitalize()}(behavior: ($propertyType) -> Unit) " +
-                                "{ fake.configureSet${property.name.capitalize()}(behavior) }\n",
+                            "{ fake.configureSet${property.name.capitalize()}(behavior) }\n",
                     )
                 }
             }
@@ -305,14 +305,14 @@ internal class ConfigurationDslGenerator(
             // Getter configuration
             appendLine(
                 "    fun $propertyName(behavior: () -> $returnTypeString) " +
-                        "{ fake.configure$capitalizedName(behavior) }",
+                    "{ fake.configure$capitalizedName(behavior) }",
             )
 
             // Setter configuration for mutable properties
             if (property.isMutable) {
                 appendLine(
                     "    fun set$capitalizedName(behavior: ($returnTypeString) -> Unit) " +
-                            "{ fake.configureSet$capitalizedName(behavior) }",
+                        "{ fake.configureSet$capitalizedName(behavior) }",
                 )
             }
         }.trimEnd() // Remove trailing newline so caller can control formatting
