@@ -45,7 +45,7 @@ class FakeGeneratorTest {
         assertContains(result, "private var getUserBehavior: (String) -> User? = { p0 -> null }")
         assertContains(result, "override fun getUser(id: String): User? {")
         assertContains(result, "return getUserBehavior(id)")
-        assertContains(result, "internal fun configureGetUser(behavior: (String) -> User?): Unit {")
+        assertContains(result, "internal fun configureGetUser(behavior: (String) -> User?) = run {")
     }
 
     @Test
@@ -81,7 +81,7 @@ class FakeGeneratorTest {
         assertContains(result, "return saveUserBehavior(user)")
         assertContains(
             result,
-            "internal fun configureSaveUser(behavior: suspend (User) -> Result<Unit>): Unit {",
+            "internal fun configureSaveUser(behavior: suspend (User) -> Result<Unit>) = run {",
         )
     }
 
@@ -359,14 +359,14 @@ class FakeGeneratorTest {
         assertContains(result, "override suspend fun saveUser(user: User): Result<Unit>")
 
         // THEN - Configuration methods
-        assertContains(result, "internal fun configureGetUser(behavior: (String) -> User?): Unit")
+        assertContains(result, "internal fun configureGetUser(behavior: (String) -> User?) = run {")
         assertContains(
             result,
-            "internal fun configureGetAllUsers(behavior: () -> List<User>): Unit",
+            "internal fun configureGetAllUsers(behavior: () -> List<User>) = run {",
         )
         assertContains(
             result,
-            "internal fun configureSaveUser(behavior: suspend (User) -> Result<Unit>): Unit",
+            "internal fun configureSaveUser(behavior: suspend (User) -> Result<Unit>) = run {",
         )
     }
 

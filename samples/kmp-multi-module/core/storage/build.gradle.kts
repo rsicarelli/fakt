@@ -17,6 +17,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("test"))
                 implementation(libs.coroutines.test)
+                implementation(projects.core.storageFakes)
             }
         }
     }

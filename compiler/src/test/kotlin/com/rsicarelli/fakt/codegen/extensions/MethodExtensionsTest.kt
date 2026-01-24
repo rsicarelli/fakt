@@ -184,7 +184,7 @@ class MethodExtensionsTest {
         val result = builder.build()
 
         // THEN
-        assertContains(result, "internal fun configureGetValue(behavior: (String) -> User?): Unit {")
+        assertContains(result, "internal fun configureGetValue(behavior: (String) -> User?) = run {")
         assertContains(result, "getValueBehavior = behavior")
     }
 
@@ -209,7 +209,7 @@ class MethodExtensionsTest {
         val result = builder.build()
 
         // THEN
-        assertContains(result, "internal fun configureSaveUser(behavior: suspend (User) -> Result<Unit>): Unit {")
+        assertContains(result, "internal fun configureSaveUser(behavior: suspend (User) -> Result<Unit>) = run {")
         assertContains(result, "saveUserBehavior = behavior")
     }
 
@@ -233,7 +233,7 @@ class MethodExtensionsTest {
         val result = builder.build()
 
         // THEN
-        assertContains(result, "internal fun configureGetData(behavior: () -> String): Unit {")
+        assertContains(result, "internal fun configureGetData(behavior: () -> String) = run {")
     }
 
     @Test
@@ -350,7 +350,7 @@ class MethodExtensionsTest {
         assertContains(result, "private var getUserBehavior: (String) -> User? = { null }")
         assertContains(result, "override fun getUser(id: String): User? {")
         assertContains(result, "return getUserBehavior(id)")
-        assertContains(result, "internal fun configureGetUser(behavior: (String) -> User?): Unit {")
+        assertContains(result, "internal fun configureGetUser(behavior: (String) -> User?) = run {")
         assertContains(result, "getUserBehavior = behavior")
     }
 }

@@ -51,9 +51,36 @@ data class CodeFile(
 sealed interface CodeDeclaration
 
 /**
- * Marker interface for class members (properties, functions).
+ * Marker interface for class members (properties, functions, comments).
  */
 sealed interface CodeMember
+
+/**
+ * Represents a comment in generated code.
+ *
+ * Used for section headers and documentation within class bodies.
+ *
+ * @property text The comment text (without // prefix)
+ */
+data class CodeComment(
+    val text: String,
+) : CodeMember
+
+/**
+ * Represents a region start marker in generated code.
+ *
+ * Used for collapsible sections in IDEs (IntelliJ, Android Studio).
+ *
+ * @property name The region name displayed when collapsed
+ */
+data class CodeRegionStart(
+    val name: String,
+) : CodeMember
+
+/**
+ * Represents a region end marker in generated code.
+ */
+data object CodeRegionEnd : CodeMember
 
 /**
  * Represents a Kotlin class declaration.
@@ -95,6 +122,7 @@ data class CodeClass(
  * @property isSuspend Whether this is a suspend function
  * @property isInline Whether this is an inline function
  * @property receiverType Extension receiver type for extension functions (e.g., Vector for fun Vector.plus())
+ * @property annotations Function-level annotations (e.g., @Suppress)
  */
 data class CodeFunction(
     val name: String,
@@ -105,7 +133,8 @@ data class CodeFunction(
     val typeParameters: List<CodeTypeParameter> = emptyList(),
     val isSuspend: Boolean = false,
     val isInline: Boolean = false,
-    val receiverType: CodeType? = null, // Extension receiver type (e.g., Vector for fun Vector.plus())
+    val receiverType: CodeType? = null,
+    val annotations: List<CodeAnnotation> = emptyList(),
 ) : CodeDeclaration,
     CodeMember
 

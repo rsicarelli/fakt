@@ -1,5 +1,14 @@
 {
   "description": "Claude Code settings for Fakt compiler plugin development with skill auto-activation",
+  "permissions": {
+    "allow": [
+      "Bash(make**)",
+      "Bash(cd samples/**)",
+      "Bash(rm -rf **)",
+      "Bash(**gradlew**)",
+      "Bash(git **)"
+    ]
+  },
   "hooks": {
     "UserPromptSubmit": [
       {
