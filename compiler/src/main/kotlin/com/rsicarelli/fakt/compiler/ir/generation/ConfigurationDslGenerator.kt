@@ -5,6 +5,7 @@ package com.rsicarelli.fakt.compiler.ir.generation
 import com.rsicarelli.fakt.compiler.core.types.TypeResolution
 import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 import com.rsicarelli.fakt.compiler.fir.metadata.toModifier
+import com.rsicarelli.fakt.compiler.ir.analysis.AnnotationAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.FunctionAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
@@ -38,6 +39,9 @@ internal class ConfigurationDslGenerator(
     ): String {
         val (typeParamsForHeader, whereClause) = formatTypeParametersWithWhereClause(analysis.typeParameters)
 
+        // Extract annotations that need to be propagated to the config class
+        val propagatedAnnotations = extractPropagatedAnnotations(analysis.annotations)
+
         val headerConfig =
             ClassHeaderConfig(
                 configClassName = "Fake${analysis.interfaceName}Config",
@@ -46,30 +50,72 @@ internal class ConfigurationDslGenerator(
                 typeParameterNames = extractTypeParameterNames(analysis.typeParameters),
                 whereClause = whereClause,
                 visibility = analysis.visibility,
+                propagatedAnnotations = propagatedAnnotations,
             )
 
         return buildString {
             appendLine(generateClassHeader(headerConfig))
-            append(generateFunctionConfigurators(analysis.functions))
-            append(generatePropertyConfigurators(analysis.properties))
+            append(generateFunctionConfigurators(analysis.functions, analysis.visibility))
+            append(generatePropertyConfigurators(analysis.properties, analysis.visibility))
             append("}")
         }
     }
 
-    private fun generateClassHeader(config: ClassHeaderConfig): String {
-        val visibilityModifier = config.visibility.toModifier()
-        return if (config.whereClause.isNotEmpty()) {
-            "${visibilityModifier}class ${config.configClassName}${config.typeParameters}(" +
-                "private val fake: ${config.fakeClassName}${config.typeParameterNames}) " +
-                "where ${config.whereClause} {"
-        } else {
-            "${visibilityModifier}class ${config.configClassName}${config.typeParameters}(" +
-                "private val fake: ${config.fakeClassName}${config.typeParameterNames}) {"
-        }
-    }
+    private fun generateClassHeader(config: ClassHeaderConfig): String =
+        buildString {
+            // Add propagated annotations (@OptIn, @Deprecated)
+            // Note: We don't add @OptIn for opt-in markers here because:
+            // 1. The impl class already has @OptIn(MarkerClass::class)
+            // 2. Config class just references the impl, doesn't need its own @OptIn
+            config.propagatedAnnotations.forEach { annotation ->
+                appendLine(renderAnnotation(annotation))
+            }
 
-    private fun generateFunctionConfigurators(functions: List<FunctionAnalysis>): String =
-        functions.joinToString("") { function ->
+            val visibilityModifier = config.visibility.toModifier()
+            if (config.whereClause.isNotEmpty()) {
+                append(
+                    "${visibilityModifier}class ${config.configClassName}${config.typeParameters}(" +
+                        "private val fake: ${config.fakeClassName}${config.typeParameterNames}) " +
+                        "where ${config.whereClause} {",
+                )
+            } else {
+                append(
+                    "${visibilityModifier}class ${config.configClassName}${config.typeParameters}(" +
+                        "private val fake: ${config.fakeClassName}${config.typeParameterNames}) {",
+                )
+            }
+        }
+
+    /**
+     * Extracts annotations that need to be propagated to the config class.
+     *
+     * This includes:
+     * - @OptIn: Required because the class references types that require opt-in
+     * - @Deprecated: Propagated so that deprecated types have deprecated config classes
+     *
+     * Excludes opt-in markers because fakes should be freely usable in tests.
+     */
+    private fun extractPropagatedAnnotations(annotations: List<AnnotationAnalysis>): List<AnnotationAnalysis> =
+        annotations.filter {
+            (it.simpleName == "OptIn" || it.simpleName == "Deprecated") && !it.isOptInMarker
+        }
+
+    /**
+     * Renders an annotation to its string representation.
+     */
+    private fun renderAnnotation(annotation: AnnotationAnalysis): String =
+        if (annotation.renderedArguments.isEmpty()) {
+            "@${annotation.simpleName}"
+        } else {
+            "@${annotation.simpleName}(${annotation.renderedArguments.joinToString(", ")})"
+        }
+
+    private fun generateFunctionConfigurators(
+        functions: List<FunctionAnalysis>,
+        visibility: FirVisibility,
+    ): String {
+        val visibilityModifier = visibility.toModifier()
+        return functions.joinToString("") { function ->
             // Preserve full generic signatures (no erasure)
             val hasMethodGenerics = function.typeParameters.isNotEmpty()
 
@@ -125,31 +171,37 @@ internal class ConfigurationDslGenerator(
 
             val suspendModifier = if (function.isSuspend) "suspend " else ""
 
-            "    fun $methodTypeParams${function.name}(" +
+            "    ${visibilityModifier}fun $methodTypeParams${function.name}(" +
                 "behavior: $suspendModifier($parameterTypes) -> $returnType) " +
                 "{ fake.configure${function.name.capitalize()}(behavior) }\n"
         }
+    }
 
-    private fun generatePropertyConfigurators(properties: List<PropertyAnalysis>): String =
-        properties.joinToString("") { property ->
+    private fun generatePropertyConfigurators(
+        properties: List<PropertyAnalysis>,
+        visibility: FirVisibility,
+    ): String {
+        val visibilityModifier = visibility.toModifier()
+        return properties.joinToString("") { property ->
             val propertyType =
                 typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
 
             buildString {
                 append(
-                    "    fun ${property.name}(behavior: () -> $propertyType) " +
+                    "    ${visibilityModifier}fun ${property.name}(behavior: () -> $propertyType) " +
                         "{ fake.configure${property.name.capitalize()}(behavior) }\n",
                 )
 
                 // For mutable properties, add setter configuration
                 if (property.isMutable) {
-                    append(
-                        "    fun set${property.name.capitalize()}(behavior: ($propertyType) -> Unit) " +
-                            "{ fake.configureSet${property.name.capitalize()}(behavior) }\n",
-                    )
+                    val capitalizedName = property.name.capitalize()
+                    append("    ${visibilityModifier}fun set$capitalizedName")
+                    append("(behavior: ($propertyType) -> Unit)")
+                    appendLine(" { fake.configureSet$capitalizedName(behavior) }")
                 }
             }
         }
+    }
 
     private fun formatTypeParameters(typeParamsForHeader: List<String>): String =
         if (typeParamsForHeader.isNotEmpty()) {
@@ -254,6 +306,9 @@ internal class ConfigurationDslGenerator(
                 ""
             }
 
+        // Extract annotations that need to be propagated to the config class
+        val propagatedAnnotations = extractPropagatedAnnotations(analysis.annotations)
+
         val headerConfig =
             ClassHeaderConfig(
                 configClassName = "Fake${analysis.className}Config",
@@ -262,6 +317,7 @@ internal class ConfigurationDslGenerator(
                 typeParameterNames = typeArguments,
                 whereClause = whereClause,
                 visibility = analysis.visibility,
+                propagatedAnnotations = propagatedAnnotations,
             )
 
         return buildString {
@@ -269,22 +325,22 @@ internal class ConfigurationDslGenerator(
 
             // Generate configuration methods for abstract methods
             for (function in analysis.abstractMethods) {
-                appendLine(generateConfigMethodForFunction(function))
+                appendLine(generateConfigMethodForFunction(function, analysis.visibility))
             }
 
             // Generate configuration methods for open methods
             for (function in analysis.openMethods) {
-                appendLine(generateConfigMethodForFunction(function))
+                appendLine(generateConfigMethodForFunction(function, analysis.visibility))
             }
 
             // Generate configuration methods for abstract properties
             for (property in analysis.abstractProperties) {
-                appendLine(generateConfigMethodForProperty(property))
+                appendLine(generateConfigMethodForProperty(property, analysis.visibility))
             }
 
             // Generate configuration methods for open properties
             for (property in analysis.openProperties) {
-                appendLine(generateConfigMethodForProperty(property))
+                appendLine(generateConfigMethodForProperty(property, analysis.visibility))
             }
 
             appendLine("}")
@@ -295,23 +351,27 @@ internal class ConfigurationDslGenerator(
      * Generates a single configuration method for a property (abstract or open).
      * Used for class DSL generation.
      */
-    private fun generateConfigMethodForProperty(property: PropertyAnalysis): String {
+    private fun generateConfigMethodForProperty(
+        property: PropertyAnalysis,
+        visibility: FirVisibility,
+    ): String {
         val propertyName = property.name
         val returnTypeString =
             typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
         val capitalizedName = propertyName.replaceFirstChar { it.titlecase() }
+        val visibilityModifier = visibility.toModifier()
 
         return buildString {
             // Getter configuration
             appendLine(
-                "    fun $propertyName(behavior: () -> $returnTypeString) " +
+                "    ${visibilityModifier}fun $propertyName(behavior: () -> $returnTypeString) " +
                     "{ fake.configure$capitalizedName(behavior) }",
             )
 
             // Setter configuration for mutable properties
             if (property.isMutable) {
                 appendLine(
-                    "    fun set$capitalizedName(behavior: ($returnTypeString) -> Unit) " +
+                    "    ${visibilityModifier}fun set$capitalizedName(behavior: ($returnTypeString) -> Unit) " +
                         "{ fake.configureSet$capitalizedName(behavior) }",
                 )
             }
@@ -324,9 +384,13 @@ internal class ConfigurationDslGenerator(
      *
      * Preserves full generic signatures (no erasure) for type-safe DSL.
      */
-    private fun generateConfigMethodForFunction(function: FunctionAnalysis): String {
+    private fun generateConfigMethodForFunction(
+        function: FunctionAnalysis,
+        visibility: FirVisibility,
+    ): String {
         val functionName = function.name
         val suspendModifier = if (function.isSuspend) "suspend " else ""
+        val visibilityModifier = visibility.toModifier()
 
         // Preserve full generic signatures (no erasure)
         val hasMethodGenerics = function.typeParameters.isNotEmpty()
@@ -379,7 +443,7 @@ internal class ConfigurationDslGenerator(
                 "$suspendModifier($parameterTypes) -> $returnType"
             }
 
-        return "    fun $methodTypeParams$functionName(behavior: $behaviorSignature) { fake.configure${
+        return "    ${visibilityModifier}fun $methodTypeParams$functionName(behavior: $behaviorSignature) { fake.configure${
             functionName.replaceFirstChar {
                 it.uppercase()
             }
@@ -530,4 +594,5 @@ private data class ClassHeaderConfig(
     val typeParameterNames: String,
     val whereClause: String,
     val visibility: FirVisibility,
+    val propagatedAnnotations: List<AnnotationAnalysis> = emptyList(),
 )

@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.transform
 
+import com.rsicarelli.fakt.compiler.fir.metadata.FirAnnotationArgument
+import com.rsicarelli.fakt.compiler.fir.metadata.FirAnnotationInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirFunctionInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirPropertyInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirTypeParameterInfo
@@ -111,13 +113,17 @@ internal class FirToIrTransformer {
         // 3. Format type parameters with bounds
         val typeParameters = firMetadata.typeParameters.map { formatTypeParameter(it) }
 
-        // 4. Pass pattern analyzer for lazy computation
+        // 4. Transform annotations for propagation
+        val annotations = transformAnnotations(firMetadata.annotations)
+
+        // 5. Pass pattern analyzer for lazy computation
         return IrGenerationMetadata(
             interfaceName = firMetadata.simpleName,
             packageName = firMetadata.packageName,
             typeParameters = typeParameters,
             properties = allProperties,
             functions = allFunctions,
+            annotations = annotations,
             sourceInterface = irClass,
             patternAnalyzer = patternAnalyzer,
             isFromCache = firMetadata.isFromCache,
@@ -173,7 +179,10 @@ internal class FirToIrTransformer {
         // 5. Format type parameters with bounds
         val typeParameters = firMetadata.typeParameters.map { formatTypeParameter(it) }
 
-        // 6. Pass pattern analyzer for lazy computation
+        // 6. Transform annotations for propagation
+        val annotations = transformAnnotations(firMetadata.annotations)
+
+        // 7. Pass pattern analyzer for lazy computation
         return IrClassGenerationMetadata(
             className = firMetadata.simpleName,
             packageName = firMetadata.packageName,
@@ -182,6 +191,7 @@ internal class FirToIrTransformer {
             openProperties = openProperties,
             abstractMethods = abstractMethods,
             openMethods = openMethods,
+            annotations = annotations,
             sourceClass = irClass,
             patternAnalyzer = patternAnalyzer,
             isFromCache = firMetadata.isFromCache,
@@ -420,4 +430,158 @@ internal class FirToIrTransformer {
             else -> dotted
         }
     }
+
+    // ========================================================================
+    // Annotation Transformation
+    // ========================================================================
+
+    /**
+     * Transform FIR annotations to IR-ready annotation metadata.
+     *
+     * Converts FirAnnotationInfo (with structured argument data) to IrAnnotationMetadata
+     * (with pre-rendered argument strings ready for code generation).
+     *
+     * **Examples**:
+     * - `@OptIn(ExperimentalApi::class)` → IrAnnotationMetadata(
+     *       simpleName = "OptIn",
+     *       fullyQualifiedName = "kotlin.OptIn",
+     *       renderedArguments = ["ExperimentalApi::class"]
+     *   )
+     *
+     * @param annotations FIR annotations from validated metadata
+     * @return List of IR-ready annotation metadata
+     */
+    private fun transformAnnotations(annotations: List<FirAnnotationInfo>): List<IrAnnotationMetadata> =
+        annotations.map { annotation ->
+            val classIdParts = annotation.annotationClassId.split("/")
+            val simpleName = classIdParts.last().substringAfterLast('.')
+            val fullyQualifiedName = annotation.annotationClassId.replace('/', '.')
+
+            IrAnnotationMetadata(
+                simpleName = simpleName,
+                fullyQualifiedName = fullyQualifiedName,
+                renderedArguments = renderAnnotationArguments(annotation.arguments),
+                isOptInMarker = annotation.isOptInMarker,
+            )
+        }
+
+    /**
+     * Render annotation arguments to Kotlin source code strings.
+     *
+     * Converts each named argument to a rendered string:
+     * - Positional args (single unnamed): just the value
+     * - Named args: "name = value"
+     * - Vararg arrays: expanded to separate elements (no brackets)
+     *
+     * **Rendering Rules**:
+     * - Strings: "\"value\"" (with escaping)
+     * - Numbers: "42", "3.14"
+     * - Booleans: "true", "false"
+     * - Chars: "'x'"
+     * - Class references: "Foo::class"
+     * - Enums: "EnumClass.ENTRY"
+     * - Named arrays: "[elem1, elem2]" (bracket syntax)
+     * - Vararg arrays: elem1, elem2 (expanded as separate arguments)
+     * - Nested annotations: "@Nested(...)"
+     *
+     * @param arguments Map of argument names to their values
+     * @return List of rendered argument strings
+     */
+    private fun renderAnnotationArguments(arguments: Map<String, FirAnnotationArgument>): List<String> =
+        arguments.flatMap { (name, value) ->
+            // Check if this is a vararg-like array that should be expanded
+            // Vararg arrays contain only class references or only string literals
+            // Used for annotations like @OptIn, @Suppress, @Tags
+            val isVarargLikeArray =
+                value is FirAnnotationArgument.ArrayValue &&
+                    value.elements.isNotEmpty() &&
+                    (
+                        value.elements.all { it is FirAnnotationArgument.ClassReference } ||
+                            value.elements.all { it is FirAnnotationArgument.StringLiteral }
+                    )
+
+            when {
+                // Vararg array: expand elements directly as separate arguments
+                isVarargLikeArray -> {
+                    val arrayValue = value as FirAnnotationArgument.ArrayValue
+                    arrayValue.elements.map { renderArgumentValue(it) }
+                }
+                // Single argument named "value": skip the name
+                arguments.size == 1 && name == "value" -> {
+                    listOf(renderArgumentValue(value))
+                }
+                // Single class reference (common vararg pattern): skip the name
+                arguments.size == 1 && value is FirAnnotationArgument.ClassReference -> {
+                    listOf(renderArgumentValue(value))
+                }
+                // Named argument: include the name
+                else -> {
+                    listOf("$name = ${renderArgumentValue(value)}")
+                }
+            }
+        }
+
+    /**
+     * Render a single annotation argument value to Kotlin source code.
+     */
+    private fun renderArgumentValue(value: FirAnnotationArgument): String =
+        when (value) {
+            is FirAnnotationArgument.ClassReference -> {
+                val simpleName = value.classId.substringAfterLast('/').substringAfterLast('.')
+                "$simpleName::class"
+            }
+
+            is FirAnnotationArgument.StringLiteral -> {
+                "\"${escapeString(value.value)}\""
+            }
+
+            is FirAnnotationArgument.NumberLiteral -> value.value
+
+            is FirAnnotationArgument.BooleanLiteral -> value.value.toString()
+
+            is FirAnnotationArgument.CharLiteral -> "'${value.value}'"
+
+            is FirAnnotationArgument.EnumValue -> {
+                // For nested enums like LogLevel.Level, we need the full path after the package
+                // enumClassId: "com/rsicarelli/.../LogLevel.Level" -> use "LogLevel.Level"
+                val enumClassPath = value.enumClassId.substringAfterLast('/')
+                "$enumClassPath.${value.entryName}"
+            }
+
+            is FirAnnotationArgument.ArrayValue -> {
+                // Note: Vararg-like arrays are handled by renderAnnotationArguments()
+                // and expanded into separate arguments. This branch handles:
+                // 1. Empty arrays: emptyArray()
+                // 2. Named array parameters: [elem1, elem2] (bracket syntax)
+                if (value.elements.isEmpty()) {
+                    "emptyArray()"
+                } else {
+                    val elementsStr = value.elements.joinToString(", ") { renderArgumentValue(it) }
+                    "[$elementsStr]"
+                }
+            }
+
+            is FirAnnotationArgument.NestedAnnotation -> {
+                val nested = value.annotation
+                val simpleName = nested.annotationClassId.substringAfterLast('/').substringAfterLast('.')
+                val argsStr =
+                    if (nested.arguments.isEmpty()) {
+                        ""
+                    } else {
+                        "(${renderAnnotationArguments(nested.arguments).joinToString(", ")})"
+                    }
+                "@$simpleName$argsStr"
+            }
+        }
+
+    /**
+     * Escape special characters in string literals for code generation.
+     */
+    private fun escapeString(value: String): String =
+        value
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("\n", "\\n")
+            .replace("\t", "\\t")
+            .replace("\r", "\\r")
 }

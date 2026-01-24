@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.codegen.renderer
 
+import com.rsicarelli.fakt.codegen.model.CodeAnnotation
 import com.rsicarelli.fakt.codegen.model.CodeBlock
 import com.rsicarelli.fakt.codegen.model.CodeClass
 import com.rsicarelli.fakt.codegen.model.CodeDeclaration
@@ -33,6 +34,14 @@ public fun CodeFile.renderTo(builder: CodeBuilder) {
     // File header
     header?.let {
         builder.appendLine("// $it")
+    }
+
+    // File-level annotations (before package declaration)
+    if (fileAnnotations.isNotEmpty()) {
+        fileAnnotations.forEach { annotation ->
+            annotation.renderAsFileAnnotation(builder)
+        }
+        builder.appendLine()
     }
 
     // Package
@@ -92,6 +101,11 @@ public fun CodeMember.renderTo(builder: CodeBuilder) {
  * @param builder The [CodeBuilder] to write to
  */
 public fun CodeClass.renderTo(builder: CodeBuilder) {
+    // Render annotations first (before class declaration)
+    annotations.forEach { annotation ->
+        annotation.renderTo(builder)
+    }
+
     // Build class header
     val modifiersStr = modifiers.joinToString(" ") { it.name.lowercase() }
     val modifierPrefix = if (modifiersStr.isNotEmpty()) "$modifiersStr " else ""
@@ -121,6 +135,46 @@ public fun CodeClass.renderTo(builder: CodeBuilder) {
             }
         }
     }
+}
+
+/**
+ * Renders [CodeAnnotation] to [CodeBuilder].
+ *
+ * Generates annotation with arguments.
+ * Examples:
+ * - `@OptIn(ExperimentalApi::class)`
+ * - `@Deprecated("old", level = DeprecationLevel.WARNING)`
+ *
+ * @param builder The [CodeBuilder] to write to
+ */
+public fun CodeAnnotation.renderTo(builder: CodeBuilder) {
+    val argsStr =
+        if (arguments.isEmpty()) {
+            ""
+        } else {
+            "(${arguments.joinToString(", ")})"
+        }
+    builder.appendLine("@$name$argsStr")
+}
+
+/**
+ * Renders [CodeAnnotation] as a file-level annotation.
+ *
+ * Generates file-level annotation with @file: prefix.
+ * Examples:
+ * - `@file:OptIn(ExperimentalObjCRefinement::class)`
+ * - `@file:Suppress("UNCHECKED_CAST")`
+ *
+ * @param builder The [CodeBuilder] to write to
+ */
+public fun CodeAnnotation.renderAsFileAnnotation(builder: CodeBuilder) {
+    val argsStr =
+        if (arguments.isEmpty()) {
+            ""
+        } else {
+            "(${arguments.joinToString(", ")})"
+        }
+    builder.appendLine("@file:$name$argsStr")
 }
 
 /**

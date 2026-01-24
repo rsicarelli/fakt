@@ -5,6 +5,7 @@ package com.rsicarelli.fakt.codegen.extensions
 import com.rsicarelli.fakt.codegen.builder.ClassBuilder
 import com.rsicarelli.fakt.codegen.builder.codeFile
 import com.rsicarelli.fakt.codegen.builder.parseType
+import com.rsicarelli.fakt.codegen.extensions.AnnotationSpec
 import com.rsicarelli.fakt.codegen.model.CodeFile
 import com.rsicarelli.fakt.codegen.renderer.render
 import com.rsicarelli.fakt.codegen.strategy.DefaultValueResolver
@@ -67,6 +68,7 @@ data class FakeGenerationConfig(
     val typeParameters: List<String> = emptyList(),
     val isClass: Boolean = false,
     val visibility: FirVisibility = FirVisibility.PUBLIC,
+    val annotations: List<AnnotationSpec> = emptyList(),
 )
 
 /**
@@ -110,6 +112,32 @@ private fun String.eraseMethodTypeParameters(typeParameters: List<String>): Stri
 fun generateCompleteFake(config: FakeGenerationConfig): CodeFile = generateCompleteFakeInternal(config)
 
 /**
+ * Annotation metadata for fake generation.
+ *
+ * @property simpleName Simple annotation name (e.g., "OptIn", "Deprecated")
+ * @property fullyQualifiedName Fully qualified name for imports (e.g., "kotlin.OptIn")
+ * @property arguments Pre-rendered argument strings (e.g., ["ExperimentalApi::class"])
+ * @property isOptInMarker True if this annotation is marked with @RequiresOptIn. When true,
+ *           the generated fake needs @OptIn(ThisAnnotation::class) to compile.
+ */
+data class AnnotationSpec(
+    val simpleName: String,
+    val fullyQualifiedName: String,
+    val arguments: List<String> = emptyList(),
+    val isOptInMarker: Boolean = false,
+)
+
+/**
+ * Annotations that require @OptIn to use them.
+ * Maps annotation FQN -> required opt-in annotation FQN.
+ */
+private val ANNOTATIONS_REQUIRING_OPTIN =
+    mapOf(
+        "kotlin.native.HiddenFromObjC" to "kotlin.experimental.ExperimentalObjCRefinement",
+        "kotlin.native.ObjCName" to "kotlin.experimental.ExperimentalObjCName",
+    )
+
+/**
  * Generates a complete fake implementation class.
  *
  * Creates a fake with:
@@ -131,7 +159,10 @@ fun generateCompleteFake(config: FakeGenerationConfig): CodeFile = generateCompl
  *     properties = listOf(
  *         PropertySpec("users", "List<User>", isStateFlow = true)
  *     ),
- *     typeParameters = listOf("out T : Any")
+ *     typeParameters = listOf("out T : Any"),
+ *     annotations = listOf(
+ *         AnnotationSpec("OptIn", "kotlin.OptIn", listOf("ExperimentalApi::class"))
+ *     )
  * )
  * ```
  *
@@ -144,6 +175,7 @@ fun generateCompleteFake(config: FakeGenerationConfig): CodeFile = generateCompl
  * @param typeParameters Generic type parameters (e.g., ["T", "out T : Any"])
  * @param isClass Whether extending a class (true) vs implementing interface (false)
  * @param visibility Visibility for the generated class (PUBLIC, INTERNAL) for explicitApi() support
+ * @param annotations Annotations to propagate to the generated class
  * @return CodeFile with complete fake implementation
  */
 fun generateCompleteFake(
@@ -156,6 +188,7 @@ fun generateCompleteFake(
     typeParameters: List<String> = emptyList(),
     isClass: Boolean = false,
     visibility: FirVisibility = FirVisibility.PUBLIC,
+    annotations: List<AnnotationSpec> = emptyList(),
 ): CodeFile =
     generateCompleteFakeInternal(
         FakeGenerationConfig(
@@ -168,6 +201,7 @@ fun generateCompleteFake(
             typeParameters = typeParameters,
             isClass = isClass,
             visibility = visibility,
+            annotations = annotations,
         ),
     )
 
@@ -181,6 +215,7 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
     val typeParameters = config.typeParameters
     val isClass = config.isClass
     val visibility = config.visibility
+    val annotations = config.annotations
     val className = "Fake${interfaceName}Impl"
 
     // Extract type parameter names for interface type arguments
@@ -200,6 +235,12 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
     // Create resolver with class-level type parameters for Array<T> handling
     val resolver = DefaultValueResolver(classLevelTypeParams = typeParamNames.toSet())
 
+    // Check if any annotation uses ::class references (requires KClass import)
+    val needsKClassImport =
+        annotations.any { spec ->
+            spec.arguments.any { it.contains("::class") }
+        }
+
     return codeFile(packageName) {
         header?.let { this.header = it }
 
@@ -214,8 +255,22 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
         import("kotlinx.coroutines.flow.MutableStateFlow")
         import("kotlinx.coroutines.flow.update")
 
+        // Add KClass import if needed (for annotations with class references)
+        if (needsKClassImport) {
+            import("kotlin.reflect.KClass")
+        }
+
         // Add custom imports
         imports.forEach { import(it) }
+
+        // Add imports for annotations
+        annotations.forEach { annotationSpec ->
+            import(annotationSpec.fullyQualifiedName)
+            // Also import required opt-in annotations
+            ANNOTATIONS_REQUIRING_OPTIN[annotationSpec.fullyQualifiedName]?.let { requiredOptIn ->
+                import(requiredOptIn)
+            }
+        }
 
         klass(className) {
             // Apply visibility modifier for explicitApi() support
@@ -231,6 +286,43 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
                 }
             }
 
+            // Collect all required @OptIn arguments into a single annotation:
+            // 1. Opt-in markers: annotations with @RequiresOptIn need @OptIn(MarkerClass::class)
+            // 2. Experimental annotations: annotations that require opt-in to use them
+            // 3. Existing @OptIn arguments from the source type
+            val optInArgs = mutableListOf<String>()
+
+            // Add opt-in for marker annotations (annotations with @RequiresOptIn)
+            annotations.filter { it.isOptInMarker }.forEach { marker ->
+                optInArgs.add("${marker.simpleName}::class")
+            }
+
+            // Add opt-in for annotations that require it (e.g., @HiddenFromObjC)
+            annotations.forEach { spec ->
+                ANNOTATIONS_REQUIRING_OPTIN[spec.fullyQualifiedName]?.let { requiredOptIn ->
+                    val optInName = requiredOptIn.substringAfterLast(".")
+                    optInArgs.add("$optInName::class")
+                }
+            }
+
+            // Collect existing @OptIn arguments from source to merge
+            annotations.filter { it.simpleName == "OptIn" }.forEach { optInAnnotation ->
+                optInArgs.addAll(optInAnnotation.arguments)
+            }
+
+            // Add single merged @OptIn if any opt-ins are needed
+            if (optInArgs.isNotEmpty()) {
+                annotation("OptIn", *optInArgs.distinct().toTypedArray())
+            }
+
+            // Propagate annotations from source type, EXCEPT:
+            // - Opt-in markers (we added @OptIn for them)
+            // - @OptIn annotations (we merged them above)
+            annotations
+                .filter { !it.isOptInMarker && it.simpleName != "OptIn" }
+                .forEach { annotationSpec ->
+                    annotation(annotationSpec.simpleName, *annotationSpec.arguments.toTypedArray())
+                }
             // Parse type parameters and build where clause for multiple constraints
             val whereClauses = mutableListOf<String>()
 
