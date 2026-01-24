@@ -286,9 +286,10 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
                 }
             }
 
-            // Collect all required @OptIn annotations:
+            // Collect all required @OptIn arguments into a single annotation:
             // 1. Opt-in markers: annotations with @RequiresOptIn need @OptIn(MarkerClass::class)
             // 2. Experimental annotations: annotations that require opt-in to use them
+            // 3. Existing @OptIn arguments from the source type
             val optInArgs = mutableListOf<String>()
 
             // Add opt-in for marker annotations (annotations with @RequiresOptIn)
@@ -304,18 +305,24 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
                 }
             }
 
-            // Add @OptIn if any opt-ins are needed
+            // Collect existing @OptIn arguments from source to merge
+            annotations.filter { it.simpleName == "OptIn" }.forEach { optInAnnotation ->
+                optInArgs.addAll(optInAnnotation.arguments)
+            }
+
+            // Add single merged @OptIn if any opt-ins are needed
             if (optInArgs.isNotEmpty()) {
                 annotation("OptIn", *optInArgs.distinct().toTypedArray())
             }
 
-            // Propagate annotations from source type, EXCEPT opt-in markers
-            // We don't propagate opt-in markers because:
-            // 1. We already added @OptIn(...) so the generated code compiles
-            // 2. Fakes should be freely usable in tests without requiring callers to opt-in
-            annotations.filter { !it.isOptInMarker }.forEach { annotationSpec ->
-                annotation(annotationSpec.simpleName, *annotationSpec.arguments.toTypedArray())
-            }
+            // Propagate annotations from source type, EXCEPT:
+            // - Opt-in markers (we added @OptIn for them)
+            // - @OptIn annotations (we merged them above)
+            annotations
+                .filter { !it.isOptInMarker && it.simpleName != "OptIn" }
+                .forEach { annotationSpec ->
+                    annotation(annotationSpec.simpleName, *annotationSpec.arguments.toTypedArray())
+                }
             // Parse type parameters and build where clause for multiple constraints
             val whereClauses = mutableListOf<String>()
 
