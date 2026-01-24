@@ -315,6 +315,7 @@ internal class CodeGenerator(
                 // Add factory function (no package/imports)
                 append(code.factory)
                 appendLine()
+                appendLine() // Blank line before config class
 
                 // Add configuration DSL (no package/imports)
                 append(code.configDsl)
@@ -367,6 +368,7 @@ internal class CodeGenerator(
                 // Add factory function (no package/imports)
                 append(code.factory)
                 appendLine()
+                appendLine() // Blank line before config class
 
                 // Add configuration DSL (no package/imports)
                 append(code.configDsl)

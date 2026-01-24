@@ -57,8 +57,7 @@ internal class ConfigurationDslGenerator(
             appendLine(generateClassHeader(headerConfig))
             append(generateFunctionConfigurators(analysis.functions, analysis.visibility))
             append(generatePropertyConfigurators(analysis.properties, analysis.visibility))
-            append("}")
-        }
+        }.trimEnd() + "\n}"
     }
 
     private fun generateClassHeader(config: ClassHeaderConfig): String =
@@ -172,8 +171,8 @@ internal class ConfigurationDslGenerator(
             val suspendModifier = if (function.isSuspend) "suspend " else ""
 
             "    ${visibilityModifier}fun $methodTypeParams${function.name}(" +
-                "behavior: $suspendModifier($parameterTypes) -> $returnType) " +
-                "{ fake.configure${function.name.capitalize()}(behavior) }\n"
+                "behavior: $suspendModifier($parameterTypes) -> $returnType): Unit " +
+                "= fake.configure${function.name.capitalize()}(behavior)\n\n"
         }
     }
 
@@ -188,17 +187,20 @@ internal class ConfigurationDslGenerator(
 
             buildString {
                 append(
-                    "    ${visibilityModifier}fun ${property.name}(behavior: () -> $propertyType) " +
-                        "{ fake.configure${property.name.capitalize()}(behavior) }\n",
+                    "    ${visibilityModifier}fun ${property.name}(behavior: () -> $propertyType): Unit " +
+                        "= fake.configure${property.name.capitalize()}(behavior)\n",
                 )
 
                 // For mutable properties, add setter configuration
                 if (property.isMutable) {
                     val capitalizedName = property.name.capitalize()
                     append("    ${visibilityModifier}fun set$capitalizedName")
-                    append("(behavior: ($propertyType) -> Unit)")
-                    appendLine(" { fake.configureSet$capitalizedName(behavior) }")
+                    append("(behavior: ($propertyType) -> Unit): Unit")
+                    append(" = fake.configureSet$capitalizedName(behavior)\n")
                 }
+
+                // Add blank line between property configurations
+                append("\n")
             }
         }
     }
@@ -364,15 +366,15 @@ internal class ConfigurationDslGenerator(
         return buildString {
             // Getter configuration
             appendLine(
-                "    ${visibilityModifier}fun $propertyName(behavior: () -> $returnTypeString) " +
-                    "{ fake.configure$capitalizedName(behavior) }",
+                "    ${visibilityModifier}fun $propertyName(behavior: () -> $returnTypeString): Unit " +
+                    "= fake.configure$capitalizedName(behavior)",
             )
 
             // Setter configuration for mutable properties
             if (property.isMutable) {
                 appendLine(
-                    "    ${visibilityModifier}fun set$capitalizedName(behavior: ($returnTypeString) -> Unit) " +
-                        "{ fake.configureSet$capitalizedName(behavior) }",
+                    "    ${visibilityModifier}fun set$capitalizedName(behavior: ($returnTypeString) -> Unit): Unit " +
+                        "= fake.configureSet$capitalizedName(behavior)",
                 )
             }
         }.trimEnd() // Remove trailing newline so caller can control formatting
@@ -443,11 +445,8 @@ internal class ConfigurationDslGenerator(
                 "$suspendModifier($parameterTypes) -> $returnType"
             }
 
-        return "    ${visibilityModifier}fun $methodTypeParams$functionName(behavior: $behaviorSignature) { fake.configure${
-            functionName.replaceFirstChar {
-                it.uppercase()
-            }
-        }(behavior) }"
+        return "    ${visibilityModifier}fun $methodTypeParams$functionName(behavior: $behaviorSignature): Unit " +
+            "= fake.configure${functionName.replaceFirstChar { it.uppercase() }}(behavior)"
     }
 
     /**

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.codegen.builder
 
+import com.rsicarelli.fakt.codegen.model.CodeAnnotation
 import com.rsicarelli.fakt.codegen.model.CodeBlock
 import com.rsicarelli.fakt.codegen.model.CodeExpression
 import com.rsicarelli.fakt.codegen.model.CodeFunction
@@ -35,6 +36,7 @@ public class FunctionBuilder
         private val parameters = mutableListOf<CodeParameter>()
         private val typeParameters = mutableListOf<CodeTypeParameter>()
         private val modifiers = mutableSetOf<CodeModifier>()
+        private val annotations = mutableListOf<CodeAnnotation>()
         private var returnType: CodeType = CodeType.Simple("Unit")
         private var bodyBlock: CodeBlock = CodeBlock.Empty
         private var receiverType: CodeType? = null
@@ -50,7 +52,7 @@ public class FunctionBuilder
         public var isInline: Boolean = false
 
         /**
-         * Sets function body as raw code string.
+         * Sets function body as raw code string (block style).
          *
          * Example:
          * ```kotlin
@@ -61,6 +63,21 @@ public class FunctionBuilder
             get() = error("Write-only property")
             set(value) {
                 bodyBlock = CodeBlock.Statements(listOf(value))
+            }
+
+        /**
+         * Sets function body as expression (= syntax).
+         *
+         * Example:
+         * ```kotlin
+         * expressionBody = "run { value = newValue }"
+         * // Generates: fun method() = run { value = newValue }
+         * ```
+         */
+        public var expressionBody: String
+            get() = error("Write-only property")
+            set(value) {
+                bodyBlock = CodeBlock.Expression(CodeExpression.Raw(value))
             }
 
         /**
@@ -197,6 +214,25 @@ public class FunctionBuilder
         }
 
         /**
+         * Adds an annotation to the function.
+         *
+         * Example:
+         * ```kotlin
+         * annotation("Suppress", "\"UNCHECKED_CAST\"")
+         * // Generates: @Suppress("UNCHECKED_CAST")
+         * ```
+         *
+         * @param name Annotation simple name
+         * @param arguments Pre-rendered argument strings
+         */
+        public fun annotation(
+            name: String,
+            vararg arguments: String,
+        ) {
+            annotations.add(CodeAnnotation(name, arguments.toList()))
+        }
+
+        /**
          * Builds the final [CodeFunction].
          *
          * @return Immutable [CodeFunction] instance
@@ -213,5 +249,6 @@ public class FunctionBuilder
                 isSuspend = isSuspend,
                 isInline = isInline,
                 receiverType = receiverType,
+                annotations = annotations,
             )
     }

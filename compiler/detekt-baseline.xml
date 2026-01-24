@@ -17,6 +17,7 @@
     <ID>LongMethod:FakeClassChecker.kt$FakeClassChecker$override fun check(declaration: FirClass)</ID>
     <ID>LongMethod:FakeGenerator.kt$private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile</ID>
     <ID>LongMethod:FakeGenerator.kt$private fun generateMethodBehaviorProperty( classBuilder: ClassBuilder, method: MethodSpec, resolver: DefaultValueResolver, isClass: Boolean = false, className: String = "", )</ID>
+    <ID>LongMethod:MethodExtensions.kt$fun ClassBuilder.configureMethod( methodName: String, paramTypes: List&lt;String&gt;, returnType: String, isSuspend: Boolean = false, typeParameters: List&lt;String&gt; = emptyList(), )</ID>
     <ID>LongMethod:MethodExtensions.kt$fun ClassBuilder.overrideMethod( name: String, params: List&lt;Triple&lt;String, String, Boolean&gt;&gt;, returnType: String, isSuspend: Boolean = false, typeParameters: List&lt;String&gt; = emptyList(), useSuperDelegation: Boolean = false, extensionReceiverType: String? = null, isOperator: Boolean = false, )</ID>
     <ID>LongMethod:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension$private fun generateFromFirMetadata(moduleFragment: IrModuleFragment)</ID>
     <ID>LongMethod:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension$private fun processClassesFromMetadata( classMetadata: List&lt;IrClassGenerationMetadata&gt;, firMetricsMap: Map&lt;String, FirMetrics&gt;, collectDetailedMetrics: Boolean, ): ProcessingResult</ID>
@@ -48,7 +49,6 @@
     <ID>ReturnCount:MetadataCacheSerializer.kt$MetadataCacheSerializer$fun computeFileSignature(filePath: String): String</ID>
     <ID>ReturnCount:MetadataCacheSerializer.kt$MetadataCacheSerializer$fun deserialize(cachePath: String): FirMetadataCache?</ID>
     <ID>SpreadOperator:FakeGenerator.kt$("OptIn", *optInArgs.distinct().toTypedArray())</ID>
-    <ID>SpreadOperator:FakeGenerator.kt$("OptIn", *optInArgs.toTypedArray())</ID>
     <ID>SpreadOperator:FakeGenerator.kt$(annotationSpec.simpleName, *annotationSpec.arguments.toTypedArray())</ID>
     <ID>SpreadOperator:MethodExtensions.kt$(name, *constraints)</ID>
     <ID>TooGenericExceptionCaught:CodeGenerator.kt$CodeGenerator$e: Exception</ID>
@@ -56,9 +56,11 @@
     <ID>TooGenericExceptionCaught:FaktCommandLineProcessor.kt$FaktCommandLineProcessor$e: Exception</ID>
     <ID>TooGenericExceptionCaught:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension$e: Exception</ID>
     <ID>TooManyFunctions:AnnotationExtractor.kt$AnnotationExtractor</ID>
+    <ID>TooManyFunctions:ClassBuilder.kt$ClassBuilder</ID>
     <ID>TooManyFunctions:ConfigurationDslGenerator.kt$ConfigurationDslGenerator</ID>
     <ID>TooManyFunctions:FakeGenerator.kt$com.rsicarelli.fakt.codegen.extensions.FakeGenerator.kt</ID>
     <ID>TooManyFunctions:FirMetadataStorage.kt$FirMetadataStorage</ID>
+    <ID>TooManyFunctions:FunctionBuilder.kt$FunctionBuilder</ID>
     <ID>TooManyFunctions:MetadataCacheSerializer.kt$MetadataCacheSerializer</ID>
     <ID>TooManyFunctions:Rendering.kt$com.rsicarelli.fakt.codegen.renderer.Rendering.kt</ID>
   </CurrentIssues>

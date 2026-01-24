@@ -55,36 +55,26 @@ class FirMetadataStorage {
      * Store validated interface metadata from FIR phase.
      *
      * Called by FIR checkers after validating an @Fake interface.
+     * In KMP multi-module builds, the same interface may be processed multiple times
+     * (common metadata + platform compilations), so duplicates are silently ignored.
      *
      * @param metadata Validated interface metadata
-     * @throws IllegalStateException if interface already stored (duplicate registration)
      */
     fun storeInterface(metadata: ValidatedFakeInterface) {
-        val previous = interfaces.putIfAbsent(metadata.classId, metadata)
-        if (previous != null) {
-            error(
-                "Duplicate @Fake interface registration: ${metadata.classId.asFqNameString()}. " +
-                    "This is a compiler bug - please report it.",
-            )
-        }
+        interfaces.putIfAbsent(metadata.classId, metadata)
     }
 
     /**
      * Store validated class metadata from FIR phase.
      *
      * Called by FIR checkers after validating an @Fake class.
+     * In KMP multi-module builds, the same class may be processed multiple times
+     * (common metadata + platform compilations), so duplicates are silently ignored.
      *
      * @param metadata Validated class metadata
-     * @throws IllegalStateException if class already stored (duplicate registration)
      */
     fun storeClass(metadata: ValidatedFakeClass) {
-        val previous = classes.putIfAbsent(metadata.classId, metadata)
-        if (previous != null) {
-            error(
-                "Duplicate @Fake class registration: ${metadata.classId.asFqNameString()}. " +
-                    "This is a compiler bug - please report it.",
-            )
-        }
+        classes.putIfAbsent(metadata.classId, metadata)
     }
 
     /**

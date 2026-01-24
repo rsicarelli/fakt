@@ -36,7 +36,15 @@ fun ClassBuilder.overrideMethod(
     extensionReceiverType: String? = null,
     isOperator: Boolean = false,
 ) {
+    // Calculate needsCast before entering the function block
+    val needsCast = typeParameters.isNotEmpty()
+
     function(name) {
+        // Add @Suppress annotation at function level when cast is needed
+        if (needsCast) {
+            annotation("Suppress", "\"UNCHECKED_CAST\"")
+        }
+
         if (isOperator) operator()
         if (extensionReceiverType != null) receiver(extensionReceiverType)
         override()
@@ -69,9 +77,6 @@ fun ClassBuilder.overrideMethod(
         returns(returnType)
 
         val callTracking = "_${name}CallCount.update { it + 1 }"
-
-        // When method has type parameters, we need to cast parameters to erased types
-        val needsCast = typeParameters.isNotEmpty()
 
         // Generate parameter names for behavior invocation
         val regularParamNames =
@@ -138,26 +143,14 @@ fun ClassBuilder.overrideMethod(
                 if (returnType == "Unit") {
                     "$callTracking\n        $invocation ?: $superCall"
                 } else {
-                    if (needsCast) {
-                        "$callTracking\n        " +
-                            "@Suppress(\"UNCHECKED_CAST\")\n        " +
-                            "return ($invocation ?: $superCall)$returnCast"
-                    } else {
-                        "$callTracking\n        return $invocation ?: $superCall"
-                    }
+                    "$callTracking\n        return ($invocation ?: $superCall)$returnCast"
                 }
             } else {
                 // Abstract or interface method: direct behavior call
                 if (returnType == "Unit") {
                     "$callTracking\n        ${name}Behavior($paramNames)"
                 } else {
-                    if (needsCast) {
-                        "$callTracking\n        " +
-                            "@Suppress(\"UNCHECKED_CAST\")\n        " +
-                            "return ${name}Behavior($paramNames)$returnCast"
-                    } else {
-                        "$callTracking\n        return ${name}Behavior($paramNames)"
-                    }
+                    "$callTracking\n        return ${name}Behavior($paramNames)$returnCast"
                 }
             }
     }
@@ -241,9 +234,8 @@ fun ClassBuilder.overrideVarargMethod(
  *
  * Generates pattern:
  * ```kotlin
- * internal fun <T> configure{MethodName}(behavior: (Params) -> ReturnType) {
- *     {methodName}Behavior = behavior
- * }
+ * internal fun <T> configure{MethodName}(behavior: (Params) -> ReturnType) =
+ *     run { {methodName}Behavior = behavior }
  * ```
  *
  * @param methodName Method name
@@ -270,7 +262,47 @@ fun ClassBuilder.configureMethod(
             append(returnType)
         }
 
+    // Add cast when method has type parameters (behavior property uses erased types)
+    val needsCast = typeParameters.isNotEmpty()
+
+    // Build erased function type for cast if needed
+    val erasedFunctionType =
+        if (needsCast) {
+            val erasedParams =
+                paramTypes.map { paramType ->
+                    var erased = paramType
+                    typeParameters.forEach { typeParam ->
+                        val paramName = typeParam.split(" : ", limit = 2)[0].trim()
+                        erased = erased.replace(Regex("\\b$paramName\\b"), "Any?")
+                    }
+                    erased
+                }
+            val erasedReturn =
+                run {
+                    var erased = returnType
+                    typeParameters.forEach { typeParam ->
+                        val paramName = typeParam.split(" : ", limit = 2)[0].trim()
+                        erased = erased.replace(Regex("\\b$paramName\\b"), "Any?")
+                    }
+                    erased
+                }
+            buildString {
+                if (isSuspend) append("suspend ")
+                append("(")
+                append(erasedParams.joinToString(", "))
+                append(") -> ")
+                append(erasedReturn)
+            }
+        } else {
+            null
+        }
+
     function("configure$capitalizedName") {
+        // Add @Suppress annotation at function level when cast is needed
+        if (needsCast) {
+            annotation("Suppress", "\"UNCHECKED_CAST\"")
+        }
+
         internal()
 
         // Add method-level type parameters
@@ -284,43 +316,11 @@ fun ClassBuilder.configureMethod(
         parameter("behavior", functionType)
         returns("Unit")
 
-        // Add cast when method has type parameters (behavior property uses erased types)
-        val needsCast = typeParameters.isNotEmpty()
-        body =
-            if (needsCast) {
-                // Build erased function type for cast by erasing method-level type parameters
-                // Apply the same erasure logic used in generateMethod (FakeGenerator.kt)
-                val erasedParams =
-                    paramTypes.map { paramType ->
-                        // Use the type erasure helper to properly erase nested generic types
-                        var erased = paramType
-                        typeParameters.forEach { typeParam ->
-                            val paramName = typeParam.split(" : ", limit = 2)[0].trim()
-                            erased = erased.replace(Regex("\\b$paramName\\b"), "Any?")
-                        }
-                        erased
-                    }
-                val erasedReturn =
-                    run {
-                        var erased = returnType
-                        typeParameters.forEach { typeParam ->
-                            val paramName = typeParam.split(" : ", limit = 2)[0].trim()
-                            erased = erased.replace(Regex("\\b$paramName\\b"), "Any?")
-                        }
-                        erased
-                    }
-
-                val erasedFunctionType =
-                    buildString {
-                        if (isSuspend) append("suspend ")
-                        append("(")
-                        append(erasedParams.joinToString(", "))
-                        append(") -> ")
-                        append(erasedReturn)
-                    }
-                "@Suppress(\"UNCHECKED_CAST\")\n        ${methodName}Behavior = behavior as $erasedFunctionType"
+        expressionBody =
+            if (needsCast && erasedFunctionType != null) {
+                "run { ${methodName}Behavior = behavior as $erasedFunctionType }"
             } else {
-                "${methodName}Behavior = behavior"
+                "run { ${methodName}Behavior = behavior }"
             }
     }
 }

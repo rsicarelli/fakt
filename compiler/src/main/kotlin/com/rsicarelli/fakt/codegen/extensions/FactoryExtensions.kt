@@ -13,9 +13,8 @@ import com.rsicarelli.fakt.compiler.fir.metadata.toModifier
  *
  * Example output:
  * ```kotlin
- * fun fakeUserService(configure: FakeUserServiceConfig.() -> Unit = {}): FakeUserServiceImpl {
- *     return FakeUserServiceImpl().apply { FakeUserServiceConfig(this).configure() }
- * }
+ * inline fun fakeUserService(configure: FakeUserServiceConfig.() -> Unit = {}): FakeUserServiceImpl =
+ *     FakeUserServiceImpl().apply { FakeUserServiceConfig(this).configure() }
  * ```
  *
  * Note: Currently generates as string because the DSL doesn't support
@@ -89,7 +88,7 @@ fun generateFactoryFunction(
                 }
             append("${visibility.toModifier()}inline fun <$typeParamsStr> $factoryName")
         } else {
-            append("${visibility.toModifier()}fun $factoryName")
+            append("${visibility.toModifier()}inline fun $factoryName")
         }
 
         // Parameters
@@ -103,11 +102,10 @@ fun generateFactoryFunction(
             append(" where $whereClause")
         }
 
-        appendLine(" {")
+        appendLine(" =")
 
-        // Body
-        appendLine("    return $fakeClassName$typeArgs().apply { $configClassName$typeArgs(this).configure() }")
-        append("}")
+        // Body - expression syntax
+        append("    $fakeClassName$typeArgs().apply { $configClassName$typeArgs(this).configure() }")
     }
 }
 

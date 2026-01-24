@@ -374,38 +374,14 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
             val superTypeWithConstructor = if (isClass) "$superType()" else superType
             implements(superTypeWithConstructor)
 
-            // ==========================================
-            // SECTION 1: Call Count StateFlows
-            // ==========================================
             // Filter out StateFlow properties (they have their own tracking)
             val simpleProperties = properties.filter { !it.isStateFlow }
 
-            // Generate call tracking for all properties
-            simpleProperties.forEach { prop ->
-                generatePropertyCallTracking(this, prop, visibility)
-            }
-
-            // Generate call tracking for all methods
-            methods.forEach { method ->
-                generateMethodCallTracking(this, method, visibility)
-            }
-
             // ==========================================
-            // SECTION 2: Behavior Properties
+            // SECTION 1: Interface/Class Implementation
             // ==========================================
-            // Generate behavior properties for all simple properties
-            simpleProperties.forEach { prop ->
-                generatePropertyBehaviorProperty(this, prop, isClass)
-            }
+            region("$interfaceName Implementation")
 
-            // Generate behavior properties for all methods
-            methods.forEach { method ->
-                generateMethodBehaviorProperty(this, method, resolver, isClass, interfaceName)
-            }
-
-            // ==========================================
-            // SECTION 3: Override Implementations
-            // ==========================================
             // Generate StateFlow property overrides (these handle tracking internally)
             properties.filter { it.isStateFlow }.forEach { prop ->
                 generateStateFlowProperty(this, prop, resolver)
@@ -421,9 +397,30 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
                 generateMethodOverride(this, method, isClass)
             }
 
+            endRegion()
+
             // ==========================================
-            // SECTION 4: Internal Configuration Methods
+            // SECTION 2: Call Tracking (public getters)
             // ==========================================
+            region("Call Tracking")
+
+            // Generate public call tracking getters for all properties
+            simpleProperties.forEach { prop ->
+                generatePropertyCallTrackingPublicGetter(this, prop, visibility)
+            }
+
+            // Generate public call tracking getters for all methods
+            methods.forEach { method ->
+                generateMethodCallTrackingPublicGetter(this, method, visibility)
+            }
+
+            endRegion()
+
+            // ==========================================
+            // SECTION 3: Behavior Configuration
+            // ==========================================
+            region("Behavior Configuration")
+
             // Generate configuration methods for simple properties
             simpleProperties.forEach { prop ->
                 generatePropertyConfigMethod(this, prop)
@@ -433,6 +430,34 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
             methods.forEach { method ->
                 generateMethodConfigMethod(this, method)
             }
+
+            endRegion()
+
+            // ==========================================
+            // SECTION 4: Private State
+            // ==========================================
+            region("Private State")
+
+            // Generate private backing fields for call tracking
+            simpleProperties.forEach { prop ->
+                generatePropertyCallTrackingBackingField(this, prop)
+            }
+
+            methods.forEach { method ->
+                generateMethodCallTrackingBackingField(this, method)
+            }
+
+            // Generate behavior properties for all simple properties
+            simpleProperties.forEach { prop ->
+                generatePropertyBehaviorProperty(this, prop, isClass)
+            }
+
+            // Generate behavior properties for all methods
+            methods.forEach { method ->
+                generateMethodBehaviorProperty(this, method, resolver, isClass, interfaceName)
+            }
+
+            endRegion()
         }
     }
 }
@@ -575,29 +600,54 @@ private fun isValidFunctionInvocationPattern(
 }
 
 /**
- * Generates ONLY call tracking StateFlows for a method.
- * Part of Section 1: Call Count StateFlows
+ * Generates ONLY the public getter for method call tracking.
+ * Part of Section 2: Call Tracking
  */
-private fun generateMethodCallTracking(
+private fun generateMethodCallTrackingPublicGetter(
     classBuilder: ClassBuilder,
     method: MethodSpec,
     visibility: FirVisibility,
 ) {
-    classBuilder.callTrackingProperty(method.name, visibility)
+    classBuilder.callTrackingPublicGetter(method.name, visibility)
 }
 
 /**
- * Generates ONLY call tracking StateFlows for a property.
- * Part of Section 1: Call Count StateFlows
+ * Generates ONLY the private backing field for method call tracking.
+ * Part of Section 4: Private State
  */
-private fun generatePropertyCallTracking(
+private fun generateMethodCallTrackingBackingField(
+    classBuilder: ClassBuilder,
+    method: MethodSpec,
+) {
+    classBuilder.callTrackingBackingField(method.name)
+}
+
+/**
+ * Generates ONLY the public getter for property call tracking.
+ * Part of Section 2: Call Tracking
+ */
+private fun generatePropertyCallTrackingPublicGetter(
     classBuilder: ClassBuilder,
     prop: PropertySpec,
     visibility: FirVisibility,
 ) {
-    classBuilder.propertyGetterTracking(prop.name, visibility)
+    classBuilder.propertyGetterTrackingPublicGetter(prop.name, visibility)
     if (prop.isMutable) {
-        classBuilder.propertySetterTracking(prop.name, visibility)
+        classBuilder.propertySetterTrackingPublicGetter(prop.name, visibility)
+    }
+}
+
+/**
+ * Generates ONLY the private backing field for property call tracking.
+ * Part of Section 4: Private State
+ */
+private fun generatePropertyCallTrackingBackingField(
+    classBuilder: ClassBuilder,
+    prop: PropertySpec,
+) {
+    classBuilder.propertyGetterTrackingBackingField(prop.name)
+    if (prop.isMutable) {
+        classBuilder.propertySetterTrackingBackingField(prop.name)
     }
 }
 
@@ -916,20 +966,20 @@ private fun generatePropertyConfigMethod(
             internal()
             parameter("behavior", "() -> ${prop.type}")
             returns("Unit")
-            body = "${prop.name}Getter = behavior"
+            expressionBody = "run { ${prop.name}Getter = behavior }"
         }
         classBuilder.function("configureSet$capitalizedName") {
             internal()
             parameter("behavior", "(${prop.type}) -> Unit")
             returns("Unit")
-            body = "${prop.name}Setter = behavior"
+            expressionBody = "run { ${prop.name}Setter = behavior }"
         }
     } else {
         classBuilder.function("configure$capitalizedName") {
             internal()
             parameter("behavior", "() -> ${prop.type}")
             returns("Unit")
-            body = "${prop.name}Behavior = behavior"
+            expressionBody = "run { ${prop.name}Behavior = behavior }"
         }
     }
 }
