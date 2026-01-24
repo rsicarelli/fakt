@@ -371,6 +371,7 @@ object MetadataCacheSerializer {
         SerializableAnnotationInfo(
             annotationClassId = annotationClassId,
             arguments = arguments.mapValues { (_, arg) -> arg.toSerializable() },
+            isOptInMarker = isOptInMarker,
         )
 
     private fun FirAnnotationArgument.toSerializable(): SerializableAnnotationArgument =
@@ -433,6 +434,7 @@ object MetadataCacheSerializer {
         FirAnnotationInfo(
             annotationClassId = annotationClassId,
             arguments = arguments.mapValues { (_, arg) -> arg.toFir() },
+            isOptInMarker = isOptInMarker,
         )
 
     private fun SerializableAnnotationArgument.toFir(): FirAnnotationArgument =

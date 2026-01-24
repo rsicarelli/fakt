@@ -95,9 +95,12 @@ data class ParameterAnalysis(
  * @property simpleName Simple annotation name (e.g., "OptIn", "Deprecated")
  * @property fullyQualifiedName Fully qualified name for imports (e.g., "kotlin.OptIn")
  * @property renderedArguments Pre-rendered argument strings (e.g., ["ExperimentalApi::class"])
+ * @property isOptInMarker True if this annotation is marked with @RequiresOptIn. When true,
+ *           the generated fake needs @OptIn(ThisAnnotation::class) to compile.
  */
 data class AnnotationAnalysis(
     val simpleName: String,
     val fullyQualifiedName: String,
     val renderedArguments: List<String> = emptyList(),
+    val isOptInMarker: Boolean = false,
 )

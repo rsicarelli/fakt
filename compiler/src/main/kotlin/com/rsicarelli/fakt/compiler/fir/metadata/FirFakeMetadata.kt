@@ -394,8 +394,11 @@ sealed interface FirAnnotationArgument {
  *
  * @property annotationClassId Fully qualified annotation class ID (e.g., "kotlin.OptIn")
  * @property arguments Named arguments to the annotation (empty for marker annotations)
+ * @property isOptInMarker True if this annotation is marked with @RequiresOptIn. When true,
+ *           the generated fake needs @OptIn(ThisAnnotation::class) to compile.
  */
 data class FirAnnotationInfo(
     val annotationClassId: String,
     val arguments: Map<String, FirAnnotationArgument> = emptyMap(),
+    val isOptInMarker: Boolean = false,
 )

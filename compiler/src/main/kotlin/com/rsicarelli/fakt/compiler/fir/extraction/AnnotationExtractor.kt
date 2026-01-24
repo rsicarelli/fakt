@@ -17,6 +17,9 @@ import org.jetbrains.kotlin.fir.expressions.FirPropertyAccessExpression
 import org.jetbrains.kotlin.fir.expressions.FirResolvedQualifier
 import org.jetbrains.kotlin.fir.expressions.FirVarargArgumentsExpression
 import org.jetbrains.kotlin.fir.references.toResolvedEnumEntrySymbol
+import org.jetbrains.kotlin.fir.resolve.providers.symbolProvider
+import org.jetbrains.kotlin.fir.symbols.SymbolInternals
+import org.jetbrains.kotlin.fir.symbols.impl.FirRegularClassSymbol
 import org.jetbrains.kotlin.fir.types.ConeClassLikeType
 import org.jetbrains.kotlin.fir.types.resolvedType
 import org.jetbrains.kotlin.name.ClassId
@@ -45,6 +48,11 @@ object AnnotationExtractor {
      * The @Fake annotation ClassId - filtered out during extraction.
      */
     private val FAKE_ANNOTATION_CLASS_ID = ClassId.topLevel(FqName("com.rsicarelli.fakt.Fake"))
+
+    /**
+     * The @RequiresOptIn annotation ClassId - used to detect opt-in marker annotations.
+     */
+    private val REQUIRES_OPT_IN_CLASS_ID = ClassId.topLevel(FqName("kotlin.RequiresOptIn"))
 
     /**
      * Extract all annotations from a FIR class declaration.
@@ -87,10 +95,47 @@ object AnnotationExtractor {
         // Extract arguments using argumentMapping.mapping (correct API!)
         val arguments = extractArguments(annotation.argumentMapping, session)
 
+        // Check if this annotation is marked with @RequiresOptIn
+        val isOptInMarker = isAnnotationOptInMarker(annotationClassId, session)
+
         return FirAnnotationInfo(
             annotationClassId = annotationClassId.asString(),
             arguments = arguments,
+            isOptInMarker = isOptInMarker,
         )
+    }
+
+    /**
+     * Check if an annotation class is marked with @RequiresOptIn.
+     *
+     * This is used to detect custom opt-in marker annotations like:
+     * ```kotlin
+     * @RequiresOptIn(level = RequiresOptIn.Level.ERROR)
+     * annotation class InternalPlatformApi
+     * ```
+     *
+     * When such an annotation is on the source interface/class, the generated fake
+     * needs `@OptIn(InternalPlatformApi::class)` to compile.
+     *
+     * @param annotationClassId The class ID of the annotation to check
+     * @param session The FIR session for resolving the annotation class
+     * @return True if the annotation class has @RequiresOptIn
+     */
+    @OptIn(SymbolInternals::class)
+    private fun isAnnotationOptInMarker(
+        annotationClassId: ClassId,
+        session: FirSession,
+    ): Boolean {
+        // Look up the annotation class symbol
+        val annotationClassSymbol =
+            session.symbolProvider
+                .getClassLikeSymbolByClassId(annotationClassId) as? FirRegularClassSymbol
+                ?: return false
+
+        // Check if the annotation class has @RequiresOptIn
+        return annotationClassSymbol.annotations.any { ann ->
+            ann.toAnnotationClassIdSafe(session) == REQUIRES_OPT_IN_CLASS_ID
+        }
     }
 
     /**

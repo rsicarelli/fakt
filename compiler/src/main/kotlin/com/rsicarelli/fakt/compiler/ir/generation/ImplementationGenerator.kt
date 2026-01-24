@@ -72,6 +72,7 @@ internal class ImplementationGenerator(
                 interfaceName = analysis.interfaceName,
                 typeParameters = analysis.typeParameters,
                 visibility = analysis.visibility,
+                annotations = annotationSpecs,
             )
 
         return GeneratedFakeCode(
@@ -141,6 +142,7 @@ internal class ImplementationGenerator(
                 interfaceName = analysis.className,
                 typeParameters = analysis.typeParameters,
                 visibility = analysis.visibility,
+                annotations = annotationSpecs,
             )
 
         return GeneratedFakeCode(
@@ -158,4 +160,5 @@ private fun AnnotationAnalysis.toAnnotationSpec(): AnnotationSpec =
         simpleName = simpleName,
         fullyQualifiedName = fullyQualifiedName,
         arguments = renderedArguments,
+        isOptInMarker = isOptInMarker,
     )

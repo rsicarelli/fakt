@@ -75,6 +75,7 @@ data class FirMetadataCache(
          * - v2:
          * - Added visibility field for explicitApi() support (Issue #21)
          * - Added annotations support (Issue #22)
+         * - Added isOptInMarker field for @RequiresOptIn detection (Issue #22)
          */
         const val CURRENT_VERSION: Int = 2
     }
@@ -236,11 +237,13 @@ data class SerializableParameterInfo(
  *
  * @property annotationClassId Fully qualified annotation class ID (e.g., "kotlin.OptIn")
  * @property arguments Named arguments to the annotation (empty for marker annotations)
+ * @property isOptInMarker True if this annotation is marked with @RequiresOptIn
  */
 @Serializable
 data class SerializableAnnotationInfo(
     val annotationClassId: String,
     val arguments: Map<String, SerializableAnnotationArgument> = emptyMap(),
+    val isOptInMarker: Boolean = false,
 )
 
 /**

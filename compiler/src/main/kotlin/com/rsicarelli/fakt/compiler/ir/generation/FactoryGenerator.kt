@@ -4,6 +4,7 @@ package com.rsicarelli.fakt.compiler.ir.generation
 
 import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 import com.rsicarelli.fakt.compiler.fir.metadata.toModifier
+import com.rsicarelli.fakt.compiler.ir.analysis.AnnotationAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
 
@@ -23,6 +24,8 @@ internal class FactoryGenerator {
         analysis: InterfaceAnalysis,
         fakeClassName: String,
     ): String {
+        // Extract annotations that need to be propagated to the factory function
+        val propagatedAnnotations = extractPropagatedAnnotations(analysis.annotations)
         val interfaceName = analysis.interfaceName
         val factoryFunctionName = "fake$interfaceName"
         val configClassName = "Fake${interfaceName}Config"
@@ -56,6 +59,11 @@ internal class FactoryGenerator {
             }
 
         return buildString {
+            // Add propagated annotations (@OptIn, @Deprecated)
+            propagatedAnnotations.forEach { annotation ->
+                appendLine(renderAnnotation(annotation))
+            }
+
             val functionSignature =
                 buildFunctionSignature(hasGenerics, typeParameters, factoryFunctionName, analysis.visibility)
             val whereClausePart = if (whereClause.isNotEmpty()) " where $whereClause" else ""
@@ -94,6 +102,9 @@ internal class FactoryGenerator {
         analysis: ClassAnalysis,
         fakeClassName: String,
     ): String {
+        // Extract annotations that need to be propagated to the factory function
+        val propagatedAnnotations = extractPropagatedAnnotations(analysis.annotations)
+
         val className = analysis.className
         val factoryFunctionName = "fake$className"
         val configClassName = "Fake${className}Config"
@@ -125,6 +136,11 @@ internal class FactoryGenerator {
             }
 
         return buildString {
+            // Add propagated annotations (@OptIn, @Deprecated)
+            propagatedAnnotations.forEach { annotation ->
+                appendLine(renderAnnotation(annotation))
+            }
+
             val hasGenerics = typeParameters.isNotEmpty()
             val functionSignature =
                 buildFunctionSignature(hasGenerics, typeParameters, factoryFunctionName, analysis.visibility)
@@ -221,4 +237,28 @@ internal class FactoryGenerator {
 
         return paramsForHeader to whereClauses.joinToString(", ")
     }
+
+    /**
+     * Extracts annotations that need to be propagated to the factory function.
+     *
+     * This includes:
+     * - @OptIn: Required because the function references types that require opt-in
+     * - @Deprecated: Propagated so that deprecated types have deprecated fakes
+     *
+     * Excludes opt-in markers because fakes should be freely usable in tests.
+     */
+    private fun extractPropagatedAnnotations(annotations: List<AnnotationAnalysis>): List<AnnotationAnalysis> =
+        annotations.filter {
+            (it.simpleName == "OptIn" || it.simpleName == "Deprecated") && !it.isOptInMarker
+        }
+
+    /**
+     * Renders an annotation to its string representation.
+     */
+    private fun renderAnnotation(annotation: AnnotationAnalysis): String =
+        if (annotation.renderedArguments.isEmpty()) {
+            "@${annotation.simpleName}"
+        } else {
+            "@${annotation.simpleName}(${annotation.renderedArguments.joinToString(", ")})"
+        }
 }

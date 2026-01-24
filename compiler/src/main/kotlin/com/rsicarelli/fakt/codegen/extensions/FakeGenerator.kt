@@ -117,23 +117,15 @@ fun generateCompleteFake(config: FakeGenerationConfig): CodeFile = generateCompl
  * @property simpleName Simple annotation name (e.g., "OptIn", "Deprecated")
  * @property fullyQualifiedName Fully qualified name for imports (e.g., "kotlin.OptIn")
  * @property arguments Pre-rendered argument strings (e.g., ["ExperimentalApi::class"])
+ * @property isOptInMarker True if this annotation is marked with @RequiresOptIn. When true,
+ *           the generated fake needs @OptIn(ThisAnnotation::class) to compile.
  */
 data class AnnotationSpec(
     val simpleName: String,
     val fullyQualifiedName: String,
     val arguments: List<String> = emptyList(),
+    val isOptInMarker: Boolean = false,
 )
-
-/**
- * Known annotations that require file-level @OptIn.
- *
- * Maps annotation fully-qualified names to the opt-in annotation class they require.
- */
-private val FILE_LEVEL_OPTINS =
-    mapOf(
-        "kotlin.native.HiddenFromObjC" to "kotlin.experimental.ExperimentalObjCRefinement",
-        "kotlin.native.ObjCName" to "kotlin.experimental.ExperimentalObjCName",
-    )
 
 /**
  * Generates a complete fake implementation class.
@@ -239,19 +231,8 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
             spec.arguments.any { it.contains("::class") }
         }
 
-    // Check for annotations requiring file-level opt-in
-    val requiredFileOptIns =
-        annotations
-            .mapNotNull { FILE_LEVEL_OPTINS[it.fullyQualifiedName] }
-            .distinct()
-
     return codeFile(packageName) {
         header?.let { this.header = it }
-
-        // Add file-level opt-in annotations (before package declaration)
-        requiredFileOptIns.forEach { optInClass ->
-            fileAnnotation("OptIn", "$optInClass::class")
-        }
 
         // Add common imports
         if (properties.any { it.isStateFlow }) {
@@ -272,7 +253,7 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
         // Add custom imports
         imports.forEach { import(it) }
 
-        // Add imports for annotations
+        // Add imports for annotations (only filtered ones)
         annotations.forEach { annotationSpec ->
             import(annotationSpec.fullyQualifiedName)
         }
@@ -291,8 +272,19 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
                 }
             }
 
-            // Propagate annotations from source type
-            annotations.forEach { annotationSpec ->
+            // Add @OptIn for opt-in marker annotations (annotations with @RequiresOptIn)
+            // These require the generated code to opt-in to use types marked with them
+            val optInMarkers = annotations.filter { it.isOptInMarker }
+            if (optInMarkers.isNotEmpty()) {
+                val optInArgs = optInMarkers.map { "${it.simpleName}::class" }
+                annotation("OptIn", *optInArgs.toTypedArray())
+            }
+
+            // Propagate annotations from source type, EXCEPT opt-in markers
+            // We don't propagate opt-in markers because:
+            // 1. We already added @OptIn(...) so the generated code compiles
+            // 2. Fakes should be freely usable in tests without requiring callers to opt-in
+            annotations.filter { !it.isOptInMarker }.forEach { annotationSpec ->
                 annotation(annotationSpec.simpleName, *annotationSpec.arguments.toTypedArray())
             }
             // Parse type parameters and build where clause for multiple constraints

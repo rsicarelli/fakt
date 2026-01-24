@@ -47,12 +47,14 @@
     <ID>ReturnCount:MetadataCacheManager.kt$MetadataCacheManager$private fun validateCache(cache: FirMetadataCache): Boolean</ID>
     <ID>ReturnCount:MetadataCacheSerializer.kt$MetadataCacheSerializer$fun computeFileSignature(filePath: String): String</ID>
     <ID>ReturnCount:MetadataCacheSerializer.kt$MetadataCacheSerializer$fun deserialize(cachePath: String): FirMetadataCache?</ID>
+    <ID>SpreadOperator:FakeGenerator.kt$("OptIn", *optInArgs.toTypedArray())</ID>
     <ID>SpreadOperator:FakeGenerator.kt$(annotationSpec.simpleName, *annotationSpec.arguments.toTypedArray())</ID>
     <ID>SpreadOperator:MethodExtensions.kt$(name, *constraints)</ID>
     <ID>TooGenericExceptionCaught:CodeGenerator.kt$CodeGenerator$e: Exception</ID>
     <ID>TooGenericExceptionCaught:CompilerOptimizations.kt$CompilerOptimizations.Companion.&lt;no name provided&gt;$e: Exception</ID>
     <ID>TooGenericExceptionCaught:FaktCommandLineProcessor.kt$FaktCommandLineProcessor$e: Exception</ID>
     <ID>TooGenericExceptionCaught:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension$e: Exception</ID>
+    <ID>TooManyFunctions:AnnotationExtractor.kt$AnnotationExtractor</ID>
     <ID>TooManyFunctions:ConfigurationDslGenerator.kt$ConfigurationDslGenerator</ID>
     <ID>TooManyFunctions:FakeGenerator.kt$com.rsicarelli.fakt.codegen.extensions.FakeGenerator.kt</ID>
     <ID>TooManyFunctions:FirMetadataStorage.kt$FirMetadataStorage</ID>

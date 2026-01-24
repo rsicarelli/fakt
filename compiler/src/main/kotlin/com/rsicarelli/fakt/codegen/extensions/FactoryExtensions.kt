@@ -25,12 +25,14 @@ import com.rsicarelli.fakt.compiler.fir.metadata.toModifier
  * @param interfaceName The name of the interface being faked
  * @param typeParameters List of type parameters with constraints (e.g., ["T : Comparable<T>"])
  * @param visibility Visibility for the generated function (PUBLIC, INTERNAL) for explicitApi() support
+ * @param annotations Annotations to propagate to the factory function (@OptIn, @Deprecated)
  * @return Generated factory function code
  */
 fun generateFactoryFunction(
     interfaceName: String,
     typeParameters: List<String> = emptyList(),
     visibility: FirVisibility = FirVisibility.PUBLIC,
+    annotations: List<AnnotationSpec> = emptyList(),
 ): String {
     val fakeClassName = "Fake${interfaceName}Impl"
     val configClassName = "Fake${interfaceName}Config"
@@ -52,7 +54,27 @@ fun generateFactoryFunction(
     // Parse type parameters into header format and where clause
     val (headerParams, whereClause) = parseTypeParametersForFactory(typeParameters)
 
+    // Filter annotations to propagate (@OptIn, @Deprecated), excluding opt-in markers
+    // We don't propagate opt-in markers because:
+    // 1. The impl class already has @OptIn(MarkerClass::class)
+    // 2. Factory just creates the impl, doesn't need its own @OptIn
+    val propagatedAnnotations =
+        annotations.filter {
+            (it.simpleName == "OptIn" || it.simpleName == "Deprecated") && !it.isOptInMarker
+        }
+
     return buildString {
+        // Add propagated annotations (@OptIn, @Deprecated)
+        propagatedAnnotations.forEach { annotation ->
+            val argsStr =
+                if (annotation.arguments.isEmpty()) {
+                    ""
+                } else {
+                    "(${annotation.arguments.joinToString(", ")})"
+                }
+            appendLine("@${annotation.simpleName}$argsStr")
+        }
+
         // Function signature with visibility modifier
         if (hasGenerics) {
             // public inline fun <reified T : Bound> fakeInterface(...)

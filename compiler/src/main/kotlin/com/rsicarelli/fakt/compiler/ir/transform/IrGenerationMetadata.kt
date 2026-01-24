@@ -290,6 +290,7 @@ private fun IrAnnotationMetadata.toAnnotationAnalysis(): AnnotationAnalysis =
         simpleName = simpleName,
         fullyQualifiedName = fullyQualifiedName,
         renderedArguments = renderedArguments,
+        isOptInMarker = isOptInMarker,
     )
 
 /**
@@ -313,9 +314,12 @@ private fun IrAnnotationMetadata.toAnnotationAnalysis(): AnnotationAnalysis =
  * @property simpleName Simple annotation name (e.g., "OptIn", "Deprecated")
  * @property fullyQualifiedName Fully qualified name for imports (e.g., "kotlin.OptIn")
  * @property renderedArguments Pre-rendered argument strings for code generation
+ * @property isOptInMarker True if this annotation is marked with @RequiresOptIn. When true,
+ *           the generated fake needs @OptIn(ThisAnnotation::class) to compile.
  */
 data class IrAnnotationMetadata(
     val simpleName: String,
     val fullyQualifiedName: String,
     val renderedArguments: List<String> = emptyList(),
+    val isOptInMarker: Boolean = false,
 )

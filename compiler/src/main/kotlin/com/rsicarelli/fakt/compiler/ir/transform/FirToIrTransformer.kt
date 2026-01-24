@@ -461,6 +461,7 @@ internal class FirToIrTransformer {
                 simpleName = simpleName,
                 fullyQualifiedName = fullyQualifiedName,
                 renderedArguments = renderAnnotationArguments(annotation.arguments),
+                isOptInMarker = annotation.isOptInMarker,
             )
         }
 
