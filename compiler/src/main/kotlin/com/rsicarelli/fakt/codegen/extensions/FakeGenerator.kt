@@ -128,6 +128,16 @@ data class AnnotationSpec(
 )
 
 /**
+ * Annotations that require @OptIn to use them.
+ * Maps annotation FQN -> required opt-in annotation FQN.
+ */
+private val ANNOTATIONS_REQUIRING_OPTIN =
+    mapOf(
+        "kotlin.native.HiddenFromObjC" to "kotlin.experimental.ExperimentalObjCRefinement",
+        "kotlin.native.ObjCName" to "kotlin.experimental.ExperimentalObjCName",
+    )
+
+/**
  * Generates a complete fake implementation class.
  *
  * Creates a fake with:
@@ -253,9 +263,13 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
         // Add custom imports
         imports.forEach { import(it) }
 
-        // Add imports for annotations (only filtered ones)
+        // Add imports for annotations
         annotations.forEach { annotationSpec ->
             import(annotationSpec.fullyQualifiedName)
+            // Also import required opt-in annotations
+            ANNOTATIONS_REQUIRING_OPTIN[annotationSpec.fullyQualifiedName]?.let { requiredOptIn ->
+                import(requiredOptIn)
+            }
         }
 
         klass(className) {
@@ -272,12 +286,27 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
                 }
             }
 
-            // Add @OptIn for opt-in marker annotations (annotations with @RequiresOptIn)
-            // These require the generated code to opt-in to use types marked with them
-            val optInMarkers = annotations.filter { it.isOptInMarker }
-            if (optInMarkers.isNotEmpty()) {
-                val optInArgs = optInMarkers.map { "${it.simpleName}::class" }
-                annotation("OptIn", *optInArgs.toTypedArray())
+            // Collect all required @OptIn annotations:
+            // 1. Opt-in markers: annotations with @RequiresOptIn need @OptIn(MarkerClass::class)
+            // 2. Experimental annotations: annotations that require opt-in to use them
+            val optInArgs = mutableListOf<String>()
+
+            // Add opt-in for marker annotations (annotations with @RequiresOptIn)
+            annotations.filter { it.isOptInMarker }.forEach { marker ->
+                optInArgs.add("${marker.simpleName}::class")
+            }
+
+            // Add opt-in for annotations that require it (e.g., @HiddenFromObjC)
+            annotations.forEach { spec ->
+                ANNOTATIONS_REQUIRING_OPTIN[spec.fullyQualifiedName]?.let { requiredOptIn ->
+                    val optInName = requiredOptIn.substringAfterLast(".")
+                    optInArgs.add("$optInName::class")
+                }
+            }
+
+            // Add @OptIn if any opt-ins are needed
+            if (optInArgs.isNotEmpty()) {
+                annotation("OptIn", *optInArgs.distinct().toTypedArray())
             }
 
             // Propagate annotations from source type, EXCEPT opt-in markers

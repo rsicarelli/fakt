@@ -47,6 +47,7 @@
     <ID>ReturnCount:MetadataCacheManager.kt$MetadataCacheManager$private fun validateCache(cache: FirMetadataCache): Boolean</ID>
     <ID>ReturnCount:MetadataCacheSerializer.kt$MetadataCacheSerializer$fun computeFileSignature(filePath: String): String</ID>
     <ID>ReturnCount:MetadataCacheSerializer.kt$MetadataCacheSerializer$fun deserialize(cachePath: String): FirMetadataCache?</ID>
+    <ID>SpreadOperator:FakeGenerator.kt$("OptIn", *optInArgs.distinct().toTypedArray())</ID>
     <ID>SpreadOperator:FakeGenerator.kt$("OptIn", *optInArgs.toTypedArray())</ID>
     <ID>SpreadOperator:FakeGenerator.kt$(annotationSpec.simpleName, *annotationSpec.arguments.toTypedArray())</ID>
     <ID>SpreadOperator:MethodExtensions.kt$(name, *constraints)</ID>
