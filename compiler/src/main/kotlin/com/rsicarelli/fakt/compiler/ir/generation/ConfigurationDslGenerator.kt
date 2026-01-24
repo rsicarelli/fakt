@@ -3,6 +3,8 @@
 package com.rsicarelli.fakt.compiler.ir.generation
 
 import com.rsicarelli.fakt.compiler.core.types.TypeResolution
+import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
+import com.rsicarelli.fakt.compiler.fir.metadata.toModifier
 import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.FunctionAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
@@ -34,40 +36,37 @@ internal class ConfigurationDslGenerator(
         analysis: InterfaceAnalysis,
         fakeClassName: String,
     ): String {
-        val configClassName = "Fake${analysis.interfaceName}Config"
         val (typeParamsForHeader, whereClause) = formatTypeParametersWithWhereClause(analysis.typeParameters)
-        val typeParameters = formatTypeParameters(typeParamsForHeader)
-        val typeParameterNames = extractTypeParameterNames(analysis.typeParameters)
+
+        val headerConfig =
+            ClassHeaderConfig(
+                configClassName = "Fake${analysis.interfaceName}Config",
+                typeParameters = formatTypeParameters(typeParamsForHeader),
+                fakeClassName = fakeClassName,
+                typeParameterNames = extractTypeParameterNames(analysis.typeParameters),
+                whereClause = whereClause,
+                visibility = analysis.visibility,
+            )
 
         return buildString {
-            appendLine(
-                generateClassHeader(
-                    configClassName,
-                    typeParameters,
-                    fakeClassName,
-                    typeParameterNames,
-                    whereClause,
-                ),
-            )
+            appendLine(generateClassHeader(headerConfig))
             append(generateFunctionConfigurators(analysis.functions))
             append(generatePropertyConfigurators(analysis.properties))
             append("}")
         }
     }
 
-    private fun generateClassHeader(
-        configClassName: String,
-        typeParameters: String,
-        fakeClassName: String,
-        typeParameterNames: String,
-        whereClause: String,
-    ): String =
-        if (whereClause.isNotEmpty()) {
-            "class $configClassName$typeParameters(" +
-                "private val fake: $fakeClassName$typeParameterNames) where $whereClause {"
+    private fun generateClassHeader(config: ClassHeaderConfig): String {
+        val visibilityModifier = config.visibility.toModifier()
+        return if (config.whereClause.isNotEmpty()) {
+            "${visibilityModifier}class ${config.configClassName}${config.typeParameters}(" +
+                "private val fake: ${config.fakeClassName}${config.typeParameterNames}) " +
+                "where ${config.whereClause} {"
         } else {
-            "class $configClassName$typeParameters(private val fake: $fakeClassName$typeParameterNames) {"
+            "${visibilityModifier}class ${config.configClassName}${config.typeParameters}(" +
+                "private val fake: ${config.fakeClassName}${config.typeParameterNames}) {"
         }
+    }
 
     private fun generateFunctionConfigurators(functions: List<FunctionAnalysis>): String =
         functions.joinToString("") { function ->
@@ -232,10 +231,6 @@ internal class ConfigurationDslGenerator(
         analysis: ClassAnalysis,
         fakeClassName: String,
     ): String {
-        val className = analysis.className
-        val configClassName = "Fake${className}Config"
-
-        // Format type parameters with where clause for multiple constraints
         val (typeParamsForHeader, whereClause) = formatTypeParametersWithWhereClause(analysis.typeParameters)
 
         val typeParameters =
@@ -245,7 +240,6 @@ internal class ConfigurationDslGenerator(
                 ""
             }
 
-        // Type arguments for usage (just names, no constraints)
         val typeParameterNames =
             if (analysis.typeParameters.isNotEmpty()) {
                 analysis.typeParameters.map { it.substringBefore(" :").trim() }
@@ -260,20 +254,18 @@ internal class ConfigurationDslGenerator(
                 ""
             }
 
+        val headerConfig =
+            ClassHeaderConfig(
+                configClassName = "Fake${analysis.className}Config",
+                typeParameters = typeParameters,
+                fakeClassName = fakeClassName,
+                typeParameterNames = typeArguments,
+                whereClause = whereClause,
+                visibility = analysis.visibility,
+            )
+
         return buildString {
-            // Generate config class header with type parameters and where clause
-            if (whereClause.isNotEmpty()) {
-                appendLine(
-                    "class $configClassName$typeParameters(" +
-                        "private val fake: $fakeClassName$typeArguments" +
-                        ") where $whereClause {",
-                )
-            } else {
-                appendLine(
-                    "class $configClassName$typeParameters(" +
-                        "private val fake: $fakeClassName$typeArguments) {",
-                )
-            }
+            appendLine(generateClassHeader(headerConfig))
 
             // Generate configuration methods for abstract methods
             for (function in analysis.abstractMethods) {
@@ -527,3 +519,15 @@ internal class ConfigurationDslGenerator(
         return parts[0] to parts[1]
     }
 }
+
+/**
+ * Configuration for generating a DSL class header.
+ */
+private data class ClassHeaderConfig(
+    val configClassName: String,
+    val typeParameters: String,
+    val fakeClassName: String,
+    val typeParameterNames: String,
+    val whereClause: String,
+    val visibility: FirVisibility,
+)

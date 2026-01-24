@@ -122,6 +122,7 @@ internal class FirToIrTransformer {
             patternAnalyzer = patternAnalyzer,
             isFromCache = firMetadata.isFromCache,
             sourceSourceSet = firMetadata.sourceSourceSet,
+            visibility = firMetadata.visibility,
         )
     }
 
@@ -185,6 +186,7 @@ internal class FirToIrTransformer {
             patternAnalyzer = patternAnalyzer,
             isFromCache = firMetadata.isFromCache,
             sourceSourceSet = firMetadata.sourceSourceSet,
+            visibility = firMetadata.visibility,
         )
     }
 

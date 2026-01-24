@@ -8,6 +8,10 @@ plugins {
     alias(libs.plugins.fakt)
 }
 
+kotlin {
+    explicitApi()
+}
+
 dependencies {
     implementation(libs.fakt.annotations)
 

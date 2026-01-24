@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.transform
 
+import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.FunctionAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.GenericPattern
@@ -39,6 +40,7 @@ import org.jetbrains.kotlin.ir.types.IrType
  * @property genericPattern Classification of generic usage
  *     (NoGenerics, ClassLevel, MethodLevel, Mixed) - computed lazily
  * @property sourceInterface Original IrClass for code generation context
+ * @property visibility Visibility of the interface for explicitApi() support
  */
 class IrGenerationMetadata internal constructor(
     val interfaceName: String,
@@ -50,6 +52,7 @@ class IrGenerationMetadata internal constructor(
     private val patternAnalyzer: GenericPatternAnalyzer,
     val isFromCache: Boolean = false,
     val sourceSourceSet: String? = null,
+    val visibility: FirVisibility = FirVisibility.PUBLIC,
 ) {
     /**
      * Lazy generic pattern analysis - computed on first access only.
@@ -157,6 +160,7 @@ data class IrParameterMetadata(
  * @property genericPattern Classification of generic usage
  *     (NoGenerics, ClassLevel, MethodLevel, Mixed) - computed lazily
  * @property sourceClass Original IrClass for code generation context
+ * @property visibility Visibility of the class for explicitApi() support
  */
 class IrClassGenerationMetadata internal constructor(
     val className: String,
@@ -170,6 +174,7 @@ class IrClassGenerationMetadata internal constructor(
     private val patternAnalyzer: GenericPatternAnalyzer,
     val isFromCache: Boolean = false,
     val sourceSourceSet: String? = null,
+    val visibility: FirVisibility = FirVisibility.PUBLIC,
 ) {
     /**
      * Lazy generic pattern analysis - computed on first access only.
@@ -201,6 +206,7 @@ fun IrGenerationMetadata.toInterfaceAnalysis(): InterfaceAnalysis =
         sourceInterface = sourceInterface,
         genericPattern = genericPattern,
         debugInfo = StringBuilder("Generated from FIR metadata (FIR metadata)"),
+        visibility = visibility,
     )
 
 /**
@@ -225,6 +231,7 @@ fun IrClassGenerationMetadata.toClassAnalysis(): ClassAnalysis =
         abstractProperties = abstractProperties.map { it.toPropertyAnalysis() },
         openProperties = openProperties.map { it.toPropertyAnalysis() },
         sourceClass = sourceClass,
+        visibility = visibility,
     )
 
 /**

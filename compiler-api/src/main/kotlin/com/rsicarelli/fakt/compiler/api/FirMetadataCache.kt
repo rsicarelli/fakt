@@ -69,8 +69,12 @@ data class FirMetadataCache(
         /**
          * Current cache format version.
          * Increment this when making breaking changes to the cache format.
+         *
+         * History:
+         * - v1: Initial cache format
+         * - v2: Added visibility field for explicitApi() support (Issue #21)
          */
-        const val CURRENT_VERSION: Int = 1
+        const val CURRENT_VERSION: Int = 2
     }
 }
 
@@ -91,6 +95,7 @@ data class FirMetadataCache(
  * @property sourceFilePath Path to source file (for cache invalidation)
  * @property sourceFileSignature MD5 hash of source file (for cache invalidation)
  * @property validationTimeNanos Time spent validating this interface in FIR phase
+ * @property visibility Visibility modifier (PUBLIC, INTERNAL, etc.) for explicitApi() support
  */
 @Serializable
 data class SerializableFakeInterface(
@@ -105,6 +110,7 @@ data class SerializableFakeInterface(
     val sourceFilePath: String,
     val sourceFileSignature: String,
     val validationTimeNanos: Long,
+    val visibility: String = "PUBLIC",
 )
 
 /**
@@ -123,6 +129,7 @@ data class SerializableFakeInterface(
  * @property sourceFilePath Path to source file
  * @property sourceFileSignature MD5 hash of source file
  * @property validationTimeNanos Time spent validating this class in FIR phase
+ * @property visibility Visibility modifier (PUBLIC, INTERNAL, etc.) for explicitApi() support
  */
 @Serializable
 data class SerializableFakeClass(
@@ -137,6 +144,7 @@ data class SerializableFakeClass(
     val sourceFilePath: String,
     val sourceFileSignature: String,
     val validationTimeNanos: Long,
+    val visibility: String = "PUBLIC",
 )
 
 /**

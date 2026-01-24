@@ -15,16 +15,16 @@ import com.rsicarelli.fakt.samples.jvmSingleModule.models.User
  * Validates real-world domain-driven design scenarios with custom data types.
  */
 @Fake
-interface UserRepository {
-    val users: List<User>
+public interface UserRepository {
+    public val users: List<User>
 
-    fun findById(id: String): User?
+    public fun findById(id: String): User?
 
-    fun save(user: User): User
+    public fun save(user: User): User
 
-    fun delete(id: String): Boolean
+    public fun delete(id: String): Boolean
 
-    fun findByAge(
+    public fun findByAge(
         minAge: Int,
         maxAge: Int = 100,
     ): List<User>

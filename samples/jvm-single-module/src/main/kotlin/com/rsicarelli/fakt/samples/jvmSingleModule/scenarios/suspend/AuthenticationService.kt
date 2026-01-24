@@ -15,23 +15,23 @@ import com.rsicarelli.fakt.samples.jvmSingleModule.models.User
  * Real-world authentication/authorization service pattern.
  */
 @Fake
-interface AuthenticationService {
-    val isLoggedIn: Boolean
-    val currentUser: User?
-    val permissions: Set<String>
+public interface AuthenticationService {
+    public val isLoggedIn: Boolean
+    public val currentUser: User?
+    public val permissions: Set<String>
 
-    suspend fun login(
+    public suspend fun login(
         username: String,
         password: String,
     ): Result<User>
 
-    suspend fun logout(): Result<Unit>
+    public suspend fun logout(): Result<Unit>
 
-    suspend fun refreshToken(): Result<String>
+    public suspend fun refreshToken(): Result<String>
 
-    fun hasPermission(permission: String): Boolean
+    public fun hasPermission(permission: String): Boolean
 
-    fun hasAnyPermissions(permissions: List<String>): Boolean
+    public fun hasAnyPermissions(permissions: List<String>): Boolean
 
-    fun hasAllPermissions(permissions: Collection<String>): Boolean
+    public fun hasAllPermissions(permissions: Collection<String>): Boolean
 }

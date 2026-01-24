@@ -8,6 +8,7 @@ import com.rsicarelli.fakt.codegen.builder.parseType
 import com.rsicarelli.fakt.codegen.model.CodeFile
 import com.rsicarelli.fakt.codegen.renderer.render
 import com.rsicarelli.fakt.codegen.strategy.DefaultValueResolver
+import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 
 /**
  * Method metadata for fake generation.
@@ -52,6 +53,23 @@ data class PropertySpec(
 )
 
 /**
+ * Configuration for complete fake generation.
+ *
+ * Groups related parameters for [generateCompleteFake] to reduce parameter count.
+ */
+data class FakeGenerationConfig(
+    val packageName: String,
+    val interfaceName: String,
+    val methods: List<MethodSpec> = emptyList(),
+    val properties: List<PropertySpec> = emptyList(),
+    val imports: List<String> = emptyList(),
+    val header: String? = null,
+    val typeParameters: List<String> = emptyList(),
+    val isClass: Boolean = false,
+    val visibility: FirVisibility = FirVisibility.PUBLIC,
+)
+
+/**
  * Erases method-level type parameters to Any? in a type string.
  *
  * Method-level type parameters (like `<T>`, `<R>`) cannot be used in behavior properties
@@ -81,6 +99,15 @@ private fun String.eraseMethodTypeParameters(typeParameters: List<String>): Stri
 
     return result
 }
+
+/**
+ * Generates a complete fake implementation class from configuration.
+ *
+ * @param config Complete generation configuration
+ * @return CodeFile with complete fake implementation
+ * @see FakeGenerationConfig
+ */
+fun generateCompleteFake(config: FakeGenerationConfig): CodeFile = generateCompleteFakeInternal(config)
 
 /**
  * Generates a complete fake implementation class.
@@ -116,6 +143,7 @@ private fun String.eraseMethodTypeParameters(typeParameters: List<String>): Stri
  * @param header Optional file header comment
  * @param typeParameters Generic type parameters (e.g., ["T", "out T : Any"])
  * @param isClass Whether extending a class (true) vs implementing interface (false)
+ * @param visibility Visibility for the generated class (PUBLIC, INTERNAL) for explicitApi() support
  * @return CodeFile with complete fake implementation
  */
 fun generateCompleteFake(
@@ -127,7 +155,32 @@ fun generateCompleteFake(
     header: String? = null,
     typeParameters: List<String> = emptyList(),
     isClass: Boolean = false,
-): CodeFile {
+    visibility: FirVisibility = FirVisibility.PUBLIC,
+): CodeFile =
+    generateCompleteFakeInternal(
+        FakeGenerationConfig(
+            packageName = packageName,
+            interfaceName = interfaceName,
+            methods = methods,
+            properties = properties,
+            imports = imports,
+            header = header,
+            typeParameters = typeParameters,
+            isClass = isClass,
+            visibility = visibility,
+        ),
+    )
+
+private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile {
+    val packageName = config.packageName
+    val interfaceName = config.interfaceName
+    val methods = config.methods
+    val properties = config.properties
+    val imports = config.imports
+    val header = config.header
+    val typeParameters = config.typeParameters
+    val isClass = config.isClass
+    val visibility = config.visibility
     val className = "Fake${interfaceName}Impl"
 
     // Extract type parameter names for interface type arguments
@@ -165,6 +218,19 @@ fun generateCompleteFake(
         imports.forEach { import(it) }
 
         klass(className) {
+            // Apply visibility modifier for explicitApi() support
+            when (visibility) {
+                FirVisibility.PUBLIC -> public()
+                FirVisibility.INTERNAL -> internal()
+                FirVisibility.PRIVATE,
+                FirVisibility.PROTECTED,
+                -> {
+                    // Private and protected are not supported for top-level classes
+                    // Default to public for safety
+                    public()
+                }
+            }
+
             // Parse type parameters and build where clause for multiple constraints
             val whereClauses = mutableListOf<String>()
 
@@ -224,12 +290,12 @@ fun generateCompleteFake(
 
             // Generate call tracking for all properties
             simpleProperties.forEach { prop ->
-                generatePropertyCallTracking(this, prop)
+                generatePropertyCallTracking(this, prop, visibility)
             }
 
             // Generate call tracking for all methods
             methods.forEach { method ->
-                generateMethodCallTracking(this, method)
+                generateMethodCallTracking(this, method, visibility)
             }
 
             // ==========================================
@@ -423,8 +489,9 @@ private fun isValidFunctionInvocationPattern(
 private fun generateMethodCallTracking(
     classBuilder: ClassBuilder,
     method: MethodSpec,
+    visibility: FirVisibility,
 ) {
-    classBuilder.callTrackingProperty(method.name)
+    classBuilder.callTrackingProperty(method.name, visibility)
 }
 
 /**
@@ -434,10 +501,11 @@ private fun generateMethodCallTracking(
 private fun generatePropertyCallTracking(
     classBuilder: ClassBuilder,
     prop: PropertySpec,
+    visibility: FirVisibility,
 ) {
-    classBuilder.propertyGetterTracking(prop.name)
+    classBuilder.propertyGetterTracking(prop.name, visibility)
     if (prop.isMutable) {
-        classBuilder.propertySetterTracking(prop.name)
+        classBuilder.propertySetterTracking(prop.name, visibility)
     }
 }
 

@@ -4,6 +4,7 @@ package com.rsicarelli.fakt.codegen.extensions
 
 import com.rsicarelli.fakt.codegen.renderer.CodeBuilder
 import com.rsicarelli.fakt.codegen.renderer.renderTo
+import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertContains
@@ -367,5 +368,130 @@ class FakeGeneratorTest {
             result,
             "internal fun configureSaveUser(behavior: suspend (User) -> Result<Unit>): Unit",
         )
+    }
+
+    // ==========================================
+    // Visibility Modifier Tests (Issue #21)
+    // ==========================================
+
+    @Test
+    fun `GIVEN public visibility WHEN generating fake THEN class has public modifier`() {
+        // GIVEN
+        val methods =
+            listOf(
+                MethodSpec("doWork", emptyList(), "String"),
+            )
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "PublicService",
+                methods = methods,
+                visibility = FirVisibility.PUBLIC,
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN
+        assertContains(result, "public class FakePublicServiceImpl : PublicService")
+    }
+
+    @Test
+    fun `GIVEN internal visibility WHEN generating fake THEN class has internal modifier`() {
+        // GIVEN
+        val methods =
+            listOf(
+                MethodSpec("doWork", emptyList(), "String"),
+            )
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "InternalService",
+                methods = methods,
+                visibility = FirVisibility.INTERNAL,
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN
+        assertContains(result, "internal class FakeInternalServiceImpl : InternalService")
+    }
+
+    @Test
+    fun `GIVEN default visibility WHEN generating fake THEN class has public modifier`() {
+        // GIVEN - no explicit visibility (uses default PUBLIC)
+        val methods =
+            listOf(
+                MethodSpec("doWork", emptyList(), "String"),
+            )
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "DefaultService",
+                methods = methods,
+                // visibility not specified - should default to PUBLIC
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Should have public modifier for explicitApi() compatibility
+        assertContains(result, "public class FakeDefaultServiceImpl : DefaultService")
+    }
+
+    @Test
+    fun `GIVEN private visibility WHEN generating fake THEN class defaults to public`() {
+        // GIVEN - private interfaces can't have public implementations,
+        // but we default to public for safety
+        val methods =
+            listOf(
+                MethodSpec("doWork", emptyList(), "String"),
+            )
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "PrivateService",
+                methods = methods,
+                visibility = FirVisibility.PRIVATE,
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Should default to public
+        assertContains(result, "public class FakePrivateServiceImpl : PrivateService")
+    }
+
+    @Test
+    fun `GIVEN protected visibility WHEN generating fake THEN class defaults to public`() {
+        // GIVEN - protected is not supported for top-level classes
+        val methods =
+            listOf(
+                MethodSpec("doWork", emptyList(), "String"),
+            )
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "ProtectedService",
+                methods = methods,
+                visibility = FirVisibility.PROTECTED,
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Should default to public
+        assertContains(result, "public class FakeProtectedServiceImpl : ProtectedService")
     }
 }
