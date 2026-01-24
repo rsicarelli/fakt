@@ -9,6 +9,7 @@ import org.jetbrains.kotlin.name.FqName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * Tests for FIR metadata data classes following GIVEN-WHEN-THEN pattern.
@@ -362,5 +363,229 @@ class FirFakeMetadataTest {
 
             // THEN
             assertEquals("internal ", modifier)
+        }
+
+    // ==========================================
+    // Annotation Data Model Tests
+    // ==========================================
+
+    @Test
+    fun `GIVEN FirAnnotationInfo with no arguments WHEN created THEN is valid marker annotation`() =
+        runTest {
+            // GIVEN & WHEN
+            val annotation =
+                FirAnnotationInfo(
+                    annotationClassId = "kotlin.Deprecated",
+                    arguments = emptyMap(),
+                )
+
+            // THEN
+            assertEquals("kotlin.Deprecated", annotation.annotationClassId)
+            assertTrue(annotation.arguments.isEmpty())
+        }
+
+    @Test
+    fun `GIVEN FirAnnotationInfo with string argument WHEN created THEN captures argument`() =
+        runTest {
+            // GIVEN & WHEN
+            val annotation =
+                FirAnnotationInfo(
+                    annotationClassId = "kotlin.Deprecated",
+                    arguments =
+                        mapOf(
+                            "message" to FirAnnotationArgument.StringLiteral("Use newMethod instead"),
+                        ),
+                )
+
+            // THEN
+            assertEquals("kotlin.Deprecated", annotation.annotationClassId)
+            assertEquals(1, annotation.arguments.size)
+            val messageArg = annotation.arguments["message"]
+            assertTrue(messageArg is FirAnnotationArgument.StringLiteral)
+            assertEquals("Use newMethod instead", (messageArg as FirAnnotationArgument.StringLiteral).value)
+        }
+
+    @Test
+    fun `GIVEN FirAnnotationInfo with class reference WHEN created THEN captures class ID`() =
+        runTest {
+            // GIVEN & WHEN - @OptIn(ExperimentalApi::class)
+            val annotation =
+                FirAnnotationInfo(
+                    annotationClassId = "kotlin.OptIn",
+                    arguments =
+                        mapOf(
+                            "markerClasses" to
+                                FirAnnotationArgument.ArrayValue(
+                                    elements =
+                                        listOf(
+                                            FirAnnotationArgument.ClassReference("com.example.ExperimentalApi"),
+                                        ),
+                                ),
+                        ),
+                )
+
+            // THEN
+            assertEquals("kotlin.OptIn", annotation.annotationClassId)
+            val markerArg = annotation.arguments["markerClasses"]
+            assertTrue(markerArg is FirAnnotationArgument.ArrayValue)
+            val elements = (markerArg as FirAnnotationArgument.ArrayValue).elements
+            assertEquals(1, elements.size)
+            assertTrue(elements[0] is FirAnnotationArgument.ClassReference)
+            assertEquals("com.example.ExperimentalApi", (elements[0] as FirAnnotationArgument.ClassReference).classId)
+        }
+
+    @Test
+    fun `GIVEN FirAnnotationInfo with enum value WHEN created THEN captures enum entry`() =
+        runTest {
+            // GIVEN & WHEN - @Target(AnnotationTarget.CLASS)
+            val annotation =
+                FirAnnotationInfo(
+                    annotationClassId = "kotlin.annotation.Target",
+                    arguments =
+                        mapOf(
+                            "allowedTargets" to
+                                FirAnnotationArgument.ArrayValue(
+                                    elements =
+                                        listOf(
+                                            FirAnnotationArgument.EnumValue(
+                                                enumClassId = "kotlin.annotation.AnnotationTarget",
+                                                entryName = "CLASS",
+                                            ),
+                                        ),
+                                ),
+                        ),
+                )
+
+            // THEN
+            assertEquals("kotlin.annotation.Target", annotation.annotationClassId)
+            val targetArg = annotation.arguments["allowedTargets"]
+            assertTrue(targetArg is FirAnnotationArgument.ArrayValue)
+            val elements = (targetArg as FirAnnotationArgument.ArrayValue).elements
+            assertEquals(1, elements.size)
+            assertTrue(elements[0] is FirAnnotationArgument.EnumValue)
+            val enumVal = elements[0] as FirAnnotationArgument.EnumValue
+            assertEquals("kotlin.annotation.AnnotationTarget", enumVal.enumClassId)
+            assertEquals("CLASS", enumVal.entryName)
+        }
+
+    @Test
+    fun `GIVEN FirAnnotationArgument types WHEN created THEN all types work correctly`() =
+        runTest {
+            // GIVEN & WHEN - Test all argument types
+            val stringArg = FirAnnotationArgument.StringLiteral("test")
+            val numberArg = FirAnnotationArgument.NumberLiteral("42")
+            val boolArg = FirAnnotationArgument.BooleanLiteral(true)
+            val charArg = FirAnnotationArgument.CharLiteral('x')
+            val classRefArg = FirAnnotationArgument.ClassReference("com.example.Foo")
+            val enumArg = FirAnnotationArgument.EnumValue("com.example.MyEnum", "ENTRY")
+            val arrayArg = FirAnnotationArgument.ArrayValue(listOf(stringArg, numberArg))
+            val nestedArg =
+                FirAnnotationArgument.NestedAnnotation(
+                    FirAnnotationInfo("kotlin.Suppress", mapOf("names" to stringArg)),
+                )
+
+            // THEN
+            assertEquals("test", stringArg.value)
+            assertEquals("42", numberArg.value)
+            assertEquals(true, boolArg.value)
+            assertEquals('x', charArg.value)
+            assertEquals("com.example.Foo", classRefArg.classId)
+            assertEquals("com.example.MyEnum", enumArg.enumClassId)
+            assertEquals("ENTRY", enumArg.entryName)
+            assertEquals(2, arrayArg.elements.size)
+            assertEquals("kotlin.Suppress", nestedArg.annotation.annotationClassId)
+        }
+
+    @Test
+    fun `GIVEN ValidatedFakeInterface with annotations WHEN created THEN contains annotations`() =
+        runTest {
+            // GIVEN
+            val classId = ClassId.topLevel(FqName("com.example.ExperimentalService"))
+            val annotations =
+                listOf(
+                    FirAnnotationInfo(
+                        annotationClassId = "kotlin.OptIn",
+                        arguments =
+                            mapOf(
+                                "markerClasses" to
+                                    FirAnnotationArgument.ArrayValue(
+                                        listOf(
+                                            FirAnnotationArgument.ClassReference("com.example.ExperimentalApi"),
+                                        ),
+                                    ),
+                            ),
+                    ),
+                    FirAnnotationInfo(
+                        annotationClassId = "kotlin.Deprecated",
+                        arguments =
+                            mapOf(
+                                "message" to FirAnnotationArgument.StringLiteral("Use NewService instead"),
+                            ),
+                    ),
+                )
+
+            // WHEN
+            val metadata =
+                ValidatedFakeInterface(
+                    classId = classId,
+                    simpleName = "ExperimentalService",
+                    packageName = "com.example",
+                    typeParameters = emptyList(),
+                    properties = emptyList(),
+                    functions = emptyList(),
+                    inheritedProperties = emptyList(),
+                    inheritedFunctions = emptyList(),
+                    annotations = annotations,
+                    sourceLocation = FirSourceLocation.UNKNOWN,
+                    validationTimeNanos = 0L,
+                )
+
+            // THEN
+            assertEquals(2, metadata.annotations.size)
+            assertEquals("kotlin.OptIn", metadata.annotations[0].annotationClassId)
+            assertEquals("kotlin.Deprecated", metadata.annotations[1].annotationClassId)
+        }
+
+    @Test
+    fun `GIVEN ValidatedFakeClass with annotations WHEN created THEN contains annotations`() =
+        runTest {
+            // GIVEN
+            val classId = ClassId.topLevel(FqName("com.example.DeprecatedRepository"))
+            val annotations =
+                listOf(
+                    FirAnnotationInfo(
+                        annotationClassId = "kotlin.Deprecated",
+                        arguments =
+                            mapOf(
+                                "message" to FirAnnotationArgument.StringLiteral("Use NewRepository"),
+                                "level" to
+                                    FirAnnotationArgument.EnumValue(
+                                        enumClassId = "kotlin.DeprecationLevel",
+                                        entryName = "WARNING",
+                                    ),
+                            ),
+                    ),
+                )
+
+            // WHEN
+            val metadata =
+                ValidatedFakeClass(
+                    classId = classId,
+                    simpleName = "DeprecatedRepository",
+                    packageName = "com.example",
+                    typeParameters = emptyList(),
+                    abstractProperties = emptyList(),
+                    openProperties = emptyList(),
+                    abstractMethods = emptyList(),
+                    openMethods = emptyList(),
+                    annotations = annotations,
+                    sourceLocation = FirSourceLocation.UNKNOWN,
+                    validationTimeNanos = 0L,
+                )
+
+            // THEN
+            assertEquals(1, metadata.annotations.size)
+            assertEquals("kotlin.Deprecated", metadata.annotations[0].annotationClassId)
+            assertEquals(2, metadata.annotations[0].arguments.size)
         }
 }

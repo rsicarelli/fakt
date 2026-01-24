@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.codegen.builder
 
+import com.rsicarelli.fakt.codegen.model.CodeAnnotation
 import com.rsicarelli.fakt.codegen.model.CodeClass
 import com.rsicarelli.fakt.codegen.model.CodeMember
 import com.rsicarelli.fakt.codegen.model.CodeModifier
@@ -43,6 +44,28 @@ public class ClassBuilder
 
         @PublishedApi
         internal var whereClause: String? = null
+
+        @PublishedApi
+        internal val annotations = mutableListOf<CodeAnnotation>()
+
+        /**
+         * Add annotation to the class.
+         *
+         * Example:
+         * ```kotlin
+         * annotation("OptIn", "ExperimentalApi::class")
+         * annotation("Deprecated", "\"use NewService\"", "level = DeprecationLevel.WARNING")
+         * ```
+         *
+         * @param name Annotation simple name (e.g., "OptIn", "Deprecated")
+         * @param arguments Pre-rendered argument strings
+         */
+        public fun annotation(
+            name: String,
+            vararg arguments: String,
+        ) {
+            annotations.add(CodeAnnotation(name, arguments.toList()))
+        }
 
         /**
          * Add type parameter: typeParam("T") or typeParam("T", "Comparable<T>")
@@ -181,5 +204,6 @@ public class ClassBuilder
                 modifiers = modifiers,
                 members = members,
                 whereClause = whereClause,
+                annotations = annotations,
             )
     }

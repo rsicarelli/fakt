@@ -72,7 +72,10 @@ data class FirMetadataCache(
          *
          * History:
          * - v1: Initial cache format
-         * - v2: Added visibility field for explicitApi() support (Issue #21)
+         * - v2:
+         * - Added visibility field for explicitApi() support (Issue #21)
+         * - Added annotations support (Issue #22)
+         * - Added isOptInMarker field for @RequiresOptIn detection (Issue #22)
          */
         const val CURRENT_VERSION: Int = 2
     }
@@ -107,6 +110,7 @@ data class SerializableFakeInterface(
     val functions: List<SerializableFunctionInfo>,
     val inheritedProperties: List<SerializablePropertyInfo>,
     val inheritedFunctions: List<SerializableFunctionInfo>,
+    val annotations: List<SerializableAnnotationInfo> = emptyList(),
     val sourceFilePath: String,
     val sourceFileSignature: String,
     val validationTimeNanos: Long,
@@ -141,6 +145,7 @@ data class SerializableFakeClass(
     val openProperties: List<SerializablePropertyInfo>,
     val abstractMethods: List<SerializableFunctionInfo>,
     val openMethods: List<SerializableFunctionInfo>,
+    val annotations: List<SerializableAnnotationInfo> = emptyList(),
     val sourceFilePath: String,
     val sourceFileSignature: String,
     val validationTimeNanos: Long,
@@ -220,3 +225,74 @@ data class SerializableParameterInfo(
     val defaultValueCode: String?,
     val isVararg: Boolean,
 )
+
+/**
+ * Serializable annotation information for cross-module caching.
+ *
+ * Stores annotation class ID and its arguments for propagation to generated fakes.
+ *
+ * Examples:
+ * - `@OptIn(ExperimentalApi::class)` → annotationClassId="kotlin.OptIn", arguments has "markerClasses" array
+ * - `@Deprecated("old")` → annotationClassId="kotlin.Deprecated", arguments has "message" string
+ *
+ * @property annotationClassId Fully qualified annotation class ID (e.g., "kotlin.OptIn")
+ * @property arguments Named arguments to the annotation (empty for marker annotations)
+ * @property isOptInMarker True if this annotation is marked with @RequiresOptIn
+ */
+@Serializable
+data class SerializableAnnotationInfo(
+    val annotationClassId: String,
+    val arguments: Map<String, SerializableAnnotationArgument> = emptyMap(),
+    val isOptInMarker: Boolean = false,
+)
+
+/**
+ * Serializable annotation argument value.
+ *
+ * Uses discriminator-based serialization to support all argument types:
+ * - CLASS_REFERENCE: Foo::class → classId
+ * - STRING: "text" → stringValue
+ * - NUMBER: 42, 3.14 → stringValue (as string)
+ * - BOOLEAN: true/false → boolValue
+ * - CHAR: 'x' → charValue
+ * - ENUM: EnumClass.ENTRY → enumClassId + enumEntryName
+ * - ARRAY: [a, b, c] → arrayElements
+ * - NESTED_ANNOTATION: @Nested("value") → nestedAnnotation
+ *
+ * @property type Discriminator for argument type
+ * @property classId Class reference value (for CLASS_REFERENCE)
+ * @property stringValue String/number literal value (for STRING, NUMBER)
+ * @property boolValue Boolean literal value (for BOOLEAN)
+ * @property charValue Char literal value as string (for CHAR)
+ * @property enumClassId Enum class ID (for ENUM)
+ * @property enumEntryName Enum entry name (for ENUM)
+ * @property arrayElements Array elements (for ARRAY)
+ * @property nestedAnnotation Nested annotation (for NESTED_ANNOTATION)
+ */
+@Serializable
+data class SerializableAnnotationArgument(
+    val type: ArgumentType,
+    val classId: String? = null,
+    val stringValue: String? = null,
+    val boolValue: Boolean? = null,
+    val charValue: String? = null,
+    val enumClassId: String? = null,
+    val enumEntryName: String? = null,
+    val arrayElements: List<SerializableAnnotationArgument>? = null,
+    val nestedAnnotation: SerializableAnnotationInfo? = null,
+) {
+    /**
+     * Argument type discriminator for serialization.
+     */
+    @Serializable
+    enum class ArgumentType {
+        CLASS_REFERENCE,
+        STRING,
+        NUMBER,
+        BOOLEAN,
+        CHAR,
+        ENUM,
+        ARRAY,
+        NESTED_ANNOTATION,
+    }
+}

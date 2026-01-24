@@ -3,6 +3,7 @@
 package com.rsicarelli.fakt.compiler.ir.transform
 
 import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
+import com.rsicarelli.fakt.compiler.ir.analysis.AnnotationAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.FunctionAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.GenericPattern
@@ -48,6 +49,7 @@ class IrGenerationMetadata internal constructor(
     val typeParameters: List<String>,
     val properties: List<IrPropertyMetadata>,
     val functions: List<IrFunctionMetadata>,
+    val annotations: List<IrAnnotationMetadata> = emptyList(),
     val sourceInterface: IrClass,
     private val patternAnalyzer: GenericPatternAnalyzer,
     val isFromCache: Boolean = false,
@@ -170,6 +172,7 @@ class IrClassGenerationMetadata internal constructor(
     val openProperties: List<IrPropertyMetadata>,
     val abstractMethods: List<IrFunctionMetadata>,
     val openMethods: List<IrFunctionMetadata>,
+    val annotations: List<IrAnnotationMetadata> = emptyList(),
     val sourceClass: IrClass,
     private val patternAnalyzer: GenericPatternAnalyzer,
     val isFromCache: Boolean = false,
@@ -207,6 +210,7 @@ fun IrGenerationMetadata.toInterfaceAnalysis(): InterfaceAnalysis =
         genericPattern = genericPattern,
         debugInfo = StringBuilder("Generated from FIR metadata (FIR metadata)"),
         visibility = visibility,
+        annotations = annotations.map { it.toAnnotationAnalysis() },
     )
 
 /**
@@ -232,6 +236,7 @@ fun IrClassGenerationMetadata.toClassAnalysis(): ClassAnalysis =
         openProperties = openProperties.map { it.toPropertyAnalysis() },
         sourceClass = sourceClass,
         visibility = visibility,
+        annotations = annotations.map { it.toAnnotationAnalysis() },
     )
 
 /**
@@ -276,3 +281,45 @@ private fun IrParameterMetadata.toParameterAnalysis(): ParameterAnalysis =
         defaultValueCode = defaultValueCode,
         isVararg = isVararg,
     )
+
+/**
+ * Convert IrAnnotationMetadata to AnnotationAnalysis.
+ */
+private fun IrAnnotationMetadata.toAnnotationAnalysis(): AnnotationAnalysis =
+    AnnotationAnalysis(
+        simpleName = simpleName,
+        fullyQualifiedName = fullyQualifiedName,
+        renderedArguments = renderedArguments,
+        isOptInMarker = isOptInMarker,
+    )
+
+/**
+ * Annotation metadata for IR code generation.
+ *
+ * Contains pre-rendered annotation information ready for code generation.
+ * Arguments are pre-rendered to Kotlin source code strings.
+ *
+ * Examples:
+ * - `@OptIn(ExperimentalApi::class)` → IrAnnotationMetadata(
+ *       simpleName = "OptIn",
+ *       fullyQualifiedName = "kotlin.OptIn",
+ *       renderedArguments = ["ExperimentalApi::class"]
+ *   )
+ * - `@Deprecated("old", level = DeprecationLevel.WARNING)` → IrAnnotationMetadata(
+ *       simpleName = "Deprecated",
+ *       fullyQualifiedName = "kotlin.Deprecated",
+ *       renderedArguments = ["\"old\"", "level = DeprecationLevel.WARNING"]
+ *   )
+ *
+ * @property simpleName Simple annotation name (e.g., "OptIn", "Deprecated")
+ * @property fullyQualifiedName Fully qualified name for imports (e.g., "kotlin.OptIn")
+ * @property renderedArguments Pre-rendered argument strings for code generation
+ * @property isOptInMarker True if this annotation is marked with @RequiresOptIn. When true,
+ *           the generated fake needs @OptIn(ThisAnnotation::class) to compile.
+ */
+data class IrAnnotationMetadata(
+    val simpleName: String,
+    val fullyQualifiedName: String,
+    val renderedArguments: List<String> = emptyList(),
+    val isOptInMarker: Boolean = false,
+)
