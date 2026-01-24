@@ -31,6 +31,7 @@ data class InterfaceAnalysis(
     val genericPattern: GenericPattern,
     val debugInfo: StringBuilder = StringBuilder(),
     val visibility: FirVisibility = FirVisibility.PUBLIC,
+    val annotations: List<AnnotationAnalysis> = emptyList(),
 )
 
 /**
@@ -47,6 +48,7 @@ data class ClassAnalysis(
     val openProperties: List<PropertyAnalysis>,
     val sourceClass: IrClass,
     val visibility: FirVisibility = FirVisibility.PUBLIC,
+    val annotations: List<AnnotationAnalysis> = emptyList(),
 )
 
 /**
@@ -85,4 +87,17 @@ data class ParameterAnalysis(
     val hasDefaultValue: Boolean,
     val defaultValueCode: String?, // Rendered default value expression
     val isVararg: Boolean,
+)
+
+/**
+ * Analysis of an annotation on a declaration.
+ *
+ * @property simpleName Simple annotation name (e.g., "OptIn", "Deprecated")
+ * @property fullyQualifiedName Fully qualified name for imports (e.g., "kotlin.OptIn")
+ * @property renderedArguments Pre-rendered argument strings (e.g., ["ExperimentalApi::class"])
+ */
+data class AnnotationAnalysis(
+    val simpleName: String,
+    val fullyQualifiedName: String,
+    val renderedArguments: List<String> = emptyList(),
 )

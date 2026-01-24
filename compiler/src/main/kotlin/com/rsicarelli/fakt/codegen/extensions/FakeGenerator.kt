@@ -5,6 +5,7 @@ package com.rsicarelli.fakt.codegen.extensions
 import com.rsicarelli.fakt.codegen.builder.ClassBuilder
 import com.rsicarelli.fakt.codegen.builder.codeFile
 import com.rsicarelli.fakt.codegen.builder.parseType
+import com.rsicarelli.fakt.codegen.extensions.AnnotationSpec
 import com.rsicarelli.fakt.codegen.model.CodeFile
 import com.rsicarelli.fakt.codegen.renderer.render
 import com.rsicarelli.fakt.codegen.strategy.DefaultValueResolver
@@ -67,6 +68,7 @@ data class FakeGenerationConfig(
     val typeParameters: List<String> = emptyList(),
     val isClass: Boolean = false,
     val visibility: FirVisibility = FirVisibility.PUBLIC,
+    val annotations: List<AnnotationSpec> = emptyList(),
 )
 
 /**
@@ -110,6 +112,30 @@ private fun String.eraseMethodTypeParameters(typeParameters: List<String>): Stri
 fun generateCompleteFake(config: FakeGenerationConfig): CodeFile = generateCompleteFakeInternal(config)
 
 /**
+ * Annotation metadata for fake generation.
+ *
+ * @property simpleName Simple annotation name (e.g., "OptIn", "Deprecated")
+ * @property fullyQualifiedName Fully qualified name for imports (e.g., "kotlin.OptIn")
+ * @property arguments Pre-rendered argument strings (e.g., ["ExperimentalApi::class"])
+ */
+data class AnnotationSpec(
+    val simpleName: String,
+    val fullyQualifiedName: String,
+    val arguments: List<String> = emptyList(),
+)
+
+/**
+ * Known annotations that require file-level @OptIn.
+ *
+ * Maps annotation fully-qualified names to the opt-in annotation class they require.
+ */
+private val FILE_LEVEL_OPTINS =
+    mapOf(
+        "kotlin.native.HiddenFromObjC" to "kotlin.experimental.ExperimentalObjCRefinement",
+        "kotlin.native.ObjCName" to "kotlin.experimental.ExperimentalObjCName",
+    )
+
+/**
  * Generates a complete fake implementation class.
  *
  * Creates a fake with:
@@ -131,7 +157,10 @@ fun generateCompleteFake(config: FakeGenerationConfig): CodeFile = generateCompl
  *     properties = listOf(
  *         PropertySpec("users", "List<User>", isStateFlow = true)
  *     ),
- *     typeParameters = listOf("out T : Any")
+ *     typeParameters = listOf("out T : Any"),
+ *     annotations = listOf(
+ *         AnnotationSpec("OptIn", "kotlin.OptIn", listOf("ExperimentalApi::class"))
+ *     )
  * )
  * ```
  *
@@ -144,6 +173,7 @@ fun generateCompleteFake(config: FakeGenerationConfig): CodeFile = generateCompl
  * @param typeParameters Generic type parameters (e.g., ["T", "out T : Any"])
  * @param isClass Whether extending a class (true) vs implementing interface (false)
  * @param visibility Visibility for the generated class (PUBLIC, INTERNAL) for explicitApi() support
+ * @param annotations Annotations to propagate to the generated class
  * @return CodeFile with complete fake implementation
  */
 fun generateCompleteFake(
@@ -156,6 +186,7 @@ fun generateCompleteFake(
     typeParameters: List<String> = emptyList(),
     isClass: Boolean = false,
     visibility: FirVisibility = FirVisibility.PUBLIC,
+    annotations: List<AnnotationSpec> = emptyList(),
 ): CodeFile =
     generateCompleteFakeInternal(
         FakeGenerationConfig(
@@ -168,6 +199,7 @@ fun generateCompleteFake(
             typeParameters = typeParameters,
             isClass = isClass,
             visibility = visibility,
+            annotations = annotations,
         ),
     )
 
@@ -181,6 +213,7 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
     val typeParameters = config.typeParameters
     val isClass = config.isClass
     val visibility = config.visibility
+    val annotations = config.annotations
     val className = "Fake${interfaceName}Impl"
 
     // Extract type parameter names for interface type arguments
@@ -200,8 +233,25 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
     // Create resolver with class-level type parameters for Array<T> handling
     val resolver = DefaultValueResolver(classLevelTypeParams = typeParamNames.toSet())
 
+    // Check if any annotation uses ::class references (requires KClass import)
+    val needsKClassImport =
+        annotations.any { spec ->
+            spec.arguments.any { it.contains("::class") }
+        }
+
+    // Check for annotations requiring file-level opt-in
+    val requiredFileOptIns =
+        annotations
+            .mapNotNull { FILE_LEVEL_OPTINS[it.fullyQualifiedName] }
+            .distinct()
+
     return codeFile(packageName) {
         header?.let { this.header = it }
+
+        // Add file-level opt-in annotations (before package declaration)
+        requiredFileOptIns.forEach { optInClass ->
+            fileAnnotation("OptIn", "$optInClass::class")
+        }
 
         // Add common imports
         if (properties.any { it.isStateFlow }) {
@@ -214,8 +264,18 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
         import("kotlinx.coroutines.flow.MutableStateFlow")
         import("kotlinx.coroutines.flow.update")
 
+        // Add KClass import if needed (for annotations with class references)
+        if (needsKClassImport) {
+            import("kotlin.reflect.KClass")
+        }
+
         // Add custom imports
         imports.forEach { import(it) }
+
+        // Add imports for annotations
+        annotations.forEach { annotationSpec ->
+            import(annotationSpec.fullyQualifiedName)
+        }
 
         klass(className) {
             // Apply visibility modifier for explicitApi() support
@@ -231,6 +291,10 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
                 }
             }
 
+            // Propagate annotations from source type
+            annotations.forEach { annotationSpec ->
+                annotation(annotationSpec.simpleName, *annotationSpec.arguments.toTypedArray())
+            }
             // Parse type parameters and build where clause for multiple constraints
             val whereClauses = mutableListOf<String>()
 

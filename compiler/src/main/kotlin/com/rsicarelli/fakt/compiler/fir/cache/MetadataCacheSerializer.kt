@@ -3,12 +3,16 @@
 package com.rsicarelli.fakt.compiler.fir.cache
 
 import com.rsicarelli.fakt.compiler.api.FirMetadataCache
+import com.rsicarelli.fakt.compiler.api.SerializableAnnotationArgument
+import com.rsicarelli.fakt.compiler.api.SerializableAnnotationInfo
 import com.rsicarelli.fakt.compiler.api.SerializableFakeClass
 import com.rsicarelli.fakt.compiler.api.SerializableFakeInterface
 import com.rsicarelli.fakt.compiler.api.SerializableFunctionInfo
 import com.rsicarelli.fakt.compiler.api.SerializableParameterInfo
 import com.rsicarelli.fakt.compiler.api.SerializablePropertyInfo
 import com.rsicarelli.fakt.compiler.api.SerializableTypeParameterInfo
+import com.rsicarelli.fakt.compiler.fir.metadata.FirAnnotationArgument
+import com.rsicarelli.fakt.compiler.fir.metadata.FirAnnotationInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirFunctionInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirParameterInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirPropertyInfo
@@ -82,6 +86,7 @@ object MetadataCacheSerializer {
             functions = validated.functions.map { it.toSerializable() },
             inheritedProperties = validated.inheritedProperties.map { it.toSerializable() },
             inheritedFunctions = validated.inheritedFunctions.map { it.toSerializable() },
+            annotations = validated.annotations.map { it.toSerializable() },
             sourceFilePath = validated.sourceLocation.filePath,
             sourceFileSignature = sourceFileSignature,
             validationTimeNanos = validated.validationTimeNanos,
@@ -104,6 +109,7 @@ object MetadataCacheSerializer {
             openProperties = validated.openProperties.map { it.toSerializable() },
             abstractMethods = validated.abstractMethods.map { it.toSerializable() },
             openMethods = validated.openMethods.map { it.toSerializable() },
+            annotations = validated.annotations.map { it.toSerializable() },
             sourceFilePath = validated.sourceLocation.filePath,
             sourceFileSignature = sourceFileSignature,
             validationTimeNanos = validated.validationTimeNanos,
@@ -146,6 +152,7 @@ object MetadataCacheSerializer {
             functions = serializable.functions.map { it.toFir() },
             inheritedProperties = serializable.inheritedProperties.map { it.toFir() },
             inheritedFunctions = serializable.inheritedFunctions.map { it.toFir() },
+            annotations = serializable.annotations.map { it.toFir() },
             sourceLocation = sourceLocation,
             // Cache hit: no FIR analysis performed in this compilation
             validationTimeNanos = 0L,
@@ -184,6 +191,7 @@ object MetadataCacheSerializer {
             openProperties = serializable.openProperties.map { it.toFir() },
             abstractMethods = serializable.abstractMethods.map { it.toFir() },
             openMethods = serializable.openMethods.map { it.toFir() },
+            annotations = serializable.annotations.map { it.toFir() },
             sourceLocation = sourceLocation,
             // Cache hit: no FIR analysis performed in this compilation
             validationTimeNanos = 0L,
@@ -354,4 +362,110 @@ object MetadataCacheSerializer {
             typeParameters = typeParameters.map { it.toFir() },
             typeParameterBounds = typeParameterBounds,
         )
+
+    // ========================================================================
+    // Annotation Serialization (FIR → Serializable)
+    // ========================================================================
+
+    private fun FirAnnotationInfo.toSerializable(): SerializableAnnotationInfo =
+        SerializableAnnotationInfo(
+            annotationClassId = annotationClassId,
+            arguments = arguments.mapValues { (_, arg) -> arg.toSerializable() },
+        )
+
+    private fun FirAnnotationArgument.toSerializable(): SerializableAnnotationArgument =
+        when (this) {
+            is FirAnnotationArgument.ClassReference ->
+                SerializableAnnotationArgument(
+                    type = SerializableAnnotationArgument.ArgumentType.CLASS_REFERENCE,
+                    classId = classId,
+                )
+
+            is FirAnnotationArgument.StringLiteral ->
+                SerializableAnnotationArgument(
+                    type = SerializableAnnotationArgument.ArgumentType.STRING,
+                    stringValue = value,
+                )
+
+            is FirAnnotationArgument.NumberLiteral ->
+                SerializableAnnotationArgument(
+                    type = SerializableAnnotationArgument.ArgumentType.NUMBER,
+                    stringValue = value,
+                )
+
+            is FirAnnotationArgument.BooleanLiteral ->
+                SerializableAnnotationArgument(
+                    type = SerializableAnnotationArgument.ArgumentType.BOOLEAN,
+                    boolValue = value,
+                )
+
+            is FirAnnotationArgument.CharLiteral ->
+                SerializableAnnotationArgument(
+                    type = SerializableAnnotationArgument.ArgumentType.CHAR,
+                    charValue = value.toString(),
+                )
+
+            is FirAnnotationArgument.EnumValue ->
+                SerializableAnnotationArgument(
+                    type = SerializableAnnotationArgument.ArgumentType.ENUM,
+                    enumClassId = enumClassId,
+                    enumEntryName = entryName,
+                )
+
+            is FirAnnotationArgument.ArrayValue ->
+                SerializableAnnotationArgument(
+                    type = SerializableAnnotationArgument.ArgumentType.ARRAY,
+                    arrayElements = elements.map { it.toSerializable() },
+                )
+
+            is FirAnnotationArgument.NestedAnnotation ->
+                SerializableAnnotationArgument(
+                    type = SerializableAnnotationArgument.ArgumentType.NESTED_ANNOTATION,
+                    nestedAnnotation = annotation.toSerializable(),
+                )
+        }
+
+    // ========================================================================
+    // Annotation Deserialization (Serializable → FIR)
+    // ========================================================================
+
+    private fun SerializableAnnotationInfo.toFir(): FirAnnotationInfo =
+        FirAnnotationInfo(
+            annotationClassId = annotationClassId,
+            arguments = arguments.mapValues { (_, arg) -> arg.toFir() },
+        )
+
+    private fun SerializableAnnotationArgument.toFir(): FirAnnotationArgument =
+        when (type) {
+            SerializableAnnotationArgument.ArgumentType.CLASS_REFERENCE ->
+                FirAnnotationArgument.ClassReference(classId = classId!!)
+
+            SerializableAnnotationArgument.ArgumentType.STRING ->
+                FirAnnotationArgument.StringLiteral(value = stringValue!!)
+
+            SerializableAnnotationArgument.ArgumentType.NUMBER ->
+                FirAnnotationArgument.NumberLiteral(value = stringValue!!)
+
+            SerializableAnnotationArgument.ArgumentType.BOOLEAN ->
+                FirAnnotationArgument.BooleanLiteral(value = boolValue!!)
+
+            SerializableAnnotationArgument.ArgumentType.CHAR ->
+                FirAnnotationArgument.CharLiteral(value = charValue!!.first())
+
+            SerializableAnnotationArgument.ArgumentType.ENUM ->
+                FirAnnotationArgument.EnumValue(
+                    enumClassId = enumClassId!!,
+                    entryName = enumEntryName!!,
+                )
+
+            SerializableAnnotationArgument.ArgumentType.ARRAY ->
+                FirAnnotationArgument.ArrayValue(
+                    elements = arrayElements!!.map { it.toFir() },
+                )
+
+            SerializableAnnotationArgument.ArgumentType.NESTED_ANNOTATION ->
+                FirAnnotationArgument.NestedAnnotation(
+                    annotation = nestedAnnotation!!.toFir(),
+                )
+        }
 }

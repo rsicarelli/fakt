@@ -5,6 +5,8 @@ package com.rsicarelli.fakt.compiler.fir.checkers
 import com.rsicarelli.fakt.compiler.api.TimeFormatter
 import com.rsicarelli.fakt.compiler.core.context.FaktSharedContext
 import com.rsicarelli.fakt.compiler.core.telemetry.measureTimeNanos
+import com.rsicarelli.fakt.compiler.fir.extraction.AnnotationExtractor
+import com.rsicarelli.fakt.compiler.fir.metadata.FirAnnotationInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirFunctionInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirParameterInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirPropertyInfo
@@ -230,6 +232,9 @@ internal class FakeClassChecker(
         // Extract visibility for explicitApi() support
         val visibility = FirVisibility.from(declaration.status.visibility)
 
+        // Extract annotations (excluding @Fake itself)
+        val annotations = AnnotationExtractor.extractAnnotations(declaration, session)
+
         // Create validated metadata (timing will be added by caller)
         return ValidatedFakeClass(
             classId = classId,
@@ -240,6 +245,7 @@ internal class FakeClassChecker(
             openProperties = openProps,
             abstractMethods = abstractMethods,
             openMethods = openMethods,
+            annotations = annotations,
             sourceLocation = sourceLocation,
             validationTimeNanos = 0L, // Will be set by caller after timing measurement
             sourceSourceSet = sourceLocation.extractSourceSetName(),

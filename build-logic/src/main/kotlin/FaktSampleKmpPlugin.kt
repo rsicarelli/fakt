@@ -40,21 +40,21 @@ class FaktSampleKmpPlugin : Plugin<Project> {
                 @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
                 run {
                     jvm()
-                    js {
-                        browser()
-                        nodejs()
-                    }
+//                    js {
+//                        browser()
+//                        nodejs()
+//                    }
                     iosX64()
                     iosArm64()
                     iosSimulatorArm64()
-                    macosX64()
-                    macosArm64()
-                    linuxX64()
-                    linuxArm64()
-                    mingwX64()
-                    wasmJs {
-                        nodejs()
-                    }
+//                    macosX64()
+//                    macosArm64()
+//                    linuxX64()
+//                    linuxArm64()
+//                    mingwX64()
+//                    wasmJs {
+//                        nodejs()
+//                    }
                 }
 
                 // NOTE: Dependencies are declared manually in each module's build.gradle.kts

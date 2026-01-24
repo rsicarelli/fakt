@@ -46,6 +46,7 @@ data class ValidatedFakeInterface(
     val functions: List<FirFunctionInfo>,
     val inheritedProperties: List<FirPropertyInfo>,
     val inheritedFunctions: List<FirFunctionInfo>,
+    val annotations: List<FirAnnotationInfo> = emptyList(),
     val sourceLocation: FirSourceLocation,
     val validationTimeNanos: Long,
     val isFromCache: Boolean = false,
@@ -79,6 +80,7 @@ data class ValidatedFakeClass(
     val openProperties: List<FirPropertyInfo>,
     val abstractMethods: List<FirFunctionInfo>,
     val openMethods: List<FirFunctionInfo>,
+    val annotations: List<FirAnnotationInfo> = emptyList(),
     val sourceLocation: FirSourceLocation,
     val validationTimeNanos: Long,
     val isFromCache: Boolean = false,
@@ -285,3 +287,115 @@ fun FirVisibility.toModifier(): String =
 
         FirVisibility.INTERNAL -> "internal "
     }
+
+/**
+ * Annotation argument value extracted from FIR.
+ *
+ * Represents the different types of values that can be passed as annotation arguments.
+ * Supports class references, literals, enum values, arrays, and nested annotations.
+ *
+ * Examples:
+ * - `@OptIn(ExperimentalApi::class)` → ClassReference("com.example.ExperimentalApi")
+ * - `@Deprecated("use foo")` → StringLiteral("use foo")
+ * - `@Target(AnnotationTarget.CLASS)` → EnumValue("kotlin.annotation.AnnotationTarget", "CLASS")
+ * - `@JvmName(name = "foo")` → StringLiteral("foo") with key "name"
+ */
+sealed interface FirAnnotationArgument {
+    /**
+     * Class reference argument (e.g., `ExperimentalApi::class`).
+     *
+     * @property classId Fully qualified class ID (e.g., "com.example.ExperimentalApi")
+     */
+    data class ClassReference(
+        val classId: String,
+    ) : FirAnnotationArgument
+
+    /**
+     * String literal argument (e.g., `"deprecated message"`).
+     *
+     * @property value The string value
+     */
+    data class StringLiteral(
+        val value: String,
+    ) : FirAnnotationArgument
+
+    /**
+     * Number literal argument (e.g., `42`, `3.14`).
+     *
+     * @property value String representation of the number
+     */
+    data class NumberLiteral(
+        val value: String,
+    ) : FirAnnotationArgument
+
+    /**
+     * Boolean literal argument (e.g., `true`, `false`).
+     *
+     * @property value The boolean value
+     */
+    data class BooleanLiteral(
+        val value: Boolean,
+    ) : FirAnnotationArgument
+
+    /**
+     * Char literal argument (e.g., `'a'`).
+     *
+     * @property value The char value
+     */
+    data class CharLiteral(
+        val value: Char,
+    ) : FirAnnotationArgument
+
+    /**
+     * Enum value argument (e.g., `AnnotationTarget.CLASS`).
+     *
+     * @property enumClassId Fully qualified enum class ID
+     * @property entryName Enum entry name (e.g., "CLASS")
+     */
+    data class EnumValue(
+        val enumClassId: String,
+        val entryName: String,
+    ) : FirAnnotationArgument
+
+    /**
+     * Array argument (e.g., `[Foo::class, Bar::class]`).
+     *
+     * @property elements List of array element values
+     */
+    data class ArrayValue(
+        val elements: List<FirAnnotationArgument>,
+    ) : FirAnnotationArgument
+
+    /**
+     * Nested annotation argument (e.g., `@Nested("value")`).
+     *
+     * @property annotation The nested annotation info
+     */
+    data class NestedAnnotation(
+        val annotation: FirAnnotationInfo,
+    ) : FirAnnotationArgument
+}
+
+/**
+ * Annotation information extracted from FIR phase.
+ *
+ * Contains the annotation's class ID and its arguments (if any).
+ * Used to propagate annotations from source types to generated fakes.
+ *
+ * Examples:
+ * - `@OptIn(ExperimentalApi::class)` → FirAnnotationInfo(
+ *       annotationClassId = "kotlin.OptIn",
+ *       arguments = mapOf("markerClasses" to ArrayValue([ClassReference("com.example.ExperimentalApi")]))
+ *   )
+ * - `@Deprecated("old")` → FirAnnotationInfo(
+ *       annotationClassId = "kotlin.Deprecated",
+ *       arguments = mapOf("message" to StringLiteral("old"))
+ *   )
+ *
+ * @property annotationClassId Fully qualified annotation class ID (e.g., "kotlin.OptIn")
+ * @property arguments Named arguments to the annotation (empty for marker annotations)
+ */
+data class FirAnnotationInfo(
+    val annotationClassId: String,
+    val arguments: Map<String, FirAnnotationArgument> = emptyMap(),
+)
