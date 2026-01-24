@@ -14,6 +14,7 @@ import com.rsicarelli.fakt.compiler.fir.metadata.FirParameterInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirPropertyInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirSourceLocation
 import com.rsicarelli.fakt.compiler.fir.metadata.FirTypeParameterInfo
+import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeClass
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeInterface
 import kotlinx.serialization.SerializationException
@@ -84,6 +85,7 @@ object MetadataCacheSerializer {
             sourceFilePath = validated.sourceLocation.filePath,
             sourceFileSignature = sourceFileSignature,
             validationTimeNanos = validated.validationTimeNanos,
+            visibility = validated.visibility.name,
         )
     }
 
@@ -105,6 +107,7 @@ object MetadataCacheSerializer {
             sourceFilePath = validated.sourceLocation.filePath,
             sourceFileSignature = sourceFileSignature,
             validationTimeNanos = validated.validationTimeNanos,
+            visibility = validated.visibility.name,
         )
     }
 
@@ -150,6 +153,8 @@ object MetadataCacheSerializer {
             isFromCache = true,
             // Extract source set from cached file path (e.g., "commonMain" from "src/commonMain/kotlin/...")
             sourceSourceSet = sourceLocation.extractSourceSetName(),
+            // Restore visibility from cache for explicitApi() support
+            visibility = FirVisibility.valueOf(serializable.visibility),
         )
     }
 
@@ -186,6 +191,8 @@ object MetadataCacheSerializer {
             isFromCache = true,
             // Extract source set from cached file path (e.g., "commonMain" from "src/commonMain/kotlin/...")
             sourceSourceSet = sourceLocation.extractSourceSetName(),
+            // Restore visibility from cache for explicitApi() support
+            visibility = FirVisibility.valueOf(serializable.visibility),
         )
     }
 

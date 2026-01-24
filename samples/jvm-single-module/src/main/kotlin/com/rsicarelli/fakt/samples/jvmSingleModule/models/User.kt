@@ -5,7 +5,7 @@ package com.rsicarelli.fakt.samples.jvmSingleModule.models
 /**
  * User model used across various test scenarios.
  */
-data class User(
+public data class User(
     val id: String,
     val name: String,
     val email: String = "",

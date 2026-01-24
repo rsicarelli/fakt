@@ -14,10 +14,10 @@ import com.rsicarelli.fakt.Fake
  * Validates baseline code generation without generic complexity.
  */
 @Fake
-interface PropertyAndMethodInterface {
-    val stringValue: String
+public interface PropertyAndMethodInterface {
+    public val stringValue: String
 
-    fun getValue(): String
+    public fun getValue(): String
 
-    fun setValue(value: String)
+    public fun setValue(value: String)
 }

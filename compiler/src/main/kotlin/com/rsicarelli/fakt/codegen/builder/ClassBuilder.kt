@@ -107,6 +107,13 @@ public class ClassBuilder
         }
 
         /**
+         * Makes class public (explicit visibility for explicitApi() mode).
+         */
+        public fun public() {
+            modifiers.add(CodeModifier.PUBLIC)
+        }
+
+        /**
          * Makes class internal.
          */
         public fun internal() {

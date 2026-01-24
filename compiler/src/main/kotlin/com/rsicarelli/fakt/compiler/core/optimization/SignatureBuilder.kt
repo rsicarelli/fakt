@@ -30,10 +30,10 @@ fun IrGenerationMetadata.buildSignature(): String {
             // Include FQN to make signature unique per-interface (even in same file)
             "$fqn:${sourceFile.readBytes().md5()}".toByteArray().md5()
         } else {
-            "interface $fqn|props:${properties.size}|funs:${functions.size}"
+            "interface $fqn|vis:${visibility.name}|props:${properties.size}|funs:${functions.size}"
         }
     } else {
-        "interface $fqn|props:${properties.size}|funs:${functions.size}"
+        "interface $fqn|vis:${visibility.name}|props:${properties.size}|funs:${functions.size}"
     }
 }
 
@@ -59,12 +59,12 @@ fun IrClassGenerationMetadata.buildSignature(): String {
         } else {
             val propCount = abstractProperties.size + openProperties.size
             val funCount = abstractMethods.size + openMethods.size
-            "class $fqn|props:$propCount|funs:$funCount"
+            "class $fqn|vis:${visibility.name}|props:$propCount|funs:$funCount"
         }
     } else {
         val propCount = abstractProperties.size + openProperties.size
         val funCount = abstractMethods.size + openMethods.size
-        "class $fqn|props:$propCount|funs:$funCount"
+        "class $fqn|vis:${visibility.name}|props:$propCount|funs:$funCount"
     }
 }
 

@@ -97,6 +97,13 @@ public class PropertyBuilder
         }
 
         /**
+         * Makes property public (explicit visibility for explicitApi() mode).
+         */
+        public fun public() {
+            modifiers.add(CodeModifier.PUBLIC)
+        }
+
+        /**
          * Builds the final [CodeProperty].
          *
          * @return Immutable [CodeProperty] instance

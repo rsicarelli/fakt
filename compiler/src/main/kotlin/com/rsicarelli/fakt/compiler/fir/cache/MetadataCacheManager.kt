@@ -160,11 +160,11 @@ class MetadataCacheManager(
 
         val cache =
             FirMetadataCache(
+                version = FirMetadataCache.CURRENT_VERSION,
                 cacheSignature = cacheSignature,
                 interfaces = serializableInterfaces,
                 classes = serializableClasses,
             )
-
         MetadataCacheSerializer.serialize(cache, outputPath)
 
         val durationNanos = System.nanoTime() - startTime
