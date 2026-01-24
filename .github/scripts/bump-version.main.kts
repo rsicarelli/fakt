@@ -199,6 +199,25 @@ fun updateGradlePropertiesWithString(gradlePropertiesFile: File, versionString: 
     gradlePropertiesFile.writeText(updatedContent)
 }
 
+fun updateFaktGradleSubplugin(newVersion: String) {
+    val subpluginFile = File("gradle-plugin/src/main/kotlin/com/rsicarelli/fakt/gradle/FaktGradleSubplugin.kt")
+    if (!subpluginFile.exists()) {
+        println("Warning: FaktGradleSubplugin.kt not found, skipping PLUGIN_VERSION update")
+        return
+    }
+
+    val content = subpluginFile.readText()
+    val versionPattern = Regex("""(public const val PLUGIN_VERSION: String = )"[^"]+"""")
+    val updatedContent = versionPattern.replace(content) { matchResult ->
+        """${matchResult.groupValues[1]}"$newVersion""""
+    }
+
+    if (content != updatedContent) {
+        subpluginFile.writeText(updatedContent)
+        println("Updated PLUGIN_VERSION in FaktGradleSubplugin.kt to $newVersion")
+    }
+}
+
 fun addSnapshotSuffix(version: SemanticVersion): String {
     val versionString = version.toString()
     return if (versionString.endsWith("-SNAPSHOT")) {
@@ -231,6 +250,9 @@ fun main(args: Array<String>) {
         // Update gradle.properties with SNAPSHOT version
         updateGradlePropertiesWithString(gradlePropertiesFile, snapshotVersion)
 
+        // Update PLUGIN_VERSION in FaktGradleSubplugin.kt
+        updateFaktGradleSubplugin(snapshotVersion)
+
         // Output for GitHub Actions (if needed)
         println("VERSION_SNAPSHOT=$snapshotVersion")
         println("Current version converted to SNAPSHOT: $snapshotVersion")
@@ -257,6 +279,9 @@ fun main(args: Array<String>) {
 
     // Update gradle.properties
     updateGradleProperties(gradlePropertiesFile, newVersion)
+
+    // Update PLUGIN_VERSION in FaktGradleSubplugin.kt
+    updateFaktGradleSubplugin(newVersion.toString())
 
     // Output for GitHub Actions
     println("VERSION_CURRENT=$currentVersion")
