@@ -58,6 +58,14 @@ internal class FactoryGenerator {
                 configClassName
             }
 
+        // Use simple type parameter names for constructor (not reified, no constraints)
+        val constructorTypeParams =
+            if (hasGenerics) {
+                "<${typeParameterNames.joinToString(", ")}>"
+            } else {
+                ""
+            }
+
         return buildString {
             // Add propagated annotations (@OptIn, @Deprecated)
             propagatedAnnotations.forEach { annotation ->
@@ -72,22 +80,13 @@ internal class FactoryGenerator {
             appendLine(
                 "$functionSignature(" +
                     "configure: $configWithGenerics.() -> Unit = {}" +
-                    "): $returnType$whereClausePart {",
+                    "): $returnType$whereClausePart =",
             )
 
-            // Use simple type parameter names for constructor (not reified, no constraints)
-            val constructorTypeParams =
-                if (hasGenerics) {
-                    "<${typeParameterNames.joinToString(", ")}>"
-                } else {
-                    ""
-                }
-
-            appendLine(
-                "    return $fakeClassName$constructorTypeParams().apply { " +
+            append(
+                "    $fakeClassName$constructorTypeParams().apply { " +
                     "$configWithGenerics(this).configure() }",
             )
-            appendLine("}")
         }
     }
 
@@ -151,21 +150,20 @@ internal class FactoryGenerator {
                 appendLine(
                     "$functionSignature(" +
                         "configure: $configClassName$typeArguments.() -> Unit = {}" +
-                        "): $returnType where $whereClause {",
+                        "): $returnType where $whereClause =",
                 )
             } else {
                 appendLine(
                     "$functionSignature(" +
                         "configure: $configClassName$typeArguments.() -> Unit = {}" +
-                        "): $returnType {",
+                        "): $returnType =",
                 )
             }
 
-            appendLine(
-                "    return $fakeClassName$typeArguments().apply { " +
+            append(
+                "    $fakeClassName$typeArguments().apply { " +
                     "$configClassName$typeArguments(this).configure() }",
             )
-            appendLine("}")
         }
     }
 
@@ -200,7 +198,7 @@ internal class FactoryGenerator {
         if (hasGenerics) {
             "${visibility.toModifier()}inline fun $typeParameters $factoryFunctionName"
         } else {
-            "${visibility.toModifier()}fun $factoryFunctionName"
+            "${visibility.toModifier()}inline fun $factoryFunctionName"
         }
 
     /**

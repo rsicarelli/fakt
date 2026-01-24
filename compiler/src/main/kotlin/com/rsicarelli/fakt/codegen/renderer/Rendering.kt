@@ -5,6 +5,7 @@ package com.rsicarelli.fakt.codegen.renderer
 import com.rsicarelli.fakt.codegen.model.CodeAnnotation
 import com.rsicarelli.fakt.codegen.model.CodeBlock
 import com.rsicarelli.fakt.codegen.model.CodeClass
+import com.rsicarelli.fakt.codegen.model.CodeComment
 import com.rsicarelli.fakt.codegen.model.CodeDeclaration
 import com.rsicarelli.fakt.codegen.model.CodeExpression
 import com.rsicarelli.fakt.codegen.model.CodeFile
@@ -12,6 +13,8 @@ import com.rsicarelli.fakt.codegen.model.CodeFunction
 import com.rsicarelli.fakt.codegen.model.CodeMember
 import com.rsicarelli.fakt.codegen.model.CodeParameter
 import com.rsicarelli.fakt.codegen.model.CodeProperty
+import com.rsicarelli.fakt.codegen.model.CodeRegionEnd
+import com.rsicarelli.fakt.codegen.model.CodeRegionStart
 import com.rsicarelli.fakt.codegen.model.CodeType
 import com.rsicarelli.fakt.codegen.model.CodeTypeParameter
 
@@ -88,9 +91,45 @@ public fun CodeDeclaration.renderTo(builder: CodeBuilder) {
  */
 public fun CodeMember.renderTo(builder: CodeBuilder) {
     when (this) {
+        is CodeComment -> renderTo(builder)
+        is CodeRegionStart -> renderTo(builder)
+        is CodeRegionEnd -> renderTo(builder)
         is CodeFunction -> renderTo(builder)
         is CodeProperty -> renderTo(builder)
     }
+}
+
+/**
+ * Renders [CodeComment] to [CodeBuilder].
+ *
+ * Generates a single-line comment.
+ *
+ * @param builder The [CodeBuilder] to write to
+ */
+public fun CodeComment.renderTo(builder: CodeBuilder) {
+    builder.appendLine("// $text")
+}
+
+/**
+ * Renders [CodeRegionStart] to [CodeBuilder].
+ *
+ * Generates an IDE-collapsible region start marker.
+ *
+ * @param builder The [CodeBuilder] to write to
+ */
+public fun CodeRegionStart.renderTo(builder: CodeBuilder) {
+    builder.appendLine("//region $name")
+}
+
+/**
+ * Renders [CodeRegionEnd] to [CodeBuilder].
+ *
+ * Generates an IDE-collapsible region end marker.
+ *
+ * @param builder The [CodeBuilder] to write to
+ */
+public fun CodeRegionEnd.renderTo(builder: CodeBuilder) {
+    builder.appendLine("//endregion")
 }
 
 /**
@@ -185,6 +224,11 @@ public fun CodeAnnotation.renderAsFileAnnotation(builder: CodeBuilder) {
  * @param builder The [CodeBuilder] to write to
  */
 public fun CodeFunction.renderTo(builder: CodeBuilder) {
+    // Render function annotations first
+    annotations.forEach { annotation ->
+        annotation.renderTo(builder)
+    }
+
     val modifiersStr =
         buildString(capacity = 50) {
             if (modifiers.isNotEmpty()) {
@@ -209,9 +253,12 @@ public fun CodeFunction.renderTo(builder: CodeBuilder) {
 
     when (body) {
         is CodeBlock.Expression -> {
+            // For expression bodies, omit `: Unit` return type as it's redundant
+            val renderedReturnType = returnType.render()
+            val returnTypePart = if (renderedReturnType == "Unit") "" else returnTypeStr
             val expressionBody = (body as CodeBlock.Expression).expr.render()
             builder.appendLine(
-                "${modifiersStr}fun $typeParamsStr$receiverStr$name($paramsStr)$returnTypeStr = " +
+                "${modifiersStr}fun $typeParamsStr$receiverStr$name($paramsStr)$returnTypePart = " +
                     expressionBody,
             )
         }

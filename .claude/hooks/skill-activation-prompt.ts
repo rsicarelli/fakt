@@ -11,7 +11,7 @@
  * Configuration: .claude/skills/skill-rules.json
  */
 
-import { readFileSync } from 'fs';
+import { readFileSync, readdirSync, existsSync } from 'fs';
 import { join } from 'path';
 
 interface HookInput {
@@ -45,6 +45,23 @@ interface MatchedSkill {
     name: string;
     matchType: 'keyword' | 'intent';
     config: SkillRule;
+    path?: string;
+}
+
+/**
+ * Find the full path to a skill's SKILL.md file
+ */
+function findSkillPath(skillName: string, projectDir: string): string | undefined {
+    const skillsDir = join(projectDir, '.claude', 'skills');
+    const categories = ['core-workflows', 'analysis', 'validation', 'development', 'knowledge-base'];
+
+    for (const category of categories) {
+        const skillPath = join(skillsDir, category, skillName, 'SKILL.md');
+        if (existsSync(skillPath)) {
+            return `.claude/skills/${category}/${skillName}/SKILL.md`;
+        }
+    }
+    return undefined;
 }
 
 async function main() {
@@ -81,7 +98,8 @@ async function main() {
                     prompt.includes(kw.toLowerCase())
                 );
                 if (keywordMatch) {
-                    matchedSkills.push({ name: skillName, matchType: 'keyword', config });
+                    const path = findSkillPath(skillName, projectDir);
+                    matchedSkills.push({ name: skillName, matchType: 'keyword', config, path });
                     continue; // Don't double-match on intent if keyword matched
                 }
             }
@@ -93,7 +111,8 @@ async function main() {
                     return regex.test(prompt);
                 });
                 if (intentMatch) {
-                    matchedSkills.push({ name: skillName, matchType: 'intent', config });
+                    const path = findSkillPath(skillName, projectDir);
+                    matchedSkills.push({ name: skillName, matchType: 'intent', config, path });
                 }
             }
         }
@@ -111,56 +130,42 @@ async function main() {
             const medium = matchedSkills.filter(s => s.config.priority === 'medium');
             const low = matchedSkills.filter(s => s.config.priority === 'low');
 
+            const formatSkill = (s: MatchedSkill) => {
+                let line = `  → ${s.name}`;
+                if (s.config.description) {
+                    line += ` - ${s.config.description}`;
+                }
+                line += '\n';
+                if (s.path) {
+                    line += `    📄 ${s.path}\n`;
+                }
+                return line;
+            };
+
             if (critical.length > 0) {
                 output += '🚨 CRITICAL SKILLS (HIGHLY RECOMMENDED):\n';
-                critical.forEach(s => {
-                    output += `  → ${s.name}`;
-                    if (s.config.description) {
-                        output += ` - ${s.config.description}`;
-                    }
-                    output += '\n';
-                });
+                critical.forEach(s => { output += formatSkill(s); });
                 output += '\n';
             }
 
             if (high.length > 0) {
                 output += '📚 RECOMMENDED SKILLS:\n';
-                high.forEach(s => {
-                    output += `  → ${s.name}`;
-                    if (s.config.description) {
-                        output += ` - ${s.config.description}`;
-                    }
-                    output += '\n';
-                });
+                high.forEach(s => { output += formatSkill(s); });
                 output += '\n';
             }
 
             if (medium.length > 0) {
                 output += '💡 SUGGESTED SKILLS:\n';
-                medium.forEach(s => {
-                    output += `  → ${s.name}`;
-                    if (s.config.description) {
-                        output += ` - ${s.config.description}`;
-                    }
-                    output += '\n';
-                });
+                medium.forEach(s => { output += formatSkill(s); });
                 output += '\n';
             }
 
             if (low.length > 0) {
                 output += '📌 OPTIONAL SKILLS:\n';
-                low.forEach(s => {
-                    output += `  → ${s.name}`;
-                    if (s.config.description) {
-                        output += ` - ${s.config.description}`;
-                    }
-                    output += '\n';
-                });
+                low.forEach(s => { output += formatSkill(s); });
                 output += '\n';
             }
 
-            output += '💡 ACTION: Read .claude/skills/{category}/{skill-name}/SKILL.md and apply guidelines\n';
-            output += '   Do NOT use Skill tool or /commands - these are guideline-based skills\n';
             output += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
 
             // Output to stdout (will be injected into Claude's context)

@@ -4,8 +4,11 @@ package com.rsicarelli.fakt.codegen.builder
 
 import com.rsicarelli.fakt.codegen.model.CodeAnnotation
 import com.rsicarelli.fakt.codegen.model.CodeClass
+import com.rsicarelli.fakt.codegen.model.CodeComment
 import com.rsicarelli.fakt.codegen.model.CodeMember
 import com.rsicarelli.fakt.codegen.model.CodeModifier
+import com.rsicarelli.fakt.codegen.model.CodeRegionEnd
+import com.rsicarelli.fakt.codegen.model.CodeRegionStart
 import com.rsicarelli.fakt.codegen.model.CodeType
 import com.rsicarelli.fakt.codegen.model.CodeTypeParameter
 
@@ -141,6 +144,48 @@ public class ClassBuilder
          */
         public fun internal() {
             modifiers.add(CodeModifier.INTERNAL)
+        }
+
+        /**
+         * Adds a comment to the class body.
+         *
+         * Example:
+         * ```kotlin
+         * comment("Section: Properties")
+         * ```
+         *
+         * @param text The comment text (without // prefix)
+         */
+        public fun comment(text: String) {
+            members.add(CodeComment(text))
+        }
+
+        /**
+         * Starts a collapsible region in the class body.
+         *
+         * Regions are IDE-collapsible sections (IntelliJ, Android Studio).
+         * Must be paired with [endRegion].
+         *
+         * Example:
+         * ```kotlin
+         * region("Private State")
+         * // ... properties ...
+         * endRegion()
+         * ```
+         *
+         * @param name The region name displayed when collapsed
+         */
+        public fun region(name: String) {
+            members.add(CodeRegionStart(name))
+        }
+
+        /**
+         * Ends a collapsible region in the class body.
+         *
+         * Must be paired with a preceding [region] call.
+         */
+        public fun endRegion() {
+            members.add(CodeRegionEnd)
         }
 
         /**
