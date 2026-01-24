@@ -18,6 +18,8 @@ runs:
         RELEASE_BOT_NAME: ${{ inputs.bot-name }}
         RELEASE_BOT_APP_ID: ${{ inputs.bot-app-id }}
       run: |
-        git config --global user.name "$RELEASE_BOT_NAME"
-        git config --global user.email "${RELEASE_BOT_APP_ID}+${RELEASE_BOT_NAME}@users.noreply.github.com"
-        echo "✅ Git configured with bot identity: $RELEASE_BOT_NAME"
+        # Ensure bot name ends with [bot] for proper GitHub attribution
+        BOT_DISPLAY_NAME="${RELEASE_BOT_NAME%[bot]}[bot]"
+        git config --global user.name "$BOT_DISPLAY_NAME"
+        git config --global user.email "${RELEASE_BOT_APP_ID}+${BOT_DISPLAY_NAME}@users.noreply.github.com"
+        echo "✅ Git configured with bot identity: $BOT_DISPLAY_NAME"
