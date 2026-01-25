@@ -266,14 +266,18 @@ object KDocGenerator {
      * @param paramName Optional parameter name to use in the example
      * @return Example value string suitable for documentation
      */
-    private fun getExampleReturnValue(returnType: String, paramName: String? = null): String =
+    private fun getExampleReturnValue(
+        returnType: String,
+        paramName: String? = null,
+    ): String =
         when {
             returnType == "String" && paramName != null -> "$paramName.uppercase()"
             exactTypeExamples.containsKey(returnType) -> exactTypeExamples.getValue(returnType)
             returnType.endsWith("?") -> paramName?.let { "get$it()" } ?: "null"
-            else -> prefixTypeExamples.entries.firstOrNull { returnType.startsWith(it.key) }?.value
-                ?: paramName?.let { "process($it)" }
-                ?: "/* your implementation */"
+            else ->
+                prefixTypeExamples.entries.firstOrNull { returnType.startsWith(it.key) }?.value
+                    ?: paramName?.let { "process($it)" }
+                    ?: "/* your implementation */"
         }
 }
 

@@ -12,7 +12,10 @@ import com.rsicarelli.fakt.compiler.fir.metadata.toModifier
  * @param includeKDoc Whether to include KDoc documentation (default: true)
  * @return Generated factory function code with optional KDoc
  */
-fun generateFactoryFunction(spec: FactoryFunctionSpec, includeKDoc: Boolean = true): String {
+fun generateFactoryFunction(
+    spec: FactoryFunctionSpec,
+    includeKDoc: Boolean = true,
+): String {
     val names = FactoryNames(spec.interfaceName, spec.typeParameters)
     val (headerParams, whereClause) = parseTypeParametersForFactory(spec.typeParameters)
     val propagatedAnnotations = spec.annotations.filterPropagatable()
@@ -42,18 +45,23 @@ private data class FactoryNames(
     val hasGenerics = typeParameters.isNotEmpty()
 }
 
-private fun List<AnnotationSpec>.filterPropagatable() = filter {
-    (it.simpleName == "OptIn" || it.simpleName == "Deprecated") && !it.isOptInMarker
-}
+private fun List<AnnotationSpec>.filterPropagatable() =
+    filter {
+        (it.simpleName == "OptIn" || it.simpleName == "Deprecated") && !it.isOptInMarker
+    }
 
-private fun StringBuilder.appendKDoc(spec: FactoryFunctionSpec, names: FactoryNames) {
-    val kdoc = KDocGenerator.generateFactoryKDoc(
-        interfaceName = spec.interfaceName,
-        factoryName = names.factoryName,
-        implClassName = names.fakeClassName,
-        methods = spec.methods,
-        properties = spec.properties,
-    )
+private fun StringBuilder.appendKDoc(
+    spec: FactoryFunctionSpec,
+    names: FactoryNames,
+) {
+    val kdoc =
+        KDocGenerator.generateFactoryKDoc(
+            interfaceName = spec.interfaceName,
+            factoryName = names.factoryName,
+            implClassName = names.fakeClassName,
+            methods = spec.methods,
+            properties = spec.properties,
+        )
     appendLine(kdoc)
 }
 
@@ -64,12 +72,17 @@ private fun StringBuilder.appendAnnotations(annotations: List<AnnotationSpec>) {
     }
 }
 
-private fun StringBuilder.appendSignature(names: FactoryNames, headerParams: List<String>, visibility: FirVisibility) {
+private fun StringBuilder.appendSignature(
+    names: FactoryNames,
+    headerParams: List<String>,
+    visibility: FirVisibility,
+) {
     if (names.hasGenerics) {
-        val typeParamsStr = headerParams.joinToString(", ") { param ->
-            val parts = param.split(" : ")
-            if (parts.size > 1) "reified ${parts[0]} : ${parts[1]}" else "reified $param"
-        }
+        val typeParamsStr =
+            headerParams.joinToString(", ") { param ->
+                val parts = param.split(" : ")
+                if (parts.size > 1) "reified ${parts[0]} : ${parts[1]}" else "reified $param"
+            }
         append("${visibility.toModifier()}inline fun <$typeParamsStr> ${names.factoryName}")
     } else {
         append("${visibility.toModifier()}inline fun ${names.factoryName}")
@@ -78,7 +91,10 @@ private fun StringBuilder.appendSignature(names: FactoryNames, headerParams: Lis
     append(": ${names.fakeClassName}${names.typeArgs}")
 }
 
-private fun StringBuilder.appendBody(names: FactoryNames, whereClause: String) {
+private fun StringBuilder.appendBody(
+    names: FactoryNames,
+    whereClause: String,
+) {
     if (whereClause.isNotEmpty()) append(" where $whereClause")
     appendLine(" =")
     val impl = "${names.fakeClassName}${names.typeArgs}()"
