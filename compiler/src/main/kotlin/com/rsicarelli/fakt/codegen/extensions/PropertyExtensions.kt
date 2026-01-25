@@ -3,7 +3,6 @@
 package com.rsicarelli.fakt.codegen.extensions
 
 import com.rsicarelli.fakt.codegen.builder.ClassBuilder
-import com.rsicarelli.fakt.codegen.builder.PropertyBuilder
 
 /**
  * Creates a StateFlow property with backing MutableStateFlow.
@@ -167,49 +166,4 @@ fun ClassBuilder.nullableSuspendBehaviorProperty(
         mutable()
         initializer = "null"
     }
-}
-
-/**
- * Creates a simple mutable property with default value.
- *
- * Generates pattern:
- * ```kotlin
- * private var {name}: Type = defaultValue
- * ```
- */
-fun ClassBuilder.mutableProperty(
-    name: String,
-    type: String,
-    defaultValue: String,
-) {
-    property(name, type) {
-        private()
-        mutable()
-        initializer = defaultValue
-    }
-}
-
-/**
- * Configures this property as a behavior property.
- *
- * Extension for PropertyBuilder to apply common behavior property settings.
- */
-fun PropertyBuilder.asBehavior() {
-    private()
-    mutable()
-}
-
-/**
- * Configures this property as a StateFlow backing property.
- */
-fun PropertyBuilder.asStateFlowBacking() {
-    private()
-}
-
-/**
- * Configures this property as an override with getter.
- */
-fun PropertyBuilder.asOverrideWithGetter(getterExpression: String) {
-    override()
-    getter = getterExpression
 }

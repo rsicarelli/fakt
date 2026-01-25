@@ -24,19 +24,4 @@ public class GradleFaktLogger(
     public fun warn(message: String): Unit = logger.warn("Fakt: $message")
 
     public fun error(message: String): Unit = logger.error("Fakt: $message")
-
-    public inline fun ifLevel(
-        level: LogLevel,
-        block: () -> Unit,
-    ) {
-        if (logLevel >= level) block()
-    }
-
-    public companion object {
-        public fun quiet(logger: Logger): GradleFaktLogger = GradleFaktLogger(logger, LogLevel.QUIET)
-
-        public fun info(logger: Logger): GradleFaktLogger = GradleFaktLogger(logger, LogLevel.INFO)
-
-        public fun debug(logger: Logger): GradleFaktLogger = GradleFaktLogger(logger, LogLevel.DEBUG)
-    }
 }

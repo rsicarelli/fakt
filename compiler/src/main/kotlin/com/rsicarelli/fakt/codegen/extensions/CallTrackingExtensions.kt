@@ -6,28 +6,6 @@ import com.rsicarelli.fakt.codegen.builder.ClassBuilder
 import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 
 /**
- * Generates call tracking StateFlow properties for a method.
- *
- * Creates pattern:
- * ```kotlin
- * private val _methodNameCallCount = MutableStateFlow(0)
- * public val methodNameCallCount: StateFlow<Int> get() = _methodNameCallCount
- * ```
- *
- * Used for test infrastructure to track method invocations.
- *
- * @param methodName Name of the method to track
- * @param visibility Visibility modifier to apply to the public getter
- */
-fun ClassBuilder.callTrackingProperty(
-    methodName: String,
-    visibility: FirVisibility,
-) {
-    callTrackingBackingField(methodName)
-    callTrackingPublicGetter(methodName, visibility)
-}
-
-/**
  * Generates only the private backing field for call tracking.
  *
  * Creates: `private val _methodNameCallCount = MutableStateFlow(0)`
@@ -69,26 +47,6 @@ fun ClassBuilder.callTrackingPublicGetter(
 }
 
 /**
- * Generates call tracking StateFlow properties for a property getter.
- *
- * Creates pattern:
- * ```kotlin
- * private val _propertyNameCallCount = MutableStateFlow(0)
- * public val propertyNameCallCount: StateFlow<Int> get() = _propertyNameCallCount
- * ```
- *
- * @param propertyName Name of the property to track
- * @param visibility Visibility modifier to apply to the public getter
- */
-fun ClassBuilder.propertyGetterTracking(
-    propertyName: String,
-    visibility: FirVisibility,
-) {
-    propertyGetterTrackingBackingField(propertyName)
-    propertyGetterTrackingPublicGetter(propertyName, visibility)
-}
-
-/**
  * Generates only the private backing field for property getter tracking.
  *
  * Creates: `private val _propertyNameCallCount = MutableStateFlow(0)`
@@ -127,26 +85,6 @@ fun ClassBuilder.propertyGetterTrackingPublicGetter(
         }
         getter = backingFieldName
     }
-}
-
-/**
- * Generates call tracking StateFlow properties for a property setter.
- *
- * Creates pattern:
- * ```kotlin
- * private val _setPropertyNameCallCount = MutableStateFlow(0)
- * public val setPropertyNameCallCount: StateFlow<Int> get() = _setPropertyNameCallCount
- * ```
- *
- * @param propertyName Name of the property to track
- * @param visibility Visibility modifier to apply to the public getter
- */
-fun ClassBuilder.propertySetterTracking(
-    propertyName: String,
-    visibility: FirVisibility,
-) {
-    propertySetterTrackingBackingField(propertyName)
-    propertySetterTrackingPublicGetter(propertyName, visibility)
 }
 
 /**

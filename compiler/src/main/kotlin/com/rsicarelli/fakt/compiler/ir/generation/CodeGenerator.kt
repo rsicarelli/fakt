@@ -17,12 +17,10 @@ import org.jetbrains.kotlin.ir.util.packageFqName
  * Groups the code generators used by CodeGenerator.
  *
  * @property implementation Generator for fake implementation classes
- * @property factory Generator for factory functions
  * @property configDsl Generator for configuration DSL
  */
 internal data class CodeGenerators(
     val implementation: ImplementationGenerator,
-    val factory: FactoryGenerator,
     val configDsl: ConfigurationDslGenerator,
 )
 
