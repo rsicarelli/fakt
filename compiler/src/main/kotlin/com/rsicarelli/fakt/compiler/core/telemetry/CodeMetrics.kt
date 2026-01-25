@@ -13,4 +13,3 @@ internal fun calculateLOC(code: String): Int =
             !trimmed.startsWith("/*") &&
             !trimmed.startsWith("*")
     }
-

@@ -82,5 +82,4 @@ class CodeMetricsTest {
         // Expected lines: "package com.example", "class Foo {", "fun bar() = Unit", "}"
         assertEquals(4, result)
     }
-
 }

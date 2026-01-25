@@ -210,7 +210,6 @@ class GenericPatternAnalyzer {
 
             return warnings
         }
-
     }
 }
 
