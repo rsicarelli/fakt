@@ -8,105 +8,98 @@ import com.rsicarelli.fakt.compiler.fir.metadata.toModifier
 /**
  * Generates a factory function string for creating fake implementations.
  *
- * Creates a top-level function that instantiates the fake implementation
- * with optional configuration via DSL.
- *
- * Example output:
- * ```kotlin
- * inline fun fakeUserService(configure: FakeUserServiceConfig.() -> Unit = {}): FakeUserServiceImpl =
- *     FakeUserServiceImpl().apply { FakeUserServiceConfig(this).configure() }
- * ```
- *
- * Note: Currently generates as string because the DSL doesn't support
- * function-level type parameters with reified modifier and where clauses yet.
- * This will be refactored when DSL gains full support.
- *
- * @param interfaceName The name of the interface being faked
- * @param typeParameters List of type parameters with constraints (e.g., ["T : Comparable<T>"])
- * @param visibility Visibility for the generated function (PUBLIC, INTERNAL) for explicitApi() support
- * @param annotations Annotations to propagate to the factory function (@OptIn, @Deprecated)
- * @return Generated factory function code
+ * @param spec Configuration for the factory function
+ * @param includeKDoc Whether to include KDoc documentation (default: true)
+ * @return Generated factory function code with optional KDoc
  */
 fun generateFactoryFunction(
-    interfaceName: String,
-    typeParameters: List<String> = emptyList(),
-    visibility: FirVisibility = FirVisibility.PUBLIC,
-    annotations: List<AnnotationSpec> = emptyList(),
+    spec: FactoryFunctionSpec,
+    includeKDoc: Boolean = true,
 ): String {
+    val names = FactoryNames(spec.interfaceName, spec.typeParameters)
+    val (headerParams, whereClause) = parseTypeParametersForFactory(spec.typeParameters)
+    val propagatedAnnotations = spec.annotations.filterPropagatable()
+
+    return buildString {
+        if (includeKDoc) appendKDoc(spec, names)
+        appendAnnotations(propagatedAnnotations)
+        appendSignature(names, headerParams, spec.visibility)
+        appendBody(names, whereClause)
+    }
+}
+
+/**
+ * Overload for common use cases without KDoc customization.
+ */
+fun generateFactoryFunction(spec: FactoryFunctionSpec): String = generateFactoryFunction(spec, includeKDoc = true)
+
+private data class FactoryNames(
+    val interfaceName: String,
+    val typeParameters: List<String>,
+) {
     val fakeClassName = "Fake${interfaceName}Impl"
     val configClassName = "Fake${interfaceName}Config"
     val factoryName = "fake$interfaceName"
-
-    val hasGenerics = typeParameters.isNotEmpty()
-
-    // Extract type parameter names (without constraints)
     val typeParamNames = typeParameters.map { it.substringBefore(" :").trim() }
+    val typeArgs = if (typeParamNames.isNotEmpty()) "<${typeParamNames.joinToString(", ")}>" else ""
+    val hasGenerics = typeParameters.isNotEmpty()
+}
 
-    // Build type arguments string for usage
-    val typeArgs =
-        if (typeParamNames.isNotEmpty()) {
-            "<${typeParamNames.joinToString(", ")}>"
-        } else {
-            ""
-        }
-
-    // Parse type parameters into header format and where clause
-    val (headerParams, whereClause) = parseTypeParametersForFactory(typeParameters)
-
-    // Filter annotations to propagate (@OptIn, @Deprecated), excluding opt-in markers
-    // We don't propagate opt-in markers because:
-    // 1. The impl class already has @OptIn(MarkerClass::class)
-    // 2. Factory just creates the impl, doesn't need its own @OptIn
-    val propagatedAnnotations =
-        annotations.filter {
-            (it.simpleName == "OptIn" || it.simpleName == "Deprecated") && !it.isOptInMarker
-        }
-
-    return buildString {
-        // Add propagated annotations (@OptIn, @Deprecated)
-        propagatedAnnotations.forEach { annotation ->
-            val argsStr =
-                if (annotation.arguments.isEmpty()) {
-                    ""
-                } else {
-                    "(${annotation.arguments.joinToString(", ")})"
-                }
-            appendLine("@${annotation.simpleName}$argsStr")
-        }
-
-        // Function signature with visibility modifier
-        if (hasGenerics) {
-            // public inline fun <reified T : Bound> fakeInterface(...)
-            val typeParamsStr =
-                headerParams.joinToString(", ") { param ->
-                    val parts = param.split(" : ")
-                    if (parts.size > 1) {
-                        "reified ${parts[0]} : ${parts[1]}"
-                    } else {
-                        "reified $param"
-                    }
-                }
-            append("${visibility.toModifier()}inline fun <$typeParamsStr> $factoryName")
-        } else {
-            append("${visibility.toModifier()}inline fun $factoryName")
-        }
-
-        // Parameters
-        append("(configure: $configClassName$typeArgs.() -> Unit = {})")
-
-        // Return type
-        append(": $fakeClassName$typeArgs")
-
-        // Where clause
-        if (whereClause.isNotEmpty()) {
-            append(" where $whereClause")
-        }
-
-        appendLine(" =")
-
-        // Body - expression syntax
-        append("    $fakeClassName$typeArgs().apply { $configClassName$typeArgs(this).configure() }")
+private fun List<AnnotationSpec>.filterPropagatable() =
+    filter {
+        (it.simpleName == "OptIn" || it.simpleName == "Deprecated") && !it.isOptInMarker
     }
+
+private fun StringBuilder.appendKDoc(
+    spec: FactoryFunctionSpec,
+    names: FactoryNames,
+) {
+    val kdoc =
+        KDocGenerator.generateFactoryKDoc(
+            interfaceName = spec.interfaceName,
+            factoryName = names.factoryName,
+            implClassName = names.fakeClassName,
+            methods = spec.methods,
+            properties = spec.properties,
+        )
+    appendLine(kdoc)
+}
+
+private fun StringBuilder.appendAnnotations(annotations: List<AnnotationSpec>) {
+    annotations.forEach { annotation ->
+        val argsStr = if (annotation.arguments.isEmpty()) "" else "(${annotation.arguments.joinToString(", ")})"
+        appendLine("@${annotation.simpleName}$argsStr")
+    }
+}
+
+private fun StringBuilder.appendSignature(
+    names: FactoryNames,
+    headerParams: List<String>,
+    visibility: FirVisibility,
+) {
+    if (names.hasGenerics) {
+        val typeParamsStr =
+            headerParams.joinToString(", ") { param ->
+                val parts = param.split(" : ")
+                if (parts.size > 1) "reified ${parts[0]} : ${parts[1]}" else "reified $param"
+            }
+        append("${visibility.toModifier()}inline fun <$typeParamsStr> ${names.factoryName}")
+    } else {
+        append("${visibility.toModifier()}inline fun ${names.factoryName}")
+    }
+    append("(configure: ${names.configClassName}${names.typeArgs}.() -> Unit = {})")
+    append(": ${names.fakeClassName}${names.typeArgs}")
+}
+
+private fun StringBuilder.appendBody(
+    names: FactoryNames,
+    whereClause: String,
+) {
+    if (whereClause.isNotEmpty()) append(" where $whereClause")
+    appendLine(" =")
+    val impl = "${names.fakeClassName}${names.typeArgs}()"
+    val config = "${names.configClassName}${names.typeArgs}(this)"
+    append("    $impl.apply { $config.configure() }")
 }
 
 /**

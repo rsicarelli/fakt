@@ -3,6 +3,7 @@
 package com.rsicarelli.fakt.compiler.ir.generation
 
 import com.rsicarelli.fakt.codegen.extensions.AnnotationSpec
+import com.rsicarelli.fakt.codegen.extensions.FactoryFunctionSpec
 import com.rsicarelli.fakt.codegen.extensions.generateCompleteFake
 import com.rsicarelli.fakt.codegen.extensions.generateFactoryFunction
 import com.rsicarelli.fakt.codegen.model.CodeFile
@@ -69,10 +70,14 @@ internal class ImplementationGenerator(
         // Generate factory function with visibility for explicitApi() support
         val factoryFunction =
             generateFactoryFunction(
-                interfaceName = analysis.interfaceName,
-                typeParameters = analysis.typeParameters,
-                visibility = analysis.visibility,
-                annotations = annotationSpecs,
+                FactoryFunctionSpec(
+                    interfaceName = analysis.interfaceName,
+                    typeParameters = analysis.typeParameters,
+                    visibility = analysis.visibility,
+                    annotations = annotationSpecs,
+                    methods = methods,
+                    properties = properties,
+                ),
             )
 
         return GeneratedFakeCode(
@@ -139,10 +144,14 @@ internal class ImplementationGenerator(
         // Generate factory function with visibility for explicitApi() support
         val factoryFunction =
             generateFactoryFunction(
-                interfaceName = analysis.className,
-                typeParameters = analysis.typeParameters,
-                visibility = analysis.visibility,
-                annotations = annotationSpecs,
+                FactoryFunctionSpec(
+                    interfaceName = analysis.className,
+                    typeParameters = analysis.typeParameters,
+                    visibility = analysis.visibility,
+                    annotations = annotationSpecs,
+                    methods = methodSpecs,
+                    properties = propertySpecs,
+                ),
             )
 
         return GeneratedFakeCode(
