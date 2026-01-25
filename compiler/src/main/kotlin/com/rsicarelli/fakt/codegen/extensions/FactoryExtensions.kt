@@ -9,10 +9,27 @@ import com.rsicarelli.fakt.compiler.fir.metadata.toModifier
  * Generates a factory function string for creating fake implementations.
  *
  * Creates a top-level function that instantiates the fake implementation
- * with optional configuration via DSL.
+ * with optional configuration via DSL. Optionally includes KDoc documentation
+ * that appears in IDE autocomplete.
  *
- * Example output:
+ * Example output (with KDoc):
  * ```kotlin
+ * /**
+ *  * Creates a fake implementation of [UserService] for testing.
+ *  *
+ *  * Example:
+ *  * ```kotlin
+ *  * val fake = fakeUserService {
+ *  *     getUser { userId -> User(id = userId, name = "Test") }
+ *  * }
+ *  * ```
+ *  *
+ *  * ## Configurable Behaviors
+ *  * - `getUser`: (String) -> User?
+ *  *
+ *  * @param configure DSL block to configure fake behaviors
+ *  * @return Configured [FakeUserServiceImpl] instance
+ *  */
  * inline fun fakeUserService(configure: FakeUserServiceConfig.() -> Unit = {}): FakeUserServiceImpl =
  *     FakeUserServiceImpl().apply { FakeUserServiceConfig(this).configure() }
  * ```
@@ -25,13 +42,19 @@ import com.rsicarelli.fakt.compiler.fir.metadata.toModifier
  * @param typeParameters List of type parameters with constraints (e.g., ["T : Comparable<T>"])
  * @param visibility Visibility for the generated function (PUBLIC, INTERNAL) for explicitApi() support
  * @param annotations Annotations to propagate to the factory function (@OptIn, @Deprecated)
- * @return Generated factory function code
+ * @param methods Optional list of methods for KDoc generation
+ * @param properties Optional list of properties for KDoc generation
+ * @param includeKDoc Whether to include KDoc documentation (default: true)
+ * @return Generated factory function code with optional KDoc
  */
 fun generateFactoryFunction(
     interfaceName: String,
     typeParameters: List<String> = emptyList(),
     visibility: FirVisibility = FirVisibility.PUBLIC,
     annotations: List<AnnotationSpec> = emptyList(),
+    methods: List<MethodSpec> = emptyList(),
+    properties: List<PropertySpec> = emptyList(),
+    includeKDoc: Boolean = true,
 ): String {
     val fakeClassName = "Fake${interfaceName}Impl"
     val configClassName = "Fake${interfaceName}Config"
@@ -63,6 +86,19 @@ fun generateFactoryFunction(
         }
 
     return buildString {
+        // Add KDoc if enabled and there's content to document
+        if (includeKDoc) {
+            val kdoc =
+                KDocGenerator.generateFactoryKDoc(
+                    interfaceName = interfaceName,
+                    factoryName = factoryName,
+                    implClassName = fakeClassName,
+                    methods = methods,
+                    properties = properties,
+                )
+            appendLine(kdoc)
+        }
+
         // Add propagated annotations (@OptIn, @Deprecated)
         propagatedAnnotations.forEach { annotation ->
             val argsStr =
