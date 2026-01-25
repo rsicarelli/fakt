@@ -62,20 +62,12 @@ public class com/rsicarelli/fakt/gradle/FaktPluginExtension {
 }
 
 public final class com/rsicarelli/fakt/gradle/GradleFaktLogger {
-	public static final field Companion Lcom/rsicarelli/fakt/gradle/GradleFaktLogger$Companion;
 	public fun <init> (Lorg/gradle/api/logging/Logger;Lcom/rsicarelli/fakt/compiler/api/LogLevel;)V
 	public final fun debug (Ljava/lang/String;)V
 	public final fun error (Ljava/lang/String;)V
 	public final fun getLogLevel ()Lcom/rsicarelli/fakt/compiler/api/LogLevel;
-	public final fun ifLevel (Lcom/rsicarelli/fakt/compiler/api/LogLevel;Lkotlin/jvm/functions/Function0;)V
 	public final fun info (Ljava/lang/String;)V
 	public final fun warn (Ljava/lang/String;)V
-}
-
-public final class com/rsicarelli/fakt/gradle/GradleFaktLogger$Companion {
-	public final fun debug (Lorg/gradle/api/logging/Logger;)Lcom/rsicarelli/fakt/gradle/GradleFaktLogger;
-	public final fun info (Lorg/gradle/api/logging/Logger;)Lcom/rsicarelli/fakt/gradle/GradleFaktLogger;
-	public final fun quiet (Lorg/gradle/api/logging/Logger;)Lcom/rsicarelli/fakt/gradle/GradleFaktLogger;
 }
 
 public final class com/rsicarelli/fakt/gradle/SourceSetDiscoveryKt {

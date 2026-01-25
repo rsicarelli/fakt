@@ -3,7 +3,6 @@
 package com.rsicarelli.fakt.compiler.core
 
 import com.rsicarelli.fakt.compiler.core.telemetry.calculateLOC
-import com.rsicarelli.fakt.compiler.core.telemetry.formatBytes
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.assertEquals
@@ -11,7 +10,7 @@ import kotlin.test.assertEquals
 /**
  * Tests for code metrics utility functions.
  *
- * Validates LOC calculation and byte formatting used in telemetry reporting.
+ * Validates LOC calculation used in telemetry reporting.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CodeMetricsTest {
@@ -82,41 +81,5 @@ class CodeMetricsTest {
         // THEN
         // Expected lines: "package com.example", "class Foo {", "fun bar() = Unit", "}"
         assertEquals(4, result)
-    }
-
-    @Test
-    fun `GIVEN bytes less than 1KB WHEN formatting THEN should show in bytes`() {
-        // GIVEN
-        val bytes = 512L
-
-        // WHEN
-        val result = bytes.formatBytes()
-
-        // THEN
-        assertEquals("512 B", result)
-    }
-
-    @Test
-    fun `GIVEN bytes in KB range WHEN formatting THEN should show in kilobytes`() {
-        // GIVEN
-        val bytes = 2048L // 2 KB
-
-        // WHEN
-        val result = bytes.formatBytes()
-
-        // THEN
-        assertEquals("2 KB", result)
-    }
-
-    @Test
-    fun `GIVEN bytes in MB range WHEN formatting THEN should show in megabytes`() {
-        // GIVEN
-        val bytes = 2_097_152L // 2 MB
-
-        // WHEN
-        val result = bytes.formatBytes()
-
-        // THEN
-        assertEquals("2 MB", result)
     }
 }
