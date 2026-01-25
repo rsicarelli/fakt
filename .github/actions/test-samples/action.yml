@@ -4,6 +4,11 @@ description: Test all sample projects to validate end-to-end functionality
 runs:
   using: composite
   steps:
+    # Regenerate lock files to match CI environment (npm generates OS-specific content)
+    - name: Regenerate JS/WASM lock files
+      shell: bash
+      run: ./gradlew kotlinUpgradePackageLock kotlinWasmUpgradePackageLock
+
     # Publish Fakt plugin to Maven Local so samples can use it
     # Samples reference the plugin by ID and version (com.rsicarelli.fakt:1.0.0-alpha01)
     # which requires the plugin to be published before sample tests can run

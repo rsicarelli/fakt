@@ -4,6 +4,11 @@ description: Execute all test suites from all source sets
 runs:
   using: 'composite'
   steps:
+    # Regenerate lock files to match CI environment (npm generates OS-specific content)
+    - name: Regenerate JS/WASM lock files
+      shell: bash
+      run: ./gradlew kotlinUpgradePackageLock kotlinWasmUpgradePackageLock
+
     # Run allTests for KMP modules (annotations) - tests ALL targets
     # Using --continue to proceed even if task doesn't exist in some modules
     - name: Run all KMP tests (all targets)
