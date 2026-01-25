@@ -103,15 +103,6 @@ private fun String.eraseMethodTypeParameters(typeParameters: List<String>): Stri
 }
 
 /**
- * Generates a complete fake implementation class from configuration.
- *
- * @param config Complete generation configuration
- * @return CodeFile with complete fake implementation
- * @see FakeGenerationConfig
- */
-fun generateCompleteFake(config: FakeGenerationConfig): CodeFile = generateCompleteFakeInternal(config)
-
-/**
  * Annotation metadata for fake generation.
  *
  * @property simpleName Simple annotation name (e.g., "OptIn", "Deprecated")

@@ -78,19 +78,6 @@ class CodeGenerationModulesContractTest {
     }
 
     @Test
-    fun `GIVEN FactoryGenerator module WHEN instantiating THEN should create successfully`() {
-        // GIVEN & WHEN
-        val factoryGenerator = FactoryGenerator()
-
-        // THEN - Should exist and have expected methods
-        assertNotNull(factoryGenerator, "FactoryGenerator should be instantiable")
-
-        // Verify key methods exist
-        val methods = FactoryGenerator::class.java.declaredMethods.map { it.name }
-        assertTrue(methods.contains("generateFactoryFunction"), "Should have generateFactoryFunction method")
-    }
-
-    @Test
     fun `GIVEN ConfigurationDslGenerator module WHEN instantiating with TypeResolver THEN should create successfully`() {
         // GIVEN & WHEN
         val typeResolution = createTypeResolution()
@@ -129,13 +116,11 @@ class CodeGenerationModulesContractTest {
             )
 
         val implementationGenerator = ImplementationGenerator(typeResolution)
-        val factoryGenerator = FactoryGenerator()
         val configurationDslGenerator = ConfigurationDslGenerator(typeResolution)
 
         val generators =
             CodeGenerators(
                 implementation = implementationGenerator,
-                factory = factoryGenerator,
                 configDsl = configurationDslGenerator,
             )
 

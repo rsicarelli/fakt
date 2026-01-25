@@ -3,7 +3,6 @@
 package com.rsicarelli.fakt.codegen.extensions
 
 import com.rsicarelli.fakt.codegen.builder.ClassBuilder
-import com.rsicarelli.fakt.codegen.builder.FunctionBuilder
 
 /**
  * Creates an override method that delegates to a behavior property.
@@ -322,42 +321,5 @@ fun ClassBuilder.configureMethod(
             } else {
                 "run { ${methodName}Behavior = behavior }"
             }
-    }
-}
-
-/**
- * Configures this function as an override that delegates to behavior.
- *
- * Extension for FunctionBuilder to create delegation pattern.
- */
-fun FunctionBuilder.delegateToBehavior(
-    functionName: String,
-    parameterNames: List<String>,
-) {
-    val invocation = "$functionName(${parameterNames.joinToString(", ")})"
-    body = "return $invocation"
-}
-
-/**
- * Configures this function as a simple override with inline body.
- */
-fun FunctionBuilder.asSimpleOverride(bodyExpression: String) {
-    override()
-    body = bodyExpression
-}
-
-/**
- * Creates an override property getter that delegates to a StateFlow.
- *
- * Used for StateFlow properties that delegate to backing MutableStateFlow.
- */
-fun ClassBuilder.overridePropertyGetter(
-    name: String,
-    type: String,
-    backingPropertyName: String,
-) {
-    property(name, type) {
-        override()
-        getter = backingPropertyName
     }
 }
