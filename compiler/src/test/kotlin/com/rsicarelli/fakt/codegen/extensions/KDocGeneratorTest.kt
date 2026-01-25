@@ -5,6 +5,7 @@ package com.rsicarelli.fakt.codegen.extensions
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertContains
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -93,7 +94,7 @@ class KDocGeneratorTest {
 
         // THEN
         assertContains(kdoc, "## Configurable Behaviors")
-        assertContains(kdoc, "`getUser`: (String) -> User?")
+        assertContains(kdoc, "`getUser`: (id: String) -> User?")
     }
 
     @Test
@@ -113,7 +114,7 @@ class KDocGeneratorTest {
         val kdoc = generateFactoryKDoc("UserService", methods = methods)
 
         // THEN
-        assertContains(kdoc, "`saveUser`: (User) -> Result<Unit> (suspend)")
+        assertContains(kdoc, "`saveUser`: (user: User) -> Result<Unit> (suspend)")
     }
 
     @Test
@@ -133,7 +134,7 @@ class KDocGeneratorTest {
         val kdoc = generateFactoryKDoc("Container", methods = methods)
 
         // THEN
-        assertContains(kdoc, "`get`: (Int) -> String (operator)")
+        assertContains(kdoc, "`get`: (index: Int) -> String (operator)")
     }
 
     @Test
@@ -153,7 +154,7 @@ class KDocGeneratorTest {
         val kdoc = generateFactoryKDoc("VectorOps", methods = methods)
 
         // THEN
-        assertContains(kdoc, "`plus`: (Vector, Vector) -> Vector (extension)")
+        assertContains(kdoc, "`plus`: (receiver: Vector, other: Vector) -> Vector (extension)")
     }
 
     @Test
@@ -196,7 +197,7 @@ class KDocGeneratorTest {
         val kdoc = generateFactoryKDoc("UserService", methods = methods)
 
         // THEN
-        assertContains(kdoc, "`updateUser`: (String, String, String?) -> User")
+        assertContains(kdoc, "`updateUser`: (id: String, name: String, email: String?) -> User")
     }
 
     // ==========================================
@@ -361,15 +362,14 @@ class KDocGeneratorTest {
         // WHEN
         val factory =
             generateFactoryFunction(
-                interfaceName = "UserService",
-                methods = methods,
+                FactoryFunctionSpec(interfaceName = "UserService", methods = methods),
                 includeKDoc = true,
             )
 
         // THEN
         assertContains(factory, "/**")
         assertContains(factory, "Creates a fake implementation of [UserService]")
-        assertContains(factory, "`getUser`: (String) -> User?")
+        assertContains(factory, "`getUser`: (id: String) -> User?")
         assertContains(factory, "inline fun fakeUserService")
     }
 
@@ -388,8 +388,7 @@ class KDocGeneratorTest {
         // WHEN
         val factory =
             generateFactoryFunction(
-                interfaceName = "UserService",
-                methods = methods,
+                FactoryFunctionSpec(interfaceName = "UserService", methods = methods),
                 includeKDoc = false,
             )
 
@@ -423,17 +422,19 @@ class KDocGeneratorTest {
         // WHEN
         val factory =
             generateFactoryFunction(
-                interfaceName = "UserRepository",
-                methods = methods,
-                properties = properties,
+                FactoryFunctionSpec(
+                    interfaceName = "UserRepository",
+                    methods = methods,
+                    properties = properties,
+                ),
                 includeKDoc = true,
             )
 
         // THEN
         assertContains(factory, "Creates a fake implementation of [UserRepository]")
-        assertContains(factory, "`getUser`: (String) -> User?")
-        assertContains(factory, "`saveUser`: (User) -> Result<Unit> (suspend)")
-        assertContains(factory, "`deleteUser`: (String) -> Unit")
+        assertContains(factory, "`getUser`: (id: String) -> User?")
+        assertContains(factory, "`saveUser`: (user: User) -> Result<Unit> (suspend)")
+        assertContains(factory, "`deleteUser`: (id: String) -> Unit")
         assertContains(factory, "`userCount`: Int")
         assertContains(factory, "`currentUser`: User? (mutable)")
         assertContains(factory, "@see UserRepository")
@@ -520,7 +521,7 @@ class KDocGeneratorTest {
     }
 
     @Test
-    fun `GIVEN many methods WHEN generating example THEN limits examples to avoid verbosity`() {
+    fun `GIVEN many methods WHEN generating example THEN shows all methods`() {
         // GIVEN - 5 methods
         val methods =
             (1..5).map { i ->
@@ -534,9 +535,9 @@ class KDocGeneratorTest {
         // WHEN
         val kdoc = generateFactoryKDoc("LargeService", methods = methods)
 
-        // THEN - Example should only show 2 methods max
+        // THEN - Example should show all methods
         val exampleSection = kdoc.substringAfter("Example:").substringBefore("```\n *\n")
         val methodCount = "method\\d".toRegex().findAll(exampleSection).count()
-        assertTrue(methodCount <= 2, "Expected at most 2 example methods, got $methodCount")
+        assertEquals(5, methodCount, "Expected all 5 example methods, got $methodCount")
     }
 }

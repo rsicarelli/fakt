@@ -105,15 +105,11 @@ object KDocGenerator {
         appendLine(" * ```kotlin")
         appendLine(" * val fake = $factoryName {")
 
-        // Show up to 3 example configurations to keep docs concise
-        val exampleMethods = methods.take(2)
-        val exampleProperties = properties.filter { !it.isStateFlow }.take(1)
-
-        exampleMethods.forEach { method ->
+        methods.forEach { method ->
             appendMethodExample(method)
         }
 
-        exampleProperties.forEach { property ->
+        properties.filter { !it.isStateFlow }.forEach { property ->
             appendPropertyExample(property)
         }
 
@@ -187,26 +183,27 @@ object KDocGenerator {
     /**
      * Appends a method signature in documentation format.
      *
-     * Format: `- \`methodName\`: (ParamTypes) -> ReturnType [modifiers]`
+     * Format: `- \`methodName\`: (name: Type, ...) -> ReturnType [modifiers]`
      */
     private fun StringBuilder.appendMethodSignature(method: MethodSpec) {
         append(" * - `${method.name}`: ")
 
-        // Build parameter types
-        val paramTypes =
+        // Build parameter list with names and types
+        val paramList =
             if (method.extensionReceiverType != null) {
-                val baseParams = method.params.map { (_, type, _) -> type }
-                listOf(method.extensionReceiverType) + baseParams
+                val receiverParam = "receiver: ${method.extensionReceiverType}"
+                val baseParams = method.params.map { (name, type, _) -> "$name: $type" }
+                listOf(receiverParam) + baseParams
             } else {
-                method.params.map { (_, type, _) -> type }
+                method.params.map { (name, type, _) -> "$name: $type" }
             }
 
         // Format as function type
         val paramsStr =
-            if (paramTypes.isEmpty()) {
+            if (paramList.isEmpty()) {
                 "()"
             } else {
-                "(${paramTypes.joinToString(", ")})"
+                "(${paramList.joinToString(", ")})"
             }
 
         append("$paramsStr -> ${method.returnType}")
@@ -239,6 +236,29 @@ object KDocGenerator {
         appendLine()
     }
 
+    /** Exact type matches for example values. */
+    private val exactTypeExamples =
+        mapOf(
+            "Unit" to "/* configure side effects */",
+            "String" to "\"test\"",
+            "Int" to "42",
+            "Long" to "42L",
+            "Double" to "3.14",
+            "Float" to "3.14f",
+            "Boolean" to "true",
+        )
+
+    /** Prefix-based type matches for example values. */
+    private val prefixTypeExamples =
+        mapOf(
+            "List<" to "listOf(/* items */)",
+            "Set<" to "setOf(/* items */)",
+            "Map<" to "mapOf(/* entries */)",
+            "Result<" to "Result.success(/* value */)",
+            "Flow<" to "flowOf(/* values */)",
+            "StateFlow<" to "MutableStateFlow(/* initial */)",
+        )
+
     /**
      * Returns an example return value for documentation based on type.
      *
@@ -246,26 +266,14 @@ object KDocGenerator {
      * @param paramName Optional parameter name to use in the example
      * @return Example value string suitable for documentation
      */
-    private fun getExampleReturnValue(
-        returnType: String,
-        paramName: String? = null,
-    ): String =
+    private fun getExampleReturnValue(returnType: String, paramName: String? = null): String =
         when {
-            returnType == "Unit" -> "/* configure side effects */"
+            returnType == "String" && paramName != null -> "$paramName.uppercase()"
+            exactTypeExamples.containsKey(returnType) -> exactTypeExamples.getValue(returnType)
             returnType.endsWith("?") -> paramName?.let { "get$it()" } ?: "null"
-            returnType.startsWith("List<") -> "listOf(/* items */)"
-            returnType.startsWith("Set<") -> "setOf(/* items */)"
-            returnType.startsWith("Map<") -> "mapOf(/* entries */)"
-            returnType.startsWith("Result<") -> "Result.success(/* value */)"
-            returnType.startsWith("Flow<") -> "flowOf(/* values */)"
-            returnType.startsWith("StateFlow<") -> "MutableStateFlow(/* initial */)"
-            returnType == "String" -> paramName?.let { "$it.uppercase()" } ?: "\"test\""
-            returnType == "Int" -> "42"
-            returnType == "Long" -> "42L"
-            returnType == "Double" -> "3.14"
-            returnType == "Float" -> "3.14f"
-            returnType == "Boolean" -> "true"
-            else -> paramName?.let { "process($it)" } ?: "/* your implementation */"
+            else -> prefixTypeExamples.entries.firstOrNull { returnType.startsWith(it.key) }?.value
+                ?: paramName?.let { "process($it)" }
+                ?: "/* your implementation */"
         }
 }
 
