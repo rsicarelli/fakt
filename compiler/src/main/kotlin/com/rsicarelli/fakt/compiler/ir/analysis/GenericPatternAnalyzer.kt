@@ -211,28 +211,6 @@ class GenericPatternAnalyzer {
             return warnings
         }
 
-        /**
-         * Get a summary of the analysis results for debugging.
-         *
-         * @param pattern The generic pattern to summarize
-         * @return Human-readable summary string
-         */
-        fun getAnalysisSummary(pattern: GenericPattern): String =
-            when (pattern) {
-                GenericPattern.NoGenerics ->
-                    "No generic parameters detected - using simple generation"
-
-                is GenericPattern.ClassLevelGenerics ->
-                    "Class-level generics: ${pattern.typeParameters.size} type parameters, " +
-                        "${pattern.constraints.size} constraints"
-
-                is GenericPattern.MethodLevelGenerics ->
-                    "Method-level generics: ${pattern.genericMethods.size} generic methods"
-
-                is GenericPattern.MixedGenerics ->
-                    "Mixed generics: ${pattern.classTypeParameters.size} class type parameters, " +
-                        "${pattern.genericMethods.size} generic methods"
-            }
     }
 }
 

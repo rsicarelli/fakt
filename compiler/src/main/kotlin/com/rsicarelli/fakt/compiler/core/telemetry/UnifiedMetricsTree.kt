@@ -99,17 +99,9 @@ data class UnifiedMetricsTree(
     val totalTimeNanos: Long
         get() = totalFirTimeNanos + totalIrTimeNanos + transformationTimeNanos
 
-    /** Total lines of code generated across all fakes. */
-    val totalLOC: Int
-        get() = interfaces.sumOf { it.irLOC } + classes.sumOf { it.irLOC }
-
     /** Average time per fake in nanoseconds. */
     val avgTimePerFakeNanos: Long
         get() = if (totalFakes > 0) totalTimeNanos / totalFakes else 0
-
-    /** Average lines of code per fake. */
-    val avgLOCPerFake: Int
-        get() = if (totalFakes > 0) totalLOC / totalFakes else 0
 
     /** Cache hit rate as percentage (0-100). */
     val cacheHitRate: Int
