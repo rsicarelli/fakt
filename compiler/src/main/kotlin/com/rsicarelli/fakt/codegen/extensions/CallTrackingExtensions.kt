@@ -129,3 +129,27 @@ fun ClassBuilder.propertySetterTrackingPublicGetter(
         getter = backingFieldName
     }
 }
+
+/**
+ * Generates the internal backing field for call history.
+ *
+ * Creates: `@PublishedApi internal val _methodNameCalls = MutableStateFlow<List<MethodNameCall>>(emptyList())`
+ * Or for 0-param: `@PublishedApi internal val _methodNameCalls = MutableStateFlow<List<Unit>>(emptyList())`
+ *
+ * @param methodName Name of the method to track
+ * @param dataClassName Name of the data class storing call arguments, or null for Unit storage
+ */
+fun ClassBuilder.callHistoryBackingField(
+    methodName: String,
+    dataClassName: String?,
+) {
+    val backingFieldName = "_${methodName}Calls"
+    val storageType = dataClassName ?: "Unit"
+
+    property(backingFieldName, "MutableStateFlow<List<$storageType>>") {
+        // @PublishedApi allows public inline functions to access internal members
+        annotation("PublishedApi")
+        internal()
+        initializer = "MutableStateFlow(emptyList())"
+    }
+}

@@ -8,6 +8,7 @@ import com.rsicarelli.fakt.codegen.renderer.renderTo
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertContains
+import kotlin.test.assertFalse
 
 /**
  * Tests for method extension functions.
@@ -99,7 +100,7 @@ class MethodExtensionsTest {
                         name = "fetchUser",
                         params = listOf(Triple("id", "String", false)),
                         returnType = "User?",
-                        isSuspend = true,
+                        config = OverrideMethodConfig(isSuspend = true),
                     )
                 }
             }
@@ -281,4 +282,193 @@ class MethodExtensionsTest {
         assertContains(result, "internal fun configureGetUser(behavior: (String) -> User?) = run {")
         assertContains(result, "getUserBehavior = behavior")
     }
+
+    // region Call History Update Tests
+
+    @Test
+    fun `GIVEN overrideMethod WHEN 0-param THEN includes Unit history update`() {
+        // GIVEN
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    overrideMethod(
+                        name = "logout",
+                        params = emptyList(),
+                        returnType = "Unit",
+                        config = OverrideMethodConfig(interfaceName = "AuthService"),
+                    )
+                }
+            }
+
+        // WHEN
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN
+        assertContains(result, "_logoutCalls.update { it + Unit }")
+        assertContains(result, "_logoutCallCount.update { it + 1 }")
+    }
+
+    @Test
+    fun `GIVEN overrideMethod WHEN with params THEN includes data class history update`() {
+        // GIVEN
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    overrideMethod(
+                        name = "getUser",
+                        params = listOf(Triple("id", "String", false)),
+                        returnType = "User",
+                        config = OverrideMethodConfig(interfaceName = "UserService"),
+                    )
+                }
+            }
+
+        // WHEN
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN
+        assertContains(result, "_getUserCalls.update { it + UserServiceGetUserCall(id) }")
+        assertContains(result, "_getUserCallCount.update { it + 1 }")
+    }
+
+    @Test
+    fun `GIVEN overrideMethod WHEN multiple params THEN includes all params in history`() {
+        // GIVEN
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    overrideMethod(
+                        name = "createOrder",
+                        params =
+                            listOf(
+                                Triple("userId", "String", false),
+                                Triple("amount", "Int", false),
+                            ),
+                        returnType = "Order",
+                        config = OverrideMethodConfig(interfaceName = "OrderService"),
+                    )
+                }
+            }
+
+        // WHEN
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN
+        assertContains(result, "_createOrderCalls.update { it + OrderServiceCreateOrderCall(userId, amount) }")
+    }
+
+    @Test
+    fun `GIVEN overrideMethod WHEN vararg param only THEN uses Unit history`() {
+        // GIVEN
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    overrideMethod(
+                        name = "log",
+                        params = listOf(Triple("messages", "Array<out String>", true)),
+                        returnType = "Unit",
+                        config = OverrideMethodConfig(interfaceName = "LogService"),
+                    )
+                }
+            }
+
+        // WHEN
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN
+        assertContains(result, "_logCalls.update { it + Unit }")
+    }
+
+    @Test
+    fun `GIVEN overrideMethod WHEN mixed params with vararg THEN excludes vararg from history`() {
+        // GIVEN
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    overrideMethod(
+                        name = "format",
+                        params =
+                            listOf(
+                                Triple("template", "String", false),
+                                Triple("args", "Array<out Any>", true),
+                            ),
+                        returnType = "String",
+                        config = OverrideMethodConfig(interfaceName = "FormatService"),
+                    )
+                }
+            }
+
+        // WHEN
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN
+        assertContains(result, "_formatCalls.update { it + FormatServiceFormatCall(template) }")
+        // Should NOT include args in the data class
+        assertFalse(result.contains("FormatServiceFormatCall(template, args)"))
+    }
+
+    @Test
+    fun `GIVEN overrideVarargMethod WHEN called THEN includes Unit history update`() {
+        // GIVEN
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    overrideVarargMethod(
+                        name = "process",
+                        varargName = "items",
+                        varargType = "String",
+                        returnType = "Int",
+                    )
+                }
+            }
+
+        // WHEN
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN
+        assertContains(result, "_processCalls.update { it + Unit }")
+        assertContains(result, "_processCallCount.update { it + 1 }")
+    }
+
+    @Test
+    fun `GIVEN overrideMethod WHEN generic param THEN casts to erased type in history`() {
+        // GIVEN
+        val file =
+            codeFile("com.example") {
+                klass("FakeRepositoryImpl") {
+                    overrideMethod(
+                        name = "save",
+                        params = listOf(Triple("item", "T", false)),
+                        returnType = "Unit",
+                        config =
+                            OverrideMethodConfig(
+                                typeParameters = listOf("T"),
+                                interfaceName = "Repository",
+                            ),
+                    )
+                }
+            }
+
+        // WHEN
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN
+        assertContains(result, "_saveCalls.update { it + RepositorySaveCall(item as Any?) }")
+    }
+
+    // endregion
 }

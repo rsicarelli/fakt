@@ -385,7 +385,7 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
 
             // Generate method overrides
             methods.forEach { method ->
-                generateMethodOverride(this, method, isClass)
+                generateMethodOverride(this, method, isClass, interfaceName, typeParameters)
             }
 
             endRegion()
@@ -436,6 +436,11 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
 
             methods.forEach { method ->
                 generateMethodCallTrackingBackingField(this, method)
+            }
+
+            // Generate call history backing fields for ALL methods (params → data class, 0-param → Unit)
+            methods.forEach { method ->
+                generateMethodCallHistoryBackingField(this, method, interfaceName)
             }
 
             // Generate behavior properties for all simple properties
@@ -611,6 +616,22 @@ private fun generateMethodCallTrackingBackingField(
     method: MethodSpec,
 ) {
     classBuilder.callTrackingBackingField(method.name)
+}
+
+/**
+ * Generates the private backing field for call history tracking.
+ * Generated for ALL methods:
+ * - Methods with params: stores data class instances
+ * - 0-param/vararg-only methods: stores Unit
+ * Part of Section 4: Private State
+ */
+private fun generateMethodCallHistoryBackingField(
+    classBuilder: ClassBuilder,
+    method: MethodSpec,
+    interfaceName: String,
+) {
+    val storageInfo = resolveHistoryStorageType(interfaceName, method.name, method.params)
+    classBuilder.callHistoryBackingField(method.name, storageInfo.dataClassName)
 }
 
 /**
@@ -821,6 +842,8 @@ private fun generateMethodOverride(
     classBuilder: ClassBuilder,
     method: MethodSpec,
     isClass: Boolean = false,
+    interfaceName: String = "",
+    classTypeParameters: List<String> = emptyList(),
 ) {
     val isOpenMethod = isClass && !method.isAbstract
 
@@ -840,11 +863,16 @@ private fun generateMethodOverride(
             name = method.name,
             params = method.params,
             returnType = method.returnType,
-            isSuspend = method.isSuspend,
-            typeParameters = method.typeParameters,
-            useSuperDelegation = isOpenMethod,
-            extensionReceiverType = method.extensionReceiverType,
-            isOperator = method.isOperator,
+            config =
+                OverrideMethodConfig(
+                    isSuspend = method.isSuspend,
+                    typeParameters = method.typeParameters,
+                    useSuperDelegation = isOpenMethod,
+                    extensionReceiverType = method.extensionReceiverType,
+                    isOperator = method.isOperator,
+                    interfaceName = interfaceName,
+                    classTypeParameters = classTypeParameters,
+                ),
         )
     }
 }
