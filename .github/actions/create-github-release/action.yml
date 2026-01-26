@@ -16,27 +16,16 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Detect pre-release from tag
-      id: detect-prerelease
-      shell: bash
-      run: |
-        TAG="${{ inputs.tag }}"
-        if [[ "$TAG" == *"-rc"* ]] || [[ "$TAG" == *"-alpha"* ]] || [[ "$TAG" == *"-beta"* ]]; then
-          echo "prerelease=true" >> $GITHUB_OUTPUT
-        else
-          echo "prerelease=${{ inputs.is-prerelease }}" >> $GITHUB_OUTPUT
-        fi
-
     - name: Create GitHub Release
       shell: bash
       run: |
         PRERELEASE_FLAG=""
-        if [[ "${{ steps.detect-prerelease.outputs.prerelease }}" == "true" ]]; then
+        if [[ "${{ inputs.is-prerelease }}" == "true" ]]; then
           PRERELEASE_FLAG="--prerelease"
         fi
 
         gh release create "${{ inputs.tag }}" \
-          --title "Release ${{ inputs.tag }}" \
+          --title "${{ inputs.tag }}" \
           --generate-notes \
           $PRERELEASE_FLAG
       env:
