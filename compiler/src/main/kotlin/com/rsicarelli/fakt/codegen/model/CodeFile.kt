@@ -148,6 +148,7 @@ data class CodeFunction(
  * @property getter Optional custom getter
  * @property setter Optional custom setter
  * @property isMutable Whether this is a var (true) or val (false)
+ * @property annotations Property-level annotations (e.g., @PublishedApi)
  */
 data class CodeProperty(
     val name: String,
@@ -157,6 +158,7 @@ data class CodeProperty(
     val getter: CodeBlock? = null,
     val setter: CodeBlock? = null,
     val isMutable: Boolean = false,
+    val annotations: List<CodeAnnotation> = emptyList(),
 ) : CodeDeclaration,
     CodeMember
 

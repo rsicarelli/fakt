@@ -7,7 +7,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for call history verification feature.
@@ -17,7 +16,6 @@ import org.junit.jupiter.api.TestInstance
  * - Verifier classes with assertion methods
  * - Scoped verify functions (verifyMethodName { ... })
  */
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CallHistoryVerificationTest {
 
     @Test

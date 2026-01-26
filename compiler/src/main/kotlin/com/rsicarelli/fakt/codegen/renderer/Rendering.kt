@@ -285,6 +285,11 @@ public fun CodeFunction.renderTo(builder: CodeBuilder) {
  * @param builder The [CodeBuilder] to write to
  */
 public fun CodeProperty.renderTo(builder: CodeBuilder) {
+    // Render property annotations first
+    annotations.forEach { annotation ->
+        annotation.renderTo(builder)
+    }
+
     val modifiersStr = modifiers.joinToString(" ") { it.name.lowercase() }
     val modifierPrefix = if (modifiersStr.isNotEmpty()) "$modifiersStr " else ""
     val varOrVal = if (isMutable) "var" else "val"

@@ -148,7 +148,7 @@ fun ClassBuilder.callHistoryBackingField(
 
     property(backingFieldName, "MutableStateFlow<List<$storageType>>") {
         // @PublishedApi allows public inline functions to access internal members
-        annotation("PublishedApi")
+        this.annotation("PublishedApi")
         internal()
         initializer = "MutableStateFlow(emptyList())"
     }
