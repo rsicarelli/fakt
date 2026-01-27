@@ -3,7 +3,6 @@
 package com.rsicarelli.fakt.codegen.extensions
 
 import com.rsicarelli.fakt.codegen.builder.ClassBuilder
-import com.rsicarelli.fakt.codegen.builder.ConstructorPropertyBuilder
 import com.rsicarelli.fakt.codegen.builder.DataClassBuilder
 import com.rsicarelli.fakt.codegen.builder.FunctionBuilder
 import com.rsicarelli.fakt.codegen.builder.PropertyBuilder
@@ -52,13 +51,4 @@ internal fun FirVisibility.applyVisibility(builder: PropertyBuilder) {
         FirVisibility.PRIVATE -> builder.private()
         FirVisibility.PROTECTED -> {} // Handled elsewhere
     }
-}
-
-/**
- * Applies visibility modifier to a [ConstructorPropertyBuilder].
- */
-@Suppress("UNUSED_PARAMETER")
-internal fun FirVisibility.applyVisibility(builder: ConstructorPropertyBuilder) {
-    // Constructor properties in verifier classes are always private
-    // Visibility is applied to the class itself, not the constructor property
 }
