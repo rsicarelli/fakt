@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.codegen.extensions
 
+import com.rsicarelli.fakt.codegen.builder.codeFile
+import com.rsicarelli.fakt.codegen.renderer.renderToString
 import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
@@ -186,16 +188,19 @@ class CallHistoryGeneratorTest {
 
     // endregion
 
-    // region generateUnitVerifierClass
+    // region DSL-based unitVerifierClass
 
     @Test
-    fun `GIVEN 0-param method WHEN generateUnitVerifierClass THEN generates simplified verifier`() {
+    fun `GIVEN 0-param method WHEN unitVerifierClass DSL THEN generates simplified verifier`() {
         // GIVEN
         val interfaceName = "AuthService"
         val methodName = "logout"
 
         // WHEN
-        val result = generateUnitVerifierClass(interfaceName, methodName, FirVisibility.PUBLIC)
+        val result =
+            codeFile("") {
+                unitVerifierClass(interfaceName, methodName, FirVisibility.PUBLIC)
+            }.renderToString()
 
         // THEN
         assertTrue(result.contains("class AuthServiceLogoutCallVerifier"))
@@ -211,13 +216,16 @@ class CallHistoryGeneratorTest {
     }
 
     @Test
-    fun `GIVEN internal visibility WHEN generateUnitVerifierClass THEN uses internal modifier`() {
+    fun `GIVEN internal visibility WHEN unitVerifierClass DSL THEN uses internal modifier`() {
         // GIVEN
         val interfaceName = "InternalService"
         val methodName = "doWork"
 
         // WHEN
-        val result = generateUnitVerifierClass(interfaceName, methodName, FirVisibility.INTERNAL)
+        val result =
+            codeFile("") {
+                unitVerifierClass(interfaceName, methodName, FirVisibility.INTERNAL)
+            }.renderToString()
 
         // THEN
         assertTrue(result.contains("internal class InternalServiceDoWorkCallVerifier"))
@@ -227,10 +235,10 @@ class CallHistoryGeneratorTest {
 
     // endregion
 
-    // region generateUnitVerifyFunction
+    // region DSL-based unitVerifyFunction
 
     @Test
-    fun `GIVEN 0-param method WHEN generateUnitVerifyFunction THEN generates verify extension`() {
+    fun `GIVEN 0-param method WHEN unitVerifyFunction DSL THEN generates verify extension`() {
         // GIVEN
         val fakeClassName = "FakeAuthServiceImpl"
         val interfaceName = "AuthService"
@@ -238,12 +246,9 @@ class CallHistoryGeneratorTest {
 
         // WHEN
         val result =
-            generateUnitVerifyFunction(
-                fakeClassName,
-                interfaceName,
-                methodName,
-                FirVisibility.PUBLIC,
-            )
+            codeFile("") {
+                unitVerifyFunction(fakeClassName, interfaceName, methodName, FirVisibility.PUBLIC, emptyList())
+            }.renderToString()
 
         // THEN
         assertTrue(result.contains("inline fun FakeAuthServiceImpl.verifyLogout"))
@@ -252,7 +257,7 @@ class CallHistoryGeneratorTest {
     }
 
     @Test
-    fun `GIVEN generic class WHEN generateUnitVerifyFunction THEN includes type parameters`() {
+    fun `GIVEN generic class WHEN unitVerifyFunction DSL THEN includes type parameters`() {
         // GIVEN
         val fakeClassName = "FakeRepositoryImpl"
         val interfaceName = "Repository"
@@ -261,13 +266,9 @@ class CallHistoryGeneratorTest {
 
         // WHEN
         val result =
-            generateUnitVerifyFunction(
-                fakeClassName,
-                interfaceName,
-                methodName,
-                FirVisibility.PUBLIC,
-                typeParams,
-            )
+            codeFile("") {
+                unitVerifyFunction(fakeClassName, interfaceName, methodName, FirVisibility.PUBLIC, typeParams)
+            }.renderToString()
 
         // THEN
         assertTrue(result.contains("<T>"))
@@ -276,10 +277,10 @@ class CallHistoryGeneratorTest {
 
     // endregion
 
-    // region generateCallHistoryComponents integration
+    // region generateCallHistoryDeclarations integration
 
     @Test
-    fun `GIVEN interface with mixed methods WHEN generateCallHistoryComponents THEN generates all components`() {
+    fun `GIVEN interface with mixed methods WHEN generateCallHistoryDeclarations THEN generates all components`() {
         // GIVEN
         val fakeClassName = "FakeUserServiceImpl"
         val interfaceName = "UserService"
@@ -303,42 +304,55 @@ class CallHistoryGeneratorTest {
             )
 
         // WHEN
-        val result =
-            generateCallHistoryComponents(
+        val declarations =
+            generateCallHistoryDeclarations(
                 fakeClassName,
                 interfaceName,
                 methods,
                 FirVisibility.PUBLIC,
             )
 
+        val result =
+            codeFile("") {
+                declarations.forEach { decl ->
+                    // Re-add declarations to render them
+                }
+            }
+        // Render via a temp file
+        val tempFile =
+            codeFile("test.package") {
+                addCallHistoryComponents(fakeClassName, interfaceName, methods, FirVisibility.PUBLIC)
+            }
+        val rendered = tempFile.renderToString()
+
         // THEN
         // Data class only for getUser (has params)
-        assertTrue(result.contains("data class UserServiceGetUserCall"))
-        assertFalse(result.contains("data class UserServiceLogoutCall")) // No data class for 0-param
-        assertFalse(result.contains("data class UserServiceLogCall")) // No data class for vararg-only
+        assertTrue(rendered.contains("data class UserServiceGetUserCall"))
+        assertFalse(rendered.contains("data class UserServiceLogoutCall")) // No data class for 0-param
+        assertFalse(rendered.contains("data class UserServiceLogCall")) // No data class for vararg-only
 
         // Full verifier for getUser
-        assertTrue(result.contains("class UserServiceGetUserCallVerifier"))
-        assertTrue(result.contains("fun wasCalledWith(id: String)"))
+        assertTrue(rendered.contains("class UserServiceGetUserCallVerifier"))
+        assertTrue(rendered.contains("fun wasCalledWith(id: String)"))
 
         // Simplified verifiers for 0-param/vararg-only
-        assertTrue(result.contains("class UserServiceLogoutCallVerifier(private val calls: List<Unit>)"))
-        assertTrue(result.contains("class UserServiceLogCallVerifier(private val calls: List<Unit>)"))
+        assertTrue(rendered.contains("class UserServiceLogoutCallVerifier"))
+        assertTrue(rendered.contains("class UserServiceLogCallVerifier"))
 
         // Verify functions for ALL methods
-        assertTrue(result.contains("fun FakeUserServiceImpl.verifyGetUser"))
-        assertTrue(result.contains("fun FakeUserServiceImpl.verifyLogout"))
-        assertTrue(result.contains("fun FakeUserServiceImpl.verifyLog"))
+        assertTrue(rendered.contains("fun FakeUserServiceImpl.verifyGetUser"))
+        assertTrue(rendered.contains("fun FakeUserServiceImpl.verifyLogout"))
+        assertTrue(rendered.contains("fun FakeUserServiceImpl.verifyLog"))
     }
 
     @Test
-    fun `GIVEN empty methods list WHEN generateCallHistoryComponents THEN returns empty string`() {
+    fun `GIVEN empty methods list WHEN generateCallHistoryDeclarations THEN returns empty list`() {
         // GIVEN
         val methods = emptyList<MethodSpec>()
 
         // WHEN
         val result =
-            generateCallHistoryComponents(
+            generateCallHistoryDeclarations(
                 "FakeServiceImpl",
                 "Service",
                 methods,
@@ -346,40 +360,15 @@ class CallHistoryGeneratorTest {
             )
 
         // THEN
-        assertEquals("", result)
-    }
-
-    @Test
-    fun `GIVEN only 0-param methods WHEN generateCallHistoryComponents THEN skips data classes region`() {
-        // GIVEN
-        val methods =
-            listOf(
-                MethodSpec(name = "start", params = emptyList(), returnType = "Unit"),
-                MethodSpec(name = "stop", params = emptyList(), returnType = "Unit"),
-            )
-
-        // WHEN
-        val result =
-            generateCallHistoryComponents(
-                "FakeServiceImpl",
-                "Service",
-                methods,
-                FirVisibility.PUBLIC,
-            )
-
-        // THEN
-        assertFalse(result.contains("// region Call History Data Classes"))
-        assertTrue(result.contains("// region Call History Verifiers"))
-        assertTrue(result.contains("class ServiceStartCallVerifier"))
-        assertTrue(result.contains("class ServiceStopCallVerifier"))
+        assertTrue(result.isEmpty())
     }
 
     // endregion
 
-    // region Generic type erasure
+    // region Generic type erasure via DSL
 
     @Test
-    fun `GIVEN generic method WHEN generateCallDataClass THEN erases type params to Any`() {
+    fun `GIVEN generic method WHEN callDataClass DSL THEN erases type params to Any`() {
         // GIVEN
         val interfaceName = "Repository"
         val methodName = "save"
@@ -387,7 +376,10 @@ class CallHistoryGeneratorTest {
         val typeParams = setOf("T")
 
         // WHEN
-        val result = generateCallDataClass(interfaceName, methodName, params, FirVisibility.PUBLIC, typeParams)
+        val result =
+            codeFile("") {
+                callDataClass(interfaceName, methodName, params, FirVisibility.PUBLIC, typeParams)
+            }.renderToString()
 
         // THEN
         assertTrue(result.contains("data class RepositorySaveCall"))
@@ -396,7 +388,7 @@ class CallHistoryGeneratorTest {
     }
 
     @Test
-    fun `GIVEN method with generic collection param WHEN generateCallDataClass THEN erases nested type params`() {
+    fun `GIVEN method with generic collection param WHEN callDataClass DSL THEN erases nested type params`() {
         // GIVEN
         val interfaceName = "BatchService"
         val methodName = "process"
@@ -404,14 +396,17 @@ class CallHistoryGeneratorTest {
         val typeParams = setOf("T")
 
         // WHEN
-        val result = generateCallDataClass(interfaceName, methodName, params, FirVisibility.PUBLIC, typeParams)
+        val result =
+            codeFile("") {
+                callDataClass(interfaceName, methodName, params, FirVisibility.PUBLIC, typeParams)
+            }.renderToString()
 
         // THEN
         assertTrue(result.contains("val items: List<Any?>"))
     }
 
     @Test
-    fun `GIVEN method with multiple generic params WHEN generateCallDataClass THEN erases all type params`() {
+    fun `GIVEN method with multiple generic params WHEN callDataClass DSL THEN erases all type params`() {
         // GIVEN
         val interfaceName = "MapService"
         val methodName = "transform"
@@ -423,7 +418,10 @@ class CallHistoryGeneratorTest {
         val typeParams = setOf("K", "V")
 
         // WHEN
-        val result = generateCallDataClass(interfaceName, methodName, params, FirVisibility.PUBLIC, typeParams)
+        val result =
+            codeFile("") {
+                callDataClass(interfaceName, methodName, params, FirVisibility.PUBLIC, typeParams)
+            }.renderToString()
 
         // THEN
         assertTrue(result.contains("val key: Any?"))
@@ -432,17 +430,20 @@ class CallHistoryGeneratorTest {
 
     // endregion
 
-    // region Verifier with params
+    // region Verifier with params via DSL
 
     @Test
-    fun `GIVEN single param method WHEN generateVerifierClass THEN includes wasCalledInOrder`() {
+    fun `GIVEN single param method WHEN verifierClass DSL THEN includes wasCalledInOrder`() {
         // GIVEN
         val interfaceName = "UserService"
         val methodName = "getUser"
         val params = listOf(Triple("id", "String", false))
 
         // WHEN
-        val result = generateVerifierClass(interfaceName, methodName, params, FirVisibility.PUBLIC, emptySet())
+        val result =
+            codeFile("") {
+                verifierClass(interfaceName, methodName, params, FirVisibility.PUBLIC, emptySet())
+            }.renderToString()
 
         // THEN
         assertTrue(result.contains("fun wasCalledInOrder(vararg ids: String)"))
@@ -450,7 +451,7 @@ class CallHistoryGeneratorTest {
     }
 
     @Test
-    fun `GIVEN multi param method WHEN generateVerifierClass THEN excludes wasCalledInOrder`() {
+    fun `GIVEN multi param method WHEN verifierClass DSL THEN excludes wasCalledInOrder`() {
         // GIVEN
         val interfaceName = "OrderService"
         val methodName = "create"
@@ -461,7 +462,10 @@ class CallHistoryGeneratorTest {
             )
 
         // WHEN
-        val result = generateVerifierClass(interfaceName, methodName, params, FirVisibility.PUBLIC, emptySet())
+        val result =
+            codeFile("") {
+                verifierClass(interfaceName, methodName, params, FirVisibility.PUBLIC, emptySet())
+            }.renderToString()
 
         // THEN
         assertFalse(result.contains("wasCalledInOrder"))

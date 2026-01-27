@@ -27,7 +27,7 @@ internal data class CodeGenerators(
 /**
  * Contains all generated code pieces for a fake implementation.
  *
- * @property implementation The generated implementation class code
+ * @property implementation The generated implementation class code (includes call history components)
  * @property factory The generated factory function code
  * @property configDsl The generated configuration DSL code
  */
@@ -171,7 +171,7 @@ internal class CodeGenerator(
             // Assemble final code
             val generatedCode =
                 GeneratedCode(
-                    implementation = implementationCode, // Complete file with package + imports
+                    implementation = implementationCode, // Complete file with package + imports + call history
                     factory = generated.factoryFunction,
                     configDsl =
                         generators.configDsl.generateConfigurationDsl(
@@ -246,7 +246,7 @@ internal class CodeGenerator(
             // Assemble final code
             val generatedCode =
                 GeneratedCode(
-                    implementation = implementationCode, // Complete file with package + imports
+                    implementation = implementationCode, // Complete file with package + imports + call history
                     factory = generated.factoryFunction,
                     configDsl =
                         generators.configDsl.generateConfigurationDsl(
@@ -302,11 +302,11 @@ internal class CodeGenerator(
         packageDir.mkdirs()
         val outputFile = packageDir.resolve("$fakeClassName.kt")
 
-        // Implementation now includes package + imports via DSL
+        // Implementation includes package, imports, class, and call history components via DSL
         // Factory and configDSL are still old generators (no package/imports)
         val fullCode =
             buildString {
-                // Implementation already has: package, imports, class (from DSL)
+                // Implementation already has: package, imports, class, call history (from DSL)
                 append(code.implementation)
                 appendLine()
 
@@ -317,7 +317,6 @@ internal class CodeGenerator(
 
                 // Add configuration DSL (no package/imports)
                 append(code.configDsl)
-                appendLine()
             }
 
         // Use buffered writer for better I/O performance
@@ -355,11 +354,11 @@ internal class CodeGenerator(
         packageDir.mkdirs()
         val outputFile = packageDir.resolve("$fakeClassName.kt")
 
-        // Implementation now includes package + imports via DSL
+        // Implementation includes package, imports, class, and call history components via DSL
         // Factory and configDSL are still old generators (no package/imports)
         val fullCode =
             buildString {
-                // Implementation already has: package, imports, class (from DSL)
+                // Implementation already has: package, imports, class, call history (from DSL)
                 append(code.implementation)
                 appendLine()
 
@@ -370,7 +369,6 @@ internal class CodeGenerator(
 
                 // Add configuration DSL (no package/imports)
                 append(code.configDsl)
-                appendLine()
             }
 
         // Use buffered writer for better I/O performance

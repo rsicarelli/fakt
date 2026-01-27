@@ -178,6 +178,13 @@ public class FunctionBuilder
         }
 
         /**
+         * Makes function public (explicit visibility for explicitApi() mode).
+         */
+        public fun public() {
+            modifiers.add(CodeModifier.PUBLIC)
+        }
+
+        /**
          * Makes function internal.
          */
         public fun internal() {
@@ -232,6 +239,24 @@ public class FunctionBuilder
             annotations.add(CodeAnnotation(name, arguments.toList()))
         }
 
+        private var whereClause: String? = null
+
+        /**
+         * Sets where clause for multiple type constraints.
+         *
+         * Example:
+         * ```kotlin
+         * typeParam("T")
+         * where("T : CharSequence, T : Comparable<T>")
+         * // Generates: fun <T> method() where T : CharSequence, T : Comparable<T>
+         * ```
+         *
+         * @param clause The where clause (e.g., "T : CharSequence, T : Comparable<T>")
+         */
+        public fun where(clause: String) {
+            whereClause = clause
+        }
+
         /**
          * Builds the final [CodeFunction].
          *
@@ -250,5 +275,6 @@ public class FunctionBuilder
                 isInline = isInline,
                 receiverType = receiverType,
                 annotations = annotations,
+                whereClause = whereClause,
             )
     }
