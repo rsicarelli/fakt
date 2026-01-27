@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.codegen.builder
 
+import com.rsicarelli.fakt.codegen.model.CodeAnnotation
 import com.rsicarelli.fakt.codegen.model.CodeBlock
 import com.rsicarelli.fakt.codegen.model.CodeExpression
 import com.rsicarelli.fakt.codegen.model.CodeModifier
@@ -30,6 +31,7 @@ public class PropertyBuilder
         private val typeString: String,
     ) {
         private val modifiers = mutableSetOf<CodeModifier>()
+        private val annotations = mutableListOf<CodeAnnotation>()
 
         /**
          * Property initializer expression.
@@ -104,6 +106,27 @@ public class PropertyBuilder
         }
 
         /**
+         * Adds an annotation to the property.
+         *
+         * Example:
+         * ```kotlin
+         * property("_calls", "MutableStateFlow<List<Call>>") {
+         *     annotation("PublishedApi")
+         *     internal()
+         * }
+         * ```
+         *
+         * @param name Annotation simple name (e.g., "PublishedApi", "Suppress")
+         * @param arguments Pre-rendered argument strings
+         */
+        public fun annotation(
+            name: String,
+            vararg arguments: String,
+        ) {
+            annotations.add(CodeAnnotation(name, arguments.toList()))
+        }
+
+        /**
          * Builds the final [CodeProperty].
          *
          * @return Immutable [CodeProperty] instance
@@ -138,5 +161,6 @@ public class PropertyBuilder
                         }
                     },
                 isMutable = isMutable,
+                annotations = annotations.toList(),
             )
     }

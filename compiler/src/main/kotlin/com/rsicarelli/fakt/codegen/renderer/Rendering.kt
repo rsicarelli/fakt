@@ -6,17 +6,20 @@ import com.rsicarelli.fakt.codegen.model.CodeAnnotation
 import com.rsicarelli.fakt.codegen.model.CodeBlock
 import com.rsicarelli.fakt.codegen.model.CodeClass
 import com.rsicarelli.fakt.codegen.model.CodeComment
+import com.rsicarelli.fakt.codegen.model.CodeDataClass
 import com.rsicarelli.fakt.codegen.model.CodeDeclaration
 import com.rsicarelli.fakt.codegen.model.CodeExpression
 import com.rsicarelli.fakt.codegen.model.CodeFile
 import com.rsicarelli.fakt.codegen.model.CodeFunction
 import com.rsicarelli.fakt.codegen.model.CodeMember
+import com.rsicarelli.fakt.codegen.model.CodeModifier
 import com.rsicarelli.fakt.codegen.model.CodeParameter
 import com.rsicarelli.fakt.codegen.model.CodeProperty
 import com.rsicarelli.fakt.codegen.model.CodeRegionEnd
 import com.rsicarelli.fakt.codegen.model.CodeRegionStart
 import com.rsicarelli.fakt.codegen.model.CodeType
 import com.rsicarelli.fakt.codegen.model.CodeTypeParameter
+import com.rsicarelli.fakt.codegen.model.ConstructorProperty
 
 /**
  * Renders [CodeFile] to string using pass-the-builder pattern.
@@ -79,6 +82,7 @@ public fun CodeFile.renderTo(builder: CodeBuilder) {
 public fun CodeDeclaration.renderTo(builder: CodeBuilder) {
     when (this) {
         is CodeClass -> renderTo(builder)
+        is CodeDataClass -> renderTo(builder)
         is CodeFunction -> renderTo(builder)
         is CodeProperty -> renderTo(builder)
     }
@@ -156,6 +160,15 @@ public fun CodeClass.renderTo(builder: CodeBuilder) {
             ""
         }
 
+    // Render constructor properties if present
+    val constructorStr =
+        if (constructorProperties.isNotEmpty()) {
+            val props = constructorProperties.joinToString(", ") { it.render() }
+            "($props)"
+        } else {
+            ""
+        }
+
     val superTypesStr =
         if (superTypes.isNotEmpty()) {
             " : ${superTypes.joinToString { it.render() }}"
@@ -166,13 +179,68 @@ public fun CodeClass.renderTo(builder: CodeBuilder) {
     val whereClauseStr = whereClause?.let { " where $it" } ?: ""
 
     // Render class
-    builder.block("${modifierPrefix}class $name$typeParamsStr$superTypesStr$whereClauseStr") {
+    builder.block("${modifierPrefix}class $name$typeParamsStr$constructorStr$superTypesStr$whereClauseStr") {
         members.forEachIndexed { index, member ->
             member.renderTo(this)
             if (index < members.lastIndex) {
                 appendLine()
             }
         }
+    }
+}
+
+/**
+ * Renders [ConstructorProperty] to string.
+ *
+ * @return Constructor property as Kotlin source string
+ */
+public fun ConstructorProperty.render(): String {
+    val modifiersStr = modifiers.joinToString(" ") { it.name.lowercase() }
+    val modifierPrefix = if (modifiersStr.isNotEmpty()) "$modifiersStr " else ""
+    return "${modifierPrefix}val $name: $type"
+}
+
+/**
+ * Renders [CodeDataClass] to [CodeBuilder].
+ *
+ * Generates data class with constructor properties.
+ *
+ * Examples:
+ * - Single property: `public data class UserCall(val id: String)`
+ * - Multi-property:
+ *   ```kotlin
+ *   public data class UserCall(
+ *       val id: String,
+ *       val name: String,
+ *   )
+ *   ```
+ *
+ * @param builder The [CodeBuilder] to write to
+ */
+public fun CodeDataClass.renderTo(builder: CodeBuilder) {
+    // Render annotations first
+    annotations.forEach { annotation ->
+        annotation.renderTo(builder)
+    }
+
+    // Build modifiers
+    val modifiersStr = modifiers.joinToString(" ") { it.name.lowercase() }
+    val modifierPrefix = if (modifiersStr.isNotEmpty()) "$modifiersStr " else ""
+
+    // Render data class
+    if (properties.size == 1) {
+        // Single property: inline format
+        val prop = properties.first()
+        builder.appendLine("${modifierPrefix}data class $name(val ${prop.name}: ${prop.type})")
+    } else {
+        // Multi-property: multi-line format
+        builder.appendLine("${modifierPrefix}data class $name(")
+        builder.indent {
+            properties.forEach { prop ->
+                appendLine("val ${prop.name}: ${prop.type},")
+            }
+        }
+        builder.appendLine(")")
     }
 }
 
@@ -224,56 +292,71 @@ public fun CodeAnnotation.renderAsFileAnnotation(builder: CodeBuilder) {
  * @param builder The [CodeBuilder] to write to
  */
 public fun CodeFunction.renderTo(builder: CodeBuilder) {
-    // Render function annotations first
-    annotations.forEach { annotation ->
-        annotation.renderTo(builder)
+    annotations.forEach { it.renderTo(builder) }
+    val signature = buildFunctionSignature()
+    when (body) {
+        is CodeBlock.Expression -> renderExpressionBody(builder, signature)
+        is CodeBlock.Statements -> renderStatementsBody(builder, signature)
+        CodeBlock.Empty -> builder.appendLine(signature.full)
     }
+}
 
-    val modifiersStr =
-        buildString(capacity = 50) {
-            if (modifiers.isNotEmpty()) {
-                append(modifiers.joinToString(" ") { it.name.lowercase() })
-                append(" ")
-            }
-            if (isSuspend) append("suspend ")
-            if (isInline) append("inline ")
-        }
-
+private fun CodeFunction.buildFunctionSignature(): FunctionSignature {
+    val modifiersStr = buildModifiersString()
     val typeParamsStr =
-        if (typeParameters.isNotEmpty()) {
-            "<${typeParameters.joinToString { it.render() }}> "
-        } else {
-            ""
-        }
-
+        typeParameters
+            .takeIf { it.isNotEmpty() }
+            ?.let { "<${it.joinToString { p -> p.render() }}> " } ?: ""
     val receiverStr = receiverType?.let { "${it.render()}." } ?: ""
-
     val paramsStr = parameters.joinToString { it.render() }
     val returnTypeStr = ": ${returnType.render()}"
+    val whereClauseStr = whereClause?.let { " where $it" } ?: ""
+    return FunctionSignature(
+        prefix = "${modifiersStr}fun $typeParamsStr$receiverStr$name($paramsStr)",
+        returnType = returnTypeStr,
+        whereClause = whereClauseStr,
+    )
+}
 
-    when (body) {
-        is CodeBlock.Expression -> {
-            // For expression bodies, omit `: Unit` return type as it's redundant
-            val renderedReturnType = returnType.render()
-            val returnTypePart = if (renderedReturnType == "Unit") "" else returnTypeStr
-            val expressionBody = (body as CodeBlock.Expression).expr.render()
-            builder.appendLine(
-                "${modifiersStr}fun $typeParamsStr$receiverStr$name($paramsStr)$returnTypePart = " +
-                    expressionBody,
-            )
+private fun CodeFunction.buildModifiersString(): String =
+    buildString(capacity = 50) {
+        if (modifiers.isNotEmpty()) {
+            append(modifiers.joinToString(" ") { it.name.lowercase() })
+            append(" ")
         }
+        if (isSuspend) append("suspend ")
+        if (isInline) append("inline ")
+    }
 
-        is CodeBlock.Statements -> {
-            builder.block("${modifiersStr}fun $typeParamsStr$receiverStr$name($paramsStr)$returnTypeStr") {
-                body.statements.forEach { stmt ->
-                    appendLine(stmt)
-                }
-            }
-        }
+private class FunctionSignature(
+    private val prefix: String,
+    private val returnType: String,
+    private val whereClause: String,
+) {
+    val full: String get() = "$prefix$returnType$whereClause"
 
-        CodeBlock.Empty -> {
-            builder.appendLine("${modifiersStr}fun $typeParamsStr$receiverStr$name($paramsStr)$returnTypeStr")
+    fun withOptionalReturn(skipUnit: Boolean): String =
+        when {
+            skipUnit && returnType == ": Unit" -> "$prefix$whereClause"
+            else -> full
         }
+}
+
+private fun CodeFunction.renderExpressionBody(
+    builder: CodeBuilder,
+    sig: FunctionSignature,
+) {
+    val skipUnit = returnType.render() == "Unit"
+    val expr = (body as CodeBlock.Expression).expr.render()
+    builder.appendLine("${sig.withOptionalReturn(skipUnit)} = $expr")
+}
+
+private fun CodeFunction.renderStatementsBody(
+    builder: CodeBuilder,
+    sig: FunctionSignature,
+) {
+    builder.block(sig.full) {
+        (body as CodeBlock.Statements).statements.forEach { appendLine(it) }
     }
 }
 
@@ -285,6 +368,11 @@ public fun CodeFunction.renderTo(builder: CodeBuilder) {
  * @param builder The [CodeBuilder] to write to
  */
 public fun CodeProperty.renderTo(builder: CodeBuilder) {
+    // Render property annotations first
+    annotations.forEach { annotation ->
+        annotation.renderTo(builder)
+    }
+
     val modifiersStr = modifiers.joinToString(" ") { it.name.lowercase() }
     val modifierPrefix = if (modifiersStr.isNotEmpty()) "$modifiersStr " else ""
     val varOrVal = if (isMutable) "var" else "val"
@@ -459,3 +547,14 @@ private val KOTLIN_KEYWORDS =
         "when",
         "while",
     )
+
+/**
+ * Convenience extension to render [CodeFile] directly to a String.
+ *
+ * @return The rendered code as a String
+ */
+public fun CodeFile.renderToString(): String {
+    val builder = CodeBuilder()
+    renderTo(builder)
+    return builder.build()
+}

@@ -90,6 +90,7 @@ data object CodeRegionEnd : CodeMember
  * @property superTypes Interfaces/classes this class implements/extends
  * @property modifiers Class modifiers (internal, abstract, etc.)
  * @property members Properties and functions within the class
+ * @property constructorProperties Primary constructor properties (e.g., `class Foo(private val x: Int)`)
  * @property whereClause Optional where clause for complex constraints
  */
 data class CodeClass(
@@ -98,6 +99,7 @@ data class CodeClass(
     val superTypes: List<CodeType> = emptyList(),
     val modifiers: Set<CodeModifier> = emptySet(),
     val members: List<CodeMember> = emptyList(),
+    val constructorProperties: List<ConstructorProperty> = emptyList(),
     val whereClause: String? = null,
     val annotations: List<CodeAnnotation> = emptyList(),
 ) : CodeDeclaration {
@@ -109,6 +111,55 @@ data class CodeClass(
      */
     fun addMember(member: CodeMember): CodeClass = copy(members = members + member)
 }
+
+/**
+ * Represents a primary constructor property.
+ *
+ * Example: `class Foo(private val calls: List<Bar>)` -> ConstructorProperty("calls", "List<Bar>", private)
+ *
+ * @property name Property name
+ * @property type Property type as string
+ * @property modifiers Property modifiers (private, public, etc.)
+ */
+data class ConstructorProperty(
+    val name: String,
+    val type: String,
+    val modifiers: Set<CodeModifier> = emptySet(),
+)
+
+/**
+ * Represents a Kotlin data class declaration.
+ *
+ * Data classes are primarily used for call history recording, where each method
+ * call's arguments are captured as a data class instance.
+ *
+ * Example:
+ * ```kotlin
+ * data class UserServiceGetUserCall(val id: String, val includeDeleted: Boolean)
+ * ```
+ *
+ * @property name The data class name
+ * @property properties Constructor properties (all val)
+ * @property modifiers Visibility modifiers (public, internal, etc.)
+ * @property annotations Class-level annotations
+ */
+data class CodeDataClass(
+    val name: String,
+    val properties: List<DataClassProperty>,
+    val modifiers: Set<CodeModifier> = emptySet(),
+    val annotations: List<CodeAnnotation> = emptyList(),
+) : CodeDeclaration
+
+/**
+ * Represents a property in a data class constructor.
+ *
+ * @property name Property name
+ * @property type Property type as a string (will be parsed during rendering)
+ */
+data class DataClassProperty(
+    val name: String,
+    val type: String,
+)
 
 /**
  * Represents a Kotlin function (top-level or member).
@@ -135,6 +186,7 @@ data class CodeFunction(
     val isInline: Boolean = false,
     val receiverType: CodeType? = null,
     val annotations: List<CodeAnnotation> = emptyList(),
+    val whereClause: String? = null,
 ) : CodeDeclaration,
     CodeMember
 
@@ -148,6 +200,7 @@ data class CodeFunction(
  * @property getter Optional custom getter
  * @property setter Optional custom setter
  * @property isMutable Whether this is a var (true) or val (false)
+ * @property annotations Property-level annotations (e.g., @PublishedApi)
  */
 data class CodeProperty(
     val name: String,
@@ -157,6 +210,7 @@ data class CodeProperty(
     val getter: CodeBlock? = null,
     val setter: CodeBlock? = null,
     val isMutable: Boolean = false,
+    val annotations: List<CodeAnnotation> = emptyList(),
 ) : CodeDeclaration,
     CodeMember
 

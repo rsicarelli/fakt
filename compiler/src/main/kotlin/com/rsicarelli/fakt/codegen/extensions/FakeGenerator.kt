@@ -83,23 +83,8 @@ data class FakeGenerationConfig(
  */
 private fun String.eraseMethodTypeParameters(typeParameters: List<String>): String {
     if (typeParameters.isEmpty()) return this
-
-    // Extract just the type parameter names (remove constraints)
-    val typeParamNames =
-        typeParameters
-            .map { param ->
-                param.substringBefore(" :").trim()
-            }.toSet()
-
-    var result = this
-    typeParamNames.forEach { paramName ->
-        // Replace type parameter with Any?, but not if it's part of a larger identifier
-        // Use word boundary to avoid replacing "T" in "String" or "Test"
-        // We DO want to replace "R" in "List<R>" -> "List<Any?>"
-        result = result.replace(Regex("\\b$paramName\\b"), "Any?")
-    }
-
-    return result
+    val typeParamNames = typeParameters.map { it.substringBefore(" :").trim() }.toSet()
+    return eraseTypeParamsSimple(this, typeParamNames)
 }
 
 /**
@@ -385,7 +370,7 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
 
             // Generate method overrides
             methods.forEach { method ->
-                generateMethodOverride(this, method, isClass)
+                generateMethodOverride(this, method, isClass, interfaceName, typeParameters)
             }
 
             endRegion()
@@ -436,6 +421,11 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
 
             methods.forEach { method ->
                 generateMethodCallTrackingBackingField(this, method)
+            }
+
+            // Generate call history backing fields for ALL methods (params → data class, 0-param → Unit)
+            methods.forEach { method ->
+                generateMethodCallHistoryBackingField(this, method, interfaceName)
             }
 
             // Generate behavior properties for all simple properties
@@ -569,7 +559,7 @@ private fun isValidFunctionInvocationPattern(
     typeParamNames: Set<String>,
 ): Boolean {
     // Method must return a type parameter
-    if (!typeParamNames.any { method.returnType.contains(Regex("\\b$it\\b")) }) return false
+    if (!typeContainsAnyParam(method.returnType, typeParamNames)) return false
 
     // Parameter must be a function type
     if (!paramType.contains("->")) return false
@@ -581,8 +571,7 @@ private fun isValidFunctionInvocationPattern(
 
     // Check if return type contains a type parameter
     val returnPart = funcSignature.substringAfter("->").trim()
-    val returnsTypeParam = typeParamNames.any { returnPart.contains(Regex("\\b$it\\b")) }
-    if (!returnsTypeParam) return false
+    if (!typeContainsAnyParam(returnPart, typeParamNames)) return false
 
     // CRITICAL: Method return type must EXACTLY match function return type
     // Good: fun <T> execute(step: () -> T): T  (both return T)
@@ -611,6 +600,22 @@ private fun generateMethodCallTrackingBackingField(
     method: MethodSpec,
 ) {
     classBuilder.callTrackingBackingField(method.name)
+}
+
+/**
+ * Generates the private backing field for call history tracking.
+ * Generated for ALL methods:
+ * - Methods with params: stores data class instances
+ * - 0-param/vararg-only methods: stores Unit
+ * Part of Section 4: Private State
+ */
+private fun generateMethodCallHistoryBackingField(
+    classBuilder: ClassBuilder,
+    method: MethodSpec,
+    interfaceName: String,
+) {
+    val storageInfo = resolveHistoryStorageType(interfaceName, method.name, method.params)
+    classBuilder.callHistoryBackingField(method.name, storageInfo.dataClassName)
 }
 
 /**
@@ -821,6 +826,8 @@ private fun generateMethodOverride(
     classBuilder: ClassBuilder,
     method: MethodSpec,
     isClass: Boolean = false,
+    interfaceName: String = "",
+    classTypeParameters: List<String> = emptyList(),
 ) {
     val isOpenMethod = isClass && !method.isAbstract
 
@@ -840,11 +847,16 @@ private fun generateMethodOverride(
             name = method.name,
             params = method.params,
             returnType = method.returnType,
-            isSuspend = method.isSuspend,
-            typeParameters = method.typeParameters,
-            useSuperDelegation = isOpenMethod,
-            extensionReceiverType = method.extensionReceiverType,
-            isOperator = method.isOperator,
+            config =
+                OverrideMethodConfig(
+                    isSuspend = method.isSuspend,
+                    typeParameters = method.typeParameters,
+                    useSuperDelegation = isOpenMethod,
+                    extensionReceiverType = method.extensionReceiverType,
+                    isOperator = method.isOperator,
+                    interfaceName = interfaceName,
+                    classTypeParameters = classTypeParameters,
+                ),
         )
     }
 }

@@ -5,62 +5,103 @@ package com.rsicarelli.fakt.codegen.extensions
 import com.rsicarelli.fakt.codegen.builder.ClassBuilder
 
 /**
- * Creates an override method that delegates to a behavior property.
+ * Builds the history update statement for recording a method call.
  *
- * Generates pattern:
- * ```kotlin
- * override fun <T> methodName(params): ReturnType {
- *     return methodNameBehavior(params)  // For interfaces/abstract methods
- *     // OR
- *     return methodNameBehavior?.invoke(params) ?: super.methodName(params)  // For open methods
- * }
- * ```
+ * For ALL methods:
+ * - Methods with params: `_xxxCalls.update { it + XxxCall(params) }`
+ * - 0-param/vararg-only methods: `_xxxCalls.update { it + Unit }`
  *
- * @param name Method name
+ * @param interfaceName Name of the interface for collision-safe data class naming
+ * @param methodName Name of the method
  * @param params List of (name, type, isVararg) triples for parameters
- * @param returnType Return type
- * @param isSuspend Whether this is a suspend function
- * @param typeParameters Method-level type parameters (e.g., ["T", "R : Comparable<R>"])
- * @param useSuperDelegation If true, generates nullable invoke with super delegation for open methods
- * @param extensionReceiverType Extension receiver type (e.g., "Vector" for fun Vector.plus())
- * @param isOperator Whether this is an operator function
+ * @param classTypeParams Set of class-level type parameter names that need erasure casts
+ * @param methodTypeParams Set of method-level type parameter names that need erasure casts
+ * @return Update statement string for call history recording
+ */
+private fun buildHistoryUpdateStatement(
+    interfaceName: String,
+    methodName: String,
+    params: List<Triple<String, String, Boolean>>,
+    classTypeParams: Set<String> = emptySet(),
+    methodTypeParams: Set<String> = emptySet(),
+): String {
+    val regularParams = params.filterNot { it.third } // Exclude varargs
+
+    // 0-param or vararg-only methods use Unit
+    if (regularParams.isEmpty()) {
+        return "_${methodName}Calls.update { it + Unit }"
+    }
+
+    val allTypeParams = classTypeParams + methodTypeParams
+
+    // Interface-prefixed data class for collision safety
+    val dataClassName = "${interfaceName}${methodName.replaceFirstChar { it.uppercase() }}Call"
+
+    // Build constructor args, adding casts for parameters that contain type parameters
+    val constructorArgs =
+        regularParams.joinToString(", ") { (name, type, _) ->
+            // Check if the parameter type contains any type parameter
+            if (typeContainsAnyParam(type, allTypeParams)) {
+                val erasedType = eraseTypeParamsToAny(type, allTypeParams)
+                "$name as $erasedType"
+            } else {
+                name
+            }
+        }
+
+    return "_${methodName}Calls.update { it + $dataClassName($constructorArgs) }"
+}
+
+/**
+ * Configuration for override method generation.
+ */
+data class OverrideMethodConfig(
+    val isSuspend: Boolean = false,
+    val typeParameters: List<String> = emptyList(),
+    val useSuperDelegation: Boolean = false,
+    val extensionReceiverType: String? = null,
+    val isOperator: Boolean = false,
+    val interfaceName: String = "",
+    val classTypeParameters: List<String> = emptyList(),
+)
+
+/**
+ * Creates an override method that delegates to a behavior property.
  */
 fun ClassBuilder.overrideMethod(
     name: String,
     params: List<Triple<String, String, Boolean>>,
     returnType: String,
-    isSuspend: Boolean = false,
-    typeParameters: List<String> = emptyList(),
-    useSuperDelegation: Boolean = false,
-    extensionReceiverType: String? = null,
-    isOperator: Boolean = false,
+    config: OverrideMethodConfig = OverrideMethodConfig(),
 ) {
-    // Calculate needsCast before entering the function block
-    val needsCast = typeParameters.isNotEmpty()
+    val classTypeParamNames = config.classTypeParameters.map(::extractTypeParamName).toSet()
+    val methodTypeParamNames = config.typeParameters.map(::extractTypeParamName).toSet()
+    val allTypeParams = classTypeParamNames + methodTypeParamNames
+
+    val paramsContainTypeParams =
+        params
+            .filterNot { it.third }
+            .any { (_, type, _) -> typeContainsAnyParam(type, allTypeParams) }
+    val needsCast = config.typeParameters.isNotEmpty() || paramsContainTypeParams
 
     function(name) {
-        // Add @Suppress annotation at function level when cast is needed
-        if (needsCast) {
-            annotation("Suppress", "\"UNCHECKED_CAST\"")
-        }
-
-        if (isOperator) operator()
-        if (extensionReceiverType != null) receiver(extensionReceiverType)
+        if (needsCast) annotation("Suppress", "\"UNCHECKED_CAST\"")
+        if (config.isOperator) operator()
+        config.extensionReceiverType?.let { receiver(it) }
         override()
-        if (isSuspend) suspend()
+        if (config.isSuspend) suspend()
 
-        // Add method-level type parameters
-        typeParameters.forEach { typeParam ->
-            // Parse "T" or "T : Bound"
+        config.typeParameters.forEach { typeParam ->
             val parts = typeParam.split(" : ", limit = 2)
-            val name = parts[0].trim()
-            val constraints = if (parts.size > 1) arrayOf(parts[1].trim()) else emptyArray()
-            typeParam(name, *constraints)
+            if (parts.size > 1) {
+                typeParam(parts[0].trim(), parts[1].trim())
+            } else {
+                typeParam(parts[0].trim())
+            }
         }
 
         params.forEach { (paramName, paramType, isVararg) ->
             if (isVararg) {
-                // Extract element type from Array<T>
                 val elementType =
                     paramType
                         .removePrefix("Array<")
@@ -72,80 +113,37 @@ fun ClassBuilder.overrideMethod(
                 parameter(paramName, paramType)
             }
         }
-
         returns(returnType)
 
-        val callTracking = "_${name}CallCount.update { it + 1 }"
-
-        // Generate parameter names for behavior invocation
-        val regularParamNames =
-            if (needsCast) {
-                // Extract type parameter names for erasure checking
-                val typeParamNames = typeParameters.map { it.split(" : ", limit = 2)[0].trim() }.toSet()
-
-                params.joinToString(", ") { (paramName, paramType, _) ->
-                    // Check if this parameter type contains method-level generic types
-                    val containsMethodGeneric =
-                        typeParamNames.any { typeParam ->
-                            paramType.contains(Regex("\\b$typeParam\\b"))
-                        }
-
-                    if (containsMethodGeneric) {
-                        // Erase the parameter type
-                        var erasedType = paramType
-                        typeParamNames.forEach { typeParam ->
-                            erasedType = erasedType.replace(Regex("\\b$typeParam\\b"), "Any?")
-                        }
-                        "$paramName as $erasedType"
-                    } else {
-                        paramName
-                    }
-                }
-            } else {
-                params.joinToString(", ") { it.first }
-            }
-
-        // For extension functions, prepend 'this' receiver as first argument
+        val historyUpdate =
+            buildHistoryUpdateStatement(
+                config.interfaceName,
+                name,
+                params,
+                classTypeParamNames,
+                methodTypeParamNames,
+            )
+        val callTracking = "$historyUpdate\n        _${name}CallCount.update { it + 1 }"
         val paramNames =
-            if (extensionReceiverType != null) {
-                if (regularParamNames.isEmpty()) {
-                    "this"
-                } else {
-                    "this, $regularParamNames"
-                }
-            } else {
-                regularParamNames
-            }
-
+            buildBehaviorInvocationParams(
+                params,
+                config.extensionReceiverType,
+                needsCast,
+                methodTypeParamNames,
+            )
         val returnCast = if (needsCast && returnType != "Unit") " as $returnType" else ""
+        val superCallParams = buildSuperCallParams(params)
 
-        // Generate super call parameters (handle varargs and named parameters after varargs)
-        val hasVararg = params.any { it.third }
-        val varargIndex = if (hasVararg) params.indexOfFirst { it.third } else -1
-        val superCallParams =
-            params
-                .mapIndexed { index, (paramName, _, isVararg) ->
-                    when {
-                        isVararg -> "*$paramName"
-                        hasVararg && index > varargIndex -> "$paramName = $paramName" // Named parameter after vararg
-                        else -> paramName
-                    }
-                }.joinToString(", ")
-
-        // Generate body with super delegation for open methods
         body =
-            if (useSuperDelegation) {
-                // Open method: nullable invoke with super delegation
+            if (config.useSuperDelegation) {
                 val invocation = "${name}Behavior?.invoke($paramNames)"
                 val superCall = "super.$name($superCallParams)"
-
                 if (returnType == "Unit") {
                     "$callTracking\n        $invocation ?: $superCall"
                 } else {
                     "$callTracking\n        return ($invocation ?: $superCall)$returnCast"
                 }
             } else {
-                // Abstract or interface method: direct behavior call
                 if (returnType == "Unit") {
                     "$callTracking\n        ${name}Behavior($paramNames)"
                 } else {
@@ -153,6 +151,45 @@ fun ClassBuilder.overrideMethod(
                 }
             }
     }
+}
+
+private fun buildBehaviorInvocationParams(
+    params: List<Triple<String, String, Boolean>>,
+    extensionReceiverType: String?,
+    needsCast: Boolean,
+    methodTypeParamNames: Set<String>,
+): String {
+    val regularParamNames =
+        if (needsCast) {
+            params.joinToString(", ") { (paramName, paramType, _) ->
+                if (typeContainsAnyParam(paramType, methodTypeParamNames)) {
+                    "$paramName as ${eraseTypeParamsToAny(paramType, methodTypeParamNames)}"
+                } else {
+                    paramName
+                }
+            }
+        } else {
+            params.joinToString(", ") { it.first }
+        }
+
+    return when {
+        extensionReceiverType == null -> regularParamNames
+        regularParamNames.isEmpty() -> "this"
+        else -> "this, $regularParamNames"
+    }
+}
+
+private fun buildSuperCallParams(params: List<Triple<String, String, Boolean>>): String {
+    val hasVararg = params.any { it.third }
+    val varargIndex = if (hasVararg) params.indexOfFirst { it.third } else -1
+    return params
+        .mapIndexed { index, (paramName, _, isVararg) ->
+            when {
+                isVararg -> "*$paramName"
+                hasVararg && index > varargIndex -> "$paramName = $paramName"
+                else -> paramName
+            }
+        }.joinToString(", ")
 }
 
 /**
@@ -196,7 +233,8 @@ fun ClassBuilder.overrideVarargMethod(
         parameter(varargName, elementType, vararg = true)
         returns(returnType)
 
-        val callTracking = "_${name}CallCount.update { it + 1 }"
+        // Vararg-only methods use Unit for history + call count
+        val callTracking = "_${name}Calls.update { it + Unit }\n        _${name}CallCount.update { it + 1 }"
 
         // For extension functions, prepend 'this' receiver as first argument
         val paramNames =
@@ -267,24 +305,9 @@ fun ClassBuilder.configureMethod(
     // Build erased function type for cast if needed
     val erasedFunctionType =
         if (needsCast) {
-            val erasedParams =
-                paramTypes.map { paramType ->
-                    var erased = paramType
-                    typeParameters.forEach { typeParam ->
-                        val paramName = typeParam.split(" : ", limit = 2)[0].trim()
-                        erased = erased.replace(Regex("\\b$paramName\\b"), "Any?")
-                    }
-                    erased
-                }
-            val erasedReturn =
-                run {
-                    var erased = returnType
-                    typeParameters.forEach { typeParam ->
-                        val paramName = typeParam.split(" : ", limit = 2)[0].trim()
-                        erased = erased.replace(Regex("\\b$paramName\\b"), "Any?")
-                    }
-                    erased
-                }
+            val typeParamNames = typeParameters.map { it.split(" : ", limit = 2)[0].trim() }.toSet()
+            val erasedParams = paramTypes.map { eraseTypeParamsSimple(it, typeParamNames) }
+            val erasedReturn = eraseTypeParamsSimple(returnType, typeParamNames)
             buildString {
                 if (isSuspend) append("suspend ")
                 append("(")
