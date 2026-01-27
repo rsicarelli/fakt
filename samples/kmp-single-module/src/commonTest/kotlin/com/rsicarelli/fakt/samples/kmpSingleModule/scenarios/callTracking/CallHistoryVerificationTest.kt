@@ -7,6 +7,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.runTest
 
 /**
  * Tests for call history verification feature.
@@ -184,17 +185,15 @@ class CallHistoryVerificationTest {
     }
 
     @Test
-    fun `GIVEN 0-param async method WHEN called THEN verifies correctly`() {
+    fun `GIVEN 0-param async method WHEN called THEN verifies correctly`() = runTest {
         // GIVEN
         val fake = fakeTrackedService {
             asyncMethod { "async-result" }
         }
 
         // WHEN
-        kotlinx.coroutines.test.runTest {
-            fake.asyncMethod()
-            fake.asyncMethod()
-        }
+        fake.asyncMethod()
+        fake.asyncMethod()
 
         // THEN
         fake.verifyAsyncMethod {
@@ -286,17 +285,15 @@ class CallHistoryVerificationTest {
     }
 
     @Test
-    fun `GIVEN async generic method WHEN called THEN verifies with type erasure`() {
+    fun `GIVEN async generic method WHEN called THEN verifies with type erasure`() = runTest {
         // GIVEN
         val fake = fakeTrackedService {
             asyncGenericMethod<Any?> { it }
         }
 
         // WHEN
-        kotlinx.coroutines.test.runTest {
-            fake.asyncGenericMethod("test")
-            fake.asyncGenericMethod(123)
-        }
+        fake.asyncGenericMethod("test")
+        fake.asyncGenericMethod(123)
 
         // THEN
         fake.verifyAsyncGenericMethod {
