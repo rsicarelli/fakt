@@ -4,6 +4,9 @@ package com.rsicarelli.fakt.compiler.ir.generation
 
 import com.rsicarelli.fakt.codegen.extensions.AnnotationSpec
 import com.rsicarelli.fakt.codegen.extensions.FactoryFunctionSpec
+import com.rsicarelli.fakt.codegen.extensions.MethodSpec
+import com.rsicarelli.fakt.codegen.extensions.PropertySpec
+import com.rsicarelli.fakt.codegen.extensions.generateCallHistoryDeclarations
 import com.rsicarelli.fakt.codegen.extensions.generateCompleteFake
 import com.rsicarelli.fakt.codegen.extensions.generateFactoryFunction
 import com.rsicarelli.fakt.codegen.model.CodeFile
@@ -16,7 +19,7 @@ import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
 /**
  * Holds the generated code pieces from the implementation generator.
  *
- * @property implementationFile CodeFile with package, imports, and implementation class
+ * @property implementationFile CodeFile with package, imports, implementation class, and call history components
  * @property factoryFunction Generated factory function code (string)
  */
 internal data class GeneratedFakeCode(
@@ -54,7 +57,7 @@ internal class ImplementationGenerator(
         val annotationSpecs = analysis.annotations.map { it.toAnnotationSpec() }
 
         // Generate implementation using DSL with visibility for explicitApi() support
-        val implementationFile =
+        var implementationFile =
             generateCompleteFake(
                 packageName = packageName,
                 interfaceName = analysis.interfaceName,
@@ -80,6 +83,22 @@ internal class ImplementationGenerator(
                 ),
             )
 
+        // Generate call history components using DSL and add to implementation file
+        val fakeClassName = "Fake${analysis.interfaceName}Impl"
+        val callHistoryDeclarations =
+            generateCallHistoryDeclarations(
+                fakeClassName = fakeClassName,
+                interfaceName = analysis.interfaceName,
+                methods = methods,
+                visibility = analysis.visibility,
+                classTypeParameters = analysis.typeParameters,
+            )
+
+        // Add call history declarations to the implementation file
+        callHistoryDeclarations.forEach { declaration ->
+            implementationFile = implementationFile.addDeclaration(declaration)
+        }
+
         return GeneratedFakeCode(
             implementationFile = implementationFile,
             factoryFunction = factoryFunction,
@@ -101,33 +120,11 @@ internal class ImplementationGenerator(
         packageName: String,
         imports: List<String> = emptyList(),
     ): GeneratedFakeCode {
-        // Convert abstract and open members to method specs (keeping track of which are abstract)
-        val abstractMethodSpecs =
-            analysis.abstractMethods.map { function ->
-                function.toMethodSpec(typeResolver).copy(isAbstract = true)
-            }
-        val openMethodSpecs =
-            analysis.openMethods.map { function ->
-                function.toMethodSpec(typeResolver).copy(isAbstract = false)
-            }
-        val methodSpecs = abstractMethodSpecs + openMethodSpecs
-
-        // Convert abstract and open properties (keeping track of which are abstract)
-        val abstractPropertySpecs =
-            analysis.abstractProperties.map { property ->
-                property.toPropertySpec(typeResolver).copy(isAbstract = true)
-            }
-        val openPropertySpecs =
-            analysis.openProperties.map { property ->
-                property.toPropertySpec(typeResolver).copy(isAbstract = false)
-            }
-        val propertySpecs = abstractPropertySpecs + openPropertySpecs
-
-        // Convert annotations to codegen specs
+        val (methodSpecs, propertySpecs) = analysis.toMemberSpecs(typeResolver)
         val annotationSpecs = analysis.annotations.map { it.toAnnotationSpec() }
 
         // Generate implementation using DSL with visibility for explicitApi() support
-        val implementationFile =
+        var implementationFile =
             generateCompleteFake(
                 packageName = packageName,
                 interfaceName = analysis.className,
@@ -154,6 +151,22 @@ internal class ImplementationGenerator(
                 ),
             )
 
+        // Generate call history components using DSL and add to implementation file
+        val fakeClassName = "Fake${analysis.className}Impl"
+        val callHistoryDeclarations =
+            generateCallHistoryDeclarations(
+                fakeClassName = fakeClassName,
+                interfaceName = analysis.className,
+                methods = methodSpecs,
+                visibility = analysis.visibility,
+                classTypeParameters = analysis.typeParameters,
+            )
+
+        // Add call history declarations to the implementation file
+        callHistoryDeclarations.forEach { declaration ->
+            implementationFile = implementationFile.addDeclaration(declaration)
+        }
+
         return GeneratedFakeCode(
             implementationFile = implementationFile,
             factoryFunction = factoryFunction,
@@ -171,3 +184,16 @@ private fun AnnotationAnalysis.toAnnotationSpec(): AnnotationSpec =
         arguments = renderedArguments,
         isOptInMarker = isOptInMarker,
     )
+
+/**
+ * Convert ClassAnalysis members to method and property specs.
+ */
+private fun ClassAnalysis.toMemberSpecs(typeResolver: TypeResolution): Pair<List<MethodSpec>, List<PropertySpec>> {
+    val methodSpecs =
+        abstractMethods.map { it.toMethodSpec(typeResolver).copy(isAbstract = true) } +
+            openMethods.map { it.toMethodSpec(typeResolver).copy(isAbstract = false) }
+    val propertySpecs =
+        abstractProperties.map { it.toPropertySpec(typeResolver).copy(isAbstract = true) } +
+            openProperties.map { it.toPropertySpec(typeResolver).copy(isAbstract = false) }
+    return methodSpecs to propertySpecs
+}

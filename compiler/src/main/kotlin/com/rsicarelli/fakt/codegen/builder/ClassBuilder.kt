@@ -11,6 +11,7 @@ import com.rsicarelli.fakt.codegen.model.CodeRegionEnd
 import com.rsicarelli.fakt.codegen.model.CodeRegionStart
 import com.rsicarelli.fakt.codegen.model.CodeType
 import com.rsicarelli.fakt.codegen.model.CodeTypeParameter
+import com.rsicarelli.fakt.codegen.model.ConstructorProperty
 
 /**
  * Builder for [CodeClass] using type-safe DSL.
@@ -50,6 +51,30 @@ public class ClassBuilder
 
         @PublishedApi
         internal val annotations = mutableListOf<CodeAnnotation>()
+
+        @PublishedApi
+        internal val constructorProperties = mutableListOf<ConstructorProperty>()
+
+        /**
+         * Adds a primary constructor property.
+         *
+         * Example:
+         * ```kotlin
+         * constructorProperty("calls", "List<DataClass>") { private() }
+         * // Generates: class Foo(private val calls: List<DataClass>)
+         * ```
+         *
+         * @param name Property name
+         * @param type Property type as string
+         * @param block DSL block for configuring the property modifiers
+         */
+        public inline fun constructorProperty(
+            name: String,
+            type: String,
+            block: ConstructorPropertyBuilder.() -> Unit = {},
+        ) {
+            constructorProperties.add(ConstructorPropertyBuilder(name, type).apply(block).build())
+        }
 
         /**
          * Add annotation to the class.
@@ -248,7 +273,58 @@ public class ClassBuilder
                 superTypes = superTypes,
                 modifiers = modifiers,
                 members = members,
+                constructorProperties = constructorProperties,
                 whereClause = whereClause,
                 annotations = annotations,
+            )
+    }
+
+/**
+ * Builder for [ConstructorProperty] using type-safe DSL.
+ *
+ * @property name Property name
+ * @property type Property type as string
+ */
+@CodeDsl
+public class ConstructorPropertyBuilder
+    @PublishedApi
+    internal constructor(
+        private val name: String,
+        private val type: String,
+    ) {
+        private val modifiers = mutableSetOf<CodeModifier>()
+
+        /**
+         * Makes property private.
+         */
+        public fun private() {
+            modifiers.add(CodeModifier.PRIVATE)
+        }
+
+        /**
+         * Makes property public.
+         */
+        public fun public() {
+            modifiers.add(CodeModifier.PUBLIC)
+        }
+
+        /**
+         * Makes property internal.
+         */
+        public fun internal() {
+            modifiers.add(CodeModifier.INTERNAL)
+        }
+
+        /**
+         * Builds the final [ConstructorProperty].
+         *
+         * @return Immutable [ConstructorProperty] instance
+         */
+        @PublishedApi
+        internal fun build(): ConstructorProperty =
+            ConstructorProperty(
+                name = name,
+                type = type,
+                modifiers = modifiers.toSet(),
             )
     }

@@ -161,6 +161,28 @@ public class CodeFileBuilder
         }
 
         /**
+         * Builds a top-level data class declaration.
+         *
+         * Example:
+         * ```kotlin
+         * dataClass("UserServiceGetUserCall") {
+         *     public()
+         *     property("id", "String")
+         *     property("includeDeleted", "Boolean")
+         * }
+         * ```
+         *
+         * @param name The data class name
+         * @param block DSL block for configuring the data class
+         */
+        public inline fun dataClass(
+            name: String,
+            block: DataClassBuilder.() -> Unit,
+        ) {
+            declarations.add(DataClassBuilder(name).apply(block).build())
+        }
+
+        /**
          * Builds the final [CodeFile].
          *
          * @return Immutable [CodeFile] instance
