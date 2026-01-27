@@ -83,23 +83,8 @@ data class FakeGenerationConfig(
  */
 private fun String.eraseMethodTypeParameters(typeParameters: List<String>): String {
     if (typeParameters.isEmpty()) return this
-
-    // Extract just the type parameter names (remove constraints)
-    val typeParamNames =
-        typeParameters
-            .map { param ->
-                param.substringBefore(" :").trim()
-            }.toSet()
-
-    var result = this
-    typeParamNames.forEach { paramName ->
-        // Replace type parameter with Any?, but not if it's part of a larger identifier
-        // Use word boundary to avoid replacing "T" in "String" or "Test"
-        // We DO want to replace "R" in "List<R>" -> "List<Any?>"
-        result = result.replace(Regex("\\b$paramName\\b"), "Any?")
-    }
-
-    return result
+    val typeParamNames = typeParameters.map { it.substringBefore(" :").trim() }.toSet()
+    return eraseTypeParamsSimple(this, typeParamNames)
 }
 
 /**
@@ -574,7 +559,7 @@ private fun isValidFunctionInvocationPattern(
     typeParamNames: Set<String>,
 ): Boolean {
     // Method must return a type parameter
-    if (!typeParamNames.any { method.returnType.contains(Regex("\\b$it\\b")) }) return false
+    if (!typeContainsAnyParam(method.returnType, typeParamNames)) return false
 
     // Parameter must be a function type
     if (!paramType.contains("->")) return false
@@ -586,8 +571,7 @@ private fun isValidFunctionInvocationPattern(
 
     // Check if return type contains a type parameter
     val returnPart = funcSignature.substringAfter("->").trim()
-    val returnsTypeParam = typeParamNames.any { returnPart.contains(Regex("\\b$it\\b")) }
-    if (!returnsTypeParam) return false
+    if (!typeContainsAnyParam(returnPart, typeParamNames)) return false
 
     // CRITICAL: Method return type must EXACTLY match function return type
     // Good: fun <T> execute(step: () -> T): T  (both return T)

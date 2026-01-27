@@ -41,13 +41,8 @@ private fun buildHistoryUpdateStatement(
     val constructorArgs =
         regularParams.joinToString(", ") { (name, type, _) ->
             // Check if the parameter type contains any type parameter
-            val containsTypeParam =
-                allTypeParams.any { typeParam ->
-                    type.contains(Regex("\\b$typeParam\\b"))
-                }
-            // If it does, erase the type and add cast
-            if (containsTypeParam) {
-                val erasedType = eraseTypeParams(type, allTypeParams)
+            if (typeContainsAnyParam(type, allTypeParams)) {
+                val erasedType = eraseTypeParamsToAny(type, allTypeParams)
                 "$name as $erasedType"
             } else {
                 name
@@ -55,25 +50,6 @@ private fun buildHistoryUpdateStatement(
         }
 
     return "_${methodName}Calls.update { it + $dataClassName($constructorArgs) }"
-}
-
-/**
- * Erases type parameters in a type string to Any?.
- */
-private fun eraseTypeParams(
-    type: String,
-    typeParams: Set<String>,
-): String {
-    var result = type
-    for (param in typeParams) {
-        // Match whole type parameter occurrences
-        // Handle: T, T?, List<T>, List<T?>, Map<K, V>, (T) -> R, etc.
-        result =
-            result
-                .replace(Regex("\\b$param\\b(?!\\?)"), "Any?")
-                .replace(Regex("\\b$param\\?"), "Any?")
-    }
-    return result
 }
 
 /**
@@ -105,7 +81,7 @@ fun ClassBuilder.overrideMethod(
     val paramsContainTypeParams =
         params
             .filterNot { it.third }
-            .any { (_, type, _) -> allTypeParams.any { type.contains(Regex("\\b$it\\b")) } }
+            .any { (_, type, _) -> typeContainsAnyParam(type, allTypeParams) }
     val needsCast = config.typeParameters.isNotEmpty() || paramsContainTypeParams
 
     function(name) {
@@ -186,9 +162,8 @@ private fun buildBehaviorInvocationParams(
     val regularParamNames =
         if (needsCast) {
             params.joinToString(", ") { (paramName, paramType, _) ->
-                val containsMethodGeneric = methodTypeParamNames.any { paramType.contains(Regex("\\b$it\\b")) }
-                if (containsMethodGeneric) {
-                    "$paramName as ${eraseTypeParams(paramType, methodTypeParamNames)}"
+                if (typeContainsAnyParam(paramType, methodTypeParamNames)) {
+                    "$paramName as ${eraseTypeParamsToAny(paramType, methodTypeParamNames)}"
                 } else {
                     paramName
                 }
@@ -330,24 +305,9 @@ fun ClassBuilder.configureMethod(
     // Build erased function type for cast if needed
     val erasedFunctionType =
         if (needsCast) {
-            val erasedParams =
-                paramTypes.map { paramType ->
-                    var erased = paramType
-                    typeParameters.forEach { typeParam ->
-                        val paramName = typeParam.split(" : ", limit = 2)[0].trim()
-                        erased = erased.replace(Regex("\\b$paramName\\b"), "Any?")
-                    }
-                    erased
-                }
-            val erasedReturn =
-                run {
-                    var erased = returnType
-                    typeParameters.forEach { typeParam ->
-                        val paramName = typeParam.split(" : ", limit = 2)[0].trim()
-                        erased = erased.replace(Regex("\\b$paramName\\b"), "Any?")
-                    }
-                    erased
-                }
+            val typeParamNames = typeParameters.map { it.split(" : ", limit = 2)[0].trim() }.toSet()
+            val erasedParams = paramTypes.map { eraseTypeParamsSimple(it, typeParamNames) }
+            val erasedReturn = eraseTypeParamsSimple(returnType, typeParamNames)
             buildString {
                 if (isSuspend) append("suspend ")
                 append("(")

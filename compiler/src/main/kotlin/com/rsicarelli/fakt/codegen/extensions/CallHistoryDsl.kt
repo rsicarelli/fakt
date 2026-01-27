@@ -35,7 +35,7 @@ internal fun CodeFileBuilder.callDataClass(
     dataClass(className) {
         visibility.applyVisibility(this)
         regularParams.forEach { (name, type, _) ->
-            property(name, eraseTypeParameters(type, allTypeParams))
+            property(name, eraseTypeParamsToAny(type, allTypeParams))
         }
     }
 }
@@ -79,7 +79,7 @@ internal fun CodeFileBuilder.verifierClass(
     // Erase ALL type parameters (class-level + method-level) to Any?
     val paramsWithErasedTypes =
         regularParams.map { (name, type, isVararg) ->
-            Triple(name, eraseTypeParameters(type, allTypeParams), isVararg)
+            Triple(name, eraseTypeParamsToAny(type, allTypeParams), isVararg)
         }
 
     klass(verifierClassName) {
@@ -332,42 +332,3 @@ internal fun CodeFileBuilder.unitVerifyFunction(
  * Capitalizes the first character of a string.
  */
 private fun String.capitalizeFirst(): String = replaceFirstChar { it.uppercase() }
-
-// Cache for compiled regex patterns to avoid recompilation
-private val typeParamNonNullableRegex = mutableMapOf<String, Regex>()
-private val typeParamNullableRegex = mutableMapOf<String, Regex>()
-
-/**
- * Erases class-level type parameters to Any? in a type string.
- *
- * Examples:
- * - "T" -> "Any?"
- * - "List<T>" -> "List<Any?>"
- * - "Map<K, V>" -> "Map<Any?, Any?>"
- * - "String" -> "String" (no change)
- */
-private fun eraseTypeParameters(
-    type: String,
-    classTypeParams: Set<String>,
-): String {
-    if (classTypeParams.isEmpty()) return type
-
-    var result = type
-    for (param in classTypeParams) {
-        // Match whole type parameter occurrences
-        // Handle: T, T?, List<T>, List<T?>, Map<K, V>, etc.
-        val nonNullableRegex =
-            typeParamNonNullableRegex.getOrPut(param) {
-                Regex("\\b$param\\b(?!\\?)")
-            }
-        val nullableRegex =
-            typeParamNullableRegex.getOrPut(param) {
-                Regex("\\b$param\\?")
-            }
-        result =
-            result
-                .replace(nonNullableRegex, "Any?") // T -> Any?
-                .replace(nullableRegex, "Any?") // T? -> Any?
-    }
-    return result
-}

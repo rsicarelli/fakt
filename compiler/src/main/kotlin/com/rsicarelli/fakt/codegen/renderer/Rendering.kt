@@ -335,7 +335,11 @@ private class FunctionSignature(
 ) {
     val full: String get() = "$prefix$returnType$whereClause"
 
-    fun withOptionalReturn(skipUnit: Boolean): String = if (skipUnit && returnType == ": Unit") "$prefix$whereClause" else full
+    fun withOptionalReturn(skipUnit: Boolean): String =
+        when {
+            skipUnit && returnType == ": Unit" -> "$prefix$whereClause"
+            else -> full
+        }
 }
 
 private fun CodeFunction.renderExpressionBody(
