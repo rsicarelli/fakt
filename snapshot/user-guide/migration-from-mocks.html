@@ -661,6 +661,48 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#verification-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verification Patterns
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Verification Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mockk-verify-fakt-verifymethod" class="md-nav__link">
+    <span class="md-ellipsis">
+      MockK verify → Fakt verify{Method}
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mockito-verify-fakt-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mockito verify → Fakt verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#argumentcaptor-first-lastornull-all" class="md-nav__link">
+    <span class="md-ellipsis">
+      ArgumentCaptor → first, lastOrNull, all
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#next-steps" class="md-nav__link">
     <span class="md-ellipsis">
       Next Steps
@@ -995,6 +1037,48 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#verification-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verification Patterns
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Verification Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mockk-verify-fakt-verifymethod" class="md-nav__link">
+    <span class="md-ellipsis">
+      MockK verify → Fakt verify{Method}
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mockito-verify-fakt-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mockito verify → Fakt verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#argumentcaptor-first-lastornull-all" class="md-nav__link">
+    <span class="md-ellipsis">
+      ArgumentCaptor → first, lastOrNull, all
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#next-steps" class="md-nav__link">
     <span class="md-ellipsis">
       Next Steps
@@ -1209,6 +1293,125 @@
 <a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="p">}</span>
 </code></pre></div>
 <p><strong>Type safety</strong>: Fakt preserves generic type parameters. The DSL lambda receives <code>item: User</code>, not <code>item: Any</code>.</p>
+<hr />
+<h2 id="verification-patterns">Verification Patterns<a class="headerlink" href="#verification-patterns" title="Permanent link">&para;</a></h2>
+<p>Fakt&rsquo;s verification DSL provides expressive assertions comparable to mocking frameworks.</p>
+<h3 id="mockk-verify-fakt-verifymethod">MockK verify → Fakt verify{Method}<a class="headerlink" href="#mockk-verify-fakt-verifymethod" title="Permanent link">&para;</a></h3>
+<p><strong>MockK:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nd">@Test</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`verify specific arguments`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">mock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mockk</span><span class="o">&lt;</span><span class="n">UserRepository</span><span class="o">&gt;</span><span class="p">()</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">    </span><span class="n">every</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">mock</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">any</span><span class="p">(),</span><span class="w"> </span><span class="n">any</span><span class="p">())</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="n">returns</span><span class="w"> </span><span class="kt">Unit</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">    </span><span class="n">mock</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">),</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="w">    </span><span class="n">mock</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bob&quot;</span><span class="p">),</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="w">    </span><span class="n">verify</span><span class="p">(</span><span class="n">exactly</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">2</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">mock</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">any</span><span class="p">(),</span><span class="w"> </span><span class="n">any</span><span class="p">())</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="w">    </span><span class="n">verify</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">mock</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">),</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>Fakt:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nd">@Test</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`verify specific arguments`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">        </span><span class="n">save</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">user</span><span class="p">,</span><span class="w"> </span><span class="n">validate</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">),</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span>
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bob&quot;</span><span class="p">),</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>
+<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">verifySave</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="w">        </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">wasCalledTimes</span><span class="p">(</span><span class="m">2</span><span class="p">))</span>
+<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="w">        </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">wasCalledWith</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">),</span><span class="w"> </span><span class="kc">true</span><span class="p">))</span>
+<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="mockito-verify-fakt-verification">Mockito verify → Fakt verification<a class="headerlink" href="#mockito-verify-fakt-verification" title="Permanent link">&para;</a></h3>
+<p><strong>Mockito:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nd">@Test</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`verify call order and counts`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">mock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mock</span><span class="p">(</span><span class="n">Analytics</span><span class="o">::</span><span class="n">class</span><span class="p">.</span><span class="na">java</span><span class="p">)</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">    </span><span class="n">mock</span><span class="p">.</span><span class="na">track</span><span class="p">(</span><span class="s">&quot;page_view&quot;</span><span class="p">)</span>
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">    </span><span class="n">mock</span><span class="p">.</span><span class="na">track</span><span class="p">(</span><span class="s">&quot;purchase&quot;</span><span class="p">)</span>
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="w">    </span><span class="n">verify</span><span class="p">(</span><span class="n">mock</span><span class="p">,</span><span class="w"> </span><span class="n">times</span><span class="p">(</span><span class="m">2</span><span class="p">)).</span><span class="na">track</span><span class="p">(</span><span class="n">any</span><span class="p">())</span>
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="w">    </span><span class="n">verify</span><span class="p">(</span><span class="n">mock</span><span class="p">).</span><span class="na">track</span><span class="p">(</span><span class="s">&quot;page_view&quot;</span><span class="p">)</span>
+<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="w">    </span><span class="n">verify</span><span class="p">(</span><span class="n">mock</span><span class="p">,</span><span class="w"> </span><span class="n">never</span><span class="p">()).</span><span class="na">track</span><span class="p">(</span><span class="s">&quot;error&quot;</span><span class="p">)</span>
+<a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>Fakt:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nd">@Test</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`verify call order and counts`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeAnalytics</span><span class="p">()</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">track</span><span class="p">(</span><span class="s">&quot;page_view&quot;</span><span class="p">)</span>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">track</span><span class="p">(</span><span class="s">&quot;purchase&quot;</span><span class="p">)</span>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">verifyTrack</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="w">        </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">wasCalledTimes</span><span class="p">(</span><span class="m">2</span><span class="p">))</span>
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="w">        </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">wasCalledWith</span><span class="p">(</span><span class="s">&quot;page_view&quot;</span><span class="p">))</span>
+<a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="w">        </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">neverCalledWith</span><span class="p">(</span><span class="s">&quot;error&quot;</span><span class="p">))</span>
+<a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="w">        </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">wasCalledInOrder</span><span class="p">(</span><span class="s">&quot;page_view&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;purchase&quot;</span><span class="p">))</span>
+<a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="argumentcaptor-first-lastornull-all">ArgumentCaptor → first, lastOrNull, all<a class="headerlink" href="#argumentcaptor-first-lastornull-all" title="Permanent link">&para;</a></h3>
+<p><strong>MockK with slot:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nd">@Test</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`capture and inspect arguments`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">mock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mockk</span><span class="o">&lt;</span><span class="n">UserRepository</span><span class="o">&gt;</span><span class="p">()</span>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span><span class="p">()</span>
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">    </span><span class="n">every</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">mock</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">capture</span><span class="p">(</span><span class="n">slot</span><span class="p">),</span><span class="w"> </span><span class="n">any</span><span class="p">())</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="n">returns</span><span class="w"> </span><span class="kt">Unit</span>
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>
+<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="w">    </span><span class="n">mock</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">),</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span>
+<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>
+<a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="na">captured</span><span class="p">.</span><span class="na">name</span><span class="p">)</span>
+<a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>Mockito with ArgumentCaptor:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nd">@Test</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`capture and inspect arguments`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">mock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mock</span><span class="p">(</span><span class="n">UserRepository</span><span class="o">::</span><span class="n">class</span><span class="p">.</span><span class="na">java</span><span class="p">)</span>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">captor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ArgumentCaptor</span><span class="p">.</span><span class="na">forClass</span><span class="p">(</span><span class="n">User</span><span class="o">::</span><span class="n">class</span><span class="p">.</span><span class="na">java</span><span class="p">)</span>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="w">    </span><span class="n">mock</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">),</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span>
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="w">    </span><span class="n">verify</span><span class="p">(</span><span class="n">mock</span><span class="p">).</span><span class="na">save</span><span class="p">(</span><span class="n">captor</span><span class="p">.</span><span class="na">capture</span><span class="p">(),</span><span class="w"> </span><span class="n">any</span><span class="p">())</span>
+<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">captor</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">name</span><span class="p">)</span>
+<a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>Fakt with call history:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="nd">@Test</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`capture and inspect arguments`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">        </span><span class="n">save</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">user</span><span class="p">,</span><span class="w"> </span><span class="n">validate</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>
+<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">),</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span>
+<a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bob&quot;</span><span class="p">),</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>
+<a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">verifySave</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="w">        </span><span class="c1">// Access first call</span>
+<a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a><span class="w">        </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">first</span><span class="p">.</span><span class="na">user</span><span class="p">.</span><span class="na">name</span><span class="p">)</span>
+<a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a><span class="w">        </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">first</span><span class="p">.</span><span class="na">validate</span><span class="p">)</span>
+<a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a>
+<a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a><span class="w">        </span><span class="c1">// Access last call</span>
+<a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a><span class="w">        </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Bob&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">lastOrNull</span><span class="o">?.</span><span class="na">user</span><span class="o">?.</span><span class="na">name</span><span class="p">)</span>
+<a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a>
+<a id="__codelineno-18-18" name="__codelineno-18-18" href="#__codelineno-18-18"></a><span class="w">        </span><span class="c1">// Access all calls</span>
+<a id="__codelineno-18-19" name="__codelineno-18-19" href="#__codelineno-18-19"></a><span class="w">        </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="n">all</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
+<a id="__codelineno-18-20" name="__codelineno-18-20" href="#__codelineno-18-20"></a><span class="w">        </span><span class="n">assertEquals</span><span class="p">(</span><span class="n">listOf</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bob&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">all</span><span class="p">.</span><span class="na">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">it</span><span class="p">.</span><span class="na">user</span><span class="p">.</span><span class="na">name</span><span class="w"> </span><span class="p">})</span>
+<a id="__codelineno-18-21" name="__codelineno-18-21" href="#__codelineno-18-21"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-18-22" name="__codelineno-18-22" href="#__codelineno-18-22"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>Key differences:</strong></p>
+<ul>
+<li>No need for separate captor/slot objects</li>
+<li>Type-safe access to all parameters via generated data classes</li>
+<li><code>first</code>, <code>lastOrNull</code>, and <code>all</code> provide natural history access</li>
+<li>Call history persists for the lifetime of the fake</li>
+</ul>
 <hr />
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
