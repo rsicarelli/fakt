@@ -8,10 +8,9 @@ import com.rsicarelli.fakt.codegen.extensions.MethodSpec
 import com.rsicarelli.fakt.codegen.extensions.PropertySpec
 import com.rsicarelli.fakt.codegen.extensions.generateCallHistoryDeclarations
 import com.rsicarelli.fakt.codegen.extensions.generateCompleteFake
-import com.rsicarelli.fakt.codegen.extensions.generateFactoryFunction
+import com.rsicarelli.fakt.codegen.extensions.generateFactoryFunctionCodeFile
 import com.rsicarelli.fakt.codegen.model.CodeFile
 import com.rsicarelli.fakt.compiler.core.types.TypeResolution
-import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 import com.rsicarelli.fakt.compiler.ir.analysis.AnnotationAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
@@ -19,12 +18,14 @@ import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
 /**
  * Holds the generated code pieces from the implementation generator.
  *
+ * Uses CodeFile for type-safe, composable code generation.
+ *
  * @property implementationFile CodeFile with package, imports, implementation class, and call history components
- * @property factoryFunction Generated factory function code (string)
+ * @property factoryFunction CodeFile containing the factory function
  */
 internal data class GeneratedFakeCode(
     val implementationFile: CodeFile,
-    val factoryFunction: String,
+    val factoryFunction: CodeFile,
 )
 
 /**
@@ -38,12 +39,12 @@ internal class ImplementationGenerator(
     /**
      * Generates fake implementation and factory for an interface.
      *
-     * Returns implementation CodeFile and factory function string.
+     * Returns implementation and factory as CodeFiles for type-safe composition.
      *
      * @param analysis The analyzed interface metadata
      * @param packageName The package name for the generated code
      * @param imports Additional imports required by the interface (from ImportResolver)
-     * @return GeneratedFakeCode with CodeFile and factory string
+     * @return GeneratedFakeCode with CodeFiles for implementation and factory
      */
     fun generateImplementation(
         analysis: InterfaceAnalysis,
@@ -70,9 +71,9 @@ internal class ImplementationGenerator(
                 annotations = annotationSpecs,
             )
 
-        // Generate factory function with visibility for explicitApi() support
+        // Generate factory function CodeFile with visibility for explicitApi() support
         val factoryFunction =
-            generateFactoryFunction(
+            generateFactoryFunctionCodeFile(
                 FactoryFunctionSpec(
                     interfaceName = analysis.interfaceName,
                     typeParameters = analysis.typeParameters,
@@ -108,12 +109,12 @@ internal class ImplementationGenerator(
     /**
      * Generates fake implementation and factory for a class.
      *
-     * Returns implementation CodeFile and factory function string.
+     * Returns implementation and factory as CodeFiles for type-safe composition.
      *
      * @param analysis The analyzed class metadata
      * @param packageName The package name for the generated code
      * @param imports Additional imports required by the class (from ImportResolver)
-     * @return GeneratedFakeCode with CodeFile and factory string
+     * @return GeneratedFakeCode with CodeFiles for implementation and factory
      */
     fun generateClassFake(
         analysis: ClassAnalysis,
@@ -138,9 +139,9 @@ internal class ImplementationGenerator(
                 annotations = annotationSpecs,
             )
 
-        // Generate factory function with visibility for explicitApi() support
+        // Generate factory function CodeFile with visibility for explicitApi() support
         val factoryFunction =
-            generateFactoryFunction(
+            generateFactoryFunctionCodeFile(
                 FactoryFunctionSpec(
                     interfaceName = analysis.className,
                     typeParameters = analysis.typeParameters,
