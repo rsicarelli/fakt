@@ -18,6 +18,58 @@ import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.types.IrType
 
 /**
+ * Generation configuration for IR metadata.
+ *
+ * Groups cache, visibility, and call history settings to reduce constructor parameter count.
+ * Used by both [IrGenerationMetadata] and [IrClassGenerationMetadata].
+ *
+ * @property isFromCache Whether metadata was loaded from incremental compilation cache
+ * @property sourceSourceSet Source set identifier for generated code placement
+ * @property visibility Visibility of the interface/class for explicitApi() support
+ * @property callHistoryMode Call history generation mode from @Fake annotation
+ */
+data class IrGenerationConfig(
+    val isFromCache: Boolean = false,
+    val sourceSourceSet: String? = null,
+    val visibility: FirVisibility = FirVisibility.PUBLIC,
+    val callHistoryMode: FirCallHistoryMode = FirCallHistoryMode.DEFAULT,
+)
+
+/**
+ * Interface members with resolved IR types.
+ *
+ * Groups all interface members (properties and functions) to reduce constructor parameter count.
+ *
+ * @property properties All interface properties with resolved IrTypes
+ * @property functions All interface functions with resolved IrTypes
+ * @property annotations Annotations from the interface for propagation
+ */
+data class IrInterfaceMembers(
+    val properties: List<IrPropertyMetadata>,
+    val functions: List<IrFunctionMetadata>,
+    val annotations: List<IrAnnotationMetadata> = emptyList(),
+)
+
+/**
+ * Abstract class members with resolved IR types.
+ *
+ * Groups all class members separated by abstract/open to reduce constructor parameter count.
+ *
+ * @property abstractProperties Abstract properties (must be implemented)
+ * @property openProperties Open properties (can be overridden)
+ * @property abstractMethods Abstract methods (must be implemented)
+ * @property openMethods Open methods (can be overridden)
+ * @property annotations Annotations from the class for propagation
+ */
+data class IrClassMembers(
+    val abstractProperties: List<IrPropertyMetadata>,
+    val openProperties: List<IrPropertyMetadata>,
+    val abstractMethods: List<IrFunctionMetadata>,
+    val openMethods: List<IrFunctionMetadata>,
+    val annotations: List<IrAnnotationMetadata> = emptyList(),
+)
+
+/**
  * Metadata for IR code generation, transformed from FIR ValidatedFakeInterface.
  *
  * This is the **bridge** between FIR phase (string-based types) and IR phase (IrTypes).
@@ -37,28 +89,42 @@ import org.jetbrains.kotlin.ir.types.IrType
  * @property packageName Package name (e.g., "com.example")
  * @property typeParameters Class-level type parameters with bounds
  *     (e.g., ["T", "K : Comparable<K>"])
- * @property properties All interface properties with resolved IrTypes
- * @property functions All interface functions with resolved IrTypes
+ * @property members Interface members (properties, functions, annotations)
  * @property genericPattern Classification of generic usage
  *     (NoGenerics, ClassLevel, MethodLevel, Mixed) - computed lazily
  * @property sourceInterface Original IrClass for code generation context
- * @property visibility Visibility of the interface for explicitApi() support
- * @property callHistoryMode Call history generation mode from @Fake annotation
+ * @property config Generation configuration (visibility, cache state, call history mode)
  */
 class IrGenerationMetadata internal constructor(
     val interfaceName: String,
     val packageName: String,
     val typeParameters: List<String>,
-    val properties: List<IrPropertyMetadata>,
-    val functions: List<IrFunctionMetadata>,
-    val annotations: List<IrAnnotationMetadata> = emptyList(),
+    private val members: IrInterfaceMembers,
     val sourceInterface: IrClass,
     private val patternAnalyzer: GenericPatternAnalyzer,
-    val isFromCache: Boolean = false,
-    val sourceSourceSet: String? = null,
-    val visibility: FirVisibility = FirVisibility.PUBLIC,
-    val callHistoryMode: FirCallHistoryMode = FirCallHistoryMode.DEFAULT,
+    private val config: IrGenerationConfig = IrGenerationConfig(),
 ) {
+    /** All interface properties with resolved IrTypes. */
+    val properties: List<IrPropertyMetadata> get() = members.properties
+
+    /** All interface functions with resolved IrTypes. */
+    val functions: List<IrFunctionMetadata> get() = members.functions
+
+    /** Annotations from the interface for propagation. */
+    val annotations: List<IrAnnotationMetadata> get() = members.annotations
+
+    /** Whether metadata was loaded from incremental compilation cache. */
+    val isFromCache: Boolean get() = config.isFromCache
+
+    /** Source set identifier for generated code placement. */
+    val sourceSourceSet: String? get() = config.sourceSourceSet
+
+    /** Visibility of the interface for explicitApi() support. */
+    val visibility: FirVisibility get() = config.visibility
+
+    /** Call history generation mode from @Fake annotation. */
+    val callHistoryMode: FirCallHistoryMode get() = config.callHistoryMode
+
     /**
      * Lazy generic pattern analysis - computed on first access only.
      *
@@ -158,32 +224,48 @@ data class IrParameterMetadata(
  * @property packageName Package name (e.g., "com.example")
  * @property typeParameters Class-level type parameters with bounds
  *     (e.g., ["T", "K : Comparable<K>"])
- * @property abstractProperties Abstract properties (must be implemented)
- * @property openProperties Open properties (can be overridden)
- * @property abstractMethods Abstract methods (must be implemented)
- * @property openMethods Open methods (can be overridden)
+ * @property members Class members separated by abstract/open
  * @property genericPattern Classification of generic usage
  *     (NoGenerics, ClassLevel, MethodLevel, Mixed) - computed lazily
  * @property sourceClass Original IrClass for code generation context
- * @property visibility Visibility of the class for explicitApi() support
- * @property callHistoryMode Call history generation mode from @Fake annotation
+ * @property config Generation configuration (visibility, cache state, call history mode)
  */
 class IrClassGenerationMetadata internal constructor(
     val className: String,
     val packageName: String,
     val typeParameters: List<String>,
-    val abstractProperties: List<IrPropertyMetadata>,
-    val openProperties: List<IrPropertyMetadata>,
-    val abstractMethods: List<IrFunctionMetadata>,
-    val openMethods: List<IrFunctionMetadata>,
-    val annotations: List<IrAnnotationMetadata> = emptyList(),
+    private val members: IrClassMembers,
     val sourceClass: IrClass,
     private val patternAnalyzer: GenericPatternAnalyzer,
-    val isFromCache: Boolean = false,
-    val sourceSourceSet: String? = null,
-    val visibility: FirVisibility = FirVisibility.PUBLIC,
-    val callHistoryMode: FirCallHistoryMode = FirCallHistoryMode.DEFAULT,
+    private val config: IrGenerationConfig = IrGenerationConfig(),
 ) {
+    /** Abstract properties (must be implemented). */
+    val abstractProperties: List<IrPropertyMetadata> get() = members.abstractProperties
+
+    /** Open properties (can be overridden). */
+    val openProperties: List<IrPropertyMetadata> get() = members.openProperties
+
+    /** Abstract methods (must be implemented). */
+    val abstractMethods: List<IrFunctionMetadata> get() = members.abstractMethods
+
+    /** Open methods (can be overridden). */
+    val openMethods: List<IrFunctionMetadata> get() = members.openMethods
+
+    /** Annotations from the class for propagation. */
+    val annotations: List<IrAnnotationMetadata> get() = members.annotations
+
+    /** Whether metadata was loaded from incremental compilation cache. */
+    val isFromCache: Boolean get() = config.isFromCache
+
+    /** Source set identifier for generated code placement. */
+    val sourceSourceSet: String? get() = config.sourceSourceSet
+
+    /** Visibility of the class for explicitApi() support. */
+    val visibility: FirVisibility get() = config.visibility
+
+    /** Call history generation mode from @Fake annotation. */
+    val callHistoryMode: FirCallHistoryMode get() = config.callHistoryMode
+
     /**
      * Lazy generic pattern analysis - computed on first access only.
      * See IrGenerationMetadata.genericPattern for details.

@@ -216,6 +216,21 @@ private fun buildSuperCallParams(params: List<Triple<String, String, Boolean>>):
 }
 
 /**
+ * Configuration for override vararg method generation.
+ *
+ * @property useSuperDelegation If true, generates nullable invoke with super delegation for open methods
+ * @property extensionReceiverType Extension receiver type for extension functions (e.g., "Vector")
+ * @property isOperator Whether method is declared with 'operator' modifier
+ * @property generateCallHistory When true, includes call tracking statement. Default: true.
+ */
+data class OverrideVarargConfig(
+    val useSuperDelegation: Boolean = false,
+    val extensionReceiverType: String? = null,
+    val isOperator: Boolean = false,
+    val generateCallHistory: Boolean = true,
+)
+
+/**
  * Creates an override method with vararg parameter.
  *
  * Generates pattern:
@@ -228,22 +243,18 @@ private fun buildSuperCallParams(params: List<Triple<String, String, Boolean>>):
  * ```
  *
  * @param varargType The Array type (e.g., "Array<String>"), element type will be extracted
- * @param useSuperDelegation If true, generates nullable invoke with super delegation for open methods
- * @param generateCallHistory If true, includes call tracking statement. Default: true.
+ * @param config Configuration options for vararg method generation
  */
 fun ClassBuilder.overrideVarargMethod(
     name: String,
     varargName: String,
     varargType: String,
     returnType: String,
-    useSuperDelegation: Boolean = false,
-    extensionReceiverType: String? = null,
-    isOperator: Boolean = false,
-    generateCallHistory: Boolean = true,
+    config: OverrideVarargConfig = OverrideVarargConfig(),
 ) {
     function(name) {
-        if (isOperator) operator()
-        if (extensionReceiverType != null) receiver(extensionReceiverType)
+        if (config.isOperator) operator()
+        if (config.extensionReceiverType != null) receiver(config.extensionReceiverType)
         override()
         // Extract element type from Array<T> or Array<out T>
         // "Array<String>" -> "String"
@@ -260,18 +271,19 @@ fun ClassBuilder.overrideVarargMethod(
 
         // Vararg-only methods use Unit for history (call count derived from history size)
         // Only generate if call history is enabled
-        val callTracking = if (generateCallHistory) "_${name}Calls.update { it + Unit }" else null
+        val callTracking =
+            if (config.generateCallHistory) "_${name}Calls.update { it + Unit }" else null
 
         // For extension functions, prepend 'this' receiver as first argument
         val paramNames =
-            if (extensionReceiverType != null) {
+            if (config.extensionReceiverType != null) {
                 "this, $varargName"
             } else {
                 varargName
             }
 
         body =
-            if (useSuperDelegation) {
+            if (config.useSuperDelegation) {
                 // Open method: nullable invoke with super delegation
                 val invocation = "${name}Behavior?.invoke($paramNames)"
                 val superCall = "super.$name(*$varargName)"

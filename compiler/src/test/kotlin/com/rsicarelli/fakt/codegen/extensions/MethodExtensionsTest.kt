@@ -548,7 +548,7 @@ class MethodExtensionsTest {
                         varargName = "items",
                         varargType = "String",
                         returnType = "Int",
-                        generateCallHistory = false,
+                        config = OverrideVarargConfig(generateCallHistory = false),
                     )
                 }
             }
@@ -630,7 +630,7 @@ class MethodExtensionsTest {
                         varargName = "messages",
                         varargType = "String",
                         returnType = "Unit",
-                        generateCallHistory = true,
+                        config = OverrideVarargConfig(generateCallHistory = true),
                     )
                 }
             }
