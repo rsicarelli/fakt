@@ -639,9 +639,9 @@ interface Consumer<in T> {
 
 ---
 
-## Call Tracking
+## Call Tracking & Verification
 
-Every Fakt-generated fake includes automatic, thread-safe call tracking via Kotlin StateFlow.
+Every Fakt-generated fake includes automatic, thread-safe call tracking with a powerful verification DSL.
 
 ### Basic Call Tracking
 
@@ -676,25 +676,97 @@ fun `GIVEN fake logger WHEN logging messages THEN tracks call counts`() {
 
 ---
 
-### StateFlow Integration
+### Verification DSL
 
-Call counters are `StateFlow<Int>`, enabling reactive testing:
+Fakt generates a scoped verification DSL for each method, providing expressive assertions:
 
 ```kotlin
-import app.cash.turbine.test
+@Test
+fun `GIVEN repository WHEN saving users THEN verifies call history`() {
+    val fake = fakeUserRepository {
+        save { user -> user }
+    }
+
+    fake.save(User("1", "Alice"))
+    fake.save(User("2", "Bob"))
+
+    fake.verifySave {
+        assertTrue(wasCalledTimes(2))
+        assertTrue(wasCalledWith(User("1", "Alice")))
+        assertEquals("1", first.user.id)
+        assertEquals(2, all.size)
+    }
+}
+```
+
+**Verifier Methods:**
+
+| Method | Description |
+|--------|-------------|
+| `wasCalledTimes(n)` | Returns `true` if method was called exactly `n` times |
+| `wasCalledWith(...)` | Returns `true` if method was called with specified arguments |
+| `wasNeverCalled()` | Returns `true` if method was never called |
+| `wasCalledInOrder(...)` | Returns `true` if single-param method was called in specified order |
+| `neverCalledWith(...)` | Returns `true` if single-param method was never called with value |
+| `first` | First call's data (throws if no calls) |
+| `lastOrNull` | Last call's data, or `null` if no calls |
+| `all` | List of all call data objects |
+
+---
+
+### Call History Data Classes
+
+For each method, Fakt generates a data class capturing all parameters:
+
+```kotlin
+// For: fun save(user: User, validate: Boolean): User
+data class FakeUserRepositorySaveCall(
+    val user: User,
+    val validate: Boolean
+)
+
+// Access in verification:
+fake.verifySave {
+    assertEquals("Alice", first.user.name)
+    assertTrue(first.validate)
+    assertEquals(2, all.size)
+}
+```
+
+**Zero-Parameter Methods:**
+
+Methods without parameters still track call counts:
+
+```kotlin
+assertEquals(2, fake.clearCallCount)
+fake.verifyClear {
+    assertTrue(wasCalledTimes(2))
+}
+```
+
+---
+
+### Call Order Verification
+
+For methods with a single parameter, verify call order:
+
+```kotlin
+@Fake
+interface Analytics {
+    fun track(event: String)
+}
 
 @Test
-fun `GIVEN fake WHEN calling methods THEN counter updates reactively`() = runTest {
-    val fake = fakeRepository()
+fun `GIVEN analytics WHEN tracking events THEN verifies order`() {
+    val fake = fakeAnalytics()
 
-    fake.getUserCallCount.test {
-        assertEquals(0, awaitItem())
+    fake.track("page_view")
+    fake.track("button_click")
+    fake.track("purchase")
 
-        fake.getUser("123")
-        assertEquals(1, awaitItem())
-
-        fake.getUser("456")
-        assertEquals(2, awaitItem())
+    fake.verifyTrack {
+        assertTrue(wasCalledInOrder("page_view", "button_click", "purchase"))
+        assertTrue(neverCalledWith("error"))
     }
 }
 ```
@@ -726,7 +798,7 @@ assertEquals(1, fake.setThemeCallCount)
 
 ### Thread Safety
 
-All call counters are thread-safe via `MutableStateFlow.update`:
+Call counts are derived from thread-safe internal state. All tracking operations are safe for concurrent access:
 
 ```kotlin
 @Test

@@ -123,24 +123,82 @@ fun `GIVEN repository failure WHEN saving user THEN handles error`() = runTest {
 
 ---
 
-## Use Turbine for Reactive Testing
+## Verification Patterns
 
-Test StateFlow call counters reactively:
+Use the verification DSL to assert on call history:
+
+### Basic Call Count Verification
 
 ```kotlin
 @Test
-fun `GIVEN fake WHEN calling repeatedly THEN emits counts`() = runTest {
+fun `GIVEN repository WHEN saving users THEN tracks call count`() {
+    val fake = fakeRepository {
+        saveUser { user -> Result.success(Unit) }
+    }
+
+    fake.saveUser(alice)
+    fake.saveUser(bob)
+
+    assertEquals(2, fake.saveUserCallCount)
+}
+```
+
+### Scoped Verification DSL
+
+```kotlin
+@Test
+fun `GIVEN repository WHEN saving users THEN verifies arguments`() {
+    val fake = fakeRepository {
+        saveUser { user -> Result.success(Unit) }
+    }
+
+    fake.saveUser(alice)
+    fake.saveUser(bob)
+
+    fake.verifySaveUser {
+        assertTrue(wasCalledTimes(2))
+        assertTrue(wasCalledWith(alice))
+        assertTrue(wasCalledWith(bob))
+        assertEquals("Alice", first.user.name)
+    }
+}
+```
+
+### Call Order Verification
+
+For single-parameter methods, verify call order:
+
+```kotlin
+@Test
+fun `GIVEN analytics WHEN tracking events THEN verifies order`() {
     val fake = fakeAnalytics()
 
-    fake.trackCallCount.test {
-        assertEquals(0, awaitItem())
+    fake.track("page_view")
+    fake.track("button_click")
+    fake.track("purchase")
 
-        fake.track("event1")
-        assertEquals(1, awaitItem())
-
-        fake.track("event2")
-        assertEquals(2, awaitItem())
+    fake.verifyTrack {
+        assertTrue(wasCalledInOrder("page_view", "button_click", "purchase"))
+        assertTrue(neverCalledWith("error"))
     }
+}
+```
+
+### Verifying No Calls
+
+```kotlin
+@Test
+fun `GIVEN cached data WHEN loading THEN does not call API`() {
+    val fake = fakeApiClient()
+    val service = CachedService(fake, preloadedCache)
+
+    service.getData("key")
+
+    fake.verifyFetchData {
+        assertTrue(wasNeverCalled())
+    }
+    // Or simply:
+    assertEquals(0, fake.fetchDataCallCount)
 }
 ```
 

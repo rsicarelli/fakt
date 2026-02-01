@@ -61,7 +61,7 @@ val fake = fakeAnalytics {
 - **[Suspend Functions](user-guide/usage.md#suspend-functions)** - Working with coroutines and async code
 - **[Generics](user-guide/usage.md#generics)** - Generic interfaces and type parameters
 - **[Properties](user-guide/usage.md#properties)** - Faking val and var properties
-- **[Call Tracking](user-guide/usage.md#call-tracking)** - StateFlow-based reactive counters
+- **[Call Tracking](user-guide/usage.md#call-tracking-verification)** - Thread-safe call counting and verification DSL
 
 **Advanced Topics:**
 
