@@ -276,9 +276,7 @@ class ProfileViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt tracks all 10 update calls!
-            profileUseCase.updateProfileCallCount.test {
-                assertEquals(10, awaitItem())
-            }
+            assertEquals(10, profileUseCase.updateProfileCallCount)
         }
 
     // ============================================================================
@@ -367,9 +365,7 @@ class ProfileViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt tracks the call automatically!
-            profileUseCase.getProfileCallCount.test {
-                assertEquals(1, awaitItem())
-            }
+            assertEquals(1, profileUseCase.getProfileCallCount)
         }
 
     @Test
@@ -393,9 +389,7 @@ class ProfileViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt tracks it!
-            profileUseCase.updateProfileCallCount.test {
-                assertEquals(1, awaitItem())
-            }
+            assertEquals(1, profileUseCase.updateProfileCallCount)
         }
 
     // ============================================================================

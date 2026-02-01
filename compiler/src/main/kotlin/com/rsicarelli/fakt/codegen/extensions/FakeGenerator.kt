@@ -414,13 +414,10 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
             // ==========================================
             region("Private State")
 
-            // Generate private backing fields for call tracking
+            // Generate private backing fields for call tracking (properties only)
+            // Methods derive count from call history, so no backing field needed
             simpleProperties.forEach { prop ->
                 generatePropertyCallTrackingBackingField(this, prop)
-            }
-
-            methods.forEach { method ->
-                generateMethodCallTrackingBackingField(this, method)
             }
 
             // Generate call history backing fields for ALL methods (params → data class, 0-param → Unit)
@@ -589,17 +586,6 @@ private fun generateMethodCallTrackingPublicGetter(
     visibility: FirVisibility,
 ) {
     classBuilder.callTrackingPublicGetter(method.name, visibility)
-}
-
-/**
- * Generates ONLY the private backing field for method call tracking.
- * Part of Section 4: Private State
- */
-private fun generateMethodCallTrackingBackingField(
-    classBuilder: ClassBuilder,
-    method: MethodSpec,
-) {
-    classBuilder.callTrackingBackingField(method.name)
 }
 
 /**

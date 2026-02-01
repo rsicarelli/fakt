@@ -41,8 +41,8 @@ class AnalyticsTest {
         fake.identify("user-123")
 
         assertEquals(listOf("user_signup", "user_login"), events)
-        assertEquals(2, fake.trackCallCount.value)
-        assertEquals(1, fake.identifyCallCount.value)
+        assertEquals(2, fake.trackCallCount)
+        assertEquals(1, fake.identifyCallCount)
     }
 }
 ```
@@ -270,8 +270,8 @@ fun `GIVEN event bus fake WHEN publishing events THEN executes configured behavi
     fake.subscribe(mockHandler)  // No-op default
 
     assertEquals(1, receivedEvents.size)
-    assertEquals(1, fake.publishCallCount.value)
-    assertEquals(1, fake.subscribeCallCount.value)
+    assertEquals(1, fake.publishCallCount)
+    assertEquals(1, fake.subscribeCallCount)
 }
 ```
 
@@ -353,7 +353,7 @@ class ApiClientTest {
 
         assertTrue(result.isSuccess)
         assertEquals(testData, result.getOrNull())
-        assertEquals(1, fake.fetchDataCallCount.value)
+        assertEquals(1, fake.fetchDataCallCount)
     }
 }
 ```
@@ -538,7 +538,7 @@ val fake = fakeConfig {
 }
 
 assertEquals("https://api.example.com", fake.apiUrl)
-assertEquals(1, fake.apiUrlCallCount.value)
+assertEquals(1, fake.apiUrlCallCount)
 ```
 
 ---
@@ -561,11 +561,11 @@ val fake = fakeSettings {
 
 // Getter tracking
 assertEquals("dark", fake.theme)
-assertEquals(1, fake.getThemeCallCount.value)
+assertEquals(1, fake.getThemeCallCount)
 
 // Setter tracking
 fake.theme = "light"
-assertEquals(1, fake.setThemeCallCount.value)
+assertEquals(1, fake.setThemeCallCount)
 ```
 
 ---
@@ -669,8 +669,8 @@ fun `GIVEN fake logger WHEN logging messages THEN tracks call counts`() {
     fake.log("Another info")
     fake.error("Error occurred")
 
-    assertEquals(2, fake.logCallCount.value)
-    assertEquals(1, fake.errorCallCount.value)
+    assertEquals(2, fake.logCallCount)
+    assertEquals(1, fake.errorCallCount)
 }
 ```
 
@@ -716,10 +716,10 @@ val fake = fakeSettings {
 }
 
 val _ = fake.theme  // Getter
-assertEquals(1, fake.getThemeCallCount.value)
+assertEquals(1, fake.getThemeCallCount)
 
 fake.theme = "light"  // Setter
-assertEquals(1, fake.setThemeCallCount.value)
+assertEquals(1, fake.setThemeCallCount)
 ```
 
 ---
@@ -741,7 +741,7 @@ fun `GIVEN fake WHEN calling from multiple threads THEN counts correctly`() = ru
         }
     }
 
-    assertEquals(1000, fake.trackCallCount.value)
+    assertEquals(1000, fake.trackCallCount)
 }
 ```
 
@@ -780,9 +780,9 @@ fun `GIVEN service fake WHEN calling inherited methods THEN works correctly`() {
     assertEquals("Alice", fake.getUser("123").name)
     assertTrue(fake.stop())
 
-    assertEquals(1, fake.startCallCount.value)
-    assertEquals(1, fake.getUserCallCount.value)
-    assertEquals(1, fake.stopCallCount.value)
+    assertEquals(1, fake.startCallCount)
+    assertEquals(1, fake.getUserCallCount)
+    assertEquals(1, fake.stopCallCount)
 }
 ```
 

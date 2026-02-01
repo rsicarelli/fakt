@@ -115,7 +115,7 @@ fun ClassBuilder.overrideMethod(
         }
         returns(returnType)
 
-        val historyUpdate =
+        val callTracking =
             buildHistoryUpdateStatement(
                 config.interfaceName,
                 name,
@@ -123,7 +123,6 @@ fun ClassBuilder.overrideMethod(
                 classTypeParamNames,
                 methodTypeParamNames,
             )
-        val callTracking = "$historyUpdate\n        _${name}CallCount.update { it + 1 }"
         val paramNames =
             buildBehaviorInvocationParams(
                 params,
@@ -233,8 +232,8 @@ fun ClassBuilder.overrideVarargMethod(
         parameter(varargName, elementType, vararg = true)
         returns(returnType)
 
-        // Vararg-only methods use Unit for history + call count
-        val callTracking = "_${name}Calls.update { it + Unit }\n        _${name}CallCount.update { it + 1 }"
+        // Vararg-only methods use Unit for history (call count derived from history size)
+        val callTracking = "_${name}Calls.update { it + Unit }"
 
         // For extension functions, prepend 'this' receiver as first argument
         val paramNames =

@@ -71,8 +71,8 @@ fun `GIVEN service WHEN processing user THEN calls repository once`() {
 
     service.processUser("123")
 
-    assertEquals(1, fakeRepo.getUserCallCount.value)
-    assertEquals(1, fakeRepo.saveUserCallCount.value)
+    assertEquals(1, fakeRepo.getUserCallCount)
+    assertEquals(1, fakeRepo.saveUserCallCount)
 }
 ```
 

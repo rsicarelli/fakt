@@ -31,8 +31,8 @@ class NativeHierarchyTest {
 
         // Then
         assertEquals("Native via Common", result)
-        assertEquals(1, commonFake.logCallCount.value)
-        assertEquals(1, commonFake.getPlatformNameCallCount.value)
+        assertEquals(1, commonFake.logCallCount)
+        assertEquals(1, commonFake.getPlatformNameCallCount)
     }
 
     @Test
@@ -58,8 +58,8 @@ class NativeHierarchyTest {
         assertEquals("x64", arch)
         assertEquals(1234, pid)
         assertEquals(501, uid)
-        assertEquals(1, nativeFake.architectureCallCount.value)
-        assertEquals(2, nativeFake.callCFunctionCallCount.value)
+        assertEquals(1, nativeFake.architectureCallCount)
+        assertEquals(2, nativeFake.callCFunctionCallCount)
     }
 
     @Test
@@ -85,9 +85,9 @@ class NativeHierarchyTest {
         assertEquals(true, debug)
         assertEquals("arm64", arch)
         assertEquals(8192L, pointer) // 1024 * 8
-        assertEquals(1, commonFake.getPlatformNameCallCount.value)
-        assertEquals(1, commonFake.isDebugEnabledCallCount.value)
-        assertEquals(1, nativeFake.architectureCallCount.value)
-        assertEquals(1, nativeFake.allocateNativeMemoryCallCount.value)
+        assertEquals(1, commonFake.getPlatformNameCallCount)
+        assertEquals(1, commonFake.isDebugEnabledCallCount)
+        assertEquals(1, nativeFake.architectureCallCount)
+        assertEquals(1, nativeFake.allocateNativeMemoryCallCount)
     }
 }

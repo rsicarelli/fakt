@@ -30,8 +30,8 @@ class JsHierarchyTest {
 
         // Then
         assertEquals("JavaScript via Common", result)
-        assertEquals(1, commonFake.logCallCount.value)
-        assertEquals(1, commonFake.getPlatformNameCallCount.value)
+        assertEquals(1, commonFake.logCallCount)
+        assertEquals(1, commonFake.getPlatformNameCallCount)
     }
 
     @Test
@@ -54,8 +54,8 @@ class JsHierarchyTest {
         // Then
         assertEquals("https://example.com", url)
         assertEquals("<h1>Title</h1>", element)
-        assertEquals(1, jsFake.currentUrlCallCount.value)
-        assertEquals(1, jsFake.getElementByIdCallCount.value)
+        assertEquals(1, jsFake.currentUrlCallCount)
+        assertEquals(1, jsFake.getElementByIdCallCount)
     }
 
     @Test
@@ -78,8 +78,8 @@ class JsHierarchyTest {
         assertEquals("JS", platform)
         assertEquals(false, debug)
         assertEquals("https://app.example.com/page", url)
-        assertEquals(1, commonFake.getPlatformNameCallCount.value)
-        assertEquals(1, commonFake.isDebugEnabledCallCount.value)
-        assertEquals(1, jsFake.currentUrlCallCount.value)
+        assertEquals(1, commonFake.getPlatformNameCallCount)
+        assertEquals(1, commonFake.isDebugEnabledCallCount)
+        assertEquals(1, jsFake.currentUrlCallCount)
     }
 }

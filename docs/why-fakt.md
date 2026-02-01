@@ -33,8 +33,8 @@ fake.track("user_signup")
 fake.flush()
 
 // Verify interactions (thread-safe StateFlow)
-assertEquals(1, fake.trackCallCount.value)
-assertEquals(1, fake.flushCallCount.value)
+assertEquals(1, fake.trackCallCount)
+assertEquals(1, fake.flushCallCount)
 ```
 
 ---
