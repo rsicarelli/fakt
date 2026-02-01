@@ -46,7 +46,7 @@ fun `GIVEN fake repository WHEN processing user THEN calls getUser`() {
     val service = UserService(fake)
     service.processUser("123")
 
-    assertEquals(1, fake.getUserCallCount.value)
+    assertEquals(1, fake.getUserCallCount)
 }
 ```
 
@@ -118,7 +118,7 @@ fun `GIVEN repository WHEN saving user THEN returns success`() = runTest {
     val result = service.createUser("Alice")
 
     assertTrue(result.isSuccess)
-    assertEquals(1, fake.saveUserCallCount.value)
+    assertEquals(1, fake.saveUserCallCount)
 }
 ```
 
@@ -154,7 +154,7 @@ fun `GIVEN fake analytics WHEN tracking event THEN records event`() = runTest {
     val service = AnalyticsService(fake)
     service.logUserAction("button_click")
 
-    assertEquals(1, fake.trackCallCount.value)
+    assertEquals(1, fake.trackCallCount)
     assertEquals("button_click", trackedEvents.first())
 }
 ```
@@ -198,7 +198,7 @@ fun `GIVEN repository WHEN fetching user THEN returns user`() = runTest {
     viewModel.loadUser("123")
 
     assertEquals("Alice", viewModel.userName.value)
-    assertEquals(1, fake.getUserCallCount.value)
+    assertEquals(1, fake.getUserCallCount)
 }
 ```
 
@@ -233,7 +233,7 @@ fun `GIVEN generic repository WHEN saving item THEN returns success`() {
     val service = CrudService(fake)
     service.createUser(User("123", "Alice"))
 
-    assertEquals(1, fake.saveCallCount.value)
+    assertEquals(1, fake.saveCallCount)
 }
 ```
 

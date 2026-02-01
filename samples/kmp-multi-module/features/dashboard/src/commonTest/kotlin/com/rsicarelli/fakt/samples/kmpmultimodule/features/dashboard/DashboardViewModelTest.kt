@@ -100,9 +100,7 @@ class DashboardViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt automatically tracks call counts!
-            useCase.loadDashboardDataCallCount.test {
-                assertEquals(1, awaitItem())
-            }
+            assertEquals(1, useCase.loadDashboardDataCallCount)
         }
 
     @Test
@@ -124,9 +122,7 @@ class DashboardViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt tracks all 3 calls automatically!
-            useCase.loadDashboardDataCallCount.test {
-                assertEquals(3, awaitItem())
-            }
+            assertEquals(3, useCase.loadDashboardDataCallCount)
         }
 
     // ============================================================================
@@ -156,9 +152,7 @@ class DashboardViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt tracks both calls (load + refresh)
-            useCase.loadDashboardDataCallCount.test {
-                assertEquals(2, awaitItem())
-            }
+            assertEquals(2, useCase.loadDashboardDataCallCount)
 
             viewModel.state.test {
                 val state = awaitItem()
@@ -183,9 +177,7 @@ class DashboardViewModelTest {
                 assertEquals(DashboardState.Idle, awaitItem())
             }
 
-            useCase.loadDashboardDataCallCount.test {
-                assertEquals(0, awaitItem()) // No calls to use case
-            }
+            assertEquals(0, useCase.loadDashboardDataCallCount) // No calls to use case
         }
 
     // ============================================================================
@@ -212,9 +204,7 @@ class DashboardViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt tracks all 10 concurrent calls safely!
-            useCase.loadDashboardDataCallCount.test {
-                assertEquals(10, awaitItem())
-            }
+            assertEquals(10, useCase.loadDashboardDataCallCount)
 
             viewModel.state.test {
                 val state = awaitItem()
@@ -242,9 +232,7 @@ class DashboardViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt handles 100 concurrent calls perfectly!
-            useCase.loadDashboardDataCallCount.test {
-                assertEquals(100, awaitItem())
-            }
+            assertEquals(100, useCase.loadDashboardDataCallCount)
         }
 
     // ============================================================================

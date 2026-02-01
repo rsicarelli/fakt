@@ -305,9 +305,8 @@ class MethodExtensionsTest {
         file.renderTo(builder)
         val result = builder.build()
 
-        // THEN
+        // THEN - Only history update (call count is derived from history size)
         assertContains(result, "_logoutCalls.update { it + Unit }")
-        assertContains(result, "_logoutCallCount.update { it + 1 }")
     }
 
     @Test
@@ -330,9 +329,8 @@ class MethodExtensionsTest {
         file.renderTo(builder)
         val result = builder.build()
 
-        // THEN
+        // THEN - Only history update (call count is derived from history size)
         assertContains(result, "_getUserCalls.update { it + UserServiceGetUserCall(id) }")
-        assertContains(result, "_getUserCallCount.update { it + 1 }")
     }
 
     @Test
@@ -437,9 +435,8 @@ class MethodExtensionsTest {
         file.renderTo(builder)
         val result = builder.build()
 
-        // THEN
+        // THEN - Only history update (call count is derived from history size)
         assertContains(result, "_processCalls.update { it + Unit }")
-        assertContains(result, "_processCallCount.update { it + 1 }")
     }
 
     @Test

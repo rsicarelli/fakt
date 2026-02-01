@@ -322,9 +322,7 @@ class NotificationsViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt tracks all 10 calls!
-            notificationUseCase.markAsReadCallCount.test {
-                assertEquals(10, awaitItem())
-            }
+            assertEquals(10, notificationUseCase.markAsReadCallCount)
         }
 
     // ============================================================================
@@ -355,9 +353,7 @@ class NotificationsViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt tracks both calls (load + refresh)
-            notificationUseCase.getNotificationsCallCount.test {
-                assertEquals(2, awaitItem())
-            }
+            assertEquals(2, notificationUseCase.getNotificationsCallCount)
         }
 
     // ============================================================================
@@ -380,9 +376,7 @@ class NotificationsViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt tracks the call automatically!
-            notificationUseCase.getNotificationsCallCount.test {
-                assertEquals(1, awaitItem())
-            }
+            assertEquals(1, notificationUseCase.getNotificationsCallCount)
         }
 
     @Test
@@ -408,9 +402,7 @@ class NotificationsViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt tracks it!
-            notificationUseCase.markAsReadCallCount.test {
-                assertEquals(1, awaitItem())
-            }
+            assertEquals(1, notificationUseCase.markAsReadCallCount)
         }
 
     // ============================================================================

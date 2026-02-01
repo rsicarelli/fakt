@@ -219,7 +219,7 @@ fun log(msg: String, level: LogLevel = INFO)
 <td>
 
 ```kotlin
-fake.trackCallCount.value // Thread-safe Int counter
+fake.trackCallCount // Thread-safe Int counter
 ```
 
 </td>

@@ -34,7 +34,7 @@ class JsOnlyServiceTest {
         // Then
         assertEquals("<h1>Header</h1>", header)
         assertNull(missing)
-        assertEquals(2, fake.getElementByIdCallCount.value)
+        assertEquals(2, fake.getElementByIdCallCount)
     }
 
     @Test
@@ -49,7 +49,7 @@ class JsOnlyServiceTest {
         fake.setLocalStorage("userId", "user-1")
 
         // Then
-        assertEquals(2, fake.setLocalStorageCallCount.value)
+        assertEquals(2, fake.setLocalStorageCallCount)
     }
 
     @Test
@@ -69,7 +69,7 @@ class JsOnlyServiceTest {
         assertEquals("abc123", token)
         assertEquals("user-1", userId)
         assertNull(missing)
-        assertEquals(3, fake.getLocalStorageCallCount.value)
+        assertEquals(3, fake.getLocalStorageCallCount)
     }
 
     @Test
@@ -84,7 +84,7 @@ class JsOnlyServiceTest {
 
         // Then
         assertEquals("https://example.com/page", result)
-        assertEquals(1, fake.currentUrlCallCount.value)
+        assertEquals(1, fake.currentUrlCallCount)
     }
 
     @Test
@@ -102,9 +102,9 @@ class JsOnlyServiceTest {
         assertEquals("any", element) // Default: identity returns input ("any")
         assertEquals("any", storage) // Default: identity returns input ("any")
         assertEquals("", url) // Default: empty string (property with no params)
-        assertEquals(1, fake.getElementByIdCallCount.value)
-        assertEquals(1, fake.setLocalStorageCallCount.value)
-        assertEquals(1, fake.getLocalStorageCallCount.value)
-        assertEquals(1, fake.currentUrlCallCount.value)
+        assertEquals(1, fake.getElementByIdCallCount)
+        assertEquals(1, fake.setLocalStorageCallCount)
+        assertEquals(1, fake.getLocalStorageCallCount)
+        assertEquals(1, fake.currentUrlCallCount)
     }
 }

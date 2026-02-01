@@ -34,8 +34,8 @@ class IosHierarchyTest {
         // Then
         assertEquals("iOS via Common", platform)
         assertEquals(true, debug)
-        assertEquals(1, commonFake.getPlatformNameCallCount.value)
-        assertEquals(1, commonFake.isDebugEnabledCallCount.value)
+        assertEquals(1, commonFake.getPlatformNameCallCount)
+        assertEquals(1, commonFake.isDebugEnabledCallCount)
     }
 
     @Test
@@ -58,8 +58,8 @@ class IosHierarchyTest {
         // Then
         assertEquals("arm64", arch)
         assertEquals(42, pid)
-        assertEquals(1, nativeFake.architectureCallCount.value)
-        assertEquals(1, nativeFake.callCFunctionCallCount.value)
+        assertEquals(1, nativeFake.architectureCallCount)
+        assertEquals(1, nativeFake.callCFunctionCallCount)
     }
 
     @Test
@@ -77,8 +77,8 @@ class IosHierarchyTest {
         // Then
         assertEquals("iPhone 15 Pro", model)
         assertEquals(true, simulator)
-        assertEquals(1, iosFake.getDeviceModelCallCount.value)
-        assertEquals(1, iosFake.isSimulatorCallCount.value)
+        assertEquals(1, iosFake.getDeviceModelCallCount)
+        assertEquals(1, iosFake.isSimulatorCallCount)
     }
 
     @Test
@@ -107,9 +107,9 @@ class IosHierarchyTest {
         assertEquals("iPhone 15", device)
 
         // Call tracking validation
-        assertEquals(1, commonFake.logCallCount.value)
-        assertEquals(1, commonFake.getPlatformNameCallCount.value)
-        assertEquals(1, nativeFake.architectureCallCount.value)
-        assertEquals(1, iosFake.getDeviceModelCallCount.value)
+        assertEquals(1, commonFake.logCallCount)
+        assertEquals(1, commonFake.getPlatformNameCallCount)
+        assertEquals(1, nativeFake.architectureCallCount)
+        assertEquals(1, iosFake.getDeviceModelCallCount)
     }
 }

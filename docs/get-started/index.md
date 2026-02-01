@@ -165,7 +165,7 @@ class AnalyticsTest {
         fake.track("user_signup")
 
         assertEquals(listOf("user_signup"), events)
-        assertEquals(1, fake.trackCallCount.value)
+        assertEquals(1, fake.trackCallCount)
     }
 }
 ```

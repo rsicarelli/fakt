@@ -29,7 +29,7 @@ class IosOnlyServiceTest {
         fake.savePreference("language", "en")
 
         // Then
-        assertEquals(2, fake.savePreferenceCallCount.value)
+        assertEquals(2, fake.savePreferenceCallCount)
     }
 
     @Test
@@ -49,7 +49,7 @@ class IosOnlyServiceTest {
         assertEquals("dark", theme)
         assertEquals("en", language)
         assertNull(missing)
-        assertEquals(3, fake.loadPreferenceCallCount.value)
+        assertEquals(3, fake.loadPreferenceCallCount)
     }
 
     @Test
@@ -64,7 +64,7 @@ class IosOnlyServiceTest {
 
         // Then
         assertEquals("iPhone 15 Pro", result)
-        assertEquals(1, fake.getDeviceModelCallCount.value)
+        assertEquals(1, fake.getDeviceModelCallCount)
     }
 
     @Test
@@ -79,7 +79,7 @@ class IosOnlyServiceTest {
 
         // Then
         assertTrue(result)
-        assertEquals(1, fake.isSimulatorCallCount.value)
+        assertEquals(1, fake.isSimulatorCallCount)
     }
 
     @Test
@@ -97,9 +97,9 @@ class IosOnlyServiceTest {
         assertEquals("any", preference) // Default: identity returns input ("any")
         assertEquals("", deviceModel) // Default: empty string (no-param function)
         assertFalse(simulator) // Default: false (property)
-        assertEquals(1, fake.savePreferenceCallCount.value)
-        assertEquals(1, fake.loadPreferenceCallCount.value)
-        assertEquals(1, fake.getDeviceModelCallCount.value)
-        assertEquals(1, fake.isSimulatorCallCount.value)
+        assertEquals(1, fake.savePreferenceCallCount)
+        assertEquals(1, fake.loadPreferenceCallCount)
+        assertEquals(1, fake.getDeviceModelCallCount)
+        assertEquals(1, fake.isSimulatorCallCount)
     }
 }
