@@ -123,7 +123,20 @@ public class PropertyBuilder
             name: String,
             vararg arguments: String,
         ) {
-            annotations.add(CodeAnnotation(name, arguments.toList()))
+            annotation(name, arguments.toList())
+        }
+
+        /**
+         * Adds an annotation with a list of arguments (avoids spread operator overhead).
+         *
+         * @param name Annotation simple name
+         * @param arguments Pre-rendered argument strings
+         */
+        public fun annotation(
+            name: String,
+            arguments: List<String>,
+        ) {
+            annotations.add(CodeAnnotation(name, arguments))
         }
 
         /**

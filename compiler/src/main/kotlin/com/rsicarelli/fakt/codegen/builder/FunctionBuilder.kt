@@ -52,6 +52,21 @@ public class FunctionBuilder
         public var isInline: Boolean = false
 
         /**
+         * Optional KDoc documentation for the function.
+         *
+         * Example:
+         * ```kotlin
+         * kdoc = """
+         *     Creates a fake implementation of [UserService] for testing.
+         *
+         *     @param configure DSL block to configure fake behaviors
+         *     @return Configured fake instance
+         * """.trimIndent()
+         * ```
+         */
+        public var kdoc: String? = null
+
+        /**
          * Sets function body as raw code string (block style).
          *
          * Example:
@@ -137,20 +152,23 @@ public class FunctionBuilder
          * ```kotlin
          * typeParam("T")  // fun <T> method()
          * typeParam("R", "Comparable<R>")  // fun <R : Comparable<R>> method()
+         * typeParam("T", reified = true)  // inline fun <reified T> method()
          * ```
          *
          * @param name Type parameter name
          * @param constraints Optional type constraints
+         * @param reified Whether this is a reified type parameter (requires inline function)
          */
         public fun typeParam(
             name: String,
             vararg constraints: String,
+            reified: Boolean = false,
         ) {
             typeParameters.add(
                 CodeTypeParameter(
                     name = name,
                     constraints = constraints.toList(),
-                    isReified = false,
+                    isReified = reified,
                 ),
             )
         }
@@ -236,7 +254,20 @@ public class FunctionBuilder
             name: String,
             vararg arguments: String,
         ) {
-            annotations.add(CodeAnnotation(name, arguments.toList()))
+            annotation(name, arguments.toList())
+        }
+
+        /**
+         * Adds an annotation with a list of arguments (avoids spread operator overhead).
+         *
+         * @param name Annotation simple name
+         * @param arguments Pre-rendered argument strings
+         */
+        public fun annotation(
+            name: String,
+            arguments: List<String>,
+        ) {
+            annotations.add(CodeAnnotation(name, arguments))
         }
 
         private var whereClause: String? = null
@@ -276,5 +307,6 @@ public class FunctionBuilder
                 receiverType = receiverType,
                 annotations = annotations,
                 whereClause = whereClause,
+                kdoc = kdoc,
             )
     }
