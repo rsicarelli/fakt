@@ -6,25 +6,10 @@ import com.rsicarelli.fakt.codegen.builder.ClassBuilder
 import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 
 /**
- * Generates only the private backing field for call tracking.
+ * Generates the public getter for method call tracking.
  *
- * Creates: `private val _methodNameCallCount = MutableStateFlow(0)`
- *
- * @param methodName Name of the method to track
- */
-fun ClassBuilder.callTrackingBackingField(methodName: String) {
-    val backingFieldName = "_${methodName}CallCount"
-
-    property(backingFieldName, "MutableStateFlow<Int>") {
-        private()
-        initializer = "MutableStateFlow(0)"
-    }
-}
-
-/**
- * Generates only the public getter for call tracking.
- *
- * Creates: `public val methodNameCallCount: StateFlow<Int> get() = _methodNameCallCount`
+ * For methods, count is derived from call history: `val methodNameCallCount: Int get() = _methodNameCalls.value.size`
+ * This eliminates redundant state updates since count can be derived from history.
  *
  * @param methodName Name of the method to track
  * @param visibility Visibility modifier to apply to the public getter
@@ -33,16 +18,16 @@ fun ClassBuilder.callTrackingPublicGetter(
     methodName: String,
     visibility: FirVisibility,
 ) {
-    val backingFieldName = "_${methodName}CallCount"
+    val callsFieldName = "_${methodName}Calls"
     val publicFieldName = "${methodName}CallCount"
 
-    property(publicFieldName, "StateFlow<Int>") {
+    property(publicFieldName, "Int") {
         when (visibility) {
             FirVisibility.PUBLIC -> public()
             FirVisibility.INTERNAL -> internal()
             FirVisibility.PRIVATE, FirVisibility.PROTECTED -> public()
         }
-        getter = backingFieldName
+        getter = "$callsFieldName.value.size"
     }
 }
 
@@ -50,6 +35,8 @@ fun ClassBuilder.callTrackingPublicGetter(
  * Generates only the private backing field for property getter tracking.
  *
  * Creates: `private val _propertyNameCallCount = MutableStateFlow(0)`
+ *
+ * Properties keep a backing StateFlow because they have no call history to derive count from.
  *
  * @param propertyName Name of the property to track
  */
@@ -65,7 +52,9 @@ fun ClassBuilder.propertyGetterTrackingBackingField(propertyName: String) {
 /**
  * Generates only the public getter for property getter tracking.
  *
- * Creates: `public val propertyNameCallCount: StateFlow<Int> get() = _propertyNameCallCount`
+ * Creates: `public val propertyNameCallCount: Int get() = _propertyNameCallCount.value`
+ *
+ * Exposes Int directly for unified API (same as method call counts).
  *
  * @param propertyName Name of the property to track
  * @param visibility Visibility modifier to apply to the public getter
@@ -77,13 +66,13 @@ fun ClassBuilder.propertyGetterTrackingPublicGetter(
     val backingFieldName = "_${propertyName}CallCount"
     val publicFieldName = "${propertyName}CallCount"
 
-    property(publicFieldName, "StateFlow<Int>") {
+    property(publicFieldName, "Int") {
         when (visibility) {
             FirVisibility.PUBLIC -> public()
             FirVisibility.INTERNAL -> internal()
             FirVisibility.PRIVATE, FirVisibility.PROTECTED -> public()
         }
-        getter = backingFieldName
+        getter = "$backingFieldName.value"
     }
 }
 
@@ -91,6 +80,8 @@ fun ClassBuilder.propertyGetterTrackingPublicGetter(
  * Generates only the private backing field for property setter tracking.
  *
  * Creates: `private val _setPropertyNameCallCount = MutableStateFlow(0)`
+ *
+ * Properties keep a backing StateFlow because they have no call history to derive count from.
  *
  * @param propertyName Name of the property to track
  */
@@ -107,7 +98,9 @@ fun ClassBuilder.propertySetterTrackingBackingField(propertyName: String) {
 /**
  * Generates only the public getter for property setter tracking.
  *
- * Creates: `public val setPropertyNameCallCount: StateFlow<Int> get() = _setPropertyNameCallCount`
+ * Creates: `public val setPropertyNameCallCount: Int get() = _setPropertyNameCallCount.value`
+ *
+ * Exposes Int directly for unified API (same as method call counts).
  *
  * @param propertyName Name of the property to track
  * @param visibility Visibility modifier to apply to the public getter
@@ -120,13 +113,13 @@ fun ClassBuilder.propertySetterTrackingPublicGetter(
     val backingFieldName = "_set${capitalizedName}CallCount"
     val publicFieldName = "set${capitalizedName}CallCount"
 
-    property(publicFieldName, "StateFlow<Int>") {
+    property(publicFieldName, "Int") {
         when (visibility) {
             FirVisibility.PUBLIC -> public()
             FirVisibility.INTERNAL -> internal()
             FirVisibility.PRIVATE, FirVisibility.PROTECTED -> public()
         }
-        getter = backingFieldName
+        getter = "$backingFieldName.value"
     }
 }
 

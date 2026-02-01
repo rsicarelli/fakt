@@ -29,7 +29,7 @@ class CallTrackingEdgeCasesTest {
         }
 
         // Then
-        assertEquals(10_000, fake.highFrequencyMethodCallCount.value)
+        assertEquals(10_000, fake.highFrequencyMethodCallCount)
     }
 
     @Test
@@ -46,7 +46,7 @@ class CallTrackingEdgeCasesTest {
             }.awaitAll()
 
             // Then - Every call counted exactly once
-            assertEquals(1000, fake.highFrequencyMethodCallCount.value)
+            assertEquals(1000, fake.highFrequencyMethodCallCount)
         }
 
     @Test
@@ -62,7 +62,7 @@ class CallTrackingEdgeCasesTest {
         }
 
         // Then - Should track all calls correctly
-        assertEquals(10_000, fake.highFrequencyMethodCallCount.value)
+        assertEquals(10_000, fake.highFrequencyMethodCallCount)
     }
 
     @Test
@@ -83,7 +83,7 @@ class CallTrackingEdgeCasesTest {
                 repeat(50) {
                     add(
                         launch {
-                            val count = fake.concurrentMethodCallCount.value
+                            val count = fake.concurrentMethodCallCount
                             assertTrue(count >= 0, "Count should never be negative: $count")
                         },
                     )
@@ -92,7 +92,7 @@ class CallTrackingEdgeCasesTest {
             jobs.forEach { it.join() }
 
             // Then
-            assertEquals(50, fake.concurrentMethodCallCount.value)
+            assertEquals(50, fake.concurrentMethodCallCount)
         }
 
     @Test
@@ -113,7 +113,7 @@ class CallTrackingEdgeCasesTest {
 
             val observer = launch {
                 repeat(100) {
-                    observations.add(fake.concurrentMethodCallCount.value)
+                    observations.add(fake.concurrentMethodCallCount)
                     delay(1)
                 }
             }
@@ -141,7 +141,7 @@ class CallTrackingEdgeCasesTest {
             job.cancel()
 
             // Then - Call was tracked even though cancelled
-            assertEquals(1, fake.cancellableMethodCallCount.value)
+            assertEquals(1, fake.cancellableMethodCallCount)
         }
 
     @Test
@@ -160,7 +160,7 @@ class CallTrackingEdgeCasesTest {
             jobs.forEach { it.cancel() }
 
             // Then
-            assertEquals(5, fake.cancellableMethodCallCount.value)
+            assertEquals(5, fake.cancellableMethodCallCount)
         }
 
     // ========================================
@@ -182,7 +182,7 @@ class CallTrackingEdgeCasesTest {
         fake.throwingMethod(false)
 
         // Then - All 3 calls tracked including the throwing ones
-        assertEquals(3, fake.throwingMethodCallCount.value)
+        assertEquals(3, fake.throwingMethodCallCount)
     }
 
     @Test
@@ -205,7 +205,7 @@ class CallTrackingEdgeCasesTest {
 
         // Then - Both tracking and finally executed
         assertTrue(finallyExecuted)
-        assertEquals(1, fake.throwingMethodCallCount.value)
+        assertEquals(1, fake.throwingMethodCallCount)
     }
 
     @Test
@@ -226,7 +226,7 @@ class CallTrackingEdgeCasesTest {
         fake.throwingMethod(false) // Success
 
         // Then
-        assertEquals(3, fake.throwingMethodCallCount.value)
+        assertEquals(3, fake.throwingMethodCallCount)
     }
 
     @Test
@@ -245,7 +245,7 @@ class CallTrackingEdgeCasesTest {
         repeat(6) { fake.recursiveMethod(it) }
 
         // Then
-        assertEquals(6, fake.recursiveMethodCallCount.value) // All calls tracked
+        assertEquals(6, fake.recursiveMethodCallCount) // All calls tracked
     }
 
     @Test
@@ -263,7 +263,7 @@ class CallTrackingEdgeCasesTest {
         }
 
         // Then - All 11 calls tracked
-        assertEquals(11, fake.recursiveMethodCallCount.value)
+        assertEquals(11, fake.recursiveMethodCallCount)
     }
 
     @Test
@@ -281,7 +281,7 @@ class CallTrackingEdgeCasesTest {
         fake.methodWithDefaults("test", 99, false) // No defaults
 
         // Then - All tracked in same counter
-        assertEquals(3, fake.methodWithDefaultsCallCount.value)
+        assertEquals(3, fake.methodWithDefaultsCallCount)
     }
 
     @Test
@@ -300,7 +300,7 @@ class CallTrackingEdgeCasesTest {
         fake.methodWithDefaults("d", optional2 = false)
 
         // Then
-        assertEquals(4, fake.methodWithDefaultsCallCount.value)
+        assertEquals(4, fake.methodWithDefaultsCallCount)
     }
 
     @Test
@@ -320,7 +320,7 @@ class CallTrackingEdgeCasesTest {
         val v3 = fake.complexProperty
 
         // Then - Each property access tracked
-        assertEquals(3, fake.complexPropertyCallCount.value)
+        assertEquals(3, fake.complexPropertyCallCount)
         assertEquals("value-1", v1)
         assertEquals("value-2", v2)
         assertEquals("value-3", v3)
@@ -339,7 +339,7 @@ class CallTrackingEdgeCasesTest {
         }
 
         // Then - All setter calls tracked
-        assertEquals(100, fake.setRapidSetPropertyCallCount.value)
+        assertEquals(100, fake.setRapidSetPropertyCallCount)
     }
 
     @Test
@@ -357,8 +357,8 @@ class CallTrackingEdgeCasesTest {
         val r3 = fake.rapidSetProperty // read
 
         // Then
-        assertEquals(3, fake.rapidSetPropertyCallCount.value) // 3 reads
-        assertEquals(2, fake.setRapidSetPropertyCallCount.value) // 2 writes
+        assertEquals(3, fake.rapidSetPropertyCallCount) // 3 reads
+        assertEquals(2, fake.setRapidSetPropertyCallCount) // 2 writes
     }
 
     @Test
@@ -374,13 +374,13 @@ class CallTrackingEdgeCasesTest {
 
             // Periodically check counter (simulating monitoring/debugging)
             if (i % 1000 == 0) {
-                val currentCount = fake.highFrequencyMethodCallCount.value
+                val currentCount = fake.highFrequencyMethodCallCount
                 assertTrue(currentCount > 0, "Counter should be positive")
             }
         }
 
         // Then
-        assertEquals(5000, fake.highFrequencyMethodCallCount.value)
+        assertEquals(5000, fake.highFrequencyMethodCallCount)
     }
 
     @Test
@@ -394,7 +394,7 @@ class CallTrackingEdgeCasesTest {
         fake.highFrequencyMethod(1)
 
         // Then - Tracking initialized correctly
-        assertEquals(1, fake.highFrequencyMethodCallCount.value)
+        assertEquals(1, fake.highFrequencyMethodCallCount)
     }
 
     @Test
@@ -403,7 +403,7 @@ class CallTrackingEdgeCasesTest {
         val fake = fakeEdgeCaseService()
 
         // When - Check counter before any method calls
-        val countBeforeCalls = fake.highFrequencyMethodCallCount.value
+        val countBeforeCalls = fake.highFrequencyMethodCallCount
 
         // Then
         assertEquals(0, countBeforeCalls)
@@ -419,12 +419,12 @@ class CallTrackingEdgeCasesTest {
 
             // When - Active period
             repeat(100) { fake.highFrequencyMethod(it) }
-            val countAfterActivity = fake.highFrequencyMethodCallCount.value
+            val countAfterActivity = fake.highFrequencyMethodCallCount
 
             // Simulate inactivity
             delay(100)
 
-            val countAfterInactivity = fake.highFrequencyMethodCallCount.value
+            val countAfterInactivity = fake.highFrequencyMethodCallCount
 
             // Then - Counter stable during inactivity
             assertEquals(countAfterActivity, countAfterInactivity)

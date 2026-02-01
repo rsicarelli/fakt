@@ -35,7 +35,7 @@ class WasmOnlyServiceTest {
         // Then
         assertEquals(1024, pointer1)
         assertEquals(1280, pointer2) // 1024 + 256
-        assertEquals(2, fake.allocateMemoryCallCount.value)
+        assertEquals(2, fake.allocateMemoryCallCount)
     }
 
     @Test
@@ -53,7 +53,7 @@ class WasmOnlyServiceTest {
         // Then
         assertTrue(freed1)
         assertFalse(freed2)
-        assertEquals(2, fake.freeMemoryCallCount.value)
+        assertEquals(2, fake.freeMemoryCallCount)
     }
 
     @Test
@@ -76,7 +76,7 @@ class WasmOnlyServiceTest {
         // Then
         assertEquals(10, sum) // 1 + 2 + 3 + 4
         assertEquals(24, product) // 2 * 3 * 4
-        assertEquals(2, fake.callWasmFunctionCallCount.value)
+        assertEquals(2, fake.callWasmFunctionCallCount)
     }
 
     @Test
@@ -91,7 +91,7 @@ class WasmOnlyServiceTest {
 
         // Then
         assertEquals(16, result)
-        assertEquals(1, fake.memoryPagesCallCount.value)
+        assertEquals(1, fake.memoryPagesCallCount)
     }
 
     @Test
@@ -110,9 +110,9 @@ class WasmOnlyServiceTest {
         assertFalse(freed) // Default: false
         assertEquals(0, result) // Default: 0
         assertEquals(0, pages) // Default: 0
-        assertEquals(1, fake.allocateMemoryCallCount.value)
-        assertEquals(1, fake.freeMemoryCallCount.value)
-        assertEquals(1, fake.callWasmFunctionCallCount.value)
-        assertEquals(1, fake.memoryPagesCallCount.value)
+        assertEquals(1, fake.allocateMemoryCallCount)
+        assertEquals(1, fake.freeMemoryCallCount)
+        assertEquals(1, fake.callWasmFunctionCallCount)
+        assertEquals(1, fake.memoryPagesCallCount)
     }
 }

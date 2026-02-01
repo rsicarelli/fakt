@@ -116,7 +116,7 @@ val result = fake.save(User("test"))
 assertEquals("generated-id", result.id) // What happened?
 
 // Interaction-based verification (same fake)
-assertEquals(1, fake.saveCallCount.value) // How many times?
+assertEquals(1, fake.saveCallCount) // How many times?
 ```
 
 This dual paradigm support means you're not forced to choose philosophies—Fakt adapts to your testing needs.
@@ -157,7 +157,7 @@ assertEquals(1, fake.orders.size) // Assert OUTCOME, not process
 // Test survives refactoring
 ```
 
-This test survives because it verifies **state** (was the order saved?), not **interactions** (which method was called?). And when you *do* need interaction verification, Fakt provides it through StateFlow: `assertEquals(1, fake.saveOrderCallCount.value)`.
+This test survives because it verifies **state** (was the order saved?), not **interactions** (which method was called?). And when you *do* need interaction verification, Fakt provides it through StateFlow: `assertEquals(1, fake.saveOrderCallCount)`.
 
 ---
 
@@ -278,7 +278,7 @@ fun `GIVEN repository WHEN loading user THEN displays user name`() = runTest {
     assertEquals("Alice", viewModel.uiState.value.userName)
 
     // Optional: Interaction verification if needed
-    assertEquals(1, fake.getUserCallCount.value)
+    assertEquals(1, fake.getUserCallCount)
 }
 ```
 

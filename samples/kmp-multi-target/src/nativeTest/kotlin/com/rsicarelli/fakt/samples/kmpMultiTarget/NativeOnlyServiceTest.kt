@@ -34,7 +34,7 @@ class NativeOnlyServiceTest {
         // Then
         assertEquals(0x1000L, pointer1)
         assertEquals(0x1400L, pointer2) // 0x1000 + 1024
-        assertEquals(2, fake.allocateNativeMemoryCallCount.value)
+        assertEquals(2, fake.allocateNativeMemoryCallCount)
     }
 
     @Test
@@ -49,7 +49,7 @@ class NativeOnlyServiceTest {
         fake.freeNativeMemory(0x2000L)
 
         // Then
-        assertEquals(2, fake.freeNativeMemoryCallCount.value)
+        assertEquals(2, fake.freeNativeMemoryCallCount)
     }
 
     @Test
@@ -74,7 +74,7 @@ class NativeOnlyServiceTest {
         assertEquals(12345, pid)
         assertEquals(1000, uid)
         assertEquals(-1, unknown)
-        assertEquals(3, fake.callCFunctionCallCount.value)
+        assertEquals(3, fake.callCFunctionCallCount)
     }
 
     @Test
@@ -89,7 +89,7 @@ class NativeOnlyServiceTest {
 
         // Then
         assertEquals("arm64", result)
-        assertEquals(1, fake.architectureCallCount.value)
+        assertEquals(1, fake.architectureCallCount)
     }
 
     @Test
@@ -107,9 +107,9 @@ class NativeOnlyServiceTest {
         assertEquals(1024L, pointer) // Default: identity returns input (1024L)
         assertEquals(0, result) // Default: 0 (callCFunction has String param, result is Int)
         assertEquals("", arch) // Default: empty string (property with no params)
-        assertEquals(1, fake.allocateNativeMemoryCallCount.value)
-        assertEquals(1, fake.freeNativeMemoryCallCount.value)
-        assertEquals(1, fake.callCFunctionCallCount.value)
-        assertEquals(1, fake.architectureCallCount.value)
+        assertEquals(1, fake.allocateNativeMemoryCallCount)
+        assertEquals(1, fake.freeNativeMemoryCallCount)
+        assertEquals(1, fake.callCFunctionCallCount)
+        assertEquals(1, fake.architectureCallCount)
     }
 }
