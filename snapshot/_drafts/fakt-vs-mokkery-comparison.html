@@ -1208,7 +1208,7 @@
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;generated-id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="na">id</span><span class="p">)</span><span class="w"> </span><span class="c1">// What happened?</span>
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
 <a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="c1">// Interaction-based verification (same fake)</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">saveCallCount</span><span class="p">.</span><span class="na">value</span><span class="p">)</span><span class="w"> </span><span class="c1">// How many times?</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">saveCallCount</span><span class="p">)</span><span class="w"> </span><span class="c1">// How many times?</span>
 </code></pre></div>
 <p>This dual paradigm support means you&rsquo;re not forced to choose philosophies—Fakt adapts to your testing needs.</p>
 <hr />
@@ -1238,7 +1238,7 @@
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">orders</span><span class="p">.</span><span class="na">size</span><span class="p">)</span><span class="w"> </span><span class="c1">// Assert OUTCOME, not process</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="c1">// Test survives refactoring</span>
 </code></pre></div>
-<p>This test survives because it verifies <strong>state</strong> (was the order saved?), not <strong>interactions</strong> (which method was called?). And when you <em>do</em> need interaction verification, Fakt provides it through StateFlow: <code>assertEquals(1, fake.saveOrderCallCount.value)</code>.</p>
+<p>This test survives because it verifies <strong>state</strong> (was the order saved?), not <strong>interactions</strong> (which method was called?). And when you <em>do</em> need interaction verification, Fakt provides it through StateFlow: <code>assertEquals(1, fake.saveOrderCallCount)</code>.</p>
 <hr />
 <h2 id="decision-matrix">Decision Matrix<a class="headerlink" href="#decision-matrix" title="Permanent link">&para;</a></h2>
 <h3 id="choose-mokkery-when">Choose Mokkery When:<a class="headerlink" href="#choose-mokkery-when" title="Permanent link">&para;</a></h3>
@@ -1449,7 +1449,7 @@
 <a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">viewModel</span><span class="p">.</span><span class="na">uiState</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">userName</span><span class="p">)</span>
 <a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>
 <a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">    </span><span class="c1">// Optional: Interaction verification if needed</span>
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">getUserCallCount</span><span class="p">.</span><span class="na">value</span><span class="p">)</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">getUserCallCount</span><span class="p">)</span>
 <a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="p">}</span>
 </code></pre></div>
 <p><strong>Pros</strong>:<br />

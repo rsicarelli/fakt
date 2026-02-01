@@ -1110,8 +1110,8 @@
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">fake</span><span class="p">.</span><span class="na">flush</span><span class="p">()</span>
 <a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
 <a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="c1">// Verify interactions (thread-safe StateFlow)</span>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">trackCallCount</span><span class="p">.</span><span class="na">value</span><span class="p">)</span>
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">flushCallCount</span><span class="p">.</span><span class="na">value</span><span class="p">)</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">trackCallCount</span><span class="p">)</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">flushCallCount</span><span class="p">)</span>
 </code></pre></div>
 <hr />
 <h2 id="the-testing-problem">The Testing Problem<a class="headerlink" href="#the-testing-problem" title="Permanent link">&para;</a></h2>
