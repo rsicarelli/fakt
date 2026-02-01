@@ -287,11 +287,13 @@ public fun CodeAnnotation.renderAsFileAnnotation(builder: CodeBuilder) {
 /**
  * Renders [CodeFunction] to [CodeBuilder].
  *
- * Generates complete function signature and body.
+ * Generates complete function signature and body, with optional KDoc.
  *
  * @param builder The [CodeBuilder] to write to
  */
 public fun CodeFunction.renderTo(builder: CodeBuilder) {
+    // Render KDoc if present
+    kdoc?.let { renderKDoc(builder, it) }
     annotations.forEach { it.renderTo(builder) }
     val signature = buildFunctionSignature()
     when (body) {
@@ -299,6 +301,33 @@ public fun CodeFunction.renderTo(builder: CodeBuilder) {
         is CodeBlock.Statements -> renderStatementsBody(builder, signature)
         CodeBlock.Empty -> builder.appendLine(signature.full)
     }
+}
+
+/**
+ * Renders KDoc content to the builder.
+ *
+ * KDoc is rendered as a multi-line comment with proper formatting:
+ * ```
+ * /**
+ *  * First line
+ *  * Second line
+ *  */
+ * ```
+ */
+private fun renderKDoc(
+    builder: CodeBuilder,
+    kdoc: String,
+) {
+    val lines = kdoc.lines()
+    builder.appendLine("/**")
+    lines.forEach { line ->
+        if (line.isBlank()) {
+            builder.appendLine(" *")
+        } else {
+            builder.appendLine(" * $line")
+        }
+    }
+    builder.appendLine(" */")
 }
 
 private fun CodeFunction.buildFunctionSignature(): FunctionSignature {

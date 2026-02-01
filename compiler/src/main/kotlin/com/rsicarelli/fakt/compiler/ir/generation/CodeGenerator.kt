@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.generation
 
+import com.rsicarelli.fakt.codegen.model.CodeFile
 import com.rsicarelli.fakt.codegen.renderer.CodeBuilder
 import com.rsicarelli.fakt.codegen.renderer.renderTo
+import com.rsicarelli.fakt.codegen.renderer.renderToString
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.core.context.ImportResolver
 import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
@@ -27,14 +29,16 @@ internal data class CodeGenerators(
 /**
  * Contains all generated code pieces for a fake implementation.
  *
- * @property implementation The generated implementation class code (includes call history components)
- * @property factory The generated factory function code
- * @property configDsl The generated configuration DSL code
+ * Uses CodeFile for type-safe, composable code generation throughout the pipeline.
+ *
+ * @property implementation The generated implementation class (includes call history components)
+ * @property factory The generated factory function
+ * @property configDsl The generated configuration DSL class
  */
 internal data class GeneratedCode(
-    val implementation: String,
-    val factory: String,
-    val configDsl: String,
+    val implementation: CodeFile,
+    val factory: CodeFile,
+    val configDsl: CodeFile,
 ) {
     /**
      * Calculates total lines of code across all generated components.
@@ -42,7 +46,14 @@ internal data class GeneratedCode(
      * @return Total non-blank, non-comment lines of code
      */
     fun calculateTotalLOC(): Int {
-        val combinedCode = "$implementation\n$factory\n$configDsl"
+        val combinedCode =
+            buildString {
+                append(implementation.renderToString())
+                appendLine()
+                append(factory.renderToString())
+                appendLine()
+                append(configDsl.renderToString())
+            }
         return calculateLOC(combinedCode)
     }
 }
@@ -78,18 +89,6 @@ internal class CodeGenerator(
     private companion object {
         /** Length of "Main" suffix for source set name transformation. */
         private const val MAIN_SUFFIX_LENGTH = 4
-
-        /** Base overhead for generated code (package, imports, class header). */
-        const val CODE_SIZE_BASE_OVERHEAD = 500
-
-        /** Estimated characters per method (call tracking + behavior + override + config). */
-        const val CODE_SIZE_PER_METHOD = 200
-
-        /** Estimated characters per property (call tracking + behavior + override + config). */
-        const val CODE_SIZE_PER_PROPERTY = 100
-
-        /** Estimated characters per import statement. */
-        const val CODE_SIZE_PER_IMPORT = 30
     }
 
     /**
@@ -149,7 +148,7 @@ internal class CodeGenerator(
             // Collect required imports for implementation
             val requiredImports = importResolver.collectRequiredImports(analysis, packageName)
 
-            // Generate implementation + factory
+            // Generate implementation + factory using DSL
             val generated =
                 generators.implementation.generateImplementation(
                     analysis,
@@ -157,24 +156,13 @@ internal class CodeGenerator(
                     requiredImports.toList(),
                 )
 
-            // Render CodeFile to string with capacity estimation for performance
-            val estimatedCapacity =
-                estimateCodeSize(
-                    methodCount = analysis.functions.size,
-                    propertyCount = analysis.properties.size,
-                    importCount = requiredImports.size,
-                )
-            val builder = CodeBuilder(builder = StringBuilder(estimatedCapacity))
-            generated.implementationFile.renderTo(builder)
-            val implementationCode = builder.build()
-
-            // Assemble final code
+            // Assemble final code using CodeFile throughout
             val generatedCode =
                 GeneratedCode(
-                    implementation = implementationCode, // Complete file with package + imports + call history
+                    implementation = generated.implementationFile,
                     factory = generated.factoryFunction,
                     configDsl =
-                        generators.configDsl.generateConfigurationDsl(
+                        generators.configDsl.generateConfigurationDslCodeFile(
                             analysis,
                             fakeClassName,
                         ),
@@ -222,7 +210,7 @@ internal class CodeGenerator(
             val requiredImports =
                 importResolver.collectRequiredImportsForClass(analysis, packageName)
 
-            // Generate implementation + factory
+            // Generate implementation + factory using DSL
             val generated =
                 generators.implementation.generateClassFake(
                     analysis,
@@ -230,26 +218,13 @@ internal class CodeGenerator(
                     requiredImports.toList(),
                 )
 
-            // Render CodeFile to string with capacity estimation for performance
-            val totalMethods = analysis.abstractMethods.size + analysis.openMethods.size
-            val totalProperties = analysis.abstractProperties.size + analysis.openProperties.size
-            val estimatedCapacity =
-                estimateCodeSize(
-                    methodCount = totalMethods,
-                    propertyCount = totalProperties,
-                    importCount = requiredImports.size,
-                )
-            val builder = CodeBuilder(builder = StringBuilder(estimatedCapacity))
-            generated.implementationFile.renderTo(builder)
-            val implementationCode = builder.build()
-
-            // Assemble final code
+            // Assemble final code using CodeFile throughout
             val generatedCode =
                 GeneratedCode(
-                    implementation = implementationCode, // Complete file with package + imports + call history
+                    implementation = generated.implementationFile,
                     factory = generated.factoryFunction,
                     configDsl =
-                        generators.configDsl.generateConfigurationDsl(
+                        generators.configDsl.generateConfigurationDslCodeFile(
                             analysis,
                             fakeClassName,
                         ),
@@ -302,27 +277,41 @@ internal class CodeGenerator(
         packageDir.mkdirs()
         val outputFile = packageDir.resolve("$fakeClassName.kt")
 
-        // Implementation includes package, imports, class, and call history components via DSL
-        // Factory and configDSL are still old generators (no package/imports)
-        val fullCode =
-            buildString {
-                // Implementation already has: package, imports, class, call history (from DSL)
-                append(code.implementation)
-                appendLine()
-
-                // Add factory function (no package/imports)
-                append(code.factory)
-                appendLine()
-                appendLine() // Blank line before config class
-
-                // Add configuration DSL (no package/imports)
-                append(code.configDsl)
-            }
+        // Render all CodeFiles to a single output string
+        val fullCode = renderGeneratedCode(code)
 
         // Use buffered writer for better I/O performance
         outputFile.bufferedWriter().use { writer ->
             writer.write(fullCode)
         }
+    }
+
+    /**
+     * Renders GeneratedCode (all CodeFile parts) to a single string.
+     *
+     * The implementation CodeFile has package + imports + class + call history.
+     * Factory and configDsl CodeFiles have empty package, so we extract just their declarations.
+     */
+    private fun renderGeneratedCode(code: GeneratedCode): String {
+        val builder = CodeBuilder()
+
+        // Render implementation (has package, imports, class, call history)
+        code.implementation.renderTo(builder)
+        builder.appendLine()
+
+        // Render factory function declarations only (no package/imports)
+        code.factory.declarations.forEach { declaration ->
+            declaration.renderTo(builder)
+        }
+        builder.appendLine()
+        builder.appendLine() // Blank line before config class
+
+        // Render config DSL declarations only (no package/imports)
+        code.configDsl.declarations.forEach { declaration ->
+            declaration.renderTo(builder)
+        }
+
+        return builder.build()
     }
 
     /**
@@ -354,53 +343,12 @@ internal class CodeGenerator(
         packageDir.mkdirs()
         val outputFile = packageDir.resolve("$fakeClassName.kt")
 
-        // Implementation includes package, imports, class, and call history components via DSL
-        // Factory and configDSL are still old generators (no package/imports)
-        val fullCode =
-            buildString {
-                // Implementation already has: package, imports, class, call history (from DSL)
-                append(code.implementation)
-                appendLine()
-
-                // Add factory function (no package/imports)
-                append(code.factory)
-                appendLine()
-                appendLine() // Blank line before config class
-
-                // Add configuration DSL (no package/imports)
-                append(code.configDsl)
-            }
+        // Render all CodeFiles to a single output string
+        val fullCode = renderGeneratedCode(code)
 
         // Use buffered writer for better I/O performance
         outputFile.bufferedWriter().use { writer ->
             writer.write(fullCode)
         }
     }
-
-    /**
-     * Estimates the size of generated code for StringBuilder capacity hint.
-     *
-     * This avoids StringBuilder reallocation during code generation,
-     * improving performance by 2-3%.
-     *
-     * Heuristic based on typical fake structure:
-     * - Base overhead: 500 chars (package, imports, class header)
-     * - Per method: ~200 chars (call tracking + behavior property + override + config)
-     * - Per property: ~100 chars (call tracking + behavior + override + config)
-     * - Per import: ~30 chars average
-     *
-     * @param methodCount Number of methods in the interface
-     * @param propertyCount Number of properties in the interface
-     * @param importCount Number of import statements
-     * @return Estimated capacity in characters
-     */
-    private fun estimateCodeSize(
-        methodCount: Int,
-        propertyCount: Int,
-        importCount: Int,
-    ): Int =
-        CODE_SIZE_BASE_OVERHEAD +
-            (methodCount * CODE_SIZE_PER_METHOD) +
-            (propertyCount * CODE_SIZE_PER_PROPERTY) +
-            (importCount * CODE_SIZE_PER_IMPORT)
 }

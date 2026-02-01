@@ -174,6 +174,7 @@ data class DataClassProperty(
  * @property isInline Whether this is an inline function
  * @property receiverType Extension receiver type for extension functions (e.g., Vector for fun Vector.plus())
  * @property annotations Function-level annotations (e.g., @Suppress)
+ * @property kdoc Optional KDoc documentation for the function
  */
 data class CodeFunction(
     val name: String,
@@ -187,6 +188,7 @@ data class CodeFunction(
     val receiverType: CodeType? = null,
     val annotations: List<CodeAnnotation> = emptyList(),
     val whereClause: String? = null,
+    val kdoc: String? = null,
 ) : CodeDeclaration,
     CodeMember
 
