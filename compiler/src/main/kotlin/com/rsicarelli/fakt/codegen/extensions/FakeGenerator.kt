@@ -57,6 +57,9 @@ data class PropertySpec(
  * Configuration for complete fake generation.
  *
  * Groups related parameters for [generateCompleteFake] to reduce parameter count.
+ *
+ * @property generateCallHistory When true, generates call tracking code (call count, call history).
+ *           When false, generates lightweight fakes without tracking. Default: true.
  */
 data class FakeGenerationConfig(
     val packageName: String,
@@ -69,6 +72,7 @@ data class FakeGenerationConfig(
     val isClass: Boolean = false,
     val visibility: FirVisibility = FirVisibility.PUBLIC,
     val annotations: List<AnnotationSpec> = emptyList(),
+    val generateCallHistory: Boolean = true,
 )
 
 /**
@@ -152,6 +156,8 @@ private val ANNOTATIONS_REQUIRING_OPTIN =
  * @param isClass Whether extending a class (true) vs implementing interface (false)
  * @param visibility Visibility for the generated class (PUBLIC, INTERNAL) for explicitApi() support
  * @param annotations Annotations to propagate to the generated class
+ * @param generateCallHistory When true, generates call tracking code. When false, generates
+ *        lightweight fakes without call count or call history tracking. Default: true.
  * @return CodeFile with complete fake implementation
  */
 fun generateCompleteFake(
@@ -165,6 +171,7 @@ fun generateCompleteFake(
     isClass: Boolean = false,
     visibility: FirVisibility = FirVisibility.PUBLIC,
     annotations: List<AnnotationSpec> = emptyList(),
+    generateCallHistory: Boolean = true,
 ): CodeFile =
     generateCompleteFakeInternal(
         FakeGenerationConfig(
@@ -178,6 +185,7 @@ fun generateCompleteFake(
             isClass = isClass,
             visibility = visibility,
             annotations = annotations,
+            generateCallHistory = generateCallHistory,
         ),
     )
 
@@ -192,6 +200,7 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
     val isClass = config.isClass
     val visibility = config.visibility
     val annotations = config.annotations
+    val generateCallHistory = config.generateCallHistory
     val className = "Fake${interfaceName}Impl"
 
     // Extract type parameter names for interface type arguments
@@ -226,10 +235,12 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
             import("kotlinx.coroutines.flow.MutableStateFlow")
         }
 
-        // Add call tracking imports (always needed for call count StateFlows)
-        import("kotlinx.coroutines.flow.StateFlow")
-        import("kotlinx.coroutines.flow.MutableStateFlow")
-        import("kotlinx.coroutines.flow.update")
+        // Add call tracking imports (only needed when call history is enabled)
+        if (generateCallHistory) {
+            import("kotlinx.coroutines.flow.StateFlow")
+            import("kotlinx.coroutines.flow.MutableStateFlow")
+            import("kotlinx.coroutines.flow.update")
+        }
 
         // Add KClass import if needed (for annotations with class references)
         if (needsKClassImport) {
@@ -365,32 +376,42 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
 
             // Generate property overrides for simple properties
             simpleProperties.forEach { prop ->
-                generatePropertyOverride(this, prop, isClass)
+                generatePropertyOverride(this, prop, isClass, generateCallHistory)
             }
 
             // Generate method overrides
             methods.forEach { method ->
-                generateMethodOverride(this, method, isClass, interfaceName, typeParameters)
+                generateMethodOverride(
+                    this,
+                    method,
+                    isClass,
+                    interfaceName,
+                    typeParameters,
+                    generateCallHistory,
+                )
             }
 
             endRegion()
 
             // ==========================================
             // SECTION 2: Call Tracking (public getters)
+            // Only generated when call history is enabled
             // ==========================================
-            region("Call Tracking")
+            if (generateCallHistory) {
+                region("Call Tracking")
 
-            // Generate public call tracking getters for all properties
-            simpleProperties.forEach { prop ->
-                generatePropertyCallTrackingPublicGetter(this, prop, visibility)
+                // Generate public call tracking getters for all properties
+                simpleProperties.forEach { prop ->
+                    generatePropertyCallTrackingPublicGetter(this, prop, visibility)
+                }
+
+                // Generate public call tracking getters for all methods
+                methods.forEach { method ->
+                    generateMethodCallTrackingPublicGetter(this, method, visibility)
+                }
+
+                endRegion()
             }
-
-            // Generate public call tracking getters for all methods
-            methods.forEach { method ->
-                generateMethodCallTrackingPublicGetter(this, method, visibility)
-            }
-
-            endRegion()
 
             // ==========================================
             // SECTION 3: Behavior Configuration
@@ -416,13 +437,16 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
 
             // Generate private backing fields for call tracking (properties only)
             // Methods derive count from call history, so no backing field needed
-            simpleProperties.forEach { prop ->
-                generatePropertyCallTrackingBackingField(this, prop)
-            }
+            // Only generated when call history is enabled
+            if (generateCallHistory) {
+                simpleProperties.forEach { prop ->
+                    generatePropertyCallTrackingBackingField(this, prop)
+                }
 
-            // Generate call history backing fields for ALL methods (params → data class, 0-param → Unit)
-            methods.forEach { method ->
-                generateMethodCallHistoryBackingField(this, method, interfaceName)
+                // Generate call history backing fields for ALL methods (params → data class, 0-param → Unit)
+                methods.forEach { method ->
+                    generateMethodCallHistoryBackingField(this, method, interfaceName)
+                }
             }
 
             // Generate behavior properties for all simple properties
@@ -807,6 +831,8 @@ private fun generatePropertyBehaviorProperty(
 /**
  * Generates ONLY the override method implementation.
  * Part of Section 3: Override Implementations
+ *
+ * @param generateCallHistory When true, includes call tracking in method body. Default: true.
  */
 private fun generateMethodOverride(
     classBuilder: ClassBuilder,
@@ -814,6 +840,7 @@ private fun generateMethodOverride(
     isClass: Boolean = false,
     interfaceName: String = "",
     classTypeParameters: List<String> = emptyList(),
+    generateCallHistory: Boolean = true,
 ) {
     val isOpenMethod = isClass && !method.isAbstract
 
@@ -827,6 +854,7 @@ private fun generateMethodOverride(
             useSuperDelegation = isOpenMethod,
             extensionReceiverType = method.extensionReceiverType,
             isOperator = method.isOperator,
+            generateCallHistory = generateCallHistory,
         )
     } else {
         classBuilder.overrideMethod(
@@ -842,6 +870,7 @@ private fun generateMethodOverride(
                     isOperator = method.isOperator,
                     interfaceName = interfaceName,
                     classTypeParameters = classTypeParameters,
+                    generateCallHistory = generateCallHistory,
                 ),
         )
     }
@@ -850,11 +879,14 @@ private fun generateMethodOverride(
 /**
  * Generates ONLY the override property implementation.
  * Part of Section 3: Override Implementations
+ *
+ * @param generateCallHistory When true, includes call count tracking in getter/setter. Default: true.
  */
 private fun generatePropertyOverride(
     classBuilder: ClassBuilder,
     prop: PropertySpec,
     isClass: Boolean = false,
+    generateCallHistory: Boolean = true,
 ) {
     val isOpenProperty = isClass && !prop.isAbstract
     val capitalizedName = prop.name.replaceFirstChar { it.uppercase() }
@@ -865,27 +897,43 @@ private fun generatePropertyOverride(
             mutable()
             getter =
                 if (isOpenProperty) {
-                    listOf(
-                        "_${prop.name}CallCount.update { it + 1 }",
-                        "return ${prop.name}Getter?.invoke() ?: super.${prop.name}",
-                    ).joinToString("\n")
+                    if (generateCallHistory) {
+                        listOf(
+                            "_${prop.name}CallCount.update { it + 1 }",
+                            "return ${prop.name}Getter?.invoke() ?: super.${prop.name}",
+                        ).joinToString("\n")
+                    } else {
+                        "${prop.name}Getter?.invoke() ?: super.${prop.name}"
+                    }
                 } else {
-                    listOf(
-                        "_${prop.name}CallCount.update { it + 1 }",
-                        "return ${prop.name}Getter()",
-                    ).joinToString("\n")
+                    if (generateCallHistory) {
+                        listOf(
+                            "_${prop.name}CallCount.update { it + 1 }",
+                            "return ${prop.name}Getter()",
+                        ).joinToString("\n")
+                    } else {
+                        "${prop.name}Getter()"
+                    }
                 }
             setter =
                 if (isOpenProperty) {
-                    listOf(
-                        "_set${capitalizedName}CallCount.update { it + 1 }",
-                        "${prop.name}Setter?.invoke(value) ?: run { super.${prop.name} = value }",
-                    ).joinToString("\n")
+                    if (generateCallHistory) {
+                        listOf(
+                            "_set${capitalizedName}CallCount.update { it + 1 }",
+                            "${prop.name}Setter?.invoke(value) ?: run { super.${prop.name} = value }",
+                        ).joinToString("\n")
+                    } else {
+                        "${prop.name}Setter?.invoke(value) ?: run { super.${prop.name} = value }"
+                    }
                 } else {
-                    listOf(
-                        "_set${capitalizedName}CallCount.update { it + 1 }",
-                        "${prop.name}Setter(value)",
-                    ).joinToString("\n")
+                    if (generateCallHistory) {
+                        listOf(
+                            "_set${capitalizedName}CallCount.update { it + 1 }",
+                            "${prop.name}Setter(value)",
+                        ).joinToString("\n")
+                    } else {
+                        "${prop.name}Setter(value)"
+                    }
                 }
         }
     } else {
@@ -893,15 +941,23 @@ private fun generatePropertyOverride(
             override()
             getter =
                 if (isOpenProperty) {
-                    listOf(
-                        "_${prop.name}CallCount.update { it + 1 }",
-                        "return ${prop.name}Behavior?.invoke() ?: super.${prop.name}",
-                    ).joinToString("\n")
+                    if (generateCallHistory) {
+                        listOf(
+                            "_${prop.name}CallCount.update { it + 1 }",
+                            "return ${prop.name}Behavior?.invoke() ?: super.${prop.name}",
+                        ).joinToString("\n")
+                    } else {
+                        "${prop.name}Behavior?.invoke() ?: super.${prop.name}"
+                    }
                 } else {
-                    listOf(
-                        "_${prop.name}CallCount.update { it + 1 }",
-                        "return ${prop.name}Behavior()",
-                    ).joinToString("\n")
+                    if (generateCallHistory) {
+                        listOf(
+                            "_${prop.name}CallCount.update { it + 1 }",
+                            "return ${prop.name}Behavior()",
+                        ).joinToString("\n")
+                    } else {
+                        "${prop.name}Behavior()"
+                    }
                 }
         }
     }

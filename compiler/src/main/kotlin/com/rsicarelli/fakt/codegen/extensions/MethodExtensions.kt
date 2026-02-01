@@ -54,6 +54,9 @@ private fun buildHistoryUpdateStatement(
 
 /**
  * Configuration for override method generation.
+ *
+ * @property generateCallHistory When true, generates call tracking code in the method body.
+ *           When false, skips call tracking for lightweight fakes. Default: true.
  */
 data class OverrideMethodConfig(
     val isSuspend: Boolean = false,
@@ -63,6 +66,7 @@ data class OverrideMethodConfig(
     val isOperator: Boolean = false,
     val interfaceName: String = "",
     val classTypeParameters: List<String> = emptyList(),
+    val generateCallHistory: Boolean = true,
 )
 
 /**
@@ -116,13 +120,17 @@ fun ClassBuilder.overrideMethod(
         returns(returnType)
 
         val callTracking =
-            buildHistoryUpdateStatement(
-                config.interfaceName,
-                name,
-                params,
-                classTypeParamNames,
-                methodTypeParamNames,
-            )
+            if (config.generateCallHistory) {
+                buildHistoryUpdateStatement(
+                    config.interfaceName,
+                    name,
+                    params,
+                    classTypeParamNames,
+                    methodTypeParamNames,
+                )
+            } else {
+                null
+            }
         val paramNames =
             buildBehaviorInvocationParams(
                 params,
@@ -138,15 +146,31 @@ fun ClassBuilder.overrideMethod(
                 val invocation = "${name}Behavior?.invoke($paramNames)"
                 val superCall = "super.$name($superCallParams)"
                 if (returnType == "Unit") {
-                    "$callTracking\n        $invocation ?: $superCall"
+                    if (callTracking != null) {
+                        "$callTracking\n        $invocation ?: $superCall"
+                    } else {
+                        "$invocation ?: $superCall"
+                    }
                 } else {
-                    "$callTracking\n        return ($invocation ?: $superCall)$returnCast"
+                    if (callTracking != null) {
+                        "$callTracking\n        return ($invocation ?: $superCall)$returnCast"
+                    } else {
+                        "return ($invocation ?: $superCall)$returnCast"
+                    }
                 }
             } else {
                 if (returnType == "Unit") {
-                    "$callTracking\n        ${name}Behavior($paramNames)"
+                    if (callTracking != null) {
+                        "$callTracking\n        ${name}Behavior($paramNames)"
+                    } else {
+                        "${name}Behavior($paramNames)"
+                    }
                 } else {
-                    "$callTracking\n        return ${name}Behavior($paramNames)$returnCast"
+                    if (callTracking != null) {
+                        "$callTracking\n        return ${name}Behavior($paramNames)$returnCast"
+                    } else {
+                        "return ${name}Behavior($paramNames)$returnCast"
+                    }
                 }
             }
     }
@@ -205,6 +229,7 @@ private fun buildSuperCallParams(params: List<Triple<String, String, Boolean>>):
  *
  * @param varargType The Array type (e.g., "Array<String>"), element type will be extracted
  * @param useSuperDelegation If true, generates nullable invoke with super delegation for open methods
+ * @param generateCallHistory If true, includes call tracking statement. Default: true.
  */
 fun ClassBuilder.overrideVarargMethod(
     name: String,
@@ -214,6 +239,7 @@ fun ClassBuilder.overrideVarargMethod(
     useSuperDelegation: Boolean = false,
     extensionReceiverType: String? = null,
     isOperator: Boolean = false,
+    generateCallHistory: Boolean = true,
 ) {
     function(name) {
         if (isOperator) operator()
@@ -233,7 +259,8 @@ fun ClassBuilder.overrideVarargMethod(
         returns(returnType)
 
         // Vararg-only methods use Unit for history (call count derived from history size)
-        val callTracking = "_${name}Calls.update { it + Unit }"
+        // Only generate if call history is enabled
+        val callTracking = if (generateCallHistory) "_${name}Calls.update { it + Unit }" else null
 
         // For extension functions, prepend 'this' receiver as first argument
         val paramNames =
@@ -250,16 +277,32 @@ fun ClassBuilder.overrideVarargMethod(
                 val superCall = "super.$name(*$varargName)"
 
                 if (returnType == "Unit") {
-                    "$callTracking\n        $invocation ?: $superCall"
+                    if (callTracking != null) {
+                        "$callTracking\n        $invocation ?: $superCall"
+                    } else {
+                        "$invocation ?: $superCall"
+                    }
                 } else {
-                    "$callTracking\n        return $invocation ?: $superCall"
+                    if (callTracking != null) {
+                        "$callTracking\n        return $invocation ?: $superCall"
+                    } else {
+                        "return $invocation ?: $superCall"
+                    }
                 }
             } else {
                 // Abstract or interface method: direct behavior call
                 if (returnType == "Unit") {
-                    "$callTracking\n        ${name}Behavior($paramNames)"
+                    if (callTracking != null) {
+                        "$callTracking\n        ${name}Behavior($paramNames)"
+                    } else {
+                        "${name}Behavior($paramNames)"
+                    }
                 } else {
-                    "$callTracking\n        return ${name}Behavior($paramNames)"
+                    if (callTracking != null) {
+                        "$callTracking\n        return ${name}Behavior($paramNames)"
+                    } else {
+                        "return ${name}Behavior($paramNames)"
+                    }
                 }
             }
     }

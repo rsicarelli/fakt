@@ -79,6 +79,41 @@ public open class FaktPluginExtension
             objects.property(LogLevel::class.java).convention(LogLevel.INFO)
 
         /**
+         * Controls default call history generation for all fakes.
+         *
+         * When set to `true` (default), generated fakes include:
+         * - Call count properties (e.g., `methodNameCallCount`)
+         * - Call history storage for argument capture
+         * - Verification DSL (`verify { method.wasCalledWith(...) }`)
+         *
+         * When set to `false`, generated fakes are lightweight and only include
+         * behavior configuration without any call tracking infrastructure.
+         *
+         * Individual fakes can override this default using the `@Fake` annotation:
+         * ```kotlin
+         * @Fake(callHistory = CallHistoryMode.ENABLED)   // Always generate
+         * @Fake(callHistory = CallHistoryMode.DISABLED)  // Never generate
+         * @Fake(callHistory = CallHistoryMode.DEFAULT)   // Follow this setting
+         * ```
+         *
+         * **Default:** `true`
+         *
+         * **Usage:**
+         * ```kotlin
+         * fakt {
+         *     enableCallHistory.set(false)  // Disable call history for all fakes by default
+         * }
+         * ```
+         *
+         * **Common use cases:**
+         * - Set to `false` for projects that don't need mock-style verification
+         * - Set to `true` (default) for migration from mocking frameworks
+         * - Use annotation overrides for fine-grained control per interface
+         */
+        public val enableCallHistory: Property<Boolean> =
+            objects.property(Boolean::class.java).convention(true)
+
+        /**
          * Source project to collect generated fakes from (collector mode).
          *
          * When set, this module switches to **collector mode**:

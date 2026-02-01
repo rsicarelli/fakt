@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.transform
 
+import com.rsicarelli.fakt.compiler.fir.metadata.FirCallHistoryMode
 import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 import com.rsicarelli.fakt.compiler.ir.analysis.AnnotationAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
@@ -42,6 +43,7 @@ import org.jetbrains.kotlin.ir.types.IrType
  *     (NoGenerics, ClassLevel, MethodLevel, Mixed) - computed lazily
  * @property sourceInterface Original IrClass for code generation context
  * @property visibility Visibility of the interface for explicitApi() support
+ * @property callHistoryMode Call history generation mode from @Fake annotation
  */
 class IrGenerationMetadata internal constructor(
     val interfaceName: String,
@@ -55,6 +57,7 @@ class IrGenerationMetadata internal constructor(
     val isFromCache: Boolean = false,
     val sourceSourceSet: String? = null,
     val visibility: FirVisibility = FirVisibility.PUBLIC,
+    val callHistoryMode: FirCallHistoryMode = FirCallHistoryMode.DEFAULT,
 ) {
     /**
      * Lazy generic pattern analysis - computed on first access only.
@@ -163,6 +166,7 @@ data class IrParameterMetadata(
  *     (NoGenerics, ClassLevel, MethodLevel, Mixed) - computed lazily
  * @property sourceClass Original IrClass for code generation context
  * @property visibility Visibility of the class for explicitApi() support
+ * @property callHistoryMode Call history generation mode from @Fake annotation
  */
 class IrClassGenerationMetadata internal constructor(
     val className: String,
@@ -178,6 +182,7 @@ class IrClassGenerationMetadata internal constructor(
     val isFromCache: Boolean = false,
     val sourceSourceSet: String? = null,
     val visibility: FirVisibility = FirVisibility.PUBLIC,
+    val callHistoryMode: FirCallHistoryMode = FirCallHistoryMode.DEFAULT,
 ) {
     /**
      * Lazy generic pattern analysis - computed on first access only.
@@ -198,9 +203,11 @@ class IrClassGenerationMetadata internal constructor(
  * Adapter pattern for backward compatibility.
  * **Future**: Refactor generators to accept IrGenerationMetadata directly.
  *
+ * @param enableCallHistoryDefault Plugin-level default for call history generation.
+ *        Used when annotation's callHistoryMode is DEFAULT.
  * @return InterfaceAnalysis compatible with existing generators
  */
-fun IrGenerationMetadata.toInterfaceAnalysis(): InterfaceAnalysis =
+fun IrGenerationMetadata.toInterfaceAnalysis(enableCallHistoryDefault: Boolean = true): InterfaceAnalysis =
     InterfaceAnalysis(
         interfaceName = interfaceName,
         typeParameters = typeParameters,
@@ -211,7 +218,30 @@ fun IrGenerationMetadata.toInterfaceAnalysis(): InterfaceAnalysis =
         debugInfo = StringBuilder("Generated from FIR metadata (FIR metadata)"),
         visibility = visibility,
         annotations = annotations.map { it.toAnnotationAnalysis() },
+        generateCallHistory = resolveCallHistoryEnabled(callHistoryMode, enableCallHistoryDefault),
     )
+
+/**
+ * Resolves whether call history should be generated for a fake.
+ *
+ * Resolution priority:
+ * 1. If annotation specifies ENABLED → true (override plugin default)
+ * 2. If annotation specifies DISABLED → false (override plugin default)
+ * 3. If annotation specifies DEFAULT → follow plugin default
+ *
+ * @param annotationMode Call history mode from @Fake annotation
+ * @param pluginDefault Plugin-level default from fakt { enableCallHistory.set(...) }
+ * @return true if call history should be generated, false otherwise
+ */
+private fun resolveCallHistoryEnabled(
+    annotationMode: FirCallHistoryMode,
+    pluginDefault: Boolean,
+): Boolean =
+    when (annotationMode) {
+        FirCallHistoryMode.ENABLED -> true
+        FirCallHistoryMode.DISABLED -> false
+        FirCallHistoryMode.DEFAULT -> pluginDefault
+    }
 
 /**
  * Adapter function: Convert IrClassGenerationMetadata to ClassAnalysis.
@@ -224,9 +254,11 @@ fun IrGenerationMetadata.toInterfaceAnalysis(): InterfaceAnalysis =
  * - Abstract members → error() defaults
  * - Open members → super.method() defaults
  *
+ * @param enableCallHistoryDefault Plugin-level default for call history generation.
+ *        Used when annotation's callHistoryMode is DEFAULT.
  * @return ClassAnalysis with separated abstract and open members
  */
-fun IrClassGenerationMetadata.toClassAnalysis(): ClassAnalysis =
+fun IrClassGenerationMetadata.toClassAnalysis(enableCallHistoryDefault: Boolean = true): ClassAnalysis =
     ClassAnalysis(
         className = className,
         typeParameters = typeParameters,
@@ -237,6 +269,7 @@ fun IrClassGenerationMetadata.toClassAnalysis(): ClassAnalysis =
         sourceClass = sourceClass,
         visibility = visibility,
         annotations = annotations.map { it.toAnnotationAnalysis() },
+        generateCallHistory = resolveCallHistoryEnabled(callHistoryMode, enableCallHistoryDefault),
     )
 
 /**

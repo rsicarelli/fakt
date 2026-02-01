@@ -129,6 +129,7 @@ internal class FirToIrTransformer {
             isFromCache = firMetadata.isFromCache,
             sourceSourceSet = firMetadata.sourceSourceSet,
             visibility = firMetadata.visibility,
+            callHistoryMode = firMetadata.callHistoryMode,
         )
     }
 
@@ -197,6 +198,7 @@ internal class FirToIrTransformer {
             isFromCache = firMetadata.isFromCache,
             sourceSourceSet = firMetadata.sourceSourceSet,
             visibility = firMetadata.visibility,
+            callHistoryMode = firMetadata.callHistoryMode,
         )
     }
 

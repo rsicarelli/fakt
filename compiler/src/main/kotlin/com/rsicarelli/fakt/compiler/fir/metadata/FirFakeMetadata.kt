@@ -7,6 +7,36 @@ import org.jetbrains.kotlin.descriptors.Visibility
 import org.jetbrains.kotlin.name.ClassId
 
 /**
+ * Call history generation mode extracted from @Fake annotation.
+ *
+ * This enum mirrors [com.rsicarelli.fakt.CallHistoryMode] from the annotations module,
+ * used internally by the compiler to avoid runtime dependency on annotations.
+ *
+ * Resolution logic (in IR phase):
+ * - [DEFAULT]: Use plugin-level `enableCallHistoryDefault` setting
+ * - [ENABLED]: Always generate call history (overrides plugin default)
+ * - [DISABLED]: Never generate call history (overrides plugin default)
+ *
+ * @see com.rsicarelli.fakt.CallHistoryMode
+ */
+enum class FirCallHistoryMode {
+    /**
+     * Use the plugin-level default from `fakt { enableCallHistory.set(...) }`.
+     */
+    DEFAULT,
+
+    /**
+     * Always generate call history, regardless of plugin default.
+     */
+    ENABLED,
+
+    /**
+     * Never generate call history, regardless of plugin default.
+     */
+    DISABLED,
+}
+
+/**
  * Metadata for a validated @Fake interface, analyzed in FIR phase and passed to IR generation.
  *
  * This data class represents the complete structural analysis of an interface that:
@@ -36,6 +66,7 @@ import org.jetbrains.kotlin.name.ClassId
  * @property sourceLocation Location in source code for error reporting
  * @property validationTimeNanos Time spent validating this interface in FIR phase (nanoseconds)
  * @property visibility Visibility of the interface (PUBLIC, INTERNAL, etc.) for explicitApi() support
+ * @property callHistoryMode Call history generation mode from @Fake annotation
  */
 data class ValidatedFakeInterface(
     val classId: ClassId,
@@ -52,6 +83,7 @@ data class ValidatedFakeInterface(
     val isFromCache: Boolean = false,
     val sourceSourceSet: String? = null,
     val visibility: FirVisibility = FirVisibility.PUBLIC,
+    val callHistoryMode: FirCallHistoryMode = FirCallHistoryMode.DEFAULT,
 )
 
 /**
@@ -70,6 +102,7 @@ data class ValidatedFakeInterface(
  * @property sourceLocation Location in source code
  * @property validationTimeNanos Time spent validating this class in FIR phase (nanoseconds)
  * @property visibility Visibility of the class (PUBLIC, INTERNAL, etc.) for explicitApi() support
+ * @property callHistoryMode Call history generation mode from @Fake annotation
  */
 data class ValidatedFakeClass(
     val classId: ClassId,
@@ -86,6 +119,7 @@ data class ValidatedFakeClass(
     val isFromCache: Boolean = false,
     val sourceSourceSet: String? = null,
     val visibility: FirVisibility = FirVisibility.PUBLIC,
+    val callHistoryMode: FirCallHistoryMode = FirCallHistoryMode.DEFAULT,
 )
 
 /**
