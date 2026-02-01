@@ -6,14 +6,17 @@ Generated code API and patterns.
 
 ## Generated Classes
 
-For each `@Fake` annotated interface, Fakt generates three components:
+For each `@Fake` annotated interface, Fakt generates several components:
 
 ### Implementation Class
 
 ```kotlin
 class Fake{Interface}Impl : {Interface} {
-    // StateFlow call counters
-    val {method}CallCount: StateFlow<Int>
+    // Call counters (derived from history)
+    val {method}CallCount: Int
+
+    // Call history
+    val {method}CallHistory: List<{Interface}{Method}Call>
 
     // Override interface members
     override fun {method}({params}): {return} = {method}Behavior({params})
@@ -41,15 +44,122 @@ class Fake{Interface}Config(private val fake: Fake{Interface}Impl) {
 
 ---
 
+## Call History Data Classes
+
+For each method with parameters, Fakt generates a data class capturing all arguments:
+
+```kotlin
+// For interface method: fun save(user: User, validate: Boolean): User
+data class FakeUserRepositorySaveCall(
+    val user: User,
+    val validate: Boolean
+)
+
+// For interface method: fun getUser(id: String): User?
+data class FakeUserRepositoryGetUserCall(
+    val id: String
+)
+```
+
+**Naming Pattern:** `Fake{Interface}{Method}Call`
+
+These data classes enable type-safe access to call history:
+
+```kotlin
+val fake = fakeUserRepository {
+    save { user, _ -> user }
+}
+
+fake.save(User("1", "Alice"), true)
+fake.save(User("2", "Bob"), false)
+
+// Access call history
+assertEquals(2, fake.saveCallHistory.size)
+assertEquals("Alice", fake.saveCallHistory[0].user.name)
+assertTrue(fake.saveCallHistory[0].validate)
+```
+
+---
+
+## Verifier Classes
+
+For each method, Fakt generates a verifier class with assertion helpers:
+
+```kotlin
+class Fake{Interface}{Method}Verifier(
+    private val history: List<Fake{Interface}{Method}Call>
+) {
+    // Assertion methods
+    fun wasCalledTimes(n: Int): Boolean
+    fun wasCalledWith({params}): Boolean
+    fun wasNeverCalled(): Boolean
+
+    // For single-parameter methods only:
+    fun wasCalledInOrder(vararg values: {ParamType}): Boolean
+    fun neverCalledWith(value: {ParamType}): Boolean
+
+    // History access
+    val first: Fake{Interface}{Method}Call
+    val lastOrNull: Fake{Interface}{Method}Call?
+    val all: List<Fake{Interface}{Method}Call>
+}
+```
+
+**Verifier API Reference:**
+
+| Method | Description |
+|--------|-------------|
+| `wasCalledTimes(n)` | Returns `true` if called exactly `n` times |
+| `wasCalledWith(...)` | Returns `true` if called with specified arguments |
+| `wasNeverCalled()` | Returns `true` if never called |
+| `wasCalledInOrder(...)` | Returns `true` if called in order (single-param only) |
+| `neverCalledWith(value)` | Returns `true` if never called with value (single-param only) |
+| `first` | First call data (throws `NoSuchElementException` if empty) |
+| `lastOrNull` | Last call data, or `null` if no calls |
+| `all` | Complete list of call data objects |
+
+---
+
+## Verify Extension Functions
+
+For each method, Fakt generates a scoped verification extension:
+
+```kotlin
+inline fun Fake{Interface}Impl.verify{Method}(
+    block: Fake{Interface}{Method}Verifier.() -> Unit
+)
+```
+
+**Usage:**
+
+```kotlin
+fake.verifySave {
+    assertTrue(wasCalledTimes(2))
+    assertTrue(wasCalledWith(User("1", "Alice"), true))
+    assertEquals("Alice", first.user.name)
+}
+
+fake.verifyTrack {
+    assertTrue(wasCalledInOrder("page_view", "button_click"))
+    assertTrue(neverCalledWith("error"))
+}
+```
+
+---
+
 ## Naming Conventions
 
-| Element                | Pattern                      | Example                  |
-|------------------------|------------------------------|--------------------------|
-| Implementation class   | `Fake{Interface}Impl`        | `FakeAnalyticsImpl`      |
-| Factory function       | `fake{Interface}`            | `fakeAnalytics`          |
-| Configuration DSL      | `Fake{Interface}Config`      | `FakeAnalyticsConfig`    |
-| Call counter           | `{method}CallCount`          | `trackCallCount`         |
-| Configuration method   | `{method}`                   | `track { }`              |
+| Element                | Pattern                           | Example                           |
+|------------------------|-----------------------------------|-----------------------------------|
+| Implementation class   | `Fake{Interface}Impl`             | `FakeAnalyticsImpl`               |
+| Factory function       | `fake{Interface}`                 | `fakeAnalytics`                   |
+| Configuration DSL      | `Fake{Interface}Config`           | `FakeAnalyticsConfig`             |
+| Call counter           | `{method}CallCount`               | `trackCallCount`                  |
+| Call history           | `{method}CallHistory`             | `trackCallHistory`                |
+| Call data class        | `Fake{Interface}{Method}Call`     | `FakeAnalyticsTrackCall`          |
+| Verifier class         | `Fake{Interface}{Method}Verifier` | `FakeAnalyticsTrackVerifier`      |
+| Verify function        | `verify{Method}`                  | `verifyTrack`                     |
+| Configuration method   | `{method}`                        | `track { }`                       |
 
 ---
 
@@ -62,6 +172,8 @@ com.example.services.Analytics (@Fake)
 → com.example.services.FakeAnalyticsImpl
 → com.example.services.fakeAnalytics()
 → com.example.services.FakeAnalyticsConfig
+→ com.example.services.FakeAnalyticsTrackCall
+→ com.example.services.FakeAnalyticsTrackVerifier
 ```
 
 ---

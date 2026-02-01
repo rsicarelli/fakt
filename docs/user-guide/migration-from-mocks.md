@@ -241,6 +241,152 @@ fun `GIVEN generic repository WHEN saving item THEN returns success`() {
 
 ---
 
+## Verification Patterns
+
+Fakt's verification DSL provides expressive assertions comparable to mocking frameworks.
+
+### MockK verify → Fakt verify{Method}
+
+**MockK:**
+
+```kotlin
+@Test
+fun `verify specific arguments`() {
+    val mock = mockk<UserRepository>()
+    every { mock.save(any(), any()) } returns Unit
+
+    mock.save(User("1", "Alice"), true)
+    mock.save(User("2", "Bob"), false)
+
+    verify(exactly = 2) { mock.save(any(), any()) }
+    verify { mock.save(User("1", "Alice"), true) }
+}
+```
+
+**Fakt:**
+
+```kotlin
+@Test
+fun `verify specific arguments`() {
+    val fake = fakeUserRepository {
+        save { user, validate -> }
+    }
+
+    fake.save(User("1", "Alice"), true)
+    fake.save(User("2", "Bob"), false)
+
+    fake.verifySave {
+        assertTrue(wasCalledTimes(2))
+        assertTrue(wasCalledWith(User("1", "Alice"), true))
+    }
+}
+```
+
+### Mockito verify → Fakt verification
+
+**Mockito:**
+
+```kotlin
+@Test
+fun `verify call order and counts`() {
+    val mock = mock(Analytics::class.java)
+
+    mock.track("page_view")
+    mock.track("purchase")
+
+    verify(mock, times(2)).track(any())
+    verify(mock).track("page_view")
+    verify(mock, never()).track("error")
+}
+```
+
+**Fakt:**
+
+```kotlin
+@Test
+fun `verify call order and counts`() {
+    val fake = fakeAnalytics()
+
+    fake.track("page_view")
+    fake.track("purchase")
+
+    fake.verifyTrack {
+        assertTrue(wasCalledTimes(2))
+        assertTrue(wasCalledWith("page_view"))
+        assertTrue(neverCalledWith("error"))
+        assertTrue(wasCalledInOrder("page_view", "purchase"))
+    }
+}
+```
+
+### ArgumentCaptor → first, lastOrNull, all
+
+**MockK with slot:**
+
+```kotlin
+@Test
+fun `capture and inspect arguments`() {
+    val mock = mockk<UserRepository>()
+    val slot = slot<User>()
+    every { mock.save(capture(slot), any()) } returns Unit
+
+    mock.save(User("1", "Alice"), true)
+
+    assertEquals("Alice", slot.captured.name)
+}
+```
+
+**Mockito with ArgumentCaptor:**
+
+```kotlin
+@Test
+fun `capture and inspect arguments`() {
+    val mock = mock(UserRepository::class.java)
+    val captor = ArgumentCaptor.forClass(User::class.java)
+
+    mock.save(User("1", "Alice"), true)
+
+    verify(mock).save(captor.capture(), any())
+    assertEquals("Alice", captor.value.name)
+}
+```
+
+**Fakt with call history:**
+
+```kotlin
+@Test
+fun `capture and inspect arguments`() {
+    val fake = fakeUserRepository {
+        save { user, validate -> }
+    }
+
+    fake.save(User("1", "Alice"), true)
+    fake.save(User("2", "Bob"), false)
+
+    fake.verifySave {
+        // Access first call
+        assertEquals("Alice", first.user.name)
+        assertTrue(first.validate)
+
+        // Access last call
+        assertEquals("Bob", lastOrNull?.user?.name)
+
+        // Access all calls
+        assertEquals(2, all.size)
+        assertEquals(listOf("Alice", "Bob"), all.map { it.user.name })
+    }
+}
+```
+
+**Key differences:**
+
+- No need for separate captor/slot objects
+- Type-safe access to all parameters via generated data classes
+- `first`, `lastOrNull`, and `all` provide natural history access
+- Call history persists for the lifetime of the fake
+
+---
+
 ## Next Steps
 
 - **[Testing Patterns](testing-patterns.md)** - Best practices for fake-based testing

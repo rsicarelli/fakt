@@ -210,12 +210,12 @@ fun log(msg: String, level: LogLevel = INFO)
 
 ---
 
-## Call Tracking
+## Call Tracking & Verification
 
 <table>
 <tr><th>Case</th><th>Example</th></tr>
 <tr>
-<td><strong>StateFlow Counters</strong></td>
+<td><strong>Call Counts</strong></td>
 <td>
 
 ```kotlin
@@ -225,11 +225,25 @@ fake.trackCallCount // Thread-safe Int counter
 </td>
 </tr>
 <tr>
-<td><strong>Reactive Testing</strong></td>
+<td><strong>Verification DSL</strong></td>
 <td>
 
 ```kotlin
-fake.trackCallCount.test { awaitItem() shouldBe 1 } // Turbine
+fake.verifyTrack {
+    assertTrue(wasCalledTimes(2))
+    assertTrue(wasCalledWith("page_view"))
+}
+```
+
+</td>
+</tr>
+<tr>
+<td><strong>Call History</strong></td>
+<td>
+
+```kotlin
+assertEquals("page_view", fake.trackCallHistory.first.event)
+assertEquals(2, fake.trackCallHistory.all.size)
 ```
 
 </td>
@@ -249,7 +263,7 @@ fake.setThemeCallCount
 <td><strong>Thread Safety</strong></td>
 <td>
 
-All counters use `MutableStateFlow.update` for thread-safe operations.
+Call counts are derived from thread-safe internal state.
 
 </td>
 </tr>
