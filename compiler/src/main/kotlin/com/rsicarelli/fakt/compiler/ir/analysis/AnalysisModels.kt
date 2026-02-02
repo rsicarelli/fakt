@@ -21,6 +21,10 @@ import org.jetbrains.kotlin.ir.types.IrType
  *
  * Used by code generators to produce fake implementations.
  * Can be created from FIR metadata or legacy IR analysis.
+ *
+ * @property generateCallHistory Controls whether call history and call count tracking
+ *           code is generated. Resolved from @Fake annotation's callHistory attribute
+ *           and plugin-level enableCallHistory default.
  */
 data class InterfaceAnalysis(
     val interfaceName: String,
@@ -32,12 +36,17 @@ data class InterfaceAnalysis(
     val debugInfo: StringBuilder = StringBuilder(),
     val visibility: FirVisibility = FirVisibility.PUBLIC,
     val annotations: List<AnnotationAnalysis> = emptyList(),
+    val generateCallHistory: Boolean = true,
 )
 
 /**
  * Complete analysis result for a class (open or abstract).
  *
  * Distinguishes between abstract and open members for proper super delegation.
+ *
+ * @property generateCallHistory Controls whether call history and call count tracking
+ *           code is generated. Resolved from @Fake annotation's callHistory attribute
+ *           and plugin-level enableCallHistory default.
  */
 data class ClassAnalysis(
     val className: String,
@@ -49,6 +58,7 @@ data class ClassAnalysis(
     val sourceClass: IrClass,
     val visibility: FirVisibility = FirVisibility.PUBLIC,
     val annotations: List<AnnotationAnalysis> = emptyList(),
+    val generateCallHistory: Boolean = true,
 )
 
 /**

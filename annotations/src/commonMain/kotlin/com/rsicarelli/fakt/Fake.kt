@@ -25,7 +25,26 @@ package com.rsicarelli.fakt
  * ## Thread Safety
  * Generated fakes are thread-safe by default through instance-based design.
  * Each call to the factory function creates a new isolated instance.
+ *
+ * ## Call History Control
+ * By default, generated fakes include call history tracking for verification.
+ * You can control this per-interface using [callHistory]:
+ * ```kotlin
+ * // Disable call history for lightweight fakes
+ * @Fake(callHistory = CallHistoryMode.DISABLED)
+ * interface Logger { ... }
+ *
+ * // Enable call history even if plugin default is disabled
+ * @Fake(callHistory = CallHistoryMode.ENABLED)
+ * interface PaymentService { ... }
+ * ```
+ *
+ * @property callHistory Controls call history generation for this fake.
+ *           Defaults to [CallHistoryMode.DEFAULT] which follows the plugin configuration.
+ * @see CallHistoryMode
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
-public annotation class Fake
+public annotation class Fake(
+    val callHistory: CallHistoryMode = CallHistoryMode.DEFAULT,
+)

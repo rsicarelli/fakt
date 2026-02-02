@@ -7,6 +7,7 @@ import com.rsicarelli.fakt.compiler.core.context.FaktSharedContext
 import com.rsicarelli.fakt.compiler.core.telemetry.measureTimeNanos
 import com.rsicarelli.fakt.compiler.fir.extraction.AnnotationExtractor
 import com.rsicarelli.fakt.compiler.fir.metadata.FirAnnotationInfo
+import com.rsicarelli.fakt.compiler.fir.metadata.FirCallHistoryMode
 import com.rsicarelli.fakt.compiler.fir.metadata.FirFunctionInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirParameterInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirPropertyInfo
@@ -25,10 +26,13 @@ import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirClassChecker
 import org.jetbrains.kotlin.fir.declarations.FirClass
 import org.jetbrains.kotlin.fir.declarations.hasAnnotation
 import org.jetbrains.kotlin.fir.declarations.processAllDeclarations
+import org.jetbrains.kotlin.fir.declarations.toAnnotationClassIdSafe
 import org.jetbrains.kotlin.fir.declarations.utils.classId
 import org.jetbrains.kotlin.fir.declarations.utils.isInline
 import org.jetbrains.kotlin.fir.declarations.utils.isSuspend
 import org.jetbrains.kotlin.fir.declarations.utils.modality
+import org.jetbrains.kotlin.fir.expressions.FirPropertyAccessExpression
+import org.jetbrains.kotlin.fir.references.toResolvedEnumEntrySymbol
 import org.jetbrains.kotlin.fir.resolve.providers.firProvider
 import org.jetbrains.kotlin.fir.resolve.toSymbol
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
@@ -176,6 +180,9 @@ internal class FakeInterfaceChecker(
         // Extract visibility for explicitApi() support
         val visibility = FirVisibility.from(declaration.status.visibility)
 
+        // Extract call history mode from @Fake annotation
+        val callHistoryMode = extractCallHistoryMode(declaration, session)
+
         return ValidatedFakeInterface(
             classId = classId,
             simpleName = simpleName,
@@ -190,7 +197,51 @@ internal class FakeInterfaceChecker(
             validationTimeNanos = 0L, // Will be set by caller after timing measurement
             sourceSourceSet = sourceLocation.extractSourceSetName(),
             visibility = visibility,
+            callHistoryMode = callHistoryMode,
         )
+    }
+
+    /**
+     * Extract callHistory attribute from @Fake annotation.
+     *
+     * Reads the `callHistory` parameter from the @Fake annotation:
+     * - `@Fake` → DEFAULT (no parameter specified)
+     * - `@Fake(callHistory = CallHistoryMode.ENABLED)` → ENABLED
+     * - `@Fake(callHistory = CallHistoryMode.DISABLED)` → DISABLED
+     *
+     * @param declaration FIR class declaration with @Fake annotation
+     * @param session FIR session for annotation resolution
+     * @return The extracted call history mode, or DEFAULT if not specified
+     */
+    private fun extractCallHistoryMode(
+        declaration: FirClass,
+        session: FirSession,
+    ): FirCallHistoryMode {
+        // Find the @Fake annotation
+        val fakeAnnotation =
+            declaration.annotations.find { annotation ->
+                annotation.toAnnotationClassIdSafe(session) == FAKE_ANNOTATION_CLASS_ID
+            } ?: return FirCallHistoryMode.DEFAULT
+
+        // Look for the callHistory argument in the annotation
+        val callHistoryArg =
+            fakeAnnotation.argumentMapping.mapping.entries
+                .find { it.key.asString() == "callHistory" }
+                ?.value
+
+        // Parse the enum value from the expression
+        return when (callHistoryArg) {
+            is FirPropertyAccessExpression -> {
+                // Resolve the enum entry symbol
+                val enumEntry = callHistoryArg.calleeReference.toResolvedEnumEntrySymbol()
+                when (enumEntry?.name?.asString()) {
+                    "ENABLED" -> FirCallHistoryMode.ENABLED
+                    "DISABLED" -> FirCallHistoryMode.DISABLED
+                    else -> FirCallHistoryMode.DEFAULT
+                }
+            }
+            else -> FirCallHistoryMode.DEFAULT
+        }
     }
 
     /**

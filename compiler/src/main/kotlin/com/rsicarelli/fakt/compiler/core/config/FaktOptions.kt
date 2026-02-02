@@ -21,6 +21,7 @@ data class FaktOptions(
     val logLevel: LogLevel = LogLevel.INFO,
     val outputDir: String? = null,
     val sourceSetContext: SourceSetContext? = null,
+    val enableCallHistoryDefault: Boolean = true,
 ) {
     /**
      * Path to write FIR cache (producer mode: metadata compilation only).
@@ -57,6 +58,8 @@ data class FaktOptions(
             val outputDir = configuration.get(FaktCommandLineProcessor.OUTPUT_DIR_KEY)
             val sourceSetContext =
                 configuration.get(FaktCommandLineProcessor.SOURCE_SET_CONTEXT_KEY)
+            val enableCallHistory =
+                configuration.get(FaktCommandLineProcessor.ENABLE_CALL_HISTORY_KEY) ?: true
 
             // Determine log level: use logLevel if present, otherwise default to INFO
             val logLevel = logLevelString?.let { LogLevel.fromString(it) } ?: LogLevel.INFO
@@ -66,6 +69,7 @@ data class FaktOptions(
                 logLevel = logLevel,
                 outputDir = outputDir,
                 sourceSetContext = sourceSetContext,
+                enableCallHistoryDefault = enableCallHistory,
             )
         }
     }
@@ -75,6 +79,7 @@ data class FaktOptions(
         FaktOptions(
             enabled=$enabled,
             logLevel=$logLevel,
+            enableCallHistoryDefault=$enableCallHistoryDefault,
             sourceSetContext=${sourceSetContext?.let { "present(${it.compilationName}/${it.targetName})" } ?: "null"}
         )
         """.trimIndent()

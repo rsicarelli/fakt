@@ -7,5 +7,20 @@
 
 // Library unique name: <com.rsicarelli.fakt:annotations>
 open annotation class com.rsicarelli.fakt/Fake : kotlin/Annotation { // com.rsicarelli.fakt/Fake|null[0]
-    constructor <init>() // com.rsicarelli.fakt/Fake.<init>|<init>(){}[0]
+    constructor <init>(com.rsicarelli.fakt/CallHistoryMode = ...) // com.rsicarelli.fakt/Fake.<init>|<init>(com.rsicarelli.fakt.CallHistoryMode){}[0]
+
+    final val callHistory // com.rsicarelli.fakt/Fake.callHistory|{}callHistory[0]
+        final fun <get-callHistory>(): com.rsicarelli.fakt/CallHistoryMode // com.rsicarelli.fakt/Fake.callHistory.<get-callHistory>|<get-callHistory>(){}[0]
+}
+
+final enum class com.rsicarelli.fakt/CallHistoryMode : kotlin/Enum<com.rsicarelli.fakt/CallHistoryMode> { // com.rsicarelli.fakt/CallHistoryMode|null[0]
+    enum entry DEFAULT // com.rsicarelli.fakt/CallHistoryMode.DEFAULT|null[0]
+    enum entry DISABLED // com.rsicarelli.fakt/CallHistoryMode.DISABLED|null[0]
+    enum entry ENABLED // com.rsicarelli.fakt/CallHistoryMode.ENABLED|null[0]
+
+    final val entries // com.rsicarelli.fakt/CallHistoryMode.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.rsicarelli.fakt/CallHistoryMode> // com.rsicarelli.fakt/CallHistoryMode.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.rsicarelli.fakt/CallHistoryMode // com.rsicarelli.fakt/CallHistoryMode.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.rsicarelli.fakt/CallHistoryMode> // com.rsicarelli.fakt/CallHistoryMode.values|values#static(){}[0]
 }

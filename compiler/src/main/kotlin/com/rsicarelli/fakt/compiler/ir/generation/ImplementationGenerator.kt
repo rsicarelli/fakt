@@ -69,6 +69,7 @@ internal class ImplementationGenerator(
                 typeParameters = analysis.typeParameters,
                 visibility = analysis.visibility,
                 annotations = annotationSpecs,
+                generateCallHistory = analysis.generateCallHistory,
             )
 
         // Generate factory function CodeFile with visibility for explicitApi() support
@@ -85,19 +86,22 @@ internal class ImplementationGenerator(
             )
 
         // Generate call history components using DSL and add to implementation file
-        val fakeClassName = "Fake${analysis.interfaceName}Impl"
-        val callHistoryDeclarations =
-            generateCallHistoryDeclarations(
-                fakeClassName = fakeClassName,
-                interfaceName = analysis.interfaceName,
-                methods = methods,
-                visibility = analysis.visibility,
-                classTypeParameters = analysis.typeParameters,
-            )
+        // Only if call history is enabled for this fake
+        if (analysis.generateCallHistory) {
+            val fakeClassName = "Fake${analysis.interfaceName}Impl"
+            val callHistoryDeclarations =
+                generateCallHistoryDeclarations(
+                    fakeClassName = fakeClassName,
+                    interfaceName = analysis.interfaceName,
+                    methods = methods,
+                    visibility = analysis.visibility,
+                    classTypeParameters = analysis.typeParameters,
+                )
 
-        // Add call history declarations to the implementation file
-        callHistoryDeclarations.forEach { declaration ->
-            implementationFile = implementationFile.addDeclaration(declaration)
+            // Add call history declarations to the implementation file
+            callHistoryDeclarations.forEach { declaration ->
+                implementationFile = implementationFile.addDeclaration(declaration)
+            }
         }
 
         return GeneratedFakeCode(
@@ -137,6 +141,7 @@ internal class ImplementationGenerator(
                 isClass = true,
                 visibility = analysis.visibility,
                 annotations = annotationSpecs,
+                generateCallHistory = analysis.generateCallHistory,
             )
 
         // Generate factory function CodeFile with visibility for explicitApi() support
@@ -153,19 +158,22 @@ internal class ImplementationGenerator(
             )
 
         // Generate call history components using DSL and add to implementation file
-        val fakeClassName = "Fake${analysis.className}Impl"
-        val callHistoryDeclarations =
-            generateCallHistoryDeclarations(
-                fakeClassName = fakeClassName,
-                interfaceName = analysis.className,
-                methods = methodSpecs,
-                visibility = analysis.visibility,
-                classTypeParameters = analysis.typeParameters,
-            )
+        // Only if call history is enabled for this fake
+        if (analysis.generateCallHistory) {
+            val fakeClassName = "Fake${analysis.className}Impl"
+            val callHistoryDeclarations =
+                generateCallHistoryDeclarations(
+                    fakeClassName = fakeClassName,
+                    interfaceName = analysis.className,
+                    methods = methodSpecs,
+                    visibility = analysis.visibility,
+                    classTypeParameters = analysis.typeParameters,
+                )
 
-        // Add call history declarations to the implementation file
-        callHistoryDeclarations.forEach { declaration ->
-            implementationFile = implementationFile.addDeclaration(declaration)
+            // Add call history declarations to the implementation file
+            callHistoryDeclarations.forEach { declaration ->
+                implementationFile = implementationFile.addDeclaration(declaration)
+            }
         }
 
         return GeneratedFakeCode(

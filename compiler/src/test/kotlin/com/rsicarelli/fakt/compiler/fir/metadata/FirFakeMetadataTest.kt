@@ -588,4 +588,201 @@ class FirFakeMetadataTest {
             assertEquals("kotlin.Deprecated", metadata.annotations[0].annotationClassId)
             assertEquals(2, metadata.annotations[0].arguments.size)
         }
+
+    // ==========================================
+    // FirCallHistoryMode Tests (Call History Control)
+    // ==========================================
+
+    @Test
+    fun `GIVEN FirCallHistoryMode DEFAULT WHEN used THEN represents plugin default behavior`() =
+        runTest {
+            // GIVEN
+            val mode = FirCallHistoryMode.DEFAULT
+
+            // WHEN
+            val name = mode.name
+
+            // THEN
+            assertEquals("DEFAULT", name)
+        }
+
+    @Test
+    fun `GIVEN FirCallHistoryMode ENABLED WHEN used THEN forces call history generation`() =
+        runTest {
+            // GIVEN
+            val mode = FirCallHistoryMode.ENABLED
+
+            // WHEN
+            val name = mode.name
+
+            // THEN
+            assertEquals("ENABLED", name)
+        }
+
+    @Test
+    fun `GIVEN FirCallHistoryMode DISABLED WHEN used THEN disables call history generation`() =
+        runTest {
+            // GIVEN
+            val mode = FirCallHistoryMode.DISABLED
+
+            // WHEN
+            val name = mode.name
+
+            // THEN
+            assertEquals("DISABLED", name)
+        }
+
+    @Test
+    fun `GIVEN ValidatedFakeInterface WHEN created with callHistoryMode ENABLED THEN contains mode`() =
+        runTest {
+            // GIVEN
+            val classId = ClassId.topLevel(FqName("com.example.TrackedService"))
+
+            // WHEN
+            val metadata =
+                ValidatedFakeInterface(
+                    classId = classId,
+                    simpleName = "TrackedService",
+                    packageName = "com.example",
+                    typeParameters = emptyList(),
+                    properties = emptyList(),
+                    functions = emptyList(),
+                    inheritedProperties = emptyList(),
+                    inheritedFunctions = emptyList(),
+                    sourceLocation = FirSourceLocation.UNKNOWN,
+                    validationTimeNanos = 0L,
+                    callHistoryMode = FirCallHistoryMode.ENABLED,
+                )
+
+            // THEN
+            assertEquals(FirCallHistoryMode.ENABLED, metadata.callHistoryMode)
+        }
+
+    @Test
+    fun `GIVEN ValidatedFakeInterface WHEN created with callHistoryMode DISABLED THEN contains mode`() =
+        runTest {
+            // GIVEN
+            val classId = ClassId.topLevel(FqName("com.example.LightweightService"))
+
+            // WHEN
+            val metadata =
+                ValidatedFakeInterface(
+                    classId = classId,
+                    simpleName = "LightweightService",
+                    packageName = "com.example",
+                    typeParameters = emptyList(),
+                    properties = emptyList(),
+                    functions = emptyList(),
+                    inheritedProperties = emptyList(),
+                    inheritedFunctions = emptyList(),
+                    sourceLocation = FirSourceLocation.UNKNOWN,
+                    validationTimeNanos = 0L,
+                    callHistoryMode = FirCallHistoryMode.DISABLED,
+                )
+
+            // THEN
+            assertEquals(FirCallHistoryMode.DISABLED, metadata.callHistoryMode)
+        }
+
+    @Test
+    fun `GIVEN ValidatedFakeInterface WHEN created without callHistoryMode THEN defaults to DEFAULT`() =
+        runTest {
+            // GIVEN
+            val classId = ClassId.topLevel(FqName("com.example.DefaultService"))
+
+            // WHEN
+            val metadata =
+                ValidatedFakeInterface(
+                    classId = classId,
+                    simpleName = "DefaultService",
+                    packageName = "com.example",
+                    typeParameters = emptyList(),
+                    properties = emptyList(),
+                    functions = emptyList(),
+                    inheritedProperties = emptyList(),
+                    inheritedFunctions = emptyList(),
+                    sourceLocation = FirSourceLocation.UNKNOWN,
+                    validationTimeNanos = 0L,
+                )
+
+            // THEN
+            assertEquals(FirCallHistoryMode.DEFAULT, metadata.callHistoryMode)
+        }
+
+    @Test
+    fun `GIVEN ValidatedFakeClass WHEN created with callHistoryMode ENABLED THEN contains mode`() =
+        runTest {
+            // GIVEN
+            val classId = ClassId.topLevel(FqName("com.example.TrackedRepository"))
+
+            // WHEN
+            val metadata =
+                ValidatedFakeClass(
+                    classId = classId,
+                    simpleName = "TrackedRepository",
+                    packageName = "com.example",
+                    typeParameters = emptyList(),
+                    abstractProperties = emptyList(),
+                    openProperties = emptyList(),
+                    abstractMethods = emptyList(),
+                    openMethods = emptyList(),
+                    sourceLocation = FirSourceLocation.UNKNOWN,
+                    validationTimeNanos = 0L,
+                    callHistoryMode = FirCallHistoryMode.ENABLED,
+                )
+
+            // THEN
+            assertEquals(FirCallHistoryMode.ENABLED, metadata.callHistoryMode)
+        }
+
+    @Test
+    fun `GIVEN ValidatedFakeClass WHEN created with callHistoryMode DISABLED THEN contains mode`() =
+        runTest {
+            // GIVEN
+            val classId = ClassId.topLevel(FqName("com.example.LightweightRepository"))
+
+            // WHEN
+            val metadata =
+                ValidatedFakeClass(
+                    classId = classId,
+                    simpleName = "LightweightRepository",
+                    packageName = "com.example",
+                    typeParameters = emptyList(),
+                    abstractProperties = emptyList(),
+                    openProperties = emptyList(),
+                    abstractMethods = emptyList(),
+                    openMethods = emptyList(),
+                    sourceLocation = FirSourceLocation.UNKNOWN,
+                    validationTimeNanos = 0L,
+                    callHistoryMode = FirCallHistoryMode.DISABLED,
+                )
+
+            // THEN
+            assertEquals(FirCallHistoryMode.DISABLED, metadata.callHistoryMode)
+        }
+
+    @Test
+    fun `GIVEN ValidatedFakeClass WHEN created without callHistoryMode THEN defaults to DEFAULT`() =
+        runTest {
+            // GIVEN
+            val classId = ClassId.topLevel(FqName("com.example.DefaultRepository"))
+
+            // WHEN
+            val metadata =
+                ValidatedFakeClass(
+                    classId = classId,
+                    simpleName = "DefaultRepository",
+                    packageName = "com.example",
+                    typeParameters = emptyList(),
+                    abstractProperties = emptyList(),
+                    openProperties = emptyList(),
+                    abstractMethods = emptyList(),
+                    openMethods = emptyList(),
+                    sourceLocation = FirSourceLocation.UNKNOWN,
+                    validationTimeNanos = 0L,
+                )
+
+            // THEN
+            assertEquals(FirCallHistoryMode.DEFAULT, metadata.callHistoryMode)
+        }
 }

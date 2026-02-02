@@ -121,14 +121,21 @@ internal class FirToIrTransformer {
             interfaceName = firMetadata.simpleName,
             packageName = firMetadata.packageName,
             typeParameters = typeParameters,
-            properties = allProperties,
-            functions = allFunctions,
-            annotations = annotations,
+            members =
+                IrInterfaceMembers(
+                    properties = allProperties,
+                    functions = allFunctions,
+                    annotations = annotations,
+                ),
             sourceInterface = irClass,
             patternAnalyzer = patternAnalyzer,
-            isFromCache = firMetadata.isFromCache,
-            sourceSourceSet = firMetadata.sourceSourceSet,
-            visibility = firMetadata.visibility,
+            config =
+                IrGenerationConfig(
+                    isFromCache = firMetadata.isFromCache,
+                    sourceSourceSet = firMetadata.sourceSourceSet,
+                    visibility = firMetadata.visibility,
+                    callHistoryMode = firMetadata.callHistoryMode,
+                ),
         )
     }
 
@@ -187,16 +194,23 @@ internal class FirToIrTransformer {
             className = firMetadata.simpleName,
             packageName = firMetadata.packageName,
             typeParameters = typeParameters,
-            abstractProperties = abstractProperties,
-            openProperties = openProperties,
-            abstractMethods = abstractMethods,
-            openMethods = openMethods,
-            annotations = annotations,
+            members =
+                IrClassMembers(
+                    abstractProperties = abstractProperties,
+                    openProperties = openProperties,
+                    abstractMethods = abstractMethods,
+                    openMethods = openMethods,
+                    annotations = annotations,
+                ),
             sourceClass = irClass,
             patternAnalyzer = patternAnalyzer,
-            isFromCache = firMetadata.isFromCache,
-            sourceSourceSet = firMetadata.sourceSourceSet,
-            visibility = firMetadata.visibility,
+            config =
+                IrGenerationConfig(
+                    isFromCache = firMetadata.isFromCache,
+                    sourceSourceSet = firMetadata.sourceSourceSet,
+                    visibility = firMetadata.visibility,
+                    callHistoryMode = firMetadata.callHistoryMode,
+                ),
         )
     }
 

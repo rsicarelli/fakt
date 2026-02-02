@@ -57,6 +57,9 @@ data class PropertySpec(
  * Configuration for complete fake generation.
  *
  * Groups related parameters for [generateCompleteFake] to reduce parameter count.
+ *
+ * @property generateCallHistory When true, generates call tracking code (call count, call history).
+ *           When false, generates lightweight fakes without tracking. Default: true.
  */
 data class FakeGenerationConfig(
     val packageName: String,
@@ -69,6 +72,7 @@ data class FakeGenerationConfig(
     val isClass: Boolean = false,
     val visibility: FirVisibility = FirVisibility.PUBLIC,
     val annotations: List<AnnotationSpec> = emptyList(),
+    val generateCallHistory: Boolean = true,
 )
 
 /**
@@ -152,6 +156,8 @@ private val ANNOTATIONS_REQUIRING_OPTIN =
  * @param isClass Whether extending a class (true) vs implementing interface (false)
  * @param visibility Visibility for the generated class (PUBLIC, INTERNAL) for explicitApi() support
  * @param annotations Annotations to propagate to the generated class
+ * @param generateCallHistory When true, generates call tracking code. When false, generates
+ *        lightweight fakes without call count or call history tracking. Default: true.
  * @return CodeFile with complete fake implementation
  */
 fun generateCompleteFake(
@@ -165,6 +171,7 @@ fun generateCompleteFake(
     isClass: Boolean = false,
     visibility: FirVisibility = FirVisibility.PUBLIC,
     annotations: List<AnnotationSpec> = emptyList(),
+    generateCallHistory: Boolean = true,
 ): CodeFile =
     generateCompleteFakeInternal(
         FakeGenerationConfig(
@@ -178,6 +185,7 @@ fun generateCompleteFake(
             isClass = isClass,
             visibility = visibility,
             annotations = annotations,
+            generateCallHistory = generateCallHistory,
         ),
     )
 
@@ -192,6 +200,7 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
     val isClass = config.isClass
     val visibility = config.visibility
     val annotations = config.annotations
+    val generateCallHistory = config.generateCallHistory
     val className = "Fake${interfaceName}Impl"
 
     // Extract type parameter names for interface type arguments
@@ -226,10 +235,12 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
             import("kotlinx.coroutines.flow.MutableStateFlow")
         }
 
-        // Add call tracking imports (always needed for call count StateFlows)
-        import("kotlinx.coroutines.flow.StateFlow")
-        import("kotlinx.coroutines.flow.MutableStateFlow")
-        import("kotlinx.coroutines.flow.update")
+        // Add call tracking imports (only needed when call history is enabled)
+        if (generateCallHistory) {
+            import("kotlinx.coroutines.flow.StateFlow")
+            import("kotlinx.coroutines.flow.MutableStateFlow")
+            import("kotlinx.coroutines.flow.update")
+        }
 
         // Add KClass import if needed (for annotations with class references)
         if (needsKClassImport) {
@@ -365,32 +376,42 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
 
             // Generate property overrides for simple properties
             simpleProperties.forEach { prop ->
-                generatePropertyOverride(this, prop, isClass)
+                generatePropertyOverride(this, prop, isClass, generateCallHistory)
             }
 
             // Generate method overrides
+            val methodContext =
+                MethodOverrideContext(
+                    isClass = isClass,
+                    interfaceName = interfaceName,
+                    classTypeParameters = typeParameters,
+                    generateCallHistory = generateCallHistory,
+                )
             methods.forEach { method ->
-                generateMethodOverride(this, method, isClass, interfaceName, typeParameters)
+                generateMethodOverride(this, method, methodContext)
             }
 
             endRegion()
 
             // ==========================================
             // SECTION 2: Call Tracking (public getters)
+            // Only generated when call history is enabled
             // ==========================================
-            region("Call Tracking")
+            if (generateCallHistory) {
+                region("Call Tracking")
 
-            // Generate public call tracking getters for all properties
-            simpleProperties.forEach { prop ->
-                generatePropertyCallTrackingPublicGetter(this, prop, visibility)
+                // Generate public call tracking getters for all properties
+                simpleProperties.forEach { prop ->
+                    generatePropertyCallTrackingPublicGetter(this, prop, visibility)
+                }
+
+                // Generate public call tracking getters for all methods
+                methods.forEach { method ->
+                    generateMethodCallTrackingPublicGetter(this, method, visibility)
+                }
+
+                endRegion()
             }
-
-            // Generate public call tracking getters for all methods
-            methods.forEach { method ->
-                generateMethodCallTrackingPublicGetter(this, method, visibility)
-            }
-
-            endRegion()
 
             // ==========================================
             // SECTION 3: Behavior Configuration
@@ -416,13 +437,16 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
 
             // Generate private backing fields for call tracking (properties only)
             // Methods derive count from call history, so no backing field needed
-            simpleProperties.forEach { prop ->
-                generatePropertyCallTrackingBackingField(this, prop)
-            }
+            // Only generated when call history is enabled
+            if (generateCallHistory) {
+                simpleProperties.forEach { prop ->
+                    generatePropertyCallTrackingBackingField(this, prop)
+                }
 
-            // Generate call history backing fields for ALL methods (params → data class, 0-param → Unit)
-            methods.forEach { method ->
-                generateMethodCallHistoryBackingField(this, method, interfaceName)
+                // Generate call history backing fields for ALL methods (params → data class, 0-param → Unit)
+                methods.forEach { method ->
+                    generateMethodCallHistoryBackingField(this, method, interfaceName)
+                }
             }
 
             // Generate behavior properties for all simple properties
@@ -805,17 +829,32 @@ private fun generatePropertyBehaviorProperty(
 }
 
 /**
+ * Context for method override generation.
+ *
+ * Groups class-level information needed during method override generation.
+ *
+ * @property isClass Whether extending a class (true) vs implementing interface (false)
+ * @property interfaceName Name of the interface for collision-safe data class naming
+ * @property classTypeParameters Class-level type parameters (e.g., ["T", "K : Comparable<K>"])
+ * @property generateCallHistory When true, includes call tracking in method body. Default: true.
+ */
+private data class MethodOverrideContext(
+    val isClass: Boolean = false,
+    val interfaceName: String = "",
+    val classTypeParameters: List<String> = emptyList(),
+    val generateCallHistory: Boolean = true,
+)
+
+/**
  * Generates ONLY the override method implementation.
  * Part of Section 3: Override Implementations
  */
 private fun generateMethodOverride(
     classBuilder: ClassBuilder,
     method: MethodSpec,
-    isClass: Boolean = false,
-    interfaceName: String = "",
-    classTypeParameters: List<String> = emptyList(),
+    context: MethodOverrideContext,
 ) {
-    val isOpenMethod = isClass && !method.isAbstract
+    val isOpenMethod = context.isClass && !method.isAbstract
 
     if (method.isVararg && method.params.size == 1) {
         val (varargName, varargType, _) = method.params.first()
@@ -824,9 +863,13 @@ private fun generateMethodOverride(
             varargName = varargName,
             varargType = varargType,
             returnType = method.returnType,
-            useSuperDelegation = isOpenMethod,
-            extensionReceiverType = method.extensionReceiverType,
-            isOperator = method.isOperator,
+            config =
+                OverrideVarargConfig(
+                    useSuperDelegation = isOpenMethod,
+                    extensionReceiverType = method.extensionReceiverType,
+                    isOperator = method.isOperator,
+                    generateCallHistory = context.generateCallHistory,
+                ),
         )
     } else {
         classBuilder.overrideMethod(
@@ -840,8 +883,9 @@ private fun generateMethodOverride(
                     useSuperDelegation = isOpenMethod,
                     extensionReceiverType = method.extensionReceiverType,
                     isOperator = method.isOperator,
-                    interfaceName = interfaceName,
-                    classTypeParameters = classTypeParameters,
+                    interfaceName = context.interfaceName,
+                    classTypeParameters = context.classTypeParameters,
+                    generateCallHistory = context.generateCallHistory,
                 ),
         )
     }
@@ -850,62 +894,151 @@ private fun generateMethodOverride(
 /**
  * Generates ONLY the override property implementation.
  * Part of Section 3: Override Implementations
+ *
+ * Dispatches to specialized helpers based on property mutability.
+ *
+ * @param generateCallHistory When true, includes call count tracking in getter/setter. Default: true.
  */
 private fun generatePropertyOverride(
     classBuilder: ClassBuilder,
     prop: PropertySpec,
     isClass: Boolean = false,
+    generateCallHistory: Boolean = true,
 ) {
     val isOpenProperty = isClass && !prop.isAbstract
-    val capitalizedName = prop.name.replaceFirstChar { it.uppercase() }
-
     if (prop.isMutable) {
-        classBuilder.property(prop.name, prop.type) {
-            override()
-            mutable()
-            getter =
-                if (isOpenProperty) {
-                    listOf(
-                        "_${prop.name}CallCount.update { it + 1 }",
-                        "return ${prop.name}Getter?.invoke() ?: super.${prop.name}",
-                    ).joinToString("\n")
-                } else {
-                    listOf(
-                        "_${prop.name}CallCount.update { it + 1 }",
-                        "return ${prop.name}Getter()",
-                    ).joinToString("\n")
-                }
-            setter =
-                if (isOpenProperty) {
-                    listOf(
-                        "_set${capitalizedName}CallCount.update { it + 1 }",
-                        "${prop.name}Setter?.invoke(value) ?: run { super.${prop.name} = value }",
-                    ).joinToString("\n")
-                } else {
-                    listOf(
-                        "_set${capitalizedName}CallCount.update { it + 1 }",
-                        "${prop.name}Setter(value)",
-                    ).joinToString("\n")
-                }
-        }
+        generateMutablePropertyOverride(classBuilder, prop, isOpenProperty, generateCallHistory)
     } else {
-        classBuilder.property(prop.name, prop.type) {
-            override()
-            getter =
-                if (isOpenProperty) {
-                    listOf(
-                        "_${prop.name}CallCount.update { it + 1 }",
-                        "return ${prop.name}Behavior?.invoke() ?: super.${prop.name}",
-                    ).joinToString("\n")
-                } else {
-                    listOf(
-                        "_${prop.name}CallCount.update { it + 1 }",
-                        "return ${prop.name}Behavior()",
-                    ).joinToString("\n")
-                }
-        }
+        generateImmutablePropertyOverride(classBuilder, prop, isOpenProperty, generateCallHistory)
     }
 }
+
+/**
+ * Generates override for mutable (var) properties.
+ *
+ * Generates pattern with getter/setter:
+ * - For abstract/interface: direct getter/setter invocation
+ * - For open: nullable getter/setter with super delegation
+ */
+private fun generateMutablePropertyOverride(
+    classBuilder: ClassBuilder,
+    prop: PropertySpec,
+    isOpenProperty: Boolean,
+    generateCallHistory: Boolean,
+) {
+    val capitalizedName = prop.name.replaceFirstChar { it.uppercase() }
+
+    classBuilder.property(prop.name, prop.type) {
+        override()
+        mutable()
+        getter = buildMutablePropertyGetter(prop.name, isOpenProperty, generateCallHistory)
+        setter = buildMutablePropertySetter(prop.name, capitalizedName, isOpenProperty, generateCallHistory)
+    }
+}
+
+/**
+ * Builds the getter expression for a mutable property.
+ */
+private fun buildMutablePropertyGetter(
+    propName: String,
+    isOpenProperty: Boolean,
+    generateCallHistory: Boolean,
+): String =
+    if (isOpenProperty) {
+        if (generateCallHistory) {
+            listOf(
+                "_${propName}CallCount.update { it + 1 }",
+                "return ${propName}Getter?.invoke() ?: super.$propName",
+            ).joinToString("\n")
+        } else {
+            "${propName}Getter?.invoke() ?: super.$propName"
+        }
+    } else {
+        if (generateCallHistory) {
+            listOf(
+                "_${propName}CallCount.update { it + 1 }",
+                "return ${propName}Getter()",
+            ).joinToString("\n")
+        } else {
+            "${propName}Getter()"
+        }
+    }
+
+/**
+ * Builds the setter expression for a mutable property.
+ */
+private fun buildMutablePropertySetter(
+    propName: String,
+    capitalizedName: String,
+    isOpenProperty: Boolean,
+    generateCallHistory: Boolean,
+): String =
+    if (isOpenProperty) {
+        if (generateCallHistory) {
+            listOf(
+                "_set${capitalizedName}CallCount.update { it + 1 }",
+                "${propName}Setter?.invoke(value) ?: run { super.$propName = value }",
+            ).joinToString("\n")
+        } else {
+            "${propName}Setter?.invoke(value) ?: run { super.$propName = value }"
+        }
+    } else {
+        if (generateCallHistory) {
+            listOf(
+                "_set${capitalizedName}CallCount.update { it + 1 }",
+                "${propName}Setter(value)",
+            ).joinToString("\n")
+        } else {
+            "${propName}Setter(value)"
+        }
+    }
+
+/**
+ * Generates override for immutable (val) properties.
+ *
+ * Generates pattern with getter only:
+ * - For abstract/interface: direct behavior invocation
+ * - For open: nullable behavior with super delegation
+ */
+private fun generateImmutablePropertyOverride(
+    classBuilder: ClassBuilder,
+    prop: PropertySpec,
+    isOpenProperty: Boolean,
+    generateCallHistory: Boolean,
+) {
+    classBuilder.property(prop.name, prop.type) {
+        override()
+        getter = buildImmutablePropertyGetter(prop.name, isOpenProperty, generateCallHistory)
+    }
+}
+
+/**
+ * Builds the getter expression for an immutable property.
+ */
+private fun buildImmutablePropertyGetter(
+    propName: String,
+    isOpenProperty: Boolean,
+    generateCallHistory: Boolean,
+): String =
+    if (isOpenProperty) {
+        if (generateCallHistory) {
+            listOf(
+                "_${propName}CallCount.update { it + 1 }",
+                "return ${propName}Behavior?.invoke() ?: super.$propName",
+            ).joinToString("\n")
+        } else {
+            "${propName}Behavior?.invoke() ?: super.$propName"
+        }
+    } else {
+        if (generateCallHistory) {
+            listOf(
+                "_${propName}CallCount.update { it + 1 }",
+                "return ${propName}Behavior()",
+            ).joinToString("\n")
+        } else {
+            "${propName}Behavior()"
+        }
+    }
 
 /**
  * Generates ONLY the configuration method.
