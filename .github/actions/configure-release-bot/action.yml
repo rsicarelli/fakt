@@ -19,7 +19,8 @@ runs:
         RELEASE_BOT_APP_ID: ${{ inputs.bot-app-id }}
       run: |
         # Ensure bot name ends with [bot] for proper GitHub attribution
-        BOT_DISPLAY_NAME="${RELEASE_BOT_NAME%[bot]}[bot]"
+        # Note: Must quote '[bot]' to match literal string, not glob pattern
+        BOT_DISPLAY_NAME="${RELEASE_BOT_NAME%'[bot]'}[bot]"
         git config --global user.name "$BOT_DISPLAY_NAME"
         git config --global user.email "${RELEASE_BOT_APP_ID}+${BOT_DISPLAY_NAME}@users.noreply.github.com"
         echo "✅ Git configured with bot identity: $BOT_DISPLAY_NAME"

@@ -131,12 +131,19 @@ jobs:
         run: |
           echo "Testing Git configuration..."
 
-          git config --global user.name 'fakt-bot'
-          git config --global user.email 'bot@rsicarelli.dev'
+          # Use the actual release bot configuration
+          BOT_NAME="${{ vars.RELEASE_BOT_NAME }}"
+          BOT_USER_ID="${{ vars.RELEASE_BOT_APP_ID }}"
+
+          # Ensure bot name ends with [bot] for proper GitHub attribution
+          BOT_DISPLAY_NAME="${BOT_NAME%'[bot]'}[bot]"
+
+          git config --global user.name "$BOT_DISPLAY_NAME"
+          git config --global user.email "${BOT_USER_ID}+${BOT_DISPLAY_NAME}@users.noreply.github.com"
 
           echo "✅ Git user configured:"
-          git config user.name
-          git config user.email
+          echo "   Name: $(git config user.name)"
+          echo "   Email: $(git config user.email)"
 
   test-commit-capability:
     name: Test Commit and Push Capability
@@ -157,10 +164,11 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
 
-      - name: Configure Git
-        run: |
-          git config --global user.name 'fakt-bot'
-          git config --global user.email 'bot@rsicarelli.dev'
+      - name: Configure Git with Release Bot Identity
+        uses: ./.github/actions/configure-release-bot
+        with:
+          bot-name: ${{ vars.RELEASE_BOT_NAME }}
+          bot-app-id: ${{ vars.RELEASE_BOT_APP_ID }}
 
       - name: Create Test Branch
         id: branch

@@ -218,6 +218,25 @@ fun updateFaktGradleSubplugin(newVersion: String) {
     }
 }
 
+fun updateLibsVersionsToml(newVersion: String) {
+    val tomlFile = File("gradle/libs.versions.toml")
+    if (!tomlFile.exists()) {
+        println("Warning: gradle/libs.versions.toml not found, skipping fakt version update")
+        return
+    }
+
+    val content = tomlFile.readText()
+    val versionPattern = Regex("""(fakt = )"[^"]+"""")
+    val updatedContent = versionPattern.replace(content) { matchResult ->
+        """${matchResult.groupValues[1]}"$newVersion""""
+    }
+
+    if (content != updatedContent) {
+        tomlFile.writeText(updatedContent)
+        println("Updated fakt version in libs.versions.toml to $newVersion")
+    }
+}
+
 fun addSnapshotSuffix(version: SemanticVersion): String {
     val versionString = version.toString()
     return if (versionString.endsWith("-SNAPSHOT")) {
@@ -253,6 +272,9 @@ fun main(args: Array<String>) {
         // Update PLUGIN_VERSION in FaktGradleSubplugin.kt
         updateFaktGradleSubplugin(snapshotVersion)
 
+        // Update fakt version in libs.versions.toml
+        updateLibsVersionsToml(snapshotVersion)
+
         // Output for GitHub Actions (if needed)
         println("VERSION_SNAPSHOT=$snapshotVersion")
         println("Current version converted to SNAPSHOT: $snapshotVersion")
@@ -282,6 +304,9 @@ fun main(args: Array<String>) {
 
     // Update PLUGIN_VERSION in FaktGradleSubplugin.kt
     updateFaktGradleSubplugin(newVersion.toString())
+
+    // Update fakt version in libs.versions.toml
+    updateLibsVersionsToml(newVersion.toString())
 
     // Output for GitHub Actions
     println("VERSION_CURRENT=$currentVersion")
