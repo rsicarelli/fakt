@@ -1,3 +1,13 @@
+public final class com/rsicarelli/fakt/CallHistoryMode : java/lang/Enum {
+	public static final field DEFAULT Lcom/rsicarelli/fakt/CallHistoryMode;
+	public static final field DISABLED Lcom/rsicarelli/fakt/CallHistoryMode;
+	public static final field ENABLED Lcom/rsicarelli/fakt/CallHistoryMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/rsicarelli/fakt/CallHistoryMode;
+	public static fun values ()[Lcom/rsicarelli/fakt/CallHistoryMode;
+}
+
 public abstract interface annotation class com/rsicarelli/fakt/Fake : java/lang/annotation/Annotation {
+	public abstract fun callHistory ()Lcom/rsicarelli/fakt/CallHistoryMode;
 }
 

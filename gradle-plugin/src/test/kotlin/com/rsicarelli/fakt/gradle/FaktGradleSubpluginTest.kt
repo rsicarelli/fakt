@@ -50,4 +50,58 @@ class FaktGradleSubpluginTest {
         // Then: Extension should have expected defaults
         assertTrue(extension.enabled.get())
     }
+
+    // ==========================================
+    // enableCallHistory Tests (Call History Control)
+    // ==========================================
+
+    @Test
+    fun `GIVEN extension WHEN accessing enableCallHistory THEN has default true`() {
+        // Given: A project with Fakt plugin applied
+        val project = ProjectBuilder.builder().build()
+        project.pluginManager.apply("com.rsicarelli.fakt")
+
+        // When: Accessing the extension
+        val extension = project.extensions.getByType(FaktPluginExtension::class.java)
+
+        // Then: enableCallHistory should default to true
+        assertTrue(
+            extension.enableCallHistory.get(),
+            "enableCallHistory should default to true",
+        )
+    }
+
+    @Test
+    fun `GIVEN extension WHEN setting enableCallHistory to false THEN value is false`() {
+        // Given: A project with Fakt plugin applied
+        val project = ProjectBuilder.builder().build()
+        project.pluginManager.apply("com.rsicarelli.fakt")
+        val extension = project.extensions.getByType(FaktPluginExtension::class.java)
+
+        // When: Setting enableCallHistory to false
+        extension.enableCallHistory.set(false)
+
+        // Then: enableCallHistory should be false
+        assertFalse(
+            extension.enableCallHistory.get(),
+            "enableCallHistory should be false after being set",
+        )
+    }
+
+    @Test
+    fun `GIVEN extension WHEN setting enableCallHistory to true THEN value is true`() {
+        // Given: A project with Fakt plugin applied
+        val project = ProjectBuilder.builder().build()
+        project.pluginManager.apply("com.rsicarelli.fakt")
+        val extension = project.extensions.getByType(FaktPluginExtension::class.java)
+
+        // When: Setting enableCallHistory to true explicitly
+        extension.enableCallHistory.set(true)
+
+        // Then: enableCallHistory should be true
+        assertTrue(
+            extension.enableCallHistory.get(),
+            "enableCallHistory should be true after being set",
+        )
+    }
 }

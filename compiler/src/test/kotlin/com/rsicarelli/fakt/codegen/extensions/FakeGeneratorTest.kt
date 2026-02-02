@@ -8,6 +8,7 @@ import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertContains
+import kotlin.test.assertFalse
 
 /**
  * Tests for high-level fake generator function.
@@ -493,5 +494,218 @@ class FakeGeneratorTest {
 
         // THEN - Should default to public
         assertContains(result, "public class FakeProtectedServiceImpl : ProtectedService")
+    }
+
+    // ==========================================
+    // generateCallHistory Tests (Call History Control)
+    // ==========================================
+
+    @Test
+    fun `GIVEN generateCallHistory false WHEN generating fake THEN omits call tracking imports`() {
+        // GIVEN
+        val methods =
+            listOf(
+                MethodSpec("doWork", emptyList(), "String"),
+            )
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "LightweightService",
+                methods = methods,
+                generateCallHistory = false,
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Should NOT contain MutableStateFlow import used for call tracking
+        assertFalse(
+            result.contains("import kotlinx.coroutines.flow.MutableStateFlow"),
+            "Should not contain MutableStateFlow import when call history is disabled",
+        )
+        assertFalse(
+            result.contains("import kotlinx.coroutines.flow.update"),
+            "Should not contain update import when call history is disabled",
+        )
+    }
+
+    @Test
+    fun `GIVEN generateCallHistory false WHEN generating fake THEN omits history backing fields`() {
+        // GIVEN
+        val methods =
+            listOf(
+                MethodSpec(
+                    name = "getUser",
+                    params = listOf(Triple("id", "String", false)),
+                    returnType = "User?",
+                ),
+            )
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "UserService",
+                methods = methods,
+                generateCallHistory = false,
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Should NOT contain call tracking backing field
+        assertFalse(
+            result.contains("_getUserCalls"),
+            "Should not contain _getUserCalls backing field when call history is disabled",
+        )
+        assertFalse(
+            result.contains("getUserCallCount"),
+            "Should not contain getUserCallCount when call history is disabled",
+        )
+    }
+
+    @Test
+    fun `GIVEN generateCallHistory false WHEN generating fake with method THEN omits Section 2 call tracking`() {
+        // GIVEN
+        val methods =
+            listOf(
+                MethodSpec("doWork", listOf(Triple("value", "Int", false)), "Unit"),
+            )
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "WorkService",
+                methods = methods,
+                generateCallHistory = false,
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Should NOT contain Section 2 Call Tracking comment
+        assertFalse(
+            result.contains("Section 2: Call Tracking"),
+            "Should not contain Section 2 Call Tracking when call history is disabled",
+        )
+        // And should NOT contain the update call in method body
+        assertFalse(
+            result.contains(".update { it +"),
+            "Should not contain history update call when call history is disabled",
+        )
+    }
+
+    @Test
+    fun `GIVEN generateCallHistory true WHEN generating fake THEN includes call tracking`() {
+        // GIVEN
+        val methods =
+            listOf(
+                MethodSpec(
+                    name = "getUser",
+                    params = listOf(Triple("id", "String", false)),
+                    returnType = "User?",
+                ),
+            )
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "UserService",
+                methods = methods,
+                generateCallHistory = true, // explicitly enabled
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Should contain call tracking imports
+        assertContains(result, "import kotlinx.coroutines.flow.MutableStateFlow")
+        assertContains(result, "import kotlinx.coroutines.flow.update")
+        // And should contain backing field
+        assertContains(result, "_getUserCalls")
+    }
+
+    @Test
+    fun `GIVEN generateCallHistory default WHEN generating fake THEN includes call tracking`() {
+        // GIVEN - using default generateCallHistory (true)
+        val methods =
+            listOf(
+                MethodSpec("doWork", emptyList(), "String"),
+            )
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "DefaultService",
+                methods = methods,
+                // generateCallHistory not specified - should default to true
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Should contain call tracking (default behavior)
+        assertContains(result, "import kotlinx.coroutines.flow.MutableStateFlow")
+        assertContains(result, "_doWorkCalls")
+    }
+
+    @Test
+    fun `GIVEN generateCallHistory false with multiple methods WHEN generating fake THEN omits all call tracking`() {
+        // GIVEN
+        val methods =
+            listOf(
+                MethodSpec("getUser", listOf(Triple("id", "String", false)), "User?"),
+                MethodSpec("saveUser", listOf(Triple("user", "User", false)), "Unit", isSuspend = true),
+                MethodSpec("deleteUser", listOf(Triple("id", "String", false)), "Boolean"),
+            )
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "UserService",
+                methods = methods,
+                generateCallHistory = false,
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Should NOT contain any call tracking fields
+        assertFalse(result.contains("_getUserCalls"))
+        assertFalse(result.contains("_saveUserCalls"))
+        assertFalse(result.contains("_deleteUserCalls"))
+        assertFalse(result.contains("CallCount"))
+    }
+
+    @Test
+    fun `GIVEN generateCallHistory false WHEN generating fake THEN still generates behavior properties`() {
+        // GIVEN
+        val methods =
+            listOf(
+                MethodSpec("doWork", listOf(Triple("value", "Int", false)), "String"),
+            )
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "WorkService",
+                methods = methods,
+                generateCallHistory = false,
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Should still contain behavior property and configure method
+        assertContains(result, "private var doWorkBehavior")
+        assertContains(result, "internal fun configureDoWork")
+        assertContains(result, "override fun doWork(value: Int): String")
     }
 }

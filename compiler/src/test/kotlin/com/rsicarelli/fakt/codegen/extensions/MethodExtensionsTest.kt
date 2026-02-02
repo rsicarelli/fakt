@@ -468,4 +468,216 @@ class MethodExtensionsTest {
     }
 
     // endregion
+
+    // region generateCallHistory Control Tests
+
+    @Test
+    fun `GIVEN overrideMethod with generateCallHistory false WHEN generating THEN omits history update`() {
+        // GIVEN
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    overrideMethod(
+                        name = "getUser",
+                        params = listOf(Triple("id", "String", false)),
+                        returnType = "User",
+                        config =
+                            OverrideMethodConfig(
+                                interfaceName = "UserService",
+                                generateCallHistory = false,
+                            ),
+                    )
+                }
+            }
+
+        // WHEN
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Should NOT contain history update
+        assertFalse(
+            result.contains("_getUserCalls.update"),
+            "Should not contain history update when generateCallHistory is false",
+        )
+        // But SHOULD still contain the behavior call
+        assertContains(result, "return getUserBehavior(id)")
+    }
+
+    @Test
+    fun `GIVEN overrideMethod with generateCallHistory false WHEN 0-param THEN omits Unit history update`() {
+        // GIVEN
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    overrideMethod(
+                        name = "logout",
+                        params = emptyList(),
+                        returnType = "Unit",
+                        config =
+                            OverrideMethodConfig(
+                                interfaceName = "AuthService",
+                                generateCallHistory = false,
+                            ),
+                    )
+                }
+            }
+
+        // WHEN
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Should NOT contain any history update
+        assertFalse(
+            result.contains("_logoutCalls.update"),
+            "Should not contain history update when generateCallHistory is false",
+        )
+        // But SHOULD still contain the behavior call
+        assertContains(result, "logoutBehavior()")
+    }
+
+    @Test
+    fun `GIVEN overrideVarargMethod with generateCallHistory false WHEN generating THEN omits history update`() {
+        // GIVEN
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    overrideVarargMethod(
+                        name = "process",
+                        varargName = "items",
+                        varargType = "String",
+                        returnType = "Int",
+                        config = OverrideVarargConfig(generateCallHistory = false),
+                    )
+                }
+            }
+
+        // WHEN
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Should NOT contain history update
+        assertFalse(
+            result.contains("_processCalls.update"),
+            "Should not contain history update when generateCallHistory is false",
+        )
+        // But SHOULD still contain the behavior call
+        assertContains(result, "return processBehavior(items)")
+    }
+
+    @Test
+    fun `GIVEN overrideMethod with generateCallHistory true WHEN generating THEN includes history update`() {
+        // GIVEN
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    overrideMethod(
+                        name = "doWork",
+                        params = listOf(Triple("value", "Int", false)),
+                        returnType = "String",
+                        config =
+                            OverrideMethodConfig(
+                                interfaceName = "WorkService",
+                                generateCallHistory = true, // explicitly enabled
+                            ),
+                    )
+                }
+            }
+
+        // WHEN
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Should contain history update
+        assertContains(result, "_doWorkCalls.update { it + WorkServiceDoWorkCall(value) }")
+    }
+
+    @Test
+    fun `GIVEN overrideMethod with default config WHEN generating THEN includes history update`() {
+        // GIVEN - Using default OverrideMethodConfig which has generateCallHistory = true
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    overrideMethod(
+                        name = "getData",
+                        params = emptyList(),
+                        returnType = "String",
+                        config = OverrideMethodConfig(interfaceName = "DataService"),
+                    )
+                }
+            }
+
+        // WHEN
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Should contain history update (default behavior)
+        assertContains(result, "_getDataCalls.update { it + Unit }")
+    }
+
+    @Test
+    fun `GIVEN overrideVarargMethod with generateCallHistory true WHEN generating THEN includes history update`() {
+        // GIVEN
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    overrideVarargMethod(
+                        name = "log",
+                        varargName = "messages",
+                        varargType = "String",
+                        returnType = "Unit",
+                        config = OverrideVarargConfig(generateCallHistory = true),
+                    )
+                }
+            }
+
+        // WHEN
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Should contain history update
+        assertContains(result, "_logCalls.update { it + Unit }")
+    }
+
+    @Test
+    fun `GIVEN suspend method with generateCallHistory false WHEN generating THEN omits history update`() {
+        // GIVEN
+        val file =
+            codeFile("com.example") {
+                klass("FakeAsyncServiceImpl") {
+                    overrideMethod(
+                        name = "fetchUser",
+                        params = listOf(Triple("id", "String", false)),
+                        returnType = "User?",
+                        config =
+                            OverrideMethodConfig(
+                                isSuspend = true,
+                                interfaceName = "AsyncService",
+                                generateCallHistory = false,
+                            ),
+                    )
+                }
+            }
+
+        // WHEN
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Should NOT contain history update
+        assertFalse(
+            result.contains("_fetchUserCalls.update"),
+            "Suspend method should not have history update when disabled",
+        )
+        // But SHOULD still be a suspend function with correct behavior
+        assertContains(result, "override suspend fun fetchUser")
+        assertContains(result, "return fetchUserBehavior(id)")
+    }
+
+    // endregion
 }

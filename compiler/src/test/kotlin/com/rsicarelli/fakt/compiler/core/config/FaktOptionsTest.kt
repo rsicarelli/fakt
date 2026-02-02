@@ -9,6 +9,7 @@ import kotlinx.coroutines.test.runTest
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -205,5 +206,93 @@ class FaktOptionsTest {
             assertTrue(optionsString.contains("enabled=true"))
             assertTrue(optionsString.contains("logLevel=INFO"))
             assertTrue(optionsString.contains("sourceSetContext"))
+        }
+
+    // ==========================================
+    // enableCallHistoryDefault Tests (Call History Control)
+    // ==========================================
+
+    @Test
+    fun `GIVEN configuration with enableCallHistory true WHEN loading THEN should have enableCallHistoryDefault true`() =
+        runTest {
+            // GIVEN: Configuration with enableCallHistory = true
+            val configuration = CompilerConfiguration()
+            configuration.put(FaktCommandLineProcessor.ENABLED_KEY, true)
+            configuration.put(FaktCommandLineProcessor.ENABLE_CALL_HISTORY_KEY, true)
+
+            // WHEN: Loading options
+            val options = FaktOptions.load(configuration)
+
+            // THEN: enableCallHistoryDefault should be true
+            assertTrue(options.enableCallHistoryDefault)
+        }
+
+    @Test
+    fun `GIVEN configuration with enableCallHistory false WHEN loading THEN should have enableCallHistoryDefault false`() =
+        runTest {
+            // GIVEN: Configuration with enableCallHistory = false
+            val configuration = CompilerConfiguration()
+            configuration.put(FaktCommandLineProcessor.ENABLED_KEY, true)
+            configuration.put(FaktCommandLineProcessor.ENABLE_CALL_HISTORY_KEY, false)
+
+            // WHEN: Loading options
+            val options = FaktOptions.load(configuration)
+
+            // THEN: enableCallHistoryDefault should be false
+            assertFalse(options.enableCallHistoryDefault)
+        }
+
+    @Test
+    fun `GIVEN configuration without enableCallHistory WHEN loading THEN should default to true`() =
+        runTest {
+            // GIVEN: Configuration without enableCallHistory option
+            val configuration = CompilerConfiguration()
+            configuration.put(FaktCommandLineProcessor.ENABLED_KEY, true)
+            // Note: ENABLE_CALL_HISTORY_KEY not set
+
+            // WHEN: Loading options
+            val options = FaktOptions.load(configuration)
+
+            // THEN: enableCallHistoryDefault should default to true
+            assertTrue(
+                options.enableCallHistoryDefault,
+                "enableCallHistoryDefault should default to true when not configured",
+            )
+        }
+
+    @Test
+    fun `GIVEN options with enableCallHistoryDefault false WHEN converting to string THEN includes setting`() =
+        runTest {
+            // GIVEN: Configuration with enableCallHistory = false
+            val configuration = CompilerConfiguration()
+            configuration.put(FaktCommandLineProcessor.ENABLED_KEY, true)
+            configuration.put(FaktCommandLineProcessor.ENABLE_CALL_HISTORY_KEY, false)
+
+            val options = FaktOptions.load(configuration)
+
+            // WHEN: Converting to string
+            val optionsString = options.toString()
+
+            // THEN: String should contain enableCallHistoryDefault setting
+            assertTrue(
+                optionsString.contains("enableCallHistoryDefault=false"),
+                "Options string should contain enableCallHistoryDefault setting",
+            )
+        }
+
+    @Test
+    fun `GIVEN empty configuration WHEN loading THEN enableCallHistoryDefault should be true`() =
+        runTest {
+            // GIVEN: Completely empty configuration
+            val configuration = CompilerConfiguration()
+
+            // WHEN: Loading options
+            val options = FaktOptions.load(configuration)
+
+            // THEN: enableCallHistoryDefault should be true (default)
+            assertTrue(
+                options.enableCallHistoryDefault,
+                "Default configuration should have enableCallHistoryDefault=true",
+            )
         }
 }

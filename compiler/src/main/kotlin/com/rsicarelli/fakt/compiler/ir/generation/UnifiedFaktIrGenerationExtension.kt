@@ -507,7 +507,11 @@ class UnifiedFaktIrGenerationExtension(
             }
 
             // Convert to InterfaceAnalysis using adapter (NO re-analysis!)
-            val interfaceAnalysis = metadata.toInterfaceAnalysis()
+            // Pass plugin default for call history resolution
+            val interfaceAnalysis =
+                metadata.toInterfaceAnalysis(
+                    enableCallHistoryDefault = sharedContext.options.enableCallHistoryDefault,
+                )
 
             // Validate pattern (reuses existing validation logic)
             validateAndLogGenericPattern(
@@ -649,7 +653,11 @@ class UnifiedFaktIrGenerationExtension(
             }
 
             // Convert to ClassAnalysis using adapter (preserves abstract/open distinction)
-            val classAnalysis = metadata.toClassAnalysis()
+            // Pass plugin default for call history resolution
+            val classAnalysis =
+                metadata.toClassAnalysis(
+                    enableCallHistoryDefault = sharedContext.options.enableCallHistoryDefault,
+                )
 
             // Generate fake implementation with timing
             // Pass sourceSourceSet to output to correct test source set

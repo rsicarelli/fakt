@@ -225,6 +225,12 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 // Pass configuration options to the compiler plugin
                 add(SubpluginOption(key = "enabled", value = extension.enabled.get().toString()))
                 add(SubpluginOption(key = "logLevel", value = extension.logLevel.get().name))
+                add(
+                    SubpluginOption(
+                        key = "enableCallHistory",
+                        value = extension.enableCallHistory.get().toString(),
+                    ),
+                )
 
                 val buildDir =
                     project.layout.buildDirectory
