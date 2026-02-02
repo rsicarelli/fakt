@@ -138,10 +138,7 @@ private fun ClassBuilder.addSingleParamMethods(
     }
 }
 
-private fun ClassBuilder.addAccessorProperties(
-    dataClassName: String,
-    visibility: FirVisibility,
-) {
+private fun ClassBuilder.addAccessorProperties(dataClassName: String, visibility: FirVisibility) {
     property("lastOrNull", "$dataClassName?") {
         visibility.applyVisibility(this)
         getter = "calls.lastOrNull()"
@@ -182,9 +179,7 @@ internal fun CodeFileBuilder.unitVerifierClass(
         visibility.applyVisibility(this)
 
         // Constructor property: private val calls: List<Unit>
-        constructorProperty("calls", "List<Unit>") {
-            private()
-        }
+        constructorProperty("calls", "List<Unit>") { private() }
 
         // fun wasCalledTimes(n: Int): Boolean = calls.size == n
         function("wasCalledTimes") {
@@ -328,7 +323,5 @@ internal fun CodeFileBuilder.unitVerifyFunction(
     }
 }
 
-/**
- * Capitalizes the first character of a string.
- */
+/** Capitalizes the first character of a string. */
 private fun String.capitalizeFirst(): String = replaceFirstChar { it.uppercase() }

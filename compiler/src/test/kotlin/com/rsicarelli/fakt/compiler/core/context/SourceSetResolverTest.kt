@@ -4,12 +4,12 @@ package com.rsicarelli.fakt.compiler.core.context
 
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.api.SourceSetInfo
-import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.runTest
 
 /**
  * TDD tests for SourceSetResolver - resolves source set hierarchies from compiler context.
@@ -111,62 +111,56 @@ class SourceSetResolverTest {
         }
 
     @Test
-    fun `GIVEN context WHEN resolving non-existent source set THEN should return null`() =
-        runTest {
-            // GIVEN: Simple context
-            val context =
-                SourceSetContext(
-                    compilationName = "test",
-                    targetName = "jvm",
-                    platformType = "jvm",
-                    isTest = true,
-                    defaultSourceSet = SourceSetInfo("jvmTest", listOf("commonMain")),
-                    allSourceSets =
-                        listOf(
-                            SourceSetInfo("jvmTest", listOf("commonMain")),
-                            SourceSetInfo("commonMain", emptyList()),
-                        ),
-                    outputDirectory = "/project/build/generated/fakt/test/kotlin",
-                    commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
-                )
+    fun `GIVEN context WHEN resolving non-existent source set THEN should return null`() = runTest {
+        // GIVEN: Simple context
+        val context =
+            SourceSetContext(
+                compilationName = "test",
+                targetName = "jvm",
+                platformType = "jvm",
+                isTest = true,
+                defaultSourceSet = SourceSetInfo("jvmTest", listOf("commonMain")),
+                allSourceSets =
+                    listOf(
+                        SourceSetInfo("jvmTest", listOf("commonMain")),
+                        SourceSetInfo("commonMain", emptyList()),
+                    ),
+                outputDirectory = "/project/build/generated/fakt/test/kotlin",
+                commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
+            )
 
-            // WHEN: Resolving non-existent source set
-            val resolver = SourceSetResolver(context)
-            val sourceSetInfo = resolver.resolveSourceSet("nonExistent")
+        // WHEN: Resolving non-existent source set
+        val resolver = SourceSetResolver(context)
+        val sourceSetInfo = resolver.resolveSourceSet("nonExistent")
 
-            // THEN: Should return null
-            assertNull(sourceSetInfo, "Non-existent source set should return null")
-        }
+        // THEN: Should return null
+        assertNull(sourceSetInfo, "Non-existent source set should return null")
+    }
 
     @Test
-    fun `GIVEN context WHEN getting default source set THEN should return default`() =
-        runTest {
-            // GIVEN: Context with default source set
-            val defaultSourceSet = SourceSetInfo("jvmTest", listOf("commonMain"))
-            val context =
-                SourceSetContext(
-                    compilationName = "test",
-                    targetName = "jvm",
-                    platformType = "jvm",
-                    isTest = true,
-                    defaultSourceSet = defaultSourceSet,
-                    allSourceSets =
-                        listOf(
-                            defaultSourceSet,
-                            SourceSetInfo("commonMain", emptyList()),
-                        ),
-                    outputDirectory = "/project/build/generated/fakt/test/kotlin",
-                    commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
-                )
+    fun `GIVEN context WHEN getting default source set THEN should return default`() = runTest {
+        // GIVEN: Context with default source set
+        val defaultSourceSet = SourceSetInfo("jvmTest", listOf("commonMain"))
+        val context =
+            SourceSetContext(
+                compilationName = "test",
+                targetName = "jvm",
+                platformType = "jvm",
+                isTest = true,
+                defaultSourceSet = defaultSourceSet,
+                allSourceSets = listOf(defaultSourceSet, SourceSetInfo("commonMain", emptyList())),
+                outputDirectory = "/project/build/generated/fakt/test/kotlin",
+                commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
+            )
 
-            // WHEN: Getting default source set
-            val resolver = SourceSetResolver(context)
-            val result = resolver.getDefaultSourceSet()
+        // WHEN: Getting default source set
+        val resolver = SourceSetResolver(context)
+        val result = resolver.getDefaultSourceSet()
 
-            // THEN: Should return default source set
-            assertEquals(defaultSourceSet, result)
-            assertEquals("jvmTest", result.name)
-        }
+        // THEN: Should return default source set
+        assertEquals(defaultSourceSet, result)
+        assertEquals("jvmTest", result.name)
+    }
 
     @Test
     fun `GIVEN KMP context WHEN getting all parent source sets THEN should traverse full hierarchy`() =

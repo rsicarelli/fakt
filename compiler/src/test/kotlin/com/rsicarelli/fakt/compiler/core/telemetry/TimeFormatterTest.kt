@@ -3,9 +3,9 @@
 package com.rsicarelli.fakt.compiler.core.telemetry
 
 import com.rsicarelli.fakt.compiler.api.TimeFormatter
+import kotlin.test.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import kotlin.test.assertEquals
 
 /**
  * Tests for TimeFormatter utility.

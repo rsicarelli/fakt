@@ -3,9 +3,9 @@
 package com.rsicarelli.fakt.compiler.core
 
 import com.rsicarelli.fakt.compiler.core.telemetry.calculateLOC
+import kotlin.test.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import kotlin.test.assertEquals
 
 /**
  * Tests for code metrics utility functions.
@@ -34,7 +34,8 @@ class CodeMetricsTest {
 
 
 
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // WHEN
         val result = calculateLOC(code)
@@ -52,7 +53,8 @@ class CodeMetricsTest {
             /* Block comment start
             * Block comment middle
             * Block comment end */
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // WHEN
         val result = calculateLOC(code)
@@ -73,7 +75,8 @@ class CodeMetricsTest {
                 /* Block comment */
                 fun bar() = Unit
             }
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // WHEN
         val result = calculateLOC(code)

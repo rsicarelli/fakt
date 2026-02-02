@@ -5,10 +5,7 @@ package com.rsicarelli.fakt.gradle
 import com.rsicarelli.fakt.compiler.api.LogLevel
 import org.gradle.api.logging.Logger
 
-public class GradleFaktLogger(
-    private val logger: Logger,
-    public val logLevel: LogLevel,
-) {
+public class GradleFaktLogger(private val logger: Logger, public val logLevel: LogLevel) {
     public fun info(message: String) {
         if (logLevel >= LogLevel.INFO) {
             logger.lifecycle("Fakt: $message")

@@ -7,8 +7,8 @@ import kotlinx.serialization.Serializable
 /**
  * Complete source set context for a single Kotlin compilation.
  *
- * This data model is passed from the Gradle plugin to the compiler plugin
- * via SubpluginOption serialization.
+ * This data model is passed from the Gradle plugin to the compiler plugin via SubpluginOption
+ * serialization.
  *
  * **Architecture**:
  * - Gradle plugin discovers project structure using KotlinCompilation APIs
@@ -42,7 +42,6 @@ import kotlinx.serialization.Serializable
  * @property commonTestOutputDirectory Absolute path for cached (common) interfaces
  * @property metadataOutputPath Path to write FIR cache (producer mode: metadata compilation only)
  * @property metadataCachePath Path to read FIR cache (consumer mode: platform compilations)
- *
  * @see SourceSetInfo
  */
 @Serializable
@@ -63,7 +62,9 @@ data class SourceSetContext(
         require(targetName.isNotBlank()) { "targetName cannot be blank" }
         require(platformType.isNotBlank()) { "platformType cannot be blank" }
         require(outputDirectory.isNotBlank()) { "outputDirectory cannot be blank" }
-        require(commonTestOutputDirectory.isNotBlank()) { "commonTestOutputDirectory cannot be blank" }
+        require(commonTestOutputDirectory.isNotBlank()) {
+            "commonTestOutputDirectory cannot be blank"
+        }
         require(allSourceSets.isNotEmpty()) { "allSourceSets cannot be empty" }
         require(allSourceSets.contains(defaultSourceSet)) {
             "allSourceSets must contain defaultSourceSet"
@@ -74,8 +75,8 @@ data class SourceSetContext(
 /**
  * Information about a single Kotlin source set and its position in the hierarchy.
  *
- * **Key Concept**: The `parents` list represents the direct `dependsOn` relationships.
- * For example, if `jvmMain.dependsOn(commonMain)`, then:
+ * **Key Concept**: The `parents` list represents the direct `dependsOn` relationships. For example,
+ * if `jvmMain.dependsOn(commonMain)`, then:
  * - `SourceSetInfo(name = "jvmMain", parents = ["commonMain"])`
  *
  * **Hierarchy Example**:
@@ -92,13 +93,9 @@ data class SourceSetContext(
  *
  * @property name Source set name (e.g., "jvmMain", "commonTest", "integrationTest")
  * @property parents Direct parent source sets from dependsOn relationships
- *
  */
 @Serializable
-data class SourceSetInfo(
-    val name: String,
-    val parents: List<String>,
-) {
+data class SourceSetInfo(val name: String, val parents: List<String>) {
     init {
         require(name.isNotBlank()) { "name cannot be blank" }
     }

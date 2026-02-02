@@ -2,11 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.fir.checkers
 
-import com.rsicarelli.fakt.compiler.api.TimeFormatter
 import com.rsicarelli.fakt.compiler.core.context.FaktSharedContext
 import com.rsicarelli.fakt.compiler.core.telemetry.measureTimeNanos
 import com.rsicarelli.fakt.compiler.fir.extraction.AnnotationExtractor
-import com.rsicarelli.fakt.compiler.fir.metadata.FirAnnotationInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirCallHistoryMode
 import com.rsicarelli.fakt.compiler.fir.metadata.FirFunctionInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirParameterInfo
@@ -24,6 +22,8 @@ import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirClassChecker
 import org.jetbrains.kotlin.fir.declarations.FirClass
+import org.jetbrains.kotlin.fir.declarations.FirSimpleFunction
+import org.jetbrains.kotlin.fir.declarations.FirValueParameter
 import org.jetbrains.kotlin.fir.declarations.hasAnnotation
 import org.jetbrains.kotlin.fir.declarations.processAllDeclarations
 import org.jetbrains.kotlin.fir.declarations.toAnnotationClassIdSafe
@@ -50,15 +50,13 @@ import org.jetbrains.kotlin.name.FqName
  * 3. Class must not be sealed
  * 4. Class must not be local
  *
- * **Note**: Class faking is secondary to interface faking in Fakt.
- * The primary use case is interfaces, but we support abstract classes
- * for compatibility with existing code patterns.
+ * **Note**: Class faking is secondary to interface faking in Fakt. The primary use case is
+ * interfaces, but we support abstract classes for compatibility with existing code patterns.
  *
  * @property sharedContext Shared context with metadata storage and logger
  */
-internal class FakeClassChecker(
-    private val sharedContext: FaktSharedContext,
-) : FirClassChecker(MppCheckerKind.Common) {
+internal class FakeClassChecker(private val sharedContext: FaktSharedContext) :
+    FirClassChecker(MppCheckerKind.Common) {
     // Extract logger from shared context for performance tracking and debugging
     private val logger = sharedContext.logger
 
@@ -150,10 +148,7 @@ internal class FakeClassChecker(
             return
         }
 
-        val timedResult =
-            measureTimeNanos {
-                analyzeMetadata(declaration, session, simpleName)
-            }
+        val timedResult = measureTimeNanos { analyzeMetadata(declaration, session, simpleName) }
 
         // Store metadata with validation timing for consolidated logging in IR phase
         val metadataWithTiming =
@@ -172,8 +167,7 @@ internal class FakeClassChecker(
     /**
      * Check if class has any open members (properties or methods).
      *
-     * Open classes without open members cannot be faked
-     * because there's nothing to override.
+     * Open classes without open members cannot be faked because there's nothing to override.
      *
      * @param declaration FIR class declaration to check
      * @return true if class has at least one open property or method
@@ -327,7 +321,8 @@ internal class FakeClassChecker(
         // This is the proper K2 way to access file information from a FirClass
         val filePath =
             try {
-                val firFile = session.firProvider.getFirClassifierContainerFileIfAny(declaration.symbol)
+                val firFile =
+                    session.firProvider.getFirClassifierContainerFileIfAny(declaration.symbol)
                 // KtSourceFile.path gives us the full file path
                 firFile?.sourceFile?.path ?: "<unknown>"
             } catch (_: Exception) {
@@ -358,22 +353,15 @@ internal class FakeClassChecker(
             val name = typeParam.name.asString()
 
             // Extract type parameter bounds (e.g., T : Comparable<T>)
-            val bounds =
-                typeParam.bounds.map { boundRef ->
-                    boundRef.coneType.toString()
-                }
+            val bounds = typeParam.bounds.map { boundRef -> boundRef.coneType.toString() }
 
-            FirTypeParameterInfo(
-                name = name,
-                bounds = bounds,
-            )
+            FirTypeParameterInfo(name = name, bounds = bounds)
         }
 
     /**
      * Extract properties from FIR class, separating abstract and open
      *
-     * Returns pair of (abstract properties, open properties).
-     * Uses modality to distinguish:
+     * Returns pair of (abstract properties, open properties). Uses modality to distinguish:
      * - ABSTRACT: Must be implemented by fake
      * - OPEN: Can be overridden (optional)
      *
@@ -381,7 +369,9 @@ internal class FakeClassChecker(
      * @return Pair of (abstract properties, open properties)
      */
     @OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class)
-    private fun extractProperties(declaration: FirClass): Pair<List<FirPropertyInfo>, List<FirPropertyInfo>> {
+    private fun extractProperties(
+        declaration: FirClass
+    ): Pair<List<FirPropertyInfo>, List<FirPropertyInfo>> {
         val abstractProperties = mutableListOf<FirPropertyInfo>()
         val openProperties = mutableListOf<FirPropertyInfo>()
 
@@ -417,94 +407,65 @@ internal class FakeClassChecker(
     }
 
     /**
-     * Extract methods from FIR class, separating abstract and open
+     * Extract methods from FIR class, separating abstract and open.
      *
-     * Returns pair of (abstract methods, open methods).
-     * Uses modality to distinguish:
+     * Returns pair of (abstract methods, open methods). Uses modality to distinguish:
      * - ABSTRACT: Must be implemented by fake
      * - OPEN: Can be overridden (call super or override)
-     *
-     * @param declaration FIR class declaration
-     * @return Pair of (abstract methods, open methods)
      */
     @OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class)
-    private fun extractMethods(declaration: FirClass): Pair<List<FirFunctionInfo>, List<FirFunctionInfo>> {
+    private fun extractMethods(
+        declaration: FirClass
+    ): Pair<List<FirFunctionInfo>, List<FirFunctionInfo>> {
         val abstractMethods = mutableListOf<FirFunctionInfo>()
         val openMethods = mutableListOf<FirFunctionInfo>()
 
         declaration.processAllDeclarations(session = declaration.moduleData.session) { symbol ->
             if (symbol is FirNamedFunctionSymbol) {
                 val function = symbol.fir
-                val name = function.name.asString()
+                val functionInfo = extractFunctionInfo(function)
 
-                // Extract parameters
-                // Extract default value expressions and render to code strings
-                val parameters =
-                    function.valueParameters.map { param ->
-                        val defaultValue = param.defaultValue
-                        val defaultValueCode =
-                            if (defaultValue != null) {
-                                renderDefaultValue(defaultValue) // null if rendering failed/not supported
-                            } else {
-                                null
-                            }
-
-                        FirParameterInfo(
-                            name = param.name.asString(),
-                            type = param.returnTypeRef.coneType.toString(),
-                            hasDefaultValue = param.defaultValue != null,
-                            defaultValueCode = defaultValueCode,
-                            isVararg = param.isVararg,
-                        )
-                    }
-
-                val returnType = function.returnTypeRef.coneType.toString()
-                val isSuspend = function.isSuspend
-                val isInline = function.isInline
-
-                // Extract function-level type parameters with bounds
-                val typeParameters =
-                    function.typeParameters.map { typeParamRef ->
-                        val typeParam = typeParamRef.symbol.fir
-                        val bounds =
-                            typeParam.bounds.map { boundRef ->
-                                boundRef.coneType.toString()
-                            }
-                        FirTypeParameterInfo(
-                            name = typeParam.name.asString(),
-                            bounds = bounds,
-                        )
-                    }
-
-                // Build typeParameterBounds map
-                val typeParameterBounds =
-                    typeParameters.associate { typeParam ->
-                        typeParam.name to typeParam.bounds.firstOrNull().orEmpty()
-                    }
-
-                val functionInfo =
-                    FirFunctionInfo(
-                        name = name,
-                        parameters = parameters,
-                        returnType = returnType,
-                        isSuspend = isSuspend,
-                        isInline = isInline,
-                        typeParameters = typeParameters,
-                        typeParameterBounds = typeParameterBounds,
-                    )
-
-                // Distinguish abstract vs open using modality
                 when (function.modality) {
                     Modality.ABSTRACT -> abstractMethods.add(functionInfo)
                     Modality.OPEN -> openMethods.add(functionInfo)
-                    else -> {
-                        // FINAL or SEALED methods shouldn't be fakeable,
-                        // but skip them if they appear
-                    }
+                    else -> Unit // FINAL or SEALED methods are skipped
                 }
             }
         }
 
-        return Pair(abstractMethods, openMethods)
+        return abstractMethods to openMethods
     }
+
+    /** Extract function metadata from FIR function declaration. */
+    @OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class)
+    private fun extractFunctionInfo(function: FirSimpleFunction): FirFunctionInfo {
+        val parameters = function.valueParameters.map(::extractParameterInfo)
+        val typeParameters =
+            function.typeParameters.map { typeParamRef ->
+                val typeParam = typeParamRef.symbol.fir
+                val bounds = typeParam.bounds.map { it.coneType.toString() }
+                FirTypeParameterInfo(name = typeParam.name.asString(), bounds = bounds)
+            }
+
+        return FirFunctionInfo(
+            name = function.name.asString(),
+            parameters = parameters,
+            returnType = function.returnTypeRef.coneType.toString(),
+            isSuspend = function.isSuspend,
+            isInline = function.isInline,
+            typeParameters = typeParameters,
+            typeParameterBounds =
+                typeParameters.associate { it.name to it.bounds.firstOrNull().orEmpty() },
+        )
+    }
+
+    /** Extract parameter metadata from FIR value parameter. */
+    private fun extractParameterInfo(param: FirValueParameter): FirParameterInfo =
+        FirParameterInfo(
+            name = param.name.asString(),
+            type = param.returnTypeRef.coneType.toString(),
+            hasDefaultValue = param.defaultValue != null,
+            defaultValueCode = param.defaultValue?.let(::renderDefaultValue),
+            isVararg = param.isVararg,
+        )
 }

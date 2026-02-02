@@ -18,8 +18,8 @@ import com.rsicarelli.fakt.codegen.model.CodeType
  * - MutableSet<T> → mutableSetOf()
  * - MutableMap<K,V> → mutableMapOf()
  *
- * For Array<T> where T is a class-level type parameter, uses emptyArray<Any>() with cast
- * since emptyArray<T>() requires reified T which isn't available at runtime.
+ * For Array<T> where T is a class-level type parameter, uses emptyArray<Any>() with cast since
+ * emptyArray<T>() requires reified T which isn't available at runtime.
  *
  * Example:
  * ```kotlin
@@ -31,15 +31,13 @@ import com.rsicarelli.fakt.codegen.model.CodeType
  * }
  * ```
  */
-public class CollectionDefaultStrategy(
-    private val classLevelTypeParams: Set<String> = emptySet(),
-) : DefaultValueStrategy {
-    override fun supports(type: CodeType): Boolean = type is CodeType.Generic && type.name in COLLECTION_TYPES
+public class CollectionDefaultStrategy(private val classLevelTypeParams: Set<String> = emptySet()) :
+    DefaultValueStrategy {
+    override fun supports(type: CodeType): Boolean =
+        type is CodeType.Generic && type.name in COLLECTION_TYPES
 
     override fun defaultValue(type: CodeType): CodeExpression {
-        require(supports(type)) {
-            "CollectionDefaultStrategy does not support type: $type"
-        }
+        require(supports(type)) { "CollectionDefaultStrategy does not support type: $type" }
 
         val typeName = (type as CodeType.Generic).name
 
@@ -61,7 +59,9 @@ public class CollectionDefaultStrategy(
 
             if (elementTypeName != null && classLevelTypeParams.contains(elementTypeName)) {
                 // Use emptyArray<Any>() for class-level generics (not reified)
-                return CodeExpression.Raw("@Suppress(\"UNCHECKED_CAST\") emptyArray<Any>() as Array<$elementTypeName>")
+                return CodeExpression.Raw(
+                    "@Suppress(\"UNCHECKED_CAST\") emptyArray<Any>() as Array<$elementTypeName>"
+                )
             }
         }
 

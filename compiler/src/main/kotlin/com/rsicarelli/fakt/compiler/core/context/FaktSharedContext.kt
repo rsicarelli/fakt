@@ -11,7 +11,8 @@ import com.rsicarelli.fakt.compiler.fir.metadata.FirMetadataStorage
 /**
  * Shared context passed between FIR and IR compilation phases.
  *
- * @property fakeAnnotations List of @Fake annotation FQNs to detect (e.g., ["com.rsicarelli.fakt.Fake"])
+ * @property fakeAnnotations List of @Fake annotation FQNs to detect (e.g.,
+ *   ["com.rsicarelli.fakt.Fake"])
  * @property options Compiler plugin options (log level, output dir, feature flags)
  * @property metadataStorage Storage for FIR→IR metadata passing
  * @property logger Logger instance for level-aware logging across compilation phases
@@ -40,8 +41,8 @@ data class FaktSharedContext(
         /**
          * Default fake annotations.
          *
-         * Currently only the official @Fake annotation, but could be extended
-         * for third-party annotations or custom markers.
+         * Currently only the official @Fake annotation, but could be extended for third-party
+         * annotations or custom markers.
          */
         val DEFAULT_FAKE_ANNOTATIONS = listOf("com.rsicarelli.fakt.Fake")
     }

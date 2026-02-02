@@ -3,6 +3,7 @@
 package com.rsicarelli.fakt.compiler.core.config
 
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
+import java.util.Base64
 import kotlinx.serialization.json.Json
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
@@ -13,11 +14,8 @@ import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.CompilerConfigurationKey
-import java.util.Base64
 
-/**
- * Command line processor for Fakt compiler plugin options.
- */
+/** Command line processor for Fakt compiler plugin options. */
 @OptIn(ExperimentalCompilerApi::class)
 class FaktCommandLineProcessor : CommandLineProcessor {
     companion object {
@@ -26,8 +24,7 @@ class FaktCommandLineProcessor : CommandLineProcessor {
         val OUTPUT_DIR_KEY = CompilerConfigurationKey<String>("fakt.outputDir")
         val SOURCE_SET_CONTEXT_KEY =
             CompilerConfigurationKey<SourceSetContext>("fakt.sourceSetContext")
-        val ENABLE_CALL_HISTORY_KEY =
-            CompilerConfigurationKey<Boolean>("fakt.enableCallHistory")
+        val ENABLE_CALL_HISTORY_KEY = CompilerConfigurationKey<Boolean>("fakt.enableCallHistory")
 
         val ENABLED_OPTION =
             CliOption(

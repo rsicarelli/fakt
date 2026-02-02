@@ -4,12 +4,12 @@ package com.rsicarelli.fakt.compiler.core.optimization
 
 import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.core.types.TypeInfo
-import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for comprehensive signature-based change detection in CompilerOptimizations.
@@ -22,15 +22,15 @@ import kotlin.test.assertTrue
  * - Modifier changes (suspend, inline)
  * - Type parameter changes
  *
- * **Note on Signature Format**:
- * These tests use detailed structural signatures for readability and explicitness:
+ * **Note on Signature Format**: These tests use detailed structural signatures for readability and
+ * explicitness:
  * - Test format: `"interface pkg.Name|functions:1|method(param:Type):ReturnType"`
  * - Production format: MD5 file hash (32-character hex: `"a3f8b7c9d1e2f5a6..."`)
  *
- * Production code uses MD5 file hashing via `SignatureBuilder.buildSignature()`.
- * Since MD5 hashes the entire source file, ANY change (including parameter names,
- * types, comments, formatting) triggers regeneration. This test verifies the cache
- * system's ability to distinguish different signatures (format-agnostic).
+ * Production code uses MD5 file hashing via `SignatureBuilder.buildSignature()`. Since MD5 hashes
+ * the entire source file, ANY change (including parameter names, types, comments, formatting)
+ * triggers regeneration. This test verifies the cache system's ability to distinguish different
+ * signatures (format-agnostic).
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TypeSignatureChangeDetectionTest {
@@ -43,7 +43,8 @@ class TypeSignatureChangeDetectionTest {
                 """
                 interface com.example.UserService|
                 functions:1|getUser(id:kotlin.String):com.example.User
-                """.trimIndent()
+                """
+                    .trimIndent()
             val originalTypeInfo =
                 TypeInfo(
                     name = "UserService",
@@ -62,7 +63,8 @@ class TypeSignatureChangeDetectionTest {
                 """
                 interface com.example.UserService|
                 functions:1|getUser(userId:kotlin.String):com.example.User
-                """.trimIndent()
+                """
+                    .trimIndent()
             val modifiedTypeInfo = originalTypeInfo.copy(signature = modifiedSignature)
 
             // THEN: Should require regeneration (parameter name changed)
@@ -82,7 +84,8 @@ class TypeSignatureChangeDetectionTest {
                 """
                 interface com.example.UserService|
                 functions:1|getUser(id:kotlin.String):com.example.User
-                """.trimIndent()
+                """
+                    .trimIndent()
             val originalTypeInfo =
                 TypeInfo(
                     name = "UserService",
@@ -100,7 +103,8 @@ class TypeSignatureChangeDetectionTest {
                 """
                 interface com.example.UserService|
                 functions:1|getUser(id:kotlin.Int):com.example.User
-                """.trimIndent()
+                """
+                    .trimIndent()
             val modifiedTypeInfo = originalTypeInfo.copy(signature = modifiedSignature)
 
             // THEN: Should require regeneration
@@ -119,7 +123,8 @@ class TypeSignatureChangeDetectionTest {
                 """
                 interface com.example.UserService|
                 functions:1|getUser(id:kotlin.String):com.example.User
-                """.trimIndent()
+                """
+                    .trimIndent()
             val originalTypeInfo =
                 TypeInfo(
                     name = "UserService",
@@ -137,7 +142,8 @@ class TypeSignatureChangeDetectionTest {
                 """
                 interface com.example.UserService|
                 functions:1|getUser(id:kotlin.String):com.example.UserDto
-                """.trimIndent()
+                """
+                    .trimIndent()
             val modifiedTypeInfo = originalTypeInfo.copy(signature = modifiedSignature)
 
             // THEN: Should require regeneration
@@ -156,7 +162,8 @@ class TypeSignatureChangeDetectionTest {
                 """
                 interface com.example.UserService|
                 properties:1|name:kotlin.String:val:nonNull
-                """.trimIndent()
+                """
+                    .trimIndent()
             val originalTypeInfo =
                 TypeInfo(
                     name = "UserService",
@@ -174,7 +181,8 @@ class TypeSignatureChangeDetectionTest {
                 """
                 interface com.example.UserService|
                 properties:1|name:kotlin.String?:val:nullable
-                """.trimIndent()
+                """
+                    .trimIndent()
             val modifiedTypeInfo = originalTypeInfo.copy(signature = modifiedSignature)
 
             // THEN: Should require regeneration
@@ -193,7 +201,8 @@ class TypeSignatureChangeDetectionTest {
                 """
                 interface com.example.UserService|
                 functions:1|loadUser():com.example.User
-                """.trimIndent()
+                """
+                    .trimIndent()
             val originalTypeInfo =
                 TypeInfo(
                     name = "UserService",
@@ -211,7 +220,8 @@ class TypeSignatureChangeDetectionTest {
                 """
                 interface com.example.UserService|
                 functions:1|loadUser():com.example.User:suspend
-                """.trimIndent()
+                """
+                    .trimIndent()
             val modifiedTypeInfo = originalTypeInfo.copy(signature = modifiedSignature)
 
             // THEN: Should require regeneration
@@ -230,7 +240,8 @@ class TypeSignatureChangeDetectionTest {
                 """
                 interface com.example.UserService|
                 properties:1|name:kotlin.String:val:nonNull
-                """.trimIndent()
+                """
+                    .trimIndent()
             val originalTypeInfo =
                 TypeInfo(
                     name = "UserService",
@@ -248,7 +259,8 @@ class TypeSignatureChangeDetectionTest {
                 """
                 interface com.example.UserService|
                 properties:1|name:kotlin.String:var:nonNull
-                """.trimIndent()
+                """
+                    .trimIndent()
             val modifiedTypeInfo = originalTypeInfo.copy(signature = modifiedSignature)
 
             // THEN: Should require regeneration
@@ -267,7 +279,8 @@ class TypeSignatureChangeDetectionTest {
                 """
                 interface com.example.Repository|
                 functions:1|save(item:com.example.User):kotlin.Unit
-                """.trimIndent()
+                """
+                    .trimIndent()
             val originalTypeInfo =
                 TypeInfo(
                     name = "Repository",
@@ -286,7 +299,8 @@ class TypeSignatureChangeDetectionTest {
                 interface com.example.Repository|
                 typeParams:<T:kotlin.Any?>|
                 functions:1|save(item:T):kotlin.Unit
-                """.trimIndent()
+                """
+                    .trimIndent()
             val modifiedTypeInfo = originalTypeInfo.copy(signature = modifiedSignature)
 
             // THEN: Should require regeneration
@@ -308,7 +322,8 @@ class TypeSignatureChangeDetectionTest {
                 functions:2|
                   getUser(id:kotlin.String):com.example.User|
                   save(user:com.example.User):kotlin.Unit
-                """.trimIndent()
+                """
+                    .trimIndent()
             val typeInfo =
                 TypeInfo(
                     name = "UserService",

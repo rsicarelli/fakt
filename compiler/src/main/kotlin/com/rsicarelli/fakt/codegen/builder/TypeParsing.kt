@@ -14,16 +14,15 @@ import com.rsicarelli.fakt.codegen.model.CodeType
  * - Nested generics: "List<Map<String, Int>>"
  * - Function types: "(Int, String) -> Boolean", "suspend (T) -> Unit"
  *
- * Note: This is a simple parser for common cases.
- * Complex types may need explicit CodeType construction.
+ * Note: This is a simple parser for common cases. Complex types may need explicit CodeType
+ * construction.
  *
  * @param typeString The type as a string
  * @return Parsed [CodeType]
  */
 internal fun parseType(typeString: String): CodeType =
     when {
-        typeString.endsWith("?") ->
-            CodeType.Nullable(parseType(typeString.dropLast(1)))
+        typeString.endsWith("?") -> CodeType.Nullable(parseType(typeString.dropLast(1)))
 
         // Function types: (A, B) -> R or suspend (A) -> R
         // Must check BEFORE generic check because function types may contain generics
@@ -35,13 +34,8 @@ internal fun parseType(typeString: String): CodeType =
 
         typeString.contains("<") -> {
             val name = typeString.substringBefore("<")
-            val argsString =
-                typeString
-                    .substringAfter("<")
-                    .substringBeforeLast(">")
-            val args =
-                splitTypeArguments(argsString)
-                    .map { parseType(it.trim()) }
+            val argsString = typeString.substringAfter("<").substringBeforeLast(">")
+            val args = splitTypeArguments(argsString).map { parseType(it.trim()) }
             CodeType.Generic(name, args)
         }
 

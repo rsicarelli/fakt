@@ -4,20 +4,18 @@ package com.rsicarelli.fakt.compiler
 
 import com.rsicarelli.fakt.compiler.api.LogLevel
 import com.rsicarelli.fakt.compiler.core.config.FaktOptions
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
-/**
- * Essential tests for FaktCompilerPluginRegistrar focusing on core functionality.
- */
+/** Essential tests for FaktCompilerPluginRegistrar focusing on core functionality. */
 @OptIn(ExperimentalCompilerApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FaktCompilerPluginRegistrarSimpleTest {
@@ -36,9 +34,13 @@ class FaktCompilerPluginRegistrarSimpleTest {
             val registrar = FaktCompilerPluginRegistrar()
 
             // Suppress "Check for instance is always 'true'" - intentional smoke test
-            // This documents the architectural requirement that FaktCompilerPluginRegistrar extends CompilerPluginRegistrar
+            // This documents the architectural requirement that FaktCompilerPluginRegistrar extends
+            // CompilerPluginRegistrar
             @Suppress("USELESS_IS_CHECK")
-            assertTrue(registrar is CompilerPluginRegistrar, "Should extend CompilerPluginRegistrar")
+            assertTrue(
+                registrar is CompilerPluginRegistrar,
+                "Should extend CompilerPluginRegistrar",
+            )
             assertNotNull(registrar, "Registrar instance should not be null")
         }
 
@@ -56,25 +58,21 @@ class FaktCompilerPluginRegistrarSimpleTest {
     fun `GIVEN custom options WHEN creating instance THEN should preserve custom values`() =
         runTest {
             val customOptions =
-                FaktOptions(
-                    enabled = true,
-                    logLevel = LogLevel.DEBUG,
-                    outputDir = "/custom/path",
-                )
+                FaktOptions(enabled = true, logLevel = LogLevel.DEBUG, outputDir = "/custom/path")
 
             assertTrue(customOptions.enabled, "Should preserve enabled state")
             assertEquals(LogLevel.DEBUG, customOptions.logLevel, "Should preserve log level")
-            assertEquals("/custom/path", customOptions.outputDir, "Should preserve output directory")
+            assertEquals(
+                "/custom/path",
+                customOptions.outputDir,
+                "Should preserve output directory",
+            )
         }
 
     @Test
     fun `GIVEN options instance WHEN converting to string THEN should provide readable representation`() =
         runTest {
-            val options =
-                FaktOptions(
-                    enabled = true,
-                    logLevel = LogLevel.INFO,
-                )
+            val options = FaktOptions(enabled = true, logLevel = LogLevel.INFO)
 
             val stringRepresentation = options.toString()
 
@@ -92,9 +90,18 @@ class FaktCompilerPluginRegistrarSimpleTest {
             val options = FaktOptions.load(configuration)
 
             // THEN
-            // NOTE: FaktOptions.load() defaults to enabled=true, logLevel=INFO when keys are missing
+            // NOTE: FaktOptions.load() defaults to enabled=true, logLevel=INFO when keys are
+            // missing
             assertTrue(options.enabled, "Should default enabled to true when not specified")
-            assertEquals(LogLevel.INFO, options.logLevel, "Should default logLevel to INFO when not specified")
-            assertEquals(null, options.outputDir, "Should default output dir to null when not specified")
+            assertEquals(
+                LogLevel.INFO,
+                options.logLevel,
+                "Should default logLevel to INFO when not specified",
+            )
+            assertEquals(
+                null,
+                options.outputDir,
+                "Should default output dir to null when not specified",
+            )
         }
 }

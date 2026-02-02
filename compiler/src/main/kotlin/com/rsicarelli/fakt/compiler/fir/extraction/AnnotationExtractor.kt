@@ -44,37 +44,29 @@ import org.jetbrains.kotlin.name.FqName
  * - FirVarargArgumentsExpression.arguments: List<FirExpression>
  */
 object AnnotationExtractor {
-    /**
-     * The @Fake annotation ClassId - filtered out during extraction.
-     */
+    /** The @Fake annotation ClassId - filtered out during extraction. */
     private val FAKE_ANNOTATION_CLASS_ID = ClassId.topLevel(FqName("com.rsicarelli.fakt.Fake"))
 
-    /**
-     * The @RequiresOptIn annotation ClassId - used to detect opt-in marker annotations.
-     */
+    /** The @RequiresOptIn annotation ClassId - used to detect opt-in marker annotations. */
     private val REQUIRES_OPT_IN_CLASS_ID = ClassId.topLevel(FqName("kotlin.RequiresOptIn"))
 
     /**
      * Extract all annotations from a FIR class declaration.
      *
-     * Filters out the @Fake annotation since generated fakes shouldn't be marked
-     * as @Fake themselves.
+     * Filters out the @Fake annotation since generated fakes shouldn't be marked as @Fake
+     * themselves.
      *
      * @param declaration The FIR class declaration to extract annotations from
      * @param session The FIR session for resolving annotation class IDs
      * @return List of extracted annotation info, excluding @Fake
      */
-    fun extractAnnotations(
-        declaration: FirClass,
-        session: FirSession,
-    ): List<FirAnnotationInfo> =
+    fun extractAnnotations(declaration: FirClass, session: FirSession): List<FirAnnotationInfo> =
         declaration.annotations
             .filter { annotation ->
                 // Filter out @Fake annotation
                 annotation.toAnnotationClassIdSafe(session) != FAKE_ANNOTATION_CLASS_ID
-            }.mapNotNull { annotation ->
-                extractAnnotationInfo(annotation, session)
             }
+            .mapNotNull { annotation -> extractAnnotationInfo(annotation, session) }
 
     /**
      * Extract annotation info from a single FIR annotation.
@@ -88,9 +80,7 @@ object AnnotationExtractor {
         session: FirSession,
     ): FirAnnotationInfo? {
         // Get annotation class ID
-        val annotationClassId =
-            annotation.toAnnotationClassIdSafe(session)
-                ?: return null
+        val annotationClassId = annotation.toAnnotationClassIdSafe(session) ?: return null
 
         // Extract arguments using argumentMapping.mapping (correct API!)
         val arguments = extractArguments(annotation.argumentMapping, session)
@@ -114,23 +104,19 @@ object AnnotationExtractor {
      * annotation class InternalPlatformApi
      * ```
      *
-     * When such an annotation is on the source interface/class, the generated fake
-     * needs `@OptIn(InternalPlatformApi::class)` to compile.
+     * When such an annotation is on the source interface/class, the generated fake needs
+     * `@OptIn(InternalPlatformApi::class)` to compile.
      *
      * @param annotationClassId The class ID of the annotation to check
      * @param session The FIR session for resolving the annotation class
      * @return True if the annotation class has @RequiresOptIn
      */
     @OptIn(SymbolInternals::class)
-    private fun isAnnotationOptInMarker(
-        annotationClassId: ClassId,
-        session: FirSession,
-    ): Boolean {
+    private fun isAnnotationOptInMarker(annotationClassId: ClassId, session: FirSession): Boolean {
         // Look up the annotation class symbol
         val annotationClassSymbol =
-            session.symbolProvider
-                .getClassLikeSymbolByClassId(annotationClassId) as? FirRegularClassSymbol
-                ?: return false
+            session.symbolProvider.getClassLikeSymbolByClassId(annotationClassId)
+                as? FirRegularClassSymbol ?: return false
 
         // Check if the annotation class has @RequiresOptIn
         return annotationClassSymbol.annotations.any { ann ->
@@ -206,27 +192,26 @@ object AnnotationExtractor {
     /**
      * Extract class reference from FirGetClassCall.
      *
-     * Handles `Foo::class` expressions.
-     * Uses `argument` (singular!) property - the FirExpression being referenced.
+     * Handles `Foo::class` expressions. Uses `argument` (singular!) property - the FirExpression
+     * being referenced.
      */
-    private fun extractClassReference(expression: FirGetClassCall): FirAnnotationArgument.ClassReference? {
-        // Get the argument of ::class using singular `argument` property
+    private fun extractClassReference(
+        expression: FirGetClassCall
+    ): FirAnnotationArgument.ClassReference? {
         val argument = expression.argument
 
         // For class literals, the argument is typically a FirResolvedQualifier
-        if (argument is FirResolvedQualifier) {
-            val classId = argument.classId ?: return null
+        (argument as? FirResolvedQualifier)?.classId?.let { classId ->
             return FirAnnotationArgument.ClassReference(classId.asString())
         }
 
         // Fallback: try to get from the resolved type
-        return try {
-            val resolvedType = argument.resolvedType as? ConeClassLikeType ?: return null
-            val classId = resolvedType.lookupTag.classId
-            FirAnnotationArgument.ClassReference(classId.asString())
-        } catch (_: Exception) {
-            null
-        }
+        return runCatching {
+                (argument.resolvedType as? ConeClassLikeType)?.lookupTag?.classId?.let {
+                    FirAnnotationArgument.ClassReference(it.asString())
+                }
+            }
+            .getOrNull()
     }
 
     /**
@@ -251,22 +236,23 @@ object AnnotationExtractor {
      *
      * Handles `EnumClass.ENTRY` expressions.
      */
-    private fun extractEnumValue(expression: FirPropertyAccessExpression): FirAnnotationArgument.EnumValue? {
-        val enumEntrySymbol = expression.calleeReference.toResolvedEnumEntrySymbol() ?: return null
-        val enumClassId = enumEntrySymbol.callableId.classId ?: return null
-        val entryName = enumEntrySymbol.name.asString()
-
-        return FirAnnotationArgument.EnumValue(
-            enumClassId = enumClassId.asString(),
-            entryName = entryName,
-        )
-    }
+    private fun extractEnumValue(
+        expression: FirPropertyAccessExpression
+    ): FirAnnotationArgument.EnumValue? =
+        expression.calleeReference.toResolvedEnumEntrySymbol()?.let { symbol ->
+            symbol.callableId.classId?.let { classId ->
+                FirAnnotationArgument.EnumValue(
+                    enumClassId = classId.asString(),
+                    entryName = symbol.name.asString(),
+                )
+            }
+        }
 
     /**
      * Extract array value from FirArrayLiteral.
      *
-     * Handles `[a, b, c]` expressions.
-     * Uses `argumentList.arguments` (NOT direct `arguments` property!).
+     * Handles `[a, b, c]` expressions. Uses `argumentList.arguments` (NOT direct `arguments`
+     * property!).
      */
     private fun extractArrayValue(
         expression: FirArrayLiteral,
@@ -283,8 +269,8 @@ object AnnotationExtractor {
     /**
      * Extract vararg value from FirVarargArgumentsExpression.
      *
-     * Handles vararg parameters spread as arrays.
-     * Uses direct `arguments` property (unlike FirArrayLiteral!).
+     * Handles vararg parameters spread as arrays. Uses direct `arguments` property (unlike
+     * FirArrayLiteral!).
      */
     private fun extractVarargValue(
         expression: FirVarargArgumentsExpression,
@@ -292,9 +278,7 @@ object AnnotationExtractor {
     ): FirAnnotationArgument.ArrayValue {
         // FirVarargArgumentsExpression has direct `arguments` property
         val elements =
-            expression.arguments.mapNotNull { element ->
-                extractArgumentValue(element, session)
-            }
+            expression.arguments.mapNotNull { element -> extractArgumentValue(element, session) }
         return FirAnnotationArgument.ArrayValue(elements)
     }
 

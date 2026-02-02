@@ -2,18 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.fir.checkers
 
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import kotlin.test.assertContains
 import kotlin.test.assertTrue
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for FIR error reporting constants and scenarios.
  *
- * **Testing Strategy:**
- * These tests validate that error constants exist and contain appropriate messages.
- * Actual error reporting behavior is validated through integration tests (E2E sample builds)
- * where we can verify error messages appear during compilation.
+ * **Testing Strategy:** These tests validate that error constants exist and contain appropriate
+ * messages. Actual error reporting behavior is validated through integration tests (E2E sample
+ * builds) where we can verify error messages appear during compilation.
  *
  * **Error Scenarios Covered:**
  *

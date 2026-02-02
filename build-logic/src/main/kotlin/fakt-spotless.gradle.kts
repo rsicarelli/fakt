@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import com.diffplug.gradle.spotless.SpotlessExtension
+import com.rsicarelli.fakt.conventions.libs
+import com.rsicarelli.fakt.conventions.version
 
 /**
- * Spotless formatting convention plugin.
+ * Spotless formatting convention plugin with ktfmt.
  *
- * Applies Spotless formatting to individual projects (replaces allprojects usage).
+ * Applies Spotless formatting to individual projects using ktfmt Kotlin style (4-space indent).
  * This plugin should be applied to each module that needs formatting.
  *
  * Configuration Cache Friendly:
@@ -18,6 +20,10 @@ plugins {
     id("com.diffplug.spotless")
 }
 
+// Read versions from gradle/libs.versions.toml (single source of truth)
+val ktfmtVersion = libs.version("ktfmt")
+val gjfVersion = libs.version("google-java-format")
+
 configure<SpotlessExtension> {
     format("misc") {
         target("*.gradle", "*.md", ".gitignore")
@@ -28,6 +34,7 @@ configure<SpotlessExtension> {
 
     java {
         target("src/**/*.java")
+        googleJavaFormat(gjfVersion).reorderImports(true).reflowLongStrings(true)
         trimTrailingWhitespace()
         endWithNewline()
         targetExclude("**/spotless.java")
@@ -37,6 +44,7 @@ configure<SpotlessExtension> {
 
     kotlin {
         target("src/**/*.kt")
+        ktfmt(ktfmtVersion).kotlinlangStyle().configure { it.setRemoveUnusedImports(true) }
         trimTrailingWhitespace()
         endWithNewline()
         targetExclude("**/spotless.kt")
@@ -45,6 +53,7 @@ configure<SpotlessExtension> {
 
     kotlinGradle {
         target("*.kts")
+        ktfmt(ktfmtVersion).kotlinlangStyle().configure { it.setRemoveUnusedImports(true) }
         trimTrailingWhitespace()
         endWithNewline()
         licenseHeaderFile(
@@ -53,7 +62,6 @@ configure<SpotlessExtension> {
         )
     }
 
-    // Apply license formatting separately for kotlin files
     format("licenseKotlin") {
         licenseHeaderFile(rootProject.file("spotless/spotless.kt"), "(package|@file:)")
         target("src/**/*.kt")

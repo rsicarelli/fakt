@@ -5,8 +5,8 @@ package com.rsicarelli.fakt.codegen.extensions
 /**
  * Memory-efficient KDoc generator for Fakt factory functions.
  *
- * Generates developer-friendly documentation that appears in IDE autocomplete,
- * helping developers understand how to configure fake implementations.
+ * Generates developer-friendly documentation that appears in IDE autocomplete, helping developers
+ * understand how to configure fake implementations.
  *
  * Design principles:
  * - Uses Kotlin string templates with pre-calculated capacity for memory efficiency
@@ -38,8 +38,8 @@ package com.rsicarelli.fakt.codegen.extensions
  */
 object KDocGenerator {
     /**
-     * Base capacity estimate per item in the documentation.
-     * Used for pre-sizing StringBuilder to avoid reallocations.
+     * Base capacity estimate per item in the documentation. Used for pre-sizing StringBuilder to
+     * avoid reallocations.
      */
     private const val BASE_CAPACITY = 256
     private const val PER_METHOD_CAPACITY = 80
@@ -86,16 +86,16 @@ object KDocGenerator {
             }
 
             // Standard @param and @return tags
-            appendLine(" * @param configure DSL block to configure fake behaviors. Defaults to no-op.")
+            appendLine(
+                " * @param configure DSL block to configure fake behaviors. Defaults to no-op."
+            )
             appendLine(" * @return Configured [$implClassName] instance ready for testing")
             appendLine(" * @see $interfaceName")
             append(" */")
         }
     }
 
-    /**
-     * Appends usage example section to the StringBuilder.
-     */
+    /** Appends usage example section to the StringBuilder. */
     private fun StringBuilder.appendUsageExample(
         factoryName: String,
         methods: List<MethodSpec>,
@@ -105,21 +105,17 @@ object KDocGenerator {
         appendLine(" * ```kotlin")
         appendLine(" * val fake = $factoryName {")
 
-        methods.forEach { method ->
-            appendMethodExample(method)
-        }
+        methods.forEach { method -> appendMethodExample(method) }
 
-        properties.filter { !it.isStateFlow }.forEach { property ->
-            appendPropertyExample(property)
-        }
+        properties
+            .filter { !it.isStateFlow }
+            .forEach { property -> appendPropertyExample(property) }
 
         appendLine(" * }")
         appendLine(" * ```")
     }
 
-    /**
-     * Appends a method configuration example.
-     */
+    /** Appends a method configuration example. */
     private fun StringBuilder.appendMethodExample(method: MethodSpec) {
         val paramNames = method.params.map { (name, _, _) -> name }
 
@@ -145,9 +141,7 @@ object KDocGenerator {
         }
     }
 
-    /**
-     * Appends a property configuration example.
-     */
+    /** Appends a property configuration example. */
     private fun StringBuilder.appendPropertyExample(property: PropertySpec) {
         val capitalizedName = property.name.replaceFirstChar { it.uppercase() }
         val exampleValue = getExampleReturnValue(property.type)
@@ -159,9 +153,7 @@ object KDocGenerator {
         }
     }
 
-    /**
-     * Appends the configurable behaviors section.
-     */
+    /** Appends the configurable behaviors section. */
     private fun StringBuilder.appendConfigurableBehaviors(
         methods: List<MethodSpec>,
         properties: List<PropertySpec>,
@@ -170,14 +162,12 @@ object KDocGenerator {
         appendLine(" *")
 
         // Document methods
-        methods.forEach { method ->
-            appendMethodSignature(method)
-        }
+        methods.forEach { method -> appendMethodSignature(method) }
 
         // Document properties (non-StateFlow only, StateFlow has different API)
-        properties.filter { !it.isStateFlow }.forEach { property ->
-            appendPropertySignature(property)
-        }
+        properties
+            .filter { !it.isStateFlow }
+            .forEach { property -> appendPropertySignature(property) }
     }
 
     /**
@@ -266,10 +256,7 @@ object KDocGenerator {
      * @param paramName Optional parameter name to use in the example
      * @return Example value string suitable for documentation
      */
-    private fun getExampleReturnValue(
-        returnType: String,
-        paramName: String? = null,
-    ): String =
+    private fun getExampleReturnValue(returnType: String, paramName: String? = null): String =
         when {
             returnType == "String" && paramName != null -> "$paramName.uppercase()"
             exactTypeExamples.containsKey(returnType) -> exactTypeExamples.getValue(returnType)

@@ -2,11 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.fir.checkers
 
-import com.rsicarelli.fakt.compiler.api.TimeFormatter
 import com.rsicarelli.fakt.compiler.core.context.FaktSharedContext
 import com.rsicarelli.fakt.compiler.core.telemetry.measureTimeNanos
 import com.rsicarelli.fakt.compiler.fir.extraction.AnnotationExtractor
-import com.rsicarelli.fakt.compiler.fir.metadata.FirAnnotationInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirCallHistoryMode
 import com.rsicarelli.fakt.compiler.fir.metadata.FirFunctionInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirParameterInfo
@@ -58,15 +56,13 @@ import org.jetbrains.kotlin.name.FqName
  * 3. Must not be external/expect declarations
  * 4. Must not be local classes
  *
- * **Metro Alignment**:
- * This follows the same validation pattern as Metro's InjectConstructorChecker,
- * adapting it for @Fake annotation validation.
+ * **Metro Alignment**: This follows the same validation pattern as Metro's
+ * InjectConstructorChecker, adapting it for @Fake annotation validation.
  *
  * @property sharedContext Shared context with metadata storage and logger
  */
-internal class FakeInterfaceChecker(
-    private val sharedContext: FaktSharedContext,
-) : FirClassChecker(MppCheckerKind.Common) {
+internal class FakeInterfaceChecker(private val sharedContext: FaktSharedContext) :
+    FirClassChecker(MppCheckerKind.Common) {
     private val logger = sharedContext.logger
 
     companion object {
@@ -74,7 +70,9 @@ internal class FakeInterfaceChecker(
         private val FAKE_ANNOTATION_CLASS_ID = ClassId.topLevel(FqName("com.rsicarelli.fakt.Fake"))
     }
 
-    context(context: CheckerContext, reporter: DiagnosticReporter) // Validation logic: early returns are idiomatic guard clauses
+    context(
+    context: CheckerContext,
+    reporter: DiagnosticReporter) // Validation logic: early returns are idiomatic guard clauses
     override fun check(declaration: FirClass) {
         val session = context.session
         val classId = declaration.classId
@@ -123,10 +121,7 @@ internal class FakeInterfaceChecker(
         }
 
         // ✅ Validation passed - analyze and store metadata with timing
-        val timedResult =
-            measureTimeNanos {
-                analyzeMetadata(declaration, session, simpleName)
-            }
+        val timedResult = measureTimeNanos { analyzeMetadata(declaration, session, simpleName) }
 
         // Store metadata with validation timing for consolidated logging in IR phase
         val metadataWithTiming =
@@ -134,7 +129,8 @@ internal class FakeInterfaceChecker(
         sharedContext.metadataStorage.storeInterface(metadataWithTiming)
 
         // Write cache for producer mode (metadata compilation)
-        // This is called after each interface to ensure cache is written even if IR phase doesn't run
+        // This is called after each interface to ensure cache is written even if IR phase doesn't
+        // run
         // (metadata compilation doesn't have IR phase)
         // Note: Don't log here - writeCache logs the summary on the final write
         if (sharedContext.cacheManager.isProducerMode) {
@@ -170,10 +166,7 @@ internal class FakeInterfaceChecker(
         val functions = extractFunctions(declaration)
         val sourceLocation = extractSourceLocation(declaration, session)
         val (inheritedProperties, inheritedFunctions) =
-            extractInheritedMembers(
-                declaration = declaration,
-                session = session,
-            )
+            extractInheritedMembers(declaration = declaration, session = session)
         // Extract annotations (excluding @Fake itself)
         val annotations = AnnotationExtractor.extractAnnotations(declaration, session)
 
@@ -247,16 +240,16 @@ internal class FakeInterfaceChecker(
     /**
      * Extract type parameters from FIR class declaration.
      *
-     * Converts FIR type parameters to simplified FirTypeParameterInfo for IR generation.
-     * Each type parameter includes its name and bounds (constraints).
+     * Converts FIR type parameters to simplified FirTypeParameterInfo for IR generation. Each type
+     * parameter includes its name and bounds (constraints).
      *
      * Examples:
      * - `interface Foo<T>` → [FirTypeParameterInfo("T", emptyList())]
      * - `interface Foo<T : Comparable<T>>` → [FirTypeParameterInfo("T", ["kotlin.Comparable<T>"])]
      * - `interface Foo<T : A, B>` → [FirTypeParameterInfo("T", ["A", "B"])]
      *
-     * **Note**: Currently extracts names and basic bounds. Full type resolution
-     * with proper FirTypeRef→String conversion will be implemented in future enhancements.
+     * **Note**: Currently extracts names and basic bounds. Full type resolution with proper
+     * FirTypeRef→String conversion will be implemented in future enhancements.
      *
      * @param declaration FIR class declaration with type parameters
      * @return List of type parameter metadata
@@ -279,17 +272,14 @@ internal class FakeInterfaceChecker(
                     boundRef.coneType.toString()
                 }
 
-            FirTypeParameterInfo(
-                name = name,
-                bounds = bounds,
-            )
+            FirTypeParameterInfo(name = name, bounds = bounds)
         }
 
     /**
      * Extract properties from FIR class declaration.
      *
-     * Converts FIR properties to simplified FirPropertyInfo for IR generation.
-     * Extracts name, type, mutability (var/val), and nullability.
+     * Converts FIR properties to simplified FirPropertyInfo for IR generation. Extracts name, type,
+     * mutability (var/val), and nullability.
      *
      * Examples:
      * - `val name: String` → FirPropertyInfo("name", "String", false, false)
@@ -326,7 +316,7 @@ internal class FakeInterfaceChecker(
                         type = type,
                         isMutable = isMutable,
                         isNullable = isNullable,
-                    ),
+                    )
                 )
             }
         }
@@ -337,12 +327,13 @@ internal class FakeInterfaceChecker(
     /**
      * Extract functions from FIR class declaration.
      *
-     * Converts FIR functions to simplified FirFunctionInfo for IR generation.
-     * Extracts name, parameters, return type, suspend/inline modifiers, and type parameters.
+     * Converts FIR functions to simplified FirFunctionInfo for IR generation. Extracts name,
+     * parameters, return type, suspend/inline modifiers, and type parameters.
      *
      * Examples:
      * - `fun getUser(): User` → FirFunctionInfo("getUser", [], "User", false, false, [], {})
-     * - `suspend fun fetch(id: Int): Result<T>` → FirFunctionInfo("fetch", [...], "Result<T>", true, false, [], {})
+     * - `suspend fun fetch(id: Int): Result<T>` → FirFunctionInfo("fetch", [...], "Result<T>",
+     *   true, false, [], {})
      *
      * **Note**: Uses basic type rendering. Future enhancements will add proper type resolution.
      *
@@ -409,7 +400,7 @@ internal class FakeInterfaceChecker(
                         isInline = isInline,
                         typeParameters = typeParameters,
                         typeParameterBounds = typeParameterBounds,
-                    ),
+                    )
                 )
             }
         }
@@ -440,7 +431,8 @@ internal class FakeInterfaceChecker(
         // This is the proper K2 way to access file information from a FirClass
         val filePath =
             try {
-                val firFile = session.firProvider.getFirClassifierContainerFileIfAny(declaration.symbol)
+                val firFile =
+                    session.firProvider.getFirClassifierContainerFileIfAny(declaration.symbol)
                 // KtSourceFile.path gives us the full file path
                 firFile?.sourceFile?.path ?: "<unknown>"
             } catch (_: Exception) {
@@ -589,11 +581,11 @@ internal class FakeInterfaceChecker(
     /**
      * Report compilation error via structured logging.
      *
-     * Uses FaktLogger for consistent error reporting across FIR and IR phases.
-     * Errors are displayed during compilation through Kotlin's MessageCollector.
+     * Uses FaktLogger for consistent error reporting across FIR and IR phases. Errors are displayed
+     * during compilation through Kotlin's MessageCollector.
      *
-     * **Note**: FIR-level diagnostic factory integration could be added in future
-     * enhancements for IDE integration and precise source location highlighting.
+     * **Note**: FIR-level diagnostic factory integration could be added in future enhancements for
+     * IDE integration and precise source location highlighting.
      *
      * @param message Error message to display
      */

@@ -16,8 +16,8 @@ import kotlin.test.assertTrue
 /**
  * Contract tests for code generation modules.
  *
- * Verifies that all code generation modules have correct constructors,
- * can be instantiated, and maintain expected method contracts.
+ * Verifies that all code generation modules have correct constructors, can be instantiated, and
+ * maintain expected method contracts.
  */
 class CodeGenerationModulesContractTest {
     @Test
@@ -30,7 +30,10 @@ class CodeGenerationModulesContractTest {
 
         // Verify key methods exist (contract verification)
         val methods = TypeResolution::class.java.declaredMethods.map { it.name }
-        assertTrue(methods.contains("irTypeToKotlinString"), "Should have irTypeToKotlinString method")
+        assertTrue(
+            methods.contains("irTypeToKotlinString"),
+            "Should have irTypeToKotlinString method",
+        )
         assertTrue(methods.contains("getDefaultValue"), "Should have getDefaultValue method")
     }
 
@@ -45,7 +48,10 @@ class CodeGenerationModulesContractTest {
 
         // Verify key methods exist
         val methods = ImportResolver::class.java.declaredMethods.map { it.name }
-        assertTrue(methods.contains("collectRequiredImports"), "Should have collectRequiredImports method")
+        assertTrue(
+            methods.contains("collectRequiredImports"),
+            "Should have collectRequiredImports method",
+        )
     }
 
     @Test
@@ -53,10 +59,7 @@ class CodeGenerationModulesContractTest {
         // GIVEN
         val defaultSourceSet = SourceSetInfo(name = "jvmTest", parents = listOf("commonTest"))
         val allSourceSets =
-            listOf(
-                defaultSourceSet,
-                SourceSetInfo(name = "commonTest", parents = emptyList()),
-            )
+            listOf(defaultSourceSet, SourceSetInfo(name = "commonTest", parents = emptyList()))
 
         // WHEN
         val sourceSetContext =
@@ -88,7 +91,10 @@ class CodeGenerationModulesContractTest {
 
         // Verify key methods exist
         val methods = ConfigurationDslGenerator::class.java.declaredMethods.map { it.name }
-        assertTrue(methods.contains("generateConfigurationDsl"), "Should have generateConfigurationDsl method")
+        assertTrue(
+            methods.contains("generateConfigurationDsl"),
+            "Should have generateConfigurationDsl method",
+        )
     }
 
     @Test

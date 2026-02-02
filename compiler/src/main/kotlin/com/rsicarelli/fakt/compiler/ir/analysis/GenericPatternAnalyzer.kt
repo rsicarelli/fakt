@@ -22,9 +22,7 @@ import org.jetbrains.kotlin.ir.types.isMarkedNullable
  * - No generics → Use existing simple generation
  */
 class GenericPatternAnalyzer {
-    /**
-     * Analyze an interface to determine its generic pattern and optimal generation strategy.
-     */
+    /** Analyze an interface to determine its generic pattern and optimal generation strategy. */
     fun analyzeInterface(irClass: IrClass): GenericPattern {
         val classTypeParams = irClass.typeParameters
         val methodTypeParams = extractMethodTypeParameters(irClass)
@@ -45,9 +43,7 @@ class GenericPatternAnalyzer {
 
             // Method-level generics only - use specialized handlers
             classTypeParams.isEmpty() && methodTypeParams.isNotEmpty() -> {
-                GenericPattern.MethodLevelGenerics(
-                    genericMethods = methodTypeParams,
-                )
+                GenericPattern.MethodLevelGenerics(genericMethods = methodTypeParams)
             }
 
             // Mixed: both class and method level generics
@@ -61,9 +57,7 @@ class GenericPatternAnalyzer {
         }
     }
 
-    /**
-     * Extract method-level type parameters from all functions in the interface.
-     */
+    /** Extract method-level type parameters from all functions in the interface. */
     @OptIn(UnsafeDuringIrConstructionAPI::class)
     private fun extractMethodTypeParameters(irClass: IrClass): List<GenericMethod> =
         irClass.declarations
@@ -76,7 +70,10 @@ class GenericPatternAnalyzer {
                     constraints = extractTypeConstraints(function.typeParameters),
                     parameters =
                         function.parameters
-                            .filter { it.kind == IrParameterKind.Regular || it.kind == IrParameterKind.Context }
+                            .filter {
+                                it.kind == IrParameterKind.Regular ||
+                                    it.kind == IrParameterKind.Context
+                            }
                             .map { param ->
                                 MethodParameter(
                                     name = param.name.asString(),
@@ -89,10 +86,10 @@ class GenericPatternAnalyzer {
                 )
             }
 
-    /**
-     * Extract type constraints (where clauses) from type parameters.
-     */
-    private fun extractTypeConstraints(typeParameters: List<IrTypeParameter>): List<TypeConstraint> =
+    /** Extract type constraints (where clauses) from type parameters. */
+    private fun extractTypeConstraints(
+        typeParameters: List<IrTypeParameter>
+    ): List<TypeConstraint> =
         typeParameters.flatMap { typeParam ->
             typeParam.superTypes.map { superType ->
                 TypeConstraint(
@@ -103,9 +100,7 @@ class GenericPatternAnalyzer {
             }
         }
 
-    /**
-     * Convert IrType to string representation for analysis.
-     */
+    /** Convert IrType to string representation for analysis. */
     @OptIn(UnsafeDuringIrConstructionAPI::class)
     private fun irTypeToString(irType: IrType): String =
         when {
@@ -118,11 +113,7 @@ class GenericPatternAnalyzer {
             irType is IrSimpleType -> {
                 // Build full qualified name with type arguments
                 val classifier = irType.classifier
-                val baseName =
-                    classifier
-                        .toString()
-                        .substringAfterLast('/')
-                        .substringAfterLast('.')
+                val baseName = classifier.toString().substringAfterLast('/').substringAfterLast('.')
 
                 val typeArguments =
                     if (irType.arguments.isNotEmpty()) {
@@ -146,10 +137,7 @@ class GenericPatternAnalyzer {
                 // Fallback to toString for other types
                 val typeString = irType.toString()
                 // Clean up common IR type representations
-                typeString
-                    .substringAfterLast('/')
-                    .substringAfterLast('.')
-                    .replace("IrClass", "")
+                typeString.substringAfterLast('/').substringAfterLast('.').replace("IrClass", "")
             }
         }
 
@@ -162,10 +150,7 @@ class GenericPatternAnalyzer {
          * @return List of validation warnings (empty if valid)
          */
         @OptIn(UnsafeDuringIrConstructionAPI::class)
-        fun validatePattern(
-            pattern: GenericPattern,
-            irClass: IrClass,
-        ): List<String> {
+        fun validatePattern(pattern: GenericPattern, irClass: IrClass): List<String> {
             val warnings = mutableListOf<String>()
 
             when (pattern) {
@@ -177,7 +162,9 @@ class GenericPatternAnalyzer {
                     // Validate constraints are properly extracted
                     pattern.constraints.forEach { constraint ->
                         if (constraint.constraint.isBlank()) {
-                            warnings.add("Empty constraint found for type parameter ${constraint.typeParameter}")
+                            warnings.add(
+                                "Empty constraint found for type parameter ${constraint.typeParameter}"
+                            )
                         }
                     }
                 }
@@ -198,9 +185,9 @@ class GenericPatternAnalyzer {
                     // Verify there really are no generics
                     val hasClassGenerics = irClass.typeParameters.isNotEmpty()
                     val hasMethodGenerics =
-                        irClass.declarations
-                            .filterIsInstance<IrSimpleFunction>()
-                            .any { it.typeParameters.isNotEmpty() }
+                        irClass.declarations.filterIsInstance<IrSimpleFunction>().any {
+                            it.typeParameters.isNotEmpty()
+                        }
 
                     if (hasClassGenerics || hasMethodGenerics) {
                         warnings.add("Interface has generics but classified as NoGenerics")
@@ -213,19 +200,14 @@ class GenericPatternAnalyzer {
     }
 }
 
-/**
- * Sealed class representing different generic patterns found in interfaces.
- */
+/** Sealed class representing different generic patterns found in interfaces. */
 sealed class GenericPattern {
-    /**
-     * Interface has no generic parameters at all.
-     * Use existing simple generation approach.
-     */
+    /** Interface has no generic parameters at all. Use existing simple generation approach. */
     object NoGenerics : GenericPattern()
 
     /**
-     * Interface has generic parameters at class level only.
-     * Generate truly generic fake class with full type safety.
+     * Interface has generic parameters at class level only. Generate truly generic fake class with
+     * full type safety.
      */
     data class ClassLevelGenerics(
         val typeParameters: List<IrTypeParameter>,
@@ -233,16 +215,14 @@ sealed class GenericPattern {
     ) : GenericPattern()
 
     /**
-     * Interface has generic parameters at method level only.
-     * Generate specialized handlers using IR type information.
+     * Interface has generic parameters at method level only. Generate specialized handlers using IR
+     * type information.
      */
-    data class MethodLevelGenerics(
-        val genericMethods: List<GenericMethod>,
-    ) : GenericPattern()
+    data class MethodLevelGenerics(val genericMethods: List<GenericMethod>) : GenericPattern()
 
     /**
-     * Interface has both class-level and method-level generics.
-     * Generate hybrid approach combining both strategies.
+     * Interface has both class-level and method-level generics. Generate hybrid approach combining
+     * both strategies.
      */
     data class MixedGenerics(
         val classTypeParameters: List<IrTypeParameter>,
@@ -251,9 +231,7 @@ sealed class GenericPattern {
     ) : GenericPattern()
 }
 
-/**
- * Represents a generic method with its type parameters and constraints.
- */
+/** Represents a generic method with its type parameters and constraints. */
 data class GenericMethod(
     val name: String,
     val typeParameters: List<IrTypeParameter>,
@@ -263,18 +241,10 @@ data class GenericMethod(
     val isSuspend: Boolean,
 )
 
-/**
- * Represents a method parameter.
- */
-data class MethodParameter(
-    val name: String,
-    val type: IrType,
-    val isVararg: Boolean,
-)
+/** Represents a method parameter. */
+data class MethodParameter(val name: String, val type: IrType, val isVararg: Boolean)
 
-/**
- * Represents a type constraint (where clause).
- */
+/** Represents a type constraint (where clause). */
 data class TypeConstraint(
     val typeParameter: String,
     val constraint: String,

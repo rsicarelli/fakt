@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.fir.metadata
 
-import org.jetbrains.kotlin.name.ClassId
 import java.util.concurrent.ConcurrentHashMap
+import org.jetbrains.kotlin.name.ClassId
 
 /**
  * Thread-safe storage for passing validated metadata from FIR phase to IR phase.
@@ -39,7 +39,8 @@ class FirMetadataStorage {
         private set
 
     /** Total cache hits (interfaces + classes) */
-    val totalCacheHits: Int get() = interfaceCacheHits + classCacheHits
+    val totalCacheHits: Int
+        get() = interfaceCacheHits + classCacheHits
 
     /** Increment interface cache hit counter (called when loading from KMP cache) */
     fun incrementInterfaceCacheHits() {
@@ -54,9 +55,9 @@ class FirMetadataStorage {
     /**
      * Store validated interface metadata from FIR phase.
      *
-     * Called by FIR checkers after validating an @Fake interface.
-     * In KMP multi-module builds, the same interface may be processed multiple times
-     * (common metadata + platform compilations), so duplicates are silently ignored.
+     * Called by FIR checkers after validating an @Fake interface. In KMP multi-module builds, the
+     * same interface may be processed multiple times (common metadata + platform compilations), so
+     * duplicates are silently ignored.
      *
      * @param metadata Validated interface metadata
      */
@@ -67,9 +68,9 @@ class FirMetadataStorage {
     /**
      * Store validated class metadata from FIR phase.
      *
-     * Called by FIR checkers after validating an @Fake class.
-     * In KMP multi-module builds, the same class may be processed multiple times
-     * (common metadata + platform compilations), so duplicates are silently ignored.
+     * Called by FIR checkers after validating an @Fake class. In KMP multi-module builds, the same
+     * class may be processed multiple times (common metadata + platform compilations), so
+     * duplicates are silently ignored.
      *
      * @param metadata Validated class metadata
      */
@@ -130,8 +131,8 @@ class FirMetadataStorage {
     /**
      * Clear all stored metadata.
      *
-     * **WARNING**: Only for testing! Never call in production code.
-     * Compilation sessions should create new storage instances.
+     * **WARNING**: Only for testing! Never call in production code. Compilation sessions should
+     * create new storage instances.
      */
     internal fun clearForTesting() {
         interfaces.clear()
@@ -143,5 +144,6 @@ class FirMetadataStorage {
      *
      * @return Human-readable summary
      */
-    override fun toString(): String = "FirMetadataStorage(interfaces=${interfaces.size}, classes=${classes.size})"
+    override fun toString(): String =
+        "FirMetadataStorage(interfaces=${interfaces.size}, classes=${classes.size})"
 }

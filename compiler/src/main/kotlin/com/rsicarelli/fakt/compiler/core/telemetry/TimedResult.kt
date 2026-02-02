@@ -9,18 +9,16 @@ package com.rsicarelli.fakt.compiler.core.telemetry
  * @property result The return value from the timed block
  * @property durationNanos The execution time in nanoseconds
  */
-data class TimedResult<T>(
-    val result: T,
-    val durationNanos: Long,
-)
+data class TimedResult<T>(val result: T, val durationNanos: Long)
 
 /**
  * Measures execution time of a block in nanoseconds.
  *
- * Returns both the block's result and the duration, eliminating the need for
- * manual `System.nanoTime()` calls and duration calculations.
+ * Returns both the block's result and the duration, eliminating the need for manual
+ * `System.nanoTime()` calls and duration calculations.
  *
  * **Usage:**
+ *
  * ```kotlin
  * val (result, duration) = measureTimeNanos {
  *     // expensive operation
@@ -30,6 +28,7 @@ data class TimedResult<T>(
  * ```
  *
  * **For side-effect blocks (Unit return):**
+ *
  * ```kotlin
  * val (_, duration) = measureTimeNanos {
  *     validateInterface()

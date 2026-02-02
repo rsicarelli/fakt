@@ -8,15 +8,15 @@ import com.rsicarelli.fakt.codegen.renderer.CodeBuilder
 import com.rsicarelli.fakt.codegen.renderer.render
 import com.rsicarelli.fakt.codegen.renderer.renderTo
 import com.rsicarelli.fakt.codegen.strategy.DefaultValueResolver
-import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Integration tests for simple interface fake generation.
  *
- * Tests the complete pipeline: Builder → Model → Renderer → Strategy
- * for simple interfaces with basic methods and properties.
+ * Tests the complete pipeline: Builder → Model → Renderer → Strategy for simple interfaces with
+ * basic methods and properties.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SimpleInterfaceFakeGenerationTest : IntegrationTestBase() {
@@ -53,7 +53,8 @@ class SimpleInterfaceFakeGenerationTest : IntegrationTestBase() {
         val result = builder.build()
 
         // THEN
-        val expected = """
+        val expected =
+            """
             package com.example
 
             class FakeUserServiceImpl : UserService {
@@ -97,7 +98,8 @@ class SimpleInterfaceFakeGenerationTest : IntegrationTestBase() {
         val result = builder.build()
 
         // THEN
-        val expected = """
+        val expected =
+            """
             package com.example
 
             class FakeUserServiceImpl : UserService {
@@ -210,7 +212,11 @@ class SimpleInterfaceFakeGenerationTest : IntegrationTestBase() {
         val result = builder.build()
 
         // THEN
-        assertContains("All parameters", "override fun create(name: String, age: Int, active: Boolean): User", result)
+        assertContains(
+            "All parameters",
+            "override fun create(name: String, age: Int, active: Boolean): User",
+            result,
+        )
     }
 
     @Test

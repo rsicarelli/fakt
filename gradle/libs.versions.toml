@@ -18,15 +18,16 @@ fakt = "1.0.0-alpha06"
 android-gradle-plugin = "8.12.3"
 binaryCompatibilityValidator = "0.18.1"
 detekt = "1.23.8"
+google-java-format = "1.33.0"
 junit5 = "5.13.4"
 kotlin = "2.2.21"
 kotlin-compile-testing = "0.11.0"
 kotlinx-coroutines = "1.10.2"
 kotlinx-serialization = "1.9.0"
-ktlint-gradle = "13.1.0"
+ktfmt = "0.61"
 licenseReport = "3.0.1"
 mavenPublish = "0.35.0"
-spotless = "7.2.1"
+spotless = "8.2.1"
 turbine = "1.2.0"
 
 [libraries]
@@ -43,7 +44,6 @@ binaryCompatibilityValidator-gradlePlugin = { module = "org.jetbrains.kotlinx.bi
 detekt-gradlePlugin = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detekt" }
 kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-gradlePlugin-api = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin-api", version.ref = "kotlin" }
-ktlint-gradlePlugin = { module = "org.jlleitschuh.gradle.ktlint:org.jlleitschuh.gradle.ktlint.gradle.plugin", version.ref = "ktlint-gradle" }
 licenseReport-gradlePlugin = { module = "com.github.jk1:gradle-license-report", version.ref = "licenseReport" }
 mavenPublish-gradlePlugin = { module = "com.vanniktech.maven.publish:com.vanniktech.maven.publish.gradle.plugin", version.ref = "mavenPublish" }
 spotless-gradlePlugin = { module = "com.diffplug.spotless:spotless-plugin-gradle", version.ref = "spotless" }

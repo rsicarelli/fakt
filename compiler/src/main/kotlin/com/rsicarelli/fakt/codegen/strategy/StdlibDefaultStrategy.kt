@@ -15,8 +15,8 @@ import com.rsicarelli.fakt.codegen.model.CodeType
  * - MutableStateFlow<T> → MutableStateFlow(default(T))
  * - Result<T> → Result.success(default(T))
  *
- * For types with generic parameters (StateFlow, Result), this strategy
- * composes with other strategies to resolve nested type defaults.
+ * For types with generic parameters (StateFlow, Result), this strategy composes with other
+ * strategies to resolve nested type defaults.
  *
  * Example:
  * ```kotlin
@@ -41,9 +41,7 @@ public class StdlibDefaultStrategy : DefaultValueStrategy {
         }
 
     override fun defaultValue(type: CodeType): CodeExpression {
-        require(supports(type)) {
-            "StdlibDefaultStrategy does not support type: $type"
-        }
+        require(supports(type)) { "StdlibDefaultStrategy does not support type: $type" }
 
         return when (type) {
             is CodeType.Simple -> {
@@ -57,7 +55,8 @@ public class StdlibDefaultStrategy : DefaultValueStrategy {
                 when (type.name) {
                     "Flow" -> CodeExpression.FunctionCall("emptyFlow")
 
-                    "StateFlow", "MutableStateFlow" -> {
+                    "StateFlow",
+                    "MutableStateFlow" -> {
                         val innerType = type.arguments.first()
                         val innerDefault = resolveNestedDefault(innerType)
                         CodeExpression.FunctionCall("MutableStateFlow", listOf(innerDefault))
@@ -80,9 +79,9 @@ public class StdlibDefaultStrategy : DefaultValueStrategy {
     /**
      * Resolves default value for nested type parameters.
      *
-     * Uses primitive, stdlib, and collection strategies for common types.
-     * Supports recursive resolution for nested stdlib types (e.g., Result<StateFlow<Int>>).
-     * Falls back to error() for unsupported types (design choice: explicit config over auto-mocking).
+     * Uses primitive, stdlib, and collection strategies for common types. Supports recursive
+     * resolution for nested stdlib types (e.g., Result<StateFlow<Int>>). Falls back to error() for
+     * unsupported types (design choice: explicit config over auto-mocking).
      */
     private fun resolveNestedDefault(type: CodeType): CodeExpression =
         when {
@@ -93,17 +92,11 @@ public class StdlibDefaultStrategy : DefaultValueStrategy {
                 CodeExpression.Raw(
                     "error(\"Type '$type' requires explicit configuration. \" + " +
                         "\"Fakt prioritizes type-safety over auto-mocking. \" + " +
-                        "\"Configure behavior via fake factory DSL.\") as Nothing",
+                        "\"Configure behavior via fake factory DSL.\") as Nothing"
                 )
         }
 
     private companion object {
-        private val STDLIB_TYPES =
-            setOf(
-                "Flow",
-                "StateFlow",
-                "MutableStateFlow",
-                "Result",
-            )
+        private val STDLIB_TYPES = setOf("Flow", "StateFlow", "MutableStateFlow", "Result")
     }
 }

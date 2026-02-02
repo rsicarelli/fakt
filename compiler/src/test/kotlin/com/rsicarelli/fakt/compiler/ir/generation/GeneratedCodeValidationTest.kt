@@ -9,8 +9,8 @@ import kotlin.test.assertTrue
 /**
  * Validates generated code patterns from samples/kmp-single-module.
  *
- * **Testing Strategy**: Read actual generated files and validate expected patterns exist.
- * This pragmatic approach tests real compiler output without complex IR mocks.
+ * **Testing Strategy**: Read actual generated files and validate expected patterns exist. This
+ * pragmatic approach tests real compiler output without complex IR mocks.
  *
  * **Requirements**:
  * - samples/kmp-single-module must be built before running these tests
@@ -23,7 +23,8 @@ import kotlin.test.assertTrue
  * - Configuration methods generation
  */
 class GeneratedCodeValidationTest {
-    private val generatedDir = File("samples/kmp-single-module/build/generated/fakt/common/test/kotlin/test/sample")
+    private val generatedDir =
+        File("samples/kmp-single-module/build/generated/fakt/common/test/kotlin/test/sample")
 
     // ==================================================================================
     // Behavior Properties Validation
@@ -36,7 +37,9 @@ class GeneratedCodeValidationTest {
 
         // Skip if not built yet
         if (!fakeFile.exists()) {
-            println("⚠️  Skipping test - sample not built. Run './gradlew :samples:single-module:build' first")
+            println(
+                "⚠️  Skipping test - sample not built. Run './gradlew :samples:single-module:build' first"
+            )
             return
         }
 
@@ -75,10 +78,7 @@ class GeneratedCodeValidationTest {
         val content = fakeFile.readText()
 
         // THEN
-        assertTrue(
-            content.contains("= { \"\" }"),
-            "String default should be empty string",
-        )
+        assertTrue(content.contains("= { \"\" }"), "String default should be empty string")
     }
 
     @Test
@@ -271,7 +271,7 @@ class GeneratedCodeValidationTest {
         // THEN
         assertTrue(
             content.contains(
-                "fun fakePropertyAndMethodInterface(configure: FakePropertyAndMethodInterfaceConfig.() -> Unit = {}): PropertyAndMethodInterface",
+                "fun fakePropertyAndMethodInterface(configure: FakePropertyAndMethodInterfaceConfig.() -> Unit = {}): PropertyAndMethodInterface"
             ),
             "Should generate factory function with DSL parameter",
         )
@@ -291,7 +291,9 @@ class GeneratedCodeValidationTest {
 
         // THEN
         assertTrue(
-            content.contains("class FakePropertyAndMethodInterfaceConfig(private val fake: FakePropertyAndMethodInterfaceImpl)"),
+            content.contains(
+                "class FakePropertyAndMethodInterfaceConfig(private val fake: FakePropertyAndMethodInterfaceImpl)"
+            ),
             "Should generate DSL configuration class",
         )
     }
@@ -305,7 +307,9 @@ class GeneratedCodeValidationTest {
         // GIVEN
         val fakeFile = File(generatedDir, "FakeVarargsProcessorImpl.kt")
         if (!fakeFile.exists()) {
-            println("⚠️  Skipping test - sample not built. Run './gradlew :samples:single-module:build' first")
+            println(
+                "⚠️  Skipping test - sample not built. Run './gradlew :samples:single-module:build' first"
+            )
             return
         }
 
@@ -365,7 +369,9 @@ class GeneratedCodeValidationTest {
             )
 
         if (!generatedDir.exists()) {
-            println("⚠️  Skipping test - sample not built. Run './gradlew :samples:single-module:build' first")
+            println(
+                "⚠️  Skipping test - sample not built. Run './gradlew :samples:single-module:build' first"
+            )
             return
         }
 
@@ -374,10 +380,7 @@ class GeneratedCodeValidationTest {
 
         // THEN
         expectedFiles.forEach { expectedFile ->
-            assertTrue(
-                expectedFile in actualFiles,
-                "Should generate $expectedFile",
-            )
+            assertTrue(expectedFile in actualFiles, "Should generate $expectedFile")
         }
     }
 }

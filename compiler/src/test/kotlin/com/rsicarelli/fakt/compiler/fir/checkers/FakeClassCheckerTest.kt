@@ -8,13 +8,13 @@ import com.rsicarelli.fakt.compiler.fir.metadata.FirPropertyInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirSourceLocation
 import com.rsicarelli.fakt.compiler.fir.metadata.FirTypeParameterInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeClass
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 /**
  * Tests for [FakeClassChecker] metadata extraction following GIVEN-WHEN-THEN pattern.
@@ -41,7 +41,7 @@ class FakeClassCheckerTest {
                                 type = "kotlin.Long",
                                 isMutable = false,
                                 isNullable = false,
-                            ),
+                            )
                         ),
                 )
 
@@ -70,7 +70,7 @@ class FakeClassCheckerTest {
                                 type = "kotlin.String",
                                 isMutable = true,
                                 isNullable = false,
-                            ),
+                            )
                         ),
                 )
 
@@ -91,10 +91,7 @@ class FakeClassCheckerTest {
             val metadata =
                 createTestClassMetadata(
                     fqName = "com.example.MixedRepository",
-                    abstractProperties =
-                        listOf(
-                            FirPropertyInfo("id", "kotlin.Long", false, false),
-                        ),
+                    abstractProperties = listOf(FirPropertyInfo("id", "kotlin.Long", false, false)),
                     openProperties =
                         listOf(
                             FirPropertyInfo("name", "kotlin.String", true, false),
@@ -129,7 +126,7 @@ class FakeClassCheckerTest {
                                 isInline = false,
                                 typeParameters = emptyList(),
                                 typeParameterBounds = emptyMap(),
-                            ),
+                            )
                         ),
                 )
 
@@ -159,7 +156,7 @@ class FakeClassCheckerTest {
                                 isInline = false,
                                 typeParameters = emptyList(),
                                 typeParameterBounds = emptyMap(),
-                            ),
+                            )
                         ),
                 )
 
@@ -188,7 +185,7 @@ class FakeClassCheckerTest {
                                 isInline = false,
                                 typeParameters = emptyList(),
                                 typeParameterBounds = emptyMap(),
-                            ),
+                            )
                         ),
                 )
 
@@ -203,7 +200,8 @@ class FakeClassCheckerTest {
     @Test
     fun `GIVEN abstract class with inline method WHEN extracting metadata THEN captures inline modifier`() =
         runTest {
-            // GIVEN: abstract class AbstractCache { abstract inline fun <T> cached(fn: () -> T): T }
+            // GIVEN: abstract class AbstractCache { abstract inline fun <T> cached(fn: () -> T): T
+            // }
             val metadata =
                 createTestClassMetadata(
                     fqName = "com.example.AbstractCache",
@@ -219,17 +217,14 @@ class FakeClassCheckerTest {
                                             hasDefaultValue = false,
                                             defaultValueCode = null,
                                             isVararg = false,
-                                        ),
+                                        )
                                     ),
                                 returnType = "T",
                                 isSuspend = false,
                                 isInline = true,
-                                typeParameters =
-                                    listOf(
-                                        FirTypeParameterInfo("T", emptyList()),
-                                    ),
+                                typeParameters = listOf(FirTypeParameterInfo("T", emptyList())),
                                 typeParameterBounds = emptyMap(),
-                            ),
+                            )
                         ),
                 )
 
@@ -282,7 +277,7 @@ class FakeClassCheckerTest {
                                 isInline = false,
                                 typeParameters = emptyList(),
                                 typeParameterBounds = emptyMap(),
-                            ),
+                            )
                         ),
                 )
 
@@ -316,14 +311,14 @@ class FakeClassCheckerTest {
                                             hasDefaultValue = false,
                                             defaultValueCode = null,
                                             isVararg = true,
-                                        ),
+                                        )
                                     ),
                                 returnType = "kotlin.Unit",
                                 isSuspend = false,
                                 isInline = false,
                                 typeParameters = emptyList(),
                                 typeParameterBounds = emptyMap(),
-                            ),
+                            )
                         ),
                 )
 
@@ -342,10 +337,7 @@ class FakeClassCheckerTest {
             val metadata =
                 createTestClassMetadata(
                     fqName = "com.example.AbstractRepository",
-                    typeParameters =
-                        listOf(
-                            FirTypeParameterInfo("T", emptyList()),
-                        ),
+                    typeParameters = listOf(FirTypeParameterInfo("T", emptyList())),
                 )
 
             // WHEN: Metadata is extracted by FakeClassChecker
@@ -364,9 +356,7 @@ class FakeClassCheckerTest {
                 createTestClassMetadata(
                     fqName = "com.example.AbstractRepository",
                     typeParameters =
-                        listOf(
-                            FirTypeParameterInfo("T", listOf("kotlin.Comparable<T>")),
-                        ),
+                        listOf(FirTypeParameterInfo("T", listOf("kotlin.Comparable<T>"))),
                 )
 
             // WHEN: Metadata is extracted by FakeClassChecker
@@ -412,18 +402,13 @@ class FakeClassCheckerTest {
                             FirFunctionInfo(
                                 name = "transform",
                                 parameters =
-                                    listOf(
-                                        FirParameterInfo("input", "T", false, null, false),
-                                    ),
+                                    listOf(FirParameterInfo("input", "T", false, null, false)),
                                 returnType = "R",
                                 isSuspend = false,
                                 isInline = false,
-                                typeParameters =
-                                    listOf(
-                                        FirTypeParameterInfo("R", emptyList()),
-                                    ),
+                                typeParameters = listOf(FirTypeParameterInfo("R", emptyList())),
                                 typeParameterBounds = emptyMap(),
-                            ),
+                            )
                         ),
                 )
 
@@ -454,17 +439,17 @@ class FakeClassCheckerTest {
                                             false,
                                             null,
                                             false,
-                                        ),
+                                        )
                                     ),
                                 returnType = "kotlin.collections.List<R>",
                                 isSuspend = false,
                                 isInline = false,
                                 typeParameters =
                                     listOf(
-                                        FirTypeParameterInfo("R", listOf("kotlin.Comparable<R>")),
+                                        FirTypeParameterInfo("R", listOf("kotlin.Comparable<R>"))
                                     ),
                                 typeParameterBounds = mapOf("R" to "kotlin.Comparable<R>"),
-                            ),
+                            )
                         ),
                 )
 
@@ -491,14 +476,14 @@ class FakeClassCheckerTest {
                                 name = "findById",
                                 parameters =
                                     listOf(
-                                        FirParameterInfo("id", "kotlin.Long", false, null, false),
+                                        FirParameterInfo("id", "kotlin.Long", false, null, false)
                                     ),
                                 returnType = "com.example.User?",
                                 isSuspend = false,
                                 isInline = false,
                                 typeParameters = emptyList(),
                                 typeParameterBounds = emptyMap(),
-                            ),
+                            )
                         ),
                 )
 
@@ -521,10 +506,7 @@ class FakeClassCheckerTest {
             val metadata =
                 createTestClassMetadata(
                     fqName = "com.example.AbstractTransformer",
-                    typeParameters =
-                        listOf(
-                            FirTypeParameterInfo("T", emptyList()),
-                        ),
+                    typeParameters = listOf(FirTypeParameterInfo("T", emptyList())),
                     abstractMethods =
                         listOf(
                             FirFunctionInfo(
@@ -552,10 +534,10 @@ class FakeClassCheckerTest {
                                 isInline = true,
                                 typeParameters =
                                     listOf(
-                                        FirTypeParameterInfo("R", listOf("kotlin.Comparable<R>")),
+                                        FirTypeParameterInfo("R", listOf("kotlin.Comparable<R>"))
                                     ),
                                 typeParameterBounds = mapOf("R" to "kotlin.Comparable<R>"),
-                            ),
+                            )
                         ),
                 )
 

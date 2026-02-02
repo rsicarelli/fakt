@@ -28,12 +28,13 @@ internal object SourceSetDiscovery {
     /**
      * Maps a main compilation name to its corresponding test source set.
      *
-     * This function transforms main source set names to their test equivalents following
-     * Kotlin's standard naming conventions. Test compilations are returned unchanged.
+     * This function transforms main source set names to their test equivalents following Kotlin's
+     * standard naming conventions. Test compilations are returned unchanged.
      *
      * ## Mapping Rules
      *
      * **Main → Test transformations:**
+     *
      * ```
      * "main" → "test"
      * "jvmMain" → "jvmTest"
@@ -42,6 +43,7 @@ internal object SourceSetDiscovery {
      * ```
      *
      * **Already test compilations (unchanged):**
+     *
      * ```
      * "test" → "test"
      * "jvmTest" → "jvmTest"
@@ -75,11 +77,10 @@ internal object SourceSetDiscovery {
     /**
      * Build complete source set context from a compilation.
      *
-     * This is the main entry point for source set discovery. It analyzes a Kotlin compilation
-     * and produces a [SourceSetContext] containing all metadata needed by the compiler plugin.
+     * This is the main entry point for source set discovery. It analyzes a Kotlin compilation and
+     * produces a [SourceSetContext] containing all metadata needed by the compiler plugin.
      *
      * ## Algorithm
-     *
      * 1. Classify compilation (test vs main)
      * 2. Get default source set from compilation
      * 3. Traverse source set graph to find all parents
@@ -91,6 +92,7 @@ internal object SourceSetDiscovery {
      * ## Examples
      *
      * **KMP project with commonMain:**
+     *
      * ```kotlin
      * // Input: jvmMain compilation
      * val context = buildContext(jvmMainCompilation, "/path/to/build")
@@ -109,6 +111,7 @@ internal object SourceSetDiscovery {
      * ```
      *
      * **Single-platform JVM project:**
+     *
      * ```kotlin
      * // Input: test compilation
      * val context = buildContext(testCompilation, "/path/to/build")
@@ -130,10 +133,7 @@ internal object SourceSetDiscovery {
      * @return Complete [SourceSetContext] ready for serialization to compiler plugin
      * @see SourceSetContext
      */
-    fun buildContext(
-        compilation: KotlinCompilation<*>,
-        buildDir: String,
-    ): SourceSetContext {
+    fun buildContext(compilation: KotlinCompilation<*>, buildDir: String): SourceSetContext {
         // 1. Classify compilation (test vs main)
         val isTest = compilation.isTestCompilation
 
@@ -147,14 +147,9 @@ internal object SourceSetDiscovery {
         val sourceSetInfos =
             allSourceSets.map { sourceSet ->
                 val parentNames =
-                    sourceSet.dependsOn
-                        .map { it.name }
-                        .sorted() // Deterministic ordering
+                    sourceSet.dependsOn.map { it.name }.sorted() // Deterministic ordering
 
-                SourceSetInfo(
-                    name = sourceSet.name,
-                    parents = parentNames,
-                )
+                SourceSetInfo(name = sourceSet.name, parents = parentNames)
             }
 
         // 5. Find the default source set info
@@ -229,9 +224,8 @@ internal object SourceSetDiscovery {
     /**
      * Compute cache paths for KMP cross-compilation optimization.
      *
-     * In KMP projects, the metadata compilation (common platform) performs FIR analysis
-     * and writes a cache file. Platform compilations then read this cache to skip
-     * redundant FIR analysis.
+     * In KMP projects, the metadata compilation (common platform) performs FIR analysis and writes
+     * a cache file. Platform compilations then read this cache to skip redundant FIR analysis.
      *
      * **Producer Mode** (metadata compilation):
      * - `platformType` == "common"
@@ -310,8 +304,8 @@ public val KotlinCompilation<*>.isTestCompilation: Boolean
     }
 
 /**
- * Traverse the dependsOn graph upwards using BFS to find all parent source sets.
- * Includes the starting source set in the result.
+ * Traverse the dependsOn graph upwards using BFS to find all parent source sets. Includes the
+ * starting source set in the result.
  *
  * **Example 1 - Simple hierarchy**:
  * ```
@@ -334,8 +328,9 @@ public val KotlinCompilation<*>.isTestCompilation: Boolean
  *         iosMain
  * Result: Set(iosMain, nativeMain, appleMain, commonMain)
  * ```
- * @receiver [KotlinSourceSet]
+ *
  * @return Set of all source sets in the hierarchy (including starting set)
+ * @receiver [KotlinSourceSet]
  */
 public fun KotlinSourceSet.getAllParentSourceSets(): Set<KotlinSourceSet> {
     val allParents = mutableSetOf<KotlinSourceSet>()

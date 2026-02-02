@@ -28,31 +28,26 @@ data class CodeFile(
     val fileAnnotations: List<CodeAnnotation> = emptyList(),
 ) {
     /**
-     * Adds a top-level declaration.
-     * Returns new CodeFile instance (immutable).
+     * Adds a top-level declaration. Returns new CodeFile instance (immutable).
      *
      * TODO Phase 10: Alternative mutation API (currently builders are preferred).
      */
-    fun addDeclaration(declaration: CodeDeclaration): CodeFile = copy(declarations = declarations + declaration)
+    fun addDeclaration(declaration: CodeDeclaration): CodeFile =
+        copy(declarations = declarations + declaration)
 
     /**
-     * Adds an import statement.
-     * Returns new CodeFile instance (immutable).
-     * Automatically deduplicates imports.
+     * Adds an import statement. Returns new CodeFile instance (immutable). Automatically
+     * deduplicates imports.
      *
      * TODO Phase 10: Alternative mutation API (currently builders are preferred).
      */
     fun addImport(fqName: String): CodeFile = copy(imports = imports + fqName)
 }
 
-/**
- * Base interface for all code declarations (classes, functions, properties).
- */
+/** Base interface for all code declarations (classes, functions, properties). */
 sealed interface CodeDeclaration
 
-/**
- * Marker interface for class members (properties, functions, comments).
- */
+/** Marker interface for class members (properties, functions, comments). */
 sealed interface CodeMember
 
 /**
@@ -62,9 +57,7 @@ sealed interface CodeMember
  *
  * @property text The comment text (without // prefix)
  */
-data class CodeComment(
-    val text: String,
-) : CodeMember
+data class CodeComment(val text: String) : CodeMember
 
 /**
  * Represents a region start marker in generated code.
@@ -73,13 +66,9 @@ data class CodeComment(
  *
  * @property name The region name displayed when collapsed
  */
-data class CodeRegionStart(
-    val name: String,
-) : CodeMember
+data class CodeRegionStart(val name: String) : CodeMember
 
-/**
- * Represents a region end marker in generated code.
- */
+/** Represents a region end marker in generated code. */
 data object CodeRegionEnd : CodeMember
 
 /**
@@ -90,7 +79,8 @@ data object CodeRegionEnd : CodeMember
  * @property superTypes Interfaces/classes this class implements/extends
  * @property modifiers Class modifiers (internal, abstract, etc.)
  * @property members Properties and functions within the class
- * @property constructorProperties Primary constructor properties (e.g., `class Foo(private val x: Int)`)
+ * @property constructorProperties Primary constructor properties (e.g., `class Foo(private val x:
+ *   Int)`)
  * @property whereClause Optional where clause for complex constraints
  */
 data class CodeClass(
@@ -104,8 +94,7 @@ data class CodeClass(
     val annotations: List<CodeAnnotation> = emptyList(),
 ) : CodeDeclaration {
     /**
-     * Adds a member to this class.
-     * Returns new CodeClass instance (immutable).
+     * Adds a member to this class. Returns new CodeClass instance (immutable).
      *
      * TODO Phase 10: Alternative mutation API (currently ClassBuilder is preferred).
      */
@@ -115,7 +104,8 @@ data class CodeClass(
 /**
  * Represents a primary constructor property.
  *
- * Example: `class Foo(private val calls: List<Bar>)` -> ConstructorProperty("calls", "List<Bar>", private)
+ * Example: `class Foo(private val calls: List<Bar>)` -> ConstructorProperty("calls", "List<Bar>",
+ * private)
  *
  * @property name Property name
  * @property type Property type as string
@@ -130,8 +120,8 @@ data class ConstructorProperty(
 /**
  * Represents a Kotlin data class declaration.
  *
- * Data classes are primarily used for call history recording, where each method
- * call's arguments are captured as a data class instance.
+ * Data classes are primarily used for call history recording, where each method call's arguments
+ * are captured as a data class instance.
  *
  * Example:
  * ```kotlin
@@ -156,10 +146,7 @@ data class CodeDataClass(
  * @property name Property name
  * @property type Property type as a string (will be parsed during rendering)
  */
-data class DataClassProperty(
-    val name: String,
-    val type: String,
-)
+data class DataClassProperty(val name: String, val type: String)
 
 /**
  * Represents a Kotlin function (top-level or member).
@@ -172,7 +159,8 @@ data class DataClassProperty(
  * @property typeParameters Generic type parameters
  * @property isSuspend Whether this is a suspend function
  * @property isInline Whether this is an inline function
- * @property receiverType Extension receiver type for extension functions (e.g., Vector for fun Vector.plus())
+ * @property receiverType Extension receiver type for extension functions (e.g., Vector for fun
+ *   Vector.plus())
  * @property annotations Function-level annotations (e.g., @Suppress)
  * @property kdoc Optional KDoc documentation for the function
  */
@@ -189,8 +177,7 @@ data class CodeFunction(
     val annotations: List<CodeAnnotation> = emptyList(),
     val whereClause: String? = null,
     val kdoc: String? = null,
-) : CodeDeclaration,
-    CodeMember
+) : CodeDeclaration, CodeMember
 
 /**
  * Represents a Kotlin property (top-level or member).
@@ -213,8 +200,7 @@ data class CodeProperty(
     val setter: CodeBlock? = null,
     val isMutable: Boolean = false,
     val annotations: List<CodeAnnotation> = emptyList(),
-) : CodeDeclaration,
-    CodeMember
+) : CodeDeclaration, CodeMember
 
 /**
  * Function/property parameter.
@@ -250,7 +236,11 @@ data class CodeTypeParameter(
     val isReified: Boolean = false,
     val variance: Variance = Variance.INVARIANT,
 ) {
-    enum class Variance { IN, OUT, INVARIANT }
+    enum class Variance {
+        IN,
+        OUT,
+        INVARIANT,
+    }
 }
 
 /**
@@ -263,32 +253,20 @@ data class CodeTypeParameter(
  * - `(String) -> Int` → CodeType.Lambda(...)
  */
 sealed interface CodeType {
-    /**
-     * Simple type reference (e.g., String, User, Int).
-     */
-    data class Simple(
-        val name: String,
-    ) : CodeType
+    /** Simple type reference (e.g., String, User, Int). */
+    data class Simple(val name: String) : CodeType
 
-    /**
-     * Generic type with type arguments (e.g., List<String>, Map<String, Int>).
-     */
-    data class Generic(
-        val name: String,
-        val arguments: List<CodeType>,
-    ) : CodeType
+    /** Generic type with type arguments (e.g., List<String>, Map<String, Int>). */
+    data class Generic(val name: String, val arguments: List<CodeType>) : CodeType
 
-    /**
-     * Nullable type (e.g., String?, User?).
-     */
-    data class Nullable(
-        val inner: CodeType,
-    ) : CodeType
+    /** Nullable type (e.g., String?, User?). */
+    data class Nullable(val inner: CodeType) : CodeType
 
     /**
      * Lambda/function type (e.g., (String) -> Int, suspend (User) -> Unit).
      *
-     * TODO Phase 10: Will be used for behavior properties like var getUserBehavior: (String) -> User?.
+     * TODO Phase 10: Will be used for behavior properties like var getUserBehavior: (String) ->
+     * User?.
      */
     data class Lambda(
         val parameters: List<CodeType>,
@@ -297,9 +275,7 @@ sealed interface CodeType {
     ) : CodeType
 }
 
-/**
- * Code modifiers (public, private, override, etc).
- */
+/** Code modifiers (public, private, override, etc). */
 enum class CodeModifier {
     PUBLIC,
     PRIVATE,
@@ -315,70 +291,35 @@ enum class CodeModifier {
     INFIX,
 }
 
-/**
- * Represents a block of code (function body, getter, etc).
- */
+/** Represents a block of code (function body, getter, etc). */
 sealed interface CodeBlock {
-    /**
-     * Single expression: `= value`
-     */
-    data class Expression(
-        val expr: CodeExpression,
-    ) : CodeBlock
+    /** Single expression: `= value` */
+    data class Expression(val expr: CodeExpression) : CodeBlock
 
-    /**
-     * Statement block: `{ statements }`
-     */
-    data class Statements(
-        val statements: List<String>,
-    ) : CodeBlock
+    /** Statement block: `{ statements }` */
+    data class Statements(val statements: List<String>) : CodeBlock
 
-    /**
-     * Empty block (for abstract members).
-     */
+    /** Empty block (for abstract members). */
     object Empty : CodeBlock
 }
 
-/**
- * Represents an expression in code.
- */
+/** Represents an expression in code. */
 sealed interface CodeExpression {
-    /**
-     * String literal: "hello"
-     */
-    data class StringLiteral(
-        val value: String,
-    ) : CodeExpression
+    /** String literal: "hello" */
+    data class StringLiteral(val value: String) : CodeExpression
 
-    /**
-     * Number literal: 42, 3.14
-     */
-    data class NumberLiteral(
-        val value: String,
-    ) : CodeExpression
+    /** Number literal: 42, 3.14 */
+    data class NumberLiteral(val value: String) : CodeExpression
 
-    /**
-     * Lambda: { it -> it * 2 }
-     */
-    data class Lambda(
-        val parameters: List<String>,
-        val body: String,
-    ) : CodeExpression
+    /** Lambda: { it -> it * 2 } */
+    data class Lambda(val parameters: List<String>, val body: String) : CodeExpression
 
-    /**
-     * Function call: emptyList()
-     */
-    data class FunctionCall(
-        val name: String,
-        val arguments: List<CodeExpression> = emptyList(),
-    ) : CodeExpression
+    /** Function call: emptyList() */
+    data class FunctionCall(val name: String, val arguments: List<CodeExpression> = emptyList()) :
+        CodeExpression
 
-    /**
-     * Raw code (escape hatch).
-     */
-    data class Raw(
-        val code: String,
-    ) : CodeExpression
+    /** Raw code (escape hatch). */
+    data class Raw(val code: String) : CodeExpression
 }
 
 /**
@@ -392,7 +333,4 @@ sealed interface CodeExpression {
  * @property name Annotation simple name (e.g., "OptIn", "Deprecated")
  * @property arguments Pre-rendered argument strings (e.g., "ExperimentalApi::class", "\"old\"")
  */
-data class CodeAnnotation(
-    val name: String,
-    val arguments: List<String> = emptyList(),
-)
+data class CodeAnnotation(val name: String, val arguments: List<String> = emptyList())

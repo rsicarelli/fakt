@@ -8,12 +8,12 @@ import com.rsicarelli.fakt.compiler.core.optimization.CompilerOptimizations
 import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.fir.cache.MetadataCacheManager
 import com.rsicarelli.fakt.compiler.fir.metadata.FirMetadataStorage
-import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for [FaktSharedContext] following GIVEN-WHEN-THEN pattern.
@@ -26,28 +26,24 @@ import kotlin.test.assertTrue
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FaktSharedContextTest {
     @Test
-    fun `GIVEN default fake annotation WHEN checking if configured THEN returns true`() =
-        runTest {
-            // GIVEN
-            val context =
-                FaktSharedContext(
-                    fakeAnnotations = listOf("com.rsicarelli.fakt.Fake"),
-                    options = FaktOptions(enabled = true),
-                    metadataStorage = FirMetadataStorage(),
-                    logger = FaktLogger.quiet(),
-                    optimizations =
-                        CompilerOptimizations(
-                            logger = FaktLogger.quiet(),
-                        ),
-                    cacheManager = MetadataCacheManager(null, null),
-                )
+    fun `GIVEN default fake annotation WHEN checking if configured THEN returns true`() = runTest {
+        // GIVEN
+        val context =
+            FaktSharedContext(
+                fakeAnnotations = listOf("com.rsicarelli.fakt.Fake"),
+                options = FaktOptions(enabled = true),
+                metadataStorage = FirMetadataStorage(),
+                logger = FaktLogger.quiet(),
+                optimizations = CompilerOptimizations(logger = FaktLogger.quiet()),
+                cacheManager = MetadataCacheManager(null, null),
+            )
 
-            // WHEN
-            val result = context.isConfiguredAnnotation("com.rsicarelli.fakt.Fake")
+        // WHEN
+        val result = context.isConfiguredAnnotation("com.rsicarelli.fakt.Fake")
 
-            // THEN
-            assertTrue(result)
-        }
+        // THEN
+        assertTrue(result)
+    }
 
     @Test
     fun `GIVEN custom annotation WHEN checking if configured THEN returns false for non-configured`() =
@@ -59,10 +55,7 @@ class FaktSharedContextTest {
                     options = FaktOptions(enabled = true),
                     metadataStorage = FirMetadataStorage(),
                     logger = FaktLogger.quiet(),
-                    optimizations =
-                        CompilerOptimizations(
-                            logger = FaktLogger.quiet(),
-                        ),
+                    optimizations = CompilerOptimizations(logger = FaktLogger.quiet()),
                     cacheManager = MetadataCacheManager(null, null),
                 )
 
@@ -76,33 +69,29 @@ class FaktSharedContextTest {
         }
 
     @Test
-    fun `GIVEN multiple annotations WHEN checking if configured THEN matches any`() =
-        runTest {
-            // GIVEN
-            val context =
-                FaktSharedContext(
-                    fakeAnnotations =
-                        listOf(
-                            "com.rsicarelli.fakt.Fake",
-                            "com.example.CustomFake",
-                            "com.test.TestFake",
-                        ),
-                    options = FaktOptions(enabled = true),
-                    metadataStorage = FirMetadataStorage(),
-                    logger = FaktLogger.quiet(),
-                    optimizations =
-                        CompilerOptimizations(
-                            logger = FaktLogger.quiet(),
-                        ),
-                    cacheManager = MetadataCacheManager(null, null),
-                )
+    fun `GIVEN multiple annotations WHEN checking if configured THEN matches any`() = runTest {
+        // GIVEN
+        val context =
+            FaktSharedContext(
+                fakeAnnotations =
+                    listOf(
+                        "com.rsicarelli.fakt.Fake",
+                        "com.example.CustomFake",
+                        "com.test.TestFake",
+                    ),
+                options = FaktOptions(enabled = true),
+                metadataStorage = FirMetadataStorage(),
+                logger = FaktLogger.quiet(),
+                optimizations = CompilerOptimizations(logger = FaktLogger.quiet()),
+                cacheManager = MetadataCacheManager(null, null),
+            )
 
-            // WHEN & THEN
-            assertTrue(context.isConfiguredAnnotation("com.rsicarelli.fakt.Fake"))
-            assertTrue(context.isConfiguredAnnotation("com.example.CustomFake"))
-            assertTrue(context.isConfiguredAnnotation("com.test.TestFake"))
-            assertFalse(context.isConfiguredAnnotation("com.other.NotConfigured"))
-        }
+        // WHEN & THEN
+        assertTrue(context.isConfiguredAnnotation("com.rsicarelli.fakt.Fake"))
+        assertTrue(context.isConfiguredAnnotation("com.example.CustomFake"))
+        assertTrue(context.isConfiguredAnnotation("com.test.TestFake"))
+        assertFalse(context.isConfiguredAnnotation("com.other.NotConfigured"))
+    }
 
     @Test
     fun `GIVEN shared context WHEN accessing metadata storage THEN returns same instance`() =
@@ -115,10 +104,7 @@ class FaktSharedContextTest {
                     options = FaktOptions(enabled = true),
                     metadataStorage = storage,
                     logger = FaktLogger.quiet(),
-                    optimizations =
-                        CompilerOptimizations(
-                            logger = FaktLogger.quiet(),
-                        ),
+                    optimizations = CompilerOptimizations(logger = FaktLogger.quiet()),
                     cacheManager = MetadataCacheManager(null, null),
                 )
 
@@ -130,35 +116,27 @@ class FaktSharedContextTest {
         }
 
     @Test
-    fun `GIVEN shared context WHEN accessing options THEN returns configured options`() =
-        runTest {
-            // GIVEN
-            val options =
-                FaktOptions(
-                    enabled = true,
-                    logLevel = LogLevel.DEBUG,
-                    outputDir = "/tmp/fakes",
-                )
-            val context =
-                FaktSharedContext(
-                    fakeAnnotations = FaktSharedContext.DEFAULT_FAKE_ANNOTATIONS,
-                    options = options,
-                    metadataStorage = FirMetadataStorage(),
-                    logger = FaktLogger.quiet(),
-                    optimizations =
-                        CompilerOptimizations(
-                            logger = FaktLogger.quiet(),
-                        ),
-                    cacheManager = MetadataCacheManager(null, null),
-                )
+    fun `GIVEN shared context WHEN accessing options THEN returns configured options`() = runTest {
+        // GIVEN
+        val options =
+            FaktOptions(enabled = true, logLevel = LogLevel.DEBUG, outputDir = "/tmp/fakes")
+        val context =
+            FaktSharedContext(
+                fakeAnnotations = FaktSharedContext.DEFAULT_FAKE_ANNOTATIONS,
+                options = options,
+                metadataStorage = FirMetadataStorage(),
+                logger = FaktLogger.quiet(),
+                optimizations = CompilerOptimizations(logger = FaktLogger.quiet()),
+                cacheManager = MetadataCacheManager(null, null),
+            )
 
-            // WHEN
-            val retrievedOptions = context.options
+        // WHEN
+        val retrievedOptions = context.options
 
-            // THEN
-            assertEquals(LogLevel.DEBUG, retrievedOptions.logLevel)
-            assertEquals("/tmp/fakes", retrievedOptions.outputDir)
-        }
+        // THEN
+        assertEquals(LogLevel.DEBUG, retrievedOptions.logLevel)
+        assertEquals("/tmp/fakes", retrievedOptions.outputDir)
+    }
 
     @Test
     fun `GIVEN default fake annotations constant WHEN accessed THEN contains official annotation`() =

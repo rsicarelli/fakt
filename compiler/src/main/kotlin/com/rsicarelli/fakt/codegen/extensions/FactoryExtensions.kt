@@ -12,9 +12,8 @@ import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 /**
  * Generates a factory function CodeFile for creating fake implementations.
  *
- * Uses type-safe DSL for clean, composable code generation.
- * The returned CodeFile contains only the function declaration (no package/imports),
- * suitable for being added to an existing file.
+ * Uses type-safe DSL for clean, composable code generation. The returned CodeFile contains only the
+ * function declaration (no package/imports), suitable for being added to an existing file.
  *
  * @param spec Configuration for the factory function
  * @param includeKDoc Whether to include KDoc documentation (default: true)
@@ -93,34 +92,23 @@ fun generateFactoryFunctionCodeFile(
  * @param includeKDoc Whether to include KDoc documentation (default: true)
  * @return Generated factory function code with optional KDoc
  */
-fun generateFactoryFunction(
-    spec: FactoryFunctionSpec,
-    includeKDoc: Boolean = true,
-): String {
+fun generateFactoryFunction(spec: FactoryFunctionSpec, includeKDoc: Boolean = true): String {
     val codeFile = generateFactoryFunctionCodeFile(spec, includeKDoc)
 
     // Extract the function declaration and render it
-    val function =
-        codeFile.declarations.firstOrNull() as? CodeFunction
-            ?: return ""
+    val function = codeFile.declarations.firstOrNull() as? CodeFunction ?: return ""
 
     val builder = CodeBuilder()
     function.renderTo(builder)
     return builder.build().trimEnd()
 }
 
-/**
- * Overload for common use cases without KDoc customization.
- */
-fun generateFactoryFunction(spec: FactoryFunctionSpec): String = generateFactoryFunction(spec, includeKDoc = true)
+/** Overload for common use cases without KDoc customization. */
+fun generateFactoryFunction(spec: FactoryFunctionSpec): String =
+    generateFactoryFunction(spec, includeKDoc = true)
 
-/**
- * Generates KDoc content (without comment markers) for factory function.
- */
-private fun generateFactoryKDocContent(
-    spec: FactoryFunctionSpec,
-    names: FactoryNames,
-): String {
+/** Generates KDoc content (without comment markers) for factory function. */
+private fun generateFactoryKDocContent(spec: FactoryFunctionSpec, names: FactoryNames): String {
     val fullKDoc =
         KDocGenerator.generateFactoryKDoc(
             interfaceName = spec.interfaceName,
@@ -134,15 +122,11 @@ private fun generateFactoryKDocContent(
         .lines()
         .drop(1) // Remove opening /**
         .dropLast(1) // Remove closing */
-        .joinToString("\n") { line ->
-            line.removePrefix(" * ").removePrefix(" *")
-        }.trim()
+        .joinToString("\n") { line -> line.removePrefix(" * ").removePrefix(" *") }
+        .trim()
 }
 
-private data class FactoryNames(
-    val interfaceName: String,
-    val typeParameters: List<String>,
-) {
+private data class FactoryNames(val interfaceName: String, val typeParameters: List<String>) {
     val fakeClassName = "Fake${interfaceName}Impl"
     val configClassName = "Fake${interfaceName}Config"
     val factoryName = "fake$interfaceName"
@@ -151,10 +135,9 @@ private data class FactoryNames(
     val hasGenerics = typeParameters.isNotEmpty()
 }
 
-private fun List<AnnotationSpec>.filterPropagatable() =
-    filter {
-        (it.simpleName == "OptIn" || it.simpleName == "Deprecated") && !it.isOptInMarker
-    }
+private fun List<AnnotationSpec>.filterPropagatable() = filter {
+    (it.simpleName == "OptIn" || it.simpleName == "Deprecated") && !it.isOptInMarker
+}
 
 /**
  * Parses type parameters for factory function generation.
@@ -164,7 +147,9 @@ private fun List<AnnotationSpec>.filterPropagatable() =
  * @param typeParameters List of type parameter strings (e.g., ["T : Comparable<T>, Serializable"])
  * @return Pair of (header parameters, where clause string)
  */
-private fun parseTypeParametersForFactory(typeParameters: List<String>): Pair<List<String>, String> {
+private fun parseTypeParametersForFactory(
+    typeParameters: List<String>
+): Pair<List<String>, String> {
     if (typeParameters.isEmpty()) {
         return emptyList<String>() to ""
     }
@@ -190,9 +175,7 @@ private fun parseTypeParametersForFactory(typeParameters: List<String>): Pair<Li
         } else {
             // Multiple constraints: use where clause
             headerParams.add(name)
-            constraintList.forEach { constraint ->
-                whereClauses.add("$name : $constraint")
-            }
+            constraintList.forEach { constraint -> whereClauses.add("$name : $constraint") }
         }
     }
 

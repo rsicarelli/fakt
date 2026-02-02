@@ -4,11 +4,11 @@ package com.rsicarelli.fakt.compiler.core.optimization
 
 import com.rsicarelli.fakt.compiler.ir.transform.IrClassGenerationMetadata
 import com.rsicarelli.fakt.compiler.ir.transform.IrGenerationMetadata
+import java.io.File
+import java.security.MessageDigest
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclaration
 import org.jetbrains.kotlin.ir.declarations.IrFile
-import java.io.File
-import java.security.MessageDigest
 
 /**
  * Builds an MD5 signature (hash) for interface, unique per-fake.

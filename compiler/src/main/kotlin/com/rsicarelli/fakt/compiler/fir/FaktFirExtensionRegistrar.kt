@@ -15,12 +15,9 @@ import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
  *
  * @property sharedContext Shared context for FIR→IR communication
  */
-class FaktFirExtensionRegistrar(
-    private val sharedContext: FaktSharedContext,
-) : FirExtensionRegistrar() {
+class FaktFirExtensionRegistrar(private val sharedContext: FaktSharedContext) :
+    FirExtensionRegistrar() {
     @Suppress("ktlint:standard:curly-spacing")
     override fun ExtensionRegistrarContext.configurePlugin() =
-        +{ session: FirSession ->
-            FaktFirCheckers.create(session, sharedContext)
-        }
+        +{ session: FirSession -> FaktFirCheckers.create(session, sharedContext) }
 }

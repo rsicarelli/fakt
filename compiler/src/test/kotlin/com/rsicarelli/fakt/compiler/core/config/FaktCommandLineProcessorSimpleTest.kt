@@ -2,19 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.core.config
 
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
-/**
- * Essential tests for FaktCommandLineProcessor focusing on core functionality.
- */
+/** Essential tests for FaktCommandLineProcessor focusing on core functionality. */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FaktCommandLineProcessorSimpleTest {
     @Test
@@ -33,7 +31,8 @@ class FaktCommandLineProcessorSimpleTest {
             val processor = FaktCommandLineProcessor()
 
             // Suppress "Check for instance is always 'true'" - intentional smoke test
-            // This documents the architectural requirement that FaktCommandLineProcessor extends CommandLineProcessor
+            // This documents the architectural requirement that FaktCommandLineProcessor extends
+            // CommandLineProcessor
             @Suppress("USELESS_IS_CHECK")
             assertTrue(processor is CommandLineProcessor, "Should extend CommandLineProcessor")
             assertNotNull(processor, "Processor instance should not be null")
@@ -51,7 +50,10 @@ class FaktCommandLineProcessorSimpleTest {
             assertTrue(optionNames.contains("enabled"), "Should include 'enabled' option")
             assertTrue(optionNames.contains("logLevel"), "Should include 'logLevel' option")
             assertTrue(optionNames.contains("outputDir"), "Should include 'outputDir' option")
-            assertTrue(optionNames.contains("sourceSetContext"), "Should include 'sourceSetContext' option")
+            assertTrue(
+                optionNames.contains("sourceSetContext"),
+                "Should include 'sourceSetContext' option",
+            )
             assertTrue(
                 optionNames.contains("enableCallHistory"),
                 "Should include 'enableCallHistory' option",
