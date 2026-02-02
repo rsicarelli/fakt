@@ -22,6 +22,8 @@ import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirClassChecker
 import org.jetbrains.kotlin.fir.declarations.FirClass
+import org.jetbrains.kotlin.fir.declarations.FirSimpleFunction
+import org.jetbrains.kotlin.fir.declarations.FirValueParameter
 import org.jetbrains.kotlin.fir.declarations.hasAnnotation
 import org.jetbrains.kotlin.fir.declarations.processAllDeclarations
 import org.jetbrains.kotlin.fir.declarations.toAnnotationClassIdSafe
@@ -405,14 +407,11 @@ internal class FakeClassChecker(private val sharedContext: FaktSharedContext) :
     }
 
     /**
-     * Extract methods from FIR class, separating abstract and open
+     * Extract methods from FIR class, separating abstract and open.
      *
      * Returns pair of (abstract methods, open methods). Uses modality to distinguish:
      * - ABSTRACT: Must be implemented by fake
      * - OPEN: Can be overridden (call super or override)
-     *
-     * @param declaration FIR class declaration
-     * @return Pair of (abstract methods, open methods)
      */
     @OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class)
     private fun extractMethods(
@@ -424,73 +423,49 @@ internal class FakeClassChecker(private val sharedContext: FaktSharedContext) :
         declaration.processAllDeclarations(session = declaration.moduleData.session) { symbol ->
             if (symbol is FirNamedFunctionSymbol) {
                 val function = symbol.fir
-                val name = function.name.asString()
+                val functionInfo = extractFunctionInfo(function)
 
-                // Extract parameters
-                // Extract default value expressions and render to code strings
-                val parameters =
-                    function.valueParameters.map { param ->
-                        val defaultValue = param.defaultValue
-                        val defaultValueCode =
-                            if (defaultValue != null) {
-                                renderDefaultValue(
-                                    defaultValue
-                                ) // null if rendering failed/not supported
-                            } else {
-                                null
-                            }
-
-                        FirParameterInfo(
-                            name = param.name.asString(),
-                            type = param.returnTypeRef.coneType.toString(),
-                            hasDefaultValue = param.defaultValue != null,
-                            defaultValueCode = defaultValueCode,
-                            isVararg = param.isVararg,
-                        )
-                    }
-
-                val returnType = function.returnTypeRef.coneType.toString()
-                val isSuspend = function.isSuspend
-                val isInline = function.isInline
-
-                // Extract function-level type parameters with bounds
-                val typeParameters =
-                    function.typeParameters.map { typeParamRef ->
-                        val typeParam = typeParamRef.symbol.fir
-                        val bounds =
-                            typeParam.bounds.map { boundRef -> boundRef.coneType.toString() }
-                        FirTypeParameterInfo(name = typeParam.name.asString(), bounds = bounds)
-                    }
-
-                // Build typeParameterBounds map
-                val typeParameterBounds =
-                    typeParameters.associate { typeParam ->
-                        typeParam.name to typeParam.bounds.firstOrNull().orEmpty()
-                    }
-
-                val functionInfo =
-                    FirFunctionInfo(
-                        name = name,
-                        parameters = parameters,
-                        returnType = returnType,
-                        isSuspend = isSuspend,
-                        isInline = isInline,
-                        typeParameters = typeParameters,
-                        typeParameterBounds = typeParameterBounds,
-                    )
-
-                // Distinguish abstract vs open using modality
                 when (function.modality) {
                     Modality.ABSTRACT -> abstractMethods.add(functionInfo)
                     Modality.OPEN -> openMethods.add(functionInfo)
-                    else -> {
-                        // FINAL or SEALED methods shouldn't be fakeable,
-                        // but skip them if they appear
-                    }
+                    else -> Unit // FINAL or SEALED methods are skipped
                 }
             }
         }
 
-        return Pair(abstractMethods, openMethods)
+        return abstractMethods to openMethods
     }
+
+    /** Extract function metadata from FIR function declaration. */
+    @OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class)
+    private fun extractFunctionInfo(function: FirSimpleFunction): FirFunctionInfo {
+        val parameters = function.valueParameters.map(::extractParameterInfo)
+        val typeParameters =
+            function.typeParameters.map { typeParamRef ->
+                val typeParam = typeParamRef.symbol.fir
+                val bounds = typeParam.bounds.map { it.coneType.toString() }
+                FirTypeParameterInfo(name = typeParam.name.asString(), bounds = bounds)
+            }
+
+        return FirFunctionInfo(
+            name = function.name.asString(),
+            parameters = parameters,
+            returnType = function.returnTypeRef.coneType.toString(),
+            isSuspend = function.isSuspend,
+            isInline = function.isInline,
+            typeParameters = typeParameters,
+            typeParameterBounds =
+                typeParameters.associate { it.name to it.bounds.firstOrNull().orEmpty() },
+        )
+    }
+
+    /** Extract parameter metadata from FIR value parameter. */
+    private fun extractParameterInfo(param: FirValueParameter): FirParameterInfo =
+        FirParameterInfo(
+            name = param.name.asString(),
+            type = param.returnTypeRef.coneType.toString(),
+            hasDefaultValue = param.defaultValue != null,
+            defaultValueCode = param.defaultValue?.let(::renderDefaultValue),
+            isVararg = param.isVararg,
+        )
 }

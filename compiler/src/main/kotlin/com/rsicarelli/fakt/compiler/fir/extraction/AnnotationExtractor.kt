@@ -198,23 +198,20 @@ object AnnotationExtractor {
     private fun extractClassReference(
         expression: FirGetClassCall
     ): FirAnnotationArgument.ClassReference? {
-        // Get the argument of ::class using singular `argument` property
         val argument = expression.argument
 
         // For class literals, the argument is typically a FirResolvedQualifier
-        if (argument is FirResolvedQualifier) {
-            val classId = argument.classId ?: return null
+        (argument as? FirResolvedQualifier)?.classId?.let { classId ->
             return FirAnnotationArgument.ClassReference(classId.asString())
         }
 
         // Fallback: try to get from the resolved type
-        return try {
-            val resolvedType = argument.resolvedType as? ConeClassLikeType ?: return null
-            val classId = resolvedType.lookupTag.classId
-            FirAnnotationArgument.ClassReference(classId.asString())
-        } catch (_: Exception) {
-            null
-        }
+        return runCatching {
+                (argument.resolvedType as? ConeClassLikeType)?.lookupTag?.classId?.let {
+                    FirAnnotationArgument.ClassReference(it.asString())
+                }
+            }
+            .getOrNull()
     }
 
     /**
@@ -241,16 +238,15 @@ object AnnotationExtractor {
      */
     private fun extractEnumValue(
         expression: FirPropertyAccessExpression
-    ): FirAnnotationArgument.EnumValue? {
-        val enumEntrySymbol = expression.calleeReference.toResolvedEnumEntrySymbol() ?: return null
-        val enumClassId = enumEntrySymbol.callableId.classId ?: return null
-        val entryName = enumEntrySymbol.name.asString()
-
-        return FirAnnotationArgument.EnumValue(
-            enumClassId = enumClassId.asString(),
-            entryName = entryName,
-        )
-    }
+    ): FirAnnotationArgument.EnumValue? =
+        expression.calleeReference.toResolvedEnumEntrySymbol()?.let { symbol ->
+            symbol.callableId.classId?.let { classId ->
+                FirAnnotationArgument.EnumValue(
+                    enumClassId = classId.asString(),
+                    entryName = symbol.name.asString(),
+                )
+            }
+        }
 
     /**
      * Extract array value from FirArrayLiteral.
