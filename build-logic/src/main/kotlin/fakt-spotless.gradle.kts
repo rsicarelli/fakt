@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import com.diffplug.gradle.spotless.SpotlessExtension
+import com.rsicarelli.fakt.conventions.libs
+import com.rsicarelli.fakt.conventions.version
 
 /**
  * Spotless formatting convention plugin with ktfmt.
@@ -18,10 +20,9 @@ plugins {
     id("com.diffplug.spotless")
 }
 
-// Versions must match gradle/libs.versions.toml
-// Hardcoded to avoid eager property resolution (Configuration Cache friendly)
-private val ktfmtVersion = "0.61"
-private val gjfVersion = "1.33.0"
+// Read versions from gradle/libs.versions.toml (single source of truth)
+val ktfmtVersion = libs.version("ktfmt")
+val gjfVersion = libs.version("google-java-format")
 
 configure<SpotlessExtension> {
     format("misc") {
