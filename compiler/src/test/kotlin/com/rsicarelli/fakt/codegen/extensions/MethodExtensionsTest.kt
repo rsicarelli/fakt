@@ -5,10 +5,10 @@ package com.rsicarelli.fakt.codegen.extensions
 import com.rsicarelli.fakt.codegen.builder.codeFile
 import com.rsicarelli.fakt.codegen.renderer.CodeBuilder
 import com.rsicarelli.fakt.codegen.renderer.renderTo
-import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertFalse
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for method extension functions.
@@ -23,11 +23,7 @@ class MethodExtensionsTest {
         val file =
             codeFile("com.example") {
                 klass("FakeServiceImpl") {
-                    overrideMethod(
-                        name = "getValue",
-                        params = emptyList(),
-                        returnType = "String",
-                    )
+                    overrideMethod(name = "getValue", params = emptyList(), returnType = "String")
                 }
             }
 
@@ -49,7 +45,12 @@ class MethodExtensionsTest {
                 klass("FakeServiceImpl") {
                     overrideMethod(
                         name = "compute",
-                        params = listOf(Triple("x", "Int", false), Triple("y", "String", false), Triple("flag", "Boolean", false)),
+                        params =
+                            listOf(
+                                Triple("x", "Int", false),
+                                Triple("y", "String", false),
+                                Triple("flag", "Boolean", false),
+                            ),
                         returnType = "Result<Unit>",
                     )
                 }
@@ -61,7 +62,10 @@ class MethodExtensionsTest {
         val result = builder.build()
 
         // THEN
-        assertContains(result, "override fun compute(x: Int, y: String, flag: Boolean): Result<Unit> {")
+        assertContains(
+            result,
+            "override fun compute(x: Int, y: String, flag: Boolean): Result<Unit> {",
+        )
         assertContains(result, "return computeBehavior(x, y, flag)")
     }
 
@@ -185,7 +189,10 @@ class MethodExtensionsTest {
         val result = builder.build()
 
         // THEN
-        assertContains(result, "internal fun configureGetValue(behavior: (String) -> User?) = run {")
+        assertContains(
+            result,
+            "internal fun configureGetValue(behavior: (String) -> User?) = run {",
+        )
         assertContains(result, "getValueBehavior = behavior")
     }
 
@@ -210,7 +217,10 @@ class MethodExtensionsTest {
         val result = builder.build()
 
         // THEN
-        assertContains(result, "internal fun configureSaveUser(behavior: suspend (User) -> Result<Unit>) = run {")
+        assertContains(
+            result,
+            "internal fun configureSaveUser(behavior: suspend (User) -> Result<Unit>) = run {",
+        )
         assertContains(result, "saveUserBehavior = behavior")
     }
 
@@ -358,7 +368,10 @@ class MethodExtensionsTest {
         val result = builder.build()
 
         // THEN
-        assertContains(result, "_createOrderCalls.update { it + OrderServiceCreateOrderCall(userId, amount) }")
+        assertContains(
+            result,
+            "_createOrderCalls.update { it + OrderServiceCreateOrderCall(userId, amount) }",
+        )
     }
 
     @Test

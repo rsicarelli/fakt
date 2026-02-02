@@ -11,7 +11,6 @@ import com.rsicarelli.fakt.compiler.core.optimization.buildSignature
 import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.core.telemetry.UnifiedFakeMetrics
 import com.rsicarelli.fakt.compiler.core.telemetry.UnifiedMetricsTree
-import com.rsicarelli.fakt.compiler.core.telemetry.calculateLOC
 import com.rsicarelli.fakt.compiler.core.telemetry.measureTimeNanos
 import com.rsicarelli.fakt.compiler.core.types.TypeInfo
 import com.rsicarelli.fakt.compiler.core.types.createTypeResolution
@@ -71,8 +70,7 @@ private data class TraceLogParams(
  * - Uses FirToIrTransformer to convert FIR metadata → IrGenerationMetadata
  * - Generates Kotlin code using CodeGenerator modules
  *
- * **Code Generation**:
- * For each @Fake annotated interface/class, generates:
+ * **Code Generation**: For each @Fake annotated interface/class, generates:
  * - FakeXxxImpl.kt - Implementation class with configurable behavior properties
  * - fakeXxx() - Type-safe factory function
  * - FakeXxxConfig - Configuration DSL class
@@ -85,14 +83,14 @@ private data class TraceLogParams(
  * - Logging utilities use synchronized blocks to ensure single initialization
  * - All instance state is effectively immutable after construction
  *
- * **Concurrency**: Kotlin compiler may process modules in parallel. This extension
- * handles concurrent invocations safely through synchronized state management.
+ * **Concurrency**: Kotlin compiler may process modules in parallel. This extension handles
+ * concurrent invocations safely through synchronized state management.
  *
- * @property sharedContext Shared context for FIR→IR communication, containing logger, telemetry, and configuration
+ * @property sharedContext Shared context for FIR→IR communication, containing logger, telemetry,
+ *   and configuration
  */
-class UnifiedFaktIrGenerationExtension(
-    private val sharedContext: FaktSharedContext,
-) : IrGenerationExtension {
+class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedContext) :
+    IrGenerationExtension {
     // Extract logger and telemetry from sharedContext
     private val logger: FaktLogger = sharedContext.logger
 
@@ -102,7 +100,9 @@ class UnifiedFaktIrGenerationExtension(
     // Get SourceSetContext from compiler options (provided by Gradle plugin)
     private val sourceSetContext =
         sharedContext.options.sourceSetContext
-            ?: error("SourceSetContext is required. Ensure Gradle plugin version matches compiler plugin.")
+            ?: error(
+                "SourceSetContext is required. Ensure Gradle plugin version matches compiler plugin."
+            )
 
     // Extracted modules following DRY principles
     private val typeResolver = createTypeResolution()
@@ -122,10 +122,7 @@ class UnifiedFaktIrGenerationExtension(
             logger = logger,
         )
 
-    override fun generate(
-        moduleFragment: IrModuleFragment,
-        pluginContext: IrPluginContext,
-    ) {
+    override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
         try {
             generateFromFirMetadata(moduleFragment)
         } catch (e: Exception) {
@@ -141,9 +138,8 @@ class UnifiedFaktIrGenerationExtension(
      * 2. IR phase transforms FIR strings → IrTypes and generates code
      * 3. NO redundant analysis or validation occurs
      *
-     * **KMP Cross-Compilation Caching**:
-     * In producer mode (metadata compilation), writes FIR cache after analysis completes.
-     * This enables platform compilations to skip redundant FIR analysis.
+     * **KMP Cross-Compilation Caching**: In producer mode (metadata compilation), writes FIR cache
+     * after analysis completes. This enables platform compilations to skip redundant FIR analysis.
      *
      * **Previous Anti-Pattern (Fixed in v1.3.0)**:
      * - ❌ Converted FIR metadata to IrClass instances
@@ -167,7 +163,6 @@ class UnifiedFaktIrGenerationExtension(
      * - Never throws exceptions - handles errors gracefully
      *
      * @param moduleFragment IR module for code generation context and file creation
-     *
      * @see FirToIrTransformer for the transformation logic
      * @see processInterfacesFromMetadata for generation without re-analysis
      * @see processClassesFromMetadata for class generation
@@ -211,7 +206,7 @@ class UnifiedFaktIrGenerationExtension(
                     val irClass = irClassMap[firInterface.classId]
                     if (irClass == null) {
                         logger.warn(
-                            "Could not find IrClass for validated interface: ${firInterface.classId.asFqNameString()}",
+                            "Could not find IrClass for validated interface: ${firInterface.classId.asFqNameString()}"
                         )
                         null
                     } else {
@@ -228,7 +223,7 @@ class UnifiedFaktIrGenerationExtension(
                     if (irClass == null) {
                         logger.warn(
                             "IrClass not found for ${firClassMetadata.simpleName}. " +
-                                "Skipping class transformation.",
+                                "Skipping class transformation."
                         )
                         null
                     } else {
@@ -243,7 +238,11 @@ class UnifiedFaktIrGenerationExtension(
         // Collect unified metrics (FIR + IR) for batch logging
         val interfaceResult =
             if (interfaceMetadata.isNotEmpty()) {
-                processInterfacesFromMetadata(interfaceMetadata, firMetricsMap, collectDetailedMetrics)
+                processInterfacesFromMetadata(
+                    interfaceMetadata,
+                    firMetricsMap,
+                    collectDetailedMetrics,
+                )
             } else {
                 ProcessingResult(emptyList(), 0)
             }
@@ -273,16 +272,16 @@ class UnifiedFaktIrGenerationExtension(
                 transformationTimeNanos = transformationTimeNanos,
                 savedFirTimeNanos = savedFirTimeNanos,
                 aggregateIrTimeNanos = interfaceResult.totalTimeNanos + classResult.totalTimeNanos,
-            ),
+            )
         )
     }
 
     /**
      * Build a map of ClassId → IrClass for fast O(1) lookup during FIR→IR transformation.
      *
-     * This method walks the entire module fragment to index all classes and interfaces,
-     * including nested classes. The map enables efficient lookup when matching FIR metadata
-     * to IR nodes without repeated tree traversal.
+     * This method walks the entire module fragment to index all classes and interfaces, including
+     * nested classes. The map enables efficient lookup when matching FIR metadata to IR nodes
+     * without repeated tree traversal.
      *
      * **Performance**:
      * - Full module traversal: O(n) where n = total classes in module
@@ -290,16 +289,14 @@ class UnifiedFaktIrGenerationExtension(
      * - Typical cost: 5-15ms for modules with 1000+ classes
      * - Map lookup: O(1) after construction
      *
-     * **ClassId Construction**:
-     * Manually constructs ClassId from IrClass properties because IrClass doesn't
-     * expose ClassId directly. Uses:
+     * **ClassId Construction**: Manually constructs ClassId from IrClass properties because IrClass
+     * doesn't expose ClassId directly. Uses:
      * - packageFqName: Package of the class
      * - name: Simple class name
      * - isLocal = false: Top-level and nested classes only (no local classes)
      *
-     * **Thread Safety**:
-     * Uses local mutableMap - safe for concurrent calls with different module fragments.
-     * Returned map is immutable after construction.
+     * **Thread Safety**: Uses local mutableMap - safe for concurrent calls with different module
+     * fragments. Returned map is immutable after construction.
      *
      * @param moduleFragment IR module to scan for all class declarations
      * @return Immutable map from ClassId to IrClass for fast lookup
@@ -323,7 +320,8 @@ class UnifiedFaktIrGenerationExtension(
                     val nestedClassId =
                         ClassId(
                             packageFqName = irClass.packageFqName ?: FqName.ROOT,
-                            relativeClassName = FqName("${irClass.name.asString()}.${nestedClass.name.asString()}"),
+                            relativeClassName =
+                                FqName("${irClass.name.asString()}.${nestedClass.name.asString()}"),
                             isLocal = false,
                         )
                     map[nestedClassId] = nestedClass
@@ -337,8 +335,8 @@ class UnifiedFaktIrGenerationExtension(
     /**
      * Build FIR metrics map from validated interfaces and classes.
      *
-     * Extracts timing and metadata from FIR phase to later merge with IR generation metrics.
-     * This enables unified logging showing both FIR analysis and IR generation in one tree.
+     * Extracts timing and metadata from FIR phase to later merge with IR generation metrics. This
+     * enables unified logging showing both FIR analysis and IR generation in one tree.
      *
      * @param validatedInterfaces Interfaces validated in FIR phase
      * @param validatedClasses Classes validated in FIR phase
@@ -415,14 +413,14 @@ class UnifiedFaktIrGenerationExtension(
     /**
      * Process interfaces from IrGenerationMetadata (NO re-analysis).
      *
-     * This method replaces the anti-pattern of passing IrClass to processInterfaces(),
-     * which triggered analyzeInterfaceDynamically() and re-analyzed what FIR already did.
+     * This method replaces the anti-pattern of passing IrClass to processInterfaces(), which
+     * triggered analyzeInterfaceDynamically() and re-analyzed what FIR already did.
      *
-     * Collects unified metrics (FIR + IR) for batch logging, including cache hits.
-     * Cache hits appear in the trace with fast IR times (~5-50µs vs ~500µs-5ms for fresh generation).
+     * Collects unified metrics (FIR + IR) for batch logging, including cache hits. Cache hits
+     * appear in the trace with fast IR times (~5-50µs vs ~500µs-5ms for fresh generation).
      *
-     * **Performance Optimization**:
-     * When `collectDetailedMetrics` is false (INFO/QUIET level), skips:
+     * **Performance Optimization**: When `collectDetailedMetrics` is false (INFO/QUIET level),
+     * skips:
      * - Per-fake `UnifiedFakeMetrics` objects
      * - LOC calculation (`calculateLOC` / file I/O)
      * - Per-fake `measureTimeNanos` calls
@@ -491,10 +489,11 @@ class UnifiedFaktIrGenerationExtension(
             // Get FIR metrics for this interface (only needed for detailed metrics)
             val firMetrics =
                 if (collectDetailedMetrics) {
-                    firMetricsMap[interfaceName] ?: run {
-                        logger.warn("No FIR metrics found for $interfaceName - skipping")
-                        continue
-                    }
+                    firMetricsMap[interfaceName]
+                        ?: run {
+                            logger.warn("No FIR metrics found for $interfaceName - skipping")
+                            continue
+                        }
                 } else {
                     null
                 }
@@ -510,7 +509,7 @@ class UnifiedFaktIrGenerationExtension(
             // Pass plugin default for call history resolution
             val interfaceAnalysis =
                 metadata.toInterfaceAnalysis(
-                    enableCallHistoryDefault = sharedContext.options.enableCallHistoryDefault,
+                    enableCallHistoryDefault = sharedContext.options.enableCallHistoryDefault
                 )
 
             // Validate pattern (reuses existing validation logic)
@@ -545,7 +544,7 @@ class UnifiedFaktIrGenerationExtension(
                         firMemberCount = firMetrics.memberCount,
                         irTimeNanos = generationTimeNanos,
                         irLOC = generatedCode.calculateTotalLOC(),
-                    ),
+                    )
                 )
             }
         }
@@ -560,15 +559,15 @@ class UnifiedFaktIrGenerationExtension(
     /**
      * Process abstract classes from IrClassGenerationMetadata (NO re-analysis).
      *
-     * **Note**: Currently combines abstract and open members since existing
-     * generators treat all members the same way (all need implementation/override).
-     * Future enhancements may support super delegation for open members.
+     * **Note**: Currently combines abstract and open members since existing generators treat all
+     * members the same way (all need implementation/override). Future enhancements may support
+     * super delegation for open members.
      *
-     * Collects unified metrics (FIR + IR) for batch logging, including cache hits.
-     * Cache hits appear in the trace with fast IR times (~5-50µs vs ~500µs-5ms for fresh generation).
+     * Collects unified metrics (FIR + IR) for batch logging, including cache hits. Cache hits
+     * appear in the trace with fast IR times (~5-50µs vs ~500µs-5ms for fresh generation).
      *
-     * **Performance Optimization**:
-     * When `collectDetailedMetrics` is false (INFO/QUIET level), skips:
+     * **Performance Optimization**: When `collectDetailedMetrics` is false (INFO/QUIET level),
+     * skips:
      * - Per-fake `UnifiedFakeMetrics` objects
      * - LOC calculation (`calculateLOC` / file I/O)
      * - Per-fake `measureTimeNanos` calls
@@ -637,10 +636,11 @@ class UnifiedFaktIrGenerationExtension(
             // Get FIR metrics for this class (only needed for detailed metrics)
             val firMetrics =
                 if (collectDetailedMetrics) {
-                    firMetricsMap[className] ?: run {
-                        logger.warn("No FIR metrics found for class $className - skipping")
-                        continue
-                    }
+                    firMetricsMap[className]
+                        ?: run {
+                            logger.warn("No FIR metrics found for class $className - skipping")
+                            continue
+                        }
                 } else {
                     null
                 }
@@ -656,7 +656,7 @@ class UnifiedFaktIrGenerationExtension(
             // Pass plugin default for call history resolution
             val classAnalysis =
                 metadata.toClassAnalysis(
-                    enableCallHistoryDefault = sharedContext.options.enableCallHistoryDefault,
+                    enableCallHistoryDefault = sharedContext.options.enableCallHistoryDefault
                 )
 
             // Generate fake implementation with timing
@@ -683,7 +683,7 @@ class UnifiedFaktIrGenerationExtension(
                         firMemberCount = firMetrics.memberCount,
                         irTimeNanos = generationTimeNanos,
                         irLOC = generatedCode.calculateTotalLOC(),
-                    ),
+                    )
                 )
             }
         }
@@ -750,17 +750,16 @@ class UnifiedFaktIrGenerationExtension(
     /**
      * Write FIR metadata cache in producer mode.
      *
-     * **KMP Cross-Compilation Optimization**:
-     * In producer mode (metadata compilation), writes validated FIR metadata to cache file.
-     * Platform compilations can then read this cache and skip redundant FIR analysis.
+     * **KMP Cross-Compilation Optimization**: In producer mode (metadata compilation), writes
+     * validated FIR metadata to cache file. Platform compilations can then read this cache and skip
+     * redundant FIR analysis.
      *
-     * **Call Timing**:
-     * Called at the start of IR generation, after FIR analysis has completed
-     * and FirMetadataStorage is fully populated.
+     * **Call Timing**: Called at the start of IR generation, after FIR analysis has completed and
+     * FirMetadataStorage is fully populated.
      *
-     * **Producer Mode**: metadataOutputPath is set (writes cache)
-     * **Consumer Mode**: metadataCachePath is set (cache already loaded in FIR phase)
-     * **Non-KMP/Disabled**: Neither path set (no caching)
+     * **Producer Mode**: metadataOutputPath is set (writes cache) **Consumer Mode**:
+     * metadataCachePath is set (cache already loaded in FIR phase) **Non-KMP/Disabled**: Neither
+     * path set (no caching)
      */
     private fun writeCacheIfProducer() {
         val cacheManager = sharedContext.cacheManager ?: return
@@ -773,7 +772,9 @@ class UnifiedFaktIrGenerationExtension(
             // Log summary once at end of IR phase
             cacheManager.getLastWriteResult()?.let { result ->
                 val time = TimeFormatter.format(result.durationNanos)
-                logger.info("Cache written: ${result.interfaceCount} interfaces, ${result.classCount} classes ($time)")
+                logger.info(
+                    "Cache written: ${result.interfaceCount} interfaces, ${result.classCount} classes ($time)"
+                )
             }
         } catch (e: Exception) {
             // Cache write failure is non-fatal - compilation continues
@@ -784,17 +785,14 @@ class UnifiedFaktIrGenerationExtension(
     /**
      * Selects the output directory based on the source set name.
      *
-     * This ensures cache checks use the SAME directory as code generation.
-     * Mirrors the logic in CodeGenerator.selectOutputDirectory().
+     * This ensures cache checks use the SAME directory as code generation. Mirrors the logic in
+     * CodeGenerator.selectOutputDirectory().
      *
      * @param sourceSourceSet Source set where interface was defined (e.g., "commonMain", null)
      * @param context Context with Gradle-provided paths
      * @return Absolute path to output directory
      */
-    private fun selectOutputDirectory(
-        sourceSourceSet: String?,
-        context: SourceSetContext,
-    ): String {
+    private fun selectOutputDirectory(sourceSourceSet: String?, context: SourceSetContext): String {
         // If we don't know the source set, use the default output directory
         if (sourceSourceSet == null) {
             return context.outputDirectory

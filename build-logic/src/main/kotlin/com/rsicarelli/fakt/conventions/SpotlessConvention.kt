@@ -19,14 +19,13 @@ import org.gradle.kotlin.dsl.configure
  * Configure Spotless predeclare with ktfmt and Google Java Format.
  *
  * Configuration Cache Friendly:
- * - Uses version catalog directly (no eager property access)
- * - Versions are hardcoded to match libs.versions.toml
+ * - Uses version catalog (single source of truth)
+ * - No eager property access
  */
 fun Project.applySpotlessPredeclare() {
-    // Versions must match gradle/libs.versions.toml
-    // Hardcoded to avoid eager property resolution (Configuration Cache friendly)
-    val ktfmtVersion = "0.56"
-    val gjfVersion = "1.28.0"
+    // Read versions from gradle/libs.versions.toml (single source of truth)
+    val ktfmtVersion = libs.version("ktfmt")
+    val gjfVersion = libs.version("google-java-format")
 
     configure<SpotlessExtension> {
         predeclareDeps()
@@ -34,10 +33,10 @@ fun Project.applySpotlessPredeclare() {
 
     configure<SpotlessExtensionPredeclare> {
         kotlin {
-            ktfmt(ktfmtVersion).googleStyle().configure { it.setRemoveUnusedImports(true) }
+            ktfmt(ktfmtVersion).kotlinlangStyle().configure { it.setRemoveUnusedImports(true) }
         }
         kotlinGradle {
-            ktfmt(ktfmtVersion).googleStyle().configure { it.setRemoveUnusedImports(true) }
+            ktfmt(ktfmtVersion).kotlinlangStyle().configure { it.setRemoveUnusedImports(true) }
         }
         java {
             googleJavaFormat(gjfVersion).reorderImports(true).reflowLongStrings(true)

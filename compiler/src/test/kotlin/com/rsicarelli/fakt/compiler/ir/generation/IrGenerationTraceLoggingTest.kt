@@ -5,9 +5,9 @@ package com.rsicarelli.fakt.compiler.ir.generation
 import com.rsicarelli.fakt.compiler.api.LogLevel
 import com.rsicarelli.fakt.compiler.core.telemetry.UnifiedFakeMetrics
 import com.rsicarelli.fakt.compiler.core.telemetry.UnifiedMetricsTree
+import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import kotlin.test.assertTrue
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class IrGenerationTraceLoggingTest {
@@ -171,7 +171,10 @@ class IrGenerationTraceLoggingTest {
         // Should show all fake impl names
         assertTrue(output.contains("FakeUserServiceImpl"), "Should show FakeUserServiceImpl")
         assertTrue(output.contains("FakeRepositoryImpl"), "Should show FakeRepositoryImpl")
-        assertTrue(output.contains("FakeAsyncDataServiceImpl"), "Should show FakeAsyncDataServiceImpl")
+        assertTrue(
+            output.contains("FakeAsyncDataServiceImpl"),
+            "Should show FakeAsyncDataServiceImpl",
+        )
         assertTrue(output.contains("FakeKeyValueCacheImpl"), "Should show FakeKeyValueCacheImpl")
         assertTrue(output.contains("FakeFileRepositoryImpl"), "Should show FakeFileRepositoryImpl")
     }
@@ -189,7 +192,7 @@ class IrGenerationTraceLoggingTest {
                     firMemberCount = 6,
                     irTimeNanos = 200,
                     irLOC = 83,
-                ),
+                )
             )
         val classMetrics = emptyList<UnifiedFakeMetrics>()
 
@@ -210,9 +213,7 @@ class IrGenerationTraceLoggingTest {
         assertTrue(output.contains("83 LOC"), "Should show 83 LOC")
     }
 
-    /**
-     * Testable version of logUnifiedTrace that accepts a TestLogger and uses UnifiedMetricsTree
-     */
+    /** Testable version of logUnifiedTrace that accepts a TestLogger and uses UnifiedMetricsTree */
     private fun logUnifiedTraceTestable(
         logger: TestLogger,
         interfaceMetrics: List<UnifiedFakeMetrics>,
@@ -220,18 +221,12 @@ class IrGenerationTraceLoggingTest {
     ) {
         if (logger.logLevel < LogLevel.DEBUG) return
 
-        val tree =
-            UnifiedMetricsTree(
-                interfaces = interfaceMetrics,
-                classes = classMetrics,
-            )
+        val tree = UnifiedMetricsTree(interfaces = interfaceMetrics, classes = classMetrics)
 
         logger.debug(tree.toTreeString())
     }
 
-    /**
-     * Test message collector that captures messages for verification
-     */
+    /** Test message collector that captures messages for verification */
     private class TestMessageCollector : org.jetbrains.kotlin.cli.common.messages.MessageCollector {
         val messages = mutableListOf<String>()
 
@@ -250,16 +245,11 @@ class IrGenerationTraceLoggingTest {
         }
     }
 
-    /**
-     * Test logger wrapper
-     */
-    private class TestLogger(
-        logLevel: LogLevel,
-    ) {
+    /** Test logger wrapper */
+    private class TestLogger(logLevel: LogLevel) {
         private val collector = TestMessageCollector()
         private val logger =
-            com.rsicarelli.fakt.compiler.core.telemetry
-                .FaktLogger(collector, logLevel)
+            com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger(collector, logLevel)
 
         val debugMessages: List<String>
             get() = collector.messages

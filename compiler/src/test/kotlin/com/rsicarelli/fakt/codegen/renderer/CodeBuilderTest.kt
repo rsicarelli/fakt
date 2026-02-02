@@ -47,9 +47,7 @@ class CodeBuilderTest {
 
         // WHEN
         builder.appendLine("class Foo {")
-        builder.indent {
-            appendLine("val x = 1")
-        }
+        builder.indent { appendLine("val x = 1") }
         builder.appendLine("}")
 
         // THEN
@@ -59,7 +57,8 @@ class CodeBuilderTest {
                 val x = 1
             }
 
-            """.trimIndent()
+            """
+                .trimIndent()
         assertEquals(expected, builder.build())
     }
 
@@ -69,11 +68,7 @@ class CodeBuilderTest {
         val builder = CodeBuilder()
 
         // WHEN
-        builder.block("class Outer") {
-            block("class Inner") {
-                appendLine("val x = 1")
-            }
-        }
+        builder.block("class Outer") { block("class Inner") { appendLine("val x = 1") } }
 
         // THEN
         val expected =
@@ -84,7 +79,8 @@ class CodeBuilderTest {
                 }
             }
 
-            """.trimIndent()
+            """
+                .trimIndent()
         assertEquals(expected, builder.build())
     }
 
@@ -94,9 +90,7 @@ class CodeBuilderTest {
         val builder = CodeBuilder()
 
         // WHEN
-        builder.block("fun test()") {
-            appendLine("return 42")
-        }
+        builder.block("fun test()") { appendLine("return 42") }
 
         // THEN
         val expected =
@@ -105,7 +99,8 @@ class CodeBuilderTest {
                 return 42
             }
 
-            """.trimIndent()
+            """
+                .trimIndent()
         assertEquals(expected, builder.build())
     }
 
@@ -129,11 +124,7 @@ class CodeBuilderTest {
         val builder = CodeBuilder()
 
         // WHEN - Simulate large generation
-        repeat(100) { i ->
-            builder.block("class Class$i") {
-                appendLine("val value = $i")
-            }
-        }
+        repeat(100) { i -> builder.block("class Class$i") { appendLine("val value = $i") } }
 
         // THEN - Should complete without OOM and contain all classes
         val result = builder.build()
@@ -151,9 +142,7 @@ class CodeBuilderTest {
         builder.appendLine("level 0")
         builder.indent {
             appendLine("level 1")
-            indent {
-                appendLine("level 2")
-            }
+            indent { appendLine("level 2") }
             appendLine("back to level 1")
         }
         builder.appendLine("back to level 0")
@@ -167,7 +156,8 @@ class CodeBuilderTest {
                 back to level 1
             back to level 0
 
-            """.trimIndent()
+            """
+                .trimIndent()
         assertEquals(expected, builder.build())
     }
 

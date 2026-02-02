@@ -24,10 +24,8 @@ clean:
 	@find samples -maxdepth 2 -type d -name "build" -exec rm -rf {} + 2>/dev/null || true
 
 format:
-	@echo "✨ Formatting code with Spotless..."
+	@echo "✨ Formatting code with ktfmt (via Spotless)..."
 	./gradlew spotlessApply
-	@echo "✨ Formatting code with ktlint..."
-	./gradlew ktlintFormat
 
 # Compiler plugin specific
 shadowJar:
@@ -58,8 +56,8 @@ test-kmp-multi-target:
 validate:
 	@echo "🔍 Running comprehensive validation..."
 	@echo ""
-	@echo "1️⃣ Formatting and linting..."
-	./gradlew spotlessCheck ktlintCheck
+	@echo "1️⃣ Formatting check..."
+	./gradlew spotlessCheck
 	@echo ""
 	@echo "2️⃣ Static analysis..."
 	./gradlew detekt
@@ -109,7 +107,7 @@ help:
 	@echo "  test            - Run all tests"
 	@echo "  compile         - Compile Kotlin sources"
 	@echo "  clean           - Clean build artifacts"
-	@echo "  format          - Format code with Spotless + ktlint"
+	@echo "  format          - Format code with ktfmt (via Spotless)"
 	@echo ""
 	@echo "  shadowJar       - Build compiler plugin JAR (debug only)"
 	@echo "  publish-local   - Publish to Maven Local (⭐ use this for development!)"

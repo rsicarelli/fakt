@@ -8,8 +8,8 @@ import com.rsicarelli.fakt.codegen.renderer.CodeBuilder
 import com.rsicarelli.fakt.codegen.renderer.render
 import com.rsicarelli.fakt.codegen.renderer.renderTo
 import com.rsicarelli.fakt.codegen.strategy.DefaultValueResolver
-import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Integration tests for suspend functions and edge cases.
@@ -76,7 +76,11 @@ class SuspendAndEdgeCasesTest : IntegrationTestBase() {
         val result = builder.build()
 
         // THEN
-        assertContains("Suspend with Result", "override suspend fun saveUser(user: User): Result<Unit>", result)
+        assertContains(
+            "Suspend with Result",
+            "override suspend fun saveUser(user: User): Result<Unit>",
+            result,
+        )
     }
 
     // ===========================================
@@ -87,11 +91,7 @@ class SuspendAndEdgeCasesTest : IntegrationTestBase() {
     fun `GIVEN empty interface WHEN generating THEN creates minimal fake`() {
         // GIVEN
         val file =
-            codeFile("com.example") {
-                klass("FakeEmptyServiceImpl") {
-                    implements("EmptyService")
-                }
-            }
+            codeFile("com.example") { klass("FakeEmptyServiceImpl") { implements("EmptyService") } }
 
         // WHEN
         val builder = CodeBuilder()
@@ -99,7 +99,8 @@ class SuspendAndEdgeCasesTest : IntegrationTestBase() {
         val result = builder.build()
 
         // THEN
-        val expected = """
+        val expected =
+            """
             package com.example
 
             class FakeEmptyServiceImpl : EmptyService {
@@ -237,7 +238,11 @@ class SuspendAndEdgeCasesTest : IntegrationTestBase() {
         assertContains("Package", "package com.example.test", result)
         assertContains("Import User", "import com.example.User", result)
         assertContains("Import StateFlow", "import kotlinx.coroutines.flow.StateFlow", result)
-        assertContains("Import MutableStateFlow", "import kotlinx.coroutines.flow.MutableStateFlow", result)
+        assertContains(
+            "Import MutableStateFlow",
+            "import kotlinx.coroutines.flow.MutableStateFlow",
+            result,
+        )
         assertContains("Class declaration", "class FakeUserServiceImpl : UserService", result)
         assertContains("Simple method behavior", "private var getUserBehavior", result)
         assertContains("Collection method behavior", "private var getAllUsersBehavior", result)
@@ -250,9 +255,7 @@ class SuspendAndEdgeCasesTest : IntegrationTestBase() {
         // GIVEN
         val file =
             codeFile("com.example.`class`.test") {
-                klass("FakeServiceImpl") {
-                    implements("Service")
-                }
+                klass("FakeServiceImpl") { implements("Service") }
             }
 
         // WHEN

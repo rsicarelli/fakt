@@ -5,11 +5,11 @@ package com.rsicarelli.fakt.codegen.strategy
 import com.rsicarelli.fakt.codegen.model.CodeExpression
 import com.rsicarelli.fakt.codegen.model.CodeType
 import com.rsicarelli.fakt.codegen.renderer.render
-import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for NullableDefaultStrategy.
@@ -87,10 +87,7 @@ class NullableDefaultStrategyTest {
     @Test
     fun `GIVEN nullable generic type WHEN checking support THEN returns true`() {
         // GIVEN
-        val type =
-            CodeType.Nullable(
-                CodeType.Generic("List", listOf(CodeType.Simple("String"))),
-            )
+        val type = CodeType.Nullable(CodeType.Generic("List", listOf(CodeType.Simple("String"))))
 
         // WHEN
         val result = strategy.supports(type)
@@ -102,10 +99,7 @@ class NullableDefaultStrategyTest {
     @Test
     fun `GIVEN nullable List type WHEN generating default THEN returns null`() {
         // GIVEN
-        val type =
-            CodeType.Nullable(
-                CodeType.Generic("List", listOf(CodeType.Simple("String"))),
-            )
+        val type = CodeType.Nullable(CodeType.Generic("List", listOf(CodeType.Simple("String"))))
 
         // WHEN
         val result = strategy.defaultValue(type)

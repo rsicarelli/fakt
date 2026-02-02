@@ -37,9 +37,7 @@ import org.jetbrains.kotlin.ir.util.kotlinFqName
  * - Enum defaults (EnumName.FIRST_ENTRY)
  * - Complex type defaults (null or intelligent defaults)
  */
-internal class DefaultValueProvider(
-    private val functionTypeHandler: FunctionTypeHandler,
-) {
+internal class DefaultValueProvider(private val functionTypeHandler: FunctionTypeHandler) {
     /**
      * Generates appropriate default value for an IR type.
      *
@@ -76,14 +74,13 @@ internal class DefaultValueProvider(
             irType.isChar() -> "'\\u0000'"
             irType.isByte() -> "0"
             irType.isShort() -> "0"
-            irType.isNothing() -> "error(\"Nothing type has no values - this indicates a type error\") as Nothing"
+            irType.isNothing() ->
+                "error(\"Nothing type has no values - this indicates a type error\") as Nothing"
             irType.isAny() -> "Any()"
             else -> null
         }
 
-    /**
-     * Generates default values for function types.
-     */
+    /** Generates default values for function types. */
     private fun generateFunctionDefault(irType: IrType): String {
         val returnType =
             if (irType is IrSimpleType && irType.arguments.isNotEmpty()) {
@@ -100,9 +97,7 @@ internal class DefaultValueProvider(
         return "{ $returnType }"
     }
 
-    /**
-     * Handles default values for class types with intelligent defaults.
-     */
+    /** Handles default values for class types with intelligent defaults. */
     private fun handleClassDefault(irType: IrType): String {
         val irClass =
             irType.getClass()
@@ -133,10 +128,7 @@ internal class DefaultValueProvider(
      * @param className The simple class name
      * @return Default value or null if not a stdlib type
      */
-    private fun getKotlinStdlibDefault(
-        packageName: String,
-        className: String,
-    ): String? {
+    private fun getKotlinStdlibDefault(packageName: String, className: String): String? {
         if (packageName != "kotlin") return null
 
         return when {
@@ -144,9 +136,7 @@ internal class DefaultValueProvider(
             className == "Array" -> "emptyArray()"
             className == "Pair" -> "Pair(null, null)"
             className == "Triple" -> "Triple(null, null, null)"
-            className.startsWith(
-                "Function",
-            ) ->
+            className.startsWith("Function") ->
                 "{ error(" +
                     "\"Function type requires explicit configuration. " +
                     "Configure behavior via fake factory DSL.\"" +
@@ -162,29 +152,24 @@ internal class DefaultValueProvider(
      * @param className The simple class name
      * @return Default value or null if not a collection
      */
-    private fun getCollectionDefault(
-        packageName: String,
-        className: String,
-    ): String? {
+    private fun getCollectionDefault(packageName: String, className: String): String? {
         if (packageName != "kotlin.collections") return null
 
         return when (className) {
-            "List", "MutableList" -> "emptyList()"
-            "Set", "MutableSet" -> "emptySet()"
-            "Map", "MutableMap" -> "emptyMap()"
+            "List",
+            "MutableList" -> "emptyList()"
+            "Set",
+            "MutableSet" -> "emptySet()"
+            "Map",
+            "MutableMap" -> "emptyMap()"
             "Collection" -> "emptyList()"
             else -> null
         }
     }
 
-    /**
-     * Handles enum default value generation.
-     */
+    /** Handles enum default value generation. */
     @OptIn(UnsafeDuringIrConstructionAPI::class)
-    private fun handleEnumDefault(
-        irClass: IrClass,
-        className: String,
-    ): String {
+    private fun handleEnumDefault(irClass: IrClass, className: String): String {
         val enumEntries = irClass.declarations.filterIsInstance<IrEnumEntry>()
         return if (enumEntries.isNotEmpty()) {
             "$className.${enumEntries.first().name.asString()}"

@@ -5,6 +5,7 @@ package com.rsicarelli.fakt.gradle
 import com.rsicarelli.fakt.compiler.api.LogLevel
 import com.rsicarelli.fakt.compiler.api.TimeFormatter
 import com.rsicarelli.fakt.gradle.FakeCollectorTask.Companion.registerForKmpProject
+import java.io.File
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
@@ -20,19 +21,18 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
-import java.io.File
 
 /**
  * Task to collect generated fakes from a source project with platform-aware placement.
  *
- * This task intelligently analyzes package structure to determine target platform
- * and places fakes in appropriate source sets:
+ * This task intelligently analyzes package structure to determine target platform and places fakes
+ * in appropriate source sets:
  * - `module.jvm.*` packages → `jvmMain/kotlin/`
  * - `module.ios.*` packages → `iosMain/kotlin/`
  * - `module.common.*` packages → `commonMain/kotlin/`
  *
- * This solves the cross-platform compilation problem where JVM-only interfaces
- * would fail to compile in commonMain.
+ * This solves the cross-platform compilation problem where JVM-only interfaces would fail to
+ * compile in commonMain.
  *
  * Example usage:
  * ```
@@ -53,57 +53,50 @@ import java.io.File
 @ExperimentalFaktMultiModule
 public abstract class FakeCollectorTask : DefaultTask() {
     /**
-     * The path to the source project that generates fakes.
-     * Configuration cache compatible (stores path, not Project object).
+     * The path to the source project that generates fakes. Configuration cache compatible (stores
+     * path, not Project object).
      */
-    @get:Input
-    @get:Optional
-    public abstract val sourceProjectPath: Property<String>
+    @get:Input @get:Optional public abstract val sourceProjectPath: Property<String>
 
     /**
-     * The directory where the source project generates fakes.
-     * Typically: build/generated/fakt/
+     * The directory where the source project generates fakes. Typically: build/generated/fakt/
      * Optional because not all source sets may have generated fakes.
      */
     @get:Internal // Not using @InputDirectory to allow missing directories
     public abstract val sourceGeneratedDir: DirectoryProperty
 
     /**
-     * The destination directory where collected fakes will be placed.
-     * Typically: src/commonMain/kotlin/ or build/generated/collected-fakes/
+     * The destination directory where collected fakes will be placed. Typically:
+     * src/commonMain/kotlin/ or build/generated/collected-fakes/
      */
-    @get:OutputDirectory
-    public abstract val destinationDir: DirectoryProperty
+    @get:OutputDirectory public abstract val destinationDir: DirectoryProperty
 
     /**
-     * Available source set names from the project's KMP configuration.
-     * Used for dynamic platform detection instead of hardcoded platform list.
-     * Empty set means fallback to legacy hardcoded behavior.
+     * Available source set names from the project's KMP configuration. Used for dynamic platform
+     * detection instead of hardcoded platform list. Empty set means fallback to legacy hardcoded
+     * behavior.
      *
      * Example: ["commonMain", "jvmMain", "iosMain", "tvosMain", "watchosMain", ...]
      */
-    @get:Input
-    @get:Optional
-    public abstract val availableSourceSets: SetProperty<String>
+    @get:Input @get:Optional public abstract val availableSourceSets: SetProperty<String>
 
     /**
-     * Log level for controlling output verbosity.
-     * Respects the same logLevel configuration as the compiler plugin.
-     *
+     * Log level for controlling output verbosity. Respects the same logLevel configuration as the
+     * compiler plugin.
      * - QUIET: No output
      * - INFO: Summary only (default)
      * - DEBUG: Summary + detailed per-source-set info
      * - TRACE: Summary + details + registration info
      */
-    @get:Input
-    public abstract val logLevel: Property<LogLevel>
+    @get:Input public abstract val logLevel: Property<LogLevel>
 
     init {
         group = "fakt"
         description = "Collects generated fakes from source project"
 
         // Task depends on source project's compilation to ensure fakes are generated first
-        // Note: Dependency will be configured in registerForKmpProject to avoid configuration cache issues
+        // Note: Dependency will be configured in registerForKmpProject to avoid configuration cache
+        // issues
     }
 
     @TaskAction
@@ -117,7 +110,7 @@ public abstract class FakeCollectorTask : DefaultTask() {
             faktLogger.warn(
                 "No fakes found in source module '$srcProjectName'. " +
                     "Verify that source module has @Fake annotated interfaces, " +
-                    "or remove this collector module if not needed.",
+                    "or remove this collector module if not needed."
             )
             return
         }
@@ -165,7 +158,7 @@ public abstract class FakeCollectorTask : DefaultTask() {
             val sourceSetDuration = System.nanoTime() - sourceSetStartTime
             faktLogger.debug(
                 "Collected ${result.collectedCount} fake(s) from ${sourceSetDir.name} " +
-                    "(${TimeFormatter.format(sourceSetDuration)})",
+                    "(${TimeFormatter.format(sourceSetDuration)})"
             )
         }
 
@@ -177,9 +170,9 @@ public abstract class FakeCollectorTask : DefaultTask() {
         faktLogger.info(
             "✅ $totalCollected fake(s) collected from $srcProjectName | ${
                 TimeFormatter.format(
-                    totalDuration,
+                    totalDuration
                 )
-            }",
+            }"
         )
 
         // Log platform distribution (INFO level)
@@ -192,8 +185,8 @@ public abstract class FakeCollectorTask : DefaultTask() {
         private const val PACKAGE_SCAN_LINES = 10 // Number of lines to scan for package declaration
 
         /**
-         * Determines the appropriate platform source set based on file content.
-         * Analyzes the package declaration to detect platform-specific markers.
+         * Determines the appropriate platform source set based on file content. Analyzes the
+         * package declaration to detect platform-specific markers.
          *
          * Detection strategy:
          * 1. Extract package declaration from file content
@@ -204,13 +197,13 @@ public abstract class FakeCollectorTask : DefaultTask() {
          * **Dynamic Matching**:
          * - Extracts package segments (e.g., "api.tvos.services" → ["api", "tvos", "services"])
          * - Finds source sets that start with each segment (case-insensitive)
-         * - Prioritizes hierarchical source sets over architecture-specific ones
-         *   (e.g., iosMain over iosArm64Main for package "api.ios.services")
+         * - Prioritizes hierarchical source sets over architecture-specific ones (e.g., iosMain
+         *   over iosArm64Main for package "api.ios.services")
          * - Falls back to commonMain if no match found
          *
          * @param fileContent The content of the fake file
-         * @param availableSourceSets Set of source set names available in the project
-         *   (from KotlinMultiplatformExtension.sourceSets.names)
+         * @param availableSourceSets Set of source set names available in the project (from
+         *   KotlinMultiplatformExtension.sourceSets.names)
          * @return The source set name (e.g., "jvmMain", "commonMain", "iosMain")
          */
         public fun determinePlatformSourceSet(
@@ -224,8 +217,7 @@ public abstract class FakeCollectorTask : DefaultTask() {
                     .take(PACKAGE_SCAN_LINES)
                     .firstOrNull { it.trim().startsWith("package ") }
                     ?.removePrefix("package ")
-                    ?.trim()
-                    ?: return "commonMain" // No package → commonMain
+                    ?.trim() ?: return "commonMain" // No package → commonMain
 
             // Split package into segments for analysis
             val packageSegments = packageDeclaration.split(".")
@@ -235,8 +227,8 @@ public abstract class FakeCollectorTask : DefaultTask() {
         }
 
         /**
-         * Match package segments to available source sets dynamically.
-         * Prioritizes matches that are closest to the package segment.
+         * Match package segments to available source sets dynamically. Prioritizes matches that are
+         * closest to the package segment.
          *
          * Strategy:
          * 1. Find all source sets that match package segments (case-insensitive prefix match)
@@ -276,12 +268,14 @@ public abstract class FakeCollectorTask : DefaultTask() {
                                 // - "ios" matches "iosMain", "iosArm64Main"
                                 // - "tvos" matches "tvosMain", "tvosArm64Main"
                                 // - "wasmJs" matches "wasmJsMain"
-                                sourceSet.startsWith(
-                                    segment,
-                                    ignoreCase = true,
-                                ) && sourceSet.endsWith("Main")
-                            }.map { sourceSet -> sourceSet to segment } // Keep track of which segment matched
-                    }.distinct()
+                                sourceSet.startsWith(segment, ignoreCase = true) &&
+                                    sourceSet.endsWith("Main")
+                            }
+                            .map { sourceSet ->
+                                sourceSet to segment
+                            } // Keep track of which segment matched
+                    }
+                    .distinct()
 
             // If no matches, fallback to commonMain (collector modules publish as libraries)
             if (matchedSourceSets.isEmpty()) {
@@ -311,9 +305,8 @@ public abstract class FakeCollectorTask : DefaultTask() {
         /**
          * Collects fakes from source directory with platform-specific placement.
          *
-         * Scans the source directory for Kotlin files, detects their target platform
-         * based on package structure, and places them in the appropriate platform
-         * source set directory.
+         * Scans the source directory for Kotlin files, detects their target platform based on
+         * package structure, and places them in the appropriate platform source set directory.
          *
          * @param sourceDir Directory containing generated fakes
          * @param destinationBaseDir Base directory for collected fakes
@@ -344,15 +337,15 @@ public abstract class FakeCollectorTask : DefaultTask() {
 
                     // Determine destination: {platform}/kotlin/{relativePath}
                     val destFile =
-                        destinationBaseDir
-                            .resolve("$platform/kotlin")
-                            .resolve(relativePath)
+                        destinationBaseDir.resolve("$platform/kotlin").resolve(relativePath)
 
                     // Create parent directories and copy file
                     destFile.parentFile.mkdirs()
                     sourceFile.copyTo(destFile, overwrite = true)
 
-                    faktLogger?.debug("${sourceFile.name} → $platform (${fileContent.length} bytes)")
+                    faktLogger?.debug(
+                        "${sourceFile.name} → $platform (${fileContent.length} bytes)"
+                    )
 
                     // Update statistics
                     collectedCount++
@@ -365,24 +358,21 @@ public abstract class FakeCollectorTask : DefaultTask() {
         /**
          * Register collector task for a KMP project with platform-aware collection.
          *
-         * This creates a single task that auto-discovers all generated fakes
-         * and intelligently places them based on package structure:
+         * This creates a single task that auto-discovers all generated fakes and intelligently
+         * places them based on package structure:
          * - api.jvm.* → jvmMain/kotlin/
          * - api.ios.* → iosMain/kotlin/
          * - api.shared.* or api.common.* → commonMain/kotlin/
          *
-         * Registers ALL *Main source sets (commonMain, jvmMain, iosMain, etc.)
-         * so each platform can access its appropriate fakes.
+         * Registers ALL *Main source sets (commonMain, jvmMain, iosMain, etc.) so each platform can
+         * access its appropriate fakes.
          *
          * @param project The target project (collector module)
          * @param extension The Fakt plugin extension
          * @see ExperimentalFaktMultiModule
          */
         @ExperimentalFaktMultiModule
-        public fun registerForKmpProject(
-            project: Project,
-            extension: FaktPluginExtension,
-        ) {
+        public fun registerForKmpProject(project: Project, extension: FaktPluginExtension) {
             val srcProject = extension.collectFrom.orNull ?: return
 
             val kotlinExtension =
@@ -404,13 +394,13 @@ public abstract class FakeCollectorTask : DefaultTask() {
 
                     // Point to root fakt directory - task will auto-discover subdirectories
                     it.sourceGeneratedDir.set(
-                        srcProject.layout.buildDirectory.dir("generated/fakt"),
+                        srcProject.layout.buildDirectory.dir("generated/fakt")
                     )
 
                     // Base directory for platform-specific collection
                     // Task will create subdirectories: commonMain/, jvmMain/, etc.
                     it.destinationDir.set(
-                        project.layout.buildDirectory.dir("generated/collected-fakes/_placeholder"),
+                        project.layout.buildDirectory.dir("generated/collected-fakes/_placeholder")
                     )
 
                     // Configure available source sets for dynamic platform detection
@@ -426,7 +416,7 @@ public abstract class FakeCollectorTask : DefaultTask() {
                         srcProject.tasks.matching { task ->
                             task.name.contains("compile", ignoreCase = true) &&
                                 !task.name.contains("test", ignoreCase = true)
-                        },
+                        }
                     )
                 }
 
@@ -440,9 +430,8 @@ public abstract class FakeCollectorTask : DefaultTask() {
             //   Collector module → collects fakes and exposes in MAIN (as library)
             //   Consumer module → depends on collector MAIN (uses fakes in its tests)
             kotlinExtension.sourceSets
-                .matching { sourceSet ->
-                    sourceSet.name.endsWith("Main")
-                }.configureEach { sourceSet ->
+                .matching { sourceSet -> sourceSet.name.endsWith("Main") }
+                .configureEach { sourceSet ->
                     val platformDir =
                         task.map {
                             it.destinationDir.asFile
@@ -453,7 +442,7 @@ public abstract class FakeCollectorTask : DefaultTask() {
                     sourceSet.kotlin.srcDir(platformDir)
 
                     project.logger.info(
-                        "Fakt: Registered collected fakes to ${sourceSet.name}: $platformDir",
+                        "Fakt: Registered collected fakes to ${sourceSet.name}: $platformDir"
                     )
 
                     // Wire task dependencies: ensure MAIN compilation tasks depend on collectFakes
@@ -461,18 +450,16 @@ public abstract class FakeCollectorTask : DefaultTask() {
                     project.tasks
                         .matching { compileTask ->
                             // Type-based: only Kotlin compilation tasks
-                            (
-                                compileTask is KotlinCompile ||
-                                    compileTask is Kotlin2JsCompile ||
-                                    compileTask is KotlinNativeCompile
-                            ) &&
+                            (compileTask is KotlinCompile ||
+                                compileTask is Kotlin2JsCompile ||
+                                compileTask is KotlinNativeCompile) &&
                                 // Name-based: match source set name
                                 compileTask.name.contains(sourceSet.name, ignoreCase = true) &&
-                                // CRITICAL: Only MAIN compilations (collector modules publish as libraries)
+                                // CRITICAL: Only MAIN compilations (collector modules publish as
+                                // libraries)
                                 !compileTask.name.contains("test", ignoreCase = true)
-                        }.configureEach { compileTask ->
-                            compileTask.dependsOn(task)
                         }
+                        .configureEach { compileTask -> compileTask.dependsOn(task) }
                 }
         }
 
@@ -482,7 +469,6 @@ public abstract class FakeCollectorTask : DefaultTask() {
          * Uses the same auto-discovery approach as KMP projects for consistency.
          *
          * ## Supported Platforms
-         *
          * - **JVM**: `org.jetbrains.kotlin.jvm` plugin
          * - **Android Library**: `com.android.library` plugin
          * - **Android Application**: `com.android.application` plugin
@@ -496,16 +482,13 @@ public abstract class FakeCollectorTask : DefaultTask() {
          * - JavaScript: [Kotlin2JsCompile] tasks
          * - Native: Handled via KMP code path
          *
-         * This ensures only Kotlin compilation tasks depend on `collectFakes`,
-         * avoiding false positives from Java/Groovy compilation tasks.
+         * This ensures only Kotlin compilation tasks depend on `collectFakes`, avoiding false
+         * positives from Java/Groovy compilation tasks.
          *
          * @see ExperimentalFaktMultiModule
          */
         @ExperimentalFaktMultiModule
-        private fun registerSingleCollectorTask(
-            project: Project,
-            extension: FaktPluginExtension,
-        ) {
+        private fun registerSingleCollectorTask(project: Project, extension: FaktPluginExtension) {
             val srcProject = extension.collectFrom.orNull ?: return
 
             val task =
@@ -514,11 +497,11 @@ public abstract class FakeCollectorTask : DefaultTask() {
 
                     // Point to root fakt directory - task will auto-discover subdirectories
                     it.sourceGeneratedDir.set(
-                        srcProject.layout.buildDirectory.dir("generated/fakt"),
+                        srcProject.layout.buildDirectory.dir("generated/fakt")
                     )
 
                     it.destinationDir.set(
-                        project.layout.buildDirectory.dir("generated/collected-fakes/kotlin"),
+                        project.layout.buildDirectory.dir("generated/collected-fakes/kotlin")
                     )
 
                     // Wire logLevel from extension for consistent telemetry
@@ -531,7 +514,7 @@ public abstract class FakeCollectorTask : DefaultTask() {
                         srcProject.tasks.matching { task ->
                             task.name.contains("compile", ignoreCase = true) &&
                                 !task.name.contains("test", ignoreCase = true)
-                        },
+                        }
                     )
                 }
 
@@ -540,18 +523,16 @@ public abstract class FakeCollectorTask : DefaultTask() {
 
             // === JVM Projects ===
             project.plugins.withId("org.jetbrains.kotlin.jvm") {
-                project.extensions
-                    .findByType(KotlinJvmProjectExtension::class.java)
-                    ?.apply {
-                        sourceSets.getByName("main").kotlin.srcDir(collectedDir)
+                project.extensions.findByType(KotlinJvmProjectExtension::class.java)?.apply {
+                    sourceSets.getByName("main").kotlin.srcDir(collectedDir)
 
-                        // Type-based task dependencies for JVM compilation
-                        project.tasks.withType(KotlinCompile::class.java).configureEach {
-                            if (!it.name.contains("test", ignoreCase = true)) {
-                                it.dependsOn(task)
-                            }
+                    // Type-based task dependencies for JVM compilation
+                    project.tasks.withType(KotlinCompile::class.java).configureEach {
+                        if (!it.name.contains("test", ignoreCase = true)) {
+                            it.dependsOn(task)
                         }
                     }
+                }
             }
 
             // === Android Library Projects ===

@@ -2,18 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.codegen.extensions
 
-import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for KDoc generation in factory functions.
  *
- * Validates that generated KDoc is developer-friendly and includes
- * all necessary information for IDE autocomplete.
+ * Validates that generated KDoc is developer-friendly and includes all necessary information for
+ * IDE autocomplete.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class KDocGeneratorTest {
@@ -86,7 +86,7 @@ class KDocGeneratorTest {
                     name = "getUser",
                     params = listOf(Triple("id", "String", false)),
                     returnType = "User?",
-                ),
+                )
             )
 
         // WHEN
@@ -107,7 +107,7 @@ class KDocGeneratorTest {
                     params = listOf(Triple("user", "User", false)),
                     returnType = "Result<Unit>",
                     isSuspend = true,
-                ),
+                )
             )
 
         // WHEN
@@ -127,7 +127,7 @@ class KDocGeneratorTest {
                     params = listOf(Triple("index", "Int", false)),
                     returnType = "String",
                     isOperator = true,
-                ),
+                )
             )
 
         // WHEN
@@ -147,7 +147,7 @@ class KDocGeneratorTest {
                     params = listOf(Triple("other", "Vector", false)),
                     returnType = "Vector",
                     extensionReceiverType = "Vector",
-                ),
+                )
             )
 
         // WHEN
@@ -162,11 +162,7 @@ class KDocGeneratorTest {
         // GIVEN
         val methods =
             listOf(
-                MethodSpec(
-                    name = "getAllUsers",
-                    params = emptyList(),
-                    returnType = "List<User>",
-                ),
+                MethodSpec(name = "getAllUsers", params = emptyList(), returnType = "List<User>")
             )
 
         // WHEN
@@ -190,7 +186,7 @@ class KDocGeneratorTest {
                             Triple("email", "String?", false),
                         ),
                     returnType = "User",
-                ),
+                )
             )
 
         // WHEN
@@ -207,14 +203,7 @@ class KDocGeneratorTest {
     @Test
     fun `GIVEN interface with val property WHEN generating KDoc THEN includes property in behaviors`() {
         // GIVEN
-        val properties =
-            listOf(
-                PropertySpec(
-                    name = "count",
-                    type = "Int",
-                    isMutable = false,
-                ),
-            )
+        val properties = listOf(PropertySpec(name = "count", type = "Int", isMutable = false))
 
         // WHEN
         val kdoc = generateFactoryKDoc("Counter", properties = properties)
@@ -228,14 +217,7 @@ class KDocGeneratorTest {
     @Test
     fun `GIVEN interface with var property WHEN generating KDoc THEN marks as mutable`() {
         // GIVEN
-        val properties =
-            listOf(
-                PropertySpec(
-                    name = "name",
-                    type = "String",
-                    isMutable = true,
-                ),
-            )
+        val properties = listOf(PropertySpec(name = "name", type = "String", isMutable = true))
 
         // WHEN
         val kdoc = generateFactoryKDoc("UserProfile", properties = properties)
@@ -248,13 +230,7 @@ class KDocGeneratorTest {
     fun `GIVEN interface with StateFlow property WHEN generating KDoc THEN excludes from behaviors`() {
         // GIVEN
         val properties =
-            listOf(
-                PropertySpec(
-                    name = "users",
-                    type = "StateFlow<List<User>>",
-                    isStateFlow = true,
-                ),
-            )
+            listOf(PropertySpec(name = "users", type = "StateFlow<List<User>>", isStateFlow = true))
 
         // WHEN
         val kdoc = generateFactoryKDoc("UserStore", properties = properties)
@@ -277,7 +253,7 @@ class KDocGeneratorTest {
                     name = "getUser",
                     params = listOf(Triple("id", "String", false)),
                     returnType = "User?",
-                ),
+                )
             )
 
         // WHEN
@@ -294,13 +270,7 @@ class KDocGeneratorTest {
     fun `GIVEN interface with no param method WHEN generating KDoc THEN shows simple example`() {
         // GIVEN
         val methods =
-            listOf(
-                MethodSpec(
-                    name = "getAll",
-                    params = emptyList(),
-                    returnType = "List<String>",
-                ),
-            )
+            listOf(MethodSpec(name = "getAll", params = emptyList(), returnType = "List<String>"))
 
         // WHEN
         val kdoc = generateFactoryKDoc("Service", methods = methods)
@@ -318,7 +288,7 @@ class KDocGeneratorTest {
                     name = "logEvent",
                     params = listOf(Triple("event", "String", false)),
                     returnType = "Unit",
-                ),
+                )
             )
 
         // WHEN
@@ -356,7 +326,7 @@ class KDocGeneratorTest {
                     name = "getUser",
                     params = listOf(Triple("id", "String", false)),
                     returnType = "User?",
-                ),
+                )
             )
 
         // WHEN
@@ -382,7 +352,7 @@ class KDocGeneratorTest {
                     name = "getUser",
                     params = listOf(Triple("id", "String", false)),
                     returnType = "User?",
-                ),
+                )
             )
 
         // WHEN
@@ -453,7 +423,7 @@ class KDocGeneratorTest {
                     name = "save",
                     params = listOf(Triple("data", "String", false)),
                     returnType = "Result<Int>",
-                ),
+                )
             )
 
         // WHEN
@@ -467,13 +437,7 @@ class KDocGeneratorTest {
     fun `GIVEN nullable return type WHEN generating example THEN shows null pattern`() {
         // GIVEN
         val methods =
-            listOf(
-                MethodSpec(
-                    name = "find",
-                    params = emptyList(),
-                    returnType = "String?",
-                ),
-            )
+            listOf(MethodSpec(name = "find", params = emptyList(), returnType = "String?"))
 
         // WHEN
         val kdoc = generateFactoryKDoc("Finder", methods = methods)
@@ -487,11 +451,7 @@ class KDocGeneratorTest {
         // GIVEN
         val methods =
             listOf(
-                MethodSpec(
-                    name = "getAll",
-                    params = emptyList(),
-                    returnType = "Map<String, Int>",
-                ),
+                MethodSpec(name = "getAll", params = emptyList(), returnType = "Map<String, Int>")
             )
 
         // WHEN
@@ -505,13 +465,7 @@ class KDocGeneratorTest {
     fun `GIVEN Boolean return type WHEN generating example THEN shows true`() {
         // GIVEN
         val methods =
-            listOf(
-                MethodSpec(
-                    name = "isValid",
-                    params = emptyList(),
-                    returnType = "Boolean",
-                ),
-            )
+            listOf(MethodSpec(name = "isValid", params = emptyList(), returnType = "Boolean"))
 
         // WHEN
         val kdoc = generateFactoryKDoc("Validator", methods = methods)
@@ -525,11 +479,7 @@ class KDocGeneratorTest {
         // GIVEN - 5 methods
         val methods =
             (1..5).map { i ->
-                MethodSpec(
-                    name = "method$i",
-                    params = emptyList(),
-                    returnType = "Unit",
-                )
+                MethodSpec(name = "method$i", params = emptyList(), returnType = "Unit")
             }
 
         // WHEN

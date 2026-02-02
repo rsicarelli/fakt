@@ -8,9 +8,9 @@ import com.rsicarelli.fakt.codegen.renderer.CodeBuilder
 import com.rsicarelli.fakt.codegen.renderer.render
 import com.rsicarelli.fakt.codegen.renderer.renderTo
 import com.rsicarelli.fakt.codegen.strategy.DefaultValueResolver
-import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Integration tests for complex interface fake generation.

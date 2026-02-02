@@ -2,14 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.gradle.samples
 
-import com.rsicarelli.fakt.compiler.api.LogLevel
 import com.rsicarelli.fakt.gradle.ExperimentalFaktMultiModule
 
 /**
  * Sample configurations for FaktPluginExtension.
  *
- * These samples are referenced in KDoc with @sample tags and serve as
- * real, compilable examples of plugin configuration patterns.
+ * These samples are referenced in KDoc with @sample tags and serve as real, compilable examples of
+ * plugin configuration patterns.
  */
 @Suppress("unused", "UNUSED_VARIABLE") // Samples are referenced in KDoc
 object FaktPluginExtensionSamples {
@@ -33,9 +32,7 @@ object FaktPluginExtensionSamples {
          */
     }
 
-    /**
-     * Enabling the plugin explicitly (enabled by default).
-     */
+    /** Enabling the plugin explicitly (enabled by default). */
     fun enabledConfiguration() {
         // In build.gradle.kts:
 
@@ -46,9 +43,7 @@ object FaktPluginExtensionSamples {
          */
     }
 
-    /**
-     * Disabling the plugin for specific builds.
-     */
+    /** Disabling the plugin for specific builds. */
     fun disabledConfiguration() {
         // In build.gradle.kts:
 
@@ -59,9 +54,7 @@ object FaktPluginExtensionSamples {
          */
     }
 
-    /**
-     * Type-safe log level configuration with IDE autocomplete.
-     */
+    /** Type-safe log level configuration with IDE autocomplete. */
     fun logLevelConfiguration() {
         // In build.gradle.kts:
 
@@ -77,9 +70,7 @@ object FaktPluginExtensionSamples {
          */
     }
 
-    /**
-     * Development configuration with debug logging.
-     */
+    /** Development configuration with debug logging. */
     fun developmentConfiguration() {
         // In build.gradle.kts:
 
@@ -92,9 +83,7 @@ object FaktPluginExtensionSamples {
          */
     }
 
-    /**
-     * CI/CD configuration for minimal output.
-     */
+    /** CI/CD configuration for minimal output. */
     fun cicdConfiguration() {
         // In build.gradle.kts:
 
@@ -128,8 +117,8 @@ object FaktPluginExtensionSamples {
     /**
      * Multi-module collector mode with type-safe project accessors.
      *
-     * Uses Gradle's type-safe project accessors for improved IDE support
-     * and compile-time validation.
+     * Uses Gradle's type-safe project accessors for improved IDE support and compile-time
+     * validation.
      */
     @OptIn(ExperimentalFaktMultiModule::class)
     fun collectorModeWithTypeSafeAccessor() {
@@ -189,9 +178,7 @@ object FaktPluginExtensionSamples {
          */
     }
 
-    /**
-     * Conditional configuration based on build variant.
-     */
+    /** Conditional configuration based on build variant. */
     fun conditionalConfiguration() {
         // In build.gradle.kts:
 
@@ -207,9 +194,7 @@ object FaktPluginExtensionSamples {
          */
     }
 
-    /**
-     * Complete configuration showing all available options.
-     */
+    /** Complete configuration showing all available options. */
     @OptIn(ExperimentalFaktMultiModule::class)
     fun completeConfiguration() {
         // In build.gradle.kts:

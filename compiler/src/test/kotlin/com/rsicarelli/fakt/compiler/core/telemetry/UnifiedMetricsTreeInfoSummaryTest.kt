@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.core.telemetry
 
-import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.runTest
 
 /**
  * Tests for UnifiedMetricsTree.toInfoSummary() - concise INFO-level output.
@@ -90,7 +90,7 @@ class UnifiedMetricsTreeInfoSummaryTest {
                                 firMemberCount = 2,
                                 irTimeNanos = 20_000, // Fast - cached
                                 irLOC = 45,
-                            ),
+                            )
                         ),
                     irCacheHits = 2, // 2 of 3 cached
                 )
@@ -169,7 +169,7 @@ class UnifiedMetricsTreeInfoSummaryTest {
                                 firMemberCount = 5,
                                 irTimeNanos = 50_000,
                                 irLOC = 73,
-                            ),
+                            )
                         ),
                     classes = emptyList(),
                     irCacheHits = 1,
@@ -197,7 +197,7 @@ class UnifiedMetricsTreeInfoSummaryTest {
                                 firMemberCount = 5,
                                 irTimeNanos = 1_285_000,
                                 irLOC = 73,
-                            ),
+                            )
                         ),
                     classes = emptyList(),
                     irCacheHits = 0,
@@ -207,186 +207,172 @@ class UnifiedMetricsTreeInfoSummaryTest {
             val summary = tree.toInfoSummary()
 
             // THEN: Should include time formatting (µs or ms)
-            assertTrue(
-                summary.contains("µs") || summary.contains("ms"),
-                "Should include time unit",
+            assertTrue(summary.contains("µs") || summary.contains("ms"), "Should include time unit")
+        }
+
+    @Test
+    fun `GIVEN summary format WHEN checking structure THEN should be single line`() = runTest {
+        // GIVEN: Tree with metrics
+        val tree =
+            UnifiedMetricsTree(
+                interfaces =
+                    listOf(
+                        UnifiedFakeMetrics(
+                            name = "UserService",
+                            firTimeNanos = 45_000,
+                            firTypeParamCount = 0,
+                            firMemberCount = 5,
+                            irTimeNanos = 535_000,
+                            irLOC = 73,
+                        )
+                    ),
+                classes = emptyList(),
+                irCacheHits = 0,
             )
-        }
+
+        // WHEN: Formatting as INFO summary
+        val summary = tree.toInfoSummary()
+
+        // THEN: Should be single line (no newlines)
+        assertFalse(summary.contains("\n"), "Summary should be single line")
+        assertTrue(summary.startsWith("Fakt:"), "Summary should start with 'Fakt:'")
+    }
 
     @Test
-    fun `GIVEN summary format WHEN checking structure THEN should be single line`() =
-        runTest {
-            // GIVEN: Tree with metrics
-            val tree =
-                UnifiedMetricsTree(
-                    interfaces =
-                        listOf(
-                            UnifiedFakeMetrics(
-                                name = "UserService",
-                                firTimeNanos = 45_000,
-                                firTypeParamCount = 0,
-                                firMemberCount = 5,
-                                irTimeNanos = 535_000,
-                                irLOC = 73,
-                            ),
+    fun `GIVEN large fake count WHEN all cached THEN should show all cached message`() = runTest {
+        // GIVEN: Tree with many fakes, all cached
+        val interfaces =
+            List(42) { index ->
+                UnifiedFakeMetrics(
+                    name = "Interface$index",
+                    firTimeNanos = 45_000,
+                    firTypeParamCount = 0,
+                    firMemberCount = 5,
+                    irTimeNanos = 50_000,
+                    irLOC = 73,
+                )
+            }
+        val classes =
+            List(5) { index ->
+                UnifiedFakeMetrics(
+                    name = "Class$index",
+                    firTimeNanos = 30_000,
+                    firTypeParamCount = 1,
+                    firMemberCount = 2,
+                    irTimeNanos = 20_000,
+                    irLOC = 45,
+                )
+            }
+        val tree =
+            UnifiedMetricsTree(
+                interfaces = interfaces,
+                classes = classes,
+                irCacheHits = 47, // All 47 cached
+            )
+
+        // WHEN: Formatting as INFO summary
+        val summary = tree.toInfoSummary()
+
+        // THEN: Should show all cached message
+        assertEquals("Fakt: 47 fakes (all cached)", summary)
+    }
+
+    @Test
+    fun `GIVEN large fake count WHEN none cached THEN should show generation message`() = runTest {
+        // GIVEN: Tree with many fakes, none cached
+        val interfaces =
+            List(42) { index ->
+                UnifiedFakeMetrics(
+                    name = "Interface$index",
+                    firTimeNanos = 45_000,
+                    firTypeParamCount = 0,
+                    firMemberCount = 5,
+                    irTimeNanos = 535_000,
+                    irLOC = 73,
+                )
+            }
+        val classes =
+            List(5) { index ->
+                UnifiedFakeMetrics(
+                    name = "Class$index",
+                    firTimeNanos = 30_000,
+                    firTypeParamCount = 1,
+                    firMemberCount = 2,
+                    irTimeNanos = 90_000,
+                    irLOC = 45,
+                )
+            }
+        val tree = UnifiedMetricsTree(interfaces = interfaces, classes = classes, irCacheHits = 0)
+
+        // WHEN: Formatting as INFO summary
+        val summary = tree.toInfoSummary()
+
+        // THEN: Should show generation message with count
+        assertContains(summary, "Fakt: 47 fakes generated in")
+    }
+
+    @Test
+    fun `GIVEN allIrCached property WHEN all cached THEN should return true`() = runTest {
+        // GIVEN: Tree with all fakes cached
+        val tree =
+            UnifiedMetricsTree(
+                interfaces =
+                    listOf(
+                        UnifiedFakeMetrics(
+                            name = "UserService",
+                            firTimeNanos = 45_000,
+                            firTypeParamCount = 0,
+                            firMemberCount = 5,
+                            irTimeNanos = 50_000,
+                            irLOC = 73,
+                        )
+                    ),
+                classes = emptyList(),
+                irCacheHits = 1,
+            )
+
+        // THEN: allIrCached should be true
+        assertTrue(tree.allIrCached)
+    }
+
+    @Test
+    fun `GIVEN allIrCached property WHEN not all cached THEN should return false`() = runTest {
+        // GIVEN: Tree with partial cache
+        val tree =
+            UnifiedMetricsTree(
+                interfaces =
+                    listOf(
+                        UnifiedFakeMetrics(
+                            name = "UserService",
+                            firTimeNanos = 45_000,
+                            firTypeParamCount = 0,
+                            firMemberCount = 5,
+                            irTimeNanos = 50_000,
+                            irLOC = 73,
                         ),
-                    classes = emptyList(),
-                    irCacheHits = 0,
-                )
-
-            // WHEN: Formatting as INFO summary
-            val summary = tree.toInfoSummary()
-
-            // THEN: Should be single line (no newlines)
-            assertFalse(summary.contains("\n"), "Summary should be single line")
-            assertTrue(summary.startsWith("Fakt:"), "Summary should start with 'Fakt:'")
-        }
-
-    @Test
-    fun `GIVEN large fake count WHEN all cached THEN should show all cached message`() =
-        runTest {
-            // GIVEN: Tree with many fakes, all cached
-            val interfaces =
-                List(42) { index ->
-                    UnifiedFakeMetrics(
-                        name = "Interface$index",
-                        firTimeNanos = 45_000,
-                        firTypeParamCount = 0,
-                        firMemberCount = 5,
-                        irTimeNanos = 50_000,
-                        irLOC = 73,
-                    )
-                }
-            val classes =
-                List(5) { index ->
-                    UnifiedFakeMetrics(
-                        name = "Class$index",
-                        firTimeNanos = 30_000,
-                        firTypeParamCount = 1,
-                        firMemberCount = 2,
-                        irTimeNanos = 20_000,
-                        irLOC = 45,
-                    )
-                }
-            val tree =
-                UnifiedMetricsTree(
-                    interfaces = interfaces,
-                    classes = classes,
-                    irCacheHits = 47, // All 47 cached
-                )
-
-            // WHEN: Formatting as INFO summary
-            val summary = tree.toInfoSummary()
-
-            // THEN: Should show all cached message
-            assertEquals("Fakt: 47 fakes (all cached)", summary)
-        }
-
-    @Test
-    fun `GIVEN large fake count WHEN none cached THEN should show generation message`() =
-        runTest {
-            // GIVEN: Tree with many fakes, none cached
-            val interfaces =
-                List(42) { index ->
-                    UnifiedFakeMetrics(
-                        name = "Interface$index",
-                        firTimeNanos = 45_000,
-                        firTypeParamCount = 0,
-                        firMemberCount = 5,
-                        irTimeNanos = 535_000,
-                        irLOC = 73,
-                    )
-                }
-            val classes =
-                List(5) { index ->
-                    UnifiedFakeMetrics(
-                        name = "Class$index",
-                        firTimeNanos = 30_000,
-                        firTypeParamCount = 1,
-                        firMemberCount = 2,
-                        irTimeNanos = 90_000,
-                        irLOC = 45,
-                    )
-                }
-            val tree =
-                UnifiedMetricsTree(
-                    interfaces = interfaces,
-                    classes = classes,
-                    irCacheHits = 0,
-                )
-
-            // WHEN: Formatting as INFO summary
-            val summary = tree.toInfoSummary()
-
-            // THEN: Should show generation message with count
-            assertContains(summary, "Fakt: 47 fakes generated in")
-        }
-
-    @Test
-    fun `GIVEN allIrCached property WHEN all cached THEN should return true`() =
-        runTest {
-            // GIVEN: Tree with all fakes cached
-            val tree =
-                UnifiedMetricsTree(
-                    interfaces =
-                        listOf(
-                            UnifiedFakeMetrics(
-                                name = "UserService",
-                                firTimeNanos = 45_000,
-                                firTypeParamCount = 0,
-                                firMemberCount = 5,
-                                irTimeNanos = 50_000,
-                                irLOC = 73,
-                            ),
+                        UnifiedFakeMetrics(
+                            name = "DataCache",
+                            firTimeNanos = 40_000,
+                            firTypeParamCount = 1,
+                            firMemberCount = 3,
+                            irTimeNanos = 300_000,
+                            irLOC = 58,
                         ),
-                    classes = emptyList(),
-                    irCacheHits = 1,
-                )
+                    ),
+                classes = emptyList(),
+                irCacheHits = 1, // Only 1 of 2 cached
+            )
 
-            // THEN: allIrCached should be true
-            assertTrue(tree.allIrCached)
-        }
-
-    @Test
-    fun `GIVEN allIrCached property WHEN not all cached THEN should return false`() =
-        runTest {
-            // GIVEN: Tree with partial cache
-            val tree =
-                UnifiedMetricsTree(
-                    interfaces =
-                        listOf(
-                            UnifiedFakeMetrics(
-                                name = "UserService",
-                                firTimeNanos = 45_000,
-                                firTypeParamCount = 0,
-                                firMemberCount = 5,
-                                irTimeNanos = 50_000,
-                                irLOC = 73,
-                            ),
-                            UnifiedFakeMetrics(
-                                name = "DataCache",
-                                firTimeNanos = 40_000,
-                                firTypeParamCount = 1,
-                                firMemberCount = 3,
-                                irTimeNanos = 300_000,
-                                irLOC = 58,
-                            ),
-                        ),
-                    classes = emptyList(),
-                    irCacheHits = 1, // Only 1 of 2 cached
-                )
-
-            // THEN: allIrCached should be false
-            assertFalse(tree.allIrCached)
-        }
+        // THEN: allIrCached should be false
+        assertFalse(tree.allIrCached)
+    }
 
     @Test
-    fun `GIVEN allIrCached property WHEN empty THEN should return false`() =
-        runTest {
-            // GIVEN: Empty tree
-            val tree = UnifiedMetricsTree(interfaces = emptyList(), classes = emptyList())
+    fun `GIVEN allIrCached property WHEN empty THEN should return false`() = runTest {
+        // GIVEN: Empty tree
+        val tree = UnifiedMetricsTree(interfaces = emptyList(), classes = emptyList())
 
-            // THEN: allIrCached should be false (no fakes to cache)
-            assertFalse(tree.allIrCached)
-        }
+        // THEN: allIrCached should be false (no fakes to cache)
+        assertFalse(tree.allIrCached)
+    }
 }

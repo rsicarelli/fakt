@@ -16,7 +16,6 @@ dependencies {
     // Convention Plugins (for module conventions)
     implementation(libs.mavenPublish.gradlePlugin)
     implementation(libs.spotless.gradlePlugin)
-    implementation(libs.ktlint.gradlePlugin)
     implementation(libs.detekt.gradlePlugin)
 
     // Root Plugin Dependencies

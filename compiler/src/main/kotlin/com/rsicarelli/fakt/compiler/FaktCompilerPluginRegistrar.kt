@@ -38,10 +38,7 @@ class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
 
     override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
         val messageCollector =
-            configuration.get(
-                CommonConfigurationKeys.MESSAGE_COLLECTOR_KEY,
-                MessageCollector.NONE,
-            )
+            configuration.get(CommonConfigurationKeys.MESSAGE_COLLECTOR_KEY, MessageCollector.NONE)
         val options = FaktOptions.load(configuration)
 
         // Create FaktLogger with configured log level
@@ -116,9 +113,7 @@ class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
      */
     private fun ExtensionStorage.registerIrExtension(sharedContext: FaktSharedContext) {
         sharedContext.logger.debug("Registering IR extension")
-        IrGenerationExtension.registerExtension(
-            UnifiedFaktIrGenerationExtension(sharedContext),
-        )
+        IrGenerationExtension.registerExtension(UnifiedFaktIrGenerationExtension(sharedContext))
     }
 
     /**
@@ -130,7 +125,8 @@ class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
      * @param options Compiler plugin options
      * @param fakeAnnotations List of configured @Fake annotation FQNs
      * @param optimizations Compiler optimizations for cache size reporting
-     * @param cacheMode Cache mode description (e.g., "PRODUCER → path", "CONSUMER ← path", "disabled")
+     * @param cacheMode Cache mode description (e.g., "PRODUCER → path", "CONSUMER ← path",
+     *   "disabled")
      */
     private fun logPluginInitialization(
         logger: FaktLogger,
@@ -138,26 +134,28 @@ class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
         fakeAnnotations: List<String>,
         optimizations: CompilerOptimizations,
         cacheMode: String,
-    ) = logger.debug(
-        buildString {
-            appendLine("Fakt Plugin initialized")
-            appendLine("   ├─ enabled: ${options.enabled}")
-            appendLine("   ├─ logLevel: ${options.logLevel}")
-            appendLine("   ├─ annotations: ${fakeAnnotations.joinToString(", ")}")
-            appendLine("   ├─ output: ${options.outputDir}")
-            appendLine("   ├─ firCacheMode: $cacheMode")
-            append("   └─ irCacheSize: ${optimizations.cacheSize()} signatures")
-        },
-    )
+    ) =
+        logger.debug(
+            buildString {
+                appendLine("Fakt Plugin initialized")
+                appendLine("   ├─ enabled: ${options.enabled}")
+                appendLine("   ├─ logLevel: ${options.logLevel}")
+                appendLine("   ├─ annotations: ${fakeAnnotations.joinToString(", ")}")
+                appendLine("   ├─ output: ${options.outputDir}")
+                appendLine("   ├─ firCacheMode: $cacheMode")
+                append("   └─ irCacheSize: ${optimizations.cacheSize()} signatures")
+            }
+        )
 
     /**
      * Creates a cache manager for KMP cross-compilation caching.
      *
-     * Returns null if neither producer nor consumer mode is configured,
-     * which is the case for non-KMP projects or when caching is disabled.
+     * Returns null if neither producer nor consumer mode is configured, which is the case for
+     * non-KMP projects or when caching is disabled.
      *
      * @param options Compiler options containing cache paths
-     * @return MetadataCacheManager instance (always created, acts as no-op when caching not configured)
+     * @return MetadataCacheManager instance (always created, acts as no-op when caching not
+     *   configured)
      */
     private fun createCacheManager(options: FaktOptions): MetadataCacheManager =
         MetadataCacheManager(

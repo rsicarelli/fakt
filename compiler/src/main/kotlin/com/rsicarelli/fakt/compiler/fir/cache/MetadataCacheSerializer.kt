@@ -21,21 +21,21 @@ import com.rsicarelli.fakt.compiler.fir.metadata.FirTypeParameterInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeClass
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeInterface
+import java.io.File
+import java.io.IOException
+import java.security.MessageDigest
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
-import java.io.File
-import java.io.IOException
-import java.security.MessageDigest
 
 /**
  * Serializes and deserializes FIR metadata cache for cross-compilation caching.
  *
  * ## Purpose
  *
- * Enables KMP projects to cache FIR analysis results from metadata compilation
- * so platform compilations can skip redundant analysis.
+ * Enables KMP projects to cache FIR analysis results from metadata compilation so platform
+ * compilations can skip redundant analysis.
  *
  * ## Thread Safety
  *
@@ -55,12 +55,11 @@ import java.security.MessageDigest
  * ```
  */
 object MetadataCacheSerializer {
-    private val json =
-        Json {
-            prettyPrint = false
-            ignoreUnknownKeys = true
-            encodeDefaults = true
-        }
+    private val json = Json {
+        prettyPrint = false
+        ignoreUnknownKeys = true
+        encodeDefaults = true
+    }
 
     // ========================================================================
     // Serialization: ValidatedFakeInterface → SerializableFakeInterface
@@ -94,9 +93,7 @@ object MetadataCacheSerializer {
         )
     }
 
-    /**
-     * Convert ValidatedFakeClass to serializable format.
-     */
+    /** Convert ValidatedFakeClass to serializable format. */
     fun toSerializable(validated: ValidatedFakeClass): SerializableFakeClass {
         val sourceFileSignature = computeFileSignature(validated.sourceLocation.filePath)
 
@@ -126,8 +123,8 @@ object MetadataCacheSerializer {
      *
      * Parses ClassId from string format "package.name/RelativeClassName".
      *
-     * Note: validationTimeNanos is set to 0 for cache hits since no FIR analysis
-     * was performed in this compilation. This ensures accurate telemetry reporting.
+     * Note: validationTimeNanos is set to 0 for cache hits since no FIR analysis was performed in
+     * this compilation. This ensures accurate telemetry reporting.
      *
      * @param serializable Serializable representation from cache
      * @return Validated interface for IR phase
@@ -158,7 +155,8 @@ object MetadataCacheSerializer {
             validationTimeNanos = 0L,
             // Mark as from cache to output to commonTest instead of platform test
             isFromCache = true,
-            // Extract source set from cached file path (e.g., "commonMain" from "src/commonMain/kotlin/...")
+            // Extract source set from cached file path (e.g., "commonMain" from
+            // "src/commonMain/kotlin/...")
             sourceSourceSet = sourceLocation.extractSourceSetName(),
             // Restore visibility from cache for explicitApi() support
             visibility = FirVisibility.valueOf(serializable.visibility),
@@ -168,8 +166,8 @@ object MetadataCacheSerializer {
     /**
      * Convert SerializableFakeClass back to ValidatedFakeClass.
      *
-     * Note: validationTimeNanos is set to 0 for cache hits since no FIR analysis
-     * was performed in this compilation.
+     * Note: validationTimeNanos is set to 0 for cache hits since no FIR analysis was performed in
+     * this compilation.
      */
     fun toValidated(serializable: SerializableFakeClass): ValidatedFakeClass {
         val classId = parseClassId(serializable.classIdString)
@@ -197,7 +195,8 @@ object MetadataCacheSerializer {
             validationTimeNanos = 0L,
             // Mark as from cache to output to commonTest instead of platform test
             isFromCache = true,
-            // Extract source set from cached file path (e.g., "commonMain" from "src/commonMain/kotlin/...")
+            // Extract source set from cached file path (e.g., "commonMain" from
+            // "src/commonMain/kotlin/...")
             sourceSourceSet = sourceLocation.extractSourceSetName(),
             // Restore visibility from cache for explicitApi() support
             visibility = FirVisibility.valueOf(serializable.visibility),
@@ -216,10 +215,7 @@ object MetadataCacheSerializer {
      * @param cache Cache data to serialize
      * @param outputPath Absolute path to output JSON file
      */
-    fun serialize(
-        cache: FirMetadataCache,
-        outputPath: String,
-    ) {
+    fun serialize(cache: FirMetadataCache, outputPath: String) {
         val file = File(outputPath)
         file.parentFile?.mkdirs()
 
@@ -274,18 +270,13 @@ object MetadataCacheSerializer {
     /**
      * Combine multiple signatures into one cache signature.
      *
-     * Sorts signatures before combining to ensure deterministic output
-     * regardless of input order.
+     * Sorts signatures before combining to ensure deterministic output regardless of input order.
      *
      * @param signatures List of individual file signatures
      * @return Combined MD5 signature
      */
     fun computeCombinedSignature(signatures: List<String>): String =
-        signatures
-            .sorted()
-            .joinToString("|")
-            .toByteArray()
-            .md5()
+        signatures.sorted().joinToString("|").toByteArray().md5()
 
     // ========================================================================
     // Private Helpers
@@ -330,9 +321,11 @@ object MetadataCacheSerializer {
     // Extension functions for FIR → Serializable conversion
     private fun FirTypeParameterInfo.toSerializable() = SerializableTypeParameterInfo(name, bounds)
 
-    private fun FirPropertyInfo.toSerializable() = SerializablePropertyInfo(name, type, isMutable, isNullable)
+    private fun FirPropertyInfo.toSerializable() =
+        SerializablePropertyInfo(name, type, isMutable, isNullable)
 
-    private fun FirParameterInfo.toSerializable() = SerializableParameterInfo(name, type, hasDefaultValue, defaultValueCode, isVararg)
+    private fun FirParameterInfo.toSerializable() =
+        SerializableParameterInfo(name, type, hasDefaultValue, defaultValueCode, isVararg)
 
     private fun FirFunctionInfo.toSerializable() =
         SerializableFunctionInfo(
@@ -348,9 +341,11 @@ object MetadataCacheSerializer {
     // Extension functions for Serializable → FIR conversion
     private fun SerializableTypeParameterInfo.toFir() = FirTypeParameterInfo(name, bounds)
 
-    private fun SerializablePropertyInfo.toFir() = FirPropertyInfo(name, type, isMutable, isNullable)
+    private fun SerializablePropertyInfo.toFir() =
+        FirPropertyInfo(name, type, isMutable, isNullable)
 
-    private fun SerializableParameterInfo.toFir() = FirParameterInfo(name, type, hasDefaultValue, defaultValueCode, isVararg)
+    private fun SerializableParameterInfo.toFir() =
+        FirParameterInfo(name, type, hasDefaultValue, defaultValueCode, isVararg)
 
     private fun SerializableFunctionInfo.toFir() =
         FirFunctionInfo(
@@ -461,13 +456,9 @@ object MetadataCacheSerializer {
                 )
 
             SerializableAnnotationArgument.ArgumentType.ARRAY ->
-                FirAnnotationArgument.ArrayValue(
-                    elements = arrayElements!!.map { it.toFir() },
-                )
+                FirAnnotationArgument.ArrayValue(elements = arrayElements!!.map { it.toFir() })
 
             SerializableAnnotationArgument.ArgumentType.NESTED_ANNOTATION ->
-                FirAnnotationArgument.NestedAnnotation(
-                    annotation = nestedAnnotation!!.toFir(),
-                )
+                FirAnnotationArgument.NestedAnnotation(annotation = nestedAnnotation!!.toFir())
         }
 }

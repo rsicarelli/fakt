@@ -36,11 +36,7 @@ fun resolveHistoryStorageType(
 
     // 0-param or vararg-only methods use Unit as storage
     if (regularParams.isEmpty()) {
-        return HistoryStorageInfo(
-            dataClassName = null,
-            params = emptyList(),
-            isUnitStorage = true,
-        )
+        return HistoryStorageInfo(dataClassName = null, params = emptyList(), isUnitStorage = true)
     }
 
     // Interface-prefixed data class for collision safety

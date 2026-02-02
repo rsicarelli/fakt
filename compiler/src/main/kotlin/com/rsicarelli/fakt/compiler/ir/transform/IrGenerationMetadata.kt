@@ -20,8 +20,8 @@ import org.jetbrains.kotlin.ir.types.IrType
 /**
  * Generation configuration for IR metadata.
  *
- * Groups cache, visibility, and call history settings to reduce constructor parameter count.
- * Used by both [IrGenerationMetadata] and [IrClassGenerationMetadata].
+ * Groups cache, visibility, and call history settings to reduce constructor parameter count. Used
+ * by both [IrGenerationMetadata] and [IrClassGenerationMetadata].
  *
  * @property isFromCache Whether metadata was loaded from incremental compilation cache
  * @property sourceSourceSet Source set identifier for generated code placement
@@ -72,30 +72,31 @@ data class IrClassMembers(
 /**
  * Metadata for IR code generation, transformed from FIR ValidatedFakeInterface.
  *
- * This is the **bridge** between FIR phase (string-based types) and IR phase (IrTypes).
- * Eliminates the need for re-analyzing IrClass instances.
+ * This is the **bridge** between FIR phase (string-based types) and IR phase (IrTypes). Eliminates
+ * the need for re-analyzing IrClass instances.
  *
  * This API enables proper FIR→IR communication following Metro pattern:
  * - FIR analyzes and extracts metadata (strings)
  * - FirToIrTransformer resolves strings → IrTypes and lookups IR nodes
  * - IR generation uses this metadata WITHOUT re-analysis
  *
- * **Performance Optimization**: `genericPattern` is computed lazily on first access.
- * This avoids expensive pattern analysis during FIR→IR transformation for interfaces
- * that are skipped by caching or fail validation. Analysis only happens when code
- * generation actually needs the pattern information (~40% cache hit rate).
+ * **Performance Optimization**: `genericPattern` is computed lazily on first access. This avoids
+ * expensive pattern analysis during FIR→IR transformation for interfaces that are skipped by
+ * caching or fail validation. Analysis only happens when code generation actually needs the pattern
+ * information (~40% cache hit rate).
  *
  * @property interfaceName Simple interface name (e.g., "UserRepository")
  * @property packageName Package name (e.g., "com.example")
- * @property typeParameters Class-level type parameters with bounds
- *     (e.g., ["T", "K : Comparable<K>"])
+ * @property typeParameters Class-level type parameters with bounds (e.g.,
+ *   ["T", "K : Comparable<K>"])
  * @property members Interface members (properties, functions, annotations)
- * @property genericPattern Classification of generic usage
- *     (NoGenerics, ClassLevel, MethodLevel, Mixed) - computed lazily
+ * @property genericPattern Classification of generic usage (NoGenerics, ClassLevel, MethodLevel,
+ *   Mixed) - computed lazily
  * @property sourceInterface Original IrClass for code generation context
  * @property config Generation configuration (visibility, cache state, call history mode)
  */
-class IrGenerationMetadata internal constructor(
+class IrGenerationMetadata
+internal constructor(
     val interfaceName: String,
     val packageName: String,
     val typeParameters: List<String>,
@@ -105,38 +106,43 @@ class IrGenerationMetadata internal constructor(
     private val config: IrGenerationConfig = IrGenerationConfig(),
 ) {
     /** All interface properties with resolved IrTypes. */
-    val properties: List<IrPropertyMetadata> get() = members.properties
+    val properties: List<IrPropertyMetadata>
+        get() = members.properties
 
     /** All interface functions with resolved IrTypes. */
-    val functions: List<IrFunctionMetadata> get() = members.functions
+    val functions: List<IrFunctionMetadata>
+        get() = members.functions
 
     /** Annotations from the interface for propagation. */
-    val annotations: List<IrAnnotationMetadata> get() = members.annotations
+    val annotations: List<IrAnnotationMetadata>
+        get() = members.annotations
 
     /** Whether metadata was loaded from incremental compilation cache. */
-    val isFromCache: Boolean get() = config.isFromCache
+    val isFromCache: Boolean
+        get() = config.isFromCache
 
     /** Source set identifier for generated code placement. */
-    val sourceSourceSet: String? get() = config.sourceSourceSet
+    val sourceSourceSet: String?
+        get() = config.sourceSourceSet
 
     /** Visibility of the interface for explicitApi() support. */
-    val visibility: FirVisibility get() = config.visibility
+    val visibility: FirVisibility
+        get() = config.visibility
 
     /** Call history generation mode from @Fake annotation. */
-    val callHistoryMode: FirCallHistoryMode get() = config.callHistoryMode
+    val callHistoryMode: FirCallHistoryMode
+        get() = config.callHistoryMode
 
     /**
      * Lazy generic pattern analysis - computed on first access only.
      *
-     * Most interfaces have no generics or simple patterns. Deferring this
-     * expensive analysis (25-40% of FIR→IR transform time) until actually
-     * needed provides significant performance improvement.
+     * Most interfaces have no generics or simple patterns. Deferring this expensive analysis
+     * (25-40% of FIR→IR transform time) until actually needed provides significant performance
+     * improvement.
      *
      * Thread-safe via Kotlin's lazy delegate (SYNCHRONIZED mode by default).
      */
-    val genericPattern: GenericPattern by lazy {
-        patternAnalyzer.analyzeInterface(sourceInterface)
-    }
+    val genericPattern: GenericPattern by lazy { patternAnalyzer.analyzeInterface(sourceInterface) }
 }
 
 /**
@@ -168,7 +174,8 @@ data class IrPropertyMetadata(
  * @property returnType Resolved return IrType (from FIR string representation)
  * @property isSuspend true if function is suspend
  * @property isInline true if function is inline
- * @property typeParameters Method-level type parameters with bounds (e.g., ["T", "R : Comparable<R>"])
+ * @property typeParameters Method-level type parameters with bounds (e.g.,
+ *   ["T", "R : Comparable<R>"])
  * @property typeParameterBounds Method-level type parameter bounds map (e.g., "R" → "TValue")
  * @property irFunction Original IR function node (for code generation)
  */
@@ -209,28 +216,29 @@ data class IrParameterMetadata(
 /**
  * Metadata for IR code generation from abstract classes, transformed from FIR ValidatedFakeClass.
  *
- * This is the **bridge** between FIR phase (string-based types) and IR phase (IrTypes) for abstract classes.
- * Similar to IrGenerationMetadata but separates abstract and open members.
+ * This is the **bridge** between FIR phase (string-based types) and IR phase (IrTypes) for abstract
+ * classes. Similar to IrGenerationMetadata but separates abstract and open members.
  *
  * Added to support abstract class fake generation.
  * - FIR analyzes and extracts metadata (strings) with abstract/open separation
  * - FirToIrTransformer resolves strings → IrTypes and lookups IR nodes
  * - IR generation uses this metadata WITHOUT re-analysis
  *
- * **Performance Optimization**: `genericPattern` is computed lazily on first access.
- * See IrGenerationMetadata for detailed rationale.
+ * **Performance Optimization**: `genericPattern` is computed lazily on first access. See
+ * IrGenerationMetadata for detailed rationale.
  *
  * @property className Simple class name (e.g., "AbstractRepository")
  * @property packageName Package name (e.g., "com.example")
- * @property typeParameters Class-level type parameters with bounds
- *     (e.g., ["T", "K : Comparable<K>"])
+ * @property typeParameters Class-level type parameters with bounds (e.g.,
+ *   ["T", "K : Comparable<K>"])
  * @property members Class members separated by abstract/open
- * @property genericPattern Classification of generic usage
- *     (NoGenerics, ClassLevel, MethodLevel, Mixed) - computed lazily
+ * @property genericPattern Classification of generic usage (NoGenerics, ClassLevel, MethodLevel,
+ *   Mixed) - computed lazily
  * @property sourceClass Original IrClass for code generation context
  * @property config Generation configuration (visibility, cache state, call history mode)
  */
-class IrClassGenerationMetadata internal constructor(
+class IrClassGenerationMetadata
+internal constructor(
     val className: String,
     val packageName: String,
     val typeParameters: List<String>,
@@ -240,56 +248,64 @@ class IrClassGenerationMetadata internal constructor(
     private val config: IrGenerationConfig = IrGenerationConfig(),
 ) {
     /** Abstract properties (must be implemented). */
-    val abstractProperties: List<IrPropertyMetadata> get() = members.abstractProperties
+    val abstractProperties: List<IrPropertyMetadata>
+        get() = members.abstractProperties
 
     /** Open properties (can be overridden). */
-    val openProperties: List<IrPropertyMetadata> get() = members.openProperties
+    val openProperties: List<IrPropertyMetadata>
+        get() = members.openProperties
 
     /** Abstract methods (must be implemented). */
-    val abstractMethods: List<IrFunctionMetadata> get() = members.abstractMethods
+    val abstractMethods: List<IrFunctionMetadata>
+        get() = members.abstractMethods
 
     /** Open methods (can be overridden). */
-    val openMethods: List<IrFunctionMetadata> get() = members.openMethods
+    val openMethods: List<IrFunctionMetadata>
+        get() = members.openMethods
 
     /** Annotations from the class for propagation. */
-    val annotations: List<IrAnnotationMetadata> get() = members.annotations
+    val annotations: List<IrAnnotationMetadata>
+        get() = members.annotations
 
     /** Whether metadata was loaded from incremental compilation cache. */
-    val isFromCache: Boolean get() = config.isFromCache
+    val isFromCache: Boolean
+        get() = config.isFromCache
 
     /** Source set identifier for generated code placement. */
-    val sourceSourceSet: String? get() = config.sourceSourceSet
+    val sourceSourceSet: String?
+        get() = config.sourceSourceSet
 
     /** Visibility of the class for explicitApi() support. */
-    val visibility: FirVisibility get() = config.visibility
+    val visibility: FirVisibility
+        get() = config.visibility
 
     /** Call history generation mode from @Fake annotation. */
-    val callHistoryMode: FirCallHistoryMode get() = config.callHistoryMode
+    val callHistoryMode: FirCallHistoryMode
+        get() = config.callHistoryMode
 
     /**
-     * Lazy generic pattern analysis - computed on first access only.
-     * See IrGenerationMetadata.genericPattern for details.
+     * Lazy generic pattern analysis - computed on first access only. See
+     * IrGenerationMetadata.genericPattern for details.
      */
-    val genericPattern: GenericPattern by lazy {
-        patternAnalyzer.analyzeInterface(sourceClass)
-    }
+    val genericPattern: GenericPattern by lazy { patternAnalyzer.analyzeInterface(sourceClass) }
 }
 
 /**
  * Adapter function: Convert IrGenerationMetadata to InterfaceAnalysis.
  *
- * This allows reusing existing code generators (ImplementationGenerator,
- * FactoryGenerator, ConfigurationDslGenerator) without refactoring them
- * to accept IrGenerationMetadata directly.
+ * This allows reusing existing code generators (ImplementationGenerator, FactoryGenerator,
+ * ConfigurationDslGenerator) without refactoring them to accept IrGenerationMetadata directly.
  *
- * Adapter pattern for backward compatibility.
- * **Future**: Refactor generators to accept IrGenerationMetadata directly.
+ * Adapter pattern for backward compatibility. **Future**: Refactor generators to accept
+ * IrGenerationMetadata directly.
  *
- * @param enableCallHistoryDefault Plugin-level default for call history generation.
- *        Used when annotation's callHistoryMode is DEFAULT.
+ * @param enableCallHistoryDefault Plugin-level default for call history generation. Used when
+ *   annotation's callHistoryMode is DEFAULT.
  * @return InterfaceAnalysis compatible with existing generators
  */
-fun IrGenerationMetadata.toInterfaceAnalysis(enableCallHistoryDefault: Boolean = true): InterfaceAnalysis =
+fun IrGenerationMetadata.toInterfaceAnalysis(
+    enableCallHistoryDefault: Boolean = true
+): InterfaceAnalysis =
     InterfaceAnalysis(
         interfaceName = interfaceName,
         typeParameters = typeParameters,
@@ -328,19 +344,20 @@ private fun resolveCallHistoryEnabled(
 /**
  * Adapter function: Convert IrClassGenerationMetadata to ClassAnalysis.
  *
- * Use ClassAnalysis to preserve abstract/open distinction
- * for proper super delegation generation.
+ * Use ClassAnalysis to preserve abstract/open distinction for proper super delegation generation.
  *
- * Unlike toInterfaceAnalysis(), this keeps abstract and open members separate
- * so generators can apply the correct defaults:
+ * Unlike toInterfaceAnalysis(), this keeps abstract and open members separate so generators can
+ * apply the correct defaults:
  * - Abstract members → error() defaults
  * - Open members → super.method() defaults
  *
- * @param enableCallHistoryDefault Plugin-level default for call history generation.
- *        Used when annotation's callHistoryMode is DEFAULT.
+ * @param enableCallHistoryDefault Plugin-level default for call history generation. Used when
+ *   annotation's callHistoryMode is DEFAULT.
  * @return ClassAnalysis with separated abstract and open members
  */
-fun IrClassGenerationMetadata.toClassAnalysis(enableCallHistoryDefault: Boolean = true): ClassAnalysis =
+fun IrClassGenerationMetadata.toClassAnalysis(
+    enableCallHistoryDefault: Boolean = true
+): ClassAnalysis =
     ClassAnalysis(
         className = className,
         typeParameters = typeParameters,
@@ -354,9 +371,7 @@ fun IrClassGenerationMetadata.toClassAnalysis(enableCallHistoryDefault: Boolean 
         generateCallHistory = resolveCallHistoryEnabled(callHistoryMode, enableCallHistoryDefault),
     )
 
-/**
- * Convert IrPropertyMetadata to PropertyAnalysis.
- */
+/** Convert IrPropertyMetadata to PropertyAnalysis. */
 private fun IrPropertyMetadata.toPropertyAnalysis(): PropertyAnalysis =
     PropertyAnalysis(
         name = name,
@@ -366,9 +381,7 @@ private fun IrPropertyMetadata.toPropertyAnalysis(): PropertyAnalysis =
         irProperty = irProperty,
     )
 
-/**
- * Convert IrFunctionMetadata to FunctionAnalysis.
- */
+/** Convert IrFunctionMetadata to FunctionAnalysis. */
 private fun IrFunctionMetadata.toFunctionAnalysis(): FunctionAnalysis =
     FunctionAnalysis(
         name = name,
@@ -397,9 +410,7 @@ private fun IrParameterMetadata.toParameterAnalysis(): ParameterAnalysis =
         isVararg = isVararg,
     )
 
-/**
- * Convert IrAnnotationMetadata to AnnotationAnalysis.
- */
+/** Convert IrAnnotationMetadata to AnnotationAnalysis. */
 private fun IrAnnotationMetadata.toAnnotationAnalysis(): AnnotationAnalysis =
     AnnotationAnalysis(
         simpleName = simpleName,
@@ -411,26 +422,21 @@ private fun IrAnnotationMetadata.toAnnotationAnalysis(): AnnotationAnalysis =
 /**
  * Annotation metadata for IR code generation.
  *
- * Contains pre-rendered annotation information ready for code generation.
- * Arguments are pre-rendered to Kotlin source code strings.
+ * Contains pre-rendered annotation information ready for code generation. Arguments are
+ * pre-rendered to Kotlin source code strings.
  *
  * Examples:
- * - `@OptIn(ExperimentalApi::class)` → IrAnnotationMetadata(
- *       simpleName = "OptIn",
- *       fullyQualifiedName = "kotlin.OptIn",
- *       renderedArguments = ["ExperimentalApi::class"]
- *   )
- * - `@Deprecated("old", level = DeprecationLevel.WARNING)` → IrAnnotationMetadata(
- *       simpleName = "Deprecated",
- *       fullyQualifiedName = "kotlin.Deprecated",
- *       renderedArguments = ["\"old\"", "level = DeprecationLevel.WARNING"]
- *   )
+ * - `@OptIn(ExperimentalApi::class)` → IrAnnotationMetadata( simpleName = "OptIn",
+ *   fullyQualifiedName = "kotlin.OptIn", renderedArguments = ["ExperimentalApi::class"] )
+ * - `@Deprecated("old", level = DeprecationLevel.WARNING)` → IrAnnotationMetadata( simpleName =
+ *   "Deprecated", fullyQualifiedName = "kotlin.Deprecated", renderedArguments =
+ *   ["\"old\"", "level = DeprecationLevel.WARNING"] )
  *
  * @property simpleName Simple annotation name (e.g., "OptIn", "Deprecated")
  * @property fullyQualifiedName Fully qualified name for imports (e.g., "kotlin.OptIn")
  * @property renderedArguments Pre-rendered argument strings for code generation
- * @property isOptInMarker True if this annotation is marked with @RequiresOptIn. When true,
- *           the generated fake needs @OptIn(ThisAnnotation::class) to compile.
+ * @property isOptInMarker True if this annotation is marked with @RequiresOptIn. When true, the
+ *   generated fake needs @OptIn(ThisAnnotation::class) to compile.
  */
 data class IrAnnotationMetadata(
     val simpleName: String,

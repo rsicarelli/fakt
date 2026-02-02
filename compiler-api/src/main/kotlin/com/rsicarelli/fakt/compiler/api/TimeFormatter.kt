@@ -7,8 +7,8 @@ import java.util.Locale
 /**
  * Utility for formatting nanosecond durations to human-readable strings.
  *
- * Provides consistent time formatting across Fakt compiler plugin and Gradle plugin.
- * Automatically selects the most appropriate unit based on duration magnitude.
+ * Provides consistent time formatting across Fakt compiler plugin and Gradle plugin. Automatically
+ * selects the most appropriate unit based on duration magnitude.
  *
  * **Unit Selection:**
  * - 0-999µs: Microseconds (e.g., "234µs", "12µs")
@@ -17,6 +17,7 @@ import java.util.Locale
  * - 60s+: Minutes and seconds (e.g., "1m 5s", "2m 30s")
  *
  * **Usage:**
+ *
  * ```kotlin
  * val startTime = System.nanoTime()
  * // ... operation ...

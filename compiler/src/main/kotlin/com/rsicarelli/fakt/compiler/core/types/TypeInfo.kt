@@ -5,8 +5,8 @@ package com.rsicarelli.fakt.compiler.core.types
 /**
  * Represents metadata about a type discovered during compilation.
  *
- * This data class contains all the necessary information to track and generate
- * fake implementations for interfaces annotated with configured annotations.
+ * This data class contains all the necessary information to track and generate fake implementations
+ * for interfaces annotated with configured annotations.
  *
  * @property name The simple name of the type (e.g., "UserService")
  * @property fullyQualifiedName The fully qualified name (e.g., "com.example.UserService")

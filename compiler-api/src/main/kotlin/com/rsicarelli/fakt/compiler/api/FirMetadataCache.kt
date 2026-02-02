@@ -9,9 +9,9 @@ import kotlinx.serialization.Serializable
  *
  * ## Purpose
  *
- * In Kotlin Multiplatform projects, identical FIR analysis runs N times (once per platform).
- * This cache stores the analysis results from metadata compilation so platform compilations
- * can skip redundant FIR analysis.
+ * In Kotlin Multiplatform projects, identical FIR analysis runs N times (once per platform). This
+ * cache stores the analysis results from metadata compilation so platform compilations can skip
+ * redundant FIR analysis.
  *
  * ## Data Flow
  *
@@ -42,15 +42,14 @@ data class FirMetadataCache(
     val generatedAt: Long = System.currentTimeMillis(),
 ) {
     /**
-     * Total FIR validation time from all cached interfaces and classes.
-     * Used to report how much time was saved by using the cache.
+     * Total FIR validation time from all cached interfaces and classes. Used to report how much
+     * time was saved by using the cache.
      */
     val totalFirTimeNanos: Long
-        get() = interfaces.sumOf { it.validationTimeNanos } + classes.sumOf { it.validationTimeNanos }
+        get() =
+            interfaces.sumOf { it.validationTimeNanos } + classes.sumOf { it.validationTimeNanos }
 
-    /**
-     * Total number of fakes (interfaces + classes) in the cache.
-     */
+    /** Total number of fakes (interfaces + classes) in the cache. */
     val totalFakesCount: Int
         get() = interfaces.size + classes.size
 
@@ -67,8 +66,8 @@ data class FirMetadataCache(
 
     companion object {
         /**
-         * Current cache format version.
-         * Increment this when making breaking changes to the cache format.
+         * Current cache format version. Increment this when making breaking changes to the cache
+         * format.
          *
          * History:
          * - v1: Initial cache format
@@ -84,8 +83,8 @@ data class FirMetadataCache(
 /**
  * Serializable version of ValidatedFakeInterface.
  *
- * Excludes ClassId (not serializable) - uses string representation instead.
- * The ClassId string format is "package.name/SimpleName" or "package.name/Outer.Inner" for nested.
+ * Excludes ClassId (not serializable) - uses string representation instead. The ClassId string
+ * format is "package.name/SimpleName" or "package.name/Outer.Inner" for nested.
  *
  * @property classIdString ClassId as string (e.g., "com.example/UserService")
  * @property simpleName Simple class name (e.g., "UserService")
@@ -158,17 +157,13 @@ data class SerializableFakeClass(
  * Examples:
  * - Simple: `T` → SerializableTypeParameterInfo("T", emptyList())
  * - Bounded: `T : Comparable<T>` → SerializableTypeParameterInfo("T", listOf("Comparable<T>"))
- * - Multiple bounds: `T : Comparable<T>, Serializable` →
- *     SerializableTypeParameterInfo("T", listOf("Comparable<T>", "Serializable"))
+ * - Multiple bounds: `T : Comparable<T>, Serializable` → SerializableTypeParameterInfo("T",
+ *   listOf("Comparable<T>", "Serializable"))
  *
  * @property name Type parameter name (e.g., "T", "K", "V")
  * @property bounds Upper bounds/constraints as strings
  */
-@Serializable
-data class SerializableTypeParameterInfo(
-    val name: String,
-    val bounds: List<String>,
-)
+@Serializable data class SerializableTypeParameterInfo(val name: String, val bounds: List<String>)
 
 /**
  * Serializable property information.
@@ -232,7 +227,8 @@ data class SerializableParameterInfo(
  * Stores annotation class ID and its arguments for propagation to generated fakes.
  *
  * Examples:
- * - `@OptIn(ExperimentalApi::class)` → annotationClassId="kotlin.OptIn", arguments has "markerClasses" array
+ * - `@OptIn(ExperimentalApi::class)` → annotationClassId="kotlin.OptIn", arguments has
+ *   "markerClasses" array
  * - `@Deprecated("old")` → annotationClassId="kotlin.Deprecated", arguments has "message" string
  *
  * @property annotationClassId Fully qualified annotation class ID (e.g., "kotlin.OptIn")
@@ -281,9 +277,7 @@ data class SerializableAnnotationArgument(
     val arrayElements: List<SerializableAnnotationArgument>? = null,
     val nestedAnnotation: SerializableAnnotationInfo? = null,
 ) {
-    /**
-     * Argument type discriminator for serialization.
-     */
+    /** Argument type discriminator for serialization. */
     @Serializable
     enum class ArgumentType {
         CLASS_REFERENCE,

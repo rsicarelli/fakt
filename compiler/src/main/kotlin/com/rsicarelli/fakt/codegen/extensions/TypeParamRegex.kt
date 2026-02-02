@@ -5,8 +5,8 @@ package com.rsicarelli.fakt.codegen.extensions
 /**
  * Cached regex patterns for type parameter matching.
  *
- * Regex compilation is expensive, so we cache patterns by parameter name.
- * These are used throughout code generation to detect and erase type parameters.
+ * Regex compilation is expensive, so we cache patterns by parameter name. These are used throughout
+ * code generation to detect and erase type parameters.
  */
 private val typeParamWordBoundaryRegex = mutableMapOf<String, Regex>()
 private val typeParamNonNullableRegex = mutableMapOf<String, Regex>()
@@ -21,9 +21,7 @@ private val typeParamNullableRegex = mutableMapOf<String, Regex>()
  * @return Cached regex for word boundary matching
  */
 internal fun getTypeParamWordBoundaryRegex(param: String): Regex =
-    typeParamWordBoundaryRegex.getOrPut(param) {
-        Regex("\\b$param\\b")
-    }
+    typeParamWordBoundaryRegex.getOrPut(param) { Regex("\\b$param\\b") }
 
 /**
  * Gets a cached regex that matches a non-nullable type parameter.
@@ -34,9 +32,7 @@ internal fun getTypeParamWordBoundaryRegex(param: String): Regex =
  * @return Cached regex for non-nullable matching
  */
 internal fun getTypeParamNonNullableRegex(param: String): Regex =
-    typeParamNonNullableRegex.getOrPut(param) {
-        Regex("\\b$param\\b(?!\\?)")
-    }
+    typeParamNonNullableRegex.getOrPut(param) { Regex("\\b$param\\b(?!\\?)") }
 
 /**
  * Gets a cached regex that matches a nullable type parameter.
@@ -47,9 +43,7 @@ internal fun getTypeParamNonNullableRegex(param: String): Regex =
  * @return Cached regex for nullable matching
  */
 internal fun getTypeParamNullableRegex(param: String): Regex =
-    typeParamNullableRegex.getOrPut(param) {
-        Regex("\\b$param\\?")
-    }
+    typeParamNullableRegex.getOrPut(param) { Regex("\\b$param\\?") }
 
 /**
  * Checks if a type string contains the given type parameter.
@@ -60,10 +54,8 @@ internal fun getTypeParamNullableRegex(param: String): Regex =
  * @param typeParam The type parameter name to look for
  * @return True if the type contains the type parameter
  */
-internal fun typeContainsParam(
-    type: String,
-    typeParam: String,
-): Boolean = type.contains(getTypeParamWordBoundaryRegex(typeParam))
+internal fun typeContainsParam(type: String, typeParam: String): Boolean =
+    type.contains(getTypeParamWordBoundaryRegex(typeParam))
 
 /**
  * Checks if a type string contains any of the given type parameters.
@@ -72,10 +64,8 @@ internal fun typeContainsParam(
  * @param typeParams The set of type parameter names to look for
  * @return True if the type contains any of the type parameters
  */
-internal fun typeContainsAnyParam(
-    type: String,
-    typeParams: Set<String>,
-): Boolean = typeParams.any { typeContainsParam(type, it) }
+internal fun typeContainsAnyParam(type: String, typeParams: Set<String>): Boolean =
+    typeParams.any { typeContainsParam(type, it) }
 
 /**
  * Erases type parameters in a type string to Any?.
@@ -90,10 +80,7 @@ internal fun typeContainsAnyParam(
  * @param typeParams The set of type parameter names to erase
  * @return The type string with all type parameters replaced by Any?
  */
-internal fun eraseTypeParamsToAny(
-    type: String,
-    typeParams: Set<String>,
-): String {
+internal fun eraseTypeParamsToAny(type: String, typeParams: Set<String>): String {
     if (typeParams.isEmpty()) return type
 
     var result = type
@@ -109,17 +96,14 @@ internal fun eraseTypeParamsToAny(
 /**
  * Erases type parameters (simple replacement without nullable handling).
  *
- * Used when we just need word boundary replacement without distinguishing
- * between nullable and non-nullable variants.
+ * Used when we just need word boundary replacement without distinguishing between nullable and
+ * non-nullable variants.
  *
  * @param type The type string to transform
  * @param typeParams The set of type parameter names to erase
  * @return The type string with all type parameters replaced by Any?
  */
-internal fun eraseTypeParamsSimple(
-    type: String,
-    typeParams: Set<String>,
-): String {
+internal fun eraseTypeParamsSimple(type: String, typeParams: Set<String>): String {
     if (typeParams.isEmpty()) return type
 
     var result = type

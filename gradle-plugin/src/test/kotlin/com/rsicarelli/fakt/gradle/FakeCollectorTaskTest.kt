@@ -4,21 +4,21 @@
 
 package com.rsicarelli.fakt.gradle
 
+import java.io.File
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import java.io.File
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 /**
  * TDD tests for FakeCollectorTask platform-specific fake placement.
  *
- * Tests the collector's ability to detect platform-specific fakes and place them
- * in the correct source sets (jvmMain, commonMain, iosMain, etc.) instead of
- * blindly copying everything to commonMain.
+ * Tests the collector's ability to detect platform-specific fakes and place them in the correct
+ * source sets (jvmMain, commonMain, iosMain, etc.) instead of blindly copying everything to
+ * commonMain.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FakeCollectorTaskTest {
@@ -33,13 +33,15 @@ class FakeCollectorTaskTest {
             class FakeDatabaseServiceImpl : DatabaseService {
                 override suspend fun connect(url: String): Boolean = false
             }
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // GIVEN available source sets
         val availableSourceSets = setOf("commonMain", "jvmMain", "jvmTest")
 
         // WHEN detecting the platform source set
-        val sourceSet = FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
+        val sourceSet =
+            FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
 
         // THEN should return jvmMain
         assertEquals("jvmMain", sourceSet)
@@ -56,13 +58,15 @@ class FakeCollectorTaskTest {
             class FakeNetworkServiceImpl : NetworkService {
                 override fun fetch(url: String): String = ""
             }
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // GIVEN available source sets
         val availableSourceSets = setOf("commonMain", "jvmMain")
 
         // WHEN detecting the platform source set
-        val sourceSet = FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
+        val sourceSet =
+            FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
 
         // THEN should return commonMain
         assertEquals("commonMain", sourceSet)
@@ -79,13 +83,15 @@ class FakeCollectorTaskTest {
             class FakeIOSServiceImpl : IOSService {
                 override fun nativeCall(): String = ""
             }
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // GIVEN available source sets
         val availableSourceSets = setOf("commonMain", "iosMain", "iosArm64Main")
 
         // WHEN detecting the platform source set
-        val sourceSet = FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
+        val sourceSet =
+            FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
 
         // THEN should return iosMain
         assertEquals("iosMain", sourceSet)
@@ -101,13 +107,15 @@ class FakeCollectorTaskTest {
             class FakeJSServiceImpl : JSService {
                 override fun browserApi(): String = ""
             }
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // GIVEN available source sets
         val availableSourceSets = setOf("commonMain", "jsMain", "jvmMain")
 
         // WHEN detecting the platform source set
-        val sourceSet = FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
+        val sourceSet =
+            FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
 
         // THEN should return jsMain
         assertEquals("jsMain", sourceSet)
@@ -123,13 +131,15 @@ class FakeCollectorTaskTest {
             class FakeNativeServiceImpl : NativeService {
                 override fun platformCall(): String = ""
             }
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // GIVEN available source sets
         val availableSourceSets = setOf("commonMain", "nativeMain", "iosMain")
 
         // WHEN detecting the platform source set
-        val sourceSet = FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
+        val sourceSet =
+            FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
 
         // THEN should return nativeMain
         assertEquals("nativeMain", sourceSet)
@@ -145,7 +155,8 @@ class FakeCollectorTaskTest {
             class FakeGenericServiceImpl : GenericService {
                 override fun doSomething(): String = ""
             }
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // WHEN detecting the platform source set
         val sourceSet = FakeCollectorTask.determinePlatformSourceSet(fakeContent)
@@ -164,13 +175,15 @@ class FakeCollectorTaskTest {
             class FakeCommonServiceImpl : CommonService {
                 override fun shared(): String = ""
             }
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // GIVEN available source sets
         val availableSourceSets = setOf("commonMain", "jvmMain")
 
         // WHEN detecting the platform source set
-        val sourceSet = FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
+        val sourceSet =
+            FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
 
         // THEN should return commonMain
         assertEquals("commonMain", sourceSet)
@@ -178,7 +191,7 @@ class FakeCollectorTaskTest {
 
     @Test
     fun `GIVEN multi-platform project WHEN collecting fakes THEN should separate by platform`(
-        @TempDir tempDir: File,
+        @TempDir tempDir: File
     ) {
         // GIVEN a source directory with mixed platform fakes
         val sourceDir = tempDir.resolve("source/build/generated/fakt/commonTest/kotlin")
@@ -191,7 +204,8 @@ class FakeCollectorTaskTest {
             """
             package api.jvm
             class FakeDatabaseServiceImpl : DatabaseService {}
-            """.trimIndent(),
+            """
+                .trimIndent()
         )
 
         // Create common fake
@@ -201,7 +215,8 @@ class FakeCollectorTaskTest {
             """
             package api.shared
             class FakeNetworkServiceImpl : NetworkService {}
-            """.trimIndent(),
+            """
+                .trimIndent()
         )
 
         // Create iOS fake
@@ -211,7 +226,8 @@ class FakeCollectorTaskTest {
             """
             package api.ios
             class FakeIOSServiceImpl : IOSService {}
-            """.trimIndent(),
+            """
+                .trimIndent()
         )
 
         // GIVEN available source sets
@@ -257,13 +273,15 @@ class FakeCollectorTaskTest {
             package com.example.api.jvm.services.database
 
             class FakeDatabaseServiceImpl : DatabaseService {}
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // GIVEN available source sets
         val availableSourceSets = setOf("commonMain", "jvmMain", "jvmTest")
 
         // WHEN detecting the platform source set
-        val sourceSet = FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
+        val sourceSet =
+            FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
 
         // THEN should detect jvmMain from package hierarchy
         assertEquals("jvmMain", sourceSet)
@@ -277,13 +295,15 @@ class FakeCollectorTaskTest {
             package api.internal.jvm.util
 
             class FakeJvmUtilImpl {}
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // GIVEN available source sets
         val availableSourceSets = setOf("commonMain", "jvmMain", "jvmTest")
 
         // WHEN detecting the platform source set
-        val sourceSet = FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
+        val sourceSet =
+            FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
 
         // THEN should detect jvmMain
         assertEquals("jvmMain", sourceSet)
@@ -297,21 +317,23 @@ class FakeCollectorTaskTest {
             class FakeServiceImpl : Service {
                 override fun doWork(): String = ""
             }
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // GIVEN available source sets
         val availableSourceSets = setOf("commonMain", "jvmMain")
 
         // WHEN detecting the platform source set
-        val sourceSet = FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
+        val sourceSet =
+            FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
 
         // THEN should default to commonMain
         assertEquals("commonMain", sourceSet)
     }
 
     /**
-     * Parametrized tests for ALL KMP targets supported by runtime.
-     * This ensures determinePlatformSourceSet() works for ALL platforms, not just hardcoded ones.
+     * Parametrized tests for ALL KMP targets supported by runtime. This ensures
+     * determinePlatformSourceSet() works for ALL platforms, not just hardcoded ones.
      *
      * Test format: "packageSegment, expectedSourceSet"
      * - packageSegment: The platform marker in package (e.g., "tvos", "macos")
@@ -353,7 +375,8 @@ class FakeCollectorTaskTest {
             class FakeServiceImpl : Service {
                 override fun doWork(): String = ""
             }
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // GIVEN available source sets (simulating KMP project with all targets)
         val availableSourceSets =
@@ -409,10 +432,15 @@ class FakeCollectorTaskTest {
             )
 
         // WHEN detecting the platform source set with available source sets
-        val sourceSet = FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
+        val sourceSet =
+            FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
 
         // THEN should return the correct source set
-        assertEquals(expectedSourceSet, sourceSet, "Package segment '$packageSegment' should map to '$expectedSourceSet'")
+        assertEquals(
+            expectedSourceSet,
+            sourceSet,
+            "Package segment '$packageSegment' should map to '$expectedSourceSet'",
+        )
     }
 
     @Test
@@ -423,7 +451,8 @@ class FakeCollectorTaskTest {
             package api.ios.services
 
             class FakeIOSServiceImpl : IOSService {}
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // GIVEN hierarchical source sets where "ios" could match iosMain, appleMain, nativeMain
         val availableSourceSets =
@@ -436,7 +465,8 @@ class FakeCollectorTaskTest {
             )
 
         // WHEN detecting the platform source set
-        val sourceSet = FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
+        val sourceSet =
+            FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
 
         // THEN should prioritize most specific (iosMain over appleMain over nativeMain)
         assertEquals("iosMain", sourceSet, "Should prioritize 'iosMain' over parent source sets")
@@ -450,19 +480,15 @@ class FakeCollectorTaskTest {
             package api.iosArm64.services
 
             class FakeIOSArm64ServiceImpl : IOSArm64Service {}
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // GIVEN available source sets including architecture-specific
-        val availableSourceSets =
-            setOf(
-                "commonMain",
-                "iosMain",
-                "iosArm64Main",
-                "iosX64Main",
-            )
+        val availableSourceSets = setOf("commonMain", "iosMain", "iosArm64Main", "iosX64Main")
 
         // WHEN detecting the platform source set
-        val sourceSet = FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
+        val sourceSet =
+            FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
 
         // THEN should match the architecture-specific source set
         assertEquals("iosArm64Main", sourceSet, "Should match architecture-specific 'iosArm64Main'")
@@ -476,18 +502,15 @@ class FakeCollectorTaskTest {
             package api.services.database
 
             class FakeServiceImpl : Service {}
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // GIVEN available source sets (no match for "api", "services", or "database")
-        val availableSourceSets =
-            setOf(
-                "commonMain",
-                "jvmMain",
-                "iosMain",
-            )
+        val availableSourceSets = setOf("commonMain", "jvmMain", "iosMain")
 
         // WHEN detecting the platform source set
-        val sourceSet = FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
+        val sourceSet =
+            FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
 
         // THEN should fallback to commonMain
         assertEquals("commonMain", sourceSet, "Should fallback to 'commonMain' when no match found")
@@ -501,15 +524,21 @@ class FakeCollectorTaskTest {
             package api.jvm.services
 
             class FakeJVMServiceImpl : JVMService {}
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // GIVEN empty available source sets
         val availableSourceSets = emptySet<String>()
 
         // WHEN detecting the platform source set
-        val sourceSet = FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
+        val sourceSet =
+            FakeCollectorTask.determinePlatformSourceSet(fakeContent, availableSourceSets)
 
         // THEN should fallback to commonMain (no matching source sets available)
-        assertEquals("commonMain", sourceSet, "Should fallback to commonMain when no available source sets provided")
+        assertEquals(
+            "commonMain",
+            sourceSet,
+            "Should fallback to commonMain when no available source sets provided",
+        )
     }
 }

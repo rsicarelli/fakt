@@ -9,6 +9,7 @@ package com.rsicarelli.fakt.compiler.core.telemetry
  * providing a complete view of fake generation performance in a single structure.
  *
  * **Usage:**
+ *
  * ```kotlin
  * val metrics = UnifiedFakeMetrics(
  *     name = "UserService",
@@ -23,8 +24,8 @@ package com.rsicarelli.fakt.compiler.core.telemetry
  * println("Total: ${metrics.totalTimeNanos}ns")
  * ```
  *
- * **Cache Detection:**
- * Cache hits naturally show fast IR times (~5-50µs) vs fresh generation (~500µs-5ms):
+ * **Cache Detection:** Cache hits naturally show fast IR times (~5-50µs) vs fresh generation
+ * (~500µs-5ms):
  * ```kotlin
  * val cached = UnifiedFakeMetrics(
  *     name = "CachedService",
@@ -53,8 +54,8 @@ data class UnifiedFakeMetrics(
     /**
      * Total time combining FIR analysis and IR generation.
      *
-     * Fast total times (~50-200µs) indicate cache hits.
-     * Slow total times (~1-10ms) indicate fresh generation.
+     * Fast total times (~50-200µs) indicate cache hits. Slow total times (~1-10ms) indicate fresh
+     * generation.
      */
     val totalTimeNanos: Long
         get() = firTimeNanos + irTimeNanos

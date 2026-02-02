@@ -18,11 +18,7 @@ import com.rsicarelli.fakt.codegen.builder.ClassBuilder
  * @param elementType Type of elements in StateFlow (e.g., "User", "List<String>")
  * @param defaultValue Initial value expression
  */
-fun ClassBuilder.stateFlowProperty(
-    name: String,
-    elementType: String,
-    defaultValue: String,
-) {
+fun ClassBuilder.stateFlowProperty(name: String, elementType: String, defaultValue: String) {
     // Backing property
     property("${name}Value", "StateFlow<$elementType>") {
         private()

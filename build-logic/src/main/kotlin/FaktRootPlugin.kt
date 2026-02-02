@@ -16,7 +16,7 @@ import org.gradle.api.Project
  * - Spotless predeclareDeps
  *
  * Note: This plugin should ONLY be applied to the root project.
- * Individual projects apply fakt-spotless, fakt-ktlint, fakt-detekt as needed.
+ * Individual projects apply fakt-spotless, fakt-detekt as needed.
  */
 class FaktRootPlugin : Plugin<Project> {
     override fun apply(target: Project) {

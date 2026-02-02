@@ -3,30 +3,28 @@
 package com.rsicarelli.fakt.compiler.ir.transform
 
 import com.rsicarelli.fakt.compiler.fir.metadata.FirTypeParameterInfo
-import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
-import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for FirToIrTransformer type bound sanitization.
  *
- * **Critical Fix**: FIR's coneType.toString() produces "kotlin/Any?" which is
- * invalid Kotlin syntax and causes compilation failures. The sanitization
- * converts these to clean, valid Kotlin type notation.
+ * **Critical Fix**: FIR's coneType.toString() produces "kotlin/Any?" which is invalid Kotlin syntax
+ * and causes compilation failures. The sanitization converts these to clean, valid Kotlin type
+ * notation.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FirToIrTransformerTest {
     // Create transformer instance using reflection to access private methods
     private val transformer = FirToIrTransformer()
     private val sanitizeMethod =
-        transformer::class.java
-            .getDeclaredMethod(
-                "sanitizeTypeBound",
-                String::class.java,
-            ).apply { isAccessible = true }
+        transformer::class.java.getDeclaredMethod("sanitizeTypeBound", String::class.java).apply {
+            isAccessible = true
+        }
 
-    private fun sanitize(bound: String): String = sanitizeMethod.invoke(transformer, bound) as String
+    private fun sanitize(bound: String): String =
+        sanitizeMethod.invoke(transformer, bound) as String
 
     @Test
     fun `GIVEN kotlin stdlib type WHEN sanitizing bound THEN should remove kotlin prefix`() {
@@ -79,17 +77,12 @@ class FirToIrTransformerTest {
     @Test
     fun `GIVEN type parameter with single bound WHEN formatting THEN should format correctly`() {
         // GIVEN: Type parameter with kotlin/ bound
-        val typeParam =
-            FirTypeParameterInfo(
-                name = "T",
-                bounds = listOf("kotlin/Comparable<T>"),
-            )
+        val typeParam = FirTypeParameterInfo(name = "T", bounds = listOf("kotlin/Comparable<T>"))
         val formatMethod =
-            transformer::class.java
-                .getDeclaredMethod(
-                    "formatTypeParameter",
-                    FirTypeParameterInfo::class.java,
-                ).apply { isAccessible = true }
+            transformer::class
+                .java
+                .getDeclaredMethod("formatTypeParameter", FirTypeParameterInfo::class.java)
+                .apply { isAccessible = true }
 
         // WHEN: Formatting
         val result = formatMethod.invoke(transformer, typeParam) as String

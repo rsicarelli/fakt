@@ -4,9 +4,34 @@
 package com.rsicarelli.fakt.conventions
 
 import org.gradle.api.Project
+import org.gradle.api.artifacts.VersionCatalog
+import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.kotlin.dsl.getByType
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+
+/**
+ * Access the version catalog (libs.versions.toml) from any project.
+ *
+ * Example:
+ * ```kotlin
+ * val ktfmtVersion = libs.version("ktfmt")
+ * ```
+ */
+internal val Project.libs: VersionCatalog
+    get() = extensions.getByType<VersionCatalogsExtension>().named("libs")
+
+/**
+ * Get a version string from the catalog.
+ *
+ * Example:
+ * ```kotlin
+ * val ktfmtVersion = libs.version("ktfmt") // "0.61"
+ * ```
+ */
+internal fun VersionCatalog.version(alias: String): String =
+    findVersion(alias).get().toString()
 
 /**
  * Configures Java plugin extension if the Java plugin is applied.

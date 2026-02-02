@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.fir.metadata
 
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 /**
  * Tests for FIR metadata data classes following GIVEN-WHEN-THEN pattern.
@@ -55,70 +55,66 @@ class FirFakeMetadataTest {
         }
 
     @Test
-    fun `GIVEN ValidatedFakeInterface WHEN created THEN contains all metadata`() =
-        runTest {
-            // GIVEN
-            val classId = ClassId.topLevel(FqName("com.example.UserService"))
-            val typeParams =
-                listOf(
-                    FirTypeParameterInfo("T", emptyList()),
-                    FirTypeParameterInfo("R", listOf("Comparable<R>")),
+    fun `GIVEN ValidatedFakeInterface WHEN created THEN contains all metadata`() = runTest {
+        // GIVEN
+        val classId = ClassId.topLevel(FqName("com.example.UserService"))
+        val typeParams =
+            listOf(
+                FirTypeParameterInfo("T", emptyList()),
+                FirTypeParameterInfo("R", listOf("Comparable<R>")),
+            )
+        val properties =
+            listOf(
+                FirPropertyInfo(
+                    name = "userId",
+                    type = "String",
+                    isMutable = false,
+                    isNullable = false,
                 )
-            val properties =
-                listOf(
-                    FirPropertyInfo(
-                        name = "userId",
-                        type = "String",
-                        isMutable = false,
-                        isNullable = false,
-                    ),
+            )
+        val functions =
+            listOf(
+                FirFunctionInfo(
+                    name = "getUser",
+                    parameters = emptyList(),
+                    returnType = "T",
+                    isSuspend = true,
+                    isInline = false,
+                    typeParameters = emptyList(),
+                    typeParameterBounds = emptyMap(),
                 )
-            val functions =
-                listOf(
-                    FirFunctionInfo(
-                        name = "getUser",
-                        parameters = emptyList(),
-                        returnType = "T",
-                        isSuspend = true,
-                        isInline = false,
-                        typeParameters = emptyList(),
-                        typeParameterBounds = emptyMap(),
-                    ),
-                )
+            )
 
-            // WHEN
-            val metadata =
-                ValidatedFakeInterface(
-                    classId = classId,
-                    simpleName = "UserService",
-                    packageName = "com.example",
-                    typeParameters = typeParams,
-                    properties = properties,
-                    functions = functions,
-                    inheritedProperties = emptyList(),
-                    inheritedFunctions = emptyList(),
-                    sourceLocation = FirSourceLocation.UNKNOWN,
-                    validationTimeNanos = 0L,
-                )
+        // WHEN
+        val metadata =
+            ValidatedFakeInterface(
+                classId = classId,
+                simpleName = "UserService",
+                packageName = "com.example",
+                typeParameters = typeParams,
+                properties = properties,
+                functions = functions,
+                inheritedProperties = emptyList(),
+                inheritedFunctions = emptyList(),
+                sourceLocation = FirSourceLocation.UNKNOWN,
+                validationTimeNanos = 0L,
+            )
 
-            // THEN
-            assertEquals(classId, metadata.classId)
-            assertEquals("UserService", metadata.simpleName)
-            assertEquals("com.example", metadata.packageName)
-            assertEquals(2, metadata.typeParameters.size)
-            assertEquals(1, metadata.properties.size)
-            assertEquals(1, metadata.functions.size)
-        }
+        // THEN
+        assertEquals(classId, metadata.classId)
+        assertEquals("UserService", metadata.simpleName)
+        assertEquals("com.example", metadata.packageName)
+        assertEquals(2, metadata.typeParameters.size)
+        assertEquals(1, metadata.properties.size)
+        assertEquals(1, metadata.functions.size)
+    }
 
     @Test
     fun `GIVEN FirTypeParameterInfo with bounds WHEN created THEN stores bounds correctly`() =
         runTest {
             // GIVEN & WHEN
             val typeParam =
-                FirTypeParameterInfo(
-                    name = "T",
-                    bounds = listOf("Comparable<T>", "Serializable"),
-                )
+                FirTypeParameterInfo(name = "T", bounds = listOf("Comparable<T>", "Serializable"))
 
             // THEN
             assertEquals("T", typeParam.name)
@@ -128,23 +124,22 @@ class FirFakeMetadataTest {
         }
 
     @Test
-    fun `GIVEN FirPropertyInfo WHEN created THEN captures all property details`() =
-        runTest {
-            // GIVEN & WHEN
-            val propertyInfo =
-                FirPropertyInfo(
-                    name = "userName",
-                    type = "String?",
-                    isMutable = true,
-                    isNullable = true,
-                )
+    fun `GIVEN FirPropertyInfo WHEN created THEN captures all property details`() = runTest {
+        // GIVEN & WHEN
+        val propertyInfo =
+            FirPropertyInfo(
+                name = "userName",
+                type = "String?",
+                isMutable = true,
+                isNullable = true,
+            )
 
-            // THEN
-            assertEquals("userName", propertyInfo.name)
-            assertEquals("String?", propertyInfo.type)
-            assertEquals(true, propertyInfo.isMutable)
-            assertEquals(true, propertyInfo.isNullable)
-        }
+        // THEN
+        assertEquals("userName", propertyInfo.name)
+        assertEquals("String?", propertyInfo.type)
+        assertEquals(true, propertyInfo.isMutable)
+        assertEquals(true, propertyInfo.isNullable)
+    }
 
     @Test
     fun `GIVEN FirFunctionInfo with suspend WHEN created THEN captures suspend modifier`() =
@@ -161,7 +156,7 @@ class FirFakeMetadataTest {
                                 hasDefaultValue = false,
                                 defaultValueCode = null,
                                 isVararg = false,
-                            ),
+                            )
                         ),
                     returnType = "User",
                     isSuspend = true,
@@ -227,14 +222,8 @@ class FirFakeMetadataTest {
         runTest {
             // GIVEN
             val classId = ClassId.topLevel(FqName("com.example.AbstractRepository"))
-            val abstractProps =
-                listOf(
-                    FirPropertyInfo("id", "Long", false, false),
-                )
-            val openProps =
-                listOf(
-                    FirPropertyInfo("name", "String", true, false),
-                )
+            val abstractProps = listOf(FirPropertyInfo("id", "Long", false, false))
+            val openProps = listOf(FirPropertyInfo("name", "String", true, false))
             val abstractMethods =
                 listOf(
                     FirFunctionInfo(
@@ -245,7 +234,7 @@ class FirFakeMetadataTest {
                         isInline = false,
                         typeParameters = emptyList(),
                         typeParameterBounds = emptyMap(),
-                    ),
+                    )
                 )
             val openMethods =
                 listOf(
@@ -257,7 +246,7 @@ class FirFakeMetadataTest {
                         isInline = false,
                         typeParameters = emptyList(),
                         typeParameterBounds = emptyMap(),
-                    ),
+                    )
                 )
 
             // WHEN
@@ -340,17 +329,16 @@ class FirFakeMetadataTest {
         }
 
     @Test
-    fun `GIVEN FirVisibility toModifier WHEN PUBLIC THEN returns public with space`() =
-        runTest {
-            // GIVEN
-            val visibility = FirVisibility.PUBLIC
+    fun `GIVEN FirVisibility toModifier WHEN PUBLIC THEN returns public with space`() = runTest {
+        // GIVEN
+        val visibility = FirVisibility.PUBLIC
 
-            // WHEN
-            val modifier = visibility.toModifier()
+        // WHEN
+        val modifier = visibility.toModifier()
 
-            // THEN
-            assertEquals("public ", modifier)
-        }
+        // THEN
+        assertEquals("public ", modifier)
+    }
 
     @Test
     fun `GIVEN FirVisibility toModifier WHEN INTERNAL THEN returns internal with space`() =
@@ -374,10 +362,7 @@ class FirFakeMetadataTest {
         runTest {
             // GIVEN & WHEN
             val annotation =
-                FirAnnotationInfo(
-                    annotationClassId = "kotlin.Deprecated",
-                    arguments = emptyMap(),
-                )
+                FirAnnotationInfo(annotationClassId = "kotlin.Deprecated", arguments = emptyMap())
 
             // THEN
             assertEquals("kotlin.Deprecated", annotation.annotationClassId)
@@ -393,7 +378,8 @@ class FirFakeMetadataTest {
                     annotationClassId = "kotlin.Deprecated",
                     arguments =
                         mapOf(
-                            "message" to FirAnnotationArgument.StringLiteral("Use newMethod instead"),
+                            "message" to
+                                FirAnnotationArgument.StringLiteral("Use newMethod instead")
                         ),
                 )
 
@@ -402,7 +388,10 @@ class FirFakeMetadataTest {
             assertEquals(1, annotation.arguments.size)
             val messageArg = annotation.arguments["message"]
             assertTrue(messageArg is FirAnnotationArgument.StringLiteral)
-            assertEquals("Use newMethod instead", (messageArg as FirAnnotationArgument.StringLiteral).value)
+            assertEquals(
+                "Use newMethod instead",
+                (messageArg as FirAnnotationArgument.StringLiteral).value,
+            )
         }
 
     @Test
@@ -418,9 +407,11 @@ class FirFakeMetadataTest {
                                 FirAnnotationArgument.ArrayValue(
                                     elements =
                                         listOf(
-                                            FirAnnotationArgument.ClassReference("com.example.ExperimentalApi"),
-                                        ),
-                                ),
+                                            FirAnnotationArgument.ClassReference(
+                                                "com.example.ExperimentalApi"
+                                            )
+                                        )
+                                )
                         ),
                 )
 
@@ -431,7 +422,10 @@ class FirFakeMetadataTest {
             val elements = (markerArg as FirAnnotationArgument.ArrayValue).elements
             assertEquals(1, elements.size)
             assertTrue(elements[0] is FirAnnotationArgument.ClassReference)
-            assertEquals("com.example.ExperimentalApi", (elements[0] as FirAnnotationArgument.ClassReference).classId)
+            assertEquals(
+                "com.example.ExperimentalApi",
+                (elements[0] as FirAnnotationArgument.ClassReference).classId,
+            )
         }
 
     @Test
@@ -450,9 +444,9 @@ class FirFakeMetadataTest {
                                             FirAnnotationArgument.EnumValue(
                                                 enumClassId = "kotlin.annotation.AnnotationTarget",
                                                 entryName = "CLASS",
-                                            ),
-                                        ),
-                                ),
+                                            )
+                                        )
+                                )
                         ),
                 )
 
@@ -469,32 +463,31 @@ class FirFakeMetadataTest {
         }
 
     @Test
-    fun `GIVEN FirAnnotationArgument types WHEN created THEN all types work correctly`() =
-        runTest {
-            // GIVEN & WHEN - Test all argument types
-            val stringArg = FirAnnotationArgument.StringLiteral("test")
-            val numberArg = FirAnnotationArgument.NumberLiteral("42")
-            val boolArg = FirAnnotationArgument.BooleanLiteral(true)
-            val charArg = FirAnnotationArgument.CharLiteral('x')
-            val classRefArg = FirAnnotationArgument.ClassReference("com.example.Foo")
-            val enumArg = FirAnnotationArgument.EnumValue("com.example.MyEnum", "ENTRY")
-            val arrayArg = FirAnnotationArgument.ArrayValue(listOf(stringArg, numberArg))
-            val nestedArg =
-                FirAnnotationArgument.NestedAnnotation(
-                    FirAnnotationInfo("kotlin.Suppress", mapOf("names" to stringArg)),
-                )
+    fun `GIVEN FirAnnotationArgument types WHEN created THEN all types work correctly`() = runTest {
+        // GIVEN & WHEN - Test all argument types
+        val stringArg = FirAnnotationArgument.StringLiteral("test")
+        val numberArg = FirAnnotationArgument.NumberLiteral("42")
+        val boolArg = FirAnnotationArgument.BooleanLiteral(true)
+        val charArg = FirAnnotationArgument.CharLiteral('x')
+        val classRefArg = FirAnnotationArgument.ClassReference("com.example.Foo")
+        val enumArg = FirAnnotationArgument.EnumValue("com.example.MyEnum", "ENTRY")
+        val arrayArg = FirAnnotationArgument.ArrayValue(listOf(stringArg, numberArg))
+        val nestedArg =
+            FirAnnotationArgument.NestedAnnotation(
+                FirAnnotationInfo("kotlin.Suppress", mapOf("names" to stringArg))
+            )
 
-            // THEN
-            assertEquals("test", stringArg.value)
-            assertEquals("42", numberArg.value)
-            assertEquals(true, boolArg.value)
-            assertEquals('x', charArg.value)
-            assertEquals("com.example.Foo", classRefArg.classId)
-            assertEquals("com.example.MyEnum", enumArg.enumClassId)
-            assertEquals("ENTRY", enumArg.entryName)
-            assertEquals(2, arrayArg.elements.size)
-            assertEquals("kotlin.Suppress", nestedArg.annotation.annotationClassId)
-        }
+        // THEN
+        assertEquals("test", stringArg.value)
+        assertEquals("42", numberArg.value)
+        assertEquals(true, boolArg.value)
+        assertEquals('x', charArg.value)
+        assertEquals("com.example.Foo", classRefArg.classId)
+        assertEquals("com.example.MyEnum", enumArg.enumClassId)
+        assertEquals("ENTRY", enumArg.entryName)
+        assertEquals(2, arrayArg.elements.size)
+        assertEquals("kotlin.Suppress", nestedArg.annotation.annotationClassId)
+    }
 
     @Test
     fun `GIVEN ValidatedFakeInterface with annotations WHEN created THEN contains annotations`() =
@@ -510,16 +503,19 @@ class FirFakeMetadataTest {
                                 "markerClasses" to
                                     FirAnnotationArgument.ArrayValue(
                                         listOf(
-                                            FirAnnotationArgument.ClassReference("com.example.ExperimentalApi"),
-                                        ),
-                                    ),
+                                            FirAnnotationArgument.ClassReference(
+                                                "com.example.ExperimentalApi"
+                                            )
+                                        )
+                                    )
                             ),
                     ),
                     FirAnnotationInfo(
                         annotationClassId = "kotlin.Deprecated",
                         arguments =
                             mapOf(
-                                "message" to FirAnnotationArgument.StringLiteral("Use NewService instead"),
+                                "message" to
+                                    FirAnnotationArgument.StringLiteral("Use NewService instead")
                             ),
                     ),
                 )
@@ -557,14 +553,15 @@ class FirFakeMetadataTest {
                         annotationClassId = "kotlin.Deprecated",
                         arguments =
                             mapOf(
-                                "message" to FirAnnotationArgument.StringLiteral("Use NewRepository"),
+                                "message" to
+                                    FirAnnotationArgument.StringLiteral("Use NewRepository"),
                                 "level" to
                                     FirAnnotationArgument.EnumValue(
                                         enumClassId = "kotlin.DeprecationLevel",
                                         entryName = "WARNING",
                                     ),
                             ),
-                    ),
+                    )
                 )
 
             // WHEN

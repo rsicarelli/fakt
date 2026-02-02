@@ -5,14 +5,14 @@ package com.rsicarelli.fakt.compiler.core.config
 import com.rsicarelli.fakt.compiler.api.LogLevel
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.api.SourceSetInfo
-import kotlinx.coroutines.test.runTest
-import org.jetbrains.kotlin.config.CompilerConfiguration
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.runTest
+import org.jetbrains.kotlin.config.CompilerConfiguration
 
 /**
  * TDD tests for FaktOptions - loading configuration from CompilerConfiguration.
@@ -118,60 +118,58 @@ class FaktOptionsTest {
         }
 
     @Test
-    fun `GIVEN empty configuration WHEN loading THEN should use default values`() =
-        runTest {
-            // GIVEN: Empty configuration
-            val configuration = CompilerConfiguration()
+    fun `GIVEN empty configuration WHEN loading THEN should use default values`() = runTest {
+        // GIVEN: Empty configuration
+        val configuration = CompilerConfiguration()
 
-            // WHEN: Loading options
-            val options = FaktOptions.load(configuration)
+        // WHEN: Loading options
+        val options = FaktOptions.load(configuration)
 
-            // THEN: Should use defaults
-            assertNull(options.sourceSetContext, "Default context should be null")
-            assertTrue(options.enabled, "Default enabled should be true")
-            assertEquals(LogLevel.INFO, options.logLevel, "Default logLevel should be INFO")
-            assertNull(options.outputDir, "Default outputDir should be null")
-        }
+        // THEN: Should use defaults
+        assertNull(options.sourceSetContext, "Default context should be null")
+        assertTrue(options.enabled, "Default enabled should be true")
+        assertEquals(LogLevel.INFO, options.logLevel, "Default logLevel should be INFO")
+        assertNull(options.outputDir, "Default outputDir should be null")
+    }
 
     @Test
-    fun `GIVEN complex KMP context WHEN loading THEN should preserve full hierarchy`() =
-        runTest {
-            // GIVEN: Complex KMP context with multiple source sets
-            val context =
-                SourceSetContext(
-                    compilationName = "main",
-                    targetName = "iosX64",
-                    platformType = "native",
-                    isTest = false,
-                    defaultSourceSet = SourceSetInfo("iosX64Main", listOf("iosMain")),
-                    allSourceSets =
-                        listOf(
-                            SourceSetInfo("iosX64Main", listOf("iosMain")),
-                            SourceSetInfo("iosMain", listOf("appleMain")),
-                            SourceSetInfo("appleMain", listOf("nativeMain")),
-                            SourceSetInfo("nativeMain", listOf("commonMain")),
-                            SourceSetInfo("commonMain", emptyList()),
-                        ),
-                    outputDirectory = "/project/build/generated/fakt/main/kotlin",
-                    commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
-                )
+    fun `GIVEN complex KMP context WHEN loading THEN should preserve full hierarchy`() = runTest {
+        // GIVEN: Complex KMP context with multiple source sets
+        val context =
+            SourceSetContext(
+                compilationName = "main",
+                targetName = "iosX64",
+                platformType = "native",
+                isTest = false,
+                defaultSourceSet = SourceSetInfo("iosX64Main", listOf("iosMain")),
+                allSourceSets =
+                    listOf(
+                        SourceSetInfo("iosX64Main", listOf("iosMain")),
+                        SourceSetInfo("iosMain", listOf("appleMain")),
+                        SourceSetInfo("appleMain", listOf("nativeMain")),
+                        SourceSetInfo("nativeMain", listOf("commonMain")),
+                        SourceSetInfo("commonMain", emptyList()),
+                    ),
+                outputDirectory = "/project/build/generated/fakt/main/kotlin",
+                commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
+            )
 
-            val configuration = CompilerConfiguration()
-            configuration.put(FaktCommandLineProcessor.SOURCE_SET_CONTEXT_KEY, context)
+        val configuration = CompilerConfiguration()
+        configuration.put(FaktCommandLineProcessor.SOURCE_SET_CONTEXT_KEY, context)
 
-            // WHEN: Loading options
-            val options = FaktOptions.load(configuration)
+        // WHEN: Loading options
+        val options = FaktOptions.load(configuration)
 
-            // THEN: Full hierarchy should be preserved
-            assertNotNull(options.sourceSetContext)
-            assertEquals(5, options.sourceSetContext.allSourceSets.size)
-            val sourceSetNames = options.sourceSetContext.allSourceSets.map { it.name }
-            assertTrue(sourceSetNames.contains("iosX64Main"))
-            assertTrue(sourceSetNames.contains("iosMain"))
-            assertTrue(sourceSetNames.contains("appleMain"))
-            assertTrue(sourceSetNames.contains("nativeMain"))
-            assertTrue(sourceSetNames.contains("commonMain"))
-        }
+        // THEN: Full hierarchy should be preserved
+        assertNotNull(options.sourceSetContext)
+        assertEquals(5, options.sourceSetContext.allSourceSets.size)
+        val sourceSetNames = options.sourceSetContext.allSourceSets.map { it.name }
+        assertTrue(sourceSetNames.contains("iosX64Main"))
+        assertTrue(sourceSetNames.contains("iosMain"))
+        assertTrue(sourceSetNames.contains("appleMain"))
+        assertTrue(sourceSetNames.contains("nativeMain"))
+        assertTrue(sourceSetNames.contains("commonMain"))
+    }
 
     @Test
     fun `GIVEN options with context WHEN converting to string THEN should include context info`() =

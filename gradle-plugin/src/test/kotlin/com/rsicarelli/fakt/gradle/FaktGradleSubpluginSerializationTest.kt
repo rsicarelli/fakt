@@ -4,12 +4,12 @@ package com.rsicarelli.fakt.gradle
 
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.gradle.helpers.SourceSetTestHelper
-import kotlinx.serialization.json.Json
-import org.junit.jupiter.api.Test
 import java.util.Base64
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlinx.serialization.json.Json
+import org.junit.jupiter.api.Test
 
 /**
  * TDD tests for FaktGradleSubplugin SubpluginOption serialization.

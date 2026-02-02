@@ -5,8 +5,8 @@ package com.rsicarelli.fakt.codegen.renderer
 /**
  * Zero-dependency code builder with automatic indentation management.
  *
- * Implements the "Format-by-Construction" pattern.
- * Single StringBuilder instance passed through entire generation for zero allocations.
+ * Implements the "Format-by-Construction" pattern. Single StringBuilder instance passed through
+ * entire generation for zero allocations.
  *
  * Key features:
  * - Automatic indentation tracking
@@ -31,15 +31,11 @@ package com.rsicarelli.fakt.codegen.renderer
  * @property indentSize Number of spaces per indentation level (default: 4)
  */
 public class CodeBuilder(
-    @PublishedApi
-    internal val builder: StringBuilder = StringBuilder(),
-    @PublishedApi
-    internal var indentLevel: Int = 0,
+    @PublishedApi internal val builder: StringBuilder = StringBuilder(),
+    @PublishedApi internal var indentLevel: Int = 0,
     public val indentSize: Int = 4,
 ) {
-    /**
-     * Current indentation string (spaces per level based on indentSize).
-     */
+    /** Current indentation string (spaces per level based on indentSize). */
     @PublishedApi
     internal val indent: String
         get() = " ".repeat(indentSize * indentLevel)
@@ -82,8 +78,8 @@ public class CodeBuilder(
     }
 
     /**
-     * Appends a line with a block opener (e.g., "class Foo {")
-     * and executes [body] with increased indent.
+     * Appends a line with a block opener (e.g., "class Foo {") and executes [body] with increased
+     * indent.
      *
      * Automatically adds opening brace and closing brace with correct indentation.
      *
@@ -101,10 +97,7 @@ public class CodeBuilder(
      * @param header The header line (e.g., "class Foo", "fun test()")
      * @param body Code block to execute inside the braces
      */
-    public inline fun block(
-        header: String,
-        body: CodeBuilder.() -> Unit,
-    ) {
+    public inline fun block(header: String, body: CodeBuilder.() -> Unit) {
         appendLine("$header {")
         indent(body)
         appendLine("}")

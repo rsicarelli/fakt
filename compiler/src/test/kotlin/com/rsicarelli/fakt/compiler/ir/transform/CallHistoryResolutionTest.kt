@@ -3,11 +3,11 @@
 package com.rsicarelli.fakt.compiler.ir.transform
 
 import com.rsicarelli.fakt.compiler.fir.metadata.FirCallHistoryMode
-import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for call history resolution logic.
@@ -24,29 +24,23 @@ class CallHistoryResolutionTest {
     /**
      * Access the private resolveCallHistoryEnabled function via reflection.
      *
-     * Function signature:
-     * private fun resolveCallHistoryEnabled(
-     *     annotationMode: FirCallHistoryMode,
-     *     pluginDefault: Boolean
-     * ): Boolean
+     * Function signature: private fun resolveCallHistoryEnabled( annotationMode:
+     * FirCallHistoryMode, pluginDefault: Boolean ): Boolean
      */
     private val resolveMethod by lazy {
         val companionClass =
-            Class.forName(
-                "com.rsicarelli.fakt.compiler.ir.transform.IrGenerationMetadataKt",
-            )
+            Class.forName("com.rsicarelli.fakt.compiler.ir.transform.IrGenerationMetadataKt")
         companionClass
             .getDeclaredMethod(
                 "resolveCallHistoryEnabled",
                 FirCallHistoryMode::class.java,
                 Boolean::class.javaPrimitiveType,
-            ).apply { isAccessible = true }
+            )
+            .apply { isAccessible = true }
     }
 
-    private fun resolve(
-        mode: FirCallHistoryMode,
-        pluginDefault: Boolean,
-    ): Boolean = resolveMethod.invoke(null, mode, pluginDefault) as Boolean
+    private fun resolve(mode: FirCallHistoryMode, pluginDefault: Boolean): Boolean =
+        resolveMethod.invoke(null, mode, pluginDefault) as Boolean
 
     // ==========================================
     // ENABLED mode tests - always returns true
@@ -161,14 +155,13 @@ class CallHistoryResolutionTest {
         }
 
     @Test
-    fun `GIVEN all modes WHEN plugin default is false THEN only ENABLED returns true`() =
-        runTest {
-            // GIVEN
-            val pluginDefault = false
+    fun `GIVEN all modes WHEN plugin default is false THEN only ENABLED returns true`() = runTest {
+        // GIVEN
+        val pluginDefault = false
 
-            // WHEN/THEN
-            assertTrue(resolve(FirCallHistoryMode.ENABLED, pluginDefault))
-            assertFalse(resolve(FirCallHistoryMode.DEFAULT, pluginDefault))
-            assertFalse(resolve(FirCallHistoryMode.DISABLED, pluginDefault))
-        }
+        // WHEN/THEN
+        assertTrue(resolve(FirCallHistoryMode.ENABLED, pluginDefault))
+        assertFalse(resolve(FirCallHistoryMode.DEFAULT, pluginDefault))
+        assertFalse(resolve(FirCallHistoryMode.DISABLED, pluginDefault))
+    }
 }

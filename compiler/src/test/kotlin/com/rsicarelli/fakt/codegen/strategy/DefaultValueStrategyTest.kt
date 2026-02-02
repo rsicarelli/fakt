@@ -20,9 +20,11 @@ class DefaultValueStrategyTest {
         // GIVEN
         val strategy =
             object : DefaultValueStrategy {
-                override fun supports(type: CodeType): Boolean = type is CodeType.Simple && type.name == "String"
+                override fun supports(type: CodeType): Boolean =
+                    type is CodeType.Simple && type.name == "String"
 
-                override fun defaultValue(type: CodeType): CodeExpression = CodeExpression.StringLiteral("")
+                override fun defaultValue(type: CodeType): CodeExpression =
+                    CodeExpression.StringLiteral("")
             }
         val stringType = CodeType.Simple("String")
 
@@ -38,9 +40,11 @@ class DefaultValueStrategyTest {
         // GIVEN
         val strategy =
             object : DefaultValueStrategy {
-                override fun supports(type: CodeType): Boolean = type is CodeType.Simple && type.name == "String"
+                override fun supports(type: CodeType): Boolean =
+                    type is CodeType.Simple && type.name == "String"
 
-                override fun defaultValue(type: CodeType): CodeExpression = CodeExpression.StringLiteral("")
+                override fun defaultValue(type: CodeType): CodeExpression =
+                    CodeExpression.StringLiteral("")
             }
         val intType = CodeType.Simple("Int")
 
@@ -56,9 +60,11 @@ class DefaultValueStrategyTest {
         // GIVEN
         val strategy =
             object : DefaultValueStrategy {
-                override fun supports(type: CodeType): Boolean = type is CodeType.Simple && type.name == "String"
+                override fun supports(type: CodeType): Boolean =
+                    type is CodeType.Simple && type.name == "String"
 
-                override fun defaultValue(type: CodeType): CodeExpression = CodeExpression.StringLiteral("")
+                override fun defaultValue(type: CodeType): CodeExpression =
+                    CodeExpression.StringLiteral("")
             }
         val stringType = CodeType.Simple("String")
 

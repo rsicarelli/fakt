@@ -5,10 +5,10 @@ package com.rsicarelli.fakt.codegen.extensions
 import com.rsicarelli.fakt.codegen.renderer.CodeBuilder
 import com.rsicarelli.fakt.codegen.renderer.renderTo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
-import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertFalse
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for high-level fake generator function.
@@ -26,7 +26,7 @@ class FakeGeneratorTest {
                     name = "getUser",
                     params = listOf(Triple("id", "String", false)),
                     returnType = "User?",
-                ),
+                )
             )
 
         // WHEN
@@ -59,7 +59,7 @@ class FakeGeneratorTest {
                     params = listOf(Triple("user", "User", false)),
                     returnType = "Result<Unit>",
                     isSuspend = true,
-                ),
+                )
             )
 
         // WHEN
@@ -96,7 +96,7 @@ class FakeGeneratorTest {
                     params = listOf(Triple("items", "String", false)),
                     returnType = "Int",
                     isVararg = true,
-                ),
+                )
             )
 
         // WHEN
@@ -119,13 +119,7 @@ class FakeGeneratorTest {
     fun `GIVEN generateCompleteFake WHEN StateFlow property THEN generates StateFlow with backing`() {
         // GIVEN
         val properties =
-            listOf(
-                PropertySpec(
-                    name = "users",
-                    type = "StateFlow<List<User>>",
-                    isStateFlow = true,
-                ),
-            )
+            listOf(PropertySpec(name = "users", type = "StateFlow<List<User>>", isStateFlow = true))
 
         // WHEN
         val file =
@@ -152,14 +146,7 @@ class FakeGeneratorTest {
     @Test
     fun `GIVEN generateCompleteFake WHEN simple property THEN generates property with backing`() {
         // GIVEN
-        val properties =
-            listOf(
-                PropertySpec(
-                    name = "count",
-                    type = "Int",
-                    isStateFlow = false,
-                ),
-            )
+        val properties = listOf(PropertySpec(name = "count", type = "Int", isStateFlow = false))
 
         // WHEN
         val file =
@@ -216,11 +203,7 @@ class FakeGeneratorTest {
     @Test
     fun `GIVEN generateCompleteFake WHEN custom imports THEN includes all imports`() {
         // GIVEN
-        val imports =
-            listOf(
-                "com.example.domain.User",
-                "com.example.domain.Result",
-            )
+        val imports = listOf("com.example.domain.User", "com.example.domain.Result")
 
         // WHEN
         val file =
@@ -303,11 +286,7 @@ class FakeGeneratorTest {
                 PropertySpec("count", "Int", isStateFlow = false),
             )
 
-        val imports =
-            listOf(
-                "com.example.domain.User",
-                "com.example.domain.Result",
-            )
+        val imports = listOf("com.example.domain.User", "com.example.domain.Result")
 
         // WHEN
         val file =
@@ -378,10 +357,7 @@ class FakeGeneratorTest {
     @Test
     fun `GIVEN public visibility WHEN generating fake THEN class has public modifier`() {
         // GIVEN
-        val methods =
-            listOf(
-                MethodSpec("doWork", emptyList(), "String"),
-            )
+        val methods = listOf(MethodSpec("doWork", emptyList(), "String"))
 
         // WHEN
         val file =
@@ -402,10 +378,7 @@ class FakeGeneratorTest {
     @Test
     fun `GIVEN internal visibility WHEN generating fake THEN class has internal modifier`() {
         // GIVEN
-        val methods =
-            listOf(
-                MethodSpec("doWork", emptyList(), "String"),
-            )
+        val methods = listOf(MethodSpec("doWork", emptyList(), "String"))
 
         // WHEN
         val file =
@@ -426,10 +399,7 @@ class FakeGeneratorTest {
     @Test
     fun `GIVEN default visibility WHEN generating fake THEN class has public modifier`() {
         // GIVEN - no explicit visibility (uses default PUBLIC)
-        val methods =
-            listOf(
-                MethodSpec("doWork", emptyList(), "String"),
-            )
+        val methods = listOf(MethodSpec("doWork", emptyList(), "String"))
 
         // WHEN
         val file =
@@ -451,10 +421,7 @@ class FakeGeneratorTest {
     fun `GIVEN private visibility WHEN generating fake THEN class defaults to public`() {
         // GIVEN - private interfaces can't have public implementations,
         // but we default to public for safety
-        val methods =
-            listOf(
-                MethodSpec("doWork", emptyList(), "String"),
-            )
+        val methods = listOf(MethodSpec("doWork", emptyList(), "String"))
 
         // WHEN
         val file =
@@ -475,10 +442,7 @@ class FakeGeneratorTest {
     @Test
     fun `GIVEN protected visibility WHEN generating fake THEN class defaults to public`() {
         // GIVEN - protected is not supported for top-level classes
-        val methods =
-            listOf(
-                MethodSpec("doWork", emptyList(), "String"),
-            )
+        val methods = listOf(MethodSpec("doWork", emptyList(), "String"))
 
         // WHEN
         val file =
@@ -503,10 +467,7 @@ class FakeGeneratorTest {
     @Test
     fun `GIVEN generateCallHistory false WHEN generating fake THEN omits call tracking imports`() {
         // GIVEN
-        val methods =
-            listOf(
-                MethodSpec("doWork", emptyList(), "String"),
-            )
+        val methods = listOf(MethodSpec("doWork", emptyList(), "String"))
 
         // WHEN
         val file =
@@ -540,7 +501,7 @@ class FakeGeneratorTest {
                     name = "getUser",
                     params = listOf(Triple("id", "String", false)),
                     returnType = "User?",
-                ),
+                )
             )
 
         // WHEN
@@ -569,10 +530,7 @@ class FakeGeneratorTest {
     @Test
     fun `GIVEN generateCallHistory false WHEN generating fake with method THEN omits Section 2 call tracking`() {
         // GIVEN
-        val methods =
-            listOf(
-                MethodSpec("doWork", listOf(Triple("value", "Int", false)), "Unit"),
-            )
+        val methods = listOf(MethodSpec("doWork", listOf(Triple("value", "Int", false)), "Unit"))
 
         // WHEN
         val file =
@@ -607,7 +565,7 @@ class FakeGeneratorTest {
                     name = "getUser",
                     params = listOf(Triple("id", "String", false)),
                     returnType = "User?",
-                ),
+                )
             )
 
         // WHEN
@@ -632,10 +590,7 @@ class FakeGeneratorTest {
     @Test
     fun `GIVEN generateCallHistory default WHEN generating fake THEN includes call tracking`() {
         // GIVEN - using default generateCallHistory (true)
-        val methods =
-            listOf(
-                MethodSpec("doWork", emptyList(), "String"),
-            )
+        val methods = listOf(MethodSpec("doWork", emptyList(), "String"))
 
         // WHEN
         val file =
@@ -660,7 +615,12 @@ class FakeGeneratorTest {
         val methods =
             listOf(
                 MethodSpec("getUser", listOf(Triple("id", "String", false)), "User?"),
-                MethodSpec("saveUser", listOf(Triple("user", "User", false)), "Unit", isSuspend = true),
+                MethodSpec(
+                    "saveUser",
+                    listOf(Triple("user", "User", false)),
+                    "Unit",
+                    isSuspend = true,
+                ),
                 MethodSpec("deleteUser", listOf(Triple("id", "String", false)), "Boolean"),
             )
 
@@ -686,10 +646,7 @@ class FakeGeneratorTest {
     @Test
     fun `GIVEN generateCallHistory false WHEN generating fake THEN still generates behavior properties`() {
         // GIVEN
-        val methods =
-            listOf(
-                MethodSpec("doWork", listOf(Triple("value", "Int", false)), "String"),
-            )
+        val methods = listOf(MethodSpec("doWork", listOf(Triple("value", "Int", false)), "String"))
 
         // WHEN
         val file =

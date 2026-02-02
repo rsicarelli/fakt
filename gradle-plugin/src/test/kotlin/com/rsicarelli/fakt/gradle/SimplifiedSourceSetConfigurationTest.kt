@@ -5,17 +5,17 @@ package com.rsicarelli.fakt.gradle
 import com.rsicarelli.fakt.gradle.helpers.createKmpProject
 import com.rsicarelli.fakt.gradle.helpers.evaluate
 import com.rsicarelli.fakt.gradle.helpers.getKotlinExtension
-import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for simplified source set configuration (no custom source sets).
  *
- * This validates that we work WITH KMP's default hierarchy template,
- * not against it. Generated code is added to EXISTING test source sets.
+ * This validates that we work WITH KMP's default hierarchy template, not against it. Generated code
+ * is added to EXISTING test source sets.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SimplifiedSourceSetConfigurationTest {
@@ -87,7 +87,11 @@ class SimplifiedSourceSetConfigurationTest {
         val commonTest = kotlin.sourceSets.getByName("commonTest")
 
         // Then - Should add generated dir to EXISTING commonTest
-        assertTrue(commonTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/commonTest/kotlin") })
+        assertTrue(
+            commonTest.kotlin.srcDirs.any {
+                it.path.contains("build/generated/fakt/commonTest/kotlin")
+            }
+        )
     }
 
     @Test
@@ -102,7 +106,9 @@ class SimplifiedSourceSetConfigurationTest {
         val jvmTest = kotlin.sourceSets.getByName("jvmTest")
 
         // Then - Should add generated dir to EXISTING jvmTest
-        assertTrue(jvmTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/jvmTest/kotlin") })
+        assertTrue(
+            jvmTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/jvmTest/kotlin") }
+        )
     }
 
     @Test
@@ -117,7 +123,9 @@ class SimplifiedSourceSetConfigurationTest {
         val jsTest = kotlin.sourceSets.getByName("jsTest")
 
         // Then - Should add generated dir to EXISTING jsTest
-        assertTrue(jsTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/jsTest/kotlin") })
+        assertTrue(
+            jsTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/jsTest/kotlin") }
+        )
     }
 
     @Test
@@ -132,7 +140,11 @@ class SimplifiedSourceSetConfigurationTest {
         val iosTest = kotlin.sourceSets.getByName("iosArm64Test")
 
         // Then - Should add generated dir to EXISTING iosArm64Test
-        assertTrue(iosTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/iosArm64Test/kotlin") })
+        assertTrue(
+            iosTest.kotlin.srcDirs.any {
+                it.path.contains("build/generated/fakt/iosArm64Test/kotlin")
+            }
+        )
     }
 
     @Test
@@ -153,10 +165,22 @@ class SimplifiedSourceSetConfigurationTest {
         val iosTest = kotlin.sourceSets.getByName("iosArm64Test")
 
         // Then - All should have their respective generated directories
-        assertTrue(commonTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/commonTest/kotlin") })
-        assertTrue(jvmTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/jvmTest/kotlin") })
-        assertTrue(jsTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/jsTest/kotlin") })
-        assertTrue(iosTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/iosArm64Test/kotlin") })
+        assertTrue(
+            commonTest.kotlin.srcDirs.any {
+                it.path.contains("build/generated/fakt/commonTest/kotlin")
+            }
+        )
+        assertTrue(
+            jvmTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/jvmTest/kotlin") }
+        )
+        assertTrue(
+            jsTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/jsTest/kotlin") }
+        )
+        assertTrue(
+            iosTest.kotlin.srcDirs.any {
+                it.path.contains("build/generated/fakt/iosArm64Test/kotlin")
+            }
+        )
     }
 
     @Test
@@ -174,7 +198,9 @@ class SimplifiedSourceSetConfigurationTest {
         // THEN - Should include ONLY iosX64Test dir (not commonTest)
         // PASS 2 was removed: KMP dependency propagation handles KLIB visibility
         assertTrue(
-            iosX64Test.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/iosX64Test/kotlin") },
+            iosX64Test.kotlin.srcDirs.any {
+                it.path.contains("build/generated/fakt/iosX64Test/kotlin")
+            },
             "iosX64Test should have its own generated directory",
         )
     }
@@ -219,18 +245,14 @@ class SimplifiedSourceSetConfigurationTest {
         // THEN - Each platform test should have its own generated dir (not commonTest)
         // PASS 2 was removed: KMP dependency propagation handles KLIB visibility
         val platformTestSourceSets =
-            listOf(
-                "jvmTest",
-                "jsTest",
-                "iosX64Test",
-                "iosArm64Test",
-                "iosSimulatorArm64Test",
-            )
+            listOf("jvmTest", "jsTest", "iosX64Test", "iosArm64Test", "iosSimulatorArm64Test")
 
         platformTestSourceSets.forEach { sourceSetName ->
             val sourceSet = kotlin.sourceSets.getByName(sourceSetName)
             assertTrue(
-                sourceSet.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/$sourceSetName/kotlin") },
+                sourceSet.kotlin.srcDirs.any {
+                    it.path.contains("build/generated/fakt/$sourceSetName/kotlin")
+                },
                 "$sourceSetName should have its own generated directory",
             )
         }

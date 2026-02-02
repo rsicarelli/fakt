@@ -15,8 +15,8 @@ import com.rsicarelli.fakt.codegen.model.CodeType
  * 4. [CollectionDefaultStrategy] - List, Set, Map, Array
  * 5. Fallback - TODO("No default for {type}")
  *
- * The resolver tries strategies in order until one supports the type.
- * If no strategy supports the type, returns a TODO expression.
+ * The resolver tries strategies in order until one supports the type. If no strategy supports the
+ * type, returns a TODO expression.
  *
  * Example:
  * ```kotlin
@@ -39,9 +39,7 @@ import com.rsicarelli.fakt.codegen.model.CodeType
  * resolver.resolve(CodeType.Simple("CustomType"))  // TODO("No default for CustomType")
  * ```
  */
-public class DefaultValueResolver(
-    private val classLevelTypeParams: Set<String> = emptySet(),
-) {
+public class DefaultValueResolver(private val classLevelTypeParams: Set<String> = emptySet()) {
     private val strategies =
         listOf(
             NullableDefaultStrategy(),
@@ -53,8 +51,8 @@ public class DefaultValueResolver(
     /**
      * Resolves a default value expression for the given type.
      *
-     * Tries all strategies in priority order. If no strategy supports
-     * the type, returns a TODO expression as fallback.
+     * Tries all strategies in priority order. If no strategy supports the type, returns a TODO
+     * expression as fallback.
      *
      * @param type The type to resolve a default for
      * @return CodeExpression representing the default value
@@ -71,7 +69,7 @@ public class DefaultValueResolver(
         return CodeExpression.Raw(
             "error(\"Type '$type' requires explicit configuration. \" + " +
                 "\"Fakt prioritizes type-safety over auto-mocking. \" + " +
-                "\"Configure behavior via fake factory DSL.\") as Nothing",
+                "\"Configure behavior via fake factory DSL.\") as Nothing"
         )
     }
 }

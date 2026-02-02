@@ -5,7 +5,6 @@ package com.rsicarelli.fakt.codegen.extensions
 import com.rsicarelli.fakt.codegen.builder.ClassBuilder
 import com.rsicarelli.fakt.codegen.builder.codeFile
 import com.rsicarelli.fakt.codegen.builder.parseType
-import com.rsicarelli.fakt.codegen.extensions.AnnotationSpec
 import com.rsicarelli.fakt.codegen.model.CodeFile
 import com.rsicarelli.fakt.codegen.renderer.render
 import com.rsicarelli.fakt.codegen.strategy.DefaultValueResolver
@@ -20,7 +19,8 @@ import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
  * @property isSuspend Whether method is suspend
  * @property isVararg Whether method has vararg parameter (deprecated, use params[].isVararg)
  * @property typeParameters Method-level type parameters (e.g., ["T", "R : Comparable<R>"])
- * @property isAbstract Whether method is abstract (true) or open (false) - only meaningful for classes
+ * @property isAbstract Whether method is abstract (true) or open (false) - only meaningful for
+ *   classes
  * @property isOperator Whether method is declared with 'operator' modifier
  * @property extensionReceiverType Extension receiver type for extension functions (e.g., "Vector")
  */
@@ -43,7 +43,8 @@ data class MethodSpec(
  * @property type Property type
  * @property isStateFlow Whether property is StateFlow
  * @property isMutable Whether property is mutable (var vs val)
- * @property isAbstract Whether property is abstract (true) or open (false) - only meaningful for classes
+ * @property isAbstract Whether property is abstract (true) or open (false) - only meaningful for
+ *   classes
  */
 data class PropertySpec(
     val name: String,
@@ -59,7 +60,7 @@ data class PropertySpec(
  * Groups related parameters for [generateCompleteFake] to reduce parameter count.
  *
  * @property generateCallHistory When true, generates call tracking code (call count, call history).
- *           When false, generates lightweight fakes without tracking. Default: true.
+ *   When false, generates lightweight fakes without tracking. Default: true.
  */
 data class FakeGenerationConfig(
     val packageName: String,
@@ -78,9 +79,9 @@ data class FakeGenerationConfig(
 /**
  * Erases method-level type parameters to Any? in a type string.
  *
- * Method-level type parameters (like `<T>`, `<R>`) cannot be used in behavior properties
- * because properties are class-scoped. This function replaces them with `Any?` to match
- * JVM type erasure behavior.
+ * Method-level type parameters (like `<T>`, `<R>`) cannot be used in behavior properties because
+ * properties are class-scoped. This function replaces them with `Any?` to match JVM type erasure
+ * behavior.
  *
  * @param typeParameters List of type parameter declarations (e.g., ["T", "R : Comparable<R>"])
  * @return Type string with method-level parameters erased to Any?
@@ -97,8 +98,8 @@ private fun String.eraseMethodTypeParameters(typeParameters: List<String>): Stri
  * @property simpleName Simple annotation name (e.g., "OptIn", "Deprecated")
  * @property fullyQualifiedName Fully qualified name for imports (e.g., "kotlin.OptIn")
  * @property arguments Pre-rendered argument strings (e.g., ["ExperimentalApi::class"])
- * @property isOptInMarker True if this annotation is marked with @RequiresOptIn. When true,
- *           the generated fake needs @OptIn(ThisAnnotation::class) to compile.
+ * @property isOptInMarker True if this annotation is marked with @RequiresOptIn. When true, the
+ *   generated fake needs @OptIn(ThisAnnotation::class) to compile.
  */
 data class AnnotationSpec(
     val simpleName: String,
@@ -108,8 +109,8 @@ data class AnnotationSpec(
 )
 
 /**
- * Annotations that require @OptIn to use them.
- * Maps annotation FQN -> required opt-in annotation FQN.
+ * Annotations that require @OptIn to use them. Maps annotation FQN -> required opt-in annotation
+ * FQN.
  */
 private val ANNOTATIONS_REQUIRING_OPTIN =
     mapOf(
@@ -157,7 +158,7 @@ private val ANNOTATIONS_REQUIRING_OPTIN =
  * @param visibility Visibility for the generated class (PUBLIC, INTERNAL) for explicitApi() support
  * @param annotations Annotations to propagate to the generated class
  * @param generateCallHistory When true, generates call tracking code. When false, generates
- *        lightweight fakes without call count or call history tracking. Default: true.
+ *   lightweight fakes without call count or call history tracking. Default: true.
  * @return CodeFile with complete fake implementation
  */
 fun generateCompleteFake(
@@ -186,7 +187,7 @@ fun generateCompleteFake(
             visibility = visibility,
             annotations = annotations,
             generateCallHistory = generateCallHistory,
-        ),
+        )
     )
 
 private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile {
@@ -222,9 +223,7 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
 
     // Check if any annotation uses ::class references (requires KClass import)
     val needsKClassImport =
-        annotations.any { spec ->
-            spec.arguments.any { it.contains("::class") }
-        }
+        annotations.any { spec -> spec.arguments.any { it.contains("::class") } }
 
     return codeFile(packageName) {
         header?.let { this.header = it }
@@ -265,8 +264,7 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
                 FirVisibility.PUBLIC -> public()
                 FirVisibility.INTERNAL -> internal()
                 FirVisibility.PRIVATE,
-                FirVisibility.PROTECTED,
-                -> {
+                FirVisibility.PROTECTED -> {
                     // Private and protected are not supported for top-level classes
                     // Default to public for safety
                     public()
@@ -280,9 +278,9 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
             val optInArgs = mutableListOf<String>()
 
             // Add opt-in for marker annotations (annotations with @RequiresOptIn)
-            annotations.filter { it.isOptInMarker }.forEach { marker ->
-                optInArgs.add("${marker.simpleName}::class")
-            }
+            annotations
+                .filter { it.isOptInMarker }
+                .forEach { marker -> optInArgs.add("${marker.simpleName}::class") }
 
             // Add opt-in for annotations that require it (e.g., @HiddenFromObjC)
             annotations.forEach { spec ->
@@ -293,9 +291,9 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
             }
 
             // Collect existing @OptIn arguments from source to merge
-            annotations.filter { it.simpleName == "OptIn" }.forEach { optInAnnotation ->
-                optInArgs.addAll(optInAnnotation.arguments)
-            }
+            annotations
+                .filter { it.simpleName == "OptIn" }
+                .forEach { optInAnnotation -> optInArgs.addAll(optInAnnotation.arguments) }
 
             // Add single merged @OptIn if any opt-ins are needed
             if (optInArgs.isNotEmpty()) {
@@ -320,11 +318,7 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
                 val constraintsStr = if (parts.size > 1) parts[1].trim() else null
 
                 // Extract name without variance
-                val name =
-                    nameWithVariance
-                        .removePrefix("out")
-                        .removePrefix("in")
-                        .trim()
+                val name = nameWithVariance.removePrefix("out").removePrefix("in").trim()
 
                 if (constraintsStr != null) {
                     // Check if there are multiple constraints (comma-separated)
@@ -353,7 +347,8 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
             // Extends class or implements interface with type arguments
             val superType =
                 when {
-                    typeParamNames.isNotEmpty() -> "$interfaceName<${typeParamNames.joinToString(", ")}>"
+                    typeParamNames.isNotEmpty() ->
+                        "$interfaceName<${typeParamNames.joinToString(", ")}>"
                     else -> interfaceName
                 }
             // Classes need constructor call: ClassName() or ClassName<T>()
@@ -370,9 +365,9 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
             region("$interfaceName Implementation")
 
             // Generate StateFlow property overrides (these handle tracking internally)
-            properties.filter { it.isStateFlow }.forEach { prop ->
-                generateStateFlowProperty(this, prop, resolver)
-            }
+            properties
+                .filter { it.isStateFlow }
+                .forEach { prop -> generateStateFlowProperty(this, prop, resolver) }
 
             // Generate property overrides for simple properties
             simpleProperties.forEach { prop ->
@@ -387,9 +382,7 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
                     classTypeParameters = typeParameters,
                     generateCallHistory = generateCallHistory,
                 )
-            methods.forEach { method ->
-                generateMethodOverride(this, method, methodContext)
-            }
+            methods.forEach { method -> generateMethodOverride(this, method, methodContext) }
 
             endRegion()
 
@@ -419,14 +412,10 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
             region("Behavior Configuration")
 
             // Generate configuration methods for simple properties
-            simpleProperties.forEach { prop ->
-                generatePropertyConfigMethod(this, prop)
-            }
+            simpleProperties.forEach { prop -> generatePropertyConfigMethod(this, prop) }
 
             // Generate configuration methods for all methods
-            methods.forEach { method ->
-                generateMethodConfigMethod(this, method)
-            }
+            methods.forEach { method -> generateMethodConfigMethod(this, method) }
 
             endRegion()
 
@@ -443,7 +432,8 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
                     generatePropertyCallTrackingBackingField(this, prop)
                 }
 
-                // Generate call history backing fields for ALL methods (params → data class, 0-param → Unit)
+                // Generate call history backing fields for ALL methods (params → data class,
+                // 0-param → Unit)
                 methods.forEach { method ->
                     generateMethodCallHistoryBackingField(this, method, interfaceName)
                 }
@@ -464,9 +454,7 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
     }
 }
 
-/**
- * Generates a StateFlow property with backing MutableStateFlow.
- */
+/** Generates a StateFlow property with backing MutableStateFlow. */
 private fun generateStateFlowProperty(
     classBuilder: ClassBuilder,
     prop: PropertySpec,
@@ -550,10 +538,7 @@ private fun detectIdentityFunction(method: MethodSpec): String? {
 
     // Extract type parameter names (e.g., "T", "R")
     val typeParamNames =
-        method.typeParameters
-            .map { param ->
-                param.substringBefore(" :").trim()
-            }.toSet()
+        method.typeParameters.map { param -> param.substringBefore(" :").trim() }.toSet()
 
     val (_, paramType, _) = method.params.first()
 
@@ -600,10 +585,7 @@ private fun isValidFunctionInvocationPattern(
     return method.returnType.trim() == returnPart.trim()
 }
 
-/**
- * Generates ONLY the public getter for method call tracking.
- * Part of Section 2: Call Tracking
- */
+/** Generates ONLY the public getter for method call tracking. Part of Section 2: Call Tracking */
 private fun generateMethodCallTrackingPublicGetter(
     classBuilder: ClassBuilder,
     method: MethodSpec,
@@ -613,11 +595,9 @@ private fun generateMethodCallTrackingPublicGetter(
 }
 
 /**
- * Generates the private backing field for call history tracking.
- * Generated for ALL methods:
+ * Generates the private backing field for call history tracking. Generated for ALL methods:
  * - Methods with params: stores data class instances
- * - 0-param/vararg-only methods: stores Unit
- * Part of Section 4: Private State
+ * - 0-param/vararg-only methods: stores Unit Part of Section 4: Private State
  */
 private fun generateMethodCallHistoryBackingField(
     classBuilder: ClassBuilder,
@@ -628,10 +608,7 @@ private fun generateMethodCallHistoryBackingField(
     classBuilder.callHistoryBackingField(method.name, storageInfo.dataClassName)
 }
 
-/**
- * Generates ONLY the public getter for property call tracking.
- * Part of Section 2: Call Tracking
- */
+/** Generates ONLY the public getter for property call tracking. Part of Section 2: Call Tracking */
 private fun generatePropertyCallTrackingPublicGetter(
     classBuilder: ClassBuilder,
     prop: PropertySpec,
@@ -644,8 +621,8 @@ private fun generatePropertyCallTrackingPublicGetter(
 }
 
 /**
- * Generates ONLY the private backing field for property call tracking.
- * Part of Section 4: Private State
+ * Generates ONLY the private backing field for property call tracking. Part of Section 4: Private
+ * State
  */
 private fun generatePropertyCallTrackingBackingField(
     classBuilder: ClassBuilder,
@@ -657,10 +634,7 @@ private fun generatePropertyCallTrackingBackingField(
     }
 }
 
-/**
- * Generates ONLY the behavior property for a method.
- * Part of Section 2: Behavior Properties
- */
+/** Generates ONLY the behavior property for a method. Part of Section 2: Behavior Properties */
 private fun generateMethodBehaviorProperty(
     classBuilder: ClassBuilder,
     method: MethodSpec,
@@ -686,14 +660,13 @@ private fun generateMethodBehaviorProperty(
     val behaviorDefault =
         when {
             isClass && method.isAbstract -> {
-                val methodSignature =
-                    buildString {
-                        append(method.name)
-                        append("(")
-                        append(method.params.joinToString { it.second })
-                        append("): ")
-                        append(method.returnType)
-                    }
+                val methodSignature = buildString {
+                    append(method.name)
+                    append("(")
+                    append(method.params.joinToString { it.second })
+                    append("): ")
+                    append(method.returnType)
+                }
                 val errorMessage =
                     "Abstract method '$methodSignature' in class '$className' must be configured. " +
                         "Use the DSL: fake${className.replaceFirstChar { it.uppercase() }} { ${method.name} { ... } }"
@@ -773,8 +746,8 @@ private fun generateMethodBehaviorProperty(
 }
 
 /**
- * Generates ONLY the behavior property for a simple property.
- * Part of Section 2: Behavior Properties
+ * Generates ONLY the behavior property for a simple property. Part of Section 2: Behavior
+ * Properties
  */
 private fun generatePropertyBehaviorProperty(
     classBuilder: ClassBuilder,
@@ -846,8 +819,7 @@ private data class MethodOverrideContext(
 )
 
 /**
- * Generates ONLY the override method implementation.
- * Part of Section 3: Override Implementations
+ * Generates ONLY the override method implementation. Part of Section 3: Override Implementations
  */
 private fun generateMethodOverride(
     classBuilder: ClassBuilder,
@@ -892,12 +864,12 @@ private fun generateMethodOverride(
 }
 
 /**
- * Generates ONLY the override property implementation.
- * Part of Section 3: Override Implementations
+ * Generates ONLY the override property implementation. Part of Section 3: Override Implementations
  *
  * Dispatches to specialized helpers based on property mutability.
  *
- * @param generateCallHistory When true, includes call count tracking in getter/setter. Default: true.
+ * @param generateCallHistory When true, includes call count tracking in getter/setter. Default:
+ *   true.
  */
 private fun generatePropertyOverride(
     classBuilder: ClassBuilder,
@@ -932,13 +904,17 @@ private fun generateMutablePropertyOverride(
         override()
         mutable()
         getter = buildMutablePropertyGetter(prop.name, isOpenProperty, generateCallHistory)
-        setter = buildMutablePropertySetter(prop.name, capitalizedName, isOpenProperty, generateCallHistory)
+        setter =
+            buildMutablePropertySetter(
+                prop.name,
+                capitalizedName,
+                isOpenProperty,
+                generateCallHistory,
+            )
     }
 }
 
-/**
- * Builds the getter expression for a mutable property.
- */
+/** Builds the getter expression for a mutable property. */
 private fun buildMutablePropertyGetter(
     propName: String,
     isOpenProperty: Boolean,
@@ -947,26 +923,23 @@ private fun buildMutablePropertyGetter(
     if (isOpenProperty) {
         if (generateCallHistory) {
             listOf(
-                "_${propName}CallCount.update { it + 1 }",
-                "return ${propName}Getter?.invoke() ?: super.$propName",
-            ).joinToString("\n")
+                    "_${propName}CallCount.update { it + 1 }",
+                    "return ${propName}Getter?.invoke() ?: super.$propName",
+                )
+                .joinToString("\n")
         } else {
             "${propName}Getter?.invoke() ?: super.$propName"
         }
     } else {
         if (generateCallHistory) {
-            listOf(
-                "_${propName}CallCount.update { it + 1 }",
-                "return ${propName}Getter()",
-            ).joinToString("\n")
+            listOf("_${propName}CallCount.update { it + 1 }", "return ${propName}Getter()")
+                .joinToString("\n")
         } else {
             "${propName}Getter()"
         }
     }
 
-/**
- * Builds the setter expression for a mutable property.
- */
+/** Builds the setter expression for a mutable property. */
 private fun buildMutablePropertySetter(
     propName: String,
     capitalizedName: String,
@@ -976,18 +949,17 @@ private fun buildMutablePropertySetter(
     if (isOpenProperty) {
         if (generateCallHistory) {
             listOf(
-                "_set${capitalizedName}CallCount.update { it + 1 }",
-                "${propName}Setter?.invoke(value) ?: run { super.$propName = value }",
-            ).joinToString("\n")
+                    "_set${capitalizedName}CallCount.update { it + 1 }",
+                    "${propName}Setter?.invoke(value) ?: run { super.$propName = value }",
+                )
+                .joinToString("\n")
         } else {
             "${propName}Setter?.invoke(value) ?: run { super.$propName = value }"
         }
     } else {
         if (generateCallHistory) {
-            listOf(
-                "_set${capitalizedName}CallCount.update { it + 1 }",
-                "${propName}Setter(value)",
-            ).joinToString("\n")
+            listOf("_set${capitalizedName}CallCount.update { it + 1 }", "${propName}Setter(value)")
+                .joinToString("\n")
         } else {
             "${propName}Setter(value)"
         }
@@ -1012,9 +984,7 @@ private fun generateImmutablePropertyOverride(
     }
 }
 
-/**
- * Builds the getter expression for an immutable property.
- */
+/** Builds the getter expression for an immutable property. */
 private fun buildImmutablePropertyGetter(
     propName: String,
     isOpenProperty: Boolean,
@@ -1023,31 +993,24 @@ private fun buildImmutablePropertyGetter(
     if (isOpenProperty) {
         if (generateCallHistory) {
             listOf(
-                "_${propName}CallCount.update { it + 1 }",
-                "return ${propName}Behavior?.invoke() ?: super.$propName",
-            ).joinToString("\n")
+                    "_${propName}CallCount.update { it + 1 }",
+                    "return ${propName}Behavior?.invoke() ?: super.$propName",
+                )
+                .joinToString("\n")
         } else {
             "${propName}Behavior?.invoke() ?: super.$propName"
         }
     } else {
         if (generateCallHistory) {
-            listOf(
-                "_${propName}CallCount.update { it + 1 }",
-                "return ${propName}Behavior()",
-            ).joinToString("\n")
+            listOf("_${propName}CallCount.update { it + 1 }", "return ${propName}Behavior()")
+                .joinToString("\n")
         } else {
             "${propName}Behavior()"
         }
     }
 
-/**
- * Generates ONLY the configuration method.
- * Part of Section 4: Internal Configuration Methods
- */
-private fun generateMethodConfigMethod(
-    classBuilder: ClassBuilder,
-    method: MethodSpec,
-) {
+/** Generates ONLY the configuration method. Part of Section 4: Internal Configuration Methods */
+private fun generateMethodConfigMethod(classBuilder: ClassBuilder, method: MethodSpec) {
     val behaviorParamTypes =
         method.params.map { (_, paramType, isVararg) ->
             if (isVararg && paramType.startsWith("Array<")) {
@@ -1074,13 +1037,10 @@ private fun generateMethodConfigMethod(
 }
 
 /**
- * Generates ONLY the configuration methods for a property.
- * Part of Section 4: Internal Configuration Methods
+ * Generates ONLY the configuration methods for a property. Part of Section 4: Internal
+ * Configuration Methods
  */
-private fun generatePropertyConfigMethod(
-    classBuilder: ClassBuilder,
-    prop: PropertySpec,
-) {
+private fun generatePropertyConfigMethod(classBuilder: ClassBuilder, prop: PropertySpec) {
     val capitalizedName = prop.name.replaceFirstChar { it.uppercase() }
 
     if (prop.isMutable) {

@@ -55,8 +55,8 @@ private fun buildHistoryUpdateStatement(
 /**
  * Configuration for override method generation.
  *
- * @property generateCallHistory When true, generates call tracking code in the method body.
- *           When false, skips call tracking for lightweight fakes. Default: true.
+ * @property generateCallHistory When true, generates call tracking code in the method body. When
+ *   false, skips call tracking for lightweight fakes. Default: true.
  */
 data class OverrideMethodConfig(
     val isSuspend: Boolean = false,
@@ -69,9 +69,7 @@ data class OverrideMethodConfig(
     val generateCallHistory: Boolean = true,
 )
 
-/**
- * Creates an override method that delegates to a behavior property.
- */
+/** Creates an override method that delegates to a behavior property. */
 fun ClassBuilder.overrideMethod(
     name: String,
     params: List<Triple<String, String, Boolean>>,
@@ -107,11 +105,7 @@ fun ClassBuilder.overrideMethod(
         params.forEach { (paramName, paramType, isVararg) ->
             if (isVararg) {
                 val elementType =
-                    paramType
-                        .removePrefix("Array<")
-                        .removeSuffix(">")
-                        .removePrefix("out ")
-                        .trim()
+                    paramType.removePrefix("Array<").removeSuffix(">").removePrefix("out ").trim()
                 parameter(paramName, elementType, vararg = true)
             } else {
                 parameter(paramName, paramType)
@@ -212,13 +206,15 @@ private fun buildSuperCallParams(params: List<Triple<String, String, Boolean>>):
                 hasVararg && index > varargIndex -> "$paramName = $paramName"
                 else -> paramName
             }
-        }.joinToString(", ")
+        }
+        .joinToString(", ")
 }
 
 /**
  * Configuration for override vararg method generation.
  *
- * @property useSuperDelegation If true, generates nullable invoke with super delegation for open methods
+ * @property useSuperDelegation If true, generates nullable invoke with super delegation for open
+ *   methods
  * @property extensionReceiverType Extension receiver type for extension functions (e.g., "Vector")
  * @property isOperator Whether method is declared with 'operator' modifier
  * @property generateCallHistory When true, includes call tracking statement. Default: true.
@@ -260,11 +256,7 @@ fun ClassBuilder.overrideVarargMethod(
         // "Array<String>" -> "String"
         // "Array<out String>" -> "String"
         val elementType =
-            varargType
-                .removePrefix("Array<")
-                .removeSuffix(">")
-                .removePrefix("out ")
-                .trim()
+            varargType.removePrefix("Array<").removeSuffix(">").removePrefix("out ").trim()
 
         parameter(varargName, elementType, vararg = true)
         returns(returnType)
@@ -344,14 +336,13 @@ fun ClassBuilder.configureMethod(
 ) {
     val capitalizedName = methodName.replaceFirstChar { it.uppercase() }
 
-    val functionType =
-        buildString {
-            if (isSuspend) append("suspend ")
-            append("(")
-            append(paramTypes.joinToString(", "))
-            append(") -> ")
-            append(returnType)
-        }
+    val functionType = buildString {
+        if (isSuspend) append("suspend ")
+        append("(")
+        append(paramTypes.joinToString(", "))
+        append(") -> ")
+        append(returnType)
+    }
 
     // Add cast when method has type parameters (behavior property uses erased types)
     val needsCast = typeParameters.isNotEmpty()

@@ -13,7 +13,6 @@
     <ID>CyclomaticComplexMethod:Rendering.kt$public fun CodeProperty.renderTo(builder: CodeBuilder)</ID>
     <ID>CyclomaticComplexMethod:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension$private fun processClassesFromMetadata( classMetadata: List&lt;IrClassGenerationMetadata&gt;, firMetricsMap: Map&lt;String, FirMetrics&gt;, collectDetailedMetrics: Boolean, ): ProcessingResult</ID>
     <ID>CyclomaticComplexMethod:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension$private fun processInterfacesFromMetadata( interfaceMetadata: List&lt;IrGenerationMetadata&gt;, firMetricsMap: Map&lt;String, FirMetrics&gt;, collectDetailedMetrics: Boolean, ): ProcessingResult</ID>
-    <ID>LongMethod:FakeClassChecker.kt$FakeClassChecker$@OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class) private fun extractMethods(declaration: FirClass): Pair&lt;List&lt;FirFunctionInfo&gt;, List&lt;FirFunctionInfo&gt;&gt;</ID>
     <ID>LongMethod:FakeClassChecker.kt$FakeClassChecker$override fun check(declaration: FirClass)</ID>
     <ID>LongMethod:FakeGenerator.kt$private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile</ID>
     <ID>LongMethod:FakeGenerator.kt$private fun generateMethodBehaviorProperty( classBuilder: ClassBuilder, method: MethodSpec, resolver: DefaultValueResolver, isClass: Boolean = false, className: String = "", )</ID>
@@ -26,17 +25,11 @@
     <ID>LongParameterList:IrGenerationMetadata.kt$IrClassGenerationMetadata$( val className: String, val packageName: String, val typeParameters: List&lt;String&gt;, private val members: IrClassMembers, val sourceClass: IrClass, private val patternAnalyzer: GenericPatternAnalyzer, private val config: IrGenerationConfig = IrGenerationConfig(), )</ID>
     <ID>LongParameterList:IrGenerationMetadata.kt$IrGenerationMetadata$( val interfaceName: String, val packageName: String, val typeParameters: List&lt;String&gt;, private val members: IrInterfaceMembers, val sourceInterface: IrClass, private val patternAnalyzer: GenericPatternAnalyzer, private val config: IrGenerationConfig = IrGenerationConfig(), )</ID>
     <ID>LoopWithTooManyJumpStatements:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension$for</ID>
-    <ID>MaxLineLength:AnalysisToCodegenMapper.kt$internal</ID>
-    <ID>MaxLineLength:FakeInterfaceChecker.kt$FakeInterfaceChecker$context(context</ID>
-    <ID>MaxLineLength:MetadataCacheSerializer.kt$MetadataCacheSerializer$private fun FirParameterInfo.toSerializable()</ID>
-    <ID>MaxLineLength:MetadataCacheSerializer.kt$MetadataCacheSerializer$private fun SerializableParameterInfo.toFir()</ID>
     <ID>NestedBlockDepth:CompilerOptimizations.kt$CompilerOptimizations.Companion$operator fun invoke( fakeAnnotations: List&lt;String&gt; = listOf("com.rsicarelli.fakt.Fake"), outputDir: String? = null, logger: FaktLogger, ): CompilerOptimizations</ID>
     <ID>NestedBlockDepth:FakeInterfaceChecker.kt$FakeInterfaceChecker$@OptIn(SymbolInternals::class) private fun collectInheritedMembers( firClass: FirClass, session: FirSession, visitedInterfaces: MutableSet&lt;ClassId&gt;, propertiesAccumulator: MutableList&lt;FirPropertyInfo&gt;, functionsAccumulator: MutableList&lt;FirFunctionInfo&gt;, )</ID>
     <ID>NestedBlockDepth:FakeInterfaceChecker.kt$FakeInterfaceChecker$@OptIn(SymbolInternals::class) private fun extractInheritedMembers( declaration: FirClass, session: FirSession, ): Pair&lt;List&lt;FirPropertyInfo&gt;, List&lt;FirFunctionInfo&gt;&gt;</ID>
     <ID>NestedBlockDepth:FunctionTypeHandler.kt$FunctionTypeHandler$fun renderFunctionType( irType: IrType, preserveTypeParameters: Boolean, typeRenderer: (IrType, Boolean) -&gt; String, ): String</ID>
     <ID>NestedBlockDepth:ImportResolver.kt$ImportResolver$private fun collectImportsFromType( irType: IrType, currentPackage: String, imports: MutableSet&lt;String&gt;, )</ID>
-    <ID>ReturnCount:AnnotationExtractor.kt$AnnotationExtractor$private fun extractClassReference(expression: FirGetClassCall): FirAnnotationArgument.ClassReference?</ID>
-    <ID>ReturnCount:AnnotationExtractor.kt$AnnotationExtractor$private fun extractEnumValue(expression: FirPropertyAccessExpression): FirAnnotationArgument.EnumValue?</ID>
     <ID>ReturnCount:FakeClassChecker.kt$FakeClassChecker$override fun check(declaration: FirClass)</ID>
     <ID>ReturnCount:FakeGenerator.kt$private fun isValidFunctionInvocationPattern( method: MethodSpec, paramType: String, typeParamNames: Set&lt;String&gt;, ): Boolean</ID>
     <ID>ReturnCount:FakeInterfaceChecker.kt$FakeInterfaceChecker$override fun check(declaration: FirClass)</ID>

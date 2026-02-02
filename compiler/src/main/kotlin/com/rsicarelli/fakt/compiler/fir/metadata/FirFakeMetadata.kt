@@ -9,8 +9,8 @@ import org.jetbrains.kotlin.name.ClassId
 /**
  * Call history generation mode extracted from @Fake annotation.
  *
- * This enum mirrors [com.rsicarelli.fakt.CallHistoryMode] from the annotations module,
- * used internally by the compiler to avoid runtime dependency on annotations.
+ * This enum mirrors [com.rsicarelli.fakt.CallHistoryMode] from the annotations module, used
+ * internally by the compiler to avoid runtime dependency on annotations.
  *
  * Resolution logic (in IR phase):
  * - [DEFAULT]: Use plugin-level `enableCallHistoryDefault` setting
@@ -20,19 +20,13 @@ import org.jetbrains.kotlin.name.ClassId
  * @see com.rsicarelli.fakt.CallHistoryMode
  */
 enum class FirCallHistoryMode {
-    /**
-     * Use the plugin-level default from `fakt { enableCallHistory.set(...) }`.
-     */
+    /** Use the plugin-level default from `fakt { enableCallHistory.set(...) }`. */
     DEFAULT,
 
-    /**
-     * Always generate call history, regardless of plugin default.
-     */
+    /** Always generate call history, regardless of plugin default. */
     ENABLED,
 
-    /**
-     * Never generate call history, regardless of plugin default.
-     */
+    /** Never generate call history, regardless of plugin default. */
     DISABLED,
 }
 
@@ -46,26 +40,29 @@ enum class FirCallHistoryMode {
  *
  * Following Metro pattern: FIR phase analyzes and validates, IR phase generates.
  *
- * Removed `genericPattern` field - it will be reconstructed in IR phase
- * from `typeParameters` and `functions` using IrTypeParameter (which we don't have in FIR).
+ * Removed `genericPattern` field - it will be reconstructed in IR phase from `typeParameters` and
+ * `functions` using IrTypeParameter (which we don't have in FIR).
  *
- * Added `inheritedProperties` and `inheritedFunctions` to support
- * interface inheritance. These are collected from super-interfaces recursively.
+ * Added `inheritedProperties` and `inheritedFunctions` to support interface inheritance. These are
+ * collected from super-interfaces recursively.
  *
- * **Immutable**: Once created in FIR phase, this metadata is never modified.
- * **Thread-safe**: Stored in [FirMetadataStorage] which is thread-safe.
+ * **Immutable**: Once created in FIR phase, this metadata is never modified. **Thread-safe**:
+ * Stored in [FirMetadataStorage] which is thread-safe.
  *
  * @property classId Fully qualified class identifier (e.g., com.example.UserService)
  * @property simpleName Simple class name (e.g., UserService)
  * @property packageName Package name (e.g., com.example)
- * @property typeParameters Class-level type parameters with bounds (e.g., ["T", "K : Comparable<K>"])
+ * @property typeParameters Class-level type parameters with bounds (e.g.,
+ *   ["T", "K : Comparable<K>"])
  * @property properties Properties declared directly in this interface
- * @property functions Functions declared directly in this interface (with method-level type parameters)
+ * @property functions Functions declared directly in this interface (with method-level type
+ *   parameters)
  * @property inheritedProperties Properties inherited from super-interfaces
  * @property inheritedFunctions Functions inherited from super-interfaces
  * @property sourceLocation Location in source code for error reporting
  * @property validationTimeNanos Time spent validating this interface in FIR phase (nanoseconds)
- * @property visibility Visibility of the interface (PUBLIC, INTERNAL, etc.) for explicitApi() support
+ * @property visibility Visibility of the interface (PUBLIC, INTERNAL, etc.) for explicitApi()
+ *   support
  * @property callHistoryMode Call history generation mode from @Fake annotation
  */
 data class ValidatedFakeInterface(
@@ -128,8 +125,8 @@ data class ValidatedFakeClass(
  * Examples:
  * - Simple: `T` → FirTypeParameterInfo("T", emptyList())
  * - Bounded: `T : Comparable<T>` → FirTypeParameterInfo("T", listOf("Comparable<T>"))
- * - Multiple bounds: `T : Comparable<T>, Serializable` →
- *     FirTypeParameterInfo("T", listOf("Comparable<T>", "Serializable"))
+ * - Multiple bounds: `T : Comparable<T>, Serializable` → FirTypeParameterInfo("T",
+ *   listOf("Comparable<T>", "Serializable"))
  *
  * Note: The multiple bounds example shows how constraints are represented as a list of strings.
  *
@@ -185,8 +182,8 @@ data class FirFunctionInfo(
  * @property name Parameter name
  * @property type Parameter type as string
  * @property hasDefaultValue True if parameter has default value
- * @property defaultValueCode Rendered default value expression (e.g., "null", "\"GET\"", "30000L", "true").
- *                            null if no default or if rendering complex expressions failed.
+ * @property defaultValueCode Rendered default value expression (e.g., "null", "\"GET\"", "30000L",
+ *   "true"). null if no default or if rendering complex expressions failed.
  * @property isVararg True if parameter is vararg
  */
 data class FirParameterInfo(
@@ -200,8 +197,8 @@ data class FirParameterInfo(
 /**
  * Source location information for error reporting.
  *
- * Captured in FIR phase where source location information is most accurate.
- * Used if we need to report errors during IR generation.
+ * Captured in FIR phase where source location information is most accurate. Used if we need to
+ * report errors during IR generation.
  *
  * @property filePath Source file path
  * @property startLine Start line number (1-indexed)
@@ -217,9 +214,7 @@ data class FirSourceLocation(
     val endColumn: Int,
 ) {
     companion object {
-        /**
-         * Unknown location - used as fallback when source info not available.
-         */
+        /** Unknown location - used as fallback when source info not available. */
         val UNKNOWN =
             FirSourceLocation(
                 filePath = "<unknown>",
@@ -262,19 +257,19 @@ data class FirSourceLocation(
 /**
  * Visibility level for generated fakes.
  *
- * Extracted from source interface/class visibility to ensure generated fakes
- * have the same visibility, which is required for `explicitApi()` mode.
+ * Extracted from source interface/class visibility to ensure generated fakes have the same
+ * visibility, which is required for `explicitApi()` mode.
  *
  * Example:
  * - `public interface UserService` → FirVisibility.PUBLIC → `public class FakeUserServiceImpl`
- * - `internal interface InternalService` → FirVisibility.INTERNAL → `internal class FakeInternalServiceImpl`
+ * - `internal interface InternalService` → FirVisibility.INTERNAL → `internal class
+ *   FakeInternalServiceImpl`
  */
 enum class FirVisibility {
     PUBLIC,
     INTERNAL,
     PRIVATE,
-    PROTECTED,
-    ;
+    PROTECTED;
 
     companion object {
         /**
@@ -304,11 +299,10 @@ enum class FirVisibility {
 /**
  * Converts FirVisibility to a Kotlin visibility modifier string for code generation.
  *
- * Used by code generators to prepend the correct visibility modifier to generated
- * classes, functions, and properties for `explicitApi()` compatibility.
+ * Used by code generators to prepend the correct visibility modifier to generated classes,
+ * functions, and properties for `explicitApi()` compatibility.
  *
- * Private and protected are not supported for top-level declarations, so they
- * fallback to public.
+ * Private and protected are not supported for top-level declarations, so they fallback to public.
  *
  * @return Visibility modifier string with trailing space (e.g., "public ", "internal ")
  */
@@ -316,8 +310,7 @@ fun FirVisibility.toModifier(): String =
     when (this) {
         FirVisibility.PUBLIC,
         FirVisibility.PRIVATE,
-        FirVisibility.PROTECTED,
-        -> "public "
+        FirVisibility.PROTECTED -> "public "
 
         FirVisibility.INTERNAL -> "internal "
     }
@@ -325,8 +318,8 @@ fun FirVisibility.toModifier(): String =
 /**
  * Annotation argument value extracted from FIR.
  *
- * Represents the different types of values that can be passed as annotation arguments.
- * Supports class references, literals, enum values, arrays, and nested annotations.
+ * Represents the different types of values that can be passed as annotation arguments. Supports
+ * class references, literals, enum values, arrays, and nested annotations.
  *
  * Examples:
  * - `@OptIn(ExperimentalApi::class)` → ClassReference("com.example.ExperimentalApi")
@@ -340,45 +333,35 @@ sealed interface FirAnnotationArgument {
      *
      * @property classId Fully qualified class ID (e.g., "com.example.ExperimentalApi")
      */
-    data class ClassReference(
-        val classId: String,
-    ) : FirAnnotationArgument
+    data class ClassReference(val classId: String) : FirAnnotationArgument
 
     /**
      * String literal argument (e.g., `"deprecated message"`).
      *
      * @property value The string value
      */
-    data class StringLiteral(
-        val value: String,
-    ) : FirAnnotationArgument
+    data class StringLiteral(val value: String) : FirAnnotationArgument
 
     /**
      * Number literal argument (e.g., `42`, `3.14`).
      *
      * @property value String representation of the number
      */
-    data class NumberLiteral(
-        val value: String,
-    ) : FirAnnotationArgument
+    data class NumberLiteral(val value: String) : FirAnnotationArgument
 
     /**
      * Boolean literal argument (e.g., `true`, `false`).
      *
      * @property value The boolean value
      */
-    data class BooleanLiteral(
-        val value: Boolean,
-    ) : FirAnnotationArgument
+    data class BooleanLiteral(val value: Boolean) : FirAnnotationArgument
 
     /**
      * Char literal argument (e.g., `'a'`).
      *
      * @property value The char value
      */
-    data class CharLiteral(
-        val value: Char,
-    ) : FirAnnotationArgument
+    data class CharLiteral(val value: Char) : FirAnnotationArgument
 
     /**
      * Enum value argument (e.g., `AnnotationTarget.CLASS`).
@@ -386,50 +369,40 @@ sealed interface FirAnnotationArgument {
      * @property enumClassId Fully qualified enum class ID
      * @property entryName Enum entry name (e.g., "CLASS")
      */
-    data class EnumValue(
-        val enumClassId: String,
-        val entryName: String,
-    ) : FirAnnotationArgument
+    data class EnumValue(val enumClassId: String, val entryName: String) : FirAnnotationArgument
 
     /**
      * Array argument (e.g., `[Foo::class, Bar::class]`).
      *
      * @property elements List of array element values
      */
-    data class ArrayValue(
-        val elements: List<FirAnnotationArgument>,
-    ) : FirAnnotationArgument
+    data class ArrayValue(val elements: List<FirAnnotationArgument>) : FirAnnotationArgument
 
     /**
      * Nested annotation argument (e.g., `@Nested("value")`).
      *
      * @property annotation The nested annotation info
      */
-    data class NestedAnnotation(
-        val annotation: FirAnnotationInfo,
-    ) : FirAnnotationArgument
+    data class NestedAnnotation(val annotation: FirAnnotationInfo) : FirAnnotationArgument
 }
 
 /**
  * Annotation information extracted from FIR phase.
  *
- * Contains the annotation's class ID and its arguments (if any).
- * Used to propagate annotations from source types to generated fakes.
+ * Contains the annotation's class ID and its arguments (if any). Used to propagate annotations from
+ * source types to generated fakes.
  *
  * Examples:
- * - `@OptIn(ExperimentalApi::class)` → FirAnnotationInfo(
- *       annotationClassId = "kotlin.OptIn",
- *       arguments = mapOf("markerClasses" to ArrayValue([ClassReference("com.example.ExperimentalApi")]))
- *   )
- * - `@Deprecated("old")` → FirAnnotationInfo(
- *       annotationClassId = "kotlin.Deprecated",
- *       arguments = mapOf("message" to StringLiteral("old"))
- *   )
+ * - `@OptIn(ExperimentalApi::class)` → FirAnnotationInfo( annotationClassId = "kotlin.OptIn",
+ *   arguments = mapOf("markerClasses" to
+ *   ArrayValue([ClassReference("com.example.ExperimentalApi")])) )
+ * - `@Deprecated("old")` → FirAnnotationInfo( annotationClassId = "kotlin.Deprecated", arguments =
+ *   mapOf("message" to StringLiteral("old")) )
  *
  * @property annotationClassId Fully qualified annotation class ID (e.g., "kotlin.OptIn")
  * @property arguments Named arguments to the annotation (empty for marker annotations)
- * @property isOptInMarker True if this annotation is marked with @RequiresOptIn. When true,
- *           the generated fake needs @OptIn(ThisAnnotation::class) to compile.
+ * @property isOptInMarker True if this annotation is marked with @RequiresOptIn. When true, the
+ *   generated fake needs @OptIn(ThisAnnotation::class) to compile.
  */
 data class FirAnnotationInfo(
     val annotationClassId: String,

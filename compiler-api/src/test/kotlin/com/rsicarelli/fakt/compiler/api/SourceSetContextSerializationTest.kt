@@ -2,27 +2,26 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.api
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.TestInstance
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 /**
- * TDD tests for SourceSetContext serialization.
- * These tests define the expected behavior BEFORE implementation.
+ * TDD tests for SourceSetContext serialization. These tests define the expected behavior BEFORE
+ * implementation.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SourceSetContextSerializationTest {
-    private val json =
-        Json {
-            prettyPrint = false
-            encodeDefaults = true
-        }
+    private val json = Json {
+        prettyPrint = false
+        encodeDefaults = true
+    }
 
     @Test
     fun `GIVEN simple SourceSetContext WHEN serializing THEN should roundtrip perfectly`() =
@@ -35,10 +34,7 @@ class SourceSetContextSerializationTest {
                     platformType = "jvm",
                     isTest = false,
                     defaultSourceSet =
-                        SourceSetInfo(
-                            name = "jvmMain",
-                            parents = listOf("commonMain"),
-                        ),
+                        SourceSetInfo(name = "jvmMain", parents = listOf("commonMain")),
                     allSourceSets =
                         listOf(
                             SourceSetInfo(name = "jvmMain", parents = listOf("commonMain")),
@@ -66,7 +62,8 @@ class SourceSetContextSerializationTest {
                     targetName = "jvm",
                     platformType = "jvm",
                     isTest = true, // Key: test compilation
-                    defaultSourceSet = SourceSetInfo(name = "jvmTest", parents = listOf("commonTest")),
+                    defaultSourceSet =
+                        SourceSetInfo(name = "jvmTest", parents = listOf("commonTest")),
                     allSourceSets =
                         listOf(
                             SourceSetInfo(name = "jvmTest", parents = listOf("commonTest")),
@@ -97,10 +94,7 @@ class SourceSetContextSerializationTest {
                     platformType = "native",
                     isTest = false,
                     defaultSourceSet =
-                        SourceSetInfo(
-                            name = "iosX64Main",
-                            parents = listOf("iosMain"),
-                        ),
+                        SourceSetInfo(name = "iosX64Main", parents = listOf("iosMain")),
                     allSourceSets =
                         listOf(
                             SourceSetInfo(name = "iosX64Main", parents = listOf("iosMain")),
@@ -118,7 +112,11 @@ class SourceSetContextSerializationTest {
             val decoded = json.decodeFromString<SourceSetContext>(jsonString)
 
             // THEN
-            assertEquals(5, decoded.allSourceSets.size, "Should have all 5 source sets in hierarchy")
+            assertEquals(
+                5,
+                decoded.allSourceSets.size,
+                "Should have all 5 source sets in hierarchy",
+            )
             assertEquals("iosX64Main", decoded.defaultSourceSet.name)
             assertEquals("native", decoded.platformType)
 
@@ -129,71 +127,66 @@ class SourceSetContextSerializationTest {
         }
 
     @Test
-    fun `GIVEN custom test suite WHEN serializing THEN should work correctly`() =
-        runTest {
-            // GIVEN: integrationTest compilation
-            val original =
-                SourceSetContext(
-                    compilationName = "integrationTest",
-                    targetName = "jvm",
-                    platformType = "jvm",
-                    isTest = true,
-                    defaultSourceSet =
-                        SourceSetInfo(
-                            name = "integrationTest",
-                            parents = listOf("commonMain"), // Custom test suite depends on main
-                        ),
-                    allSourceSets =
-                        listOf(
-                            SourceSetInfo(name = "integrationTest", parents = listOf("commonMain")),
-                            SourceSetInfo(name = "commonMain", parents = emptyList()),
-                        ),
-                    outputDirectory = "/build/generated/fakt/test/jvm/kotlin",
-                    commonTestOutputDirectory = "/build/generated/fakt/commonTest/kotlin",
-                )
+    fun `GIVEN custom test suite WHEN serializing THEN should work correctly`() = runTest {
+        // GIVEN: integrationTest compilation
+        val original =
+            SourceSetContext(
+                compilationName = "integrationTest",
+                targetName = "jvm",
+                platformType = "jvm",
+                isTest = true,
+                defaultSourceSet =
+                    SourceSetInfo(
+                        name = "integrationTest",
+                        parents = listOf("commonMain"), // Custom test suite depends on main
+                    ),
+                allSourceSets =
+                    listOf(
+                        SourceSetInfo(name = "integrationTest", parents = listOf("commonMain")),
+                        SourceSetInfo(name = "commonMain", parents = emptyList()),
+                    ),
+                outputDirectory = "/build/generated/fakt/test/jvm/kotlin",
+                commonTestOutputDirectory = "/build/generated/fakt/commonTest/kotlin",
+            )
 
-            // WHEN
-            val jsonString = json.encodeToString(original)
-            val decoded = json.decodeFromString<SourceSetContext>(jsonString)
+        // WHEN
+        val jsonString = json.encodeToString(original)
+        val decoded = json.decodeFromString<SourceSetContext>(jsonString)
 
-            // THEN
-            assertEquals("integrationTest", decoded.compilationName)
-            assertTrue(decoded.isTest)
-            assertEquals(2, decoded.allSourceSets.size)
-        }
+        // THEN
+        assertEquals("integrationTest", decoded.compilationName)
+        assertTrue(decoded.isTest)
+        assertEquals(2, decoded.allSourceSets.size)
+    }
 
     @Test
-    fun `GIVEN empty parents list WHEN serializing THEN should handle correctly`() =
-        runTest {
-            // GIVEN: commonMain has no parents (root of hierarchy)
-            val original =
-                SourceSetContext(
-                    compilationName = "main",
-                    targetName = "metadata",
-                    platformType = "common",
-                    isTest = false,
-                    defaultSourceSet =
-                        SourceSetInfo(
-                            name = "commonMain",
-                            parents = emptyList(), // Root has no parents
-                        ),
-                    allSourceSets =
-                        listOf(
-                            SourceSetInfo(name = "commonMain", parents = emptyList()),
-                        ),
-                    outputDirectory = "/build/generated/fakt/main/metadata/kotlin",
-                    commonTestOutputDirectory = "/build/generated/fakt/commonTest/kotlin",
-                )
+    fun `GIVEN empty parents list WHEN serializing THEN should handle correctly`() = runTest {
+        // GIVEN: commonMain has no parents (root of hierarchy)
+        val original =
+            SourceSetContext(
+                compilationName = "main",
+                targetName = "metadata",
+                platformType = "common",
+                isTest = false,
+                defaultSourceSet =
+                    SourceSetInfo(
+                        name = "commonMain",
+                        parents = emptyList(), // Root has no parents
+                    ),
+                allSourceSets = listOf(SourceSetInfo(name = "commonMain", parents = emptyList())),
+                outputDirectory = "/build/generated/fakt/main/metadata/kotlin",
+                commonTestOutputDirectory = "/build/generated/fakt/commonTest/kotlin",
+            )
 
-            // WHEN
-            val jsonString = json.encodeToString(original)
-            val decoded = json.decodeFromString<SourceSetContext>(jsonString)
+        // WHEN
+        val jsonString = json.encodeToString(original)
+        val decoded = json.decodeFromString<SourceSetContext>(jsonString)
 
-            // THEN
-            assertTrue(decoded.defaultSourceSet.parents.isEmpty(), "Root should have no parents")
-            assertEquals("metadata", decoded.targetName)
-            assertEquals("common", decoded.platformType)
-        }
+        // THEN
+        assertTrue(decoded.defaultSourceSet.parents.isEmpty(), "Root should have no parents")
+        assertEquals("metadata", decoded.targetName)
+        assertEquals("common", decoded.platformType)
+    }
 
     @Test
     fun `GIVEN serialized JSON WHEN checking size THEN should be reasonable for command line`() =
@@ -205,7 +198,8 @@ class SourceSetContextSerializationTest {
                     targetName = "jvm",
                     platformType = "jvm",
                     isTest = false,
-                    defaultSourceSet = SourceSetInfo(name = "jvmMain", parents = listOf("commonMain")),
+                    defaultSourceSet =
+                        SourceSetInfo(name = "jvmMain", parents = listOf("commonMain")),
                     allSourceSets =
                         listOf(
                             SourceSetInfo(name = "jvmMain", parents = listOf("commonMain")),

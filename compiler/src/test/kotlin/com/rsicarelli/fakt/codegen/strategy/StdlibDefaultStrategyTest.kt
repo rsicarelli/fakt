@@ -5,11 +5,11 @@ package com.rsicarelli.fakt.codegen.strategy
 import com.rsicarelli.fakt.codegen.model.CodeExpression
 import com.rsicarelli.fakt.codegen.model.CodeType
 import com.rsicarelli.fakt.codegen.renderer.render
-import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for StdlibDefaultStrategy.

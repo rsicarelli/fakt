@@ -9,9 +9,9 @@ import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 /**
  * Logging wrapper for the Fakt compiler plugin.
  *
- * Wraps the Kotlin compiler's [MessageCollector] with level-aware logging.
- * Only outputs messages that meet or exceed the configured [logLevel], preventing
- * log spam while maintaining debugging capabilities when needed.
+ * Wraps the Kotlin compiler's [MessageCollector] with level-aware logging. Only outputs messages
+ * that meet or exceed the configured [logLevel], preventing log spam while maintaining debugging
+ * capabilities when needed.
  *
  * **Design:**
  * - Wraps standard Kotlin compiler MessageCollector API
@@ -21,6 +21,7 @@ import org.jetbrains.kotlin.cli.common.messages.MessageCollector
  * - Null-safe (handles null MessageCollector gracefully)
  *
  * **Usage:**
+ *
  * ```kotlin
  * val logger = FaktLogger(messageCollector, LogLevel.DEBUG)
  *
@@ -31,10 +32,7 @@ import org.jetbrains.kotlin.cli.common.messages.MessageCollector
  * @property messageCollector The Kotlin compiler's message collector (may be null)
  * @property logLevel The minimum level required for messages to be logged
  */
-class FaktLogger(
-    private val messageCollector: MessageCollector?,
-    val logLevel: LogLevel,
-) {
+class FaktLogger(private val messageCollector: MessageCollector?, val logLevel: LogLevel) {
     fun info(message: String) {
         if (logLevel >= LogLevel.INFO) {
             messageCollector?.report(CompilerMessageSeverity.INFO, message)
@@ -55,20 +53,20 @@ class FaktLogger(
         messageCollector?.report(CompilerMessageSeverity.ERROR, message)
     }
 
-    inline fun ifLevel(
-        level: LogLevel,
-        block: () -> Unit,
-    ) {
+    inline fun ifLevel(level: LogLevel, block: () -> Unit) {
         if (logLevel >= level) {
             block()
         }
     }
 
     companion object {
-        fun quiet(messageCollector: MessageCollector? = null): FaktLogger = FaktLogger(messageCollector, LogLevel.QUIET)
+        fun quiet(messageCollector: MessageCollector? = null): FaktLogger =
+            FaktLogger(messageCollector, LogLevel.QUIET)
 
-        fun info(messageCollector: MessageCollector?): FaktLogger = FaktLogger(messageCollector, LogLevel.INFO)
+        fun info(messageCollector: MessageCollector?): FaktLogger =
+            FaktLogger(messageCollector, LogLevel.INFO)
 
-        fun debug(messageCollector: MessageCollector?): FaktLogger = FaktLogger(messageCollector, LogLevel.DEBUG)
+        fun debug(messageCollector: MessageCollector?): FaktLogger =
+            FaktLogger(messageCollector, LogLevel.DEBUG)
     }
 }

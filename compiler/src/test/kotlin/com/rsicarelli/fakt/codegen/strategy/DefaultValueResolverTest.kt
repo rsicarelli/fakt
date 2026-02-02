@@ -4,10 +4,10 @@ package com.rsicarelli.fakt.codegen.strategy
 
 import com.rsicarelli.fakt.codegen.model.CodeExpression
 import com.rsicarelli.fakt.codegen.model.CodeType
-import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for DefaultValueResolver.
@@ -50,10 +50,7 @@ class DefaultValueResolverTest {
     @Test
     fun `GIVEN nullable List WHEN resolving THEN returns null not emptyList`() {
         // GIVEN
-        val type =
-            CodeType.Nullable(
-                CodeType.Generic("List", listOf(CodeType.Simple("String"))),
-            )
+        val type = CodeType.Nullable(CodeType.Generic("List", listOf(CodeType.Simple("String"))))
 
         // WHEN
         val result = resolver.resolve(type)
@@ -197,10 +194,7 @@ class DefaultValueResolverTest {
     fun `GIVEN Map type WHEN resolving THEN returns emptyMap`() {
         // GIVEN
         val type =
-            CodeType.Generic(
-                "Map",
-                listOf(CodeType.Simple("String"), CodeType.Simple("Int")),
-            )
+            CodeType.Generic("Map", listOf(CodeType.Simple("String"), CodeType.Simple("Int")))
 
         // WHEN
         val result = resolver.resolve(type)
@@ -219,9 +213,7 @@ class DefaultValueResolverTest {
         val type =
             CodeType.Generic(
                 "StateFlow",
-                listOf(
-                    CodeType.Generic("List", listOf(CodeType.Simple("String"))),
-                ),
+                listOf(CodeType.Generic("List", listOf(CodeType.Simple("String")))),
             )
 
         // WHEN
@@ -242,9 +234,7 @@ class DefaultValueResolverTest {
         val type =
             CodeType.Generic(
                 "Result",
-                listOf(
-                    CodeType.Generic("StateFlow", listOf(CodeType.Simple("Int"))),
-                ),
+                listOf(CodeType.Generic("StateFlow", listOf(CodeType.Simple("Int")))),
             )
 
         // WHEN

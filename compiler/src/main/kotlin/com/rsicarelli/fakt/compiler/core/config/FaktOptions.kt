@@ -7,8 +7,8 @@ import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import org.jetbrains.kotlin.config.CompilerConfiguration
 
 /**
- * Configuration options for the Fakt compiler plugin.
- * Loaded from Gradle plugin configuration and command line arguments.
+ * Configuration options for the Fakt compiler plugin. Loaded from Gradle plugin configuration and
+ * command line arguments.
  *
  * **Visibility**: Public to allow FIR/IR extensions to access configuration
  *
@@ -24,28 +24,24 @@ data class FaktOptions(
     val enableCallHistoryDefault: Boolean = true,
 ) {
     /**
-     * Path to write FIR cache (producer mode: metadata compilation only).
-     * Null for platform compilations and non-KMP projects.
+     * Path to write FIR cache (producer mode: metadata compilation only). Null for platform
+     * compilations and non-KMP projects.
      */
     val metadataOutputPath: String?
         get() = sourceSetContext?.metadataOutputPath
 
     /**
-     * Path to read FIR cache (consumer mode: platform compilations).
-     * Null for metadata compilation and non-KMP projects.
+     * Path to read FIR cache (consumer mode: platform compilations). Null for metadata compilation
+     * and non-KMP projects.
      */
     val metadataCachePath: String?
         get() = sourceSetContext?.metadataCachePath
 
-    /**
-     * True if operating in producer mode (metadata compilation writes cache).
-     */
+    /** True if operating in producer mode (metadata compilation writes cache). */
     val isProducerMode: Boolean
         get() = metadataOutputPath != null
 
-    /**
-     * True if operating in consumer mode (platform compilation reads cache).
-     */
+    /** True if operating in consumer mode (platform compilation reads cache). */
     val isConsumerMode: Boolean
         get() = metadataCachePath != null
 
@@ -82,5 +78,6 @@ data class FaktOptions(
             enableCallHistoryDefault=$enableCallHistoryDefault,
             sourceSetContext=${sourceSetContext?.let { "present(${it.compilationName}/${it.targetName})" } ?: "null"}
         )
-        """.trimIndent()
+        """
+            .trimIndent()
 }

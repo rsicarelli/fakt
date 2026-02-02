@@ -21,8 +21,8 @@ import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 /**
  * Metro-inspired compatibility wrapper for accessing extension receiver parameter.
  *
- * Uses the unified `parameters` list instead of deprecated `extensionReceiverParameter`.
- * This approach is future-proof against Kotlin compiler API changes.
+ * Uses the unified `parameters` list instead of deprecated `extensionReceiverParameter`. This
+ * approach is future-proof against Kotlin compiler API changes.
  *
  * @return Extension receiver parameter, or null if function is not an extension
  */
@@ -35,6 +35,7 @@ private val IrFunction.extensionReceiverParameterCompat: IrValueParameter?
  * This is the critical component that eliminates redundant analysis.
  *
  * ## Transformation Flow
+ *
  * ```
  * FIR Phase (FakeInterfaceChecker)
  *   ↓ Extracts metadata (strings)
@@ -46,8 +47,10 @@ private val IrFunction.extensionReceiverParameterCompat: IrValueParameter?
  * ```
  *
  * ## What This Does
- * 1. **Resolves Properties**: FirPropertyInfo (string) → IrPropertyMetadata (IrType + IrProperty node)
- * 2. **Resolves Functions**: FirFunctionInfo (string) → IrFunctionMetadata (IrType + IrSimpleFunction node)
+ * 1. **Resolves Properties**: FirPropertyInfo (string) → IrPropertyMetadata (IrType + IrProperty
+ *    node)
+ * 2. **Resolves Functions**: FirFunctionInfo (string) → IrFunctionMetadata (IrType +
+ *    IrSimpleFunction node)
  * 3. **Formats Type Parameters**: ["T", "K : Comparable<K>"]
  * 4. **Computes GenericPattern**: Uses [GenericPatternAnalyzer]
  *
@@ -59,8 +62,8 @@ internal class FirToIrTransformer {
     /**
      * Transform ValidatedFakeInterface to IrGenerationMetadata.
      *
-     * **Critical**: This method uses FIR metadata as the source of truth for structure.
-     * IrClass is only used for:
+     * **Critical**: This method uses FIR metadata as the source of truth for structure. IrClass is
+     * only used for:
      * 1. Looking up IR nodes (IrProperty, IrSimpleFunction) by name
      * 2. Resolving type representations (IrType from IR nodes)
      * 3. Computing GenericPattern (uses IrClass.typeParameters)
@@ -71,23 +74,15 @@ internal class FirToIrTransformer {
      * @param irClass IR class for node lookup and type resolution
      * @return IrGenerationMetadata ready for code generation
      */
-    fun transform(
-        firMetadata: ValidatedFakeInterface,
-        irClass: IrClass,
-    ): IrGenerationMetadata {
+    fun transform(firMetadata: ValidatedFakeInterface, irClass: IrClass): IrGenerationMetadata {
         // 1. Resolve directly declared properties (FIR strings → IrTypes + IR nodes)
         val declaredProperties =
-            firMetadata.properties.map { firProperty ->
-                resolveProperty(firProperty, irClass)
-            }
+            firMetadata.properties.map { firProperty -> resolveProperty(firProperty, irClass) }
 
         // 2. Resolve directly declared functions (FIR strings → IrTypes + IR nodes)
         val declaredFunctions =
             firMetadata.functions.map { firFunction ->
-                resolveFunction(
-                    firFunction = firFunction,
-                    irClass = irClass,
-                )
+                resolveFunction(firFunction = firFunction, irClass = irClass)
             }
 
         // Resolve inherited members
@@ -99,10 +94,7 @@ internal class FirToIrTransformer {
 
         val inheritedFunctions =
             firMetadata.inheritedFunctions.map { firFunction ->
-                resolveFunction(
-                    firFunction = firFunction,
-                    irClass = irClass,
-                )
+                resolveFunction(firFunction = firFunction, irClass = irClass)
             }
 
         // Combine declared and inherited members for code generation
@@ -167,21 +159,15 @@ internal class FirToIrTransformer {
 
         // 2. Resolve open properties
         val openProperties =
-            firMetadata.openProperties.map { firProperty ->
-                resolveProperty(firProperty, irClass)
-            }
+            firMetadata.openProperties.map { firProperty -> resolveProperty(firProperty, irClass) }
 
         // 3. Resolve abstract methods
         val abstractMethods =
-            firMetadata.abstractMethods.map { firFunction ->
-                resolveFunction(firFunction, irClass)
-            }
+            firMetadata.abstractMethods.map { firFunction -> resolveFunction(firFunction, irClass) }
 
         // 4. Resolve open methods
         val openMethods =
-            firMetadata.openMethods.map { firFunction ->
-                resolveFunction(firFunction, irClass)
-            }
+            firMetadata.openMethods.map { firFunction -> resolveFunction(firFunction, irClass) }
 
         // 5. Format type parameters with bounds
         val typeParameters = firMetadata.typeParameters.map { formatTypeParameter(it) }
@@ -215,7 +201,8 @@ internal class FirToIrTransformer {
     }
 
     /**
-     * Resolve FirPropertyInfo to IrPropertyMetadata by looking up the IR node and extracting IrType.
+     * Resolve FirPropertyInfo to IrPropertyMetadata by looking up the IR node and extracting
+     * IrType.
      *
      * This method performs a PURE LOOKUP operation - NO analysis or validation:
      * 1. Find IrProperty by name in IrClass.declarations (FIR guarantees it exists)
@@ -227,18 +214,16 @@ internal class FirToIrTransformer {
      * - IrType extraction: O(1)
      * - Typical cost: < 100μs per property
      *
-     * **Error Handling**:
-     * Throws IllegalStateException if:
+     * **Error Handling**: Throws IllegalStateException if:
      * - IrProperty not found by name (indicates FIR/IR phase mismatch - compiler bug)
      * - IrProperty has no type (invalid IR state - compiler bug)
      *
-     * These errors should never occur in production as FIR validation guarantees
-     * the property exists and is well-formed.
+     * These errors should never occur in production as FIR validation guarantees the property
+     * exists and is well-formed.
      *
      * @param firProperty FIR property metadata (source of truth for structure)
      * @param irClass IR class for node lookup ONLY
      * @return IrPropertyMetadata with resolved IrType and IR node reference
-     *
      * @throws IllegalStateException if IR node lookup fails (compiler bug)
      */
     @OptIn(UnsafeDuringIrConstructionAPI::class)
@@ -248,12 +233,12 @@ internal class FirToIrTransformer {
     ): IrPropertyMetadata {
         // Lookup IrProperty by name (FIR guarantees this exists)
         val irProperty =
-            irClass.declarations
-                .filterIsInstance<IrProperty>()
-                .firstOrNull { it.name.asString() == firProperty.name }
+            irClass.declarations.filterIsInstance<IrProperty>().firstOrNull {
+                it.name.asString() == firProperty.name
+            }
                 ?: error(
                     "IrProperty '${firProperty.name}' not found in ${irClass.name}. " +
-                        "FIR validation should have ensured this exists.",
+                        "FIR validation should have ensured this exists."
                 )
 
         // Resolve IrType from IR node
@@ -262,7 +247,7 @@ internal class FirToIrTransformer {
                 ?: irProperty.backingField?.type
                 ?: error(
                     "IrProperty '${firProperty.name}' has no type. " +
-                        "This should not happen for valid properties.",
+                        "This should not happen for valid properties."
                 )
 
         return IrPropertyMetadata(
@@ -275,7 +260,8 @@ internal class FirToIrTransformer {
     }
 
     /**
-     * Resolve FirFunctionInfo to IrFunctionMetadata by looking up the IR node and extracting IrTypes.
+     * Resolve FirFunctionInfo to IrFunctionMetadata by looking up the IR node and extracting
+     * IrTypes.
      *
      * This method performs a PURE LOOKUP operation - NO analysis or validation:
      * 1. Find IrSimpleFunction by name in IrClass.declarations (FIR guarantees it exists)
@@ -290,18 +276,16 @@ internal class FirToIrTransformer {
      * - IrType extraction: O(1) per parameter
      * - Typical cost: < 200μs per function
      *
-     * **Error Handling**:
-     * Throws IllegalStateException if:
+     * **Error Handling**: Throws IllegalStateException if:
      * - IrSimpleFunction not found by name (FIR/IR mismatch - compiler bug)
      * - Parameter count mismatch (FIR/IR mismatch - compiler bug)
      *
-     * These errors should never occur in production as FIR validation guarantees
-     * the function exists with matching parameters.
+     * These errors should never occur in production as FIR validation guarantees the function
+     * exists with matching parameters.
      *
-     * **Parameter Matching**:
-     * Parameters are matched by position (index), not by name:
+     * **Parameter Matching**: Parameters are matched by position (index), not by name:
      * - FIR: `fun foo(a: String, b: Int)`
-     * - IR:  `fun foo(param0: String, param1: Int)`
+     * - IR: `fun foo(param0: String, param1: Int)`
      * - Match: position 0 → a:String, position 1 → b:Int
      *
      * This works because FIR and IR maintain the same parameter order.
@@ -309,8 +293,8 @@ internal class FirToIrTransformer {
      * @param firFunction FIR function metadata (source of truth for structure)
      * @param irClass IR class for node lookup ONLY
      * @return IrFunctionMetadata with resolved IrTypes and IR node reference
-     *
-     * @throws IllegalStateException if IR node lookup fails or parameter count mismatches (compiler bug)
+     * @throws IllegalStateException if IR node lookup fails or parameter count mismatches (compiler
+     *   bug)
      */
     @OptIn(UnsafeDuringIrConstructionAPI::class)
     private fun resolveFunction(
@@ -319,12 +303,12 @@ internal class FirToIrTransformer {
     ): IrFunctionMetadata {
         // Lookup IrSimpleFunction by name (FIR guarantees this exists)
         val irFunction =
-            irClass.declarations
-                .filterIsInstance<IrSimpleFunction>()
-                .firstOrNull { it.name.asString() == firFunction.name }
+            irClass.declarations.filterIsInstance<IrSimpleFunction>().firstOrNull {
+                it.name.asString() == firFunction.name
+            }
                 ?: error(
                     "IrSimpleFunction '${firFunction.name}' not found in ${irClass.name}. " +
-                        "FIR validation should have ensured this exists.",
+                        "FIR validation should have ensured this exists."
                 )
 
         // Resolve parameters (match by position - FIR guarantees same order)
@@ -333,7 +317,7 @@ internal class FirToIrTransformer {
         if (irRegularParams.size != firFunction.parameters.size) {
             error(
                 "Parameter count mismatch for '${firFunction.name}'. " +
-                    "FIR: ${firFunction.parameters.size}, IR: ${irRegularParams.size}",
+                    "FIR: ${firFunction.parameters.size}, IR: ${irRegularParams.size}"
             )
         }
 
@@ -373,9 +357,8 @@ internal class FirToIrTransformer {
      * - `K` with bounds `["Comparable<K>"]` → `"K : Comparable<K>"`
      * - `V` with bounds `["Comparable<V>", "Serializable"]` → `"V : Comparable<V>, Serializable"`
      *
-     * **Bound Sanitization**:
-     * FIR's ConeType.toString() produces invalid Kotlin syntax (e.g., `"kotlin/Any?"`).
-     * This method sanitizes bounds:
+     * **Bound Sanitization**: FIR's ConeType.toString() produces invalid Kotlin syntax (e.g.,
+     * `"kotlin/Any?"`). This method sanitizes bounds:
      * 1. Replace forward slashes with dots: `kotlin/Any?` → `kotlin.Any?`
      * 2. Remove kotlin stdlib prefixes: `kotlin.Any?` → `Any?`
      *
@@ -386,7 +369,6 @@ internal class FirToIrTransformer {
      *
      * @param firTypeParam FIR type parameter with bounds from FIR phase
      * @return Formatted type parameter string ready for code generation
-     *
      * @see sanitizeTypeBound for bound string sanitization logic
      */
     private fun formatTypeParameter(firTypeParam: FirTypeParameterInfo): String {
@@ -401,14 +383,14 @@ internal class FirToIrTransformer {
     /**
      * Sanitize type bound string from FIR phase to valid Kotlin syntax.
      *
-     * **Problem**: FIR's ConeType.toString() produces paths with forward slashes
-     * (e.g., `"kotlin/Any?"`, `"kotlin/Comparable<T>"`) which is invalid Kotlin syntax.
+     * **Problem**: FIR's ConeType.toString() produces paths with forward slashes (e.g.,
+     * `"kotlin/Any?"`, `"kotlin/Comparable<T>"`) which is invalid Kotlin syntax.
      *
      * **Solution**:
      * 1. Replace forward slashes with dots: `kotlin/Any?` → `kotlin.Any?`
      * 2. Remove kotlin stdlib prefixes for cleaner code:
-     *    - `kotlin.Any?` → `Any?`
-     *    - `kotlin.collections.List<T>` → `List<T>`
+     *     - `kotlin.Any?` → `Any?`
+     *     - `kotlin.collections.List<T>` → `List<T>`
      * 3. Preserve other package prefixes: `com/example/Foo` → `com.example.Foo`
      *
      * **Examples**:
@@ -417,9 +399,8 @@ internal class FirToIrTransformer {
      * - `"kotlin/collections/List<T>"` → `"List<T>"`
      * - `"com/example/CustomType"` → `"com.example.CustomType"`
      *
-     * **Why Remove kotlin.* Prefix**:
-     * Kotlin stdlib types are imported by default and don't need qualification.
-     * This produces cleaner generated code matching typical Kotlin style.
+     * **Why Remove kotlin.* Prefix**: Kotlin stdlib types are imported by default and don't need
+     * qualification. This produces cleaner generated code matching typical Kotlin style.
      *
      * **Performance**:
      * - String replacement: O(n) where n = bound string length (~10-50 chars)
@@ -452,20 +433,19 @@ internal class FirToIrTransformer {
     /**
      * Transform FIR annotations to IR-ready annotation metadata.
      *
-     * Converts FirAnnotationInfo (with structured argument data) to IrAnnotationMetadata
-     * (with pre-rendered argument strings ready for code generation).
+     * Converts FirAnnotationInfo (with structured argument data) to IrAnnotationMetadata (with
+     * pre-rendered argument strings ready for code generation).
      *
      * **Examples**:
-     * - `@OptIn(ExperimentalApi::class)` → IrAnnotationMetadata(
-     *       simpleName = "OptIn",
-     *       fullyQualifiedName = "kotlin.OptIn",
-     *       renderedArguments = ["ExperimentalApi::class"]
-     *   )
+     * - `@OptIn(ExperimentalApi::class)` → IrAnnotationMetadata( simpleName = "OptIn",
+     *   fullyQualifiedName = "kotlin.OptIn", renderedArguments = ["ExperimentalApi::class"] )
      *
      * @param annotations FIR annotations from validated metadata
      * @return List of IR-ready annotation metadata
      */
-    private fun transformAnnotations(annotations: List<FirAnnotationInfo>): List<IrAnnotationMetadata> =
+    private fun transformAnnotations(
+        annotations: List<FirAnnotationInfo>
+    ): List<IrAnnotationMetadata> =
         annotations.map { annotation ->
             val classIdParts = annotation.annotationClassId.split("/")
             val simpleName = classIdParts.last().substringAfterLast('.')
@@ -501,7 +481,9 @@ internal class FirToIrTransformer {
      * @param arguments Map of argument names to their values
      * @return List of rendered argument strings
      */
-    private fun renderAnnotationArguments(arguments: Map<String, FirAnnotationArgument>): List<String> =
+    private fun renderAnnotationArguments(
+        arguments: Map<String, FirAnnotationArgument>
+    ): List<String> =
         arguments.flatMap { (name, value) ->
             // Check if this is a vararg-like array that should be expanded
             // Vararg arrays contain only class references or only string literals
@@ -509,10 +491,8 @@ internal class FirToIrTransformer {
             val isVarargLikeArray =
                 value is FirAnnotationArgument.ArrayValue &&
                     value.elements.isNotEmpty() &&
-                    (
-                        value.elements.all { it is FirAnnotationArgument.ClassReference } ||
-                            value.elements.all { it is FirAnnotationArgument.StringLiteral }
-                    )
+                    (value.elements.all { it is FirAnnotationArgument.ClassReference } ||
+                        value.elements.all { it is FirAnnotationArgument.StringLiteral })
 
             when {
                 // Vararg array: expand elements directly as separate arguments
@@ -535,9 +515,7 @@ internal class FirToIrTransformer {
             }
         }
 
-    /**
-     * Render a single annotation argument value to Kotlin source code.
-     */
+    /** Render a single annotation argument value to Kotlin source code. */
     private fun renderArgumentValue(value: FirAnnotationArgument): String =
         when (value) {
             is FirAnnotationArgument.ClassReference -> {
@@ -577,7 +555,8 @@ internal class FirToIrTransformer {
 
             is FirAnnotationArgument.NestedAnnotation -> {
                 val nested = value.annotation
-                val simpleName = nested.annotationClassId.substringAfterLast('/').substringAfterLast('.')
+                val simpleName =
+                    nested.annotationClassId.substringAfterLast('/').substringAfterLast('.')
                 val argsStr =
                     if (nested.arguments.isEmpty()) {
                         ""
@@ -588,9 +567,7 @@ internal class FirToIrTransformer {
             }
         }
 
-    /**
-     * Escape special characters in string literals for code generation.
-     */
+    /** Escape special characters in string literals for code generation. */
     private fun escapeString(value: String): String =
         value
             .replace("\\", "\\\\")

@@ -17,9 +17,7 @@ import org.jetbrains.kotlin.ir.util.kotlinFqName
  * - Rendering function types to Kotlin syntax: (A, B) -> R
  */
 internal class FunctionTypeHandler {
-    /**
-     * Checks if an IR type represents a function type.
-     */
+    /** Checks if an IR type represents a function type. */
     fun isFunction(irType: IrType): Boolean {
         val irClass = irType.getClass() ?: return false
         val className = irClass.name.asString()
@@ -27,9 +25,7 @@ internal class FunctionTypeHandler {
         return packageName == "kotlin" && className.startsWith("Function")
     }
 
-    /**
-     * Checks if an IR type represents a suspend function type.
-     */
+    /** Checks if an IR type represents a suspend function type. */
     fun isSuspendFunction(irType: IrType): Boolean {
         val irClass = irType.getClass() ?: return false
         val className = irClass.name.asString()
@@ -57,7 +53,8 @@ internal class FunctionTypeHandler {
         if (className.startsWith("Function") || className.startsWith("SuspendFunction")) {
             val arityString =
                 when {
-                    className.startsWith("SuspendFunction") -> className.removePrefix("SuspendFunction")
+                    className.startsWith("SuspendFunction") ->
+                        className.removePrefix("SuspendFunction")
                     className.startsWith("Function") -> className.removePrefix("Function")
                     else -> ""
                 }

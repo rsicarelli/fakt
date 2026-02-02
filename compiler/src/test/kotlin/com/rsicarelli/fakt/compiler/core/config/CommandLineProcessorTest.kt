@@ -4,10 +4,6 @@ package com.rsicarelli.fakt.compiler.core.config
 
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.api.SourceSetInfo
-import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.Json
-import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
-import org.jetbrains.kotlin.config.CompilerConfiguration
 import java.util.Base64
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -15,6 +11,10 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
+import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
+import org.jetbrains.kotlin.config.CompilerConfiguration
 
 /**
  * TDD tests for FaktCommandLineProcessor - deserializes SourceSetContext from Gradle plugin.
@@ -60,7 +60,9 @@ class CommandLineProcessorTest {
             val configuration = CompilerConfiguration()
 
             processor.processOption(
-                option = processor.pluginOptions.first { it.optionName == "sourceSetContext" } as AbstractCliOption,
+                option =
+                    processor.pluginOptions.first { it.optionName == "sourceSetContext" }
+                        as AbstractCliOption,
                 value = base64Encoded,
                 configuration = configuration,
             )
@@ -78,93 +80,93 @@ class CommandLineProcessorTest {
         }
 
     @Test
-    fun `GIVEN complex KMP context WHEN processing THEN should preserve hierarchy`() =
-        runTest {
-            // GIVEN: iOS hierarchy - iosX64Main → iosMain → appleMain → nativeMain → commonMain
-            val context =
-                SourceSetContext(
-                    compilationName = "main",
-                    targetName = "iosX64",
-                    platformType = "native",
-                    isTest = false,
-                    defaultSourceSet = SourceSetInfo("iosX64Main", listOf("iosMain")),
-                    allSourceSets =
-                        listOf(
-                            SourceSetInfo("iosX64Main", listOf("iosMain")),
-                            SourceSetInfo("iosMain", listOf("appleMain")),
-                            SourceSetInfo("appleMain", listOf("nativeMain")),
-                            SourceSetInfo("nativeMain", listOf("commonMain")),
-                            SourceSetInfo("commonMain", emptyList()),
-                        ),
-                    outputDirectory = "/project/build/generated/fakt/main/kotlin",
-                    commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
-                )
-
-            val json = Json { prettyPrint = false }
-            val jsonString = json.encodeToString(context)
-            val base64Encoded = Base64.getEncoder().encodeToString(jsonString.toByteArray())
-
-            // WHEN: Processing
-            val processor = FaktCommandLineProcessor()
-            val configuration = CompilerConfiguration()
-
-            processor.processOption(
-                option = processor.pluginOptions.first { it.optionName == "sourceSetContext" } as AbstractCliOption,
-                value = base64Encoded,
-                configuration = configuration,
+    fun `GIVEN complex KMP context WHEN processing THEN should preserve hierarchy`() = runTest {
+        // GIVEN: iOS hierarchy - iosX64Main → iosMain → appleMain → nativeMain → commonMain
+        val context =
+            SourceSetContext(
+                compilationName = "main",
+                targetName = "iosX64",
+                platformType = "native",
+                isTest = false,
+                defaultSourceSet = SourceSetInfo("iosX64Main", listOf("iosMain")),
+                allSourceSets =
+                    listOf(
+                        SourceSetInfo("iosX64Main", listOf("iosMain")),
+                        SourceSetInfo("iosMain", listOf("appleMain")),
+                        SourceSetInfo("appleMain", listOf("nativeMain")),
+                        SourceSetInfo("nativeMain", listOf("commonMain")),
+                        SourceSetInfo("commonMain", emptyList()),
+                    ),
+                outputDirectory = "/project/build/generated/fakt/main/kotlin",
+                commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
             )
 
-            // THEN: Full hierarchy preserved
-            val deserializedContext =
-                configuration.get(FaktCommandLineProcessor.SOURCE_SET_CONTEXT_KEY)
-            assertNotNull(deserializedContext)
-            assertEquals(5, deserializedContext.allSourceSets.size)
-            assertEquals("iosX64Main", deserializedContext.defaultSourceSet.name)
-            assertFalse(deserializedContext.isTest)
+        val json = Json { prettyPrint = false }
+        val jsonString = json.encodeToString(context)
+        val base64Encoded = Base64.getEncoder().encodeToString(jsonString.toByteArray())
 
-            // Verify parent relationships
-            val iosX64Info = deserializedContext.allSourceSets.first { it.name == "iosX64Main" }
-            assertTrue(iosX64Info.parents.contains("iosMain"))
-        }
+        // WHEN: Processing
+        val processor = FaktCommandLineProcessor()
+        val configuration = CompilerConfiguration()
+
+        processor.processOption(
+            option =
+                processor.pluginOptions.first { it.optionName == "sourceSetContext" }
+                    as AbstractCliOption,
+            value = base64Encoded,
+            configuration = configuration,
+        )
+
+        // THEN: Full hierarchy preserved
+        val deserializedContext = configuration.get(FaktCommandLineProcessor.SOURCE_SET_CONTEXT_KEY)
+        assertNotNull(deserializedContext)
+        assertEquals(5, deserializedContext.allSourceSets.size)
+        assertEquals("iosX64Main", deserializedContext.defaultSourceSet.name)
+        assertFalse(deserializedContext.isTest)
+
+        // Verify parent relationships
+        val iosX64Info = deserializedContext.allSourceSets.first { it.name == "iosX64Main" }
+        assertTrue(iosX64Info.parents.contains("iosMain"))
+    }
 
     @Test
-    fun `GIVEN enabled option WHEN processing THEN should set enabled flag`() =
-        runTest {
-            // GIVEN
-            val processor = FaktCommandLineProcessor()
-            val configuration = CompilerConfiguration()
+    fun `GIVEN enabled option WHEN processing THEN should set enabled flag`() = runTest {
+        // GIVEN
+        val processor = FaktCommandLineProcessor()
+        val configuration = CompilerConfiguration()
 
-            // WHEN
-            processor.processOption(
-                option = processor.pluginOptions.first { it.optionName == "enabled" } as AbstractCliOption,
-                value = "true",
-                configuration = configuration,
-            )
+        // WHEN
+        processor.processOption(
+            option =
+                processor.pluginOptions.first { it.optionName == "enabled" } as AbstractCliOption,
+            value = "true",
+            configuration = configuration,
+        )
 
-            // THEN
-            val enabled = configuration.get(FaktCommandLineProcessor.ENABLED_KEY)
-            assertTrue(enabled == true, "Enabled flag should be set")
-        }
+        // THEN
+        val enabled = configuration.get(FaktCommandLineProcessor.ENABLED_KEY)
+        assertTrue(enabled == true, "Enabled flag should be set")
+    }
 
     @Test
-    fun `GIVEN outputDir option WHEN processing THEN should set output directory`() =
-        runTest {
-            // GIVEN
-            val processor = FaktCommandLineProcessor()
-            val configuration = CompilerConfiguration()
-            val outputPath = "/custom/output/path"
+    fun `GIVEN outputDir option WHEN processing THEN should set output directory`() = runTest {
+        // GIVEN
+        val processor = FaktCommandLineProcessor()
+        val configuration = CompilerConfiguration()
+        val outputPath = "/custom/output/path"
 
-            // WHEN
-            processor.processOption(
-                option = processor.pluginOptions.first { it.optionName == "outputDir" } as AbstractCliOption,
-                value = outputPath,
-                configuration = configuration,
-            )
+        // WHEN
+        processor.processOption(
+            option =
+                processor.pluginOptions.first { it.optionName == "outputDir" } as AbstractCliOption,
+            value = outputPath,
+            configuration = configuration,
+        )
 
-            // THEN
-            val outputDir = configuration.get(FaktCommandLineProcessor.OUTPUT_DIR_KEY)
-            assertEquals(outputPath, outputDir, "Output directory should be set")
-        }
+        // THEN
+        val outputDir = configuration.get(FaktCommandLineProcessor.OUTPUT_DIR_KEY)
+        assertEquals(outputPath, outputDir, "Output directory should be set")
+    }
 
     @Test
     fun `GIVEN invalid base64 WHEN processing sourceSetContext THEN should handle gracefully`() =
@@ -175,7 +177,9 @@ class CommandLineProcessorTest {
 
             // WHEN/THEN: Should not crash, just leave context null
             processor.processOption(
-                option = processor.pluginOptions.first { it.optionName == "sourceSetContext" } as AbstractCliOption,
+                option =
+                    processor.pluginOptions.first { it.optionName == "sourceSetContext" }
+                        as AbstractCliOption,
                 value = "invalid-base64!!!",
                 configuration = configuration,
             )
@@ -196,7 +200,9 @@ class CommandLineProcessorTest {
 
             // WHEN/THEN: Should not crash
             processor.processOption(
-                option = processor.pluginOptions.first { it.optionName == "sourceSetContext" } as AbstractCliOption,
+                option =
+                    processor.pluginOptions.first { it.optionName == "sourceSetContext" }
+                        as AbstractCliOption,
                 value = base64Encoded,
                 configuration = configuration,
             )
@@ -206,35 +212,33 @@ class CommandLineProcessorTest {
         }
 
     @Test
-    fun `GIVEN processor WHEN getting plugin options THEN should declare all options`() =
-        runTest {
-            // GIVEN
-            val processor = FaktCommandLineProcessor()
+    fun `GIVEN processor WHEN getting plugin options THEN should declare all options`() = runTest {
+        // GIVEN
+        val processor = FaktCommandLineProcessor()
 
-            // WHEN
-            val options = processor.pluginOptions
+        // WHEN
+        val options = processor.pluginOptions
 
-            // THEN: Should have all required options
-            val optionNames = options.map { it.optionName }
-            assertTrue(optionNames.contains("enabled"), "Should have 'enabled' option")
-            assertTrue(optionNames.contains("logLevel"), "Should have 'logLevel' option")
-            assertTrue(optionNames.contains("outputDir"), "Should have 'outputDir' option")
-            assertTrue(
-                optionNames.contains("sourceSetContext"),
-                "Should have 'sourceSetContext' option",
-            )
-        }
+        // THEN: Should have all required options
+        val optionNames = options.map { it.optionName }
+        assertTrue(optionNames.contains("enabled"), "Should have 'enabled' option")
+        assertTrue(optionNames.contains("logLevel"), "Should have 'logLevel' option")
+        assertTrue(optionNames.contains("outputDir"), "Should have 'outputDir' option")
+        assertTrue(
+            optionNames.contains("sourceSetContext"),
+            "Should have 'sourceSetContext' option",
+        )
+    }
 
     @Test
-    fun `GIVEN processor WHEN getting plugin ID THEN should return correct ID`() =
-        runTest {
-            // GIVEN
-            val processor = FaktCommandLineProcessor()
+    fun `GIVEN processor WHEN getting plugin ID THEN should return correct ID`() = runTest {
+        // GIVEN
+        val processor = FaktCommandLineProcessor()
 
-            // WHEN
-            val pluginId = processor.pluginId
+        // WHEN
+        val pluginId = processor.pluginId
 
-            // THEN
-            assertEquals("com.rsicarelli.fakt", pluginId, "Plugin ID should match")
-        }
+        // THEN
+        assertEquals("com.rsicarelli.fakt", pluginId, "Plugin ID should match")
+    }
 }

@@ -5,9 +5,7 @@ package com.rsicarelli.fakt.compiler.ir.analysis
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 
-/**
- * Tests for GenericPatternAnalyzer with data structure validation.
- */
+/** Tests for GenericPatternAnalyzer with data structure validation. */
 class GenericPatternAnalyzerTest {
     private val analyzer = GenericPatternAnalyzer()
 

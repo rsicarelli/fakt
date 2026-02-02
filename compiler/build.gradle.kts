@@ -4,7 +4,6 @@ plugins {
     id("fakt-kotlin-jvm")
     id("fakt-publishing")
     id("fakt-spotless")
-    id("fakt-ktlint")
     id("fakt-detekt")
     alias(libs.plugins.shadow)
 }
@@ -12,11 +11,7 @@ plugins {
 description = "Fakt Kotlin compiler plugin for automatic fake generation using FIR + IR phases"
 
 kotlin {
-    compilerOptions {
-        optIn.addAll(
-            "org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi",
-        )
-    }
+    compilerOptions { optIn.addAll("org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi") }
 }
 
 dependencies {
@@ -67,17 +62,13 @@ val shadowJar =
 // Replace artifacts with shadowJar
 // CRITICAL: This ensures maven-publish uses shadowJar instead of regular jar
 for (c in arrayOf("apiElements", "runtimeElements")) {
-    configurations.named(c) {
-        artifacts.removeIf { true }
-    }
+    configurations.named(c) { artifacts.removeIf { true } }
     artifacts.add(c, shadowJar)
 }
 
 tasks {
     // Make the shadow jar the main artifact
-    named("build") {
-        dependsOn(shadowJar)
-    }
+    named("build") { dependsOn(shadowJar) }
 
     test {
         jvmArgs("-Xmx2g", "-XX:MaxMetaspaceSize=512m")

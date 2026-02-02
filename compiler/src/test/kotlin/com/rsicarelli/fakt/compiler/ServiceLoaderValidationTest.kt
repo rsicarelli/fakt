@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler
 
-import org.junit.jupiter.api.TestInstance
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Service Loader validation tests to prevent classpath issues.
@@ -17,8 +17,8 @@ import kotlin.test.fail
  * - Files are moved to different packages during refactoring
  * - Service loader files are not updated accordingly
  *
- * Real bug prevented: ClassNotFoundException for FaktCommandLineProcessor after
- * moving it from com.rsicarelli.fakt.compiler to com.rsicarelli.fakt.compiler.config
+ * Real bug prevented: ClassNotFoundException for FaktCommandLineProcessor after moving it from
+ * com.rsicarelli.fakt.compiler to com.rsicarelli.fakt.compiler.config
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ServiceLoaderValidationTest {
@@ -29,14 +29,8 @@ class ServiceLoaderValidationTest {
     fun `GIVEN CommandLineProcessor service file WHEN reading class name THEN class should exist in correct package`() {
         // Given
         val serviceFile =
-            File(
-                servicesDir,
-                "org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor",
-            )
-        assertTrue(
-            serviceFile.exists(),
-            "Service file should exist: ${serviceFile.absolutePath}",
-        )
+            File(servicesDir, "org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor")
+        assertTrue(serviceFile.exists(), "Service file should exist: ${serviceFile.absolutePath}")
 
         // When
         val className = serviceFile.readText().trim()
@@ -49,7 +43,7 @@ class ServiceLoaderValidationTest {
                 fail(
                     "Service loader references non-existent class: $className. " +
                         "This usually happens when a class is moved to a different package but " +
-                        "META-INF/services was not updated. Error: ${e.message}",
+                        "META-INF/services was not updated. Error: ${e.message}"
                 )
             }
 
@@ -64,14 +58,8 @@ class ServiceLoaderValidationTest {
     fun `GIVEN CompilerPluginRegistrar service file WHEN reading class name THEN class should exist and be public`() {
         // Given
         val serviceFile =
-            File(
-                servicesDir,
-                "org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar",
-            )
-        assertTrue(
-            serviceFile.exists(),
-            "Service file should exist: ${serviceFile.absolutePath}",
-        )
+            File(servicesDir, "org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar")
+        assertTrue(serviceFile.exists(), "Service file should exist: ${serviceFile.absolutePath}")
 
         // When
         val className = serviceFile.readText().trim()
@@ -84,7 +72,7 @@ class ServiceLoaderValidationTest {
                 fail(
                     "Service loader references non-existent class: $className. " +
                         "Did you move FaktCompilerPluginRegistrar without updating META-INF/services? " +
-                        "Error: ${e.message}",
+                        "Error: ${e.message}"
                 )
             }
 
@@ -93,8 +81,7 @@ class ServiceLoaderValidationTest {
         // Verify class is public (service loader requirement)
         val modifiers = loadedClass.modifiers
         assertTrue(
-            java.lang.reflect.Modifier
-                .isPublic(modifiers),
+            java.lang.reflect.Modifier.isPublic(modifiers),
             "Service loader class must be public: $className",
         )
 
@@ -126,10 +113,7 @@ class ServiceLoaderValidationTest {
         serviceFiles.forEach { serviceFileName ->
             val serviceFile = File(servicesDir, serviceFileName)
 
-            assertTrue(
-                serviceFile.exists(),
-                "Service file should exist: $serviceFileName",
-            )
+            assertTrue(serviceFile.exists(), "Service file should exist: $serviceFileName")
 
             val classNames =
                 serviceFile
@@ -151,7 +135,7 @@ class ServiceLoaderValidationTest {
                         "Service file '$serviceFileName' references non-existent class: $className. " +
                             "This breaks plugin loading at runtime. " +
                             "Check if class was moved or renamed without updating META-INF/services. " +
-                            "Error: ${e.message}",
+                            "Error: ${e.message}"
                     )
                 }
             }
@@ -162,10 +146,7 @@ class ServiceLoaderValidationTest {
     fun `GIVEN service loader config WHEN validating package THEN FaktCommandLineProcessor should be in config package`() {
         // Given - This test documents the expected package structure
         val serviceFile =
-            File(
-                servicesDir,
-                "org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor",
-            )
+            File(servicesDir, "org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor")
         val className = serviceFile.readText().trim()
 
         // When
@@ -191,10 +172,7 @@ class ServiceLoaderValidationTest {
     fun `GIVEN service loader config WHEN validating package THEN FaktCompilerPluginRegistrar in root compiler package`() {
         // Given - This test documents the expected package structure
         val serviceFile =
-            File(
-                servicesDir,
-                "org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar",
-            )
+            File(servicesDir, "org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar")
         val className = serviceFile.readText().trim()
 
         // When
