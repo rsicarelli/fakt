@@ -20,7 +20,8 @@ import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
  *
  * Uses CodeFile for type-safe, composable code generation.
  *
- * @property implementationFile CodeFile with package, imports, implementation class, and call history components
+ * @property implementationFile CodeFile with package, imports, implementation class, and call
+ *   history components
  * @property factoryFunction CodeFile containing the factory function
  */
 internal data class GeneratedFakeCode(
@@ -33,9 +34,7 @@ internal data class GeneratedFakeCode(
  *
  * Uses type-safe DSL for clean, composable code generation.
  */
-internal class ImplementationGenerator(
-    private val typeResolver: TypeResolution,
-) {
+internal class ImplementationGenerator(private val typeResolver: TypeResolution) {
     /**
      * Generates fake implementation and factory for an interface.
      *
@@ -82,7 +81,7 @@ internal class ImplementationGenerator(
                     annotations = annotationSpecs,
                     methods = methods,
                     properties = properties,
-                ),
+                )
             )
 
         // Generate call history components using DSL and add to implementation file
@@ -154,7 +153,7 @@ internal class ImplementationGenerator(
                     annotations = annotationSpecs,
                     methods = methodSpecs,
                     properties = propertySpecs,
-                ),
+                )
             )
 
         // Generate call history components using DSL and add to implementation file
@@ -183,9 +182,7 @@ internal class ImplementationGenerator(
     }
 }
 
-/**
- * Convert AnnotationAnalysis to AnnotationSpec for code generation.
- */
+/** Convert AnnotationAnalysis to AnnotationSpec for code generation. */
 private fun AnnotationAnalysis.toAnnotationSpec(): AnnotationSpec =
     AnnotationSpec(
         simpleName = simpleName,
@@ -194,10 +191,10 @@ private fun AnnotationAnalysis.toAnnotationSpec(): AnnotationSpec =
         isOptInMarker = isOptInMarker,
     )
 
-/**
- * Convert ClassAnalysis members to method and property specs.
- */
-private fun ClassAnalysis.toMemberSpecs(typeResolver: TypeResolution): Pair<List<MethodSpec>, List<PropertySpec>> {
+/** Convert ClassAnalysis members to method and property specs. */
+private fun ClassAnalysis.toMemberSpecs(
+    typeResolver: TypeResolution
+): Pair<List<MethodSpec>, List<PropertySpec>> {
     val methodSpecs =
         abstractMethods.map { it.toMethodSpec(typeResolver).copy(isAbstract = true) } +
             openMethods.map { it.toMethodSpec(typeResolver).copy(isAbstract = false) }

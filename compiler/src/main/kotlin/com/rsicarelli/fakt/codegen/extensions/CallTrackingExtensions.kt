@@ -8,16 +8,14 @@ import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 /**
  * Generates the public getter for method call tracking.
  *
- * For methods, count is derived from call history: `val methodNameCallCount: Int get() = _methodNameCalls.value.size`
- * This eliminates redundant state updates since count can be derived from history.
+ * For methods, count is derived from call history: `val methodNameCallCount: Int get() =
+ * _methodNameCalls.value.size` This eliminates redundant state updates since count can be derived
+ * from history.
  *
  * @param methodName Name of the method to track
  * @param visibility Visibility modifier to apply to the public getter
  */
-fun ClassBuilder.callTrackingPublicGetter(
-    methodName: String,
-    visibility: FirVisibility,
-) {
+fun ClassBuilder.callTrackingPublicGetter(methodName: String, visibility: FirVisibility) {
     val callsFieldName = "_${methodName}Calls"
     val publicFieldName = "${methodName}CallCount"
 
@@ -25,7 +23,8 @@ fun ClassBuilder.callTrackingPublicGetter(
         when (visibility) {
             FirVisibility.PUBLIC -> public()
             FirVisibility.INTERNAL -> internal()
-            FirVisibility.PRIVATE, FirVisibility.PROTECTED -> public()
+            FirVisibility.PRIVATE,
+            FirVisibility.PROTECTED -> public()
         }
         getter = "$callsFieldName.value.size"
     }
@@ -70,7 +69,8 @@ fun ClassBuilder.propertyGetterTrackingPublicGetter(
         when (visibility) {
             FirVisibility.PUBLIC -> public()
             FirVisibility.INTERNAL -> internal()
-            FirVisibility.PRIVATE, FirVisibility.PROTECTED -> public()
+            FirVisibility.PRIVATE,
+            FirVisibility.PROTECTED -> public()
         }
         getter = "$backingFieldName.value"
     }
@@ -117,7 +117,8 @@ fun ClassBuilder.propertySetterTrackingPublicGetter(
         when (visibility) {
             FirVisibility.PUBLIC -> public()
             FirVisibility.INTERNAL -> internal()
-            FirVisibility.PRIVATE, FirVisibility.PROTECTED -> public()
+            FirVisibility.PRIVATE,
+            FirVisibility.PROTECTED -> public()
         }
         getter = "$backingFieldName.value"
     }
@@ -126,16 +127,14 @@ fun ClassBuilder.propertySetterTrackingPublicGetter(
 /**
  * Generates the internal backing field for call history.
  *
- * Creates: `@PublishedApi internal val _methodNameCalls = MutableStateFlow<List<MethodNameCall>>(emptyList())`
- * Or for 0-param: `@PublishedApi internal val _methodNameCalls = MutableStateFlow<List<Unit>>(emptyList())`
+ * Creates: `@PublishedApi internal val _methodNameCalls =
+ * MutableStateFlow<List<MethodNameCall>>(emptyList())` Or for 0-param: `@PublishedApi internal val
+ * _methodNameCalls = MutableStateFlow<List<Unit>>(emptyList())`
  *
  * @param methodName Name of the method to track
  * @param dataClassName Name of the data class storing call arguments, or null for Unit storage
  */
-fun ClassBuilder.callHistoryBackingField(
-    methodName: String,
-    dataClassName: String?,
-) {
+fun ClassBuilder.callHistoryBackingField(methodName: String, dataClassName: String?) {
     val backingFieldName = "_${methodName}Calls"
     val storageType = dataClassName ?: "Unit"
 

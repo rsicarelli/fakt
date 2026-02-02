@@ -30,12 +30,11 @@ import com.rsicarelli.fakt.codegen.model.CodeType
  * ```
  */
 public class PrimitiveDefaultStrategy : DefaultValueStrategy {
-    override fun supports(type: CodeType): Boolean = type is CodeType.Simple && type.name in PRIMITIVE_TYPES
+    override fun supports(type: CodeType): Boolean =
+        type is CodeType.Simple && type.name in PRIMITIVE_TYPES
 
     override fun defaultValue(type: CodeType): CodeExpression {
-        require(supports(type)) {
-            "PrimitiveDefaultStrategy does not support type: $type"
-        }
+        require(supports(type)) { "PrimitiveDefaultStrategy does not support type: $type" }
 
         val typeName = (type as CodeType.Simple).name
         return when (typeName) {
@@ -54,16 +53,6 @@ public class PrimitiveDefaultStrategy : DefaultValueStrategy {
 
     private companion object {
         private val PRIMITIVE_TYPES =
-            setOf(
-                "String",
-                "Int",
-                "Long",
-                "Boolean",
-                "Double",
-                "Float",
-                "Short",
-                "Byte",
-                "Char",
-            )
+            setOf("String", "Int", "Long", "Boolean", "Double", "Float", "Short", "Byte", "Char")
     }
 }

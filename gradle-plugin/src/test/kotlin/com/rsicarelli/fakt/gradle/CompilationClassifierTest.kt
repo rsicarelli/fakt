@@ -4,6 +4,9 @@
 
 package com.rsicarelli.fakt.gradle
 
+import kotlin.test.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import org.gradle.api.Action
 import org.gradle.api.attributes.AttributeContainer
 import org.gradle.api.file.FileCollection
@@ -11,13 +14,10 @@ import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinDependencyHandler
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
-import kotlin.test.Test
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 /**
- * TDD tests for compilation classification (test vs main).
- * These tests define the expected heuristics BEFORE implementation.
+ * TDD tests for compilation classification (test vs main). These tests define the expected
+ * heuristics BEFORE implementation.
  *
  * **Heuristics**:
  * 1. Standard test compilation name = "test"
@@ -31,7 +31,7 @@ class CompilationClassifierTest {
         // GIVEN
         val compilation =
             FakeKotlinCompilation(
-                name = KotlinCompilation.TEST_COMPILATION_NAME, // "test"
+                name = KotlinCompilation.TEST_COMPILATION_NAME // "test"
             )
 
         // WHEN
@@ -46,7 +46,7 @@ class CompilationClassifierTest {
         // GIVEN
         val compilation =
             FakeKotlinCompilation(
-                name = KotlinCompilation.MAIN_COMPILATION_NAME, // "main"
+                name = KotlinCompilation.MAIN_COMPILATION_NAME // "main"
             )
 
         // WHEN
@@ -111,11 +111,7 @@ class CompilationClassifierTest {
     fun `GIVEN compilation associated with main WHEN classifying THEN should return true`() {
         // GIVEN: Custom compilation associated with main (test suite pattern)
         val main = FakeKotlinCompilation(name = "main")
-        val custom =
-            FakeKotlinCompilation(
-                name = "customSuite",
-                associatedWith = setOf(main),
-            )
+        val custom = FakeKotlinCompilation(name = "customSuite", associatedWith = setOf(main))
 
         // WHEN
         val result = custom.isTestCompilation
@@ -130,11 +126,7 @@ class CompilationClassifierTest {
     @Test
     fun `GIVEN compilation not associated with main WHEN classifying THEN should check name`() {
         // GIVEN: Custom compilation NOT associated with main
-        val compilation =
-            FakeKotlinCompilation(
-                name = "custom",
-                associatedWith = emptySet(),
-            )
+        val compilation = FakeKotlinCompilation(name = "custom", associatedWith = emptySet())
 
         // WHEN
         val result = compilation.isTestCompilation
@@ -220,8 +212,8 @@ class CompilationClassifierTest {
 }
 
 /**
- * Minimal fake implementation for testing.
- * Only implements the properties that CompilationClassifier actually uses.
+ * Minimal fake implementation for testing. Only implements the properties that
+ * CompilationClassifier actually uses.
  */
 @Suppress("DEPRECATION_ERROR")
 private class FakeKotlinCompilation(
@@ -234,39 +226,79 @@ private class FakeKotlinCompilation(
     override val allAssociatedCompilations: Set<KotlinCompilation<*>> = associatedWith
 
     // Everything else throws errors to catch misuse
-    override val implementationConfigurationName get() = error("Not used")
-    override val apiConfigurationName get() = error("Not used")
-    override val compileOnlyConfigurationName get() = error("Not used")
-    override val runtimeOnlyConfigurationName get() = error("Not used")
-    override val associatedCompilations get() = error("Not used")
-    override val target get() = error("Not used")
-    override val kotlinSourceSets get() = error("Not used")
-    override val allKotlinSourceSets get() = error("Not used")
-    override val defaultSourceSet get() = error("Not used")
-    override val extras get() = error("Not used")
-    override val project get() = error("Not used")
-    override val compileDependencyConfigurationName get() = error("Not used")
+    override val implementationConfigurationName
+        get() = error("Not used")
+
+    override val apiConfigurationName
+        get() = error("Not used")
+
+    override val compileOnlyConfigurationName
+        get() = error("Not used")
+
+    override val runtimeOnlyConfigurationName
+        get() = error("Not used")
+
+    override val associatedCompilations
+        get() = error("Not used")
+
+    override val target
+        get() = error("Not used")
+
+    override val kotlinSourceSets
+        get() = error("Not used")
+
+    override val allKotlinSourceSets
+        get() = error("Not used")
+
+    override val defaultSourceSet
+        get() = error("Not used")
+
+    override val extras
+        get() = error("Not used")
+
+    override val project
+        get() = error("Not used")
+
+    override val compileDependencyConfigurationName
+        get() = error("Not used")
+
     override var compileDependencyFiles: FileCollection
         get() = error("Not used")
         set(_) = error("Not used")
-    override val runtimeDependencyConfigurationName get() = error("Not used")
-    override val runtimeDependencyFiles get() = error("Not used")
-    override val output get() = error("Not used")
-    override val compileKotlinTaskName get() = error("Not used")
-    override val compileTaskProvider get() = error("Not used")
-    override val compileAllTaskName get() = error("Not used")
+
+    override val runtimeDependencyConfigurationName
+        get() = error("Not used")
+
+    override val runtimeDependencyFiles
+        get() = error("Not used")
+
+    override val output
+        get() = error("Not used")
+
+    override val compileKotlinTaskName
+        get() = error("Not used")
+
+    override val compileTaskProvider
+        get() = error("Not used")
+
+    override val compileAllTaskName
+        get() = error("Not used")
 
     @Suppress("OVERRIDE_DEPRECATION")
-    override val compilerOptions get() = error("Not used")
+    override val compilerOptions
+        get() = error("Not used")
 
     @Suppress("OVERRIDE_DEPRECATION")
-    override val compileKotlinTask get() = error("Not used")
+    override val compileKotlinTask
+        get() = error("Not used")
 
     @Suppress("OVERRIDE_DEPRECATION")
-    override val compileKotlinTaskProvider get() = error("Not used")
+    override val compileKotlinTaskProvider
+        get() = error("Not used")
 
     @Suppress("OVERRIDE_DEPRECATION")
-    override val kotlinOptions get() = error("Not used")
+    override val kotlinOptions
+        get() = error("Not used")
 
     override fun defaultSourceSet(configure: KotlinSourceSet.() -> Unit) = error("Not used")
 
@@ -288,8 +320,12 @@ private class FakeKotlinCompilation(
     override fun source(sourceSet: KotlinSourceSet) = error("Not used")
 
     @Suppress("OVERRIDE_DEPRECATION")
-    override fun kotlinOptions(configure: org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions.() -> Unit) = error("Not used")
+    override fun kotlinOptions(
+        configure: org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions.() -> Unit
+    ) = error("Not used")
 
     @Suppress("OVERRIDE_DEPRECATION")
-    override fun kotlinOptions(configure: Action<org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions>) = error("Not used")
+    override fun kotlinOptions(
+        configure: Action<org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions>
+    ) = error("Not used")
 }

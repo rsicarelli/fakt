@@ -28,285 +28,253 @@ import com.rsicarelli.fakt.codegen.model.CodeTypeParameter
  * @property name The function name
  */
 @CodeDsl
-public class FunctionBuilder
-    @PublishedApi
-    internal constructor(
-        private val name: String,
-    ) {
-        private val parameters = mutableListOf<CodeParameter>()
-        private val typeParameters = mutableListOf<CodeTypeParameter>()
-        private val modifiers = mutableSetOf<CodeModifier>()
-        private val annotations = mutableListOf<CodeAnnotation>()
-        private var returnType: CodeType = CodeType.Simple("Unit")
-        private var bodyBlock: CodeBlock = CodeBlock.Empty
-        private var receiverType: CodeType? = null
+public class FunctionBuilder @PublishedApi internal constructor(private val name: String) {
+    private val parameters = mutableListOf<CodeParameter>()
+    private val typeParameters = mutableListOf<CodeTypeParameter>()
+    private val modifiers = mutableSetOf<CodeModifier>()
+    private val annotations = mutableListOf<CodeAnnotation>()
+    private var returnType: CodeType = CodeType.Simple("Unit")
+    private var bodyBlock: CodeBlock = CodeBlock.Empty
+    private var receiverType: CodeType? = null
 
-        /**
-         * Whether this is a suspend function.
-         */
-        public var isSuspend: Boolean = false
+    /** Whether this is a suspend function. */
+    public var isSuspend: Boolean = false
 
-        /**
-         * Whether this is an inline function.
-         */
-        public var isInline: Boolean = false
+    /** Whether this is an inline function. */
+    public var isInline: Boolean = false
 
-        /**
-         * Optional KDoc documentation for the function.
-         *
-         * Example:
-         * ```kotlin
-         * kdoc = """
-         *     Creates a fake implementation of [UserService] for testing.
-         *
-         *     @param configure DSL block to configure fake behaviors
-         *     @return Configured fake instance
-         * """.trimIndent()
-         * ```
-         */
-        public var kdoc: String? = null
+    /**
+     * Optional KDoc documentation for the function.
+     *
+     * Example:
+     * ```kotlin
+     * kdoc = """
+     *     Creates a fake implementation of [UserService] for testing.
+     *
+     *     @param configure DSL block to configure fake behaviors
+     *     @return Configured fake instance
+     * """.trimIndent()
+     * ```
+     */
+    public var kdoc: String? = null
 
-        /**
-         * Sets function body as raw code string (block style).
-         *
-         * Example:
-         * ```kotlin
-         * body = "return 42"
-         * ```
-         */
-        public var body: String
-            get() = error("Write-only property")
-            set(value) {
-                bodyBlock = CodeBlock.Statements(listOf(value))
-            }
-
-        /**
-         * Sets function body as expression (= syntax).
-         *
-         * Example:
-         * ```kotlin
-         * expressionBody = "run { value = newValue }"
-         * // Generates: fun method() = run { value = newValue }
-         * ```
-         */
-        public var expressionBody: String
-            get() = error("Write-only property")
-            set(value) {
-                bodyBlock = CodeBlock.Expression(CodeExpression.Raw(value))
-            }
-
-        /**
-         * Sets function body using a lambda.
-         *
-         * Example:
-         * ```kotlin
-         * body {
-         *     buildString {
-         *         appendLine("val x = 1")
-         *         appendLine("return x")
-         *     }
-         * }
-         * ```
-         *
-         * @param block Lambda that returns the body code
-         */
-        public fun body(block: () -> String) {
-            bodyBlock = CodeBlock.Statements(listOf(block()))
+    /**
+     * Sets function body as raw code string (block style).
+     *
+     * Example:
+     * ```kotlin
+     * body = "return 42"
+     * ```
+     */
+    public var body: String
+        get() = error("Write-only property")
+        set(value) {
+            bodyBlock = CodeBlock.Statements(listOf(value))
         }
 
-        /**
-         * Adds parameter.
-         *
-         * Example:
-         * ```kotlin
-         * parameter("id", "String")
-         * parameter("count", "Int", defaultValue = "0")
-         * parameter("items", "String", vararg = true)
-         * ```
-         *
-         * @param name Parameter name
-         * @param type Parameter type as string
-         * @param defaultValue Optional default value expression
-         * @param vararg Whether this is a vararg parameter
-         */
-        public fun parameter(
-            name: String,
-            type: String,
-            defaultValue: String? = null,
-            vararg: Boolean = false,
-        ) {
-            parameters.add(
-                CodeParameter(
-                    name = name,
-                    type = parseType(type),
-                    defaultValue = defaultValue?.let { CodeExpression.Raw(it) },
-                    isVararg = vararg,
-                ),
-            )
+    /**
+     * Sets function body as expression (= syntax).
+     *
+     * Example:
+     * ```kotlin
+     * expressionBody = "run { value = newValue }"
+     * // Generates: fun method() = run { value = newValue }
+     * ```
+     */
+    public var expressionBody: String
+        get() = error("Write-only property")
+        set(value) {
+            bodyBlock = CodeBlock.Expression(CodeExpression.Raw(value))
         }
 
-        /**
-         * Adds a type parameter to the function.
-         *
-         * Example:
-         * ```kotlin
-         * typeParam("T")  // fun <T> method()
-         * typeParam("R", "Comparable<R>")  // fun <R : Comparable<R>> method()
-         * typeParam("T", reified = true)  // inline fun <reified T> method()
-         * ```
-         *
-         * @param name Type parameter name
-         * @param constraints Optional type constraints
-         * @param reified Whether this is a reified type parameter (requires inline function)
-         */
-        public fun typeParam(
-            name: String,
-            vararg constraints: String,
-            reified: Boolean = false,
-        ) {
-            typeParameters.add(
-                CodeTypeParameter(
-                    name = name,
-                    constraints = constraints.toList(),
-                    isReified = reified,
-                ),
-            )
-        }
-
-        /**
-         * Sets return type.
-         *
-         * Example:
-         * ```kotlin
-         * returns("User?")
-         * returns("List<String>")
-         * ```
-         *
-         * @param type Return type as string
-         */
-        public fun returns(type: String) {
-            returnType = parseType(type)
-        }
-
-        /**
-         * Makes function override.
-         */
-        public fun override() {
-            modifiers.add(CodeModifier.OVERRIDE)
-        }
-
-        /**
-         * Makes function public (explicit visibility for explicitApi() mode).
-         */
-        public fun public() {
-            modifiers.add(CodeModifier.PUBLIC)
-        }
-
-        /**
-         * Makes function internal.
-         */
-        public fun internal() {
-            modifiers.add(CodeModifier.INTERNAL)
-        }
-
-        /**
-         * Makes function suspend.
-         */
-        public fun suspend() {
-            isSuspend = true
-        }
-
-        /**
-         * Makes function operator.
-         */
-        public fun operator() {
-            modifiers.add(CodeModifier.OPERATOR)
-        }
-
-        /**
-         * Sets extension receiver type for extension functions.
-         *
-         * Example:
-         * ```kotlin
-         * receiver("Vector")  // fun Vector.plus()
-         * receiver("List<T>")  // fun List<T>.sum()
-         * ```
-         *
-         * @param type Receiver type as string
-         */
-        public fun receiver(type: String) {
-            receiverType = parseType(type)
-        }
-
-        /**
-         * Adds an annotation to the function.
-         *
-         * Example:
-         * ```kotlin
-         * annotation("Suppress", "\"UNCHECKED_CAST\"")
-         * // Generates: @Suppress("UNCHECKED_CAST")
-         * ```
-         *
-         * @param name Annotation simple name
-         * @param arguments Pre-rendered argument strings
-         */
-        public fun annotation(
-            name: String,
-            vararg arguments: String,
-        ) {
-            annotation(name, arguments.toList())
-        }
-
-        /**
-         * Adds an annotation with a list of arguments (avoids spread operator overhead).
-         *
-         * @param name Annotation simple name
-         * @param arguments Pre-rendered argument strings
-         */
-        public fun annotation(
-            name: String,
-            arguments: List<String>,
-        ) {
-            annotations.add(CodeAnnotation(name, arguments))
-        }
-
-        private var whereClause: String? = null
-
-        /**
-         * Sets where clause for multiple type constraints.
-         *
-         * Example:
-         * ```kotlin
-         * typeParam("T")
-         * where("T : CharSequence, T : Comparable<T>")
-         * // Generates: fun <T> method() where T : CharSequence, T : Comparable<T>
-         * ```
-         *
-         * @param clause The where clause (e.g., "T : CharSequence, T : Comparable<T>")
-         */
-        public fun where(clause: String) {
-            whereClause = clause
-        }
-
-        /**
-         * Builds the final [CodeFunction].
-         *
-         * @return Immutable [CodeFunction] instance
-         */
-        @PublishedApi
-        internal fun build(): CodeFunction =
-            CodeFunction(
-                name = name,
-                parameters = parameters,
-                typeParameters = typeParameters,
-                returnType = returnType,
-                body = bodyBlock,
-                modifiers = modifiers,
-                isSuspend = isSuspend,
-                isInline = isInline,
-                receiverType = receiverType,
-                annotations = annotations,
-                whereClause = whereClause,
-                kdoc = kdoc,
-            )
+    /**
+     * Sets function body using a lambda.
+     *
+     * Example:
+     * ```kotlin
+     * body {
+     *     buildString {
+     *         appendLine("val x = 1")
+     *         appendLine("return x")
+     *     }
+     * }
+     * ```
+     *
+     * @param block Lambda that returns the body code
+     */
+    public fun body(block: () -> String) {
+        bodyBlock = CodeBlock.Statements(listOf(block()))
     }
+
+    /**
+     * Adds parameter.
+     *
+     * Example:
+     * ```kotlin
+     * parameter("id", "String")
+     * parameter("count", "Int", defaultValue = "0")
+     * parameter("items", "String", vararg = true)
+     * ```
+     *
+     * @param name Parameter name
+     * @param type Parameter type as string
+     * @param defaultValue Optional default value expression
+     * @param vararg Whether this is a vararg parameter
+     */
+    public fun parameter(
+        name: String,
+        type: String,
+        defaultValue: String? = null,
+        vararg: Boolean = false,
+    ) {
+        parameters.add(
+            CodeParameter(
+                name = name,
+                type = parseType(type),
+                defaultValue = defaultValue?.let { CodeExpression.Raw(it) },
+                isVararg = vararg,
+            )
+        )
+    }
+
+    /**
+     * Adds a type parameter to the function.
+     *
+     * Example:
+     * ```kotlin
+     * typeParam("T")  // fun <T> method()
+     * typeParam("R", "Comparable<R>")  // fun <R : Comparable<R>> method()
+     * typeParam("T", reified = true)  // inline fun <reified T> method()
+     * ```
+     *
+     * @param name Type parameter name
+     * @param constraints Optional type constraints
+     * @param reified Whether this is a reified type parameter (requires inline function)
+     */
+    public fun typeParam(name: String, vararg constraints: String, reified: Boolean = false) {
+        typeParameters.add(
+            CodeTypeParameter(name = name, constraints = constraints.toList(), isReified = reified)
+        )
+    }
+
+    /**
+     * Sets return type.
+     *
+     * Example:
+     * ```kotlin
+     * returns("User?")
+     * returns("List<String>")
+     * ```
+     *
+     * @param type Return type as string
+     */
+    public fun returns(type: String) {
+        returnType = parseType(type)
+    }
+
+    /** Makes function override. */
+    public fun override() {
+        modifiers.add(CodeModifier.OVERRIDE)
+    }
+
+    /** Makes function public (explicit visibility for explicitApi() mode). */
+    public fun public() {
+        modifiers.add(CodeModifier.PUBLIC)
+    }
+
+    /** Makes function internal. */
+    public fun internal() {
+        modifiers.add(CodeModifier.INTERNAL)
+    }
+
+    /** Makes function suspend. */
+    public fun suspend() {
+        isSuspend = true
+    }
+
+    /** Makes function operator. */
+    public fun operator() {
+        modifiers.add(CodeModifier.OPERATOR)
+    }
+
+    /**
+     * Sets extension receiver type for extension functions.
+     *
+     * Example:
+     * ```kotlin
+     * receiver("Vector")  // fun Vector.plus()
+     * receiver("List<T>")  // fun List<T>.sum()
+     * ```
+     *
+     * @param type Receiver type as string
+     */
+    public fun receiver(type: String) {
+        receiverType = parseType(type)
+    }
+
+    /**
+     * Adds an annotation to the function.
+     *
+     * Example:
+     * ```kotlin
+     * annotation("Suppress", "\"UNCHECKED_CAST\"")
+     * // Generates: @Suppress("UNCHECKED_CAST")
+     * ```
+     *
+     * @param name Annotation simple name
+     * @param arguments Pre-rendered argument strings
+     */
+    public fun annotation(name: String, vararg arguments: String) {
+        annotation(name, arguments.toList())
+    }
+
+    /**
+     * Adds an annotation with a list of arguments (avoids spread operator overhead).
+     *
+     * @param name Annotation simple name
+     * @param arguments Pre-rendered argument strings
+     */
+    public fun annotation(name: String, arguments: List<String>) {
+        annotations.add(CodeAnnotation(name, arguments))
+    }
+
+    private var whereClause: String? = null
+
+    /**
+     * Sets where clause for multiple type constraints.
+     *
+     * Example:
+     * ```kotlin
+     * typeParam("T")
+     * where("T : CharSequence, T : Comparable<T>")
+     * // Generates: fun <T> method() where T : CharSequence, T : Comparable<T>
+     * ```
+     *
+     * @param clause The where clause (e.g., "T : CharSequence, T : Comparable<T>")
+     */
+    public fun where(clause: String) {
+        whereClause = clause
+    }
+
+    /**
+     * Builds the final [CodeFunction].
+     *
+     * @return Immutable [CodeFunction] instance
+     */
+    @PublishedApi
+    internal fun build(): CodeFunction =
+        CodeFunction(
+            name = name,
+            parameters = parameters,
+            typeParameters = typeParameters,
+            returnType = returnType,
+            body = bodyBlock,
+            modifiers = modifiers,
+            isSuspend = isSuspend,
+            isInline = isInline,
+            receiverType = receiverType,
+            annotations = annotations,
+            whereClause = whereClause,
+            kdoc = kdoc,
+        )
+}

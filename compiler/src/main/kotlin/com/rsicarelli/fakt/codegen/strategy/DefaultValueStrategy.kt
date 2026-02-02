@@ -44,8 +44,8 @@ public interface DefaultValueStrategy {
     /**
      * Generates a default value expression for the given type.
      *
-     * Must only be called if [supports] returns true for this type.
-     * Throws [IllegalArgumentException] if type is not supported.
+     * Must only be called if [supports] returns true for this type. Throws
+     * [IllegalArgumentException] if type is not supported.
      *
      * @param type The type to generate a default for
      * @return CodeExpression representing the default value

@@ -7,7 +7,6 @@ import org.jetbrains.kotlin.fir.expressions.FirExpression
 import org.jetbrains.kotlin.fir.expressions.FirFunctionCall
 import org.jetbrains.kotlin.fir.expressions.FirLiteralExpression
 import org.jetbrains.kotlin.fir.expressions.FirPropertyAccessExpression
-import org.jetbrains.kotlin.fir.types.resolvedType
 import org.jetbrains.kotlin.types.ConstantValueKind
 
 /**
@@ -98,8 +97,7 @@ private fun renderLiteral(literal: FirLiteralExpression): String? {
         // Not supported yet
         ConstantValueKind.IntegerLiteral,
         ConstantValueKind.UnsignedIntegerLiteral,
-        ConstantValueKind.Error,
-        -> null
+        ConstantValueKind.Error -> null
     }
 }
 

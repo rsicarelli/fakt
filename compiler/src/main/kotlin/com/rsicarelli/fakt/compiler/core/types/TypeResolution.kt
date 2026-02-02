@@ -22,10 +22,7 @@ internal interface TypeResolution {
      * @param preserveTypeParameters Whether to preserve generic type parameters
      * @return String representation of the type
      */
-    fun irTypeToKotlinString(
-        irType: IrType,
-        preserveTypeParameters: Boolean,
-    ): String
+    fun irTypeToKotlinString(irType: IrType, preserveTypeParameters: Boolean): String
 
     /**
      * Generates appropriate default values for IR types.
@@ -44,26 +41,20 @@ internal interface TypeResolution {
     fun isPrimitiveType(irType: IrType): Boolean
 }
 
-/**
- * Default implementation of TypeResolution that coordinates specialized handlers.
- */
+/** Default implementation of TypeResolution that coordinates specialized handlers. */
 internal class TypeResolutionImpl(
     private val typeRenderer: TypeRenderer,
     private val defaultValueProvider: DefaultValueProvider,
 ) : TypeResolution {
-    override fun irTypeToKotlinString(
-        irType: IrType,
-        preserveTypeParameters: Boolean,
-    ): String = typeRenderer.render(irType, preserveTypeParameters)
+    override fun irTypeToKotlinString(irType: IrType, preserveTypeParameters: Boolean): String =
+        typeRenderer.render(irType, preserveTypeParameters)
 
     override fun getDefaultValue(irType: IrType): String = defaultValueProvider.provide(irType)
 
     override fun isPrimitiveType(irType: IrType): Boolean = typeRenderer.isPrimitive(irType)
 }
 
-/**
- * Factory function to create a TypeResolution instance with all required handlers.
- */
+/** Factory function to create a TypeResolution instance with all required handlers. */
 internal fun createTypeResolution(): TypeResolution {
     val functionTypeHandler = FunctionTypeHandler()
     val genericTypeHandler = GenericTypeHandler()

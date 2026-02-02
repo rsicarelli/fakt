@@ -14,10 +14,8 @@ import org.jetbrains.kotlin.fir.analysis.extensions.FirAdditionalCheckersExtensi
  * @property session FIR compilation session
  * @property sharedContext Shared context with metadata storage
  */
-class FaktFirCheckers(
-    session: FirSession,
-    private val sharedContext: FaktSharedContext,
-) : FirAdditionalCheckersExtension(session) {
+class FaktFirCheckers(session: FirSession, private val sharedContext: FaktSharedContext) :
+    FirAdditionalCheckersExtension(session) {
     /**
      * Register declaration checkers for @Fake validation.
      *
@@ -26,19 +24,12 @@ class FaktFirCheckers(
     override val declarationCheckers: DeclarationCheckers =
         object : DeclarationCheckers() {
             override val classCheckers: Set<FirClassChecker> =
-                setOf(
-                    FakeInterfaceChecker(sharedContext),
-                    FakeClassChecker(sharedContext),
-                )
+                setOf(FakeInterfaceChecker(sharedContext), FakeClassChecker(sharedContext))
         }
 
     companion object {
-        /**
-         * Factory function for FirAdditionalCheckersExtension.
-         * */
-        fun create(
-            session: FirSession,
-            sharedContext: FaktSharedContext,
-        ): FaktFirCheckers = FaktFirCheckers(session, sharedContext)
+        /** Factory function for FirAdditionalCheckersExtension. */
+        fun create(session: FirSession, sharedContext: FaktSharedContext): FaktFirCheckers =
+            FaktFirCheckers(session, sharedContext)
     }
 }

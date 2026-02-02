@@ -24,7 +24,8 @@ internal fun FunctionAnalysis.toMethodSpec(typeResolver: TypeResolution): Method
     // Map parameters to (name, type, isVararg) triples
     val paramTriples =
         parameters.map { param ->
-            val typeStr = typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+            val typeStr =
+                typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
             Triple(param.name, typeStr, param.isVararg)
         }
 
@@ -84,7 +85,9 @@ internal fun PropertyAnalysis.toPropertySpec(typeResolver: TypeResolution): Prop
  *
  * @return Pair of (methods, properties) ready for generateCompleteFake()
  */
-internal fun InterfaceAnalysis.toCodegenSpecs(typeResolver: TypeResolution): Pair<List<MethodSpec>, List<PropertySpec>> {
+internal fun InterfaceAnalysis.toCodegenSpecs(
+    typeResolver: TypeResolution
+): Pair<List<MethodSpec>, List<PropertySpec>> {
     val methodSpecs = functions.map { it.toMethodSpec(typeResolver) }
     val propertySpecs = properties.map { it.toPropertySpec(typeResolver) }
 

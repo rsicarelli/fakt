@@ -19,12 +19,12 @@ import org.jetbrains.kotlin.ir.types.IrType
 /**
  * Complete analysis result for an interface.
  *
- * Used by code generators to produce fake implementations.
- * Can be created from FIR metadata or legacy IR analysis.
+ * Used by code generators to produce fake implementations. Can be created from FIR metadata or
+ * legacy IR analysis.
  *
- * @property generateCallHistory Controls whether call history and call count tracking
- *           code is generated. Resolved from @Fake annotation's callHistory attribute
- *           and plugin-level enableCallHistory default.
+ * @property generateCallHistory Controls whether call history and call count tracking code is
+ *   generated. Resolved from @Fake annotation's callHistory attribute and plugin-level
+ *   enableCallHistory default.
  */
 data class InterfaceAnalysis(
     val interfaceName: String,
@@ -44,9 +44,9 @@ data class InterfaceAnalysis(
  *
  * Distinguishes between abstract and open members for proper super delegation.
  *
- * @property generateCallHistory Controls whether call history and call count tracking
- *           code is generated. Resolved from @Fake annotation's callHistory attribute
- *           and plugin-level enableCallHistory default.
+ * @property generateCallHistory Controls whether call history and call count tracking code is
+ *   generated. Resolved from @Fake annotation's callHistory attribute and plugin-level
+ *   enableCallHistory default.
  */
 data class ClassAnalysis(
     val className: String,
@@ -61,9 +61,7 @@ data class ClassAnalysis(
     val generateCallHistory: Boolean = true,
 )
 
-/**
- * Analysis of a property within an interface or class.
- */
+/** Analysis of a property within an interface or class. */
 data class PropertyAnalysis(
     val name: String,
     val type: IrType,
@@ -72,9 +70,7 @@ data class PropertyAnalysis(
     val irProperty: IrProperty,
 )
 
-/**
- * Analysis of a function within an interface or class.
- */
+/** Analysis of a function within an interface or class. */
 data class FunctionAnalysis(
     val name: String,
     val parameters: List<ParameterAnalysis>,
@@ -84,13 +80,12 @@ data class FunctionAnalysis(
     val typeParameters: List<String>, // Method-level type parameters like <T>, <T, R>
     val typeParameterBounds: Map<String, String>, // Type parameter bounds like R : TValue
     val isOperator: Boolean, // Whether this function is declared with 'operator' modifier
-    val extensionReceiverType: IrType?, // Extension receiver type (e.g., Vector for fun Vector.plus())
+    val extensionReceiverType:
+        IrType?, // Extension receiver type (e.g., Vector for fun Vector.plus())
     val irFunction: IrSimpleFunction,
 )
 
-/**
- * Analysis of a function parameter.
- */
+/** Analysis of a function parameter. */
 data class ParameterAnalysis(
     val name: String,
     val type: IrType,
@@ -105,8 +100,8 @@ data class ParameterAnalysis(
  * @property simpleName Simple annotation name (e.g., "OptIn", "Deprecated")
  * @property fullyQualifiedName Fully qualified name for imports (e.g., "kotlin.OptIn")
  * @property renderedArguments Pre-rendered argument strings (e.g., ["ExperimentalApi::class"])
- * @property isOptInMarker True if this annotation is marked with @RequiresOptIn. When true,
- *           the generated fake needs @OptIn(ThisAnnotation::class) to compile.
+ * @property isOptInMarker True if this annotation is marked with @RequiresOptIn. When true, the
+ *   generated fake needs @OptIn(ThisAnnotation::class) to compile.
  */
 data class AnnotationAnalysis(
     val simpleName: String,

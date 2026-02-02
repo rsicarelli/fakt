@@ -8,8 +8,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * TDD tests for graph traversal of KotlinSourceSet dependsOn relationships.
- * These tests define the expected BFS behavior BEFORE implementation.
+ * TDD tests for graph traversal of KotlinSourceSet dependsOn relationships. These tests define the
+ * expected BFS behavior BEFORE implementation.
  */
 class SourceSetGraphTraversalTest {
     @Test
@@ -29,11 +29,7 @@ class SourceSetGraphTraversalTest {
     fun `GIVEN simple hierarchy WHEN traversing THEN should find all parents`() {
         // GIVEN: jvmMain → commonMain
         val commonMain = FakeKotlinSourceSet(name = "commonMain")
-        val jvmMain =
-            FakeKotlinSourceSet(
-                name = "jvmMain",
-                parents = setOf(commonMain),
-            )
+        val jvmMain = FakeKotlinSourceSet(name = "jvmMain", parents = setOf(commonMain))
 
         // WHEN
         val result = jvmMain.getAllParentSourceSets()
@@ -76,11 +72,7 @@ class SourceSetGraphTraversalTest {
         val commonMain = FakeKotlinSourceSet(name = "commonMain")
         val nativeMain = FakeKotlinSourceSet(name = "nativeMain", parents = setOf(commonMain))
         val appleMain = FakeKotlinSourceSet(name = "appleMain", parents = setOf(commonMain))
-        val iosMain =
-            FakeKotlinSourceSet(
-                name = "iosMain",
-                parents = setOf(nativeMain, appleMain),
-            )
+        val iosMain = FakeKotlinSourceSet(name = "iosMain", parents = setOf(nativeMain, appleMain))
 
         // WHEN
         val result = iosMain.getAllParentSourceSets()
@@ -105,11 +97,7 @@ class SourceSetGraphTraversalTest {
         //         jvmMain
         val commonMain = FakeKotlinSourceSet(name = "commonMain")
         val utilsMain = FakeKotlinSourceSet(name = "utilsMain")
-        val jvmMain =
-            FakeKotlinSourceSet(
-                name = "jvmMain",
-                parents = setOf(commonMain, utilsMain),
-            )
+        val jvmMain = FakeKotlinSourceSet(name = "jvmMain", parents = setOf(commonMain, utilsMain))
 
         // WHEN
         val result = jvmMain.getAllParentSourceSets()

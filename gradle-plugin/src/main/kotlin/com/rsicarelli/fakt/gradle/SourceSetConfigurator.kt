@@ -2,17 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.gradle
 
+import java.io.File
 import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
-import java.io.File
 
 /**
  * Configures source sets and output directories for generated fake implementations.
  *
- * This internal utility handles the complex task of determining where to place generated
- * fakes and ensuring they're accessible from test compilations. It supports both
- * single-platform (JVM-only) and Kotlin Multiplatform (KMP) projects.
+ * This internal utility handles the complex task of determining where to place generated fakes and
+ * ensuring they're accessible from test compilations. It supports both single-platform (JVM-only)
+ * and Kotlin Multiplatform (KMP) projects.
  *
  * ## Directory Strategy
  *
@@ -36,8 +36,8 @@ import java.io.File
  * 1. Their own generated directory (for platform-specific fakes)
  * 2. The commonTest generated directory (for common interfaces from commonMain)
  *
- * This dual registration ensures platform tests can import fakes generated from
- * common interfaces while maintaining support for platform-specific fakes.
+ * This dual registration ensures platform tests can import fakes generated from common interfaces
+ * while maintaining support for platform-specific fakes.
  *
  * ## Usage
  *
@@ -51,33 +51,27 @@ import java.io.File
  * @see FaktGradleSubplugin
  * @see SourceSetDiscovery
  */
-internal class SourceSetConfigurator(
-    private val project: Project,
-) {
+internal class SourceSetConfigurator(private val project: Project) {
     /**
-     * Automatically configure source sets for multiplatform projects.
-     * This ensures generated fakes are accessible from test source sets.
+     * Automatically configure source sets for multiplatform projects. This ensures generated fakes
+     * are accessible from test source sets.
      */
     fun configureSourceSets() =
         project.extensions
             .findByType(KotlinMultiplatformExtension::class.java)
-            ?.let(::configureKmpSourceSets)
-            ?: configureJvmSourceSets()
+            ?.let(::configureKmpSourceSets) ?: configureJvmSourceSets()
 
     /**
      * Configure multiplatform source sets to include generated fakes.
      *
-     * This adds generated directories to EXISTING test source sets.
-     * Generated fakes are placed in directories matching the test source set names:
+     * This adds generated directories to EXISTING test source sets. Generated fakes are placed in
+     * directories matching the test source set names:
      * - commonTest → build/generated/fakt/commonTest/kotlin
      * - jvmTest → build/generated/fakt/jvmTest/kotlin
      * - etc.
      */
     private fun configureKmpSourceSets(kotlin: KotlinMultiplatformExtension) {
-        val buildDir =
-            project.layout.buildDirectory
-                .get()
-                .asFile
+        val buildDir = project.layout.buildDirectory.get().asFile
 
         // PASS 1: Add source-set-specific generated directories
         // Each test source set gets its own generated directory
@@ -106,7 +100,7 @@ internal class SourceSetConfigurator(
 
         if (hasCommonTest) {
             project.logger.debug(
-                "Fakt: PASS 2 is disabled - KMP dependency propagation handles code visibility",
+                "Fakt: PASS 2 is disabled - KMP dependency propagation handles code visibility"
             )
 
             // PASS 2 REMOVED: After extensive testing, we determined that explicitly adding
@@ -138,18 +132,13 @@ internal class SourceSetConfigurator(
         project.tasks.withType(AbstractKotlinCompile::class.java) { task ->
             if (isTestTask(task.name)) {
                 val generatedDir =
-                    File(
-                        project.layout.buildDirectory
-                            .get()
-                            .asFile,
-                        "generated/fakt/test/kotlin",
-                    )
+                    File(project.layout.buildDirectory.get().asFile, "generated/fakt/test/kotlin")
 
                 task.source(generatedDir)
 
                 project.logger.info(
                     "Fakt: Configured test compilation task '${task.name}' " +
-                        "to include generated sources",
+                        "to include generated sources"
                 )
             }
         }

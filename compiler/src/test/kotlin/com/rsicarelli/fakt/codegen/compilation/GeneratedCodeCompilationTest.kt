@@ -5,15 +5,15 @@ package com.rsicarelli.fakt.codegen.compilation
 import com.rsicarelli.fakt.codegen.builder.codeFile
 import com.rsicarelli.fakt.codegen.renderer.CodeBuilder
 import com.rsicarelli.fakt.codegen.renderer.renderTo
-import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Compilation validation tests for generated fake code.
  *
- * Uses kotlin-compile-testing to ensure all generated code actually compiles.
- * This is critical for catching type errors, import issues, and syntax problems
- * before integrating with the real compiler.
+ * Uses kotlin-compile-testing to ensure all generated code actually compiles. This is critical for
+ * catching type errors, import issues, and syntax problems before integrating with the real
+ * compiler.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GeneratedCodeCompilationTest : CompilationTestBase() {
@@ -35,7 +35,8 @@ class GeneratedCodeCompilationTest : CompilationTestBase() {
                     return getUserBehavior(id)
                 }
             }
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // WHEN/THEN
         assertCompiles(code, "Simple fake implementation")
@@ -67,7 +68,8 @@ class GeneratedCodeCompilationTest : CompilationTestBase() {
                     return findByIdBehavior(id)
                 }
             }
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // WHEN/THEN
         assertCompiles(code, "Fake with collections")
@@ -95,7 +97,8 @@ class GeneratedCodeCompilationTest : CompilationTestBase() {
                 override val users: StateFlow<List<User>>
                     get() = usersValue
             }
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // WHEN/THEN
         assertCompiles(code, "Fake with StateFlow")
@@ -127,7 +130,8 @@ class GeneratedCodeCompilationTest : CompilationTestBase() {
                     return saveUserBehavior(user)
                 }
             }
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // WHEN/THEN
         assertCompiles(code, "Fake with suspend functions")
@@ -167,7 +171,8 @@ class GeneratedCodeCompilationTest : CompilationTestBase() {
             interface Service {
                 fun doSomething(): String
             }
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // WHEN/THEN
         assertCompiles(completeCode, "DSL-generated fake")
@@ -201,7 +206,8 @@ class GeneratedCodeCompilationTest : CompilationTestBase() {
                 override val state: StateFlow<Map<String, List<User>>>
                     get() = stateValue
             }
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // WHEN/THEN
         assertCompiles(code, "Fake with nested generics")
@@ -225,7 +231,8 @@ class GeneratedCodeCompilationTest : CompilationTestBase() {
                     return processBehavior(items)
                 }
             }
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // WHEN/THEN
         assertCompiles(code, "Fake with vararg")
@@ -249,7 +256,8 @@ class GeneratedCodeCompilationTest : CompilationTestBase() {
                     return processBehavior(value, count)
                 }
             }
-            """.trimIndent()
+            """
+                .trimIndent()
 
         // WHEN/THEN
         assertCompiles(code, "Fake with default parameters")

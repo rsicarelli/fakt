@@ -5,9 +5,9 @@ package com.rsicarelli.fakt.codegen.extensions
 import com.rsicarelli.fakt.codegen.builder.codeFile
 import com.rsicarelli.fakt.codegen.renderer.CodeBuilder
 import com.rsicarelli.fakt.codegen.renderer.renderTo
-import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertContains
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for property extension functions.
@@ -37,7 +37,10 @@ class PropertyExtensionsTest {
         val result = builder.build()
 
         // THEN
-        assertContains(result, "private val usersValue: StateFlow<List<User>> = MutableStateFlow(emptyList())")
+        assertContains(
+            result,
+            "private val usersValue: StateFlow<List<User>> = MutableStateFlow(emptyList())",
+        )
         assertContains(result, "override val users: StateFlow<List<User>>")
         assertContains(result, "get() = usersValue")
     }
@@ -87,7 +90,10 @@ class PropertyExtensionsTest {
         val result = builder.build()
 
         // THEN
-        assertContains(result, "private var computeBehavior: (Int, String, Boolean) -> Result<Unit> =")
+        assertContains(
+            result,
+            "private var computeBehavior: (Int, String, Boolean) -> Result<Unit> =",
+        )
     }
 
     @Test
@@ -135,7 +141,10 @@ class PropertyExtensionsTest {
         val result = builder.build()
 
         // THEN
-        assertContains(result, "private var saveUserBehavior: suspend (User, Boolean) -> Result<Unit> =")
+        assertContains(
+            result,
+            "private var saveUserBehavior: suspend (User, Boolean) -> Result<Unit> =",
+        )
     }
 
     @Test
@@ -167,7 +176,10 @@ class PropertyExtensionsTest {
         assertContains(result, "import kotlinx.coroutines.flow.StateFlow")
         assertContains(result, "import kotlinx.coroutines.flow.MutableStateFlow")
         assertContains(result, "class FakeUserStoreImpl : UserStore")
-        assertContains(result, "private val currentUserValue: StateFlow<User?> = MutableStateFlow(null)")
+        assertContains(
+            result,
+            "private val currentUserValue: StateFlow<User?> = MutableStateFlow(null)",
+        )
         assertContains(result, "override val currentUser: StateFlow<User?>")
         assertContains(result, "get() = currentUserValue")
     }

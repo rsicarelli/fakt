@@ -4,12 +4,12 @@ package com.rsicarelli.fakt.compiler.core.optimization
 
 import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.core.types.TypeInfo
-import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.TestInstance
 
 /**
  * TDD tests for CompilerOptimizations - in-memory caching for KMP builds.
@@ -21,38 +21,36 @@ import kotlin.test.assertTrue
  * 4. Test annotation configuration
  * 5. Test type indexing and lookup
  *
- * **Note on Signature Format**:
- * These tests use simplified structural signatures for readability:
+ * **Note on Signature Format**: These tests use simplified structural signatures for readability:
  * - Test format: `"interface com.example.UserService|props:0|funs:2"`
  * - Production format: MD5 file hash (32-character hex: `"a3f8b7c9d1e2f5a6b8c0d3e5f7a9b1c3"`)
  *
- * Production code uses MD5 file hashing via `SignatureBuilder.buildSignature()`.
- * The cache system is format-agnostic (string equality only), so both work.
- * Structural format is only used in production as fallback when source file unavailable.
+ * Production code uses MD5 file hashing via `SignatureBuilder.buildSignature()`. The cache system
+ * is format-agnostic (string equality only), so both work. Structural format is only used in
+ * production as fallback when source file unavailable.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CompilerOptimizationsTest {
     @Test
-    fun `GIVEN new interface WHEN checking regeneration THEN should return true`() =
-        runTest {
-            // GIVEN: Fresh optimization instance with new interface
-            val optimizations = CompilerOptimizations(logger = FaktLogger.quiet())
-            val typeInfo =
-                TypeInfo(
-                    name = "UserService",
-                    fullyQualifiedName = "com.example.UserService",
-                    packageName = "com.example",
-                    fileName = "UserService.kt",
-                    annotations = listOf("com.rsicarelli.fakt.Fake"),
-                    signature = "interface com.example.UserService|props:0|funs:2",
-                )
+    fun `GIVEN new interface WHEN checking regeneration THEN should return true`() = runTest {
+        // GIVEN: Fresh optimization instance with new interface
+        val optimizations = CompilerOptimizations(logger = FaktLogger.quiet())
+        val typeInfo =
+            TypeInfo(
+                name = "UserService",
+                fullyQualifiedName = "com.example.UserService",
+                packageName = "com.example",
+                fileName = "UserService.kt",
+                annotations = listOf("com.rsicarelli.fakt.Fake"),
+                signature = "interface com.example.UserService|props:0|funs:2",
+            )
 
-            // WHEN: Checking if regeneration is needed
-            val needsRegen = optimizations.needsRegeneration(typeInfo)
+        // WHEN: Checking if regeneration is needed
+        val needsRegen = optimizations.needsRegeneration(typeInfo)
 
-            // THEN: Should need regeneration (first time)
-            assertTrue(needsRegen, "First generation should require regeneration")
-        }
+        // THEN: Should need regeneration (first time)
+        assertTrue(needsRegen, "First generation should require regeneration")
+    }
 
     @Test
     fun `GIVEN interface already generated WHEN checking regeneration THEN should return false`() =
@@ -151,7 +149,11 @@ class CompilerOptimizationsTest {
         runTest {
             // GIVEN: Optimizations configured with custom annotation
             val customAnnotation = "com.company.GenerateFake"
-            val optimizations = CompilerOptimizations(fakeAnnotations = listOf(customAnnotation), logger = FaktLogger.quiet())
+            val optimizations =
+                CompilerOptimizations(
+                    fakeAnnotations = listOf(customAnnotation),
+                    logger = FaktLogger.quiet(),
+                )
 
             // WHEN: Checking if annotation is configured
             val isConfigured = optimizations.isConfiguredFor(customAnnotation)

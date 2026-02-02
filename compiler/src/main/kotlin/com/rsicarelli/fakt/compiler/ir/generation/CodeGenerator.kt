@@ -46,14 +46,13 @@ internal data class GeneratedCode(
      * @return Total non-blank, non-comment lines of code
      */
     fun calculateTotalLOC(): Int {
-        val combinedCode =
-            buildString {
-                append(implementation.renderToString())
-                appendLine()
-                append(factory.renderToString())
-                appendLine()
-                append(configDsl.renderToString())
-            }
+        val combinedCode = buildString {
+            append(implementation.renderToString())
+            appendLine()
+            append(factory.renderToString())
+            appendLine()
+            append(configDsl.renderToString())
+        }
         return calculateLOC(combinedCode)
     }
 }
@@ -72,8 +71,8 @@ internal data class WriteContext(
 )
 
 /**
- * Handles code generation for fake implementations.
- * Orchestrates the generation of implementation classes, factory functions, and configuration DSLs.
+ * Handles code generation for fake implementations. Orchestrates the generation of implementation
+ * classes, factory functions, and configuration DSLs.
  *
  * @property importResolver Resolves import statements for generated code
  * @property sourceSetContext Context with compilation metadata from Gradle plugin
@@ -100,8 +99,8 @@ internal class CodeGenerator(
      * - JvmOnlyService (jvmMain) → jvmTest
      * - IosOnlyService (iosMain) → iosTest
      *
-     * This is more reliable than the cache-based approach because it works regardless
-     * of compilation order and metadata compilation being skipped.
+     * This is more reliable than the cache-based approach because it works regardless of
+     * compilation order and metadata compilation being skipped.
      *
      * @param sourceSourceSet Source set name (e.g., "commonMain", "iosMain") or null
      * @return Absolute path to output directory
@@ -125,7 +124,10 @@ internal class CodeGenerator(
         // Derive output directory from commonTestOutputDirectory pattern
         // commonTestOutputDirectory = "$buildDir/generated/fakt/commonTest/kotlin"
         // We replace "commonTest" with our target test source set
-        return sourceSetContext.commonTestOutputDirectory.replace("/commonTest/", "/$testSourceSet/")
+        return sourceSetContext.commonTestOutputDirectory.replace(
+            "/commonTest/",
+            "/$testSourceSet/",
+        )
     }
 
     /**
@@ -133,7 +135,8 @@ internal class CodeGenerator(
      *
      * @param sourceInterface The interface to generate a fake for
      * @param analysis The analyzed interface metadata
-     * @param sourceSourceSet Source set name where interface was defined (e.g., "commonMain", "iosMain")
+     * @param sourceSourceSet Source set name where interface was defined (e.g., "commonMain",
+     *   "iosMain")
      */
     fun generateWorkingFakeImplementation(
         sourceInterface: IrClass,
@@ -190,11 +193,13 @@ internal class CodeGenerator(
     }
 
     /**
-     * Generates complete fake implementation for a class including implementation, factory, and configuration DSL.
+     * Generates complete fake implementation for a class including implementation, factory, and
+     * configuration DSL.
      *
      * @param sourceClass The class to generate a fake for
      * @param analysis The analyzed class metadata
-     * @param sourceSourceSet Source set name where class was defined (e.g., "commonMain", "iosMain")
+     * @param sourceSourceSet Source set name where class was defined (e.g., "commonMain",
+     *   "iosMain")
      */
     fun generateWorkingClassFake(
         sourceClass: IrClass,
@@ -281,16 +286,14 @@ internal class CodeGenerator(
         val fullCode = renderGeneratedCode(code)
 
         // Use buffered writer for better I/O performance
-        outputFile.bufferedWriter().use { writer ->
-            writer.write(fullCode)
-        }
+        outputFile.bufferedWriter().use { writer -> writer.write(fullCode) }
     }
 
     /**
      * Renders GeneratedCode (all CodeFile parts) to a single string.
      *
-     * The implementation CodeFile has package + imports + class + call history.
-     * Factory and configDsl CodeFiles have empty package, so we extract just their declarations.
+     * The implementation CodeFile has package + imports + class + call history. Factory and
+     * configDsl CodeFiles have empty package, so we extract just their declarations.
      */
     private fun renderGeneratedCode(code: GeneratedCode): String {
         val builder = CodeBuilder()
@@ -300,16 +303,12 @@ internal class CodeGenerator(
         builder.appendLine()
 
         // Render factory function declarations only (no package/imports)
-        code.factory.declarations.forEach { declaration ->
-            declaration.renderTo(builder)
-        }
+        code.factory.declarations.forEach { declaration -> declaration.renderTo(builder) }
         builder.appendLine()
         builder.appendLine() // Blank line before config class
 
         // Render config DSL declarations only (no package/imports)
-        code.configDsl.declarations.forEach { declaration ->
-            declaration.renderTo(builder)
-        }
+        code.configDsl.declarations.forEach { declaration -> declaration.renderTo(builder) }
 
         return builder.build()
     }
@@ -347,8 +346,6 @@ internal class CodeGenerator(
         val fullCode = renderGeneratedCode(code)
 
         // Use buffered writer for better I/O performance
-        outputFile.bufferedWriter().use { writer ->
-            writer.write(fullCode)
-        }
+        outputFile.bufferedWriter().use { writer -> writer.write(fullCode) }
     }
 }

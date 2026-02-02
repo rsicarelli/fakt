@@ -5,9 +5,9 @@ package com.rsicarelli.fakt.gradle
 /**
  * Marks declarations related to Fakt's multi-module fake collection feature as experimental.
  *
- * This annotation indicates that the multi-module API is experimental and subject to change
- * in future releases. The multi-module feature allows dedicated fake modules to collect
- * generated fakes from source modules (e.g., foundation-fakes collecting from foundation).
+ * This annotation indicates that the multi-module API is experimental and subject to change in
+ * future releases. The multi-module feature allows dedicated fake modules to collect generated
+ * fakes from source modules (e.g., foundation-fakes collecting from foundation).
  *
  * ## Why Experimental?
  *
@@ -24,6 +24,7 @@ package com.rsicarelli.fakt.gradle
  * To use multi-module features in your build.gradle.kts, you must explicitly opt-in.
  *
  * **Option 1: Local opt-in (recommended)**
+ *
  * ```kotlin
  * import com.rsicarelli.fakt.gradle.ExperimentalFaktMultiModule
  *
@@ -34,6 +35,7 @@ package com.rsicarelli.fakt.gradle
  * ```
  *
  * **Option 2: File-level opt-in**
+ *
  * ```kotlin
  * @file:OptIn(com.rsicarelli.fakt.gradle.ExperimentalFaktMultiModule::class)
  *
@@ -52,7 +54,6 @@ package com.rsicarelli.fakt.gradle
  * ## Multi-Module Pattern
  *
  * The experimental multi-module pattern enables:
- *
  * ```
  * foundation/              # Source module - generates fakes
  *   ├── src/commonMain/    (interfaces with @Fake)

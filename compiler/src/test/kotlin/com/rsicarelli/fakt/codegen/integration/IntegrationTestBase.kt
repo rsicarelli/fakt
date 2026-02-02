@@ -7,9 +7,8 @@ import kotlin.test.assertEquals
 /**
  * Base class for integration tests.
  *
- * Provides common assertion helpers for validating generated code.
- * Integration tests verify the complete codegen pipeline:
- * Builder → Model → Renderer → Strategy.
+ * Provides common assertion helpers for validating generated code. Integration tests verify the
+ * complete codegen pipeline: Builder → Model → Renderer → Strategy.
  */
 abstract class IntegrationTestBase {
     /**
@@ -21,11 +20,7 @@ abstract class IntegrationTestBase {
      * @param expected Expected Kotlin code
      * @param actual Actually generated code
      */
-    protected fun assertGeneratedCode(
-        description: String,
-        expected: String,
-        actual: String,
-    ) {
+    protected fun assertGeneratedCode(description: String, expected: String, actual: String) {
         val normalizedExpected = expected.trimIndent().trim()
         val normalizedActual = actual.trim()
 
@@ -45,16 +40,12 @@ abstract class IntegrationTestBase {
      * @param expectedSubstring Expected substring in generated code
      * @param actual Actually generated code
      */
-    protected fun assertContains(
-        description: String,
-        expectedSubstring: String,
-        actual: String,
-    ) {
+    protected fun assertContains(description: String, expectedSubstring: String, actual: String) {
         if (!actual.contains(expectedSubstring)) {
             throw AssertionError(
                 "Generated code for '$description' does not contain expected substring.\n" +
                     "Expected to find: $expectedSubstring\n" +
-                    "Actual code:\n$actual",
+                    "Actual code:\n$actual"
             )
         }
     }

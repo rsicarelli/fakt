@@ -18,27 +18,22 @@ import com.rsicarelli.fakt.compiler.ir.analysis.ParameterAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.PropertyAnalysis
 
 /**
- * Generates configuration DSL classes for fake implementations.
- * Creates type-safe DSL classes that provide convenient configuration of fake behavior.
+ * Generates configuration DSL classes for fake implementations. Creates type-safe DSL classes that
+ * provide convenient configuration of fake behavior.
  *
  * Uses the type-safe CodeFile DSL for clean, composable code generation.
  */
-internal class ConfigurationDslGenerator(
-    private val typeResolver: TypeResolution,
-) {
+internal class ConfigurationDslGenerator(private val typeResolver: TypeResolution) {
     companion object {
-        /**
-         * Length of "Array<" prefix when extracting generic type from Array<T>.
-         */
+        /** Length of "Array<" prefix when extracting generic type from Array<T>. */
         private const val ARRAY_PREFIX_LENGTH = 6
     }
 
     /**
      * Generates a configuration DSL CodeFile for the fake implementation.
      *
-     * Uses type-safe DSL for clean, composable code generation.
-     * The returned CodeFile contains only the class declaration (no package/imports),
-     * suitable for being added to an existing file.
+     * Uses type-safe DSL for clean, composable code generation. The returned CodeFile contains only
+     * the class declaration (no package/imports), suitable for being added to an existing file.
      *
      * @param analysis The analyzed interface metadata
      * @param fakeClassName The name of the fake implementation class
@@ -49,7 +44,8 @@ internal class ConfigurationDslGenerator(
         fakeClassName: String,
     ): CodeFile {
         val configClassName = "Fake${analysis.interfaceName}Config"
-        val (typeParamsForHeader, whereClause) = formatTypeParametersWithWhereClause(analysis.typeParameters)
+        val (typeParamsForHeader, whereClause) =
+            formatTypeParametersWithWhereClause(analysis.typeParameters)
         val typeArguments = extractTypeParameterNames(analysis.typeParameters)
         val propagatedAnnotations = extractPropagatedAnnotations(analysis.annotations)
 
@@ -67,9 +63,7 @@ internal class ConfigurationDslGenerator(
                 }
 
                 // Add constructor property for fake reference
-                constructorProperty("fake", "$fakeClassName$typeArguments") {
-                    private()
-                }
+                constructorProperty("fake", "$fakeClassName$typeArguments") { private() }
 
                 // Add propagated annotations
                 propagatedAnnotations.forEach { annotation ->
@@ -92,23 +86,18 @@ internal class ConfigurationDslGenerator(
     /**
      * Generates a configuration DSL class for the fake implementation.
      *
-     * This is the legacy string-based API that delegates to the DSL-based implementation
-     * and renders the result to a string.
+     * This is the legacy string-based API that delegates to the DSL-based implementation and
+     * renders the result to a string.
      *
      * @param analysis The analyzed interface metadata
      * @param fakeClassName The name of the fake implementation class
      * @return The generated configuration DSL class code
      */
-    fun generateConfigurationDsl(
-        analysis: InterfaceAnalysis,
-        fakeClassName: String,
-    ): String {
+    fun generateConfigurationDsl(analysis: InterfaceAnalysis, fakeClassName: String): String {
         val codeFile = generateConfigurationDslCodeFile(analysis, fakeClassName)
 
         // Extract the class declaration and render it
-        val klass =
-            codeFile.declarations.firstOrNull() as? CodeClass
-                ?: return ""
+        val klass = codeFile.declarations.firstOrNull() as? CodeClass ?: return ""
 
         val builder = CodeBuilder()
         klass.renderTo(builder)
@@ -122,12 +111,10 @@ internal class ConfigurationDslGenerator(
      * @param fakeClassName The name of the fake implementation class
      * @return CodeFile containing the configuration DSL class
      */
-    fun generateConfigurationDslCodeFile(
-        analysis: ClassAnalysis,
-        fakeClassName: String,
-    ): CodeFile {
+    fun generateConfigurationDslCodeFile(analysis: ClassAnalysis, fakeClassName: String): CodeFile {
         val configClassName = "Fake${analysis.className}Config"
-        val (typeParamsForHeader, whereClause) = formatTypeParametersWithWhereClause(analysis.typeParameters)
+        val (typeParamsForHeader, whereClause) =
+            formatTypeParametersWithWhereClause(analysis.typeParameters)
         val typeArguments = extractTypeParameterNames(analysis.typeParameters)
         val propagatedAnnotations = extractPropagatedAnnotations(analysis.annotations)
 
@@ -145,9 +132,7 @@ internal class ConfigurationDslGenerator(
                 }
 
                 // Add constructor property for fake reference
-                constructorProperty("fake", "$fakeClassName$typeArguments") {
-                    private()
-                }
+                constructorProperty("fake", "$fakeClassName$typeArguments") { private() }
 
                 // Add propagated annotations
                 propagatedAnnotations.forEach { annotation ->
@@ -186,25 +171,18 @@ internal class ConfigurationDslGenerator(
      * @param fakeClassName The name of the fake implementation class
      * @return The generated configuration DSL class code
      */
-    fun generateConfigurationDsl(
-        analysis: ClassAnalysis,
-        fakeClassName: String,
-    ): String {
+    fun generateConfigurationDsl(analysis: ClassAnalysis, fakeClassName: String): String {
         val codeFile = generateConfigurationDslCodeFile(analysis, fakeClassName)
 
         // Extract the class declaration and render it
-        val klass =
-            codeFile.declarations.firstOrNull() as? CodeClass
-                ?: return ""
+        val klass = codeFile.declarations.firstOrNull() as? CodeClass ?: return ""
 
         val builder = CodeBuilder()
         klass.renderTo(builder)
         return builder.build().trimEnd()
     }
 
-    /**
-     * Applies visibility modifier to the class builder.
-     */
+    /** Applies visibility modifier to the class builder. */
     private fun ClassBuilder.applyVisibility(visibility: FirVisibility) {
         when (visibility) {
             FirVisibility.PUBLIC -> public()
@@ -213,9 +191,7 @@ internal class ConfigurationDslGenerator(
         }
     }
 
-    /**
-     * Adds type parameters to the class builder.
-     */
+    /** Adds type parameters to the class builder. */
     private fun ClassBuilder.addTypeParameters(typeParamsForHeader: List<String>) {
         typeParamsForHeader.forEach { param ->
             val parts = param.split(" : ", limit = 2)
@@ -229,9 +205,7 @@ internal class ConfigurationDslGenerator(
         }
     }
 
-    /**
-     * Generates a function configurator method.
-     */
+    /** Generates a function configurator method. */
     private fun ClassBuilder.generateFunctionConfigurator(
         function: FunctionAnalysis,
         visibility: FirVisibility,
@@ -268,16 +242,15 @@ internal class ConfigurationDslGenerator(
         }
     }
 
-    /**
-     * Generates a property configurator method.
-     */
+    /** Generates a property configurator method. */
     private fun ClassBuilder.generatePropertyConfigurator(
         property: PropertyAnalysis,
         visibility: FirVisibility,
     ) {
         val propertyName = property.name
         val capitalizedName = propertyName.replaceFirstChar { it.uppercase() }
-        val propertyType = typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
+        val propertyType =
+            typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
 
         // Getter configuration
         function(propertyName) {
@@ -308,9 +281,7 @@ internal class ConfigurationDslGenerator(
         }
     }
 
-    /**
-     * Builds the behavior signature for a function.
-     */
+    /** Builds the behavior signature for a function. */
     private fun buildBehaviorSignature(function: FunctionAnalysis): String {
         val suspendModifier = if (function.isSuspend) "suspend " else ""
 
@@ -343,7 +314,8 @@ internal class ConfigurationDslGenerator(
             }
 
         // Keep original return type (including method-level generics)
-        val returnType = typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+        val returnType =
+            typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
 
         return if (parameterTypes.isEmpty()) {
             "$suspendModifier() -> $returnType"
@@ -361,7 +333,9 @@ internal class ConfigurationDslGenerator(
      *
      * Excludes opt-in markers because fakes should be freely usable in tests.
      */
-    private fun extractPropagatedAnnotations(annotations: List<AnnotationAnalysis>): List<AnnotationAnalysis> =
+    private fun extractPropagatedAnnotations(
+        annotations: List<AnnotationAnalysis>
+    ): List<AnnotationAnalysis> =
         annotations.filter {
             (it.simpleName == "OptIn" || it.simpleName == "Deprecated") && !it.isOptInMarker
         }
@@ -382,9 +356,12 @@ internal class ConfigurationDslGenerator(
     }
 
     /**
-     * Formats type parameters for config class headers, handling where clauses for multiple constraints.
+     * Formats type parameters for config class headers, handling where clauses for multiple
+     * constraints.
      */
-    private fun formatTypeParametersWithWhereClause(typeParameters: List<String>): Pair<List<String>, String> {
+    private fun formatTypeParametersWithWhereClause(
+        typeParameters: List<String>
+    ): Pair<List<String>, String> {
         if (typeParameters.isEmpty()) {
             return emptyList<String>() to ""
         }
@@ -407,18 +384,14 @@ internal class ConfigurationDslGenerator(
                 paramsForHeader.add(typeParam)
             } else {
                 paramsForHeader.add(name)
-                constraintList.forEach { constraint ->
-                    whereClauses.add("$name : $constraint")
-                }
+                constraintList.forEach { constraint -> whereClauses.add("$name : $constraint") }
             }
         }
 
         return paramsForHeader to whereClauses.joinToString(", ")
     }
 
-    /**
-     * Extracts type parameter names as a type argument string.
-     */
+    /** Extracts type parameter names as a type argument string. */
     private fun extractTypeParameterNames(typeParameters: List<String>): String =
         if (typeParameters.isNotEmpty()) {
             "<${typeParameters.joinToString(", ") { it.substringBefore(" :").trim() }}>"

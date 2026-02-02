@@ -35,26 +35,38 @@ internal fun CodeFileBuilder.addCallHistoryComponents(
 
     // Data classes for methods with params
     methodsWithParams.forEach { method ->
-        val typeParams = classTypeParamNames + method.typeParameters.map(::extractTypeParamName).toSet()
+        val typeParams =
+            classTypeParamNames + method.typeParameters.map(::extractTypeParamName).toSet()
         callDataClass(interfaceName, method.name, method.params, visibility, typeParams)
     }
 
     // Verifier classes for all methods
     methodsWithParams.forEach { method ->
-        val typeParams = classTypeParamNames + method.typeParameters.map(::extractTypeParamName).toSet()
+        val typeParams =
+            classTypeParamNames + method.typeParameters.map(::extractTypeParamName).toSet()
         verifierClass(interfaceName, method.name, method.params, visibility, typeParams)
     }
-    zeroParamMethods.forEach { method ->
-        unitVerifierClass(interfaceName, method.name, visibility)
-    }
+    zeroParamMethods.forEach { method -> unitVerifierClass(interfaceName, method.name, visibility) }
 
     // Verify functions for all methods
     methods.forEach { method ->
         val hasParams = method.params.any { !it.third }
         if (hasParams) {
-            verifyFunction(fakeClassName, interfaceName, method.name, visibility, classTypeParameters)
+            verifyFunction(
+                fakeClassName,
+                interfaceName,
+                method.name,
+                visibility,
+                classTypeParameters,
+            )
         } else {
-            unitVerifyFunction(fakeClassName, interfaceName, method.name, visibility, classTypeParameters)
+            unitVerifyFunction(
+                fakeClassName,
+                interfaceName,
+                method.name,
+                visibility,
+                classTypeParameters,
+            )
         }
     }
 }
@@ -62,8 +74,8 @@ internal fun CodeFileBuilder.addCallHistoryComponents(
 /**
  * Generates call history declarations as a list that can be added to an existing CodeFile.
  *
- * This function creates a temporary CodeFileBuilder, adds all call history components,
- * and returns the declarations.
+ * This function creates a temporary CodeFileBuilder, adds all call history components, and returns
+ * the declarations.
  *
  * @param fakeClassName Name of the fake implementation class
  * @param interfaceName Name of the interface (for collision-safe data class naming)
@@ -83,7 +95,13 @@ internal fun generateCallHistoryDeclarations(
 
     val tempFile =
         codeFile("") {
-            addCallHistoryComponents(fakeClassName, interfaceName, methods, visibility, classTypeParameters)
+            addCallHistoryComponents(
+                fakeClassName,
+                interfaceName,
+                methods,
+                visibility,
+                classTypeParameters,
+            )
         }
 
     return tempFile.declarations

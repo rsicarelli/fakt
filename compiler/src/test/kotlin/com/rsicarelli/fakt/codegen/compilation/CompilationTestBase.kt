@@ -9,31 +9,28 @@ import kotlin.test.assertEquals
 /**
  * Base class for compilation validation tests.
  *
- * Uses kotlin-compile-testing to ensure generated code actually compiles.
- * This catches type errors, syntax issues, and import problems before
- * integration with the real compiler.
+ * Uses kotlin-compile-testing to ensure generated code actually compiles. This catches type errors,
+ * syntax issues, and import problems before integration with the real compiler.
  */
 abstract class CompilationTestBase {
     /**
      * Asserts that the given source code compiles successfully.
      *
-     * Uses kotlin-compile-testing to perform actual compilation.
-     * Fails the test if compilation produces errors.
+     * Uses kotlin-compile-testing to perform actual compilation. Fails the test if compilation
+     * produces errors.
      *
      * @param sourceCode Complete Kotlin source file content
      * @param description Description of what's being compiled (for error messages)
      */
-    protected fun assertCompiles(
-        sourceCode: String,
-        description: String = "Generated code",
-    ) {
+    protected fun assertCompiles(sourceCode: String, description: String = "Generated code") {
         val result =
             KotlinCompilation()
                 .apply {
                     sources = listOf(SourceFile.kotlin("Generated.kt", sourceCode))
                     inheritClassPath = true
                     messageOutputStream = System.out
-                }.compile()
+                }
+                .compile()
 
         assertEquals(
             KotlinCompilation.ExitCode.OK,
@@ -50,17 +47,15 @@ abstract class CompilationTestBase {
      * @param sourceCode Complete Kotlin source file content
      * @param description Description of what's being compiled
      */
-    protected fun assertDoesNotCompile(
-        sourceCode: String,
-        description: String = "Generated code",
-    ) {
+    protected fun assertDoesNotCompile(sourceCode: String, description: String = "Generated code") {
         val result =
             KotlinCompilation()
                 .apply {
                     sources = listOf(SourceFile.kotlin("Generated.kt", sourceCode))
                     inheritClassPath = true
                     messageOutputStream = System.out
-                }.compile()
+                }
+                .compile()
 
         assertEquals(
             KotlinCompilation.ExitCode.COMPILATION_ERROR,

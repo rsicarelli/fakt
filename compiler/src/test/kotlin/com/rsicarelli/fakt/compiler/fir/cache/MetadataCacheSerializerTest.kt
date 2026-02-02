@@ -14,17 +14,17 @@ import com.rsicarelli.fakt.compiler.fir.metadata.FirPropertyInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirSourceLocation
 import com.rsicarelli.fakt.compiler.fir.metadata.FirTypeParameterInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeInterface
-import kotlinx.coroutines.test.runTest
-import org.jetbrains.kotlin.name.ClassId
-import org.jetbrains.kotlin.name.FqName
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.runTest
+import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.name.FqName
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.io.TempDir
 
 /**
  * BDD tests for MetadataCacheSerializer.
@@ -33,8 +33,7 @@ import kotlin.test.assertTrue
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MetadataCacheSerializerTest {
-    @TempDir
-    lateinit var tempDir: File
+    @TempDir lateinit var tempDir: File
 
     // ========================================================================
     // ValidatedFakeInterface → SerializableFakeInterface Conversion Tests
@@ -50,28 +49,20 @@ class MetadataCacheSerializerTest {
                     classId = classId,
                     simpleName = "UserService",
                     packageName = "com.example",
-                    typeParameters =
-                        listOf(
-                            FirTypeParameterInfo("T", listOf("Any")),
-                        ),
-                    properties =
-                        listOf(
-                            FirPropertyInfo("userId", "String", false, false),
-                        ),
+                    typeParameters = listOf(FirTypeParameterInfo("T", listOf("Any"))),
+                    properties = listOf(FirPropertyInfo("userId", "String", false, false)),
                     functions =
                         listOf(
                             FirFunctionInfo(
                                 name = "getUser",
                                 parameters =
-                                    listOf(
-                                        FirParameterInfo("id", "String", false, null, false),
-                                    ),
+                                    listOf(FirParameterInfo("id", "String", false, null, false)),
                                 returnType = "User",
                                 isSuspend = true,
                                 isInline = false,
                                 typeParameters = emptyList(),
                                 typeParameterBounds = emptyMap(),
-                            ),
+                            )
                         ),
                     inheritedProperties = emptyList(),
                     inheritedFunctions = emptyList(),
@@ -170,31 +161,30 @@ class MetadataCacheSerializerTest {
         }
 
     @Test
-    fun `GIVEN nested class classIdString WHEN toValidated THEN parses correctly`() =
-        runTest {
-            // GIVEN: ClassId.asString() format uses slashes for package
-            val serializable =
-                SerializableFakeInterface(
-                    classIdString = "com/example/Outer.Inner",
-                    simpleName = "Inner",
-                    packageName = "com.example",
-                    typeParameters = emptyList(),
-                    properties = emptyList(),
-                    functions = emptyList(),
-                    inheritedProperties = emptyList(),
-                    inheritedFunctions = emptyList(),
-                    sourceFilePath = "/path/to/file.kt",
-                    sourceFileSignature = "abc123",
-                    validationTimeNanos = 0L,
-                )
+    fun `GIVEN nested class classIdString WHEN toValidated THEN parses correctly`() = runTest {
+        // GIVEN: ClassId.asString() format uses slashes for package
+        val serializable =
+            SerializableFakeInterface(
+                classIdString = "com/example/Outer.Inner",
+                simpleName = "Inner",
+                packageName = "com.example",
+                typeParameters = emptyList(),
+                properties = emptyList(),
+                functions = emptyList(),
+                inheritedProperties = emptyList(),
+                inheritedFunctions = emptyList(),
+                sourceFilePath = "/path/to/file.kt",
+                sourceFileSignature = "abc123",
+                validationTimeNanos = 0L,
+            )
 
-            // WHEN
-            val validated = MetadataCacheSerializer.toValidated(serializable)
+        // WHEN
+        val validated = MetadataCacheSerializer.toValidated(serializable)
 
-            // THEN
-            assertEquals("com.example", validated.classId.packageFqName.asString())
-            assertEquals("Outer.Inner", validated.classId.relativeClassName.asString())
-        }
+        // THEN
+        assertEquals("com.example", validated.classId.packageFqName.asString())
+        assertEquals("Outer.Inner", validated.classId.relativeClassName.asString())
+    }
 
     @Test
     fun `GIVEN serializable with all field types WHEN toValidated THEN converts everything`() =
@@ -221,23 +211,25 @@ class MetadataCacheSerializerTest {
                                 name = "method1",
                                 parameters =
                                     listOf(
-                                        SerializableParameterInfo("p1", "String", false, null, false),
+                                        SerializableParameterInfo(
+                                            "p1",
+                                            "String",
+                                            false,
+                                            null,
+                                            false,
+                                        ),
                                         SerializableParameterInfo("p2", "Int", true, "42", false),
                                     ),
                                 returnType = "Unit",
                                 isSuspend = true,
                                 isInline = false,
                                 typeParameters =
-                                    listOf(
-                                        SerializableTypeParameterInfo("U", emptyList()),
-                                    ),
+                                    listOf(SerializableTypeParameterInfo("U", emptyList())),
                                 typeParameterBounds = mapOf("U" to "Any"),
-                            ),
+                            )
                         ),
                     inheritedProperties =
-                        listOf(
-                            SerializablePropertyInfo("inherited", "Boolean", false, false),
-                        ),
+                        listOf(SerializablePropertyInfo("inherited", "Boolean", false, false)),
                     inheritedFunctions =
                         listOf(
                             SerializableFunctionInfo(
@@ -248,7 +240,7 @@ class MetadataCacheSerializerTest {
                                 isInline = false,
                                 typeParameters = emptyList(),
                                 typeParameterBounds = emptyMap(),
-                            ),
+                            )
                         ),
                     sourceFilePath = "/path/to/ComplexService.kt",
                     sourceFileSignature = "complex-sig",
@@ -290,20 +282,19 @@ class MetadataCacheSerializerTest {
     // ========================================================================
 
     @Test
-    fun `GIVEN source file WHEN computeFileSignature THEN returns MD5 hash`() =
-        runTest {
-            // GIVEN
-            val testFile = File(tempDir, "TestFile.kt")
-            testFile.writeText("interface TestInterface { fun test(): String }")
+    fun `GIVEN source file WHEN computeFileSignature THEN returns MD5 hash`() = runTest {
+        // GIVEN
+        val testFile = File(tempDir, "TestFile.kt")
+        testFile.writeText("interface TestInterface { fun test(): String }")
 
-            // WHEN
-            val signature = MetadataCacheSerializer.computeFileSignature(testFile.absolutePath)
+        // WHEN
+        val signature = MetadataCacheSerializer.computeFileSignature(testFile.absolutePath)
 
-            // THEN
-            assertNotNull(signature)
-            assertEquals(32, signature.length, "MD5 hash should be 32 hex characters")
-            assertTrue(signature.matches(Regex("[a-f0-9]{32}")), "Should be valid hex string")
-        }
+        // THEN
+        assertNotNull(signature)
+        assertEquals(32, signature.length, "MD5 hash should be 32 hex characters")
+        assertTrue(signature.matches(Regex("[a-f0-9]{32}")), "Should be valid hex string")
+    }
 
     @Test
     fun `GIVEN same file content WHEN computeFileSignature twice THEN returns same hash`() =
@@ -339,30 +330,28 @@ class MetadataCacheSerializerTest {
         }
 
     @Test
-    fun `GIVEN missing file WHEN computeFileSignature THEN returns missing marker`() =
-        runTest {
-            // GIVEN
-            val missingPath = File(tempDir, "NonExistent.kt").absolutePath
+    fun `GIVEN missing file WHEN computeFileSignature THEN returns missing marker`() = runTest {
+        // GIVEN
+        val missingPath = File(tempDir, "NonExistent.kt").absolutePath
 
-            // WHEN
-            val signature = MetadataCacheSerializer.computeFileSignature(missingPath)
+        // WHEN
+        val signature = MetadataCacheSerializer.computeFileSignature(missingPath)
 
-            // THEN
-            assertEquals("missing", signature)
-        }
+        // THEN
+        assertEquals("missing", signature)
+    }
 
     @Test
-    fun `GIVEN unknown path WHEN computeFileSignature THEN returns unknown marker`() =
-        runTest {
-            // GIVEN
-            val unknownPath = "<unknown>"
+    fun `GIVEN unknown path WHEN computeFileSignature THEN returns unknown marker`() = runTest {
+        // GIVEN
+        val unknownPath = "<unknown>"
 
-            // WHEN
-            val signature = MetadataCacheSerializer.computeFileSignature(unknownPath)
+        // WHEN
+        val signature = MetadataCacheSerializer.computeFileSignature(unknownPath)
 
-            // THEN
-            assertEquals("unknown", signature)
-        }
+        // THEN
+        assertEquals("unknown", signature)
+    }
 
     // ========================================================================
     // Combined Signature Tests
@@ -399,263 +388,251 @@ class MetadataCacheSerializerTest {
         }
 
     @Test
-    fun `GIVEN empty signatures WHEN computeCombinedSignature THEN returns valid hash`() =
-        runTest {
-            // GIVEN
-            val empty = emptyList<String>()
+    fun `GIVEN empty signatures WHEN computeCombinedSignature THEN returns valid hash`() = runTest {
+        // GIVEN
+        val empty = emptyList<String>()
 
-            // WHEN
-            val combined = MetadataCacheSerializer.computeCombinedSignature(empty)
+        // WHEN
+        val combined = MetadataCacheSerializer.computeCombinedSignature(empty)
 
-            // THEN
-            assertEquals(32, combined.length, "Should still produce valid MD5 hash")
-        }
+        // THEN
+        assertEquals(32, combined.length, "Should still produce valid MD5 hash")
+    }
 
     // ========================================================================
     // File I/O Tests
     // ========================================================================
 
     @Test
-    fun `GIVEN cache data WHEN serialize to file THEN writes atomically`() =
-        runTest {
-            // GIVEN
-            val cache =
-                FirMetadataCache(
-                    cacheSignature = "test-sig",
-                    interfaces =
-                        listOf(
-                            SerializableFakeInterface(
-                                classIdString = "com/example/Test",
-                                simpleName = "Test",
-                                packageName = "com.example",
-                                typeParameters = emptyList(),
-                                properties = emptyList(),
-                                functions = emptyList(),
-                                inheritedProperties = emptyList(),
-                                inheritedFunctions = emptyList(),
-                                sourceFilePath = "Test.kt",
-                                sourceFileSignature = "sig",
-                                validationTimeNanos = 0L,
-                            ),
-                        ),
-                    classes = emptyList(),
-                )
-            val outputPath = File(tempDir, "cache.json").absolutePath
+    fun `GIVEN cache data WHEN serialize to file THEN writes atomically`() = runTest {
+        // GIVEN
+        val cache =
+            FirMetadataCache(
+                cacheSignature = "test-sig",
+                interfaces =
+                    listOf(
+                        SerializableFakeInterface(
+                            classIdString = "com/example/Test",
+                            simpleName = "Test",
+                            packageName = "com.example",
+                            typeParameters = emptyList(),
+                            properties = emptyList(),
+                            functions = emptyList(),
+                            inheritedProperties = emptyList(),
+                            inheritedFunctions = emptyList(),
+                            sourceFilePath = "Test.kt",
+                            sourceFileSignature = "sig",
+                            validationTimeNanos = 0L,
+                        )
+                    ),
+                classes = emptyList(),
+            )
+        val outputPath = File(tempDir, "cache.json").absolutePath
 
-            // WHEN
-            MetadataCacheSerializer.serialize(cache, outputPath)
+        // WHEN
+        MetadataCacheSerializer.serialize(cache, outputPath)
 
-            // THEN
-            val outputFile = File(outputPath)
-            assertTrue(outputFile.exists(), "Cache file should exist")
-            assertTrue(outputFile.length() > 0, "Cache file should not be empty")
+        // THEN
+        val outputFile = File(outputPath)
+        assertTrue(outputFile.exists(), "Cache file should exist")
+        assertTrue(outputFile.length() > 0, "Cache file should not be empty")
 
-            // Verify no temp file left behind (atomic write cleans up)
-            val tempFile = File("$outputPath.tmp")
-            assertTrue(!tempFile.exists(), "Temp file should be cleaned up")
-        }
-
-    @Test
-    fun `GIVEN serialized cache WHEN deserialize THEN returns original data`() =
-        runTest {
-            // GIVEN
-            val original =
-                FirMetadataCache(
-                    cacheSignature = "roundtrip-sig",
-                    interfaces =
-                        listOf(
-                            SerializableFakeInterface(
-                                classIdString = "com/example/RoundTrip",
-                                simpleName = "RoundTrip",
-                                packageName = "com.example",
-                                typeParameters =
-                                    listOf(
-                                        SerializableTypeParameterInfo("T", listOf("Any")),
-                                    ),
-                                properties =
-                                    listOf(
-                                        SerializablePropertyInfo("prop", "String", false, false),
-                                    ),
-                                functions =
-                                    listOf(
-                                        SerializableFunctionInfo(
-                                            name = "method",
-                                            parameters = emptyList(),
-                                            returnType = "T",
-                                            isSuspend = true,
-                                            isInline = false,
-                                            typeParameters = emptyList(),
-                                            typeParameterBounds = emptyMap(),
-                                        ),
-                                    ),
-                                inheritedProperties = emptyList(),
-                                inheritedFunctions = emptyList(),
-                                sourceFilePath = "RoundTrip.kt",
-                                sourceFileSignature = "rt-sig",
-                                validationTimeNanos = 12345L,
-                            ),
-                        ),
-                    classes = emptyList(),
-                )
-            val cachePath = File(tempDir, "roundtrip.json").absolutePath
-            MetadataCacheSerializer.serialize(original, cachePath)
-
-            // WHEN
-            val loaded = MetadataCacheSerializer.deserialize(cachePath)
-
-            // THEN
-            assertNotNull(loaded)
-            assertEquals(original.cacheSignature, loaded.cacheSignature)
-            assertEquals(original.interfaces.size, loaded.interfaces.size)
-            assertEquals(original.interfaces[0].simpleName, loaded.interfaces[0].simpleName)
-        }
+        // Verify no temp file left behind (atomic write cleans up)
+        val tempFile = File("$outputPath.tmp")
+        assertTrue(!tempFile.exists(), "Temp file should be cleaned up")
+    }
 
     @Test
-    fun `GIVEN missing file WHEN deserialize THEN returns null`() =
-        runTest {
-            // GIVEN
-            val missingPath = File(tempDir, "nonexistent.json").absolutePath
+    fun `GIVEN serialized cache WHEN deserialize THEN returns original data`() = runTest {
+        // GIVEN
+        val original =
+            FirMetadataCache(
+                cacheSignature = "roundtrip-sig",
+                interfaces =
+                    listOf(
+                        SerializableFakeInterface(
+                            classIdString = "com/example/RoundTrip",
+                            simpleName = "RoundTrip",
+                            packageName = "com.example",
+                            typeParameters =
+                                listOf(SerializableTypeParameterInfo("T", listOf("Any"))),
+                            properties =
+                                listOf(SerializablePropertyInfo("prop", "String", false, false)),
+                            functions =
+                                listOf(
+                                    SerializableFunctionInfo(
+                                        name = "method",
+                                        parameters = emptyList(),
+                                        returnType = "T",
+                                        isSuspend = true,
+                                        isInline = false,
+                                        typeParameters = emptyList(),
+                                        typeParameterBounds = emptyMap(),
+                                    )
+                                ),
+                            inheritedProperties = emptyList(),
+                            inheritedFunctions = emptyList(),
+                            sourceFilePath = "RoundTrip.kt",
+                            sourceFileSignature = "rt-sig",
+                            validationTimeNanos = 12345L,
+                        )
+                    ),
+                classes = emptyList(),
+            )
+        val cachePath = File(tempDir, "roundtrip.json").absolutePath
+        MetadataCacheSerializer.serialize(original, cachePath)
 
-            // WHEN
-            val result = MetadataCacheSerializer.deserialize(missingPath)
+        // WHEN
+        val loaded = MetadataCacheSerializer.deserialize(cachePath)
 
-            // THEN
-            assertNull(result, "Should return null for missing file")
-        }
+        // THEN
+        assertNotNull(loaded)
+        assertEquals(original.cacheSignature, loaded.cacheSignature)
+        assertEquals(original.interfaces.size, loaded.interfaces.size)
+        assertEquals(original.interfaces[0].simpleName, loaded.interfaces[0].simpleName)
+    }
 
     @Test
-    fun `GIVEN corrupt JSON WHEN deserialize THEN returns null gracefully`() =
-        runTest {
-            // GIVEN
-            val corruptFile = File(tempDir, "corrupt.json")
-            corruptFile.writeText("{ this is not valid JSON }")
+    fun `GIVEN missing file WHEN deserialize THEN returns null`() = runTest {
+        // GIVEN
+        val missingPath = File(tempDir, "nonexistent.json").absolutePath
 
-            // WHEN
-            val result = MetadataCacheSerializer.deserialize(corruptFile.absolutePath)
+        // WHEN
+        val result = MetadataCacheSerializer.deserialize(missingPath)
 
-            // THEN
-            assertNull(result, "Should return null for corrupt JSON")
-        }
+        // THEN
+        assertNull(result, "Should return null for missing file")
+    }
 
     @Test
-    fun `GIVEN empty file WHEN deserialize THEN returns null gracefully`() =
-        runTest {
-            // GIVEN
-            val emptyFile = File(tempDir, "empty.json")
-            emptyFile.writeText("")
+    fun `GIVEN corrupt JSON WHEN deserialize THEN returns null gracefully`() = runTest {
+        // GIVEN
+        val corruptFile = File(tempDir, "corrupt.json")
+        corruptFile.writeText("{ this is not valid JSON }")
 
-            // WHEN
-            val result = MetadataCacheSerializer.deserialize(emptyFile.absolutePath)
+        // WHEN
+        val result = MetadataCacheSerializer.deserialize(corruptFile.absolutePath)
 
-            // THEN
-            assertNull(result, "Should return null for empty file")
-        }
+        // THEN
+        assertNull(result, "Should return null for corrupt JSON")
+    }
 
     @Test
-    fun `GIVEN nested directory path WHEN serialize THEN creates parent directories`() =
-        runTest {
-            // GIVEN
-            val cache =
-                FirMetadataCache(
-                    cacheSignature = "nested-sig",
-                    interfaces = emptyList(),
-                    classes = emptyList(),
-                )
-            val nestedPath = File(tempDir, "a/b/c/cache.json").absolutePath
+    fun `GIVEN empty file WHEN deserialize THEN returns null gracefully`() = runTest {
+        // GIVEN
+        val emptyFile = File(tempDir, "empty.json")
+        emptyFile.writeText("")
 
-            // WHEN
-            MetadataCacheSerializer.serialize(cache, nestedPath)
+        // WHEN
+        val result = MetadataCacheSerializer.deserialize(emptyFile.absolutePath)
 
-            // THEN
-            assertTrue(File(nestedPath).exists(), "Should create nested directories and file")
-        }
+        // THEN
+        assertNull(result, "Should return null for empty file")
+    }
+
+    @Test
+    fun `GIVEN nested directory path WHEN serialize THEN creates parent directories`() = runTest {
+        // GIVEN
+        val cache =
+            FirMetadataCache(
+                cacheSignature = "nested-sig",
+                interfaces = emptyList(),
+                classes = emptyList(),
+            )
+        val nestedPath = File(tempDir, "a/b/c/cache.json").absolutePath
+
+        // WHEN
+        MetadataCacheSerializer.serialize(cache, nestedPath)
+
+        // THEN
+        assertTrue(File(nestedPath).exists(), "Should create nested directories and file")
+    }
 
     // ========================================================================
     // Full Roundtrip with ValidatedFakeInterface Tests
     // ========================================================================
 
     @Test
-    fun `GIVEN ValidatedFakeInterface WHEN full roundtrip THEN preserves all data`() =
-        runTest {
-            // GIVEN
-            val classId = ClassId.topLevel(FqName("com.example.FullRoundTrip"))
-            val original =
-                ValidatedFakeInterface(
-                    classId = classId,
-                    simpleName = "FullRoundTrip",
-                    packageName = "com.example",
-                    typeParameters =
-                        listOf(
-                            FirTypeParameterInfo("T", listOf("Comparable<T>")),
-                        ),
-                    properties =
-                        listOf(
-                            FirPropertyInfo("id", "Long", false, false),
-                            FirPropertyInfo("name", "String?", true, true),
-                        ),
-                    functions =
-                        listOf(
-                            FirFunctionInfo(
-                                name = "process",
-                                parameters =
-                                    listOf(
-                                        FirParameterInfo("input", "T", false, null, false),
-                                        FirParameterInfo("options", "Map<String, Any>", true, "emptyMap()", false),
+    fun `GIVEN ValidatedFakeInterface WHEN full roundtrip THEN preserves all data`() = runTest {
+        // GIVEN
+        val classId = ClassId.topLevel(FqName("com.example.FullRoundTrip"))
+        val original =
+            ValidatedFakeInterface(
+                classId = classId,
+                simpleName = "FullRoundTrip",
+                packageName = "com.example",
+                typeParameters = listOf(FirTypeParameterInfo("T", listOf("Comparable<T>"))),
+                properties =
+                    listOf(
+                        FirPropertyInfo("id", "Long", false, false),
+                        FirPropertyInfo("name", "String?", true, true),
+                    ),
+                functions =
+                    listOf(
+                        FirFunctionInfo(
+                            name = "process",
+                            parameters =
+                                listOf(
+                                    FirParameterInfo("input", "T", false, null, false),
+                                    FirParameterInfo(
+                                        "options",
+                                        "Map<String, Any>",
+                                        true,
+                                        "emptyMap()",
+                                        false,
                                     ),
-                                returnType = "Result<T>",
-                                isSuspend = true,
-                                isInline = false,
-                                typeParameters = emptyList(),
-                                typeParameterBounds = emptyMap(),
-                            ),
-                        ),
-                    inheritedProperties =
-                        listOf(
-                            FirPropertyInfo("inherited", "Boolean", false, false),
-                        ),
-                    inheritedFunctions =
-                        listOf(
-                            FirFunctionInfo(
-                                name = "close",
-                                parameters = emptyList(),
-                                returnType = "Unit",
-                                isSuspend = false,
-                                isInline = false,
-                                typeParameters = emptyList(),
-                                typeParameterBounds = emptyMap(),
-                            ),
-                        ),
-                    sourceLocation = FirSourceLocation("/src/FullRoundTrip.kt", 1, 0, 100, 1),
-                    validationTimeNanos = 54321L,
-                )
+                                ),
+                            returnType = "Result<T>",
+                            isSuspend = true,
+                            isInline = false,
+                            typeParameters = emptyList(),
+                            typeParameterBounds = emptyMap(),
+                        )
+                    ),
+                inheritedProperties = listOf(FirPropertyInfo("inherited", "Boolean", false, false)),
+                inheritedFunctions =
+                    listOf(
+                        FirFunctionInfo(
+                            name = "close",
+                            parameters = emptyList(),
+                            returnType = "Unit",
+                            isSuspend = false,
+                            isInline = false,
+                            typeParameters = emptyList(),
+                            typeParameterBounds = emptyMap(),
+                        )
+                    ),
+                sourceLocation = FirSourceLocation("/src/FullRoundTrip.kt", 1, 0, 100, 1),
+                validationTimeNanos = 54321L,
+            )
 
-            // WHEN: Convert to serializable, serialize, deserialize, convert back
-            val serializable = MetadataCacheSerializer.toSerializable(original)
-            val cachePath = File(tempDir, "full-roundtrip.json").absolutePath
-            val cache =
-                FirMetadataCache(
-                    cacheSignature = "full-sig",
-                    interfaces = listOf(serializable),
-                    classes = emptyList(),
-                )
-            MetadataCacheSerializer.serialize(cache, cachePath)
-            val loadedCache = MetadataCacheSerializer.deserialize(cachePath)
-            val restored = MetadataCacheSerializer.toValidated(loadedCache!!.interfaces[0])
+        // WHEN: Convert to serializable, serialize, deserialize, convert back
+        val serializable = MetadataCacheSerializer.toSerializable(original)
+        val cachePath = File(tempDir, "full-roundtrip.json").absolutePath
+        val cache =
+            FirMetadataCache(
+                cacheSignature = "full-sig",
+                interfaces = listOf(serializable),
+                classes = emptyList(),
+            )
+        MetadataCacheSerializer.serialize(cache, cachePath)
+        val loadedCache = MetadataCacheSerializer.deserialize(cachePath)
+        val restored = MetadataCacheSerializer.toValidated(loadedCache!!.interfaces[0])
 
-            // THEN
-            assertEquals(original.classId.asFqNameString(), restored.classId.asFqNameString())
-            assertEquals(original.simpleName, restored.simpleName)
-            assertEquals(original.packageName, restored.packageName)
-            assertEquals(original.typeParameters.size, restored.typeParameters.size)
-            assertEquals(original.typeParameters[0].name, restored.typeParameters[0].name)
-            assertEquals(original.typeParameters[0].bounds, restored.typeParameters[0].bounds)
-            assertEquals(original.properties.size, restored.properties.size)
-            assertEquals(original.functions.size, restored.functions.size)
-            assertEquals(original.functions[0].parameters.size, restored.functions[0].parameters.size)
-            assertEquals(original.inheritedProperties.size, restored.inheritedProperties.size)
-            assertEquals(original.inheritedFunctions.size, restored.inheritedFunctions.size)
-            // validationTimeNanos is intentionally set to 0 for cache hits since no FIR analysis
-            // was performed - this ensures accurate telemetry reporting in platform compilations
-            assertEquals(0L, restored.validationTimeNanos)
-        }
+        // THEN
+        assertEquals(original.classId.asFqNameString(), restored.classId.asFqNameString())
+        assertEquals(original.simpleName, restored.simpleName)
+        assertEquals(original.packageName, restored.packageName)
+        assertEquals(original.typeParameters.size, restored.typeParameters.size)
+        assertEquals(original.typeParameters[0].name, restored.typeParameters[0].name)
+        assertEquals(original.typeParameters[0].bounds, restored.typeParameters[0].bounds)
+        assertEquals(original.properties.size, restored.properties.size)
+        assertEquals(original.functions.size, restored.functions.size)
+        assertEquals(original.functions[0].parameters.size, restored.functions[0].parameters.size)
+        assertEquals(original.inheritedProperties.size, restored.inheritedProperties.size)
+        assertEquals(original.inheritedFunctions.size, restored.inheritedFunctions.size)
+        // validationTimeNanos is intentionally set to 0 for cache hits since no FIR analysis
+        // was performed - this ensures accurate telemetry reporting in platform compilations
+        assertEquals(0L, restored.validationTimeNanos)
+    }
 }

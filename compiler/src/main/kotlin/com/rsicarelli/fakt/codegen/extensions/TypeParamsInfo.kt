@@ -18,8 +18,8 @@ internal data class TypeParamsInfo(
 /**
  * Parses class-level type parameters into declaration, where clause, and usage components.
  *
- * Handles variance modifiers (out/in), simple constraints, and multiple constraints
- * that require where clauses.
+ * Handles variance modifiers (out/in), simple constraints, and multiple constraints that require
+ * where clauses.
  */
 internal fun parseTypeParameters(classTypeParameters: List<String>): TypeParamsInfo {
     if (classTypeParameters.isEmpty()) {
@@ -30,7 +30,8 @@ internal fun parseTypeParameters(classTypeParameters: List<String>): TypeParamsI
         classTypeParameters.map { param ->
             val cleanParam = param.removePrefix("out ").removePrefix("in ").trim()
             val name = cleanParam.substringBefore(" :").trim()
-            val constraintPart = if (" :" in cleanParam) cleanParam.substringAfter(" :").trim() else null
+            val constraintPart =
+                if (" :" in cleanParam) cleanParam.substringAfter(" :").trim() else null
             name to constraintPart
         }
 
@@ -47,7 +48,8 @@ internal fun parseTypeParameters(classTypeParameters: List<String>): TypeParamsI
                     .filter { it.second != null }
                     .flatMap { (name, constraints) ->
                         splitConstraints(constraints!!).map { "$name : $it" }
-                    }.joinToString(", ")
+                    }
+                    .joinToString(", ")
             val where = if (whereConstraints.isNotEmpty()) " where $whereConstraints" else ""
             "<${params.joinToString(", ")}> " to where
         } else {
@@ -68,7 +70,7 @@ internal fun parseTypeParameters(classTypeParameters: List<String>): TypeParamsI
  *
  * Examples:
  * - "CharSequence, Comparable<T>" -> ["CharSequence", "Comparable<T>"]
- * - "Map<K, V>" -> ["Map<K, V>"]  (doesn't split inside generics)
+ * - "Map<K, V>" -> ["Map<K, V>"] (doesn't split inside generics)
  */
 internal fun splitConstraints(constraints: String): List<String> {
     val result = mutableListOf<String>()
@@ -105,14 +107,10 @@ internal fun splitConstraints(constraints: String): List<String> {
 }
 
 /**
- * Extracts just the type parameter name from a full declaration.
- * Handles variance modifiers (out/in) and constraints.
+ * Extracts just the type parameter name from a full declaration. Handles variance modifiers
+ * (out/in) and constraints.
  *
  * Examples: "T" → "T", "out T" → "T", "T : Any" → "T"
  */
 internal fun extractTypeParamName(param: String): String =
-    param
-        .substringBefore(" :")
-        .removePrefix("out ")
-        .removePrefix("in ")
-        .trim()
+    param.substringBefore(" :").removePrefix("out ").removePrefix("in ").trim()

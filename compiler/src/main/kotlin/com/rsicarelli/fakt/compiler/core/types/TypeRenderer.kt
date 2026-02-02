@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.core.types
 
+import java.util.concurrent.ConcurrentHashMap
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
@@ -22,13 +23,12 @@ import org.jetbrains.kotlin.ir.types.isShort
 import org.jetbrains.kotlin.ir.types.isString
 import org.jetbrains.kotlin.ir.types.isUnit
 import org.jetbrains.kotlin.ir.types.makeNotNull
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Renders IR types to Kotlin string representations.
  *
- * Focuses on converting IrType to readable Kotlin code strings,
- * handling primitives, nullability, and complex types.
+ * Focuses on converting IrType to readable Kotlin code strings, handling primitives, nullability,
+ * and complex types.
  *
  * Uses memoization to cache type string conversions for performance.
  */
@@ -37,8 +37,7 @@ internal class TypeRenderer(
     private val functionTypeHandler: FunctionTypeHandler,
 ) {
     /**
-     * Thread-safe cache for type string conversions.
-     * Key: Pair(IrType, preserveTypeParameters flag)
+     * Thread-safe cache for type string conversions. Key: Pair(IrType, preserveTypeParameters flag)
      * Value: Rendered string representation
      */
     private val typeStringCache = ConcurrentHashMap<Pair<IrType, Boolean>, String>()
@@ -52,10 +51,7 @@ internal class TypeRenderer(
      * @param preserveTypeParameters Whether to preserve generic type parameters
      * @return String representation of the type
      */
-    fun render(
-        irType: IrType,
-        preserveTypeParameters: Boolean,
-    ): String =
+    fun render(irType: IrType, preserveTypeParameters: Boolean): String =
         typeStringCache.getOrPut(irType to preserveTypeParameters) {
             when {
                 // Handle nullable types
@@ -64,8 +60,9 @@ internal class TypeRenderer(
                     val nonNullType = irType.makeNotNull()
 
                     // Function types need parentheses when nullable: ((Int, Int) -> Unit)?
-                    if (functionTypeHandler.isFunction(nonNullType) ||
-                        functionTypeHandler.isSuspendFunction(nonNullType)
+                    if (
+                        functionTypeHandler.isFunction(nonNullType) ||
+                            functionTypeHandler.isSuspendFunction(nonNullType)
                     ) {
                         "($baseType)?"
                     } else {
@@ -75,23 +72,24 @@ internal class TypeRenderer(
 
                 // Handle primitive types
                 else ->
-                    irType.asPrimitiveName()
-                        ?: handleComplexType(irType, preserveTypeParameters)
+                    irType.asPrimitiveName() ?: handleComplexType(irType, preserveTypeParameters)
             }
         }
 
-    /**
-     * Check if a type is primitive and doesn't need imports.
-     */
+    /** Check if a type is primitive and doesn't need imports. */
     fun isPrimitive(irType: IrType): Boolean =
-        irType.isString() || irType.isInt() || irType.isBoolean() ||
-            irType.isUnit() || irType.isLong() || irType.isFloat() ||
-            irType.isDouble() || irType.isChar() || irType.isByte() ||
+        irType.isString() ||
+            irType.isInt() ||
+            irType.isBoolean() ||
+            irType.isUnit() ||
+            irType.isLong() ||
+            irType.isFloat() ||
+            irType.isDouble() ||
+            irType.isChar() ||
+            irType.isByte() ||
             irType.isShort()
 
-    /**
-     * Returns primitive type name or null if not primitive.
-     */
+    /** Returns primitive type name or null if not primitive. */
     private fun IrType.asPrimitiveName(): String? =
         when {
             isString() -> "String"
@@ -109,22 +107,13 @@ internal class TypeRenderer(
             else -> null
         }
 
-    /**
-     * Handles complex (non-primitive) type conversion.
-     */
+    /** Handles complex (non-primitive) type conversion. */
     @OptIn(UnsafeDuringIrConstructionAPI::class)
-    private fun handleComplexType(
-        irType: IrType,
-        preserveTypeParameters: Boolean,
-    ): String =
+    private fun handleComplexType(irType: IrType, preserveTypeParameters: Boolean): String =
         when {
             // Handle function types
             functionTypeHandler.isFunction(irType) ->
-                functionTypeHandler.renderFunctionType(
-                    irType,
-                    preserveTypeParameters,
-                    this::render,
-                )
+                functionTypeHandler.renderFunctionType(irType, preserveTypeParameters, this::render)
 
             // Handle suspending function types
             functionTypeHandler.isSuspendFunction(irType) -> {
@@ -165,8 +154,6 @@ internal class TypeRenderer(
             }
         }
 
-    /**
-     * Gets simple class name from IR class, avoiding package qualification.
-     */
+    /** Gets simple class name from IR class, avoiding package qualification. */
     private fun getSimpleClassName(irClass: IrClass): String = irClass.name.asString()
 }

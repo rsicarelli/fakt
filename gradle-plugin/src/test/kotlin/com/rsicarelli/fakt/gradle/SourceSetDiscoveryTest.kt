@@ -5,12 +5,12 @@ package com.rsicarelli.fakt.gradle
 import com.rsicarelli.fakt.gradle.fakes.FakeKotlinCompilation
 import com.rsicarelli.fakt.gradle.fakes.FakeKotlinSourceSet
 import com.rsicarelli.fakt.gradle.fakes.FakeKotlinTarget
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 
 /**
  * TDD tests for SourceSetDiscovery - the integration point that builds SourceSetContext.
@@ -29,17 +29,9 @@ class SourceSetDiscoveryTest {
     fun `GIVEN simple JVM test compilation WHEN building context THEN should capture test metadata`() {
         // GIVEN: JVM test compilation with commonMain as parent
         val commonMain = FakeKotlinSourceSet(name = "commonMain")
-        val jvmTest =
-            FakeKotlinSourceSet(
-                name = "jvmTest",
-                parents = setOf(commonMain),
-            )
+        val jvmTest = FakeKotlinSourceSet(name = "jvmTest", parents = setOf(commonMain))
 
-        val target =
-            FakeKotlinTarget(
-                name = "jvm",
-                platformType = KotlinPlatformType.jvm,
-            )
+        val target = FakeKotlinTarget(name = "jvm", platformType = KotlinPlatformType.jvm)
         val compilation =
             FakeKotlinCompilation(
                 name = "test",
@@ -50,10 +42,7 @@ class SourceSetDiscoveryTest {
 
         // WHEN
         val context =
-            SourceSetDiscovery.buildContext(
-                compilation = compilation,
-                buildDir = "/project/build",
-            )
+            SourceSetDiscovery.buildContext(compilation = compilation, buildDir = "/project/build")
 
         // THEN
         assertEquals("test", context.compilationName)
@@ -73,17 +62,9 @@ class SourceSetDiscoveryTest {
     fun `GIVEN simple JVM main compilation WHEN building context THEN should capture main metadata`() {
         // GIVEN: JVM main compilation
         val commonMain = FakeKotlinSourceSet(name = "commonMain")
-        val jvmMain =
-            FakeKotlinSourceSet(
-                name = "jvmMain",
-                parents = setOf(commonMain),
-            )
+        val jvmMain = FakeKotlinSourceSet(name = "jvmMain", parents = setOf(commonMain))
 
-        val target =
-            FakeKotlinTarget(
-                name = "jvm",
-                platformType = KotlinPlatformType.jvm,
-            )
+        val target = FakeKotlinTarget(name = "jvm", platformType = KotlinPlatformType.jvm)
         val compilation =
             FakeKotlinCompilation(
                 name = "main",
@@ -94,10 +75,7 @@ class SourceSetDiscoveryTest {
 
         // WHEN
         val context =
-            SourceSetDiscovery.buildContext(
-                compilation = compilation,
-                buildDir = "/project/build",
-            )
+            SourceSetDiscovery.buildContext(compilation = compilation, buildDir = "/project/build")
 
         // THEN
         assertEquals("main", context.compilationName)
@@ -115,32 +93,12 @@ class SourceSetDiscoveryTest {
     fun `GIVEN KMP iOS compilation WHEN building context THEN should capture full hierarchy`() {
         // GIVEN: iOS hierarchy - iosX64Main → iosMain → appleMain → nativeMain → commonMain
         val commonMain = FakeKotlinSourceSet(name = "commonMain")
-        val nativeMain =
-            FakeKotlinSourceSet(
-                name = "nativeMain",
-                parents = setOf(commonMain),
-            )
-        val appleMain =
-            FakeKotlinSourceSet(
-                name = "appleMain",
-                parents = setOf(nativeMain),
-            )
-        val iosMain =
-            FakeKotlinSourceSet(
-                name = "iosMain",
-                parents = setOf(appleMain),
-            )
-        val iosX64Main =
-            FakeKotlinSourceSet(
-                name = "iosX64Main",
-                parents = setOf(iosMain),
-            )
+        val nativeMain = FakeKotlinSourceSet(name = "nativeMain", parents = setOf(commonMain))
+        val appleMain = FakeKotlinSourceSet(name = "appleMain", parents = setOf(nativeMain))
+        val iosMain = FakeKotlinSourceSet(name = "iosMain", parents = setOf(appleMain))
+        val iosX64Main = FakeKotlinSourceSet(name = "iosX64Main", parents = setOf(iosMain))
 
-        val target =
-            FakeKotlinTarget(
-                name = "iosX64",
-                platformType = KotlinPlatformType.native,
-            )
+        val target = FakeKotlinTarget(name = "iosX64", platformType = KotlinPlatformType.native)
         val compilation =
             FakeKotlinCompilation(
                 name = "main",
@@ -151,10 +109,7 @@ class SourceSetDiscoveryTest {
 
         // WHEN
         val context =
-            SourceSetDiscovery.buildContext(
-                compilation = compilation,
-                buildDir = "/project/build",
-            )
+            SourceSetDiscovery.buildContext(compilation = compilation, buildDir = "/project/build")
 
         // THEN
         assertEquals("iosX64", context.targetName)
@@ -187,16 +142,9 @@ class SourceSetDiscoveryTest {
         // GIVEN: integrationTest custom compilation
         val commonMain = FakeKotlinSourceSet(name = "commonMain")
         val integrationTest =
-            FakeKotlinSourceSet(
-                name = "integrationTest",
-                parents = setOf(commonMain),
-            )
+            FakeKotlinSourceSet(name = "integrationTest", parents = setOf(commonMain))
 
-        val target =
-            FakeKotlinTarget(
-                name = "jvm",
-                platformType = KotlinPlatformType.jvm,
-            )
+        val target = FakeKotlinTarget(name = "jvm", platformType = KotlinPlatformType.jvm)
         val compilation =
             FakeKotlinCompilation(
                 name = "integrationTest",
@@ -207,15 +155,15 @@ class SourceSetDiscoveryTest {
 
         // WHEN
         val context =
-            SourceSetDiscovery.buildContext(
-                compilation = compilation,
-                buildDir = "/project/build",
-            )
+            SourceSetDiscovery.buildContext(compilation = compilation, buildDir = "/project/build")
 
         // THEN
         assertEquals("integrationTest", context.compilationName)
         assertTrue(context.isTest, "Custom test suite should be classified as test")
-        assertTrue(context.outputDirectory.contains("Test"), "Should contain Test in source set name (e.g., integrationTest)")
+        assertTrue(
+            context.outputDirectory.contains("Test"),
+            "Should contain Test in source set name (e.g., integrationTest)",
+        )
     }
 
     @Test
@@ -227,27 +175,11 @@ class SourceSetDiscoveryTest {
         //        \        /
         //         iosMain
         val commonMain = FakeKotlinSourceSet(name = "commonMain")
-        val nativeMain =
-            FakeKotlinSourceSet(
-                name = "nativeMain",
-                parents = setOf(commonMain),
-            )
-        val appleMain =
-            FakeKotlinSourceSet(
-                name = "appleMain",
-                parents = setOf(commonMain),
-            )
-        val iosMain =
-            FakeKotlinSourceSet(
-                name = "iosMain",
-                parents = setOf(nativeMain, appleMain),
-            )
+        val nativeMain = FakeKotlinSourceSet(name = "nativeMain", parents = setOf(commonMain))
+        val appleMain = FakeKotlinSourceSet(name = "appleMain", parents = setOf(commonMain))
+        val iosMain = FakeKotlinSourceSet(name = "iosMain", parents = setOf(nativeMain, appleMain))
 
-        val target =
-            FakeKotlinTarget(
-                name = "ios",
-                platformType = KotlinPlatformType.native,
-            )
+        val target = FakeKotlinTarget(name = "ios", platformType = KotlinPlatformType.native)
         val compilation =
             FakeKotlinCompilation(
                 name = "main",
@@ -258,10 +190,7 @@ class SourceSetDiscoveryTest {
 
         // WHEN
         val context =
-            SourceSetDiscovery.buildContext(
-                compilation = compilation,
-                buildDir = "/project/build",
-            )
+            SourceSetDiscovery.buildContext(compilation = compilation, buildDir = "/project/build")
 
         // THEN
         assertEquals(
@@ -283,17 +212,9 @@ class SourceSetDiscoveryTest {
     fun `GIVEN JS platform WHEN building context THEN should capture JS platform type`() {
         // GIVEN: JS compilation
         val commonMain = FakeKotlinSourceSet(name = "commonMain")
-        val jsMain =
-            FakeKotlinSourceSet(
-                name = "jsMain",
-                parents = setOf(commonMain),
-            )
+        val jsMain = FakeKotlinSourceSet(name = "jsMain", parents = setOf(commonMain))
 
-        val target =
-            FakeKotlinTarget(
-                name = "js",
-                platformType = KotlinPlatformType.js,
-            )
+        val target = FakeKotlinTarget(name = "js", platformType = KotlinPlatformType.js)
         val compilation =
             FakeKotlinCompilation(
                 name = "main",
@@ -304,10 +225,7 @@ class SourceSetDiscoveryTest {
 
         // WHEN
         val context =
-            SourceSetDiscovery.buildContext(
-                compilation = compilation,
-                buildDir = "/project/build",
-            )
+            SourceSetDiscovery.buildContext(compilation = compilation, buildDir = "/project/build")
 
         // THEN
         assertEquals("js", context.platformType)
@@ -321,10 +239,7 @@ class SourceSetDiscoveryTest {
         val androidMain = FakeKotlinSourceSet(name = "androidMain", parents = setOf(commonMain))
 
         val target =
-            FakeKotlinTarget(
-                name = "android",
-                platformType = KotlinPlatformType.androidJvm,
-            )
+            FakeKotlinTarget(name = "android", platformType = KotlinPlatformType.androidJvm)
         val compilation =
             FakeKotlinCompilation(
                 name = "main",
@@ -335,10 +250,7 @@ class SourceSetDiscoveryTest {
 
         // WHEN
         val context =
-            SourceSetDiscovery.buildContext(
-                compilation = compilation,
-                buildDir = "/project/build",
-            )
+            SourceSetDiscovery.buildContext(compilation = compilation, buildDir = "/project/build")
 
         // THEN
         assertEquals("androidJvm", context.platformType)
@@ -349,17 +261,9 @@ class SourceSetDiscoveryTest {
     fun `GIVEN output directory path WHEN building context THEN should use conventional structure`() {
         // GIVEN
         val commonMain = FakeKotlinSourceSet(name = "commonMain")
-        val jvmTest =
-            FakeKotlinSourceSet(
-                name = "jvmTest",
-                parents = setOf(commonMain),
-            )
+        val jvmTest = FakeKotlinSourceSet(name = "jvmTest", parents = setOf(commonMain))
 
-        val target =
-            FakeKotlinTarget(
-                name = "jvm",
-                platformType = KotlinPlatformType.jvm,
-            )
+        val target = FakeKotlinTarget(name = "jvm", platformType = KotlinPlatformType.jvm)
         val compilation =
             FakeKotlinCompilation(
                 name = "test",
@@ -378,7 +282,10 @@ class SourceSetDiscoveryTest {
         // THEN
         // Should follow pattern: {buildDir}/generated/fakt/{sourceSetName}/kotlin
         assertTrue(context.outputDirectory.startsWith("/Users/dev/project/build/generated/fakt"))
-        assertTrue(context.outputDirectory.contains("Test"), "Should contain Test in source set name")
+        assertTrue(
+            context.outputDirectory.contains("Test"),
+            "Should contain Test in source set name",
+        )
         assertTrue(context.outputDirectory.endsWith("/kotlin"))
     }
 }

@@ -12,7 +12,6 @@ import com.rsicarelli.fakt.codegen.model.CodeExpression
 import com.rsicarelli.fakt.codegen.model.CodeFile
 import com.rsicarelli.fakt.codegen.model.CodeFunction
 import com.rsicarelli.fakt.codegen.model.CodeMember
-import com.rsicarelli.fakt.codegen.model.CodeModifier
 import com.rsicarelli.fakt.codegen.model.CodeParameter
 import com.rsicarelli.fakt.codegen.model.CodeProperty
 import com.rsicarelli.fakt.codegen.model.CodeRegionEnd
@@ -38,15 +37,11 @@ import com.rsicarelli.fakt.codegen.model.ConstructorProperty
  */
 public fun CodeFile.renderTo(builder: CodeBuilder) {
     // File header
-    header?.let {
-        builder.appendLine("// $it")
-    }
+    header?.let { builder.appendLine("// $it") }
 
     // File-level annotations (before package declaration)
     if (fileAnnotations.isNotEmpty()) {
-        fileAnnotations.forEach { annotation ->
-            annotation.renderAsFileAnnotation(builder)
-        }
+        fileAnnotations.forEach { annotation -> annotation.renderAsFileAnnotation(builder) }
         builder.appendLine()
     }
 
@@ -57,9 +52,7 @@ public fun CodeFile.renderTo(builder: CodeBuilder) {
 
     // Imports (sorted)
     if (imports.isNotEmpty()) {
-        imports.sorted().forEach { import ->
-            builder.appendLine("import $import")
-        }
+        imports.sorted().forEach { import -> builder.appendLine("import $import") }
         builder.appendLine()
     }
 
@@ -145,9 +138,7 @@ public fun CodeRegionEnd.renderTo(builder: CodeBuilder) {
  */
 public fun CodeClass.renderTo(builder: CodeBuilder) {
     // Render annotations first (before class declaration)
-    annotations.forEach { annotation ->
-        annotation.renderTo(builder)
-    }
+    annotations.forEach { annotation -> annotation.renderTo(builder) }
 
     // Build class header
     val modifiersStr = modifiers.joinToString(" ") { it.name.lowercase() }
@@ -179,7 +170,9 @@ public fun CodeClass.renderTo(builder: CodeBuilder) {
     val whereClauseStr = whereClause?.let { " where $it" } ?: ""
 
     // Render class
-    builder.block("${modifierPrefix}class $name$typeParamsStr$constructorStr$superTypesStr$whereClauseStr") {
+    builder.block(
+        "${modifierPrefix}class $name$typeParamsStr$constructorStr$superTypesStr$whereClauseStr"
+    ) {
         members.forEachIndexed { index, member ->
             member.renderTo(this)
             if (index < members.lastIndex) {
@@ -207,21 +200,13 @@ public fun ConstructorProperty.render(): String {
  *
  * Examples:
  * - Single property: `public data class UserCall(val id: String)`
- * - Multi-property:
- *   ```kotlin
- *   public data class UserCall(
- *       val id: String,
- *       val name: String,
- *   )
- *   ```
+ * - Multi-property: ```kotlin public data class UserCall( val id: String, val name: String, ) ```
  *
  * @param builder The [CodeBuilder] to write to
  */
 public fun CodeDataClass.renderTo(builder: CodeBuilder) {
     // Render annotations first
-    annotations.forEach { annotation ->
-        annotation.renderTo(builder)
-    }
+    annotations.forEach { annotation -> annotation.renderTo(builder) }
 
     // Build modifiers
     val modifiersStr = modifiers.joinToString(" ") { it.name.lowercase() }
@@ -236,9 +221,7 @@ public fun CodeDataClass.renderTo(builder: CodeBuilder) {
         // Multi-property: multi-line format
         builder.appendLine("${modifierPrefix}data class $name(")
         builder.indent {
-            properties.forEach { prop ->
-                appendLine("val ${prop.name}: ${prop.type},")
-            }
+            properties.forEach { prop -> appendLine("val ${prop.name}: ${prop.type},") }
         }
         builder.appendLine(")")
     }
@@ -247,8 +230,7 @@ public fun CodeDataClass.renderTo(builder: CodeBuilder) {
 /**
  * Renders [CodeAnnotation] to [CodeBuilder].
  *
- * Generates annotation with arguments.
- * Examples:
+ * Generates annotation with arguments. Examples:
  * - `@OptIn(ExperimentalApi::class)`
  * - `@Deprecated("old", level = DeprecationLevel.WARNING)`
  *
@@ -267,8 +249,7 @@ public fun CodeAnnotation.renderTo(builder: CodeBuilder) {
 /**
  * Renders [CodeAnnotation] as a file-level annotation.
  *
- * Generates file-level annotation with @file: prefix.
- * Examples:
+ * Generates file-level annotation with @file: prefix. Examples:
  * - `@file:OptIn(ExperimentalObjCRefinement::class)`
  * - `@file:Suppress("UNCHECKED_CAST")`
  *
@@ -314,10 +295,7 @@ public fun CodeFunction.renderTo(builder: CodeBuilder) {
  *  */
  * ```
  */
-private fun renderKDoc(
-    builder: CodeBuilder,
-    kdoc: String,
-) {
+private fun renderKDoc(builder: CodeBuilder, kdoc: String) {
     val lines = kdoc.lines()
     builder.appendLine("/**")
     lines.forEach { line ->
@@ -362,7 +340,8 @@ private class FunctionSignature(
     private val returnType: String,
     private val whereClause: String,
 ) {
-    val full: String get() = "$prefix$returnType$whereClause"
+    val full: String
+        get() = "$prefix$returnType$whereClause"
 
     fun withOptionalReturn(skipUnit: Boolean): String =
         when {
@@ -371,22 +350,14 @@ private class FunctionSignature(
         }
 }
 
-private fun CodeFunction.renderExpressionBody(
-    builder: CodeBuilder,
-    sig: FunctionSignature,
-) {
+private fun CodeFunction.renderExpressionBody(builder: CodeBuilder, sig: FunctionSignature) {
     val skipUnit = returnType.render() == "Unit"
     val expr = (body as CodeBlock.Expression).expr.render()
     builder.appendLine("${sig.withOptionalReturn(skipUnit)} = $expr")
 }
 
-private fun CodeFunction.renderStatementsBody(
-    builder: CodeBuilder,
-    sig: FunctionSignature,
-) {
-    builder.block(sig.full) {
-        (body as CodeBlock.Statements).statements.forEach { appendLine(it) }
-    }
+private fun CodeFunction.renderStatementsBody(builder: CodeBuilder, sig: FunctionSignature) {
+    builder.block(sig.full) { (body as CodeBlock.Statements).statements.forEach { appendLine(it) } }
 }
 
 /**
@@ -398,9 +369,7 @@ private fun CodeFunction.renderStatementsBody(
  */
 public fun CodeProperty.renderTo(builder: CodeBuilder) {
     // Render property annotations first
-    annotations.forEach { annotation ->
-        annotation.renderTo(builder)
-    }
+    annotations.forEach { annotation -> annotation.renderTo(builder) }
 
     val modifiersStr = modifiers.joinToString(" ") { it.name.lowercase() }
     val modifierPrefix = if (modifiersStr.isNotEmpty()) "$modifiersStr " else ""
@@ -413,13 +382,10 @@ public fun CodeProperty.renderTo(builder: CodeBuilder) {
             builder.indent {
                 getter?.let {
                     when (it) {
-                        is CodeBlock.Expression ->
-                            appendLine("get() = ${it.expr.render()}")
+                        is CodeBlock.Expression -> appendLine("get() = ${it.expr.render()}")
 
                         is CodeBlock.Statements -> {
-                            block("get()") {
-                                it.statements.forEach { stmt -> appendLine(stmt) }
-                            }
+                            block("get()") { it.statements.forEach { stmt -> appendLine(stmt) } }
                         }
 
                         CodeBlock.Empty -> {}
@@ -427,8 +393,7 @@ public fun CodeProperty.renderTo(builder: CodeBuilder) {
                 }
                 setter?.let {
                     when (it) {
-                        is CodeBlock.Expression ->
-                            appendLine("set(value) = ${it.expr.render()}")
+                        is CodeBlock.Expression -> appendLine("set(value) = ${it.expr.render()}")
 
                         is CodeBlock.Statements -> {
                             block("set(value)") {
@@ -444,7 +409,7 @@ public fun CodeProperty.renderTo(builder: CodeBuilder) {
 
         initializer != null -> {
             builder.appendLine(
-                "$modifierPrefix$varOrVal $name: $typeStr = ${initializer!!.render()}",
+                "$modifierPrefix$varOrVal $name: $typeStr = ${initializer!!.render()}"
             )
         }
 
@@ -542,9 +507,7 @@ private fun String.escapePackageName(): String {
     }
 }
 
-/**
- * Set of Kotlin keywords that must be escaped in package names.
- */
+/** Set of Kotlin keywords that must be escaped in package names. */
 private val KOTLIN_KEYWORDS =
     setOf(
         "as",

@@ -11,6 +11,7 @@ package com.rsicarelli.fakt.compiler.api
  * - [DEBUG]: Detailed FIR + IR phase timing (troubleshooting)
  *
  * **Usage:**
+ *
  * ```kotlin
  * import com.rsicarelli.fakt.compiler.api.LogLevel
  *
@@ -20,9 +21,7 @@ package com.rsicarelli.fakt.compiler.api
  * ```
  */
 enum class LogLevel {
-    /**
-     * No output except errors. Use for CI/CD pipelines and production builds.
-     */
+    /** No output except errors. Use for CI/CD pipelines and production builds. */
     QUIET,
 
     /**
@@ -31,6 +30,7 @@ enum class LogLevel {
      * Use for local development and monitoring cache effectiveness.
      *
      * **Example output:**
+     *
      * ```
      * Fakt: 101 fakes generated in 35ms (50 cached)
      *   Interfaces: 101 | Classes: 0
@@ -46,6 +46,7 @@ enum class LogLevel {
      * Use for troubleshooting, performance analysis, and bug reports.
      *
      * **Example output:**
+     *
      * ```
      * FIR + IR trace
      * ├─ FIR Time: 6ms
@@ -54,8 +55,7 @@ enum class LogLevel {
      * │  └─ IR generation: FakeDataCacheImpl 83 LOC (766µs)
      * ```
      */
-    DEBUG,
-    ;
+    DEBUG;
 
     companion object {
         /**

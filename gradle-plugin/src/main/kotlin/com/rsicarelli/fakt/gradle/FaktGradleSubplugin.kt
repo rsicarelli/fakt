@@ -4,6 +4,7 @@
 
 package com.rsicarelli.fakt.gradle
 
+import java.util.Base64
 import kotlinx.serialization.json.Json
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
@@ -11,13 +12,12 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
-import java.util.Base64
 
 /**
  * Gradle plugin for Fakt compiler plugin integration.
  *
- * This is the main entry point that bridges Gradle build system with the Fakt compiler plugin.
- * It implements [KotlinCompilerPluginSupportPlugin] to hook into Kotlin's compilation lifecycle.
+ * This is the main entry point that bridges Gradle build system with the Fakt compiler plugin. It
+ * implements [KotlinCompilerPluginSupportPlugin] to hook into Kotlin's compilation lifecycle.
  *
  * ## Plugin Lifecycle
  *
@@ -41,6 +41,7 @@ import java.util.Base64
  * ## Modes of Operation
  *
  * **Generator Mode (default):**
+ *
  * ```kotlin
  * // build.gradle.kts
  * fakt {
@@ -51,6 +52,7 @@ import java.util.Base64
  * ```
  *
  * **Collector Mode (experimental):**
+ *
  * ```kotlin
  * // build.gradle.kts
  * fakt {
@@ -60,7 +62,6 @@ import java.util.Base64
  * ```
  *
  * ## Integration Points
- *
  * - **Extension DSL**: [FaktPluginExtension] provides `fakt { }` block
  * - **Compiler Plugin**: Serializes options to Fakt compiler plugin
  * - **Source Sets**: [SourceSetConfigurator] adds generated directories to test source sets
@@ -92,7 +93,7 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 // COLLECTOR MODE: Collect fakes from another project
                 val sourceProject = extension.collectFrom.get()
                 target.logger.info(
-                    "Fakt: Collector mode enabled - collecting fakes from ${sourceProject.name}",
+                    "Fakt: Collector mode enabled - collecting fakes from ${sourceProject.name}"
                 )
 
                 // Register collector tasks (handles KMP automatically)
@@ -125,6 +126,7 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
      * ```
      *
      * **Apply to main compilations only:**
+     *
      * ```
      * Single-platform JVM:
      *   "main" → true  ✅
@@ -141,9 +143,9 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
      *
      * ## Why Skip Test Compilations?
      *
-     * Test compilations don't contain `@Fake` annotations to process. They only USE the
-     * generated fakes that were created from main source sets. Applying the plugin to test
-     * compilations would:
+     * Test compilations don't contain `@Fake` annotations to process. They only USE the generated
+     * fakes that were created from main source sets. Applying the plugin to test compilations
+     * would:
      * - Waste compilation time
      * - Generate duplicate/empty output
      * - Cause circular dependencies
@@ -160,7 +162,7 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
 
         if (extension.collectFrom.isPresent) {
             project.logger.info(
-                "Fakt: Skipping compiler plugin for '${kotlinCompilation.name}' (collector mode)",
+                "Fakt: Skipping compiler plugin for '${kotlinCompilation.name}' (collector mode)"
             )
             return false
         }
@@ -185,20 +187,18 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
     /**
      * Applies Fakt compiler plugin to a specific Kotlin compilation.
      *
-     * This is called by Gradle for each compilation where [isApplicable] returned true.
-     * It serializes all configuration and metadata into compiler plugin options that
-     * are passed to the Fakt compiler plugin via command-line arguments.
+     * This is called by Gradle for each compilation where [isApplicable] returned true. It
+     * serializes all configuration and metadata into compiler plugin options that are passed to the
+     * Fakt compiler plugin via command-line arguments.
      *
      * ## Serialization Strategy
-     *
      * 1. **Configuration Options**: Direct string/boolean values
-     *    - `enabled`: true/false
-     *    - `logLevel`: INFO/DEBUG/TRACE/QUIET
-     *
+     *     - `enabled`: true/false
+     *     - `logLevel`: INFO/DEBUG/TRACE/QUIET
      * 2. **Source Set Context**: Base64-encoded JSON
-     *    - Contains: compilation metadata, source set hierarchy, output directories
-     *    - Serialized with kotlinx.serialization
-     *    - Encoded to avoid special character issues in command-line arguments
+     *     - Contains: compilation metadata, source set hierarchy, output directories
+     *     - Serialized with kotlinx.serialization
+     *     - Encoded to avoid special character issues in command-line arguments
      *
      * ## Example Compiler Options
      *
@@ -214,11 +214,15 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
      * @see SourceSetDiscovery.buildContext
      * @see FaktPluginExtension
      */
-    override fun applyToCompilation(kotlinCompilation: KotlinCompilation<*>): Provider<List<SubpluginOption>> {
+    override fun applyToCompilation(
+        kotlinCompilation: KotlinCompilation<*>
+    ): Provider<List<SubpluginOption>> {
         val project = kotlinCompilation.project
         val extension = project.extensions.getByType(FaktPluginExtension::class.java)
 
-        project.logger.info("Fakt: Applying compiler plugin to compilation ${kotlinCompilation.name}")
+        project.logger.info(
+            "Fakt: Applying compiler plugin to compilation ${kotlinCompilation.name}"
+        )
 
         return project.provider {
             buildList {
@@ -229,13 +233,10 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                     SubpluginOption(
                         key = "enableCallHistory",
                         value = extension.enableCallHistory.get().toString(),
-                    ),
+                    )
                 )
 
-                val buildDir =
-                    project.layout.buildDirectory
-                        .get()
-                        .asFile.absolutePath
+                val buildDir = project.layout.buildDirectory.get().asFile.absolutePath
                 val context = SourceSetDiscovery.buildContext(kotlinCompilation, buildDir)
 
                 // Serialize context to Base64-encoded JSON for compiler plugin

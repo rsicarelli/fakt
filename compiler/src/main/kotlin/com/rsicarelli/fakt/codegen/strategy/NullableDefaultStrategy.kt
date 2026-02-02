@@ -10,8 +10,8 @@ import com.rsicarelli.fakt.codegen.model.CodeType
  *
  * All nullable types default to `null`, regardless of the inner type.
  *
- * This strategy should have the highest priority in composition,
- * as nullable types always have a clear default value.
+ * This strategy should have the highest priority in composition, as nullable types always have a
+ * clear default value.
  *
  * Example:
  * ```kotlin
@@ -28,9 +28,7 @@ public class NullableDefaultStrategy : DefaultValueStrategy {
     override fun supports(type: CodeType): Boolean = type is CodeType.Nullable
 
     override fun defaultValue(type: CodeType): CodeExpression {
-        require(supports(type)) {
-            "NullableDefaultStrategy does not support type: $type"
-        }
+        require(supports(type)) { "NullableDefaultStrategy does not support type: $type" }
 
         return CodeExpression.Raw("null")
     }

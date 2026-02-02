@@ -11,14 +11,15 @@ import java.util.concurrent.atomic.AtomicBoolean
  *
  * ## Purpose
  *
- * In KMP projects, identical FIR analysis runs N times (once per platform).
- * This manager enables caching analysis results from metadata compilation so
- * platform compilations can skip redundant analysis.
+ * In KMP projects, identical FIR analysis runs N times (once per platform). This manager enables
+ * caching analysis results from metadata compilation so platform compilations can skip redundant
+ * analysis.
  *
  * ## Operation Modes
- *
- * - **Producer Mode** (`metadataOutputPath` set): Metadata compilation writes cache after FIR analysis
- * - **Consumer Mode** (`metadataCachePath` set): Platform compilations read cache and skip FIR analysis
+ * - **Producer Mode** (`metadataOutputPath` set): Metadata compilation writes cache after FIR
+ *   analysis
+ * - **Consumer Mode** (`metadataCachePath` set): Platform compilations read cache and skip FIR
+ *   analysis
  *
  * ## Thread Safety
  *
@@ -51,30 +52,27 @@ class MetadataCacheManager(
     private var lastWriteResult: CacheWriteResult? = null
     private var savedFirTimeNanos: Long = 0L
 
-    /**
-     * True if operating in producer mode (metadata compilation writes cache).
-     */
-    val isProducerMode: Boolean get() = metadataOutputPath != null
+    /** True if operating in producer mode (metadata compilation writes cache). */
+    val isProducerMode: Boolean
+        get() = metadataOutputPath != null
 
-    /**
-     * True if operating in consumer mode (platform compilation reads cache).
-     */
-    val isConsumerMode: Boolean get() = metadataCachePath != null
+    /** True if operating in consumer mode (platform compilation reads cache). */
+    val isConsumerMode: Boolean
+        get() = metadataCachePath != null
 
-    /**
-     * True if caching is enabled (either producer or consumer mode).
-     */
-    val isEnabled: Boolean get() = isProducerMode || isConsumerMode
+    /** True if caching is enabled (either producer or consumer mode). */
+    val isEnabled: Boolean
+        get() = isProducerMode || isConsumerMode
 
     /**
      * Try to load cached metadata into storage.
      *
-     * Called at the start of FIR phase before analysis.
-     * If cache is valid and loaded, FIR analysis can be skipped.
+     * Called at the start of FIR phase before analysis. If cache is valid and loaded, FIR analysis
+     * can be skipped.
      *
-     * Note: This method is resilient to exceptions - if any error occurs during
-     * cache loading, it returns false and falls back to regular FIR analysis.
-     * This prevents cache issues from crashing the compilation.
+     * Note: This method is resilient to exceptions - if any error occurs during cache loading, it
+     * returns false and falls back to regular FIR analysis. This prevents cache issues from
+     * crashing the compilation.
      *
      * @param storage FirMetadataStorage to populate from cache
      * @return true if cache was loaded successfully and FIR analysis can be skipped
@@ -121,8 +119,8 @@ class MetadataCacheManager(
     /**
      * Get the saved FIR time from cache load.
      *
-     * Returns the total FIR validation time that was saved by loading from cache.
-     * This is used for unified logging in the Fakt Trace tree.
+     * Returns the total FIR validation time that was saved by loading from cache. This is used for
+     * unified logging in the Fakt Trace tree.
      *
      * @return Saved FIR time in nanoseconds, or 0 if no cache was loaded
      */

@@ -48,26 +48,14 @@ internal class GenericTypeHandler {
             }
 
             // NoGenerics pattern: Use specific type erasure rules for common types
-            packageName == "kotlin.collections" && className in
-                listOf(
-                    "List",
-                    "MutableList",
-                )
-            -> "List<Any>"
+            packageName == "kotlin.collections" && className in listOf("List", "MutableList") ->
+                "List<Any>"
 
-            packageName == "kotlin.collections" && className in
-                listOf(
-                    "Set",
-                    "MutableSet",
-                )
-            -> "Set<Any>"
+            packageName == "kotlin.collections" && className in listOf("Set", "MutableSet") ->
+                "Set<Any>"
 
-            packageName == "kotlin.collections" && className in
-                listOf(
-                    "Map",
-                    "MutableMap",
-                )
-            -> "Map<Any, Any>"
+            packageName == "kotlin.collections" && className in listOf("Map", "MutableMap") ->
+                "Map<Any, Any>"
 
             packageName == "kotlin.collections" && className == "Collection" -> "Collection<Any>"
             packageName == "kotlin" && className == "Result" -> "Result<Any>"
@@ -77,8 +65,8 @@ internal class GenericTypeHandler {
     }
 
     /**
-     * Converts type arguments to string representation.
-     * Preserves star projections (*) for type-safe override signatures.
+     * Converts type arguments to string representation. Preserves star projections (*) for
+     * type-safe override signatures.
      *
      * @param arguments List of type arguments to convert
      * @param preserveTypeParameters Whether to preserve generic type parameters

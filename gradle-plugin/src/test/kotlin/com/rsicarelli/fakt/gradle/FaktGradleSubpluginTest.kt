@@ -2,15 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.gradle
 
-import org.gradle.testfixtures.ProjectBuilder
-import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import org.gradle.testfixtures.ProjectBuilder
+import org.junit.jupiter.api.Test
 
-/**
- * Unit tests for Fakt Gradle plugin.
- */
+/** Unit tests for Fakt Gradle plugin. */
 class FaktGradleSubpluginTest {
     @Test
     fun `plugin applies successfully to project`() {
@@ -65,10 +63,7 @@ class FaktGradleSubpluginTest {
         val extension = project.extensions.getByType(FaktPluginExtension::class.java)
 
         // Then: enableCallHistory should default to true
-        assertTrue(
-            extension.enableCallHistory.get(),
-            "enableCallHistory should default to true",
-        )
+        assertTrue(extension.enableCallHistory.get(), "enableCallHistory should default to true")
     }
 
     @Test

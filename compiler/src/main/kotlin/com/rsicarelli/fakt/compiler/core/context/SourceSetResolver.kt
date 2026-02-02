@@ -16,9 +16,7 @@ import com.rsicarelli.fakt.compiler.api.SourceSetInfo
  *
  * @param context The source set context from Gradle plugin (via CommandLineProcessor)
  */
-class SourceSetResolver(
-    private val context: SourceSetContext,
-) {
+class SourceSetResolver(private val context: SourceSetContext) {
     /**
      * Resolves a source set by name.
      *
@@ -26,9 +24,7 @@ class SourceSetResolver(
      * @return SourceSetInfo if found, null otherwise
      */
     fun resolveSourceSet(sourceSetName: String): SourceSetInfo? =
-        context.allSourceSets.firstOrNull {
-            it.name == sourceSetName
-        }
+        context.allSourceSets.firstOrNull { it.name == sourceSetName }
 
     /**
      * Gets the default source set for this compilation.

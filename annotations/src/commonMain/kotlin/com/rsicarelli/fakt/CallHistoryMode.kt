@@ -5,14 +5,14 @@ package com.rsicarelli.fakt
 /**
  * Controls call history and call count generation for fake implementations.
  *
- * Call history tracking enables verification of method invocations in tests,
- * similar to mock verification in traditional mocking frameworks. When enabled,
- * generated fakes include:
+ * Call history tracking enables verification of method invocations in tests, similar to mock
+ * verification in traditional mocking frameworks. When enabled, generated fakes include:
  * - Call count properties (e.g., `getMethodNameCallCount`)
  * - Call history storage for argument capture
  * - Verification DSL (`verify { method.wasCalledWith(...) }`)
  *
  * ## Usage
+ *
  * ```kotlin
  * // Follow plugin default (recommended for most cases)
  * @Fake
@@ -33,8 +33,8 @@ public enum class CallHistoryMode {
     /**
      * Use the plugin-level default configuration.
      *
-     * This is the default behavior when `callHistory` is not specified.
-     * The plugin default can be configured in `build.gradle.kts`:
+     * This is the default behavior when `callHistory` is not specified. The plugin default can be
+     * configured in `build.gradle.kts`:
      * ```kotlin
      * fakt {
      *     enableCallHistory.set(true)  // or false
@@ -66,8 +66,8 @@ public enum class CallHistoryMode {
      * - Reducing generated code size
      * - Fakes are only used for stubbing, not verification
      *
-     * Generated fakes will only include behavior configuration,
-     * without any call tracking infrastructure.
+     * Generated fakes will only include behavior configuration, without any call tracking
+     * infrastructure.
      */
     DISABLED,
 }

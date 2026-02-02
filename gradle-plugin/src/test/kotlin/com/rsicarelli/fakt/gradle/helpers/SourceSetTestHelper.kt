@@ -6,13 +6,11 @@ import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.api.SourceSetInfo
 
 /**
- * Test helper for creating SourceSetContext instances for testing.
- * Provides factory methods that simulate real Gradle/KMP scenarios.
+ * Test helper for creating SourceSetContext instances for testing. Provides factory methods that
+ * simulate real Gradle/KMP scenarios.
  */
 object SourceSetTestHelper {
-    /**
-     * Create a simple JVM test context (jvmTest → commonMain).
-     */
+    /** Create a simple JVM test context (jvmTest → commonMain). */
     fun createSimpleJvmTestContext(
         compilationName: String,
         targetName: String,
@@ -34,9 +32,7 @@ object SourceSetTestHelper {
             commonTestOutputDirectory = commonTestOutputDirectory,
         )
 
-    /**
-     * Create a simple JVM main context (jvmMain → commonMain).
-     */
+    /** Create a simple JVM main context (jvmMain → commonMain). */
     fun createSimpleJvmMainContext(
         compilationName: String,
         targetName: String,
@@ -59,8 +55,8 @@ object SourceSetTestHelper {
         )
 
     /**
-     * Create an iOS KMP context with full hierarchy:
-     * iosX64Main → iosMain → appleMain → nativeMain → commonMain
+     * Create an iOS KMP context with full hierarchy: iosX64Main → iosMain → appleMain → nativeMain
+     * → commonMain
      */
     fun createIosKmpContext(
         compilationName: String,
@@ -87,8 +83,7 @@ object SourceSetTestHelper {
         )
 
     /**
-     * Create a context with multi-parent source set:
-     * appleTest → iosTest, macosTest → commonTest
+     * Create a context with multi-parent source set: appleTest → iosTest, macosTest → commonTest
      */
     fun createMultiParentContext(
         compilationName: String,

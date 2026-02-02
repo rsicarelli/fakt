@@ -8,9 +8,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotSame
 import kotlin.test.assertTrue
 
-/**
- * Tests for code model immutability and structure.
- */
+/** Tests for code model immutability and structure. */
 class CodeModelTest {
     @Test
     fun `GIVEN CodeFile WHEN adding declaration THEN returns new instance with preserved immutability`() {
@@ -87,10 +85,7 @@ class CodeModelTest {
         val function =
             CodeFunction(
                 name = "findById",
-                parameters =
-                    listOf(
-                        CodeParameter("id", CodeType.Simple("String")),
-                    ),
+                parameters = listOf(CodeParameter("id", CodeType.Simple("String"))),
                 returnType = CodeType.Nullable(CodeType.Simple("User")),
                 body = CodeBlock.Statements(listOf("return null")),
                 modifiers = setOf(CodeModifier.OVERRIDE),

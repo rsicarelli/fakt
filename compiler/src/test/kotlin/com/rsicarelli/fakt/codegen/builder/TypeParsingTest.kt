@@ -11,8 +11,8 @@ import kotlin.test.assertTrue
 /**
  * Comprehensive tests for type parsing.
  *
- * Tests parseType() function which converts string type representations
- * into structured CodeType instances.
+ * Tests parseType() function which converts string type representations into structured CodeType
+ * instances.
  */
 class TypeParsingTest {
     // ========================================

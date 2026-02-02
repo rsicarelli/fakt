@@ -5,13 +5,13 @@ package com.rsicarelli.fakt.codegen.extensions
 import com.rsicarelli.fakt.codegen.builder.codeFile
 import com.rsicarelli.fakt.codegen.renderer.renderToString
 import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
-import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for CallHistoryGenerator functions.
@@ -145,11 +145,7 @@ class CallHistoryGeneratorTest {
         // GIVEN
         val interfaceName = "OrderService"
         val methodName = "createOrder"
-        val params =
-            listOf(
-                Triple("userId", "String", false),
-                Triple("amount", "Int", false),
-            )
+        val params = listOf(Triple("userId", "String", false), Triple("amount", "Int", false))
 
         // WHEN
         val result = buildHistoryRecordExpression(interfaceName, methodName, params)
@@ -198,9 +194,8 @@ class CallHistoryGeneratorTest {
 
         // WHEN
         val result =
-            codeFile("") {
-                unitVerifierClass(interfaceName, methodName, FirVisibility.PUBLIC)
-            }.renderToString()
+            codeFile("") { unitVerifierClass(interfaceName, methodName, FirVisibility.PUBLIC) }
+                .renderToString()
 
         // THEN
         assertTrue(result.contains("class AuthServiceLogoutCallVerifier"))
@@ -223,9 +218,8 @@ class CallHistoryGeneratorTest {
 
         // WHEN
         val result =
-            codeFile("") {
-                unitVerifierClass(interfaceName, methodName, FirVisibility.INTERNAL)
-            }.renderToString()
+            codeFile("") { unitVerifierClass(interfaceName, methodName, FirVisibility.INTERNAL) }
+                .renderToString()
 
         // THEN
         assertTrue(result.contains("internal class InternalServiceDoWorkCallVerifier"))
@@ -247,13 +241,22 @@ class CallHistoryGeneratorTest {
         // WHEN
         val result =
             codeFile("") {
-                unitVerifyFunction(fakeClassName, interfaceName, methodName, FirVisibility.PUBLIC, emptyList())
-            }.renderToString()
+                    unitVerifyFunction(
+                        fakeClassName,
+                        interfaceName,
+                        methodName,
+                        FirVisibility.PUBLIC,
+                        emptyList(),
+                    )
+                }
+                .renderToString()
 
         // THEN
         assertTrue(result.contains("inline fun FakeAuthServiceImpl.verifyLogout"))
         assertTrue(result.contains("block: AuthServiceLogoutCallVerifier.() -> Unit"))
-        assertTrue(result.contains("AuthServiceLogoutCallVerifier(_logoutCalls.value).apply(block)"))
+        assertTrue(
+            result.contains("AuthServiceLogoutCallVerifier(_logoutCalls.value).apply(block)")
+        )
     }
 
     @Test
@@ -267,8 +270,15 @@ class CallHistoryGeneratorTest {
         // WHEN
         val result =
             codeFile("") {
-                unitVerifyFunction(fakeClassName, interfaceName, methodName, FirVisibility.PUBLIC, typeParams)
-            }.renderToString()
+                    unitVerifyFunction(
+                        fakeClassName,
+                        interfaceName,
+                        methodName,
+                        FirVisibility.PUBLIC,
+                        typeParams,
+                    )
+                }
+                .renderToString()
 
         // THEN
         assertTrue(result.contains("<T>"))
@@ -291,11 +301,7 @@ class CallHistoryGeneratorTest {
                     params = listOf(Triple("id", "String", false)),
                     returnType = "User",
                 ),
-                MethodSpec(
-                    name = "logout",
-                    params = emptyList(),
-                    returnType = "Unit",
-                ),
+                MethodSpec(name = "logout", params = emptyList(), returnType = "Unit"),
                 MethodSpec(
                     name = "log",
                     params = listOf(Triple("messages", "Array<out String>", true)),
@@ -321,15 +327,24 @@ class CallHistoryGeneratorTest {
         // Render via a temp file
         val tempFile =
             codeFile("test.package") {
-                addCallHistoryComponents(fakeClassName, interfaceName, methods, FirVisibility.PUBLIC)
+                addCallHistoryComponents(
+                    fakeClassName,
+                    interfaceName,
+                    methods,
+                    FirVisibility.PUBLIC,
+                )
             }
         val rendered = tempFile.renderToString()
 
         // THEN
         // Data class only for getUser (has params)
         assertTrue(rendered.contains("data class UserServiceGetUserCall"))
-        assertFalse(rendered.contains("data class UserServiceLogoutCall")) // No data class for 0-param
-        assertFalse(rendered.contains("data class UserServiceLogCall")) // No data class for vararg-only
+        assertFalse(
+            rendered.contains("data class UserServiceLogoutCall")
+        ) // No data class for 0-param
+        assertFalse(
+            rendered.contains("data class UserServiceLogCall")
+        ) // No data class for vararg-only
 
         // Full verifier for getUser
         assertTrue(rendered.contains("class UserServiceGetUserCallVerifier"))
@@ -378,8 +393,15 @@ class CallHistoryGeneratorTest {
         // WHEN
         val result =
             codeFile("") {
-                callDataClass(interfaceName, methodName, params, FirVisibility.PUBLIC, typeParams)
-            }.renderToString()
+                    callDataClass(
+                        interfaceName,
+                        methodName,
+                        params,
+                        FirVisibility.PUBLIC,
+                        typeParams,
+                    )
+                }
+                .renderToString()
 
         // THEN
         assertTrue(result.contains("data class RepositorySaveCall"))
@@ -398,8 +420,15 @@ class CallHistoryGeneratorTest {
         // WHEN
         val result =
             codeFile("") {
-                callDataClass(interfaceName, methodName, params, FirVisibility.PUBLIC, typeParams)
-            }.renderToString()
+                    callDataClass(
+                        interfaceName,
+                        methodName,
+                        params,
+                        FirVisibility.PUBLIC,
+                        typeParams,
+                    )
+                }
+                .renderToString()
 
         // THEN
         assertTrue(result.contains("val items: List<Any?>"))
@@ -410,18 +439,21 @@ class CallHistoryGeneratorTest {
         // GIVEN
         val interfaceName = "MapService"
         val methodName = "transform"
-        val params =
-            listOf(
-                Triple("key", "K", false),
-                Triple("value", "V", false),
-            )
+        val params = listOf(Triple("key", "K", false), Triple("value", "V", false))
         val typeParams = setOf("K", "V")
 
         // WHEN
         val result =
             codeFile("") {
-                callDataClass(interfaceName, methodName, params, FirVisibility.PUBLIC, typeParams)
-            }.renderToString()
+                    callDataClass(
+                        interfaceName,
+                        methodName,
+                        params,
+                        FirVisibility.PUBLIC,
+                        typeParams,
+                    )
+                }
+                .renderToString()
 
         // THEN
         assertTrue(result.contains("val key: Any?"))
@@ -442,8 +474,15 @@ class CallHistoryGeneratorTest {
         // WHEN
         val result =
             codeFile("") {
-                verifierClass(interfaceName, methodName, params, FirVisibility.PUBLIC, emptySet())
-            }.renderToString()
+                    verifierClass(
+                        interfaceName,
+                        methodName,
+                        params,
+                        FirVisibility.PUBLIC,
+                        emptySet(),
+                    )
+                }
+                .renderToString()
 
         // THEN
         assertTrue(result.contains("fun wasCalledInOrder(vararg ids: String)"))
@@ -455,17 +494,20 @@ class CallHistoryGeneratorTest {
         // GIVEN
         val interfaceName = "OrderService"
         val methodName = "create"
-        val params =
-            listOf(
-                Triple("userId", "String", false),
-                Triple("amount", "Int", false),
-            )
+        val params = listOf(Triple("userId", "String", false), Triple("amount", "Int", false))
 
         // WHEN
         val result =
             codeFile("") {
-                verifierClass(interfaceName, methodName, params, FirVisibility.PUBLIC, emptySet())
-            }.renderToString()
+                    verifierClass(
+                        interfaceName,
+                        methodName,
+                        params,
+                        FirVisibility.PUBLIC,
+                        emptySet(),
+                    )
+                }
+                .renderToString()
 
         // THEN
         assertFalse(result.contains("wasCalledInOrder"))

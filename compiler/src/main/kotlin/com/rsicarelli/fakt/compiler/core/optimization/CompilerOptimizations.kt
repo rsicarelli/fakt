@@ -7,7 +7,8 @@ import com.rsicarelli.fakt.compiler.core.types.TypeInfo
 import java.io.File
 
 /**
- * Provides compiler optimization capabilities including custom annotation support and incremental compilation.
+ * Provides compiler optimization capabilities including custom annotation support and incremental
+ * compilation.
  *
  * This interface enables efficient fake generation by supporting:
  * - Custom annotation detection for enterprise flexibility
@@ -15,8 +16,9 @@ import java.io.File
  * - Incremental compilation to skip unchanged types
  * - Change detection based on type signatures
  *
- * Companies can configure their own annotations instead of being limited to the default `@Fake` annotation,
- * providing better ownership and protection against breaking changes in the Fakt library.
+ * Companies can configure their own annotations instead of being limited to the default `@Fake`
+ * annotation, providing better ownership and protection against breaking changes in the Fakt
+ * library.
  *
  * @see TypeInfo
  */
@@ -32,8 +34,8 @@ interface CompilerOptimizations {
     /**
      * Indexes a type for efficient lookup and processing.
      *
-     * This method stores type metadata to enable fast annotation-based discovery
-     * and change detection during subsequent compilations.
+     * This method stores type metadata to enable fast annotation-based discovery and change
+     * detection during subsequent compilations.
      *
      * @param type The type information to index
      */
@@ -50,8 +52,8 @@ interface CompilerOptimizations {
     /**
      * Determines if a type needs to be regenerated based on signature changes.
      *
-     * This method enables incremental compilation by detecting when a type's
-     * signature has changed since the last generation.
+     * This method enables incremental compilation by detecting when a type's signature has changed
+     * since the last generation.
      *
      * @param type The type to check for changes
      * @return `true` if the type needs regeneration, `false` if it can be skipped
@@ -61,8 +63,8 @@ interface CompilerOptimizations {
     /**
      * Records that a type has been successfully generated.
      *
-     * This method updates the internal cache to mark a type as up-to-date,
-     * enabling future incremental compilation optimizations.
+     * This method updates the internal cache to mark a type as up-to-date, enabling future
+     * incremental compilation optimizations.
      *
      * @param type The type that was successfully generated
      */
@@ -83,10 +85,12 @@ interface CompilerOptimizations {
          * across multiple compilation tasks (KMP targets). This prevents redundant generation when
          * multiple targets (jvm, js, native, metadata, etc.) compile the same interface.
          *
-         * @param fakeAnnotations List of fully qualified annotation names to process.
-         *                       Defaults to `["com.rsicarelli.fakt.Fake"]`
-         * @param outputDir Output directory for generated code (used to determine cache file location)
-         * @return An optimization instance configured for the specified annotations with file-based caching
+         * @param fakeAnnotations List of fully qualified annotation names to process. Defaults to
+         *   `["com.rsicarelli.fakt.Fake"]`
+         * @param outputDir Output directory for generated code (used to determine cache file
+         *   location)
+         * @return An optimization instance configured for the specified annotations with file-based
+         *   caching
          */
         operator fun invoke(
             fakeAnnotations: List<String> = listOf("com.rsicarelli.fakt.Fake"),
@@ -106,9 +110,7 @@ interface CompilerOptimizations {
                             ?.parentFile
                             ?.resolve("cache")
                             ?.resolve("ir-signatures.txt")
-                            ?.also {
-                                it.parentFile?.mkdirs()
-                            }
+                            ?.also { it.parentFile?.mkdirs() }
                     }
 
                 // Load previously generated signatures from file
@@ -125,7 +127,7 @@ interface CompilerOptimizations {
                             }
                         } catch (e: Exception) {
                             logger.warn(
-                                "Cache unavailable: Failed to load signatures from ${cacheFile.name}: ${e.message}",
+                                "Cache unavailable: Failed to load signatures from ${cacheFile.name}: ${e.message}"
                             )
                             logger.debug("Full cache load error: ${e.stackTraceToString()}")
                         }
@@ -138,29 +140,29 @@ interface CompilerOptimizations {
 
                     try {
                         // Append signature to file (synchronized to avoid concurrent writes)
-                        synchronized(cacheFile) {
-                            cacheFile.appendText("$signature\n")
-                        }
+                        synchronized(cacheFile) { cacheFile.appendText("$signature\n") }
                     } catch (e: Exception) {
-                        logger.warn("Cache update failed: Cannot write signature to ${cacheFile.name}: ${e.message}")
+                        logger.warn(
+                            "Cache update failed: Cannot write signature to ${cacheFile.name}: ${e.message}"
+                        )
                         logger.debug("Full cache write error: ${e.stackTraceToString()}")
                     }
                 }
 
-                override fun isConfiguredFor(annotation: String): Boolean = annotation in fakeAnnotations
+                override fun isConfiguredFor(annotation: String): Boolean =
+                    annotation in fakeAnnotations
 
                 override fun indexType(type: TypeInfo) {
                     indexedTypes.add(type)
                 }
 
                 override fun findTypesWithAnnotation(annotation: String): List<TypeInfo> =
-                    indexedTypes.filter { type ->
-                        type.annotations.any { it == annotation }
-                    }
+                    indexedTypes.filter { type -> type.annotations.any { it == annotation } }
 
                 override fun needsRegeneration(type: TypeInfo): Boolean {
                     // Check file-based cache to skip regeneration across compilation tasks
-                    // This prevents redundant generation when multiple KMP targets compile the same interface
+                    // This prevents redundant generation when multiple KMP targets compile the same
+                    // interface
                     return type.signature !in generatedSignatures
                 }
 
