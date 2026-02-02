@@ -25,8 +25,8 @@ import org.gradle.kotlin.dsl.configure
 fun Project.applySpotlessPredeclare() {
     // Versions must match gradle/libs.versions.toml
     // Hardcoded to avoid eager property resolution (Configuration Cache friendly)
-    val ktfmtVersion = "0.56"
-    val gjfVersion = "1.28.0"
+    val ktfmtVersion = "0.61"
+    val gjfVersion = "1.33.0"
 
     configure<SpotlessExtension> {
         predeclareDeps()
@@ -34,10 +34,10 @@ fun Project.applySpotlessPredeclare() {
 
     configure<SpotlessExtensionPredeclare> {
         kotlin {
-            ktfmt(ktfmtVersion).googleStyle().configure { it.setRemoveUnusedImports(true) }
+            ktfmt(ktfmtVersion).kotlinlangStyle().configure { it.setRemoveUnusedImports(true) }
         }
         kotlinGradle {
-            ktfmt(ktfmtVersion).googleStyle().configure { it.setRemoveUnusedImports(true) }
+            ktfmt(ktfmtVersion).kotlinlangStyle().configure { it.setRemoveUnusedImports(true) }
         }
         java {
             googleJavaFormat(gjfVersion).reorderImports(true).reflowLongStrings(true)
