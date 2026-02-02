@@ -819,6 +819,85 @@ fun `GIVEN fake WHEN calling from multiple threads THEN counts correctly`() = ru
 
 ---
 
+### Configuring Call History
+
+By default, Fakt generates full call tracking for every fake. You can disable this for lightweight fakes that don't need verification.
+
+#### Project-Wide Default
+
+Configure the default for all fakes in your project:
+
+```kotlin
+// build.gradle.kts
+fakt {
+    enableCallHistory.set(false)  // Disable for all fakes by default
+}
+```
+
+#### Per-Interface Override
+
+Override the project default for specific interfaces:
+
+```kotlin
+import com.rsicarelli.fakt.CallHistoryMode
+
+// Disable call history for this interface (lightweight fake)
+@Fake(callHistory = CallHistoryMode.DISABLED)
+interface Logger {
+    fun log(message: String)
+}
+
+// Enable call history (even if plugin default is disabled)
+@Fake(callHistory = CallHistoryMode.ENABLED)
+interface PaymentService {
+    fun processPayment(amount: Double): Result<Receipt>
+}
+
+// Follow plugin default
+@Fake  // Same as @Fake(callHistory = CallHistoryMode.DEFAULT)
+interface UserService { ... }
+```
+
+#### When to Disable Call History
+
+Disable call history when:
+
+- Fakes are only used for stubbing, not verification
+- You want smaller generated code
+- Migrating legacy tests that don't need call tracking
+
+Enable call history when:
+
+- You need to verify method calls (`wasCalledTimes`, `wasCalledWith`)
+- Migrating from mocking frameworks (MockK, Mockito)
+- Testing interaction patterns
+
+#### What Changes
+
+**With call history enabled (default):**
+
+```kotlin
+val fake = fakeLogger()
+fake.log("message")
+
+assertEquals(1, fake.logCallCount)  // Available
+fake.verifyLog {                     // Available
+    assertTrue(wasCalledWith("message"))
+}
+```
+
+**With call history disabled:**
+
+```kotlin
+val fake = fakeLogger()
+fake.log("message")
+
+// fake.logCallCount         // Not generated
+// fake.verifyLog { ... }    // Not generated
+```
+
+---
+
 ## Advanced Patterns
 
 ### Inheritance

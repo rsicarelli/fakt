@@ -115,6 +115,9 @@ fakt {
     // Logging verbosity: QUIET, INFO, DEBUG
     logLevel.set(LogLevel.DEBUG)
 
+    // Call history generation (default: true)
+    enableCallHistory.set(true)  // Set to false for lightweight fakes
+
     // Use FIR-based analysis (experimental)
     useFirAnalysis.set(true)
 }
