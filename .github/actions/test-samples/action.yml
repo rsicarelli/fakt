@@ -55,3 +55,16 @@ runs:
     - name: Check kmp-multi-module sample (validations)
       shell: bash
       run: ./gradlew -p samples/kmp-multi-module check
+
+    # Test fake-publishing sample (two-project workflow)
+    - name: Publish fake-publishing publisher to Maven Local
+      shell: bash
+      run: ./gradlew -p samples/fake-publishing/kmp-publisher publishToMavenLocal
+
+    - name: Test fake-publishing consumer (all targets)
+      shell: bash
+      run: ./gradlew -p samples/fake-publishing/kmp-consumer allTests --continue
+
+    - name: Check fake-publishing consumer (validations)
+      shell: bash
+      run: ./gradlew -p samples/fake-publishing/kmp-consumer check
