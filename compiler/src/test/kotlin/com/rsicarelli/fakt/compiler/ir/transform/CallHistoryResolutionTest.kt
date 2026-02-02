@@ -31,18 +31,22 @@ class CallHistoryResolutionTest {
      * ): Boolean
      */
     private val resolveMethod by lazy {
-        val companionClass = Class.forName(
-            "com.rsicarelli.fakt.compiler.ir.transform.IrGenerationMetadataKt"
-        )
-        companionClass.getDeclaredMethod(
-            "resolveCallHistoryEnabled",
-            FirCallHistoryMode::class.java,
-            Boolean::class.javaPrimitiveType
-        ).apply { isAccessible = true }
+        val companionClass =
+            Class.forName(
+                "com.rsicarelli.fakt.compiler.ir.transform.IrGenerationMetadataKt",
+            )
+        companionClass
+            .getDeclaredMethod(
+                "resolveCallHistoryEnabled",
+                FirCallHistoryMode::class.java,
+                Boolean::class.javaPrimitiveType,
+            ).apply { isAccessible = true }
     }
 
-    private fun resolve(mode: FirCallHistoryMode, pluginDefault: Boolean): Boolean =
-        resolveMethod.invoke(null, mode, pluginDefault) as Boolean
+    private fun resolve(
+        mode: FirCallHistoryMode,
+        pluginDefault: Boolean,
+    ): Boolean = resolveMethod.invoke(null, mode, pluginDefault) as Boolean
 
     // ==========================================
     // ENABLED mode tests - always returns true
