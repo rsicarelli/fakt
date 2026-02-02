@@ -267,6 +267,17 @@ Call counts are derived from thread-safe internal state.
 
 </td>
 </tr>
+<tr>
+<td><strong>Configurable</strong></td>
+<td>
+
+```kotlin
+@Fake(callHistory = CallHistoryMode.DISABLED)
+interface Logger { ... }  // Lightweight, no tracking
+```
+
+</td>
+</tr>
 </table>
 
 ---

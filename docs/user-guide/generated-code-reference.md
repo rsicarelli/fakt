@@ -46,6 +46,9 @@ class Fake{Interface}Config(private val fake: Fake{Interface}Impl) {
 
 ## Call History Data Classes
 
+!!! note "Call History is Configurable"
+    The classes and properties described in this section are only generated when call history is enabled. See [Plugin Configuration](plugin-configuration.md#call-history-configuration) for details.
+
 For each method with parameters, Fakt generates a data class capturing all arguments:
 
 ```kotlin
@@ -144,6 +147,28 @@ fake.verifyTrack {
     assertTrue(neverCalledWith("error"))
 }
 ```
+
+---
+
+## Generated Code with Call History Disabled
+
+When call history is disabled via `enableCallHistory.set(false)` or `@Fake(callHistory = CallHistoryMode.DISABLED)`, generated fakes are simplified:
+
+**Generated:**
+
+- `Fake{Interface}Impl` - Implementation class
+- `fake{Interface}()` - Factory function
+- `Fake{Interface}Config` - Configuration DSL
+
+**Not Generated:**
+
+- `{method}CallCount` properties
+- `{method}CallHistory` lists
+- `Fake{Interface}{Method}Call` data classes
+- `Fake{Interface}{Method}Verifier` classes
+- `verify{Method}` extension functions
+
+This results in smaller, simpler generated code for fakes that only need stubbing.
 
 ---
 

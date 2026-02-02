@@ -23,6 +23,9 @@ fakt {
     // Control logging verbosity (default: INFO)
     logLevel.set(LogLevel.INFO)  // Options: QUIET, INFO, DEBUG
 
+    // Control call history generation (default: true)
+    enableCallHistory.set(true)  // Set to false for lightweight fakes
+
     // Multi-module: Collect fakes from another module (default: not set)
     @OptIn(com.rsicarelli.fakt.compiler.api.ExperimentalFaktMultiModule::class)
     collectFakesFrom(projects.core.analytics)
@@ -56,6 +59,19 @@ fakt {
 ```kotlin
 fakt {
     logLevel.set(LogLevel.DEBUG)
+}
+```
+
+</td>
+</tr>
+<tr>
+<td><strong>enableCallHistory</strong></td>
+<td><code>true</code></td>
+<td>
+
+```kotlin
+fakt {
+    enableCallHistory.set(false)
 }
 ```
 
@@ -162,6 +178,76 @@ fakt {
 </td>
 </tr>
 </table>
+
+---
+
+## Call History Configuration
+
+Control whether generated fakes include call tracking and verification capabilities.
+
+<table>
+<tr><th>Setting</th><th>Description</th><th>Example</th></tr>
+<tr>
+<td><strong>true</strong><br>(default)</td>
+<td>
+
+Full call tracking with:
+
+- `methodNameCallCount` properties
+- `methodNameCallHistory` lists
+- `verifyMethodName { }` DSL
+
+</td>
+<td>
+
+```kotlin
+fakt {
+    enableCallHistory.set(true)
+}
+```
+
+</td>
+</tr>
+<tr>
+<td><strong>false</strong></td>
+<td>
+
+Lightweight fakes with only behavior configuration. No call tracking overhead.
+
+</td>
+<td>
+
+```kotlin
+fakt {
+    enableCallHistory.set(false)
+}
+```
+
+</td>
+</tr>
+</table>
+
+### Per-Interface Override
+
+Individual interfaces can override the project default:
+
+```kotlin
+import com.rsicarelli.fakt.CallHistoryMode
+
+// Always generate call history (even if plugin default is false)
+@Fake(callHistory = CallHistoryMode.ENABLED)
+interface PaymentService { ... }
+
+// Never generate call history (even if plugin default is true)
+@Fake(callHistory = CallHistoryMode.DISABLED)
+interface Logger { ... }
+
+// Follow plugin default
+@Fake  // or @Fake(callHistory = CallHistoryMode.DEFAULT)
+interface UserService { ... }
+```
+
+**Resolution order:** Annotation setting takes precedence over plugin default.
 
 ---
 
