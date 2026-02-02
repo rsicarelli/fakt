@@ -698,6 +698,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#generated-code-with-call-history-disabled" class="md-nav__link">
+    <span class="md-ellipsis">
+      Generated Code with Call History Disabled
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#naming-conventions" class="md-nav__link">
     <span class="md-ellipsis">
       Naming Conventions
@@ -1004,6 +1013,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#generated-code-with-call-history-disabled" class="md-nav__link">
+    <span class="md-ellipsis">
+      Generated Code with Call History Disabled
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#naming-conventions" class="md-nav__link">
     <span class="md-ellipsis">
       Naming Conventions
@@ -1090,6 +1108,10 @@
 </code></pre></div>
 <hr />
 <h2 id="call-history-data-classes">Call History Data Classes<a class="headerlink" href="#call-history-data-classes" title="Permanent link">&para;</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Call History is Configurable</p>
+<p>The classes and properties described in this section are only generated when call history is enabled. See <a href="plugin-configuration.html#call-history-configuration">Plugin Configuration</a> for details.</p>
+</div>
 <p>For each method with parameters, Fakt generates a data class capturing all arguments:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// For interface method: fun save(user: User, validate: Boolean): User</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kd">data</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">FakeUserRepositorySaveCall</span><span class="p">(</span>
@@ -1199,6 +1221,24 @@
 <a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">    </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">neverCalledWith</span><span class="p">(</span><span class="s">&quot;error&quot;</span><span class="p">))</span>
 <a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="p">}</span>
 </code></pre></div>
+<hr />
+<h2 id="generated-code-with-call-history-disabled">Generated Code with Call History Disabled<a class="headerlink" href="#generated-code-with-call-history-disabled" title="Permanent link">&para;</a></h2>
+<p>When call history is disabled via <code>enableCallHistory.set(false)</code> or <code>@Fake(callHistory = CallHistoryMode.DISABLED)</code>, generated fakes are simplified:</p>
+<p><strong>Generated:</strong></p>
+<ul>
+<li><code>Fake{Interface}Impl</code> - Implementation class</li>
+<li><code>fake{Interface}()</code> - Factory function</li>
+<li><code>Fake{Interface}Config</code> - Configuration DSL</li>
+</ul>
+<p><strong>Not Generated:</strong></p>
+<ul>
+<li><code>{method}CallCount</code> properties</li>
+<li><code>{method}CallHistory</code> lists</li>
+<li><code>Fake{Interface}{Method}Call</code> data classes</li>
+<li><code>Fake{Interface}{Method}Verifier</code> classes</li>
+<li><code>verify{Method}</code> extension functions</li>
+</ul>
+<p>This results in smaller, simpler generated code for fakes that only need stubbing.</p>
 <hr />
 <h2 id="naming-conventions">Naming Conventions<a class="headerlink" href="#naming-conventions" title="Permanent link">&para;</a></h2>
 <table>

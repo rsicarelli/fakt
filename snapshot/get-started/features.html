@@ -1232,6 +1232,16 @@ Call counts are derived from thread-safe internal state.
 
 </td>
 </tr>
+<tr>
+<td><strong>Configurable</strong></td>
+<td>
+
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nd">@Fake</span><span class="p">(</span><span class="n">callHistory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CallHistoryMode</span><span class="p">.</span><span class="na">DISABLED</span><span class="p">)</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">Logger</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span><span class="w">  </span><span class="c1">// Lightweight, no tracking</span>
+</code></pre></div>
+
+</td>
+</tr>
 </table>
 
 <hr />
@@ -1242,7 +1252,7 @@ Call counts are derived from thread-safe internal state.
 <td><strong>Factory Functions</strong></td>
 <td>
 
-<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">getUser</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">getUser</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
 </code></pre></div>
 
 </td>
@@ -1278,10 +1288,10 @@ Compiler catches type errors at build time.
 <td><strong>Collector Module</strong></td>
 <td>
 
-<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
-<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
-<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
+<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="p">}</span>
 </code></pre></div>
 
 </td>
@@ -1290,11 +1300,11 @@ Compiler catches type errors at build time.
 <td><strong>Consumer Module</strong></td>
 <td>
 
-<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="n">dependencies</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="w">    </span><span class="n">commonTest</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="w">        </span><span class="n">implementation</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analyticsFakes</span><span class="p">)</span>
-<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="n">dependencies</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="w">    </span><span class="n">commonTest</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="w">        </span><span class="n">implementation</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analyticsFakes</span><span class="p">)</span>
+<a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="p">}</span>
 </code></pre></div>
 
 </td>

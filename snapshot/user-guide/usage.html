@@ -841,6 +841,57 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#configuring-call-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuring Call History
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuring Call History">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#project-wide-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      Project-Wide Default
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-interface-override" class="md-nav__link">
+    <span class="md-ellipsis">
+      Per-Interface Override
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#when-to-disable-call-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      When to Disable Call History
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      What Changes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1529,6 +1580,57 @@
       Thread Safety
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuring-call-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuring Call History
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuring Call History">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#project-wide-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      Project-Wide Default
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-interface-override" class="md-nav__link">
+    <span class="md-ellipsis">
+      Per-Interface Override
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#when-to-disable-call-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      When to Disable Call History
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      What Changes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -2263,52 +2365,112 @@
 <a id="__codelineno-40-14" name="__codelineno-40-14" href="#__codelineno-40-14"></a><span class="p">}</span>
 </code></pre></div>
 <hr />
+<h3 id="configuring-call-history">Configuring Call History<a class="headerlink" href="#configuring-call-history" title="Permanent link">&para;</a></h3>
+<p>By default, Fakt generates full call tracking for every fake. You can disable this for lightweight fakes that don&rsquo;t need verification.</p>
+<h4 id="project-wide-default">Project-Wide Default<a class="headerlink" href="#project-wide-default" title="Permanent link">&para;</a></h4>
+<p>Configure the default for all fakes in your project:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a><span class="c1">// build.gradle.kts</span>
+<a id="__codelineno-41-2" name="__codelineno-41-2" href="#__codelineno-41-2"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-41-3" name="__codelineno-41-3" href="#__codelineno-41-3"></a><span class="w">    </span><span class="n">enableCallHistory</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span><span class="w">  </span><span class="c1">// Disable for all fakes by default</span>
+<a id="__codelineno-41-4" name="__codelineno-41-4" href="#__codelineno-41-4"></a><span class="p">}</span>
+</code></pre></div>
+<h4 id="per-interface-override">Per-Interface Override<a class="headerlink" href="#per-interface-override" title="Permanent link">&para;</a></h4>
+<p>Override the project default for specific interfaces:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a><span class="k">import</span><span class="w"> </span><span class="nn">com.rsicarelli.fakt.CallHistoryMode</span>
+<a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a>
+<a id="__codelineno-42-3" name="__codelineno-42-3" href="#__codelineno-42-3"></a><span class="c1">// Disable call history for this interface (lightweight fake)</span>
+<a id="__codelineno-42-4" name="__codelineno-42-4" href="#__codelineno-42-4"></a><span class="nd">@Fake</span><span class="p">(</span><span class="n">callHistory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CallHistoryMode</span><span class="p">.</span><span class="na">DISABLED</span><span class="p">)</span>
+<a id="__codelineno-42-5" name="__codelineno-42-5" href="#__codelineno-42-5"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">Logger</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-42-6" name="__codelineno-42-6" href="#__codelineno-42-6"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">log</span><span class="p">(</span><span class="n">message</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">)</span>
+<a id="__codelineno-42-7" name="__codelineno-42-7" href="#__codelineno-42-7"></a><span class="p">}</span>
+<a id="__codelineno-42-8" name="__codelineno-42-8" href="#__codelineno-42-8"></a>
+<a id="__codelineno-42-9" name="__codelineno-42-9" href="#__codelineno-42-9"></a><span class="c1">// Enable call history (even if plugin default is disabled)</span>
+<a id="__codelineno-42-10" name="__codelineno-42-10" href="#__codelineno-42-10"></a><span class="nd">@Fake</span><span class="p">(</span><span class="n">callHistory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CallHistoryMode</span><span class="p">.</span><span class="na">ENABLED</span><span class="p">)</span>
+<a id="__codelineno-42-11" name="__codelineno-42-11" href="#__codelineno-42-11"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">PaymentService</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-42-12" name="__codelineno-42-12" href="#__codelineno-42-12"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">processPayment</span><span class="p">(</span><span class="n">amount</span><span class="p">:</span><span class="w"> </span><span class="kt">Double</span><span class="p">):</span><span class="w"> </span><span class="n">Result</span><span class="o">&lt;</span><span class="n">Receipt</span><span class="o">&gt;</span>
+<a id="__codelineno-42-13" name="__codelineno-42-13" href="#__codelineno-42-13"></a><span class="p">}</span>
+<a id="__codelineno-42-14" name="__codelineno-42-14" href="#__codelineno-42-14"></a>
+<a id="__codelineno-42-15" name="__codelineno-42-15" href="#__codelineno-42-15"></a><span class="c1">// Follow plugin default</span>
+<a id="__codelineno-42-16" name="__codelineno-42-16" href="#__codelineno-42-16"></a><span class="nd">@Fake</span><span class="w">  </span><span class="c1">// Same as @Fake(callHistory = CallHistoryMode.DEFAULT)</span>
+<a id="__codelineno-42-17" name="__codelineno-42-17" href="#__codelineno-42-17"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">UserService</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<h4 id="when-to-disable-call-history">When to Disable Call History<a class="headerlink" href="#when-to-disable-call-history" title="Permanent link">&para;</a></h4>
+<p>Disable call history when:</p>
+<ul>
+<li>Fakes are only used for stubbing, not verification</li>
+<li>You want smaller generated code</li>
+<li>Migrating legacy tests that don&rsquo;t need call tracking</li>
+</ul>
+<p>Enable call history when:</p>
+<ul>
+<li>You need to verify method calls (<code>wasCalledTimes</code>, <code>wasCalledWith</code>)</li>
+<li>Migrating from mocking frameworks (MockK, Mockito)</li>
+<li>Testing interaction patterns</li>
+</ul>
+<h4 id="what-changes">What Changes<a class="headerlink" href="#what-changes" title="Permanent link">&para;</a></h4>
+<p><strong>With call history enabled (default):</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeLogger</span><span class="p">()</span>
+<a id="__codelineno-43-2" name="__codelineno-43-2" href="#__codelineno-43-2"></a><span class="n">fake</span><span class="p">.</span><span class="na">log</span><span class="p">(</span><span class="s">&quot;message&quot;</span><span class="p">)</span>
+<a id="__codelineno-43-3" name="__codelineno-43-3" href="#__codelineno-43-3"></a>
+<a id="__codelineno-43-4" name="__codelineno-43-4" href="#__codelineno-43-4"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">logCallCount</span><span class="p">)</span><span class="w">  </span><span class="c1">// Available</span>
+<a id="__codelineno-43-5" name="__codelineno-43-5" href="#__codelineno-43-5"></a><span class="n">fake</span><span class="p">.</span><span class="na">verifyLog</span><span class="w"> </span><span class="p">{</span><span class="w">                     </span><span class="c1">// Available</span>
+<a id="__codelineno-43-6" name="__codelineno-43-6" href="#__codelineno-43-6"></a><span class="w">    </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">wasCalledWith</span><span class="p">(</span><span class="s">&quot;message&quot;</span><span class="p">))</span>
+<a id="__codelineno-43-7" name="__codelineno-43-7" href="#__codelineno-43-7"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>With call history disabled:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeLogger</span><span class="p">()</span>
+<a id="__codelineno-44-2" name="__codelineno-44-2" href="#__codelineno-44-2"></a><span class="n">fake</span><span class="p">.</span><span class="na">log</span><span class="p">(</span><span class="s">&quot;message&quot;</span><span class="p">)</span>
+<a id="__codelineno-44-3" name="__codelineno-44-3" href="#__codelineno-44-3"></a>
+<a id="__codelineno-44-4" name="__codelineno-44-4" href="#__codelineno-44-4"></a><span class="c1">// fake.logCallCount         // Not generated</span>
+<a id="__codelineno-44-5" name="__codelineno-44-5" href="#__codelineno-44-5"></a><span class="c1">// fake.verifyLog { ... }    // Not generated</span>
+</code></pre></div>
+<hr />
 <h2 id="advanced-patterns">Advanced Patterns<a class="headerlink" href="#advanced-patterns" title="Permanent link">&para;</a></h2>
 <h3 id="inheritance">Inheritance<a class="headerlink" href="#inheritance" title="Permanent link">&para;</a></h3>
 <p>Fakt handles inherited methods correctly:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">BaseService</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-41-2" name="__codelineno-41-2" href="#__codelineno-41-2"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">start</span><span class="p">():</span><span class="w"> </span><span class="kt">Boolean</span>
-<a id="__codelineno-41-3" name="__codelineno-41-3" href="#__codelineno-41-3"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">stop</span><span class="p">():</span><span class="w"> </span><span class="kt">Boolean</span>
-<a id="__codelineno-41-4" name="__codelineno-41-4" href="#__codelineno-41-4"></a><span class="p">}</span>
-<a id="__codelineno-41-5" name="__codelineno-41-5" href="#__codelineno-41-5"></a>
-<a id="__codelineno-41-6" name="__codelineno-41-6" href="#__codelineno-41-6"></a><span class="nd">@Fake</span>
-<a id="__codelineno-41-7" name="__codelineno-41-7" href="#__codelineno-41-7"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">UserService</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">BaseService</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-41-8" name="__codelineno-41-8" href="#__codelineno-41-8"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">getUser</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">):</span><span class="w"> </span><span class="n">User</span>
-<a id="__codelineno-41-9" name="__codelineno-41-9" href="#__codelineno-41-9"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">BaseService</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-45-2" name="__codelineno-45-2" href="#__codelineno-45-2"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">start</span><span class="p">():</span><span class="w"> </span><span class="kt">Boolean</span>
+<a id="__codelineno-45-3" name="__codelineno-45-3" href="#__codelineno-45-3"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">stop</span><span class="p">():</span><span class="w"> </span><span class="kt">Boolean</span>
+<a id="__codelineno-45-4" name="__codelineno-45-4" href="#__codelineno-45-4"></a><span class="p">}</span>
+<a id="__codelineno-45-5" name="__codelineno-45-5" href="#__codelineno-45-5"></a>
+<a id="__codelineno-45-6" name="__codelineno-45-6" href="#__codelineno-45-6"></a><span class="nd">@Fake</span>
+<a id="__codelineno-45-7" name="__codelineno-45-7" href="#__codelineno-45-7"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">UserService</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">BaseService</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-45-8" name="__codelineno-45-8" href="#__codelineno-45-8"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">getUser</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">):</span><span class="w"> </span><span class="n">User</span>
+<a id="__codelineno-45-9" name="__codelineno-45-9" href="#__codelineno-45-9"></a><span class="p">}</span>
 </code></pre></div>
 <p><strong>Usage:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN service fake WHEN calling inherited methods THEN works correctly`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-42-3" name="__codelineno-42-3" href="#__codelineno-42-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserService</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-42-4" name="__codelineno-42-4" href="#__codelineno-42-4"></a><span class="w">        </span><span class="n">start</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-42-5" name="__codelineno-42-5" href="#__codelineno-42-5"></a><span class="w">        </span><span class="n">stop</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-42-6" name="__codelineno-42-6" href="#__codelineno-42-6"></a><span class="w">        </span><span class="n">getUser</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-42-7" name="__codelineno-42-7" href="#__codelineno-42-7"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-42-8" name="__codelineno-42-8" href="#__codelineno-42-8"></a>
-<a id="__codelineno-42-9" name="__codelineno-42-9" href="#__codelineno-42-9"></a><span class="w">    </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">fake</span><span class="p">.</span><span class="na">start</span><span class="p">())</span>
-<a id="__codelineno-42-10" name="__codelineno-42-10" href="#__codelineno-42-10"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">getUser</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">).</span><span class="na">name</span><span class="p">)</span>
-<a id="__codelineno-42-11" name="__codelineno-42-11" href="#__codelineno-42-11"></a><span class="w">    </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">fake</span><span class="p">.</span><span class="na">stop</span><span class="p">())</span>
-<a id="__codelineno-42-12" name="__codelineno-42-12" href="#__codelineno-42-12"></a>
-<a id="__codelineno-42-13" name="__codelineno-42-13" href="#__codelineno-42-13"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">startCallCount</span><span class="p">)</span>
-<a id="__codelineno-42-14" name="__codelineno-42-14" href="#__codelineno-42-14"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">getUserCallCount</span><span class="p">)</span>
-<a id="__codelineno-42-15" name="__codelineno-42-15" href="#__codelineno-42-15"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">stopCallCount</span><span class="p">)</span>
-<a id="__codelineno-42-16" name="__codelineno-42-16" href="#__codelineno-42-16"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-46-1" name="__codelineno-46-1" href="#__codelineno-46-1"></a><span class="nd">@Test</span>
+<a id="__codelineno-46-2" name="__codelineno-46-2" href="#__codelineno-46-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN service fake WHEN calling inherited methods THEN works correctly`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-46-3" name="__codelineno-46-3" href="#__codelineno-46-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserService</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-46-4" name="__codelineno-46-4" href="#__codelineno-46-4"></a><span class="w">        </span><span class="n">start</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-46-5" name="__codelineno-46-5" href="#__codelineno-46-5"></a><span class="w">        </span><span class="n">stop</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-46-6" name="__codelineno-46-6" href="#__codelineno-46-6"></a><span class="w">        </span><span class="n">getUser</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-46-7" name="__codelineno-46-7" href="#__codelineno-46-7"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-46-8" name="__codelineno-46-8" href="#__codelineno-46-8"></a>
+<a id="__codelineno-46-9" name="__codelineno-46-9" href="#__codelineno-46-9"></a><span class="w">    </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">fake</span><span class="p">.</span><span class="na">start</span><span class="p">())</span>
+<a id="__codelineno-46-10" name="__codelineno-46-10" href="#__codelineno-46-10"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">getUser</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">).</span><span class="na">name</span><span class="p">)</span>
+<a id="__codelineno-46-11" name="__codelineno-46-11" href="#__codelineno-46-11"></a><span class="w">    </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">fake</span><span class="p">.</span><span class="na">stop</span><span class="p">())</span>
+<a id="__codelineno-46-12" name="__codelineno-46-12" href="#__codelineno-46-12"></a>
+<a id="__codelineno-46-13" name="__codelineno-46-13" href="#__codelineno-46-13"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">startCallCount</span><span class="p">)</span>
+<a id="__codelineno-46-14" name="__codelineno-46-14" href="#__codelineno-46-14"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">getUserCallCount</span><span class="p">)</span>
+<a id="__codelineno-46-15" name="__codelineno-46-15" href="#__codelineno-46-15"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">stopCallCount</span><span class="p">)</span>
+<a id="__codelineno-46-16" name="__codelineno-46-16" href="#__codelineno-46-16"></a><span class="p">}</span>
 </code></pre></div>
 <hr />
 <h3 id="reconfiguring-fakes">Reconfiguring Fakes<a class="headerlink" href="#reconfiguring-fakes" title="Permanent link">&para;</a></h3>
 <p>You can reconfigure behavior mid-test if needed:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-43-2" name="__codelineno-43-2" href="#__codelineno-43-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN fake WHEN reconfiguring behavior THEN uses new behavior`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-43-3" name="__codelineno-43-3" href="#__codelineno-43-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="p">()</span>
-<a id="__codelineno-43-4" name="__codelineno-43-4" href="#__codelineno-43-4"></a>
-<a id="__codelineno-43-5" name="__codelineno-43-5" href="#__codelineno-43-5"></a><span class="w">    </span><span class="c1">// Initial configuration</span>
-<a id="__codelineno-43-6" name="__codelineno-43-6" href="#__codelineno-43-6"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">configureGetUser</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-43-7" name="__codelineno-43-7" href="#__codelineno-43-7"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">getUser</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">).</span><span class="na">name</span><span class="p">)</span>
-<a id="__codelineno-43-8" name="__codelineno-43-8" href="#__codelineno-43-8"></a>
-<a id="__codelineno-43-9" name="__codelineno-43-9" href="#__codelineno-43-9"></a><span class="w">    </span><span class="c1">// Reconfigure</span>
-<a id="__codelineno-43-10" name="__codelineno-43-10" href="#__codelineno-43-10"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">configureGetUser</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bob&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-43-11" name="__codelineno-43-11" href="#__codelineno-43-11"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Bob&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">getUser</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">).</span><span class="na">name</span><span class="p">)</span>
-<a id="__codelineno-43-12" name="__codelineno-43-12" href="#__codelineno-43-12"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a><span class="nd">@Test</span>
+<a id="__codelineno-47-2" name="__codelineno-47-2" href="#__codelineno-47-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN fake WHEN reconfiguring behavior THEN uses new behavior`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-47-3" name="__codelineno-47-3" href="#__codelineno-47-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="p">()</span>
+<a id="__codelineno-47-4" name="__codelineno-47-4" href="#__codelineno-47-4"></a>
+<a id="__codelineno-47-5" name="__codelineno-47-5" href="#__codelineno-47-5"></a><span class="w">    </span><span class="c1">// Initial configuration</span>
+<a id="__codelineno-47-6" name="__codelineno-47-6" href="#__codelineno-47-6"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">configureGetUser</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-47-7" name="__codelineno-47-7" href="#__codelineno-47-7"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">getUser</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">).</span><span class="na">name</span><span class="p">)</span>
+<a id="__codelineno-47-8" name="__codelineno-47-8" href="#__codelineno-47-8"></a>
+<a id="__codelineno-47-9" name="__codelineno-47-9" href="#__codelineno-47-9"></a><span class="w">    </span><span class="c1">// Reconfigure</span>
+<a id="__codelineno-47-10" name="__codelineno-47-10" href="#__codelineno-47-10"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">configureGetUser</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bob&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-47-11" name="__codelineno-47-11" href="#__codelineno-47-11"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Bob&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">getUser</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">).</span><span class="na">name</span><span class="p">)</span>
+<a id="__codelineno-47-12" name="__codelineno-47-12" href="#__codelineno-47-12"></a><span class="p">}</span>
 </code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">Advanced Usage</p>

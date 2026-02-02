@@ -473,6 +473,30 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#call-history-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Call History Configuration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Call History Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#per-interface-override" class="md-nav__link">
+    <span class="md-ellipsis">
+      Per-Interface Override
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#multi-module-configuration" class="md-nav__link">
     <span class="md-ellipsis">
       Multi-Module Configuration
@@ -935,6 +959,30 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#call-history-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Call History Configuration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Call History Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#per-interface-override" class="md-nav__link">
+    <span class="md-ellipsis">
+      Per-Interface Override
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#multi-module-configuration" class="md-nav__link">
     <span class="md-ellipsis">
       Multi-Module Configuration
@@ -1023,10 +1071,13 @@
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">    </span><span class="c1">// Control logging verbosity (default: INFO)</span>
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">    </span><span class="n">logLevel</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">LogLevel</span><span class="p">.</span><span class="na">INFO</span><span class="p">)</span><span class="w">  </span><span class="c1">// Options: QUIET, INFO, DEBUG</span>
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">    </span><span class="c1">// Multi-module: Collect fakes from another module (default: not set)</span>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">com</span><span class="p">.</span><span class="na">rsicarelli</span><span class="p">.</span><span class="na">fakt</span><span class="p">.</span><span class="na">compiler</span><span class="p">.</span><span class="na">api</span><span class="p">.</span><span class="na">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="p">}</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">    </span><span class="c1">// Control call history generation (default: true)</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">    </span><span class="n">enableCallHistory</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span><span class="w">  </span><span class="c1">// Set to false for lightweight fakes</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">    </span><span class="c1">// Multi-module: Collect fakes from another module (default: not set)</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">com</span><span class="p">.</span><span class="na">rsicarelli</span><span class="p">.</span><span class="na">fakt</span><span class="p">.</span><span class="na">compiler</span><span class="p">.</span><span class="na">api</span><span class="p">.</span><span class="na">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="p">}</span>
 </code></pre></div>
 <hr />
 <h2 id="configuration-properties">Configuration Properties<a class="headerlink" href="#configuration-properties" title="Permanent link">&para;</a></h2>
@@ -1057,14 +1108,26 @@
 </td>
 </tr>
 <tr>
+<td><strong>enableCallHistory</strong></td>
+<td><code>true</code></td>
+<td>
+
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="n">enableCallHistory</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="p">}</span>
+</code></pre></div>
+
+</td>
+</tr>
+<tr>
 <td><strong>collectFrom</strong></td>
 <td>Not set</td>
 <td>
 
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">}</span>
 </code></pre></div>
 
 </td>
@@ -1084,17 +1147,17 @@ Concise summary with key metrics. Use for local development and monitoring cache
 </td>
 <td>
 
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="n">logLevel</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">LogLevel</span><span class="p">.</span><span class="na">INFO</span><span class="p">)</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="n">logLevel</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">LogLevel</span><span class="p">.</span><span class="na">INFO</span><span class="p">)</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="p">}</span>
 </code></pre></div>
 
 <strong>Output:</strong>
 
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Fakt: 101 fakes generated in 35ms (50 cached)
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>  Interfaces: 101 | Classes: 0
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>  FIR: 6ms | IR: 29ms
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>  Cache: 50/101 (49%)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Fakt: 101 fakes generated in 35ms (50 cached)
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>  Interfaces: 101 | Classes: 0
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>  FIR: 6ms | IR: 29ms
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>  Cache: 50/101 (49%)
 </code></pre></div>
 
 </td>
@@ -1108,24 +1171,24 @@ Detailed FIR + IR phase timing. Use for troubleshooting, performance analysis, a
 </td>
 <td>
 
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="n">logLevel</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">LogLevel</span><span class="p">.</span><span class="na">DEBUG</span><span class="p">)</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="n">logLevel</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">LogLevel</span><span class="p">.</span><span class="na">DEBUG</span><span class="p">)</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="p">}</span>
 </code></pre></div>
 
 <strong>Output:</strong>
 
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Registering FIR extension
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>Registering IR extension with FIR metadata access
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>Built IR class map with 149 classes
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>FIR→IR Transformation (interfaces: 101/101, took 1ms)
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>FIR + IR trace
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>├─ Total FIR time: 6ms
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>├─ Total IR time: 58ms
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>│  ├─ FIR analysis: 1 type parameters, 6 members (55µs)
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>│  └─ IR generation: FakeDataCacheImpl 83 LOC (766µs)
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>│  ├─ FIR analysis: 2 type parameters, 1 members (23µs)
-<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>│  └─ IR generation: FakeMapTransformerImpl 23 LOC (335µs)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Registering FIR extension
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>Registering IR extension with FIR metadata access
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>Built IR class map with 149 classes
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>FIR→IR Transformation (interfaces: 101/101, took 1ms)
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>FIR + IR trace
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>├─ Total FIR time: 6ms
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>├─ Total IR time: 58ms
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>│  ├─ FIR analysis: 1 type parameters, 6 members (55µs)
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>│  └─ IR generation: FakeDataCacheImpl 83 LOC (766µs)
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>│  ├─ FIR analysis: 2 type parameters, 1 members (23µs)
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>│  └─ IR generation: FakeMapTransformerImpl 23 LOC (335µs)
 </code></pre></div>
 
 </td>
@@ -1139,9 +1202,9 @@ No output except errors. Use for CI/CD pipelines and production builds.
 </td>
 <td>
 
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="n">logLevel</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">LogLevel</span><span class="p">.</span><span class="na">QUIET</span><span class="p">)</span>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span><span class="n">logLevel</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">LogLevel</span><span class="p">.</span><span class="na">QUIET</span><span class="p">)</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="p">}</span>
 </code></pre></div>
 
 <strong>Output:</strong> None (silent)
@@ -1151,6 +1214,66 @@ No output except errors. Use for CI/CD pipelines and production builds.
 </table>
 
 <hr />
+<h2 id="call-history-configuration">Call History Configuration<a class="headerlink" href="#call-history-configuration" title="Permanent link">&para;</a></h2>
+<p>Control whether generated fakes include call tracking and verification capabilities.</p>
+<table>
+<tr><th>Setting</th><th>Description</th><th>Example</th></tr>
+<tr>
+<td><strong>true</strong><br>(default)</td>
+<td>
+
+Full call tracking with:
+
+- `methodNameCallCount` properties
+- `methodNameCallHistory` lists
+- `verifyMethodName { }` DSL
+
+</td>
+<td>
+
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span><span class="n">enableCallHistory</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="p">}</span>
+</code></pre></div>
+
+</td>
+</tr>
+<tr>
+<td><strong>false</strong></td>
+<td>
+
+Lightweight fakes with only behavior configuration. No call tracking overhead.
+
+</td>
+<td>
+
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">    </span><span class="n">enableCallHistory</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="p">}</span>
+</code></pre></div>
+
+</td>
+</tr>
+</table>
+
+<h3 id="per-interface-override">Per-Interface Override<a class="headerlink" href="#per-interface-override" title="Permanent link">&para;</a></h3>
+<p>Individual interfaces can override the project default:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">import</span><span class="w"> </span><span class="nn">com.rsicarelli.fakt.CallHistoryMode</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="c1">// Always generate call history (even if plugin default is false)</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="nd">@Fake</span><span class="p">(</span><span class="n">callHistory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CallHistoryMode</span><span class="p">.</span><span class="na">ENABLED</span><span class="p">)</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">PaymentService</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="c1">// Never generate call history (even if plugin default is true)</span>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="nd">@Fake</span><span class="p">(</span><span class="n">callHistory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CallHistoryMode</span><span class="p">.</span><span class="na">DISABLED</span><span class="p">)</span>
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">Logger</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="c1">// Follow plugin default</span>
+<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a><span class="nd">@Fake</span><span class="w">  </span><span class="c1">// or @Fake(callHistory = CallHistoryMode.DEFAULT)</span>
+<a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">UserService</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p><strong>Resolution order:</strong> Annotation setting takes precedence over plugin default.</p>
+<hr />
 <h2 id="multi-module-configuration">Multi-Module Configuration<a class="headerlink" href="#multi-module-configuration" title="Permanent link">&para;</a></h2>
 <table>
 <tr><th>Mode</th><th>Example</th></tr>
@@ -1158,10 +1281,10 @@ No output except errors. Use for CI/CD pipelines and production builds.
 <td><strong>Type-safe accessor</strong></td>
 <td>
 
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="p">}</span>
 </code></pre></div>
 
 </td>
@@ -1170,10 +1293,10 @@ No output except errors. Use for CI/CD pipelines and production builds.
 <td><strong>String-based path</strong></td>
 <td>
 
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">project</span><span class="p">(</span><span class="s">&quot;:core:analytics&quot;</span><span class="p">))</span>
-<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">project</span><span class="p">(</span><span class="s">&quot;:core:analytics&quot;</span><span class="p">))</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="p">}</span>
 </code></pre></div>
 
 </td>
