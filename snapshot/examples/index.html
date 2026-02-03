@@ -748,6 +748,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#fake-publishing" class="md-nav__link">
+    <span class="md-ellipsis">
+      fake-publishing
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#running-samples" class="md-nav__link">
     <span class="md-ellipsis">
       Running Samples
@@ -936,6 +945,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#fake-publishing" class="md-nav__link">
+    <span class="md-ellipsis">
+      fake-publishing
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#running-samples" class="md-nav__link">
     <span class="md-ellipsis">
       Running Samples
@@ -1059,6 +1077,23 @@
 </ul>
 <p><strong>Best for</strong>: Validating Fakt&rsquo;s source set mapping and KMP hierarchy support</p>
 <hr />
+<h2 id="fake-publishing">fake-publishing<a class="headerlink" href="#fake-publishing" title="Permanent link">&para;</a></h2>
+<p><strong>Location</strong>: <a href="https://github.com/rsicarelli/fakt/tree/main/samples/fake-publishing"><code>samples/fake-publishing/</code></a></p>
+<p><strong>Demonstrates</strong>: Publishing Fakt-generated fakes as Maven artifacts for external consumption</p>
+<p><strong>Structure</strong>:</p>
+<ul>
+<li><code>kmp-publisher/</code> - Library project that publishes fakes</li>
+<li><code>kmp-consumer/</code> - External project that consumes published fakes</li>
+</ul>
+<p><strong>Key Examples</strong>:</p>
+<ul>
+<li>Publishing collector modules to Maven Local</li>
+<li>Consuming pre-generated fakes from Maven artifacts</li>
+<li>Cross-project fake usage without Fakt plugin</li>
+<li>Interface, abstract class, and open class support</li>
+</ul>
+<p><strong>Best for</strong>: Library authors who want to ship pre-generated fakes alongside their APIs</p>
+<hr />
 <h2 id="running-samples">Running Samples<a class="headerlink" href="#running-samples" title="Permanent link">&para;</a></h2>
 <p>Clone the repository and build:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/rsicarelli/fakt.git
@@ -1078,6 +1113,13 @@
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="c1"># KMP hierarchy validation</span>
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="nb">cd</span><span class="w"> </span>fakt/samples/kmp-multi-target
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>./gradlew<span class="w"> </span>allTests
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="c1"># Fake publishing sample (requires sequential steps)</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="nb">cd</span><span class="w"> </span>fakt/samples/fake-publishing/kmp-publisher
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>./gradlew<span class="w"> </span>publishToMavenLocal
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="nb">cd</span><span class="w"> </span>fakt/samples/fake-publishing/kmp-consumer
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>./gradlew<span class="w"> </span>build
 </code></pre></div>
 <hr />
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
