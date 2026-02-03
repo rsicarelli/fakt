@@ -299,7 +299,7 @@
             "type": "domain",
             "enforcement": "suggest",
             "priority": "medium",
-            "description": "Monitors KtFakes implementation progress and validates phase completion status with real metrics",
+            "description": "Monitors Fakt implementation progress and validates phase completion status with real metrics",
             "promptTriggers": {
                 "keywords": [
                     "implementation status",
@@ -470,12 +470,12 @@
             "low": "Optional - Trigger only for explicit matches (skill creation, docs navigation)"
         },
         "customization": {
-            "pathPatterns": "Currently configured for ktfakes-prototype/ktfake project structure",
+            "pathPatterns": "Currently configured for fakt project structure",
             "keywords": "Focused on Kotlin compiler plugin development, Metro patterns, and BDD testing",
             "intentPatterns": "Optimized for compiler development workflows and debugging"
         },
         "project_context": {
-            "project": "Fakt (formerly ktfakes-prototype)",
+            "project": "Fakt",
             "purpose": "Kotlin compiler plugin for type-safe fake generation at compile time",
             "architecture": "Two-phase FIR → IR compilation inspired by Metro DI framework",
             "testing_standard": "GIVEN-WHEN-THEN with vanilla JUnit5 (THE ABSOLUTE STANDARD)"
