@@ -5,7 +5,7 @@ PR titles follow the same Conventional Commits format as commit messages for con
 ## Format
 
 ```
-<type>[(scope)][!]: <description>
+<type>[(scope)]: <description>
 ```
 
 ## Components
@@ -45,15 +45,6 @@ Indicates the area of the codebase affected.
 | `samples` | Sample projects |
 | `docs` | Documentation |
 
-### Breaking Change Indicator (Optional)
-
-Add `!` before `:` to indicate breaking changes:
-
-```
-feat(api)!: change factory signature
-refactor(dsl)!: restructure configuration
-```
-
 ### Description
 
 - **Imperative mood**: "add" not "added"
@@ -75,7 +66,6 @@ test(compiler): add GIVEN-WHEN-THEN tests for generics
 build: upgrade Kotlin to 2.1.0
 ci: add KMP platform matrix
 chore(deps): update kotlinx-coroutines
-feat(dsl)!: require explicit configuration block
 ```
 
 ### Bad Titles (Avoid)
@@ -116,22 +106,6 @@ When a PR contains multiple commits of different types:
 Example: PR with `feat` + `test` + `docs` commits:
 ```
 feat(compiler): add suspend function support
-```
-
-## Breaking Changes
-
-Two ways to indicate:
-
-**1. With `!` suffix (preferred for titles):**
-```
-feat(api)!: change factory return type
-```
-
-**2. Mentioned in description:**
-```
-refactor(dsl): restructure configuration API
-
-BREAKING CHANGE: Configuration now requires explicit block.
 ```
 
 ## Character Count Guide

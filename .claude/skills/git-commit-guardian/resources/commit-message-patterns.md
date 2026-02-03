@@ -277,17 +277,6 @@ update: change thing                 # Use appropriate type
 Closes #<issue>
 ```
 
-### Breaking Change
-```
-<type>(<scope>)!: <description>
-
-<body>
-
-BREAKING CHANGE: <description of breaking change>
-
-Migration: <how to migrate>
-```
-
 ## Pre-Commit Checklist
 
 Before every commit:

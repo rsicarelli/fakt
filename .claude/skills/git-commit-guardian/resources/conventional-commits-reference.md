@@ -5,7 +5,7 @@ Quick reference for the Conventional Commits 1.0.0 specification.
 ## Format
 
 ```
-<type>[optional scope][optional !]: <description>
+<type>[optional scope]: <description>
 
 [optional body]
 
@@ -27,25 +27,6 @@ Quick reference for the Conventional Commits 1.0.0 specification.
 | `ci` | CI configuration | - |
 | `chore` | Maintenance tasks | - |
 | `revert` | Reverting previous commit | varies |
-
-## Breaking Changes
-
-Two ways to indicate breaking changes:
-
-**1. Exclamation mark in header:**
-```
-feat(api)!: change factory signature to require config block
-```
-
-**2. Footer notation:**
-```
-feat(api): change factory signature to require config block
-
-BREAKING CHANGE: fakeXxx() now requires configuration block.
-Migrate: fakeXxx() → fakeXxx {}
-```
-
-Both trigger MAJOR version bump in semantic versioning.
 
 ## Scope
 
@@ -110,16 +91,10 @@ Fixes #456
 Resolves #789
 ```
 
-**Breaking change (alternative to `!`):**
-```
-BREAKING CHANGE: description of breaking change
-```
-
 **Multiple footers:**
 ```
 Closes #123
 Reviewed-by: @username
-BREAKING CHANGE: API signature changed
 ```
 
 ## Complete Examples
@@ -144,20 +119,6 @@ resolution, causing infinite loops with self-referential generics.
 Added visited set to break cycles.
 
 Fixes #234
-```
-
-### Breaking change
-```
-feat(api)!: require explicit configuration for factory functions
-
-BREAKING CHANGE: Factory functions no longer have implicit defaults.
-
-Before: val fake = fakeUserService()
-After:  val fake = fakeUserService {}
-
-This change improves type safety and makes behavior explicit.
-
-Migration guide: https://fakt.dev/migration/v2
 ```
 
 ### Documentation
@@ -220,6 +181,5 @@ Before committing:
 - [ ] Imperative mood used
 - [ ] Blank line before body (if body exists)
 - [ ] Body wrapped at 80 chars
-- [ ] Breaking changes marked
 - [ ] NO AI attribution lines
 - [ ] NO "Generated with Claude Code"

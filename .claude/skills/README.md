@@ -26,43 +26,20 @@ allowed-tools: Read, Bash, Grep, Glob
 
 ## Available Skills (13 Total)
 
-### Analysis Skills (4)
-
 | Skill | Purpose |
 |-------|---------|
 | `kotlin-api-consultant` | Validates Kotlin compiler API usage against source code |
 | `compilation-error-analyzer` | Systematic compilation error diagnosis and resolution |
 | `interface-analyzer` | Deep structural analysis of @Fake annotated interfaces |
-| `generic-scoping-analyzer` | Analyzes generic type parameter scoping challenges |
-
-### Core Workflows (4)
-
-| Skill | Purpose |
-|-------|---------|
 | `bdd-test-runner` | Executes BDD-compliant GIVEN-WHEN-THEN tests |
 | `behavior-analyzer-tester` | Deep behavior analysis and test generation |
 | `git-commit-guardian` | Enforces Conventional Commits format |
 | `pr-creator` | Creates professional PRs using project template |
-
-### Validation (3)
-
-| Skill | Purpose |
-|-------|---------|
 | `compilation-validator` | Production-grade compilation validation |
 | `compiler-architecture-validator` | Validates compiler plugin best practices |
 | `implementation-tracker` | Monitors implementation progress |
-
-### Knowledge Base (2)
-
-| Skill | Purpose |
-|-------|---------|
 | `fakt-docs-navigator` | Navigate internal contributor documentation |
 | `public-docs-navigator` | Navigate public MkDocs documentation |
-
-### Development (1)
-
-| Skill | Purpose |
-|-------|---------|
 | `skill-creator` | Meta-skill for creating new skills |
 
 ## Skill Structure
@@ -70,8 +47,8 @@ allowed-tools: Read, Bash, Grep, Glob
 Each skill follows this structure:
 
 ```
-.claude/skills/{category}/{skill-name}/
-├── SKILL.md              # Main skill file
+.claude/skills/{skill-name}/
+├── SKILL.md              # Main skill file (required)
 └── resources/            # Supporting files (optional)
     ├── reference.md
     └── examples.md
@@ -110,11 +87,11 @@ Simply write natural prompts and Claude Code will auto-suggest relevant skills b
 "Run tests and check BDD compliance"
 → Activates: bdd-test-runner
 
-"Debug IR generation for UserService"
-→ Activates: kotlin-ir-debugger
-
 "Check if IrFactory API changed"
 → Activates: kotlin-api-consultant
+
+"Create a PR for this branch"
+→ Activates: pr-creator
 ```
 
 ### Manual Invocation
@@ -122,8 +99,8 @@ Simply write natural prompts and Claude Code will auto-suggest relevant skills b
 Use the slash command to invoke a skill directly:
 
 ```
-/release-notes
-/keybindings-help
+/pr-creator
+/git-commit-guardian
 ```
 
 Or ask Claude to use a specific skill:
@@ -145,7 +122,3 @@ Use the `skill-creator` skill for guidance on creating new skills. Key requireme
 
 - [CLAUDE.md](../../CLAUDE.md) - Main project documentation
 - [Testing Guidelines](../docs/development/validation/testing-guidelines.md) - BDD standards
-
----
-
-**Total Skills**: 13 (4 Analysis + 4 Core Workflows + 3 Validation + 2 Knowledge Base + 1 Development)

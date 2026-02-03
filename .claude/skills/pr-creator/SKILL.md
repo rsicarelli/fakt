@@ -1,6 +1,6 @@
 ---
 name: pr-creator
-description: Creates professional PRs using project template, enforces Conventional Commits title format, always creates drafts via gh CLI. Use when creating PR, opening PR, submitting PR, or user mentions "create pr", "open pr", "pr this", "submit pr", "make pr".
+description: REQUIRED for all PR creation in this project. Creates professional PRs using project template, enforces Conventional Commits title format, BLOCKS AI attribution pollution, always creates drafts via gh CLI. Use when creating PR, opening PR, submitting PR, creating pull request, or user mentions "create pr", "open pr", "pr this", "submit pr", "make pr", "pull request", "create a pr", "open a pr", "push for review".
 allowed-tools: Read, Bash, Grep, Glob, AskUserQuestion
 ---
 
@@ -90,7 +90,7 @@ git diff main..HEAD --name-only
 **Apply Conventional Commits format:**
 
 ```
-<type>[(scope)][!]: <description>
+<type>[(scope)]: <description>
 ```
 
 **Validation:**
@@ -98,14 +98,13 @@ git diff main..HEAD --name-only
 - [ ] Max 72 characters
 - [ ] No period at end
 - [ ] Imperative mood ("add" not "added")
-- [ ] Breaking changes marked with `!`
 
 **Examples:**
 ```
 feat(compiler): add generic type parameter support
 fix(fir): resolve annotation detection for nested interfaces
 docs: update KMP multi-module guide
-refactor(generation)!: restructure factory generation API
+refactor(generation): restructure factory generation API
 ```
 
 ### 5. Populate PR Template

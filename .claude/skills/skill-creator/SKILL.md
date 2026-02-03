@@ -27,7 +27,6 @@ This meta-Skill scaffolds new Skills with:
 - [ ] **Skill name** (kebab-case, descriptive)
 - [ ] **Core purpose** (what problem does it solve?)
 - [ ] **Trigger keywords** (how will users invoke it?)
-- [ ] **Category** (core-workflows, validation, analysis, etc.)
 - [ ] **Source** (migrating from slash command OR new from scratch)
 
 **Optional information:**
@@ -46,9 +45,6 @@ A: "Validates Kotlin compiler API usage against source code"
 
 Q: "How might users invoke it?"
 A: "validate API", "check Kotlin API", "consult compiler source"
-
-Q: "Category?"
-A: "analysis"
 
 Q: "Migrating from slash command or creating new?"
 A: "Migrating from /consult-kotlin-api"
@@ -151,14 +147,12 @@ skill-name/
 **Execute scaffolding:**
 
 ```bash
-# Determine category
-CATEGORY="{category}"  # core-workflows, validation, analysis, etc.
 SKILL_NAME="{skill-name}"
 
-# Create structure
-mkdir -p "claude2/skills/${CATEGORY}/${SKILL_NAME}/{scripts,resources}"
+# Create structure (flat - no category subdirectories)
+mkdir -p ".claude/skills/${SKILL_NAME}/{scripts,resources}"
 
-echo "✅ Created: claude2/skills/${CATEGORY}/${SKILL_NAME}/"
+echo "✅ Created: .claude/skills/${SKILL_NAME}/"
 ```
 
 ### 6. Write SKILL.md from Template
@@ -169,7 +163,7 @@ echo "✅ Created: claude2/skills/${CATEGORY}/${SKILL_NAME}/"
 ---
 name: {skill-name}
 description: {trigger-rich description from step 3}
-allowed-tools: [{minimal set of tools needed}]
+allowed-tools: {Tool1, Tool2, Tool3}
 ---
 
 # {Skill Title}
@@ -323,7 +317,7 @@ allowed-tools: Read, Write, Bash, Grep, Glob, TaskCreate, TaskUpdate
 - "{general question not Skill-specific}"
 ```
 
-**Add to claude2/SKILLS-ACTIVATION-TESTS.md**
+**Add to .claude/skills/SKILLS-ACTIVATION-TESTS.md**
 
 ### 10. Document in Migration Log
 
@@ -355,7 +349,7 @@ allowed-tools: Read, Write, Bash, Grep, Glob, TaskCreate, TaskUpdate
 ✅ SKILL CREATED: {skill-name}
 
 📁 Location:
-claude2/skills/{category}/{skill-name}/
+.claude/skills/{skill-name}/
 
 📝 Files Created:
 - SKILL.md ({X} lines)

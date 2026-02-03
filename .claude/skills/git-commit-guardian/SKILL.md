@@ -58,7 +58,7 @@ git diff --cached --name-only | grep -E '\.(env|pem|key|credentials)$'
 **Required format (Conventional Commits):**
 
 ```
-<type>[(scope)][!]: <description>
+<type>[(scope)]: <description>
 
 [optional body]
 
@@ -72,7 +72,6 @@ git diff --cached --name-only | grep -E '\.(env|pem|key|credentials)$'
 - [ ] Subject uses imperative mood ("add" not "added", "fix" not "fixed")
 - [ ] Blank line between subject and body (if body exists)
 - [ ] Body lines wrapped at 80 characters
-- [ ] Breaking changes marked with `!` or `BREAKING CHANGE:` footer
 
 **If validation fails:**
 ```
@@ -226,14 +225,6 @@ Recommend splitting into multiple commits:
 Use: git add -p (patch mode) to stage selectively
 ```
 
-**Breaking changes:**
-```
-feat(api)!: change factory function signature
-
-BREAKING CHANGE: fakeXxx() now requires explicit configuration.
-Migration: fakeXxx() → fakeXxx {}
-```
-
 **Reverting commits:**
 ```
 revert: feat(compiler): add generic type parameter support
@@ -269,7 +260,6 @@ This skill enables:
 4. **Keep subject concise** - 72 chars max, aim for 50
 5. **Never include AI attribution** - Clean, professional commits only
 6. **Reference issues when relevant** - `Closes #123`, `Fixes #456`
-7. **Mark breaking changes explicitly** - Use `!` or `BREAKING CHANGE:` footer
 
 ## Commit Type Reference
 
