@@ -1,6 +1,11 @@
+---
+name: fakt-docs-navigator
+description: Navigate Fakt internal docs. Use when asking about testing guidelines, Metro alignment, compiler architecture, or contributor documentation.
+allowed-tools: Read, Grep, Glob
+---
+
 # Fakt Documentation Navigator
 
-## Description
 Navigate Fakt's internal contributor documentation efficiently using the updated folder structure.
 
 ## Usage

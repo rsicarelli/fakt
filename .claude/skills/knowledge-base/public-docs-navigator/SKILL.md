@@ -1,7 +1,7 @@
 ---
 name: public-docs-navigator
 description: Navigate Fakt's public MkDocs documentation site (docs/) for users learning about Fakt. Use when users ask about documentation, guides, multi-module setup, code generation strategy, testing patterns, or need help understanding Fakt features. Provides quick navigation to reference docs, usage guides, multi-module documentation, and troubleshooting resources. Progressive disclosure - loads specific pages on demand rather than loading everything.
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: Read, Grep, Glob
 ---
 
 # Public Documentation Navigator

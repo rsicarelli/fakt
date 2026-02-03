@@ -1,7 +1,7 @@
 ---
 name: skill-creator
 description: Creates new Claude Code Skills following best practices from migration patterns. Use when creating new Skills, converting slash commands to Skills, scaffolding Skill structure, or when user mentions "create skill", "new skill", "migrate command", or "skill from scratch". Enforces trigger-rich descriptions, progressive disclosure, and model-agnostic design.
-allowed-tools: [Read, Write, Bash, Grep, Glob]
+allowed-tools: Read, Write, Bash, Grep, Glob
 ---
 
 # Skill Creator - Meta-Skill for Skill Development
@@ -266,32 +266,32 @@ allowed-tools: [{minimal set of tools needed}]
 
 ```yaml
 # ❌ Too permissive:
-allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, TodoWrite, Task, WebFetch]
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob, TaskCreate, TaskUpdate, Task, WebFetch
 
 # ✅ Minimal (only what's needed):
-allowed-tools: [Read, Grep, Bash]
+allowed-tools: Read, Grep, Bash
 ```
 
 **Common tool sets:**
 
 **Analysis Skills:**
 ```yaml
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: Read, Grep, Glob
 ```
 
 **Execution Skills:**
 ```yaml
-allowed-tools: [Read, Bash, TodoWrite]
+allowed-tools: Read, Bash, TaskCreate, TaskUpdate
 ```
 
 **Generation Skills:**
 ```yaml
-allowed-tools: [Read, Write, Grep, Glob]
+allowed-tools: Read, Write, Grep, Glob
 ```
 
 **Complex Workflows:**
 ```yaml
-allowed-tools: [Read, Write, Bash, Grep, Glob, TodoWrite]
+allowed-tools: Read, Write, Bash, Grep, Glob, TaskCreate, TaskUpdate
 ```
 
 ### 9. Create Activation Test Prompts

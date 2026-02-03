@@ -1,7 +1,7 @@
 ---
 name: behavior-analyzer-tester
 description: Performs deep behavior analysis of code and generates comprehensive unit tests following GIVEN-WHEN-THEN patterns with vanilla JUnit5. Use when generating tests, analyzing behavior, improving test coverage, creating unit tests, or when user mentions "generate tests", "test coverage", "analyze behavior", "GIVEN-WHEN-THEN tests", "unit tests", or provides file path to analyze.
-allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, TodoWrite]
+allowed-tools: Read, Write, Edit, Grep, Glob, Bash, TaskCreate, TaskUpdate
 ---
 
 # Behavior Analyzer & Test Generator

@@ -1,7 +1,7 @@
 ---
 name: kotlin-api-consultant
 description: Queries Kotlin compiler source code for API validation, compatibility checks, Metro pattern alignment, breaking change detection, and best practice recommendations. Use when validating Kotlin APIs, checking compiler compatibility, analyzing API usage patterns, detecting breaking changes, or when user mentions "Kotlin API", "compiler API", "IrGenerationExtension", "IrPluginContext", "API validation", "Metro API usage", or specific Kotlin compiler class/interface names.
-allowed-tools: [Read, Grep, Glob, Bash, WebFetch]
+allowed-tools: Read, Grep, Glob, Bash, WebFetch
 ---
 
 # Kotlin API Oracle & Compatibility Validator

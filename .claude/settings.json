@@ -1,5 +1,5 @@
 {
-  "description": "Claude Code settings for Fakt compiler plugin development with skill auto-activation",
+  "description": "Claude Code settings for Fakt compiler plugin development",
   "permissions": {
     "allow": [
       "Bash(make**)",
@@ -7,19 +7,6 @@
       "Bash(rm -rf **)",
       "Bash(**gradlew**)",
       "Bash(git **)"
-    ]
-  },
-  "hooks": {
-    "UserPromptSubmit": [
-      {
-        "description": "Auto-suggest relevant skills based on user prompts and context",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/skill-activation-prompt.sh"
-          }
-        ]
-      }
     ]
   }
 }

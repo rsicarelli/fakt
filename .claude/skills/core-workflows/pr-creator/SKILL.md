@@ -1,7 +1,7 @@
 ---
 name: pr-creator
 description: Creates professional PRs using project template, enforces Conventional Commits title format, always creates drafts via gh CLI. Use when creating PR, opening PR, submitting PR, or user mentions "create pr", "open pr", "pr this", "submit pr", "make pr".
-allowed-tools: [Read, Bash, Grep, Glob, AskUserQuestion]
+allowed-tools: Read, Bash, Grep, Glob, AskUserQuestion
 ---
 
 # PR Creator

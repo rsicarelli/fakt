@@ -1,7 +1,7 @@
 ---
 name: compilation-validator
 description: Validates compilation of generated Fakt fake code ensuring zero errors, proper type safety, smart defaults working correctly, and configuration DSL properly typed. Use when validating compilation, checking generated code, verifying type safety, debugging compilation issues, or when user mentions "validate compilation", "check compilation", "generated code errors", "compile fakes", "compilation fails", interface names with "validate", or "type safety".
-allowed-tools: [Read, Bash, Grep, Glob, TodoWrite]
+allowed-tools: Read, Bash, Grep, Glob, TaskCreate, TaskUpdate
 ---
 
 # Compilation Validator & Type Safety Checker

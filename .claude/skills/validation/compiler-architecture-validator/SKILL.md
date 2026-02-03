@@ -1,7 +1,7 @@
 ---
 name: compiler-architecture-validator
 description: Validates Fakt implementation follows compiler plugin best practices including two-phase FIR→IR compilation, context-driven generation, CompilerPluginRegistrar structure, and IrGenerationExtension patterns. Use when validating architectural patterns, verifying compiler plugin structure, checking code quality, or when user mentions "architecture", "validate patterns", "compiler plugin", "check structure", or specific component names.
-allowed-tools: [Read, Grep, Glob, TodoWrite]
+allowed-tools: Read, Grep, Glob, TaskCreate, TaskUpdate
 ---
 
 # Compiler Architecture Validator

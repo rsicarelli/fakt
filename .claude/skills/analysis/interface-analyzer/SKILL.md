@@ -1,7 +1,7 @@
 ---
 name: interface-analyzer
 description: Deep structural analysis of @Fake annotated interfaces examining method signatures, property definitions, generic type parameters, suspend functions, complexity assessment, and generation strategy recommendations. Use when analyzing interface structure, examining method signatures, checking generic patterns, assessing generation complexity, or when user mentions "analyze interface", "interface structure", "check methods", "assess complexity", interface names, or "generation strategy".
-allowed-tools: [Read, Grep, Glob, Bash]
+allowed-tools: Read, Grep, Glob, Bash
 ---
 
 # Interface Structure Deep Analyzer

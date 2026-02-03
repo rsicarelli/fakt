@@ -1,7 +1,7 @@
 ---
 name: bdd-test-runner
 description: Executes BDD-compliant GIVEN-WHEN-THEN tests with vanilla JUnit5, validates test naming compliance, analyzes coverage, and ensures tests follow project testing standards. Use when running tests, validating test patterns, checking coverage, or when user mentions "run tests", "BDD", "GIVEN-WHEN-THEN", "test coverage", or "validate tests".
-allowed-tools: [Read, Bash, Grep, Glob, TodoWrite]
+allowed-tools: Read, Bash, Grep, Glob, TaskCreate, TaskUpdate
 ---
 
 # BDD Test Runner & Compliance Validator

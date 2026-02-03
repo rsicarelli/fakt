@@ -1,7 +1,7 @@
 ---
 name: {skill-name}
 description: {trigger-rich-description - max 1024 chars, include "use when" clause, third person, specific keywords}
-allowed-tools: [{minimal-set-of-tools}]
+allowed-tools: {Tool1, Tool2, Tool3}
 ---
 
 # {Skill Title}

@@ -1,7 +1,7 @@
 ---
 name: compilation-error-analyzer
 description: Systematic compilation error diagnostic and resolution for Fakt development analyzing error types, identifying root causes, providing targeted solutions, and systematic debugging workflows. Use when debugging compilation errors, analyzing build failures, troubleshooting generated code, resolving plugin issues, or when user mentions "compilation error", "build fails", "generated code error", "plugin error", error messages, stack traces, or interface names with error context.
-allowed-tools: [Read, Grep, Bash, Glob]
+allowed-tools: Read, Grep, Bash, Glob
 ---
 
 # Compilation Error Diagnostic & Resolution Engine

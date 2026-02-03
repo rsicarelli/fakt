@@ -1,7 +1,7 @@
 ---
 name: implementation-tracker
 description: Monitors Fakt implementation progress tracking phase completion status, test pass rates, compilation success metrics, milestone validation, and identifying blockers. Use when checking status, monitoring progress, validating phases, reviewing milestones, or when user mentions "check status", "implementation progress", "phase completion", "what's done", "current state", "milestone", or phase names (Phase 1, Phase 2).
-allowed-tools: [Read, Grep, Glob, Bash]
+allowed-tools: Read, Grep, Glob, Bash
 ---
 
 # Implementation Progress Tracker

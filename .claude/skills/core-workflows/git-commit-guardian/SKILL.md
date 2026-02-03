@@ -1,7 +1,7 @@
 ---
 name: git-commit-guardian
 description: Enforces Conventional Commits format, validates message quality (72 char subject, 80 char body), and BLOCKS Claude Code pollution (co-author/generated-by markers). Use when committing, creating commits, git commit, or when user mentions "commit", "git commit", "commit message", "commit changes", "push changes".
-allowed-tools: [Read, Bash, Grep, Glob]
+allowed-tools: Read, Bash, Grep, Glob
 ---
 
 # Git Commit Guardian
