@@ -43,7 +43,7 @@ Options: specific interface | all generated fakes | verbose report
 **Ensure fresh compilation:**
 ```bash
 # Navigate to project root
-cd /Users/rsicarelli/Workspace/Personal/ktfakes-prototype/ktfake
+cd /Users/rsicarelli/Workspace/Personal/fakt
 
 # Clean build artifacts
 ./gradlew clean

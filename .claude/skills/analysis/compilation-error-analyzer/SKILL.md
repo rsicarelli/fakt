@@ -85,7 +85,7 @@ grep -A 10 "Exception" compilation.log
 **Plugin Registration Errors:**
 ```
 Indicators:
-- "KtFakeCompilerPluginRegistrar"
+- "FaktCompilerPluginRegistrar"
 - "CompilerPluginRegistrar not found"
 - "META-INF/services"
 - ServiceLoader exceptions
@@ -95,7 +95,7 @@ Indicators:
 ```
 Indicators:
 - "IrGenerationExtension"
-- "UnifiedKtFakesIrGenerationExtension"
+- "UnifiedFaktIrGenerationExtension"
 - "IR generation failed"
 - IrElement exceptions
 ```
@@ -112,7 +112,7 @@ Indicators:
 **Generated Code Compilation Errors:**
 ```
 Indicators:
-- "build/generated/ktfake"
+- "build/generated/fakt"
 - Path containing generated files
 - "Fake*Impl.kt"
 - Kotlin syntax errors in generated files
@@ -171,7 +171,7 @@ grep -A 20 "Exception:" compilation.log
 
 **Pattern 1: Plugin JAR Not Built**
 ```
-❌ ERROR: Cannot find KtFakeCompilerPluginRegistrar
+❌ ERROR: Cannot find FaktCompilerPluginRegistrar
 
 Root Cause:
 - Compiler plugin JAR not built or out of date
@@ -196,7 +196,7 @@ Solution:
 
 Verification:
 ✅ compiler-*.jar exists in build/libs/
-✅ JAR contains KtFakeCompilerPluginRegistrar.class
+✅ JAR contains FaktCompilerPluginRegistrar.class
 ✅ META-INF/services/ has registrar entry
 ```
 

@@ -1,13 +1,13 @@
-# Kotlin Compiler IR API Reference - KtFakes Development Guide
+# Kotlin Compiler IR API Reference - Fakt Development Guide
 
-> **Purpose**: Comprehensive reference for Kotlin IR APIs used in KtFakes development
+> **Purpose**: Comprehensive reference for Kotlin IR APIs used in Fakt development
 > **Version**: Based on Kotlin 2.2.21 source code
 > **Scope**: IR-Native code generation for fake implementation generation
 > **Testing Standard**: [📋 Testing Guidelines](.claude/docs/validation/testing-guidelines.md)
 
 ## 🎯 **Overview**
 
-The Kotlin IR (Intermediate Representation) API provides the foundation for KtFakes to generate type-safe fake implementations at compile time. This guide documents the key APIs needed for our unified IR-native approach.
+The Kotlin IR (Intermediate Representation) API provides the foundation for Fakt to generate type-safe fake implementations at compile time. This guide documents the key APIs needed for our unified IR-native approach.
 
 ## 🏗️ **Core IR Architecture**
 
@@ -28,7 +28,7 @@ IrElement (base class)
 └── IrTypeArgument              # Generic type parameters
 ```
 
-### **KtFakes Usage Mapping**
+### **Fakt Usage Mapping**
 - **IrClass**: Interface analysis and fake implementation generation
 - **IrSimpleFunction**: Method signature preservation and behavior generation
 - **IrProperty**: Property implementation with getter/setter generation
@@ -47,7 +47,7 @@ kotlin/compiler/ir/
 └── serialization.*/           # IR serialization (for debugging)
 ```
 
-### **Critical Packages for KtFakes**
+### **Critical Packages for Fakt**
 ```kotlin
 // Core IR declarations
 import org.jetbrains.kotlin.ir.declarations.*
@@ -73,17 +73,17 @@ abstract class CompilerPluginRegistrar {
 }
 ```
 
-**KtFakes Implementation:**
+**Fakt Implementation:**
 ```kotlin
-class KtFakeCompilerPluginRegistrar : CompilerPluginRegistrar() {
+class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
     override val supportsK2: Boolean = true
 
     override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
         // Phase 1: FIR extension for @Fake detection
-        FirExtensionRegistrarAdapter.registerExtension(KtFakesFirExtensionRegistrar())
+        FirExtensionRegistrarAdapter.registerExtension(FaktFirExtensionRegistrar())
 
         // Phase 2: IR extension for fake implementation generation
-        IrGenerationExtension.registerExtension(UnifiedKtFakesIrGenerationExtension())
+        IrGenerationExtension.registerExtension(UnifiedFaktIrGenerationExtension())
     }
 }
 ```
@@ -109,17 +109,17 @@ interface IrGenerationExtension {
 }
 ```
 
-**KtFakes Implementation Pattern:**
+**Fakt Implementation Pattern:**
 ```kotlin
-class UnifiedKtFakesIrGenerationExtension : IrGenerationExtension {
+class UnifiedFaktIrGenerationExtension : IrGenerationExtension {
     override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
         // Create context following Metro patterns
-        val context = IrKtFakeContext(pluginContext, messageCollector, ...)
+        val context = IrFaktContext(pluginContext, messageCollector, ...)
 
         context(context) { generateInner(moduleFragment) }
     }
 
-    context(context: IrKtFakeContext)
+    context(context: IrFaktContext)
     private fun generateInner(moduleFragment: IrModuleFragment) {
         val fakeInterfaces = discoverFakeInterfaces(moduleFragment)
         fakeInterfaces.forEach { generateFakeImplementation(it) }
@@ -133,7 +133,7 @@ class UnifiedKtFakesIrGenerationExtension : IrGenerationExtension {
 ```kotlin
 // Interface detection
 val isInterface: Boolean = irClass.isInterface
-val isFakeAnnotated: Boolean = irClass.hasAnnotation(FqName("dev.rsicarelli.ktfake.Fake"))
+val isFakeAnnotated: Boolean = irClass.hasAnnotation(FqName("dev.rsicarelli.fakt.Fake"))
 
 // Member extraction
 val methods: List<IrSimpleFunction> = irClass.declarations.filterIsInstance<IrSimpleFunction>()
@@ -143,9 +143,9 @@ val properties: List<IrProperty> = irClass.declarations.filterIsInstance<IrPrope
 val typeParameters: List<IrTypeParameter> = irClass.typeParameters
 ```
 
-**KtFakes Interface Analysis Example:**
+**Fakt Interface Analysis Example:**
 ```kotlin
-context(context: IrKtFakeContext)
+context(context: IrFaktContext)
 private fun analyzeInterface(irClass: IrClass): InterfaceMetadata {
     require(irClass.isInterface) { "Expected interface, got ${irClass.kind}" }
 
@@ -163,7 +163,7 @@ private fun analyzeInterface(irClass: IrClass): InterfaceMetadata {
 
 ### **Method Signature Analysis**
 ```kotlin
-context(context: IrKtFakeContext)
+context(context: IrFaktContext)
 private fun analyzeMethod(irFunction: IrSimpleFunction): MethodMetadata {
     return MethodMetadata(
         name = irFunction.name.asString(),
@@ -185,7 +185,7 @@ private fun analyzeMethod(irFunction: IrSimpleFunction): MethodMetadata {
 
 ### **IrFactory Usage**
 ```kotlin
-context(context: IrKtFakeContext)
+context(context: IrFaktContext)
 private fun generateFakeImplementation(interfaceClass: IrClass): IrClass {
     return context.irFactory.buildClass {
         name = Name.identifier("Fake${interfaceClass.name}Impl")
@@ -207,7 +207,7 @@ private fun generateFakeImplementation(interfaceClass: IrClass): IrClass {
 
 ### **Method Generation**
 ```kotlin
-context(context: IrKtFakeContext)
+context(context: IrFaktContext)
 private fun generateMethodImplementation(
     fakeClass: IrClass,
     originalMethod: IrSimpleFunction
@@ -239,7 +239,7 @@ private fun generateMethodImplementation(
 
 ### **IrType Handling**
 ```kotlin
-context(context: IrKtFakeContext)
+context(context: IrFaktContext)
 private fun irTypeToKotlinString(irType: IrType): String {
     return when (irType) {
         is IrSimpleType -> {
@@ -279,7 +279,7 @@ private fun irTypeToKotlinString(irType: IrType): String {
 
 ### **Generic Type Parameter Handling (Phase 2 Challenge)**
 ```kotlin
-context(context: IrKtFakeContext)
+context(context: IrFaktContext)
 private fun handleGenericTypeParameter(typeParam: IrTypeParameter): String {
     // Phase 2A: Dynamic casting approach
     return when {
@@ -300,7 +300,7 @@ private fun handleGenericTypeParameter(typeParam: IrTypeParameter): String {
 
 ### **Symbol Resolution**
 ```kotlin
-context(context: IrKtFakeContext)
+context(context: IrFaktContext)
 private fun resolveSymbol(fqName: String): IrClassSymbol? {
     return context.pluginContext.referenceClass(ClassId.fromString(fqName))
 }
@@ -313,15 +313,15 @@ val stringType = context.pluginContext.irBuiltIns.stringType
 
 ### **Annotation Analysis**
 ```kotlin
-context(context: IrKtFakeContext)
+context(context: IrFaktContext)
 private fun hasAnnotation(irClass: IrClass, annotationFqName: String): Boolean {
     return irClass.annotations.any { annotation ->
         annotation.symbol.owner.parentAsClass.fqNameWhenAvailable?.asString() == annotationFqName
     }
 }
 
-// KtFakes usage
-val isFakeAnnotated = hasAnnotation(irClass, "dev.rsicarelli.ktfake.Fake")
+// Fakt usage
+val isFakeAnnotated = hasAnnotation(irClass, "dev.rsicarelli.fakt.Fake")
 ```
 
 ## 🧪 **Testing IR APIs**
@@ -386,7 +386,7 @@ private var behavior: (String) -> String
 // Generated code fails to compile
 
 // ✅ SOLUTION: Explicit import generation
-context(context: IrKtFakeContext)
+context(context: IrFaktContext)
 private fun generateImports(usedTypes: Set<String>): List<String> {
     return usedTypes.mapNotNull { typeName ->
         resolveTypeImport(typeName)
@@ -414,4 +414,4 @@ private fun generateImports(usedTypes: Set<String>): List<String> {
 
 ---
 
-**This guide provides the foundation for understanding and using Kotlin IR APIs in KtFakes development, with focus on the Phase 2 generic scoping challenge.**
+**This guide provides the foundation for understanding and using Kotlin IR APIs in Fakt development, with focus on the Phase 2 generic scoping challenge.**
