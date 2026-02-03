@@ -1,6 +1,6 @@
-# Common Issues & Solutions - KtFakes Development
+# Common Issues & Solutions - Fakt Development
 
-> **Purpose**: Quick solutions for common development issues with KtFakes compiler plugin
+> **Purpose**: Quick solutions for common development issues with Fakt compiler plugin
 > **Audience**: Developers working on the unified IR-native architecture
 > **Maintenance**: Update when new issues are discovered
 
@@ -15,8 +15,8 @@ Error: Unresolved reference: Fake
 ```kotlin
 // Ensure proper dependency in build.gradle.kts
 dependencies {
-    implementation("dev.rsicarelli.ktfake:annotations:$ktfakeVersion")
-    testImplementation("dev.rsicarelli.ktfake:compiler:$ktfakeVersion")
+    implementation("dev.rsicarelli.fakt:annotations:$faktVersion")
+    testImplementation("dev.rsicarelli.fakt:compiler:$faktVersion")
 }
 ```
 
@@ -51,7 +51,7 @@ Type mismatch: inferred type is Any but String was expected
 ```kotlin
 @Test
 fun `GIVEN interface with complex types WHEN generating THEN should handle types correctly`() = runTest {
-    // Validate type resolution in UnifiedKtFakesIrGenerationExtensionTest
+    // Validate type resolution in UnifiedFaktIrGenerationExtensionTest
 }
 ```
 
@@ -115,7 +115,7 @@ java.lang.ClassNotFoundException: FakeServiceImpl
 ```kotlin
 // In test module build.gradle.kts
 dependencies {
-    testImplementation("dev.rsicarelli.ktfake:compiler:$version")
+    testImplementation("dev.rsicarelli.fakt:compiler:$version")
 }
 ```
 
@@ -137,7 +137,7 @@ dependencies {
 ```kotlin
 @Test
 fun `GIVEN interface with suspend methods WHEN generating THEN should preserve suspend modifier`() = runTest {
-    // Validate in UnifiedKtFakesIrGenerationExtensionTest
+    // Validate in UnifiedFaktIrGenerationExtensionTest
 }
 ```
 
@@ -212,7 +212,7 @@ interface SimpleRepository {
 1. Enable debug output:
 ```kotlin
 // Add to compiler plugin configuration
-ktfake {
+fakt {
     debug = true
 }
 ```
@@ -254,7 +254,7 @@ fun `GIVEN invalid interface WHEN generating THEN should report clear error`() =
 
 ### **Issue: "Compilation takes too long"**
 ```
-// Build time significantly increased with KtFakes
+// Build time significantly increased with Fakt
 ```
 
 **Solution:**
@@ -323,7 +323,7 @@ interface SharedService { ... } // Duplicate
 ls -la build/generated/fakt/test/kotlin/
 
 # Verify plugin registration
-./gradlew :test-sample:dependencies | grep ktfake
+./gradlew :test-sample:dependencies | grep fakt
 ```
 
 ### **Common Fixes**

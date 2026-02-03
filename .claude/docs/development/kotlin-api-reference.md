@@ -229,7 +229,7 @@ grep -A 5 "interface IrTypeParameter" /kotlin/compiler/ir/ir.tree/src/org/jetbra
 
 3. **Pattern Application:**
    ```kotlin
-   // Apply Kotlin patterns to KtFakes
+   // Apply Kotlin patterns to Fakt
    // Follow exactly how Kotlin does it internally
    ```
 
@@ -244,7 +244,7 @@ grep -A 5 "interface IrTypeParameter" /kotlin/compiler/ir/ir.tree/src/org/jetbra
 2. **Resolution Pattern:**
    ```kotlin
    // See how Kotlin resolves the same issue
-   // Apply same pattern to KtFakes
+   // Apply same pattern to Fakt
    ```
 
 ### **Workflow 3: Performance Optimization**
@@ -255,7 +255,7 @@ grep -A 5 "interface IrTypeParameter" /kotlin/compiler/ir/ir.tree/src/org/jetbra
    grep -r "performance\|optimization\|cache" /kotlin/compiler/
    ```
 
-2. **Apply to KtFakes:**
+2. **Apply to Fakt:**
    ```kotlin
    // Use Kotlin's own optimization strategies
    ```
@@ -280,7 +280,7 @@ grep -A 5 "interface IrTypeParameter" /kotlin/compiler/ir/ir.tree/src/org/jetbra
 // How does Kotlin handle type parameter scoping?
 
 // 3. Combined solution
-context(context: IrKtFakeContext)
+context(context: IrFaktContext)
 private fun resolveGenericType(irType: IrType): String {
     // Use Kotlin's own type parameter resolution + Metro patterns
     return when (irType) {

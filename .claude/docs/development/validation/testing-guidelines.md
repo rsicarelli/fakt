@@ -1,4 +1,4 @@
-# Testing Guidelines - KtFakes Compiler Plugin
+# Testing Guidelines - Fakt Compiler Plugin
 
 > **THE BIBLE**: This is our **absolute testing standard**
 > **Source**: Based on `/fakt/docs/TESTING_GUIDELINES.md`
@@ -18,7 +18,7 @@ Every test MUST follow:
 ### **✅ CORRECT Pattern - ALWAYS Use This**
 ```kotlin
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class UnifiedKtFakesIrGenerationExtensionTest {
+class UnifiedFaktIrGenerationExtensionTest {
 
     @Test
     fun `GIVEN interface with suspend functions WHEN generating fake THEN should preserve suspend signatures`() = runTest {
@@ -27,7 +27,7 @@ class UnifiedKtFakesIrGenerationExtensionTest {
             method("getUser") { suspend(); returns("User") }
             method("updateUser") { suspend(); returns("Boolean") }
         }
-        val generator = UnifiedKtFakesIrGenerationExtension()
+        val generator = UnifiedFaktIrGenerationExtension()
 
         // When
         val result = generator.generateFakeImplementation(asyncInterface)
@@ -421,4 +421,4 @@ fun `GIVEN interface with varargs WHEN generating THEN should handle varargs cor
 
 ---
 
-**This document is THE ABSOLUTE STANDARD for all testing in KtFakes. Every test code snippet in documentation MUST follow these patterns.**
+**This document is THE ABSOLUTE STANDARD for all testing in Fakt. Every test code snippet in documentation MUST follow these patterns.**
