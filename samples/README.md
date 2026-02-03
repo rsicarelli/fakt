@@ -61,6 +61,21 @@ A comprehensive KMP hierarchy validation sample demonstrating:
 
 **Source Set Targets**: `commonMain`, `jvmMain`, `iosMain`, `jsMain`, `wasmJsMain`, `nativeMain` → corresponding test source sets
 
+### 📤 **fake-publishing** ⭐ NEW
+A two-project sample validating Maven artifact publishing workflow:
+- **Publisher Project**: Library with @Fake interfaces published to Maven Local
+- **Consumer Project**: Separate Gradle project consuming published fakes
+- **No Plugin Required**: Consumer uses fakes without Fakt compiler plugin
+- **Real-World Workflow**: Validates library author publishing scenario
+
+**Key Validations:**
+- ✅ Fakes included in published JAR artifacts
+- ✅ Factory functions accessible from external projects
+- ✅ DSL configuration works at runtime
+- ✅ KMP metadata properly exported
+
+**Structure**: Two independent Gradle projects (`kmp-publisher` → `kmp-consumer`)
+
 ## 🎯 **Testing Philosophy**
 
 Each sample serves as a **battle test** for the Fakt compiler plugin:

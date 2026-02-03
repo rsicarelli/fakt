@@ -1,7 +1,7 @@
 # Fakt Development Commands
 # Run from fakt/ directory (or from project root)
 
-.PHONY: build test compile clean format shadowJar test-sample validate quick-test full-rebuild
+.PHONY: build test compile clean format shadowJar test-sample test-fake-publishing validate quick-test full-rebuild
 
 # Core build commands
 build:
@@ -51,6 +51,14 @@ test-kmp-multi-module:
 test-kmp-multi-target:
 	@echo "🎯 Testing kmp-multi-target sample (hierarchy validation)..."
 	cd samples/kmp-multi-target && ./gradlew allTests
+
+# Fake publishing sample (two-project workflow)
+test-fake-publishing:
+	@echo "📤 Testing fake-publishing sample (two-step workflow)..."
+	@echo "Step 1: Publishing kmp-publisher to Maven Local..."
+	cd samples/fake-publishing/kmp-publisher && ./gradlew publishToMavenLocal
+	@echo "Step 2: Building and testing kmp-consumer..."
+	cd samples/fake-publishing/kmp-consumer && ./gradlew build
 
 # Comprehensive validation workflow (runs all checks like CI)
 validate:
@@ -114,6 +122,7 @@ help:
 	@echo "  test-sample     - Test kmp-single-module sample (composite build)"
 	@echo "  test-kmp-multi-module - Test kmp-multi-module sample (composite build)"
 	@echo "  test-kmp-multi-target - Test kmp-multi-target sample (hierarchy validation)"
+	@echo "  test-fake-publishing - Test fake-publishing sample (two-step workflow)"
 	@echo ""
 	@echo "  validate        - ⭐ Run all validations (format, lint, tests, samples)"
 	@echo "  quick-test      - Quick development cycle (auto-rebuilds plugin!)"

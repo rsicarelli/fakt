@@ -116,6 +116,28 @@ Fakt includes working sample projects demonstrating different use cases.
 
 ---
 
+## fake-publishing
+
+**Location**: [`samples/fake-publishing/`](https://github.com/rsicarelli/fakt/tree/main/samples/fake-publishing)
+
+**Demonstrates**: Publishing Fakt-generated fakes as Maven artifacts for external consumption
+
+**Structure**:
+
+- `kmp-publisher/` - Library project that publishes fakes
+- `kmp-consumer/` - External project that consumes published fakes
+
+**Key Examples**:
+
+- Publishing collector modules to Maven Local
+- Consuming pre-generated fakes from Maven artifacts
+- Cross-project fake usage without Fakt plugin
+- Interface, abstract class, and open class support
+
+**Best for**: Library authors who want to ship pre-generated fakes alongside their APIs
+
+---
+
 ## Running Samples
 
 Clone the repository and build:
@@ -138,6 +160,13 @@ cd fakt/samples/kmp-single-module
 # KMP hierarchy validation
 cd fakt/samples/kmp-multi-target
 ./gradlew allTests
+
+# Fake publishing sample (requires sequential steps)
+cd fakt/samples/fake-publishing/kmp-publisher
+./gradlew publishToMavenLocal
+
+cd fakt/samples/fake-publishing/kmp-consumer
+./gradlew build
 ```
 
 ---
