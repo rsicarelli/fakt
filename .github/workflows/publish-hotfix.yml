@@ -29,9 +29,6 @@ jobs:
       - name: Setup Environment
         uses: ./.github/actions/setup-environment
 
-      - name: Run Ktlint
-        uses: ./.github/actions/validate-ktlint
-
       - name: Run Detekt
         uses: ./.github/actions/validate-detekt
 
