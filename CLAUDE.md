@@ -364,12 +364,12 @@ Fakt includes 12 specialized skills that **automatically activate** based on you
 com.example.services.UserService
 // → com.example.services.FakeUserServiceImpl (same package)
 
-// Behavior properties naming
+// Behavior properties naming (immutable, set via constructor)
 interface UserService {
     fun getUser(): User
 }
-// → private var getUserBehavior: () -> User = { ... }
-// → fun configureGetUser(behavior: () -> User) { getUserBehavior = behavior }
+// → private val getUserBehavior: () -> User = { ... }  (constructor parameter)
+// → FakeUserServiceConfig: internal var getUserBehavior: (() -> User)? = null
 ```
 
 ### **Code Style**

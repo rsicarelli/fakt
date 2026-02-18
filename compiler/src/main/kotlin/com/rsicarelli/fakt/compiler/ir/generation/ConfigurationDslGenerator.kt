@@ -18,8 +18,11 @@ import com.rsicarelli.fakt.compiler.ir.analysis.ParameterAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.PropertyAnalysis
 
 /**
- * Generates configuration DSL classes for fake implementations. Creates type-safe DSL classes that
- * provide convenient configuration of fake behavior.
+ * Generates configuration DSL classes for fake implementations.
+ *
+ * The config class acts as a standalone builder — it collects behavior lambdas internally during DSL
+ * configuration, then the factory function reads these behaviors to construct an immutable fake.
+ * The config class does NOT hold a reference to the fake implementation.
  *
  * Uses the type-safe CodeFile DSL for clean, composable code generation.
  */
@@ -36,17 +39,16 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
      * the class declaration (no package/imports), suitable for being added to an existing file.
      *
      * @param analysis The analyzed interface metadata
-     * @param fakeClassName The name of the fake implementation class
+     * @param fakeClassName The name of the fake implementation class (unused, kept for API compat)
      * @return CodeFile containing the configuration DSL class
      */
     fun generateConfigurationDslCodeFile(
         analysis: InterfaceAnalysis,
-        fakeClassName: String,
+        @Suppress("UNUSED_PARAMETER") fakeClassName: String,
     ): CodeFile {
         val configClassName = "Fake${analysis.interfaceName}Config"
         val (typeParamsForHeader, whereClause) =
             formatTypeParametersWithWhereClause(analysis.typeParameters)
-        val typeArguments = extractTypeParameterNames(analysis.typeParameters)
         val propagatedAnnotations = extractPropagatedAnnotations(analysis.annotations)
 
         return codeFile("") {
@@ -62,21 +64,19 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
                     where(whereClause)
                 }
 
-                // Add constructor property for fake reference
-                constructorProperty("fake", "$fakeClassName$typeArguments") { private() }
-
                 // Add propagated annotations
                 propagatedAnnotations.forEach { annotation ->
                     annotation(annotation.simpleName, annotation.renderedArguments)
                 }
 
-                // Generate function configurators
+                // Generate internal behavior properties + DSL configurator methods
                 analysis.functions.forEach { func ->
+                    generateFunctionBehaviorProperty(func)
                     generateFunctionConfigurator(func, analysis.visibility)
                 }
 
-                // Generate property configurators
                 analysis.properties.forEach { prop ->
+                    generatePropertyBehaviorProperty(prop)
                     generatePropertyConfigurator(prop, analysis.visibility)
                 }
             }
@@ -108,14 +108,16 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
      * Generates a configuration DSL CodeFile for the fake class implementation.
      *
      * @param analysis The analyzed class metadata
-     * @param fakeClassName The name of the fake implementation class
+     * @param fakeClassName The name of the fake implementation class (unused, kept for API compat)
      * @return CodeFile containing the configuration DSL class
      */
-    fun generateConfigurationDslCodeFile(analysis: ClassAnalysis, fakeClassName: String): CodeFile {
+    fun generateConfigurationDslCodeFile(
+        analysis: ClassAnalysis,
+        @Suppress("UNUSED_PARAMETER") fakeClassName: String,
+    ): CodeFile {
         val configClassName = "Fake${analysis.className}Config"
         val (typeParamsForHeader, whereClause) =
             formatTypeParametersWithWhereClause(analysis.typeParameters)
-        val typeArguments = extractTypeParameterNames(analysis.typeParameters)
         val propagatedAnnotations = extractPropagatedAnnotations(analysis.annotations)
 
         return codeFile("") {
@@ -131,9 +133,6 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
                     where(whereClause)
                 }
 
-                // Add constructor property for fake reference
-                constructorProperty("fake", "$fakeClassName$typeArguments") { private() }
-
                 // Add propagated annotations
                 propagatedAnnotations.forEach { annotation ->
                     annotation(annotation.simpleName, annotation.renderedArguments)
@@ -141,21 +140,25 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
 
                 // Generate configuration methods for abstract methods
                 analysis.abstractMethods.forEach { func ->
+                    generateFunctionBehaviorProperty(func)
                     generateFunctionConfigurator(func, analysis.visibility)
                 }
 
                 // Generate configuration methods for open methods
                 analysis.openMethods.forEach { func ->
+                    generateFunctionBehaviorProperty(func)
                     generateFunctionConfigurator(func, analysis.visibility)
                 }
 
                 // Generate configuration methods for abstract properties
                 analysis.abstractProperties.forEach { prop ->
+                    generatePropertyBehaviorProperty(prop)
                     generatePropertyConfigurator(prop, analysis.visibility)
                 }
 
                 // Generate configuration methods for open properties
                 analysis.openProperties.forEach { prop ->
+                    generatePropertyBehaviorProperty(prop)
                     generatePropertyConfigurator(prop, analysis.visibility)
                 }
             }
@@ -205,16 +208,60 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
         }
     }
 
-    /** Generates a function configurator method. */
+    /**
+     * Generates an internal mutable behavior property for a function.
+     *
+     * The config class stores behaviors as `internal var` properties during the DSL phase. These
+     * are read by the factory function to construct an immutable fake.
+     */
+    private fun ClassBuilder.generateFunctionBehaviorProperty(function: FunctionAnalysis) {
+        val behaviorSignature = buildBehaviorSignature(function)
+        property("${function.name}Behavior", behaviorSignature) {
+            internal()
+            mutable()
+            initializer = "null"
+        }
+    }
+
+    /**
+     * Generates an internal mutable behavior property for a property.
+     *
+     * Stores the getter (and optionally setter) behavior during DSL configuration.
+     */
+    private fun ClassBuilder.generatePropertyBehaviorProperty(property: PropertyAnalysis) {
+        val propertyType =
+            typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
+
+        property("${property.name}Behavior", "(() -> $propertyType)?") {
+            internal()
+            mutable()
+            initializer = "null"
+        }
+
+        if (property.isMutable) {
+            property("set${property.name.replaceFirstChar { it.uppercase() }}Behavior", "((${propertyType}) -> Unit)?") {
+                internal()
+                mutable()
+                initializer = "null"
+            }
+        }
+    }
+
+    /**
+     * Generates a function configurator method.
+     *
+     * DSL method that stores the behavior lambda in the config's internal property.
+     */
     private fun ClassBuilder.generateFunctionConfigurator(
         function: FunctionAnalysis,
         visibility: FirVisibility,
     ) {
         val functionName = function.name
-        val capitalizedName = functionName.replaceFirstChar { it.uppercase() }
 
         // Build behavior signature
         val behaviorSignature = buildBehaviorSignature(function)
+        // Remove the nullable wrapper for the parameter type
+        val paramSignature = behaviorSignature.removeSuffix(")?") + ")"
 
         function(functionName) {
             // Apply visibility
@@ -236,13 +283,17 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
                 }
             }
 
-            parameter("behavior", behaviorSignature)
+            parameter("behavior", paramSignature)
             returns("Unit")
-            expressionBody = "fake.configure$capitalizedName(behavior)"
+            expressionBody = "run { ${functionName}Behavior = behavior }"
         }
     }
 
-    /** Generates a property configurator method. */
+    /**
+     * Generates a property configurator method.
+     *
+     * DSL method that stores the behavior lambda in the config's internal property.
+     */
     private fun ClassBuilder.generatePropertyConfigurator(
         property: PropertyAnalysis,
         visibility: FirVisibility,
@@ -262,7 +313,7 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
 
             parameter("behavior", "() -> $propertyType")
             returns("Unit")
-            expressionBody = "fake.configure$capitalizedName(behavior)"
+            expressionBody = "run { ${propertyName}Behavior = behavior }"
         }
 
         // Setter configuration for mutable properties
@@ -276,12 +327,16 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
 
                 parameter("behavior", "($propertyType) -> Unit")
                 returns("Unit")
-                expressionBody = "fake.configureSet$capitalizedName(behavior)"
+                expressionBody = "run { set${capitalizedName}Behavior = behavior }"
             }
         }
     }
 
-    /** Builds the behavior signature for a function. */
+    /**
+     * Builds the behavior signature for a function.
+     *
+     * Returns a nullable function type for use as internal config property.
+     */
     private fun buildBehaviorSignature(function: FunctionAnalysis): String {
         val suspendModifier = if (function.isSuspend) "suspend " else ""
 
@@ -317,11 +372,14 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
         val returnType =
             typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
 
-        return if (parameterTypes.isEmpty()) {
-            "$suspendModifier() -> $returnType"
-        } else {
-            "$suspendModifier($parameterTypes) -> $returnType"
-        }
+        val baseType =
+            if (parameterTypes.isEmpty()) {
+                "$suspendModifier() -> $returnType"
+            } else {
+                "$suspendModifier($parameterTypes) -> $returnType"
+            }
+
+        return "($baseType)?"
     }
 
     /**

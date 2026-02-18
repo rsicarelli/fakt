@@ -221,22 +221,22 @@ override suspend fun fetchData(): Result<Data> = fetchDataBehavior()
 
 **Check default values work:**
 
-**For return types:**
+**For return types (constructor parameters, immutable):**
 ```kotlin
 // Primitives
-private var getUserBehavior: (String) -> User = { User("default") }
+private val getUserBehavior: (String) -> User = { User("default") },
 
 // Nullable
-private var findUserBehavior: (String) -> User? = { null }
+private val findUserBehavior: (String) -> User? = { null },
 
 // Collections
-private var getAllBehavior: () -> List<User> = { emptyList() }
+private val getAllBehavior: () -> List<User> = { emptyList() },
 
 // Unit
-private var deleteBehavior: (String) -> Unit = {}
+private val deleteBehavior: (String) -> Unit = {},
 
 // Complex types
-private var getResultBehavior: () -> Result<Data> = { Result.failure(NotImplementedError()) }
+private val getResultBehavior: () -> Result<Data> = { Result.failure(NotImplementedError()) },
 ```
 
 **Validate each default:**
@@ -252,27 +252,33 @@ private var getResultBehavior: () -> Result<Data> = { Result.failure(NotImplemen
 **Factory function:**
 ```kotlin
 fun fakeUserService(configure: FakeUserServiceConfig.() -> Unit = {}): UserService {
-    return FakeUserServiceImpl().apply {
-        FakeUserServiceConfig(this).configure()
-    }
+    val config = FakeUserServiceConfig().apply(configure)
+    return FakeUserServiceImpl(
+        getUserBehavior = config.getUserBehavior ?: { User("default") },
+    )
 }
 ```
 
-**Config class:**
+**Config class (standalone, no fake reference):**
 ```kotlin
-class FakeUserServiceConfig(private val fake: FakeUserServiceImpl) {
+class FakeUserServiceConfig {
+    internal var getUserBehavior: ((String) -> User)? = null
+
     fun getUser(behavior: (String) -> User) {
-        fake.configureGetUser(behavior)
+        getUserBehavior = behavior
     }
 }
 ```
 
 **Validate:**
 - [ ] Factory function properly typed
-- [ ] Config class takes correct impl type
+- [ ] Config class is standalone (no fake reference)
+- [ ] Config collects behaviors as nullable `internal var`
+- [ ] Factory passes configured behaviors to constructor
 - [ ] DSL methods match interface signatures
 - [ ] Lambda types match method signatures
 - [ ] No unsafe casts in DSL
+- [ ] Fake is immutable after construction
 
 ### 9. Multi-Stage Validation
 

@@ -45,22 +45,19 @@ Generate fake using current Phase 1 compiler plugin:
 
 ### Expected Output
 ```kotlin
-// Generated: FakeUserServiceImpl.kt
-class FakeUserServiceImpl : UserService {
-    private var getUserBehavior: (String) -> User = { User("default") }
-
+// Generated: FakeUserServiceImpl.kt (immutable after construction)
+class FakeUserServiceImpl(
+    private val getUserBehavior: (String) -> User = { User("default") },
+) : UserService {
     override fun getUser(id: String): User = getUserBehavior(id)
-
-    internal fun configureGetUser(behavior: (String) -> User) {
-        getUserBehavior = behavior
-    }
 }
 
 // Factory
 fun fakeUserService(configure: FakeUserServiceConfig.() -> Unit = {}): UserService {
-    return FakeUserServiceImpl().apply {
-        FakeUserServiceConfig(this).configure()
-    }
+    val config = FakeUserServiceConfig().apply(configure)
+    return FakeUserServiceImpl(
+        getUserBehavior = config.getUserBehavior ?: { User("default") },
+    )
 }
 ```
 
@@ -139,17 +136,18 @@ interface UserRepository {
 
 **Expected output**:
 ```kotlin
-// Phase 2B will generate:
-class FakeRepository<T> : Repository<T> {
-    private var saveBehavior: (T) -> T = { it }  // Type-safe!
-
+// Phase 2B will generate (immutable after construction):
+class FakeRepository<T>(
+    private val saveBehavior: (T) -> T = { it },  // Type-safe!
+) : Repository<T> {
     override fun save(item: T): T = saveBehavior(item)
 }
 
 fun <T> fakeRepository(configure: FakeRepositoryConfig<T>.() -> Unit = {}): Repository<T> {
-    return FakeRepository<T>().apply {
-        FakeRepositoryConfig(this).configure()
-    }
+    val config = FakeRepositoryConfig<T>().apply(configure)
+    return FakeRepository<T>(
+        saveBehavior = config.saveBehavior ?: { it },
+    )
 }
 ```
 
@@ -162,10 +160,10 @@ fun <T> fakeRepository(configure: FakeRepositoryConfig<T>.() -> Unit = {}): Repo
 
 **Accept limitations**:
 ```kotlin
-// Phase 1 generates:
-class FakeRepositoryImpl : Repository<Any> {  // T → Any
-    private var saveBehavior: (Any) -> Any = { it }
-
+// Phase 1 generates (immutable):
+class FakeRepositoryImpl(
+    private val saveBehavior: (Any) -> Any = { it },
+) : Repository<Any> {  // T → Any
     override fun save(item: Any): Any = saveBehavior(item)
 }
 ```
@@ -211,17 +209,13 @@ class FakeProcessorImpl : Processor {
 
 ### Phase 2A Solution
 ```kotlin
-class FakeProcessorImpl : Processor {
-    // Use Any? with identity function
-    private var processBehavior: (Any?) -> Any? = { it }
-
+class FakeProcessorImpl(
+    // Use Any? with identity function (immutable)
+    private val processBehavior: (Any?) -> Any? = { it },
+) : Processor {
     override fun <T> process(data: T): T {
         @Suppress("UNCHECKED_CAST")
         return processBehavior(data) as T  // Dynamic cast
-    }
-
-    internal fun configureProcess(behavior: (Any?) -> Any?) {
-        processBehavior = behavior
     }
 }
 ```

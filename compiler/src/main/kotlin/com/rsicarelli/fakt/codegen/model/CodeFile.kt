@@ -115,6 +115,7 @@ data class ConstructorProperty(
     val name: String,
     val type: String,
     val modifiers: Set<CodeModifier> = emptySet(),
+    val defaultValue: String? = null,
 )
 
 /**

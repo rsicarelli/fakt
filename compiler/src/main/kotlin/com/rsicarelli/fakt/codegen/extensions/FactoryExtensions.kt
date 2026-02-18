@@ -65,10 +65,20 @@ fun generateFactoryFunctionCodeFile(
             // Set return type
             returns("${names.fakeClassName}${names.typeArgs}")
 
-            // Set expression body
-            val impl = "${names.fakeClassName}${names.typeArgs}()"
-            val config = "${names.configClassName}${names.typeArgs}(this)"
-            expressionBody = "$impl.apply { $config.configure() }"
+            // Build constructor arguments from config behavior properties
+            val behaviorArgs = buildBehaviorArguments(spec)
+
+            if (behaviorArgs.isEmpty()) {
+                expressionBody =
+                    "${names.configClassName}${names.typeArgs}().apply(configure).let { ${names.fakeClassName}${names.typeArgs}() }"
+            } else {
+                val argsStr = behaviorArgs.joinToString(", ") { arg ->
+                    "${arg.paramName} = ${arg.valueExpr}"
+                }
+                body =
+                    "val config = ${names.configClassName}${names.typeArgs}().apply(configure)\n" +
+                        "return ${names.fakeClassName}${names.typeArgs}($argsStr)"
+            }
 
             // Add KDoc if requested
             if (includeKDoc) {
@@ -124,6 +134,65 @@ private fun generateFactoryKDocContent(spec: FactoryFunctionSpec, names: Factory
         .dropLast(1) // Remove closing */
         .joinToString("\n") { line -> line.removePrefix(" * ").removePrefix(" *") }
         .trim()
+}
+
+/**
+ * Represents a behavior argument mapping from config to constructor.
+ *
+ * @property paramName Constructor parameter name
+ * @property valueExpr Expression to read the value from config with null-coalescing default
+ */
+private data class BehaviorArg(val paramName: String, val valueExpr: String)
+
+/**
+ * Builds the list of behavior arguments for the factory constructor call.
+ *
+ * Each property and method generates a behavior argument that maps from the config builder (which
+ * stores nullable behaviors) to the fake implementation constructor (which expects non-null
+ * behaviors with defaults). The null-coalescing (`?:`) operator bridges the gap.
+ */
+private fun buildBehaviorArguments(spec: FactoryFunctionSpec): List<BehaviorArg> {
+    val args = mutableListOf<BehaviorArg>()
+
+    // Property behaviors
+    spec.properties.filter { !it.isStateFlow }.forEach { prop ->
+        val defaultExpr = prop.defaultBehavior.ifEmpty { "{ TODO() }" }
+        if (prop.isMutable) {
+            val capitalizedName = prop.name.replaceFirstChar { it.uppercase() }
+            args.add(
+                BehaviorArg(
+                    paramName = "${prop.name}Getter",
+                    valueExpr = "config.${prop.name}Behavior ?: $defaultExpr",
+                )
+            )
+            args.add(
+                BehaviorArg(
+                    paramName = "${prop.name}Setter",
+                    valueExpr = "config.set${capitalizedName}Behavior ?: { }",
+                )
+            )
+        } else {
+            args.add(
+                BehaviorArg(
+                    paramName = "${prop.name}Behavior",
+                    valueExpr = "config.${prop.name}Behavior ?: $defaultExpr",
+                )
+            )
+        }
+    }
+
+    // Method behaviors
+    spec.methods.forEach { method ->
+        val defaultExpr = method.defaultBehavior.ifEmpty { "{ TODO() }" }
+        args.add(
+            BehaviorArg(
+                paramName = "${method.name}Behavior",
+                valueExpr = "config.${method.name}Behavior ?: $defaultExpr",
+            )
+        )
+    }
+
+    return args
 }
 
 private data class FactoryNames(val interfaceName: String, val typeParameters: List<String>) {

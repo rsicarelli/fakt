@@ -96,11 +96,11 @@ interface Processor {
 // Cannot generate - T not in scope
 ```
 
-**After (Phase 2A - Works)**:
+**After (Phase 2A - Works, immutable)**:
 ```kotlin
-class FakeProcessorImpl : Processor {
-    private var processBehavior: (Any?) -> Any? = { it }  // Identity
-
+class FakeProcessorImpl(
+    private val processBehavior: (Any?) -> Any? = { it },  // Identity
+) : Processor {
     override fun <T> process(data: T): T {
         @Suppress("UNCHECKED_CAST")
         return processBehavior(data) as T  // Dynamic cast
@@ -154,23 +154,26 @@ val result: String = fake.process("test")  // T inferred as String
 
 **Before (Phase 1 - Type Erasure)**:
 ```kotlin
-class FakeRepositoryImpl : Repository<Any> {  // Any!
-    private var saveBehavior: (Any) -> Any = { it }
+class FakeRepositoryImpl(
+    private val saveBehavior: (Any) -> Any = { it },
+) : Repository<Any> {  // Any!
+    override fun save(item: Any): Any = saveBehavior(item)
 }
 ```
 
-**After (Phase 2B - Type Safe)**:
+**After (Phase 2B - Type Safe, immutable)**:
 ```kotlin
-class FakeRepository<T> : Repository<T> {  // Generic class!
-    private var saveBehavior: (T) -> T = { it }
-
+class FakeRepository<T>(
+    private val saveBehavior: (T) -> T = { it },  // Type-safe!
+) : Repository<T> {  // Generic class!
     override fun save(item: T): T = saveBehavior(item)
 }
 
 fun <T> fakeRepository(configure: FakeRepositoryConfig<T>.() -> Unit = {}): Repository<T> {
-    return FakeRepository<T>().apply {
-        FakeRepositoryConfig(this).configure()
-    }
+    val config = FakeRepositoryConfig<T>().apply(configure)
+    return FakeRepository<T>(
+        saveBehavior = config.saveBehavior ?: { it },
+    )
 }
 ```
 

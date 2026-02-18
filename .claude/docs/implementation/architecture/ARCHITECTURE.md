@@ -240,11 +240,10 @@ package com.example
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-// Implementation class
-internal class FakeUserServiceImpl : UserService {
-    // Behavior properties
-    private var getUserBehavior: () -> User = { User("default") }
-
+// Implementation class (immutable after construction)
+internal class FakeUserServiceImpl(
+    private val getUserBehavior: () -> User = { User("default") },
+) : UserService {
     // Call tracking
     private val _getUserCalls = MutableStateFlow(0)
     val getUserCalls: StateFlow<Int> = _getUserCalls
@@ -254,24 +253,22 @@ internal class FakeUserServiceImpl : UserService {
         _getUserCalls.value++
         return getUserBehavior()
     }
-
-    // Configuration
-    internal fun configureGetUser(behavior: () -> User) {
-        getUserBehavior = behavior
-    }
 }
 
 // Factory function
 fun fakeUserService(configure: FakeUserServiceConfig.() -> Unit = {}): UserService {
-    return FakeUserServiceImpl().apply {
-        FakeUserServiceConfig(this).configure()
-    }
+    val config = FakeUserServiceConfig().apply(configure)
+    return FakeUserServiceImpl(
+        getUserBehavior = config.getUserBehavior ?: { User("default") },
+    )
 }
 
-// Configuration DSL
-class FakeUserServiceConfig(private val fake: FakeUserServiceImpl) {
+// Configuration DSL (standalone, no fake reference)
+class FakeUserServiceConfig {
+    internal var getUserBehavior: (() -> User)? = null
+
     fun getUser(behavior: () -> User) {
-        fake.configureGetUser(behavior)
+        getUserBehavior = behavior
     }
 }
 ```
@@ -378,9 +375,9 @@ interface DataService {
 }
 
 // CURRENT GENERATION (workaround with casting):
-class FakeDataServiceImpl : DataService {
-    private var processBehavior: suspend (Any?) -> Any? = { it }
-
+class FakeDataServiceImpl(
+    private val processBehavior: suspend (Any?) -> Any? = { it },
+) : DataService {
     override suspend fun <T> process(data: T): T {
         @Suppress("UNCHECKED_CAST")
         return processBehavior(data) as T

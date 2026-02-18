@@ -212,19 +212,21 @@ interface DataProcessor {
 **Problem**:
 ```kotlin
 // Behavior property can't access method-level <T>
-private var processBehavior: (???) -> ???  // What type?
+// processBehavior: (???) -> ???  // What type for constructor param?
 
 // Method has <T> in scope
 override fun <T> process(data: T): T = processBehavior(data)  // Type mismatch
 ```
 
-**Phase 2A Solution**:
+**Phase 2A Solution (immutable constructor param)**:
 ```kotlin
-private var processBehavior: (Any?) -> Any? = { it }  // Identity
-
-override fun <T> process(data: T): T {
-    @Suppress("UNCHECKED_CAST")
-    return processBehavior(data) as T
+class FakeProcessorImpl(
+    private val processBehavior: (Any?) -> Any? = { it },  // Identity
+) : Processor {
+    override fun <T> process(data: T): T {
+        @Suppress("UNCHECKED_CAST")
+        return processBehavior(data) as T
+    }
 }
 ```
 

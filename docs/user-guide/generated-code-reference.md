@@ -11,7 +11,10 @@ For each `@Fake` annotated interface, Fakt generates several components:
 ### Implementation Class
 
 ```kotlin
-class Fake{Interface}Impl : {Interface} {
+class Fake{Interface}Impl(
+    // Behavior properties (immutable after construction)
+    private val {method}Behavior: ({params}) -> {return} = { default },
+) : {Interface} {
     // Call counters (derived from history)
     val {method}CallCount: Int
 
@@ -20,25 +23,33 @@ class Fake{Interface}Impl : {Interface} {
 
     // Override interface members
     override fun {method}({params}): {return} = {method}Behavior({params})
-
-    // Internal configuration methods
-    internal fun configure{Method}(behavior: ({params}) -> {return})
 }
 ```
+
+Fakes are **immutable after construction** — all behavior is set via constructor parameters with smart defaults.
 
 ### Factory Function
 
 ```kotlin
 fun fake{Interface}(
     configure: Fake{Interface}Config.() -> Unit = {}
-): Fake{Interface}Impl
+): Fake{Interface}Impl {
+    val config = Fake{Interface}Config().apply(configure)
+    return Fake{Interface}Impl(
+        {method}Behavior = config.{method}Behavior ?: { default },
+    )
+}
 ```
 
 ### Configuration DSL
 
 ```kotlin
-class Fake{Interface}Config(private val fake: Fake{Interface}Impl) {
-    fun {method}(behavior: ({params}) -> {return})
+class Fake{Interface}Config {
+    internal var {method}Behavior: (({params}) -> {return})? = null
+
+    fun {method}(behavior: ({params}) -> {return}) {
+        {method}Behavior = behavior
+    }
 }
 ```
 

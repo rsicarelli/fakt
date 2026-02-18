@@ -13,12 +13,13 @@ import org.junit.jupiter.api.TestInstance
 /**
  * Tests for high-level fake generator function.
  *
- * Validates complete fake generation with methods, properties, and configuration.
+ * Validates complete fake generation with immutable constructor-based behaviors, override methods,
+ * and configuration DSL.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FakeGeneratorTest {
     @Test
-    fun `GIVEN generateCompleteFake WHEN simple method THEN generates complete implementation`() {
+    fun `GIVEN generateCompleteFake WHEN simple method THEN generates immutable implementation`() {
         // GIVEN
         val methods =
             listOf(
@@ -40,13 +41,28 @@ class FakeGeneratorTest {
         file.renderTo(builder)
         val result = builder.build()
 
-        // THEN
+        // THEN - Class declaration
         assertContains(result, "package com.example")
-        assertContains(result, "class FakeUserServiceImpl : UserService")
-        assertContains(result, "private var getUserBehavior: (String) -> User? = { p0 -> null }")
+        assertContains(result, "class FakeUserServiceImpl")
+
+        // THEN - Direct private val constructor property with default
+        assertContains(result, "private val getUserBehavior: (String) -> User? = { p0 -> null }")
+
+        // THEN - No intermediate member properties (simplified pattern)
+        assertFalse(
+            result.contains("getUserBehavior ?:"),
+            "Should NOT have intermediate member with null-coalescing (simplified pattern)",
+        )
+
+        // THEN - Override delegates to behavior
         assertContains(result, "override fun getUser(id: String): User? {")
         assertContains(result, "return getUserBehavior(id)")
-        assertContains(result, "internal fun configureGetUser(behavior: (String) -> User?) = run {")
+
+        // THEN - No configureXxx methods (immutable)
+        assertFalse(
+            result.contains("internal fun configureGetUser"),
+            "Should NOT contain configureXxx methods in immutable fake",
+        )
     }
 
     @Test
@@ -73,17 +89,19 @@ class FakeGeneratorTest {
         file.renderTo(builder)
         val result = builder.build()
 
-        // THEN
+        // THEN - Direct private val constructor property with suspend default
         assertContains(
             result,
-            "private var saveUserBehavior: suspend (User) -> Result<Unit> = { p0 -> Result.success(Unit) }",
+            "private val saveUserBehavior: suspend (User) -> Result<Unit>",
         )
+        assertContains(result, "Result.success(Unit)")
+
+        // THEN - Override method
         assertContains(result, "override suspend fun saveUser(user: User): Result<Unit> {")
         assertContains(result, "return saveUserBehavior(user)")
-        assertContains(
-            result,
-            "internal fun configureSaveUser(behavior: suspend (User) -> Result<Unit>) = run {",
-        )
+
+        // THEN - No configureXxx
+        assertFalse(result.contains("internal fun configureSaveUser"))
     }
 
     @Test
@@ -144,7 +162,7 @@ class FakeGeneratorTest {
     }
 
     @Test
-    fun `GIVEN generateCompleteFake WHEN simple property THEN generates property with backing`() {
+    fun `GIVEN generateCompleteFake WHEN simple property THEN generates immutable constructor param`() {
         // GIVEN
         val properties = listOf(PropertySpec(name = "count", type = "Int", isStateFlow = false))
 
@@ -159,8 +177,10 @@ class FakeGeneratorTest {
         file.renderTo(builder)
         val result = builder.build()
 
-        // THEN
-        assertContains(result, "private var countBehavior: () -> Int = { 0 }")
+        // THEN - Direct private val constructor property with default
+        assertContains(result, "private val countBehavior: () -> Int = { 0 }")
+
+        // THEN - Override delegates
         assertContains(result, "override val count: Int")
         assertContains(result, "get() =")
     }
@@ -191,12 +211,12 @@ class FakeGeneratorTest {
         file.renderTo(builder)
         val result = builder.build()
 
-        // THEN
-        assertContains(result, "private var getUserBehavior")
+        // THEN - All behaviors as immutable members
+        assertContains(result, "private val getUserBehavior")
         assertContains(result, "override fun getUser(id: String): User?")
-        assertContains(result, "private var saveUserBehavior: suspend")
+        assertContains(result, "private val saveUserBehavior: suspend")
         assertContains(result, "override suspend fun saveUser(user: User): Result<Unit>")
-        assertContains(result, "private var deleteUserBehavior")
+        assertContains(result, "private val deleteUserBehavior")
         assertContains(result, "override fun deleteUser(id: String): Unit")
     }
 
@@ -266,7 +286,7 @@ class FakeGeneratorTest {
     }
 
     @Test
-    fun `GIVEN generateCompleteFake WHEN complete interface THEN generates full fake implementation`() {
+    fun `GIVEN generateCompleteFake WHEN complete interface THEN generates full immutable fake`() {
         // GIVEN
         val methods =
             listOf(
@@ -302,7 +322,7 @@ class FakeGeneratorTest {
         file.renderTo(builder)
         val result = builder.build()
 
-        // THEN - Header
+        // THEN - Header and package
         assertContains(result, "// Generated by Fakt")
         assertContains(result, "package com.example.test")
 
@@ -313,41 +333,29 @@ class FakeGeneratorTest {
         assertContains(result, "import kotlinx.coroutines.flow.MutableStateFlow")
 
         // THEN - Class declaration
-        assertContains(result, "class FakeUserServiceImpl : UserService")
+        assertContains(result, "class FakeUserServiceImpl")
 
-        // THEN - Properties
+        // THEN - StateFlow property (unchanged pattern)
         assertContains(
             result,
             "private val usersValue: StateFlow<List<User>> = MutableStateFlow(emptyList())",
         )
         assertContains(result, "override val users: StateFlow<List<User>>")
-        assertContains(result, "private var countBehavior: () -> Int = { 0 }")
+
+        // THEN - Simple property as immutable member
+        assertContains(result, "private val countBehavior: () -> Int")
         assertContains(result, "override val count: Int")
 
-        // THEN - Methods
-        assertContains(result, "private var getUserBehavior: (String) -> User? = { p0 -> null }")
+        // THEN - Method behaviors as immutable members
+        assertContains(result, "private val getUserBehavior: (String) -> User?")
         assertContains(result, "override fun getUser(id: String): User?")
-        assertContains(
-            result,
-            "private var getAllUsersBehavior: () -> List<User> = { emptyList() }",
-        )
+        assertContains(result, "private val getAllUsersBehavior: () -> List<User>")
         assertContains(result, "override fun getAllUsers(): List<User>")
-        assertContains(
-            result,
-            "private var saveUserBehavior: suspend (User) -> Result<Unit> = { p0 -> Result.success(Unit) }",
-        )
+        assertContains(result, "private val saveUserBehavior: suspend (User) -> Result<Unit>")
         assertContains(result, "override suspend fun saveUser(user: User): Result<Unit>")
 
-        // THEN - Configuration methods
-        assertContains(result, "internal fun configureGetUser(behavior: (String) -> User?) = run {")
-        assertContains(
-            result,
-            "internal fun configureGetAllUsers(behavior: () -> List<User>) = run {",
-        )
-        assertContains(
-            result,
-            "internal fun configureSaveUser(behavior: suspend (User) -> Result<Unit>) = run {",
-        )
+        // THEN - No configuration methods (immutable)
+        assertFalse(result.contains("internal fun configure"))
     }
 
     // ==========================================
@@ -372,7 +380,7 @@ class FakeGeneratorTest {
         val result = builder.build()
 
         // THEN
-        assertContains(result, "public class FakePublicServiceImpl : PublicService")
+        assertContains(result, "public class FakePublicServiceImpl")
     }
 
     @Test
@@ -393,7 +401,7 @@ class FakeGeneratorTest {
         val result = builder.build()
 
         // THEN
-        assertContains(result, "internal class FakeInternalServiceImpl : InternalService")
+        assertContains(result, "internal class FakeInternalServiceImpl")
     }
 
     @Test
@@ -414,7 +422,7 @@ class FakeGeneratorTest {
         val result = builder.build()
 
         // THEN - Should have public modifier for explicitApi() compatibility
-        assertContains(result, "public class FakeDefaultServiceImpl : DefaultService")
+        assertContains(result, "public class FakeDefaultServiceImpl")
     }
 
     @Test
@@ -436,7 +444,7 @@ class FakeGeneratorTest {
         val result = builder.build()
 
         // THEN - Should default to public
-        assertContains(result, "public class FakePrivateServiceImpl : PrivateService")
+        assertContains(result, "public class FakePrivateServiceImpl")
     }
 
     @Test
@@ -457,7 +465,7 @@ class FakeGeneratorTest {
         val result = builder.build()
 
         // THEN - Should default to public
-        assertContains(result, "public class FakeProtectedServiceImpl : ProtectedService")
+        assertContains(result, "public class FakeProtectedServiceImpl")
     }
 
     // ==========================================
@@ -528,7 +536,7 @@ class FakeGeneratorTest {
     }
 
     @Test
-    fun `GIVEN generateCallHistory false WHEN generating fake with method THEN omits Section 2 call tracking`() {
+    fun `GIVEN generateCallHistory false WHEN generating fake with method THEN omits call tracking region`() {
         // GIVEN
         val methods = listOf(MethodSpec("doWork", listOf(Triple("value", "Int", false)), "Unit"))
 
@@ -544,10 +552,10 @@ class FakeGeneratorTest {
         file.renderTo(builder)
         val result = builder.build()
 
-        // THEN - Should NOT contain Section 2 Call Tracking comment
+        // THEN - Should NOT contain call tracking region
         assertFalse(
-            result.contains("Section 2: Call Tracking"),
-            "Should not contain Section 2 Call Tracking when call history is disabled",
+            result.contains("//region Call Tracking"),
+            "Should not contain Call Tracking region when call history is disabled",
         )
         // And should NOT contain the update call in method body
         assertFalse(
@@ -644,7 +652,7 @@ class FakeGeneratorTest {
     }
 
     @Test
-    fun `GIVEN generateCallHistory false WHEN generating fake THEN still generates behavior properties`() {
+    fun `GIVEN generateCallHistory false WHEN generating fake THEN still generates immutable behavior properties`() {
         // GIVEN
         val methods = listOf(MethodSpec("doWork", listOf(Triple("value", "Int", false)), "String"))
 
@@ -660,9 +668,211 @@ class FakeGeneratorTest {
         file.renderTo(builder)
         val result = builder.build()
 
-        // THEN - Should still contain behavior property and configure method
-        assertContains(result, "private var doWorkBehavior")
-        assertContains(result, "internal fun configureDoWork")
+        // THEN - Should still contain immutable behavior member property
+        assertContains(result, "private val doWorkBehavior")
+        // THEN - No configureXxx methods (immutable)
+        assertFalse(result.contains("internal fun configureDoWork"))
+        // THEN - Override method still works
         assertContains(result, "override fun doWork(value: Int): String")
+    }
+
+    // ==========================================
+    // Mutable Property Tests (Getter/Setter Pattern)
+    // ==========================================
+
+    @Test
+    fun `GIVEN mutable property WHEN generating fake THEN creates getter and setter constructor params`() {
+        // GIVEN
+        val properties =
+            listOf(
+                PropertySpec(
+                    name = "currentUser",
+                    type = "User?",
+                    isStateFlow = false,
+                    isMutable = true,
+                )
+            )
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "UserStore",
+                properties = properties,
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Getter constructor property with default
+        assertContains(result, "private val currentUserGetter: () -> User? = { null }")
+
+        // THEN - Setter constructor property with no-op default
+        assertContains(result, "private val currentUserSetter: (User?) -> Unit = { }")
+
+        // THEN - Override mutable property with getter and setter
+        assertContains(result, "override var currentUser: User?")
+        assertContains(result, "get() = currentUserGetter()")
+        assertContains(result, "set(value) { currentUserSetter(value) }")
+    }
+
+    @Test
+    fun `GIVEN mutable non-nullable property WHEN generating fake THEN creates typed getter and setter`() {
+        // GIVEN
+        val properties =
+            listOf(
+                PropertySpec(
+                    name = "count",
+                    type = "Int",
+                    isStateFlow = false,
+                    isMutable = true,
+                )
+            )
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "Counter",
+                properties = properties,
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Getter with typed default
+        assertContains(result, "private val countGetter: () -> Int = { 0 }")
+
+        // THEN - Setter with no-op default
+        assertContains(result, "private val countSetter: (Int) -> Unit = { }")
+
+        // THEN - Override var property
+        assertContains(result, "override var count: Int")
+    }
+
+    @Test
+    fun `GIVEN mix of mutable and immutable properties WHEN generating fake THEN handles both patterns`() {
+        // GIVEN
+        val properties =
+            listOf(
+                PropertySpec(name = "name", type = "String", isStateFlow = false, isMutable = false),
+                PropertySpec(
+                    name = "score",
+                    type = "Int",
+                    isStateFlow = false,
+                    isMutable = true,
+                ),
+            )
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "Player",
+                properties = properties,
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Immutable property uses single behavior
+        assertContains(result, "private val nameBehavior: () -> String")
+        assertContains(result, "override val name: String")
+
+        // THEN - Mutable property uses getter/setter pair
+        assertContains(result, "private val scoreGetter: () -> Int")
+        assertContains(result, "private val scoreSetter: (Int) -> Unit")
+        assertContains(result, "override var score: Int")
+    }
+
+    // ==========================================
+    // Open Method/Property Tests (Class Fakes)
+    // ==========================================
+
+    @Test
+    fun `GIVEN abstract method in class WHEN generating fake THEN creates non-null constructor param`() {
+        // GIVEN - isAbstract = true means it MUST be overridden (like interface methods)
+        val methods =
+            listOf(
+                MethodSpec(
+                    name = "validate",
+                    params = listOf(Triple("input", "String", false)),
+                    returnType = "Boolean",
+                    isAbstract = true,
+                )
+            )
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "Validator",
+                methods = methods,
+                isClass = true,
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Abstract method gets non-null constructor property with default
+        assertContains(result, "private val validateBehavior: (String) -> Boolean = { p0 -> false }")
+    }
+
+    @Test
+    fun `GIVEN open method in class WHEN generating fake THEN creates nullable constructor param`() {
+        // GIVEN - isAbstract = false + isClass = true → open method
+        val methods =
+            listOf(
+                MethodSpec(
+                    name = "validate",
+                    params = listOf(Triple("input", "String", false)),
+                    returnType = "Boolean",
+                    isAbstract = false, // open, not abstract
+                )
+            )
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "Validator",
+                methods = methods,
+                isClass = true,
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Open method gets nullable constructor property (null = delegate to super)
+        assertContains(result, "private val validateBehavior: ((String) -> Boolean)? = null")
+    }
+
+    @Test
+    fun `GIVEN open property in class WHEN generating fake THEN creates nullable constructor param`() {
+        // GIVEN
+        val properties =
+            listOf(
+                PropertySpec(
+                    name = "label",
+                    type = "String",
+                    isStateFlow = false,
+                    isAbstract = false, // open, not abstract
+                )
+            )
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "Widget",
+                properties = properties,
+                isClass = true,
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Open property gets nullable constructor property
+        assertContains(result, "private val labelBehavior: (() -> String)? = null")
     }
 }

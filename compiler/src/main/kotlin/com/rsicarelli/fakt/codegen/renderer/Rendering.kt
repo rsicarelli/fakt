@@ -152,10 +152,19 @@ public fun CodeClass.renderTo(builder: CodeBuilder) {
         }
 
     // Render constructor properties if present
+    // Use multi-line format when any property has a default value (typically behavior lambdas)
+    val hasDefaults = constructorProperties.any { it.defaultValue != null }
     val constructorStr =
         if (constructorProperties.isNotEmpty()) {
-            val props = constructorProperties.joinToString(", ") { it.render() }
-            "($props)"
+            if (hasDefaults) {
+                // Multi-line constructor for readability
+                val props =
+                    constructorProperties.joinToString(",\n    ") { it.render() }
+                "(\n    $props,\n)"
+            } else {
+                val props = constructorProperties.joinToString(", ") { it.render() }
+                "($props)"
+            }
         } else {
             ""
         }
@@ -190,7 +199,8 @@ public fun CodeClass.renderTo(builder: CodeBuilder) {
 public fun ConstructorProperty.render(): String {
     val modifiersStr = modifiers.joinToString(" ") { it.name.lowercase() }
     val modifierPrefix = if (modifiersStr.isNotEmpty()) "$modifiersStr " else ""
-    return "${modifierPrefix}val $name: $type"
+    val defaultStr = defaultValue?.let { " = $it" } ?: ""
+    return "${modifierPrefix}val $name: $type$defaultStr"
 }
 
 /**

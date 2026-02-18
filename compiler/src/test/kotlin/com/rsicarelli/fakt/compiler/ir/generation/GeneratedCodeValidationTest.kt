@@ -4,6 +4,7 @@ package com.rsicarelli.fakt.compiler.ir.generation
 
 import java.io.File
 import kotlin.test.Test
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -17,21 +18,21 @@ import kotlin.test.assertTrue
  * - Generated files must exist in build/generated/fakt/common/test/kotlin/
  *
  * **Coverage**:
- * - Behavior properties with correct type signatures
+ * - Immutable behavior properties via constructor params
  * - Default value generation for all type categories
  * - Type preservation in generated code
- * - Configuration methods generation
+ * - No configureXxx methods (immutable pattern)
  */
 class GeneratedCodeValidationTest {
     private val generatedDir =
         File("samples/kmp-single-module/build/generated/fakt/common/test/kotlin/test/sample")
 
     // ==================================================================================
-    // Behavior Properties Validation
+    // Behavior Properties Validation (Immutable Constructor Pattern)
     // ==================================================================================
 
     @Test
-    fun `GIVEN simple interface WHEN generated THEN should create behavior properties with correct types`() {
+    fun `GIVEN simple interface WHEN generated THEN should create immutable behavior properties`() {
         // GIVEN
         val fakeFile = File(generatedDir, "FakePropertyAndMethodInterfaceImpl.kt")
 
@@ -46,18 +47,24 @@ class GeneratedCodeValidationTest {
         // WHEN
         val content = fakeFile.readText()
 
-        // THEN - Behavior properties should exist with exact types
+        // THEN - Behavior properties should be immutable (private val)
         assertTrue(
-            content.contains("private var getValueBehavior: () -> String"),
-            "Should generate behavior property with correct String type",
+            content.contains("private val getValueBehavior: () -> String"),
+            "Should generate immutable behavior property with correct String type",
         )
         assertTrue(
-            content.contains("private var setValueBehavior: (String) -> Unit"),
-            "Should generate behavior property with correct parameter type",
+            content.contains("private val setValueBehavior: (String) -> Unit"),
+            "Should generate immutable behavior property with correct parameter type",
         )
         assertTrue(
-            content.contains("private var stringValueBehavior: () -> String"),
-            "Should generate behavior property for properties",
+            content.contains("private val stringValueBehavior: () -> String"),
+            "Should generate immutable behavior property for properties",
+        )
+
+        // THEN - Should NOT have mutable behavior vars
+        assertFalse(
+            content.contains("private var getValueBehavior"),
+            "Should NOT have mutable behavior properties (immutable pattern)",
         )
     }
 
@@ -151,11 +158,11 @@ class GeneratedCodeValidationTest {
     }
 
     // ==================================================================================
-    // Configuration Methods Validation
+    // Immutability Validation (No configureXxx methods)
     // ==================================================================================
 
     @Test
-    fun `GIVEN interface methods WHEN generated THEN should create configure methods`() {
+    fun `GIVEN interface methods WHEN generated THEN should NOT have configureXxx methods`() {
         // GIVEN
         val fakeFile = File(generatedDir, "FakePropertyAndMethodInterfaceImpl.kt")
         if (!fakeFile.exists()) {
@@ -166,14 +173,10 @@ class GeneratedCodeValidationTest {
         // WHEN
         val content = fakeFile.readText()
 
-        // THEN
-        assertTrue(
-            content.contains("internal fun configureGetValue(behavior: () -> String)"),
-            "Should generate configure method for functions",
-        )
-        assertTrue(
-            content.contains("internal fun configureStringValue(behavior: () -> String)"),
-            "Should generate configure method for properties",
+        // THEN - Immutable fakes should NOT have configure methods
+        assertFalse(
+            content.contains("internal fun configure"),
+            "Immutable fakes should NOT have configureXxx methods",
         )
     }
 
@@ -193,11 +196,11 @@ class GeneratedCodeValidationTest {
         // WHEN
         val content = fakeFile.readText()
 
-        // THEN
+        // THEN - Immutable behavior properties preserve suspend
         assertTrue(
-            content.contains("private var fetchDataBehavior: suspend () -> String") ||
-                content.contains("private var processDataBehavior: suspend"),
-            "Should preserve suspend modifier in behavior property",
+            content.contains("private val fetchDataBehavior: suspend () -> String") ||
+                content.contains("private val processDataBehavior: suspend"),
+            "Should preserve suspend modifier in immutable behavior property",
         )
         assertTrue(
             content.contains("override suspend fun fetchData(): String") ||
@@ -278,7 +281,7 @@ class GeneratedCodeValidationTest {
     }
 
     @Test
-    fun `GIVEN interface WHEN generated THEN should create configuration DSL class`() {
+    fun `GIVEN interface WHEN generated THEN should create standalone configuration DSL class`() {
         // GIVEN
         val fakeFile = File(generatedDir, "FakePropertyAndMethodInterfaceImpl.kt")
         if (!fakeFile.exists()) {
@@ -289,12 +292,15 @@ class GeneratedCodeValidationTest {
         // WHEN
         val content = fakeFile.readText()
 
-        // THEN
+        // THEN - Config class is standalone (no fake reference in constructor)
         assertTrue(
-            content.contains(
-                "class FakePropertyAndMethodInterfaceConfig(private val fake: FakePropertyAndMethodInterfaceImpl)"
-            ),
-            "Should generate DSL configuration class",
+            content.contains("class FakePropertyAndMethodInterfaceConfig"),
+            "Should generate standalone DSL configuration class",
+        )
+        // Config should NOT reference the fake implementation
+        assertFalse(
+            content.contains("FakePropertyAndMethodInterfaceConfig(private val fake:"),
+            "Config class should NOT take fake as constructor param (standalone builder pattern)",
         )
     }
 
@@ -316,10 +322,10 @@ class GeneratedCodeValidationTest {
         // WHEN
         val content = fakeFile.readText()
 
-        // THEN - Behavior property should use Array<out T>, NOT vararg keyword
+        // THEN - Immutable behavior property should use Array<out T>
         assertTrue(
-            content.contains("private var processBehavior: (Array<out String>) -> List<String>"),
-            "Behavior property should use Array<out String>, not 'vararg String' which is invalid Kotlin syntax",
+            content.contains("private val processBehavior: (Array<out String>) -> List<String>"),
+            "Immutable behavior property should use Array<out String>",
         )
 
         // Override method should still use vararg (this is correct)
@@ -345,6 +351,34 @@ class GeneratedCodeValidationTest {
         assertTrue(
             content.contains("override fun handle(items: List<*>): Int"),
             "Override signature should preserve star projection List<*>, not use List<Any>",
+        )
+    }
+
+    // ==================================================================================
+    // Constructor Parameter Validation
+    // ==================================================================================
+
+    @Test
+    fun `GIVEN interface WHEN generated THEN should have private val constructor params with defaults`() {
+        // GIVEN
+        val fakeFile = File(generatedDir, "FakePropertyAndMethodInterfaceImpl.kt")
+        if (!fakeFile.exists()) {
+            println("⚠️  Skipping test - sample not built")
+            return
+        }
+
+        // WHEN
+        val content = fakeFile.readText()
+
+        // THEN - Constructor params are private val with sensible defaults
+        assertTrue(
+            content.contains("private val") && content.contains("Behavior:"),
+            "Constructor behavior params should be private val with defaults",
+        )
+        // THEN - No intermediate member properties (direct constructor pattern)
+        assertFalse(
+            content.contains("Behavior ?:"),
+            "Should NOT have intermediate null-coalescing members (simplified pattern)",
         )
     }
 

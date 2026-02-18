@@ -34,6 +34,7 @@ data class MethodSpec(
     val isAbstract: Boolean = false, // true for abstract methods, false for open methods
     val isOperator: Boolean = false, // true for operator functions (plus, get, etc.)
     val extensionReceiverType: String? = null, // Extension receiver type for extension functions
+    val defaultBehavior: String = "", // Default behavior lambda expression (e.g., "{ null }")
 )
 
 /**
@@ -52,6 +53,7 @@ data class PropertySpec(
     val isStateFlow: Boolean = false,
     val isMutable: Boolean = false,
     val isAbstract: Boolean = false, // true for abstract properties, false for open properties
+    val defaultBehavior: String = "", // Default behavior lambda expression (e.g., "{ 0 }")
 )
 
 /**
@@ -360,6 +362,24 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
             val simpleProperties = properties.filter { !it.isStateFlow }
 
             // ==========================================
+            // Constructor: Behavior parameters (immutable)
+            // Behaviors are constructor params with defaults,
+            // making the fake immutable after construction.
+            // ==========================================
+            simpleProperties.forEach { prop ->
+                generatePropertyBehaviorConstructorParam(this, prop, isClass, className)
+            }
+            methods.forEach { method ->
+                generateMethodBehaviorConstructorParam(
+                    this,
+                    method,
+                    resolver,
+                    isClass,
+                    className,
+                )
+            }
+
+            // ==========================================
             // SECTION 1: Interface/Class Implementation
             // ==========================================
             region("$interfaceName Implementation")
@@ -407,49 +427,25 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
             }
 
             // ==========================================
-            // SECTION 3: Behavior Configuration
+            // SECTION 3: Private State (call tracking only)
+            // Behavior properties are now immutable constructor
+            // params — only call tracking state remains here.
             // ==========================================
-            region("Behavior Configuration")
-
-            // Generate configuration methods for simple properties
-            simpleProperties.forEach { prop -> generatePropertyConfigMethod(this, prop) }
-
-            // Generate configuration methods for all methods
-            methods.forEach { method -> generateMethodConfigMethod(this, method) }
-
-            endRegion()
-
-            // ==========================================
-            // SECTION 4: Private State
-            // ==========================================
-            region("Private State")
-
-            // Generate private backing fields for call tracking (properties only)
-            // Methods derive count from call history, so no backing field needed
-            // Only generated when call history is enabled
             if (generateCallHistory) {
+                region("Private State")
+
+                // Generate private backing fields for call tracking (properties only)
                 simpleProperties.forEach { prop ->
                     generatePropertyCallTrackingBackingField(this, prop)
                 }
 
-                // Generate call history backing fields for ALL methods (params → data class,
-                // 0-param → Unit)
+                // Generate call history backing fields for ALL methods
                 methods.forEach { method ->
                     generateMethodCallHistoryBackingField(this, method, interfaceName)
                 }
-            }
 
-            // Generate behavior properties for all simple properties
-            simpleProperties.forEach { prop ->
-                generatePropertyBehaviorProperty(this, prop, isClass)
+                endRegion()
             }
-
-            // Generate behavior properties for all methods
-            methods.forEach { method ->
-                generateMethodBehaviorProperty(this, method, resolver, isClass, interfaceName)
-            }
-
-            endRegion()
         }
     }
 }
@@ -634,8 +630,22 @@ private fun generatePropertyCallTrackingBackingField(
     }
 }
 
-/** Generates ONLY the behavior property for a method. Part of Section 2: Behavior Properties */
-private fun generateMethodBehaviorProperty(
+/**
+ * Generates a `private val` constructor property for a method behavior.
+ *
+ * The behavior lambda is a direct constructor property with a sensible default. No intermediate
+ * member properties needed — the override methods reference the constructor `val` directly.
+ *
+ * Generated pattern:
+ * ```kotlin
+ * class FakeXxxImpl(
+ *     private val findByIdBehavior: (String) -> User? = { null },
+ * ) : Xxx {
+ *     override fun findById(id: String): User? = findByIdBehavior(id)
+ * }
+ * ```
+ */
+private fun generateMethodBehaviorConstructorParam(
     classBuilder: ClassBuilder,
     method: MethodSpec,
     resolver: DefaultValueResolver,
@@ -712,47 +722,30 @@ private fun generateMethodBehaviorProperty(
             erasedParamTypes
         }
 
-    if (isOpenMethod) {
-        if (method.isSuspend) {
-            classBuilder.nullableSuspendBehaviorProperty(
-                methodName = method.name,
-                paramTypes = behaviorFinalParamTypes,
-                returnType = erasedReturnType,
-            )
-        } else {
-            classBuilder.nullableBehaviorProperty(
-                methodName = method.name,
-                paramTypes = behaviorFinalParamTypes,
-                returnType = erasedReturnType,
-            )
-        }
-    } else {
-        if (method.isSuspend) {
-            classBuilder.suspendBehaviorProperty(
-                methodName = method.name,
-                paramTypes = behaviorFinalParamTypes,
-                returnType = erasedReturnType,
-                defaultValue = behaviorDefault,
-            )
-        } else {
-            classBuilder.behaviorProperty(
-                methodName = method.name,
-                paramTypes = behaviorFinalParamTypes,
-                returnType = erasedReturnType,
-                defaultValue = behaviorDefault,
-            )
-        }
+    val functionType = buildBehaviorFunctionType(
+        paramTypes = behaviorFinalParamTypes,
+        returnType = erasedReturnType,
+        isSuspend = method.isSuspend,
+        isNullable = isOpenMethod,
+    )
+
+    // Direct private val constructor property — no intermediate member needed
+    classBuilder.constructorProperty("${method.name}Behavior", functionType) {
+        private()
+        this.defaultValue = if (isOpenMethod) "null" else behaviorDefault
     }
 }
 
 /**
- * Generates ONLY the behavior property for a simple property. Part of Section 2: Behavior
- * Properties
+ * Generates `private val` constructor properties for a property behavior.
+ *
+ * Direct constructor properties with sensible defaults — no intermediate member properties needed.
  */
-private fun generatePropertyBehaviorProperty(
+private fun generatePropertyBehaviorConstructorParam(
     classBuilder: ClassBuilder,
     prop: PropertySpec,
     isClass: Boolean = false,
+    @Suppress("UNUSED_PARAMETER") className: String = "",
 ) {
     val isOpenProperty = isClass && !prop.isAbstract
     val parsedType = parseType(prop.type)
@@ -762,40 +755,34 @@ private fun generatePropertyBehaviorProperty(
 
     if (prop.isMutable) {
         if (isOpenProperty) {
-            classBuilder.property("${prop.name}Getter", "(() -> ${prop.type})?") {
+            classBuilder.constructorProperty("${prop.name}Getter", "(() -> ${prop.type})?") {
                 private()
-                mutable()
-                initializer = "null"
+                this.defaultValue = "null"
             }
-            classBuilder.property("${prop.name}Setter", "((${prop.type}) -> Unit)?") {
+            classBuilder.constructorProperty("${prop.name}Setter", "((${prop.type}) -> Unit)?") {
                 private()
-                mutable()
-                initializer = "null"
+                this.defaultValue = "null"
             }
         } else {
-            classBuilder.property("${prop.name}Getter", "() -> ${prop.type}") {
+            classBuilder.constructorProperty("${prop.name}Getter", "() -> ${prop.type}") {
                 private()
-                mutable()
-                initializer = "{ $defaultExpr }"
+                this.defaultValue = "{ $defaultExpr }"
             }
-            classBuilder.property("${prop.name}Setter", "(${prop.type}) -> Unit") {
+            classBuilder.constructorProperty("${prop.name}Setter", "(${prop.type}) -> Unit") {
                 private()
-                mutable()
-                initializer = "{ }"
+                this.defaultValue = "{ }"
             }
         }
     } else {
         if (isOpenProperty) {
-            classBuilder.property("${prop.name}Behavior", "(() -> ${prop.type})?") {
+            classBuilder.constructorProperty("${prop.name}Behavior", "(() -> ${prop.type})?") {
                 private()
-                mutable()
-                initializer = "null"
+                this.defaultValue = "null"
             }
         } else {
-            classBuilder.property("${prop.name}Behavior", "() -> ${prop.type}") {
+            classBuilder.constructorProperty("${prop.name}Behavior", "() -> ${prop.type}") {
                 private()
-                mutable()
-                initializer = "{ $defaultExpr }"
+                this.defaultValue = "{ $defaultExpr }"
             }
         }
     }
@@ -1009,59 +996,23 @@ private fun buildImmutablePropertyGetter(
         }
     }
 
-/** Generates ONLY the configuration method. Part of Section 4: Internal Configuration Methods */
-private fun generateMethodConfigMethod(classBuilder: ClassBuilder, method: MethodSpec) {
-    val behaviorParamTypes =
-        method.params.map { (_, paramType, isVararg) ->
-            if (isVararg && paramType.startsWith("Array<")) {
-                paramType.replace("Array<", "Array<out ")
-            } else {
-                paramType
-            }
-        }
-
-    val configureFinalParamTypes =
-        if (method.extensionReceiverType != null) {
-            listOf(method.extensionReceiverType) + behaviorParamTypes
-        } else {
-            behaviorParamTypes
-        }
-
-    classBuilder.configureMethod(
-        methodName = method.name,
-        paramTypes = configureFinalParamTypes,
-        returnType = method.returnType,
-        isSuspend = method.isSuspend,
-        typeParameters = method.typeParameters,
-    )
-}
-
 /**
- * Generates ONLY the configuration methods for a property. Part of Section 4: Internal
- * Configuration Methods
+ * Builds a function type string for behavior lambdas.
+ *
+ * @param paramTypes Parameter types for the lambda
+ * @param returnType Return type of the lambda
+ * @param isSuspend Whether the lambda is suspend
+ * @param isNullable Whether the function type should be nullable (for open methods)
+ * @return Function type string (e.g., "(String) -> User?" or "(suspend (String) -> User?)?")
  */
-private fun generatePropertyConfigMethod(classBuilder: ClassBuilder, prop: PropertySpec) {
-    val capitalizedName = prop.name.replaceFirstChar { it.uppercase() }
-
-    if (prop.isMutable) {
-        classBuilder.function("configure$capitalizedName") {
-            internal()
-            parameter("behavior", "() -> ${prop.type}")
-            returns("Unit")
-            expressionBody = "run { ${prop.name}Getter = behavior }"
-        }
-        classBuilder.function("configureSet$capitalizedName") {
-            internal()
-            parameter("behavior", "(${prop.type}) -> Unit")
-            returns("Unit")
-            expressionBody = "run { ${prop.name}Setter = behavior }"
-        }
-    } else {
-        classBuilder.function("configure$capitalizedName") {
-            internal()
-            parameter("behavior", "() -> ${prop.type}")
-            returns("Unit")
-            expressionBody = "run { ${prop.name}Behavior = behavior }"
-        }
-    }
+private fun buildBehaviorFunctionType(
+    paramTypes: List<String>,
+    returnType: String,
+    isSuspend: Boolean = false,
+    isNullable: Boolean = false,
+): String {
+    val suspendPrefix = if (isSuspend) "suspend " else ""
+    val paramsStr = paramTypes.joinToString(", ")
+    val baseType = "$suspendPrefix($paramsStr) -> $returnType"
+    return if (isNullable) "($baseType)?" else baseType
 }
