@@ -42,7 +42,7 @@ sealed class OrderState {
  * This serves as a real-world example for testing with Fakt + Turbine.
  *
  * NOTE: Call counts are automatically tracked by Fakt fakes!
- * Use `orderUseCase.createOrderCallCount`, `cancelOrderCallCount`, etc. in tests.
+ * Use `orderUseCase.createOrderCalls.value.size`, `cancelOrderCalls.value.size`, etc. in tests.
  */
 class OrderViewModel(
     private val orderUseCase: OrderUseCase,

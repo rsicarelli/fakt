@@ -100,7 +100,7 @@ class DashboardViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt automatically tracks call counts!
-            assertEquals(1, useCase.loadDashboardDataCallCount)
+            assertEquals(1, useCase.loadDashboardDataCalls.value.size)
         }
 
     @Test
@@ -122,7 +122,7 @@ class DashboardViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt tracks all 3 calls automatically!
-            assertEquals(3, useCase.loadDashboardDataCallCount)
+            assertEquals(3, useCase.loadDashboardDataCalls.value.size)
         }
 
     // ============================================================================
@@ -152,7 +152,7 @@ class DashboardViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt tracks both calls (load + refresh)
-            assertEquals(2, useCase.loadDashboardDataCallCount)
+            assertEquals(2, useCase.loadDashboardDataCalls.value.size)
 
             viewModel.state.test {
                 val state = awaitItem()
@@ -177,7 +177,7 @@ class DashboardViewModelTest {
                 assertEquals(DashboardState.Idle, awaitItem())
             }
 
-            assertEquals(0, useCase.loadDashboardDataCallCount) // No calls to use case
+            assertEquals(0, useCase.loadDashboardDataCalls.value.size) // No calls to use case
         }
 
     // ============================================================================
@@ -204,7 +204,7 @@ class DashboardViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt tracks all 10 concurrent calls safely!
-            assertEquals(10, useCase.loadDashboardDataCallCount)
+            assertEquals(10, useCase.loadDashboardDataCalls.value.size)
 
             viewModel.state.test {
                 val state = awaitItem()
@@ -232,7 +232,7 @@ class DashboardViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt handles 100 concurrent calls perfectly!
-            assertEquals(100, useCase.loadDashboardDataCallCount)
+            assertEquals(100, useCase.loadDashboardDataCalls.value.size)
         }
 
     // ============================================================================

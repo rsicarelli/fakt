@@ -235,7 +235,7 @@ internal fun CodeFileBuilder.verifyFunction(
     val capitalizedMethodName = methodName.capitalizeFirst()
     val dataClassName = "${interfaceName}${capitalizedMethodName}Call"
     val verifierClassName = "${dataClassName}Verifier"
-    val backingFieldName = "_${methodName}Calls"
+    val backingFieldName = "${methodName}Calls"
     val functionName = "verify$capitalizedMethodName"
     val typeParams = parseTypeParameters(classTypeParameters)
 
@@ -289,7 +289,7 @@ internal fun CodeFileBuilder.unitVerifyFunction(
 ) {
     val capitalizedMethodName = methodName.capitalizeFirst()
     val verifierClassName = "${interfaceName}${capitalizedMethodName}CallVerifier"
-    val backingFieldName = "_${methodName}Calls"
+    val backingFieldName = "${methodName}Calls"
     val functionName = "verify$capitalizedMethodName"
     val typeParams = parseTypeParameters(classTypeParameters)
 

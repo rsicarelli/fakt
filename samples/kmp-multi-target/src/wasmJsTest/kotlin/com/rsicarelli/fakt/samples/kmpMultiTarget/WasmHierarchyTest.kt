@@ -31,8 +31,8 @@ class WasmHierarchyTest {
         // Then
         assertEquals("WASM via Common", platform)
         assertEquals(true, debug)
-        assertEquals(1, commonFake.getPlatformNameCallCount)
-        assertEquals(1, commonFake.isDebugEnabledCallCount)
+        assertEquals(1, commonFake.getPlatformNameCalls.value.size)
+        assertEquals(1, commonFake.isDebugEnabledCalls.value.size)
     }
 
     @Test
@@ -55,8 +55,8 @@ class WasmHierarchyTest {
         // Then
         assertEquals(32, pages)
         assertEquals(60, result)
-        assertEquals(1, wasmFake.memoryPagesCallCount)
-        assertEquals(1, wasmFake.callWasmFunctionCallCount)
+        assertEquals(1, wasmFake.memoryPagesCalls.value.size)
+        assertEquals(1, wasmFake.callWasmFunctionCalls.value.size)
     }
 
     @Test
@@ -81,9 +81,9 @@ class WasmHierarchyTest {
         assertEquals("WASM", platform)
         assertEquals(16, pages)
         assertEquals(4096, pointer) // 4 * 1024
-        assertEquals(1, commonFake.logCallCount)
-        assertEquals(1, commonFake.getPlatformNameCallCount)
-        assertEquals(1, wasmFake.memoryPagesCallCount)
-        assertEquals(1, wasmFake.allocateMemoryCallCount)
+        assertEquals(1, commonFake.logCalls.value.size)
+        assertEquals(1, commonFake.getPlatformNameCalls.value.size)
+        assertEquals(1, wasmFake.memoryPagesCalls.value.size)
+        assertEquals(1, wasmFake.allocateMemoryCalls.value.size)
     }
 }

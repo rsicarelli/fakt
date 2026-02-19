@@ -33,7 +33,7 @@ sealed class DashboardState {
  * This serves as a real-world example for testing with Fakt + Turbine.
  *
  * NOTE: Call counts are automatically tracked by Fakt fakes!
- * No need to manually track counters - use `useCase.methodNameCallCount` in tests.
+ * No need to manually track counters - use `useCase.methodNameCalls.value.size` in tests.
  */
 class DashboardViewModel(
     private val useCase: DashboardUseCase,

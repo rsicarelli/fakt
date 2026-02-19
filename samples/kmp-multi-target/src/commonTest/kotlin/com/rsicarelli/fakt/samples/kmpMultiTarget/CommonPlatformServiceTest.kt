@@ -28,7 +28,7 @@ class CommonPlatformServiceTest {
         fake.log("ERROR", "Error message")
 
         // Then
-        assertEquals(2, fake.logCallCount)
+        assertEquals(2, fake.logCalls.value.size)
     }
 
     @Test
@@ -43,7 +43,7 @@ class CommonPlatformServiceTest {
 
         // Then
         assertEquals("TestPlatform", result)
-        assertEquals(1, fake.getPlatformNameCallCount)
+        assertEquals(1, fake.getPlatformNameCalls.value.size)
     }
 
     @Test
@@ -58,7 +58,7 @@ class CommonPlatformServiceTest {
 
         // Then
         assertTrue(result)
-        assertEquals(1, fake.isDebugEnabledCallCount)
+        assertEquals(1, fake.isDebugEnabledCalls.value.size)
     }
 
     @Test
@@ -74,8 +74,8 @@ class CommonPlatformServiceTest {
         // Then
         assertEquals("", platformName) // Default: empty string
         assertFalse(debugEnabled) // Default: false
-        assertEquals(1, fake.logCallCount)
-        assertEquals(1, fake.getPlatformNameCallCount)
-        assertEquals(1, fake.isDebugEnabledCallCount)
+        assertEquals(1, fake.logCalls.value.size)
+        assertEquals(1, fake.getPlatformNameCalls.value.size)
+        assertEquals(1, fake.isDebugEnabledCalls.value.size)
     }
 }

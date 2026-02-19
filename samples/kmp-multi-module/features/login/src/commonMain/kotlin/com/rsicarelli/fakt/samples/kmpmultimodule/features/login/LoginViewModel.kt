@@ -40,7 +40,7 @@ sealed class LoginState {
  * This serves as a real-world example for testing with Fakt + Turbine.
  *
  * NOTE: Call counts and failed attempts are automatically tracked by Fakt fakes!
- * Use `loginUseCase.loginCallCount` and `repository.getFailedAttemptsCallCount` in tests.
+ * Use `loginUseCase.loginCalls.value.size` and `repository.getFailedAttemptsCalls.value.size` in tests.
  */
 class LoginViewModel(
     private val loginUseCase: LoginUseCase,

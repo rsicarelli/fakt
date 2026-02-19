@@ -165,7 +165,7 @@ class AnalyticsTest {
         fake.track("user_signup")
 
         assertEquals(listOf("user_signup"), events)
-        assertEquals(1, fake.trackCallCount)
+        assertEquals(1, fake.trackCalls.value.size)
     }
 }
 ```
@@ -182,11 +182,11 @@ Fakt generates three components for each `@Fake` interface:
 class FakeAnalyticsImpl(
     private val trackBehavior: (String) -> Unit = { },
 ) : Analytics {
-    private val _trackCallCount = MutableStateFlow(0)
-    val trackCallCount: StateFlow<Int> get() = _trackCallCount
+    // Call History
+    val trackCalls = MutableStateFlow<List<Unit>>(emptyList())
 
     override fun track(event: String) {
-        _trackCallCount.update { it + 1 }
+        trackCalls.update { it + Unit }
         trackBehavior(event)
     }
 }

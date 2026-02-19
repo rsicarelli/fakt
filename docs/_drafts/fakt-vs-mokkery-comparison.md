@@ -101,7 +101,7 @@ These aren't bugs—they're the glass ceiling of the mocking paradigm. Mocking r
 Fakt doesn't mock—it generates *real implementations* with support for both testing approaches. Every generated fake includes:
 
 - **Behavior configuration** (state-based testing)
-- **StateFlow call tracking** (interaction-based testing)
+- **StateFlow call history** (interaction-based testing)
 - **Thread-safety** (no `var count = 0` footguns)
 
 The same Fakt fake can verify state *and* interactions:
@@ -116,7 +116,7 @@ val result = fake.save(User("test"))
 assertEquals("generated-id", result.id) // What happened?
 
 // Interaction-based verification (same fake)
-assertEquals(1, fake.saveCallCount) // How many times?
+assertEquals(1, fake.saveCalls.value.size) // How many times?
 ```
 
 This dual paradigm support means you're not forced to choose philosophies—Fakt adapts to your testing needs.
@@ -157,7 +157,7 @@ assertEquals(1, fake.orders.size) // Assert OUTCOME, not process
 // Test survives refactoring
 ```
 
-This test survives because it verifies **state** (was the order saved?), not **interactions** (which method was called?). And when you *do* need interaction verification, Fakt provides it through StateFlow: `assertEquals(1, fake.saveOrderCallCount)`.
+This test survives because it verifies **state** (was the order saved?), not **interactions** (which method was called?). And when you *do* need interaction verification, Fakt provides it through StateFlow: `assertEquals(1, fake.saveOrderCalls.value.size)`.
 
 ---
 
@@ -278,7 +278,7 @@ fun `GIVEN repository WHEN loading user THEN displays user name`() = runTest {
     assertEquals("Alice", viewModel.uiState.value.userName)
 
     // Optional: Interaction verification if needed
-    assertEquals(1, fake.getUserCallCount)
+    assertEquals(1, fake.getUserCalls.value.size)
 }
 ```
 
@@ -317,11 +317,11 @@ every { mock.getUser(any()) } returns User("123", "Test")
 // Before: Manual fake (60+ lines)
 class FakeUserService : UserService {
     private var getUserBehavior: ((String) -> User)? = null
-    private var _getUserCallCount = 0
-    val getUserCallCount: Int get() = _getUserCallCount
+    private val _getUserCalls = mutableListOf<Unit>()
+    val getUserCalls: List<Unit> get() = _getUserCalls
 
     override fun getUser(id: String): User {
-        _getUserCallCount++
+        _getUserCalls.add(Unit)
         return getUserBehavior?.invoke(id) ?: User(id, "")
     }
 

@@ -370,7 +370,7 @@ class OrderViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt tracks all 10 calls!
-            assertEquals(10, orderUseCase.createOrderCallCount)
+            assertEquals(10, orderUseCase.createOrderCalls.value.size)
         }
 
     // ============================================================================
@@ -393,7 +393,7 @@ class OrderViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt tracks the call automatically!
-            assertEquals(1, orderUseCase.getUserOrdersCallCount)
+            assertEquals(1, orderUseCase.getUserOrdersCalls.value.size)
         }
 
     @Test
@@ -412,7 +412,7 @@ class OrderViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt tracks it!
-            assertEquals(1, orderUseCase.createOrderCallCount)
+            assertEquals(1, orderUseCase.createOrderCalls.value.size)
         }
 
     @Test
@@ -432,7 +432,7 @@ class OrderViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt tracks it!
-            assertEquals(1, orderUseCase.cancelOrderCallCount)
+            assertEquals(1, orderUseCase.cancelOrderCalls.value.size)
         }
 
     // ============================================================================

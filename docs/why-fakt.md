@@ -33,8 +33,8 @@ fake.track("user_signup")
 fake.flush()
 
 // Verify interactions (thread-safe StateFlow)
-assertEquals(1, fake.trackCallCount)
-assertEquals(1, fake.flushCallCount)
+assertEquals(1, fake.trackCalls.value.size)
+assertEquals(1, fake.flushCalls.value.size)
 ```
 
 ---
@@ -61,21 +61,21 @@ class FakeAnalyticsService : AnalyticsService {
     private var trackBehavior: ((String) -> Unit)? = null
     private var flushBehavior: (suspend () -> Result<Unit>)? = null
 
-    // Call tracking (non-thread-safe!)
-    private var _trackCallCount = 0
-    val trackCallCount: Int get() = _trackCallCount
+    // Call history (non-thread-safe!)
+    private var _trackCalls = mutableListOf<Unit>()
+    val trackCalls: List<Unit> get() = _trackCalls
 
-    private var _flushCallCount = 0
-    val flushCallCount: Int get() = _flushCallCount
+    private var _flushCalls = mutableListOf<Unit>()
+    val flushCalls: List<Unit> get() = _flushCalls
 
     // Interface implementation
     override fun track(event: String) {
-        _trackCallCount++
+        _trackCalls.add(Unit)
         trackBehavior?.invoke(event) ?: Unit
     }
 
     override suspend fun flush(): Result<Unit> {
-        _flushCallCount++
+        _flushCalls.add(Unit)
         return flushBehavior?.invoke() ?: Result.success(Unit)
     }
 
@@ -93,7 +93,7 @@ class FakeAnalyticsService : AnalyticsService {
 !!! note "Fakt does it differently"
     Unlike the mutable handwritten pattern above, Fakt generates **immutable** fakes where behavior is set via constructor parameters and cannot change after construction. This eliminates shared mutable state and makes fakes thread-safe by design.
 
-The problems: call tracking uses mutable variables that break under concurrent tests. N methods require ~30N lines. Interface changes don't break unused fakes—they silently drift. For 50 interfaces, this means thousands of lines of brittle boilerplate.
+The problems: call history uses mutable variables that break under concurrent tests. N methods require ~30N lines. Interface changes don't break unused fakes—they silently drift. For 50 interfaces, this means thousands of lines of brittle boilerplate.
 
 ### The Mock Tax
 
@@ -141,7 +141,7 @@ Fakt uses a two-phase FIR → IR architecture:
 │  PHASE 2: IR (Intermediate Representation)          │
 │  • Analyzes interface methods and properties        │
 │  • Generates readable .kt source files              │
-│  • Thread-safe StateFlow call tracking              │
+│  • Thread-safe StateFlow call history               │
 └──────────────────────────────────────────────────────┘
 ```
 
@@ -176,7 +176,7 @@ Kotlin's async testing stack—`runTest`, `TestDispatcher`, Turbine[^17]—is in
 | **Runtime Overhead** | Heavy (reflection) | Zero |
 | **Type Safety** | Partial (`any()` matchers) | Complete |
 | **Learning Curve** | Steep (complex DSL) | Gentle (typed functions) |
-| **Call Tracking** | Manual (`verify { }`) | Built-in (StateFlow) |
+| **Call History** | Manual (`verify { }`) | Built-in (StateFlow) |
 | **Thread Safety** | Not guaranteed | StateFlow-based |
 | **Debuggability** | Reflection (opaque) | Generated `.kt` files |
 
@@ -196,11 +196,11 @@ Fakt and mocking libraries solve overlapping but distinct problems. Choosing bet
 
 - You value exercising production code in tests. Fakt-generated fakes are real implementations your tests compile against, catching interface drift at build time rather than runtime.
 
-- Tests run concurrently. Fakt tracks calls with StateFlow, which is thread-safe by design. Manual fakes with `var count = 0` break under parallel execution.
+- Tests run concurrently. Fakt tracks call history with StateFlow, which is thread-safe by design. Manual fakes with `var count = 0` break under parallel execution.
 
 **Mocking libraries (Mokkery, MockK) work best when:**
 
-- You need strict call ordering verification. Verifying that `validate()` was called before `charge()` before `ship()` in exact sequence requires `verify(exhaustiveOrder)`. Fakt tracks call counts, not call order.
+- You need strict call ordering verification. Verifying that `validate()` was called before `charge()` before `ship()` in exact sequence requires `verify(exhaustiveOrder)`. Fakt tracks call history, not call order.
 
 - You need spy behavior. Partial mocking of real implementations—calling real methods while intercepting others—is something only mocking frameworks can do. Fakt generates new implementations, it doesn't wrap existing ones.
 

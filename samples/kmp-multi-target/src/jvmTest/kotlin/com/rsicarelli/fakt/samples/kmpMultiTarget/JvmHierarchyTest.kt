@@ -28,7 +28,7 @@ class JvmHierarchyTest {
 
         // Then
         assertEquals("JVM via Common", result)
-        assertEquals(1, commonFake.getPlatformNameCallCount)
+        assertEquals(1, commonFake.getPlatformNameCalls.value.size)
     }
 
     @Test
@@ -48,7 +48,7 @@ class JvmHierarchyTest {
 
         // Then
         assertEquals("17.0.0", result)
-        assertEquals(1, jvmFake.getSystemPropertyCallCount)
+        assertEquals(1, jvmFake.getSystemPropertyCalls.value.size)
     }
 
     @Test
@@ -70,8 +70,8 @@ class JvmHierarchyTest {
         // Then - Both fakes work correctly
         assertEquals("JVM", platform)
         assertEquals("/home/user/project", workDir)
-        assertEquals(1, commonFake.logCallCount)
-        assertEquals(1, commonFake.getPlatformNameCallCount)
-        assertEquals(1, jvmFake.workingDirectoryCallCount)
+        assertEquals(1, commonFake.logCalls.value.size)
+        assertEquals(1, commonFake.getPlatformNameCalls.value.size)
+        assertEquals(1, jvmFake.workingDirectoryCalls.value.size)
     }
 }

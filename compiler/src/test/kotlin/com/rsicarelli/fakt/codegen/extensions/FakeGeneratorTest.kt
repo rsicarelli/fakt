@@ -177,9 +177,10 @@ class FakeGeneratorTest {
         // THEN - Direct private val constructor property with default
         assertContains(result, "private val countBehavior: () -> Int = { 0 }")
 
-        // THEN - Override delegates
+        // THEN - Override delegates (block body due to call tracking)
         assertContains(result, "override val count: Int")
-        assertContains(result, "get() =")
+        assertContains(result, "countCalls.update { it + Unit }")
+        assertContains(result, "return countBehavior()")
     }
 
     @Test
@@ -523,12 +524,8 @@ class FakeGeneratorTest {
 
         // THEN - Should NOT contain call tracking backing field
         assertFalse(
-            result.contains("_getUserCalls"),
-            "Should not contain _getUserCalls backing field when call history is disabled",
-        )
-        assertFalse(
-            result.contains("getUserCallCount"),
-            "Should not contain getUserCallCount when call history is disabled",
+            result.contains("getUserCalls"),
+            "Should not contain getUserCalls backing field when call history is disabled",
         )
     }
 
@@ -549,10 +546,10 @@ class FakeGeneratorTest {
         file.renderTo(builder)
         val result = builder.build()
 
-        // THEN - Should NOT contain call tracking region
+        // THEN - Should NOT contain call history region
         assertFalse(
-            result.contains("//region Call Tracking"),
-            "Should not contain Call Tracking region when call history is disabled",
+            result.contains("//region Call History"),
+            "Should not contain Call History region when call history is disabled",
         )
         // And should NOT contain the update call in method body
         assertFalse(
@@ -589,7 +586,7 @@ class FakeGeneratorTest {
         assertContains(result, "import kotlinx.coroutines.flow.MutableStateFlow")
         assertContains(result, "import kotlinx.coroutines.flow.update")
         // And should contain backing field
-        assertContains(result, "_getUserCalls")
+        assertContains(result, "getUserCalls")
     }
 
     @Test
@@ -611,7 +608,7 @@ class FakeGeneratorTest {
 
         // THEN - Should contain call tracking (default behavior)
         assertContains(result, "import kotlinx.coroutines.flow.MutableStateFlow")
-        assertContains(result, "_doWorkCalls")
+        assertContains(result, "doWorkCalls")
     }
 
     @Test
@@ -641,11 +638,10 @@ class FakeGeneratorTest {
         file.renderTo(builder)
         val result = builder.build()
 
-        // THEN - Should NOT contain any call tracking fields
-        assertFalse(result.contains("_getUserCalls"))
-        assertFalse(result.contains("_saveUserCalls"))
-        assertFalse(result.contains("_deleteUserCalls"))
-        assertFalse(result.contains("CallCount"))
+        // THEN - Should NOT contain any call history fields
+        assertFalse(result.contains("getUserCalls"))
+        assertFalse(result.contains("saveUserCalls"))
+        assertFalse(result.contains("deleteUserCalls"))
     }
 
     @Test
@@ -709,9 +705,9 @@ class FakeGeneratorTest {
 
         // THEN - Override mutable property with getter and setter (block body due to call tracking)
         assertContains(result, "override var currentUser: User?")
-        assertContains(result, "_currentUserCallCount.update { it + 1 }")
+        assertContains(result, "currentUserCalls.update { it + Unit }")
         assertContains(result, "return currentUserGetter()")
-        assertContains(result, "_setCurrentUserCallCount.update { it + 1 }")
+        assertContains(result, "setCurrentUserCalls.update { it + Unit }")
         assertContains(result, "currentUserSetter(value)")
     }
 

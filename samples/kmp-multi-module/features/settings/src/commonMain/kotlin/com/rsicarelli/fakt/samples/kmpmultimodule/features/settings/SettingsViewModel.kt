@@ -36,7 +36,7 @@ sealed class SettingsState {
  * This serves as a real-world example for testing with Fakt + Turbine.
  *
  * NOTE: Call counts are automatically tracked by Fakt fakes!
- * Use `settingsUseCase.getSettingsCallCount` and `updateSettingsCallCount` in tests.
+ * Use `settingsUseCase.getSettingsCalls.value.size` and `updateSettingsCalls.value.size` in tests.
  */
 class SettingsViewModel(
     private val settingsUseCase: SettingsUseCase,

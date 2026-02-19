@@ -37,7 +37,7 @@ sealed class ProfileState {
  * This serves as a real-world example for testing with Fakt + Turbine.
  *
  * NOTE: Call counts are automatically tracked by Fakt fakes!
- * Use `profileUseCase.getProfileCallCount` and `updateProfileCallCount` in tests.
+ * Use `profileUseCase.getProfileCalls.value.size` and `updateProfileCalls.value.size` in tests.
  */
 class ProfileViewModel(
     private val profileUseCase: ProfileUseCase,

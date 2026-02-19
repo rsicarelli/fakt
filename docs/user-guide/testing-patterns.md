@@ -61,7 +61,7 @@ fun `GIVEN repository WHEN getting user THEN returns user`() {
 
 ## Verify Behavior, Not Implementation
 
-Use call counters to verify interactions:
+Use call history to verify interactions:
 
 ```kotlin
 @Test
@@ -71,8 +71,8 @@ fun `GIVEN service WHEN processing user THEN calls repository once`() {
 
     service.processUser("123")
 
-    assertEquals(1, fakeRepo.getUserCallCount)
-    assertEquals(1, fakeRepo.saveUserCallCount)
+    assertEquals(1, fakeRepo.getUserCalls.value.size)
+    assertEquals(1, fakeRepo.saveUserCalls.value.size)
 }
 ```
 
@@ -127,11 +127,11 @@ fun `GIVEN repository failure WHEN saving user THEN handles error`() = runTest {
 
 Use the verification DSL to assert on call history:
 
-### Basic Call Count Verification
+### Basic Call History Verification
 
 ```kotlin
 @Test
-fun `GIVEN repository WHEN saving users THEN tracks call count`() {
+fun `GIVEN repository WHEN saving users THEN tracks calls`() {
     val fake = fakeRepository {
         saveUser { user -> Result.success(Unit) }
     }
@@ -139,7 +139,7 @@ fun `GIVEN repository WHEN saving users THEN tracks call count`() {
     fake.saveUser(alice)
     fake.saveUser(bob)
 
-    assertEquals(2, fake.saveUserCallCount)
+    assertEquals(2, fake.saveUserCalls.value.size)
 }
 ```
 
@@ -198,7 +198,7 @@ fun `GIVEN cached data WHEN loading THEN does not call API`() {
         assertTrue(wasNeverCalled())
     }
     // Or simply:
-    assertEquals(0, fake.fetchDataCallCount)
+    assertEquals(0, fake.fetchDataCalls.value.size)
 }
 ```
 

@@ -286,7 +286,7 @@ class SettingsViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt tracks all 10 update calls!
-            assertEquals(10, settingsUseCase.updateSettingsCallCount)
+            assertEquals(10, settingsUseCase.updateSettingsCalls.value.size)
         }
 
     // ============================================================================
@@ -309,7 +309,7 @@ class SettingsViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt tracks the call automatically!
-            assertEquals(1, settingsUseCase.getSettingsCallCount)
+            assertEquals(1, settingsUseCase.getSettingsCalls.value.size)
         }
 
     @Test
@@ -333,7 +333,7 @@ class SettingsViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt tracks it!
-            assertEquals(1, settingsUseCase.updateSettingsCallCount)
+            assertEquals(1, settingsUseCase.updateSettingsCalls.value.size)
         }
 
     // ============================================================================

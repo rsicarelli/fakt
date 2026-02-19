@@ -25,7 +25,7 @@ class CallTrackingTest {
         fake.simpleMethod()
 
         // Then
-        assertEquals(1, fake.simpleMethodCallCount)
+        assertEquals(1, fake.simpleMethodCalls.value.size)
     }
 
     @Test
@@ -41,7 +41,7 @@ class CallTrackingTest {
         fake.simpleMethod()
 
         // Then
-        assertEquals(3, fake.simpleMethodCallCount)
+        assertEquals(3, fake.simpleMethodCalls.value.size)
     }
 
     @Test
@@ -50,7 +50,7 @@ class CallTrackingTest {
         val fake = fakeTrackedService()
 
         // When
-        val count = fake.simpleMethodCallCount
+        val count = fake.simpleMethodCalls.value.size
 
         // Then
         assertEquals(0, count)
@@ -70,7 +70,7 @@ class CallTrackingTest {
             }.awaitAll()
 
             // Then
-            assertEquals(100, fake.simpleMethodCallCount)
+            assertEquals(100, fake.simpleMethodCalls.value.size)
         }
 
     @Test
@@ -90,8 +90,8 @@ class CallTrackingTest {
             jobs.forEach { it.join() }
 
             // Then
-            assertEquals(50, fake.asyncMethodCallCount)
-            assertEquals(30, fake.batchProcessCallCount)
+            assertEquals(50, fake.asyncMethodCalls.value.size)
+            assertEquals(30, fake.batchProcessCalls.value.size)
         }
 
     @Test
@@ -108,7 +108,7 @@ class CallTrackingTest {
             fake.asyncMethod()
 
             // Then
-            assertEquals(3, fake.asyncMethodCallCount)
+            assertEquals(3, fake.asyncMethodCalls.value.size)
         }
 
     @Test
@@ -127,7 +127,7 @@ class CallTrackingTest {
             }.awaitAll()
 
             // Then
-            assertEquals(20, fake.batchProcessCallCount)
+            assertEquals(20, fake.batchProcessCalls.value.size)
         }
 
     @Test
@@ -143,7 +143,7 @@ class CallTrackingTest {
         fake.genericMethod(true)
 
         // Then - Single counter tracks all invocations regardless of type
-        assertEquals(3, fake.genericMethodCallCount)
+        assertEquals(3, fake.genericMethodCalls.value.size)
     }
 
     @Test
@@ -160,7 +160,7 @@ class CallTrackingTest {
             fake.asyncGenericMethod(listOf(1, 2, 3))
 
             // Then
-            assertEquals(3, fake.asyncGenericMethodCallCount)
+            assertEquals(3, fake.asyncGenericMethodCalls.value.size)
         }
 
     @Test
@@ -175,7 +175,7 @@ class CallTrackingTest {
         fake.nullableMethod()
 
         // Then
-        assertEquals(2, fake.nullableMethodCallCount)
+        assertEquals(2, fake.nullableMethodCalls.value.size)
     }
 
     @Test
@@ -191,7 +191,7 @@ class CallTrackingTest {
         fake.nullableParamMethod(null)
 
         // Then
-        assertEquals(3, fake.nullableParamMethodCallCount)
+        assertEquals(3, fake.nullableParamMethodCalls.value.size)
     }
 
     @Test
@@ -207,7 +207,7 @@ class CallTrackingTest {
         fake.customTypeMethod(user)
 
         // Then
-        assertEquals(2, fake.customTypeMethodCallCount)
+        assertEquals(2, fake.customTypeMethodCalls.value.size)
     }
 
     @Test
@@ -223,7 +223,7 @@ class CallTrackingTest {
         fake.methodWithParams("id-3", 30)
 
         // Then
-        assertEquals(3, fake.methodWithParamsCallCount)
+        assertEquals(3, fake.methodWithParamsCalls.value.size)
     }
 
     @Test
@@ -239,7 +239,7 @@ class CallTrackingTest {
         val value3 = fake.readOnlyProperty
 
         // Then
-        assertEquals(3, fake.readOnlyPropertyCallCount)
+        assertEquals(3, fake.readOnlyPropertyCalls.value.size)
     }
 
     @Test
@@ -257,8 +257,8 @@ class CallTrackingTest {
         val read3 = fake.mutableProperty // getter
 
         // Then
-        assertEquals(3, fake.mutablePropertyCallCount) // 3 reads
-        assertEquals(2, fake.setMutablePropertyCallCount) // 2 writes
+        assertEquals(3, fake.mutablePropertyCalls.value.size) // 3 reads
+        assertEquals(2, fake.setMutablePropertyCalls.value.size) // 2 writes
     }
 
     @Test
@@ -270,7 +270,7 @@ class CallTrackingTest {
 
         // When
         fake.simpleMethod()
-        val count = fake.simpleMethodCallCount
+        val count = fake.simpleMethodCalls.value.size
 
         // Then
         assertEquals(1, count)
@@ -294,9 +294,9 @@ class CallTrackingTest {
         fake.nullableMethod()
 
         // Then - Each counter tracks independently
-        assertEquals(2, fake.simpleMethodCallCount)
-        assertEquals(1, fake.methodWithParamsCallCount)
-        assertEquals(3, fake.nullableMethodCallCount)
+        assertEquals(2, fake.simpleMethodCalls.value.size)
+        assertEquals(1, fake.methodWithParamsCalls.value.size)
+        assertEquals(3, fake.nullableMethodCalls.value.size)
     }
 
     @Test
@@ -312,7 +312,7 @@ class CallTrackingTest {
         fake.varargsMethod()
 
         // Then
-        assertEquals(3, fake.varargsMethodCallCount)
+        assertEquals(3, fake.varargsMethodCalls.value.size)
     }
 
     @Test
@@ -327,7 +327,7 @@ class CallTrackingTest {
         runCatching { fake.simpleMethod() }
 
         // Then - Counter increments even when method throws
-        assertEquals(2, fake.simpleMethodCallCount)
+        assertEquals(2, fake.simpleMethodCalls.value.size)
     }
 
     @Test
@@ -350,7 +350,7 @@ class CallTrackingTest {
         assertEquals("result-1", result1)
         assertEquals("result-2", result2)
         assertEquals("result-3", result3)
-        assertEquals(3, fake.simpleMethodCallCount)
+        assertEquals(3, fake.simpleMethodCalls.value.size)
     }
 
     @Test
@@ -365,9 +365,9 @@ class CallTrackingTest {
             val prop = fake.readOnlyProperty
 
             // Then
-            assertEquals(1, fake.simpleMethodCallCount)
-            assertEquals(1, fake.asyncMethodCallCount)
-            assertEquals(1, fake.readOnlyPropertyCallCount)
+            assertEquals(1, fake.simpleMethodCalls.value.size)
+            assertEquals(1, fake.asyncMethodCalls.value.size)
+            assertEquals(1, fake.readOnlyPropertyCalls.value.size)
         }
 
     @Test
@@ -382,8 +382,8 @@ class CallTrackingTest {
         fake2.simpleMethod()
 
         // Then - Independent tracking
-        assertEquals(2, fake1.simpleMethodCallCount)
-        assertEquals(1, fake2.simpleMethodCallCount)
+        assertEquals(2, fake1.simpleMethodCalls.value.size)
+        assertEquals(1, fake2.simpleMethodCalls.value.size)
     }
 
     @Test
@@ -394,18 +394,18 @@ class CallTrackingTest {
         // When - No calls made
 
         // Then
-        assertEquals(0, fake.simpleMethodCallCount)
-        assertEquals(0, fake.asyncMethodCallCount)
-        assertEquals(0, fake.genericMethodCallCount)
-        assertEquals(0, fake.methodWithParamsCallCount)
-        assertEquals(0, fake.readOnlyPropertyCallCount)
-        assertEquals(0, fake.mutablePropertyCallCount)
-        assertEquals(0, fake.setMutablePropertyCallCount)
-        assertEquals(0, fake.nullableMethodCallCount)
-        assertEquals(0, fake.customTypeMethodCallCount)
-        assertEquals(0, fake.batchProcessCallCount)
-        assertEquals(0, fake.varargsMethodCallCount)
-        assertEquals(0, fake.nullableParamMethodCallCount)
-        assertEquals(0, fake.asyncGenericMethodCallCount)
+        assertEquals(0, fake.simpleMethodCalls.value.size)
+        assertEquals(0, fake.asyncMethodCalls.value.size)
+        assertEquals(0, fake.genericMethodCalls.value.size)
+        assertEquals(0, fake.methodWithParamsCalls.value.size)
+        assertEquals(0, fake.readOnlyPropertyCalls.value.size)
+        assertEquals(0, fake.mutablePropertyCalls.value.size)
+        assertEquals(0, fake.setMutablePropertyCalls.value.size)
+        assertEquals(0, fake.nullableMethodCalls.value.size)
+        assertEquals(0, fake.customTypeMethodCalls.value.size)
+        assertEquals(0, fake.batchProcessCalls.value.size)
+        assertEquals(0, fake.varargsMethodCalls.value.size)
+        assertEquals(0, fake.nullableParamMethodCalls.value.size)
+        assertEquals(0, fake.asyncGenericMethodCalls.value.size)
     }
 }

@@ -1,6 +1,6 @@
 # Usage Guide
 
-Comprehensive reference for using Fakt-generated fakes in your tests. This guide covers everything from basic patterns to advanced features like coroutines, generics, and call tracking.
+Comprehensive reference for using Fakt-generated fakes in your tests. This guide covers everything from basic patterns to advanced features like coroutines, generics, and call history.
 
 ---
 
@@ -41,8 +41,8 @@ class AnalyticsTest {
         fake.identify("user-123")
 
         assertEquals(listOf("user_signup", "user_login"), events)
-        assertEquals(2, fake.trackCallCount)
-        assertEquals(1, fake.identifyCallCount)
+        assertEquals(2, fake.trackCalls.value.size)
+        assertEquals(1, fake.identifyCalls.value.size)
     }
 }
 ```
@@ -270,8 +270,8 @@ fun `GIVEN event bus fake WHEN publishing events THEN executes configured behavi
     fake.subscribe(mockHandler)  // No-op default
 
     assertEquals(1, receivedEvents.size)
-    assertEquals(1, fake.publishCallCount)
-    assertEquals(1, fake.subscribeCallCount)
+    assertEquals(1, fake.publishCalls.value.size)
+    assertEquals(1, fake.subscribeCalls.value.size)
 }
 ```
 
@@ -353,7 +353,7 @@ class ApiClientTest {
 
         assertTrue(result.isSuccess)
         assertEquals(testData, result.getOrNull())
-        assertEquals(1, fake.fetchDataCallCount)
+        assertEquals(1, fake.fetchDataCalls.value.size)
     }
 }
 ```
@@ -521,7 +521,7 @@ fun `GIVEN slow API WHEN fetching THEN handles timeout`() = runTest {
 
 ## Properties
 
-Fakt generates fakes for both read-only (`val`) and mutable (`var`) properties with automatic call tracking.
+Fakt generates fakes for both read-only (`val`) and mutable (`var`) properties with automatic call history.
 
 ### Read-Only Properties (val)
 
@@ -538,7 +538,7 @@ val fake = fakeConfig {
 }
 
 assertEquals("https://api.example.com", fake.apiUrl)
-assertEquals(1, fake.apiUrlCallCount)
+assertEquals(1, fake.apiUrlCalls.value.size)
 ```
 
 ---
@@ -561,11 +561,11 @@ val fake = fakeSettings {
 
 // Getter tracking
 assertEquals("dark", fake.theme)
-assertEquals(1, fake.getThemeCallCount)
+assertEquals(1, fake.getThemeCalls.value.size)
 
 // Setter tracking
 fake.theme = "light"
-assertEquals(1, fake.setThemeCallCount)
+assertEquals(1, fake.setThemeCalls.value.size)
 ```
 
 ---
@@ -639,11 +639,11 @@ interface Consumer<in T> {
 
 ---
 
-## Call Tracking & Verification
+## Call History & Verification
 
-Every Fakt-generated fake includes automatic, thread-safe call tracking with a powerful verification DSL.
+Every Fakt-generated fake includes automatic, thread-safe call history with a powerful verification DSL.
 
-### Basic Call Tracking
+### Basic Call History
 
 Every method automatically tracks calls:
 
@@ -659,7 +659,7 @@ interface Logger {
 
 ```kotlin
 @Test
-fun `GIVEN fake logger WHEN logging messages THEN tracks call counts`() {
+fun `GIVEN fake logger WHEN logging messages THEN tracks calls`() {
     val fake = fakeLogger {
         log { message -> println(message) }
         error { message -> System.err.println(message) }
@@ -669,8 +669,8 @@ fun `GIVEN fake logger WHEN logging messages THEN tracks call counts`() {
     fake.log("Another info")
     fake.error("Error occurred")
 
-    assertEquals(2, fake.logCallCount)
-    assertEquals(1, fake.errorCallCount)
+    assertEquals(2, fake.logCalls.value.size)
+    assertEquals(1, fake.errorCalls.value.size)
 }
 ```
 
@@ -735,10 +735,10 @@ fake.verifySave {
 
 **Zero-Parameter Methods:**
 
-Methods without parameters still track call counts:
+Methods without parameters still track calls:
 
 ```kotlin
-assertEquals(2, fake.clearCallCount)
+assertEquals(2, fake.clearCalls.value.size)
 fake.verifyClear {
     assertTrue(wasCalledTimes(2))
 }
@@ -773,7 +773,7 @@ fun `GIVEN analytics WHEN tracking events THEN verifies order`() {
 
 ---
 
-### Property Call Tracking
+### Property Call History
 
 Properties track both getter and setter calls:
 
@@ -788,21 +788,21 @@ val fake = fakeSettings {
 }
 
 val _ = fake.theme  // Getter
-assertEquals(1, fake.getThemeCallCount)
+assertEquals(1, fake.getThemeCalls.value.size)
 
 fake.theme = "light"  // Setter
-assertEquals(1, fake.setThemeCallCount)
+assertEquals(1, fake.setThemeCalls.value.size)
 ```
 
 ---
 
 ### Thread Safety
 
-Call counts are derived from thread-safe internal state. All tracking operations are safe for concurrent access:
+Call history is backed by thread-safe internal state. All tracking operations are safe for concurrent access:
 
 ```kotlin
 @Test
-fun `GIVEN fake WHEN calling from multiple threads THEN counts correctly`() = runTest {
+fun `GIVEN fake WHEN calling from multiple threads THEN tracks correctly`() = runTest {
     val fake = fakeAnalytics()
 
     withContext(Dispatchers.Default) {
@@ -813,7 +813,7 @@ fun `GIVEN fake WHEN calling from multiple threads THEN counts correctly`() = ru
         }
     }
 
-    assertEquals(1000, fake.trackCallCount)
+    assertEquals(1000, fake.trackCalls.value.size)
 }
 ```
 
@@ -821,7 +821,7 @@ fun `GIVEN fake WHEN calling from multiple threads THEN counts correctly`() = ru
 
 ### Configuring Call History
 
-By default, Fakt generates full call tracking for every fake. You can disable this for lightweight fakes that don't need verification.
+By default, Fakt generates full call history for every fake. You can disable this for lightweight fakes that don't need verification.
 
 #### Project-Wide Default
 
@@ -864,7 +864,7 @@ Disable call history when:
 
 - Fakes are only used for stubbing, not verification
 - You want smaller generated code
-- Migrating legacy tests that don't need call tracking
+- Migrating legacy tests that don't need call history
 
 Enable call history when:
 
@@ -880,7 +880,7 @@ Enable call history when:
 val fake = fakeLogger()
 fake.log("message")
 
-assertEquals(1, fake.logCallCount)  // Available
+assertEquals(1, fake.logCalls.value.size)  // Available
 fake.verifyLog {                     // Available
     assertTrue(wasCalledWith("message"))
 }
@@ -892,7 +892,7 @@ fake.verifyLog {                     // Available
 val fake = fakeLogger()
 fake.log("message")
 
-// fake.logCallCount         // Not generated
+// fake.logCalls             // Not generated
 // fake.verifyLog { ... }    // Not generated
 ```
 
@@ -931,9 +931,9 @@ fun `GIVEN service fake WHEN calling inherited methods THEN works correctly`() {
     assertEquals("Alice", fake.getUser("123").name)
     assertTrue(fake.stop())
 
-    assertEquals(1, fake.startCallCount)
-    assertEquals(1, fake.getUserCallCount)
-    assertEquals(1, fake.stopCallCount)
+    assertEquals(1, fake.startCalls.value.size)
+    assertEquals(1, fake.getUserCalls.value.size)
+    assertEquals(1, fake.stopCalls.value.size)
 }
 ```
 

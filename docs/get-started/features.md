@@ -171,7 +171,7 @@ suspend fun fetch(): User // Works in runTest { }
 <td>
 
 ```kotlin
-val apiUrl: String // fake.apiUrl + fake.apiUrlCallCount
+val apiUrl: String // fake.apiUrl + fake.apiUrlCalls.value.size
 ```
 
 </td>
@@ -181,7 +181,7 @@ val apiUrl: String // fake.apiUrl + fake.apiUrlCallCount
 <td>
 
 ```kotlin
-var theme: String // getThemeCallCount + setThemeCallCount
+var theme: String // getThemeCalls.value.size + setThemeCalls.value.size
 ```
 
 </td>
@@ -210,7 +210,7 @@ fun log(msg: String, level: LogLevel = INFO)
 
 ---
 
-## Call Tracking & Verification
+## Call History & Verification
 
 <table>
 <tr><th>Case</th><th>Example</th></tr>
@@ -219,7 +219,7 @@ fun log(msg: String, level: LogLevel = INFO)
 <td>
 
 ```kotlin
-fake.trackCallCount // Thread-safe Int counter
+fake.trackCalls.value.size // Thread-safe call count
 ```
 
 </td>
@@ -253,8 +253,8 @@ assertEquals(2, fake.trackCallHistory.all.size)
 <td>
 
 ```kotlin
-fake.getThemeCallCount
-fake.setThemeCallCount
+fake.getThemeCalls.value.size
+fake.setThemeCalls.value.size
 ```
 
 </td>
@@ -263,7 +263,7 @@ fake.setThemeCallCount
 <td><strong>Thread Safety</strong></td>
 <td>
 
-Call counts are derived from thread-safe internal state.
+Call history is backed by thread-safe internal state.
 
 </td>
 </tr>

@@ -30,7 +30,7 @@ class UserRepositoryTest {
         assertEquals("Alice", result[0].name)
         assertEquals("Bob", result[1].name)
         // Call tracking validation
-        assertEquals(1, fake.usersCallCount)
+        assertEquals(1, fake.usersCalls.value.size)
     }
 
     @Test
@@ -55,7 +55,7 @@ class UserRepositoryTest {
         assertEquals("Found User", existingUser?.name)
         assertNull(missingUser)
         // Call tracking validation
-        assertEquals(2, fake.findByIdCallCount) // Called twice
+        assertEquals(2, fake.findByIdCalls.value.size) // Called twice
     }
 
     @Test
@@ -76,7 +76,7 @@ class UserRepositoryTest {
         assertEquals("Test", result.name)
         assertEquals(25, result.age)
         // Call tracking validation
-        assertEquals(1, fake.saveCallCount)
+        assertEquals(1, fake.saveCalls.value.size)
     }
 
     @Test
@@ -94,7 +94,7 @@ class UserRepositoryTest {
         assertTrue(deletedExisting)
         assertFalse(deletedMissing)
         // Call tracking validation
-        assertEquals(2, fake.deleteCallCount) // Called twice
+        assertEquals(2, fake.deleteCalls.value.size) // Called twice
     }
 
     @Test
@@ -120,7 +120,7 @@ class UserRepositoryTest {
         assertEquals(25, resultDefault[0].age)
         assertEquals(100, resultDefault[1].age)
         // Call tracking validation
-        assertEquals(2, fake.findByAgeCallCount) // Called with and without defaults
+        assertEquals(2, fake.findByAgeCalls.value.size) // Called with and without defaults
     }
 
     @Test
@@ -142,10 +142,10 @@ class UserRepositoryTest {
         assertFalse(deleted) // Default: false
         assertTrue(byAge.isEmpty()) // Default: empty list
         // Call tracking validation - All methods called once
-        assertEquals(1, fake.usersCallCount)
-        assertEquals(1, fake.findByIdCallCount)
-        assertEquals(1, fake.saveCallCount)
-        assertEquals(1, fake.deleteCallCount)
-        assertEquals(1, fake.findByAgeCallCount)
+        assertEquals(1, fake.usersCalls.value.size)
+        assertEquals(1, fake.findByIdCalls.value.size)
+        assertEquals(1, fake.saveCalls.value.size)
+        assertEquals(1, fake.deleteCalls.value.size)
+        assertEquals(1, fake.findByAgeCalls.value.size)
     }
 }

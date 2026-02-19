@@ -316,7 +316,7 @@ class MethodExtensionsTest {
         val result = builder.build()
 
         // THEN - Only history update (call count is derived from history size)
-        assertContains(result, "_logoutCalls.update { it + Unit }")
+        assertContains(result, "logoutCalls.update { it + Unit }")
     }
 
     @Test
@@ -340,7 +340,7 @@ class MethodExtensionsTest {
         val result = builder.build()
 
         // THEN - Only history update (call count is derived from history size)
-        assertContains(result, "_getUserCalls.update { it + UserServiceGetUserCall(id) }")
+        assertContains(result, "getUserCalls.update { it + UserServiceGetUserCall(id) }")
     }
 
     @Test
@@ -370,7 +370,7 @@ class MethodExtensionsTest {
         // THEN
         assertContains(
             result,
-            "_createOrderCalls.update { it + OrderServiceCreateOrderCall(userId, amount) }",
+            "createOrderCalls.update { it + OrderServiceCreateOrderCall(userId, amount) }",
         )
     }
 
@@ -395,7 +395,7 @@ class MethodExtensionsTest {
         val result = builder.build()
 
         // THEN
-        assertContains(result, "_logCalls.update { it + Unit }")
+        assertContains(result, "logCalls.update { it + Unit }")
     }
 
     @Test
@@ -423,7 +423,7 @@ class MethodExtensionsTest {
         val result = builder.build()
 
         // THEN
-        assertContains(result, "_formatCalls.update { it + FormatServiceFormatCall(template) }")
+        assertContains(result, "formatCalls.update { it + FormatServiceFormatCall(template) }")
         // Should NOT include args in the data class
         assertFalse(result.contains("FormatServiceFormatCall(template, args)"))
     }
@@ -449,7 +449,7 @@ class MethodExtensionsTest {
         val result = builder.build()
 
         // THEN - Only history update (call count is derived from history size)
-        assertContains(result, "_processCalls.update { it + Unit }")
+        assertContains(result, "processCalls.update { it + Unit }")
     }
 
     @Test
@@ -477,7 +477,7 @@ class MethodExtensionsTest {
         val result = builder.build()
 
         // THEN
-        assertContains(result, "_saveCalls.update { it + RepositorySaveCall(item as Any?) }")
+        assertContains(result, "saveCalls.update { it + RepositorySaveCall(item as Any?) }")
     }
 
     // endregion
@@ -510,7 +510,7 @@ class MethodExtensionsTest {
 
         // THEN - Should NOT contain history update
         assertFalse(
-            result.contains("_getUserCalls.update"),
+            result.contains("getUserCalls.update"),
             "Should not contain history update when generateCallHistory is false",
         )
         // But SHOULD still contain the behavior call
@@ -543,7 +543,7 @@ class MethodExtensionsTest {
 
         // THEN - Should NOT contain any history update
         assertFalse(
-            result.contains("_logoutCalls.update"),
+            result.contains("logoutCalls.update"),
             "Should not contain history update when generateCallHistory is false",
         )
         // But SHOULD still contain the behavior call
@@ -573,7 +573,7 @@ class MethodExtensionsTest {
 
         // THEN - Should NOT contain history update
         assertFalse(
-            result.contains("_processCalls.update"),
+            result.contains("processCalls.update"),
             "Should not contain history update when generateCallHistory is false",
         )
         // But SHOULD still contain the behavior call
@@ -605,7 +605,7 @@ class MethodExtensionsTest {
         val result = builder.build()
 
         // THEN - Should contain history update
-        assertContains(result, "_doWorkCalls.update { it + WorkServiceDoWorkCall(value) }")
+        assertContains(result, "doWorkCalls.update { it + WorkServiceDoWorkCall(value) }")
     }
 
     @Test
@@ -629,7 +629,7 @@ class MethodExtensionsTest {
         val result = builder.build()
 
         // THEN - Should contain history update (default behavior)
-        assertContains(result, "_getDataCalls.update { it + Unit }")
+        assertContains(result, "getDataCalls.update { it + Unit }")
     }
 
     @Test
@@ -654,7 +654,7 @@ class MethodExtensionsTest {
         val result = builder.build()
 
         // THEN - Should contain history update
-        assertContains(result, "_logCalls.update { it + Unit }")
+        assertContains(result, "logCalls.update { it + Unit }")
     }
 
     @Test
@@ -684,7 +684,7 @@ class MethodExtensionsTest {
 
         // THEN - Should NOT contain history update
         assertFalse(
-            result.contains("_fetchUserCalls.update"),
+            result.contains("fetchUserCalls.update"),
             "Suspend method should not have history update when disabled",
         )
         // But SHOULD still be a suspend function with correct behavior
