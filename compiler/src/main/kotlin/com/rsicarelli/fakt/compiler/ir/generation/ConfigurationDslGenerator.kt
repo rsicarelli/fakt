@@ -361,8 +361,7 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
                 when {
                     abstractClassName != null -> {
                         val sig = buildMethodSignature(function)
-                        val escapedClassName =
-                            abstractClassName.replaceFirstChar { it.uppercase() }
+                        val escapedClassName = abstractClassName.replaceFirstChar { it.uppercase() }
                         val errorMsg =
                             "Abstract method '$sig' in class '$abstractClassName' must be configured. " +
                                 "Use the DSL: fake$escapedClassName { ${function.name} { ... } }"
