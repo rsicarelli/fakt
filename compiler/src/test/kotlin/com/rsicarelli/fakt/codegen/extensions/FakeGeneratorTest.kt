@@ -90,10 +90,7 @@ class FakeGeneratorTest {
         val result = builder.build()
 
         // THEN - Direct private val constructor property with suspend default
-        assertContains(
-            result,
-            "private val saveUserBehavior: suspend (User) -> Result<Unit>",
-        )
+        assertContains(result, "private val saveUserBehavior: suspend (User) -> Result<Unit>")
         assertContains(result, "Result.success(Unit)")
 
         // THEN - Override method
@@ -710,10 +707,12 @@ class FakeGeneratorTest {
         // THEN - Setter constructor property with no-op default
         assertContains(result, "private val currentUserSetter: (User?) -> Unit = { }")
 
-        // THEN - Override mutable property with getter and setter
+        // THEN - Override mutable property with getter and setter (block body due to call tracking)
         assertContains(result, "override var currentUser: User?")
-        assertContains(result, "get() = currentUserGetter()")
-        assertContains(result, "set(value) { currentUserSetter(value) }")
+        assertContains(result, "_currentUserCallCount.update { it + 1 }")
+        assertContains(result, "return currentUserGetter()")
+        assertContains(result, "_setCurrentUserCallCount.update { it + 1 }")
+        assertContains(result, "currentUserSetter(value)")
     }
 
     @Test
@@ -721,12 +720,7 @@ class FakeGeneratorTest {
         // GIVEN
         val properties =
             listOf(
-                PropertySpec(
-                    name = "count",
-                    type = "Int",
-                    isStateFlow = false,
-                    isMutable = true,
-                )
+                PropertySpec(name = "count", type = "Int", isStateFlow = false, isMutable = true)
             )
 
         // WHEN
@@ -755,13 +749,13 @@ class FakeGeneratorTest {
         // GIVEN
         val properties =
             listOf(
-                PropertySpec(name = "name", type = "String", isStateFlow = false, isMutable = false),
                 PropertySpec(
-                    name = "score",
-                    type = "Int",
+                    name = "name",
+                    type = "String",
                     isStateFlow = false,
-                    isMutable = true,
+                    isMutable = false,
                 ),
+                PropertySpec(name = "score", type = "Int", isStateFlow = false, isMutable = true),
             )
 
         // WHEN
@@ -814,8 +808,10 @@ class FakeGeneratorTest {
         file.renderTo(builder)
         val result = builder.build()
 
-        // THEN - Abstract method gets non-null constructor property with default
-        assertContains(result, "private val validateBehavior: (String) -> Boolean = { p0 -> false }")
+        // THEN - Abstract method gets non-null constructor property with error default
+        // (abstract class methods require explicit configuration via DSL)
+        assertContains(result, "private val validateBehavior: (String) -> Boolean = { p0 -> error(")
+        assertContains(result, "Abstract method 'validate(String): Boolean'")
     }
 
     @Test

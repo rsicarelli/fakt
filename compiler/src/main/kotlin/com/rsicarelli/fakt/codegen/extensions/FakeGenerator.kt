@@ -370,13 +370,7 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
                 generatePropertyBehaviorConstructorParam(this, prop, isClass, className)
             }
             methods.forEach { method ->
-                generateMethodBehaviorConstructorParam(
-                    this,
-                    method,
-                    resolver,
-                    isClass,
-                    className,
-                )
+                generateMethodBehaviorConstructorParam(this, method, resolver, isClass, className)
             }
 
             // ==========================================
@@ -722,12 +716,13 @@ private fun generateMethodBehaviorConstructorParam(
             erasedParamTypes
         }
 
-    val functionType = buildBehaviorFunctionType(
-        paramTypes = behaviorFinalParamTypes,
-        returnType = erasedReturnType,
-        isSuspend = method.isSuspend,
-        isNullable = isOpenMethod,
-    )
+    val functionType =
+        buildBehaviorFunctionType(
+            paramTypes = behaviorFinalParamTypes,
+            returnType = erasedReturnType,
+            isSuspend = method.isSuspend,
+            isNullable = isOpenMethod,
+        )
 
     // Direct private val constructor property — no intermediate member needed
     classBuilder.constructorProperty("${method.name}Behavior", functionType) {

@@ -158,8 +158,7 @@ public fun CodeClass.renderTo(builder: CodeBuilder) {
         if (constructorProperties.isNotEmpty()) {
             if (hasDefaults) {
                 // Multi-line constructor for readability
-                val props =
-                    constructorProperties.joinToString(",\n    ") { it.render() }
+                val props = constructorProperties.joinToString(",\n    ") { it.render() }
                 "(\n    $props,\n)"
             } else {
                 val props = constructorProperties.joinToString(", ") { it.render() }

@@ -383,6 +383,56 @@ class GeneratedCodeValidationTest {
     }
 
     // ==================================================================================
+    // Config Build Method Validation
+    // ==================================================================================
+
+    @Test
+    fun `GIVEN interface WHEN generated THEN config class has PublishedApi build method`() {
+        // GIVEN
+        val fakeFile = File(generatedDir, "FakePropertyAndMethodInterfaceImpl.kt")
+        if (!fakeFile.exists()) {
+            println("⚠️  Skipping test - sample not built")
+            return
+        }
+
+        // WHEN
+        val content = fakeFile.readText()
+
+        // THEN
+        assertTrue(
+            content.contains("@PublishedApi"),
+            "Config class should have @PublishedApi annotation on build method",
+        )
+        assertTrue(
+            content.contains("internal fun build()"),
+            "Config class should have internal fun build() method",
+        )
+        assertTrue(
+            content.contains("FakePropertyAndMethodInterfaceImpl("),
+            "build() should construct FakePropertyAndMethodInterfaceImpl",
+        )
+    }
+
+    @Test
+    fun `GIVEN interface WHEN generated THEN factory delegates to config build`() {
+        // GIVEN
+        val fakeFile = File(generatedDir, "FakePropertyAndMethodInterfaceImpl.kt")
+        if (!fakeFile.exists()) {
+            println("⚠️  Skipping test - sample not built")
+            return
+        }
+
+        // WHEN
+        val content = fakeFile.readText()
+
+        // THEN
+        assertTrue(
+            content.contains(".apply(configure).build()"),
+            "Factory should delegate to config.build() via .apply(configure).build()",
+        )
+    }
+
+    // ==================================================================================
     // Complete Validation
     // ==================================================================================
 

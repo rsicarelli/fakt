@@ -301,12 +301,7 @@ class RenderingTest {
     @Test
     fun `GIVEN ConstructorProperty with null default WHEN rendering THEN omits default expression`() {
         // GIVEN
-        val prop =
-            ConstructorProperty(
-                name = "count",
-                type = "Int",
-                defaultValue = null,
-            )
+        val prop = ConstructorProperty(name = "count", type = "Int", defaultValue = null)
 
         // WHEN
         val rendered = prop.render()
@@ -363,9 +358,7 @@ class RenderingTest {
 
         // THEN - Constructor property appears in constructor parentheses
         assertTrue(result.contains("class FakeServiceImpl("))
-        assertTrue(
-            result.contains("private val getBehavior: (String) -> String = { \"\" }"),
-        )
+        assertTrue(result.contains("private val getBehavior: (String) -> String = { \"\" }"))
         // THEN - Override method works
         assertTrue(result.contains("override fun get(id: String): String"))
     }

@@ -69,7 +69,7 @@ public class FunctionBuilder @PublishedApi internal constructor(private val name
     public var body: String
         get() = error("Write-only property")
         set(value) {
-            bodyBlock = CodeBlock.Statements(listOf(value))
+            bodyBlock = CodeBlock.Statements(value.split("\n"))
         }
 
     /**
@@ -103,7 +103,7 @@ public class FunctionBuilder @PublishedApi internal constructor(private val name
      * @param block Lambda that returns the body code
      */
     public fun body(block: () -> String) {
-        bodyBlock = CodeBlock.Statements(listOf(block()))
+        bodyBlock = CodeBlock.Statements(block().split("\n"))
     }
 
     /**
