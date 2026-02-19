@@ -778,19 +778,19 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#call-tracking-verification" class="md-nav__link">
+  <a href="#call-history-verification" class="md-nav__link">
     <span class="md-ellipsis">
-      Call Tracking &amp; Verification
+      Call History &amp; Verification
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Call Tracking &amp; Verification">
+    <nav class="md-nav" aria-label="Call History &amp; Verification">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#basic-call-tracking" class="md-nav__link">
+  <a href="#basic-call-history" class="md-nav__link">
     <span class="md-ellipsis">
-      Basic Call Tracking
+      Basic Call History
     </span>
   </a>
   
@@ -824,9 +824,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#property-call-tracking" class="md-nav__link">
+  <a href="#property-call-history" class="md-nav__link">
     <span class="md-ellipsis">
-      Property Call Tracking
+      Property Call History
     </span>
   </a>
   
@@ -1520,19 +1520,19 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#call-tracking-verification" class="md-nav__link">
+  <a href="#call-history-verification" class="md-nav__link">
     <span class="md-ellipsis">
-      Call Tracking &amp; Verification
+      Call History &amp; Verification
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Call Tracking &amp; Verification">
+    <nav class="md-nav" aria-label="Call History &amp; Verification">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#basic-call-tracking" class="md-nav__link">
+  <a href="#basic-call-history" class="md-nav__link">
     <span class="md-ellipsis">
-      Basic Call Tracking
+      Basic Call History
     </span>
   </a>
   
@@ -1566,9 +1566,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#property-call-tracking" class="md-nav__link">
+  <a href="#property-call-history" class="md-nav__link">
     <span class="md-ellipsis">
-      Property Call Tracking
+      Property Call History
     </span>
   </a>
   
@@ -1701,7 +1701,7 @@
 
 
 <h1 id="usage-guide">Usage Guide<a class="headerlink" href="#usage-guide" title="Permanent link">&para;</a></h1>
-<p>Comprehensive reference for using Fakt-generated fakes in your tests. This guide covers everything from basic patterns to advanced features like coroutines, generics, and call tracking.</p>
+<p>Comprehensive reference for using Fakt-generated fakes in your tests. This guide covers everything from basic patterns to advanced features like coroutines, generics, and call history.</p>
 <hr />
 <h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
 <p>The most common use case—a simple interface with methods:</p>
@@ -1734,8 +1734,8 @@
 <a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">        </span><span class="n">fake</span><span class="p">.</span><span class="na">identify</span><span class="p">(</span><span class="s">&quot;user-123&quot;</span><span class="p">)</span>
 <a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>
 <a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">        </span><span class="n">assertEquals</span><span class="p">(</span><span class="n">listOf</span><span class="p">(</span><span class="s">&quot;user_signup&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;user_login&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">events</span><span class="p">)</span>
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">        </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">trackCallCount</span><span class="p">)</span>
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">        </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">identifyCallCount</span><span class="p">)</span>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">        </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">trackCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">        </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">identifyCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
 <a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="p">}</span>
 </code></pre></div>
@@ -1911,8 +1911,8 @@
 <a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">subscribe</span><span class="p">(</span><span class="n">mockHandler</span><span class="p">)</span><span class="w">  </span><span class="c1">// No-op default</span>
 <a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>
 <a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">receivedEvents</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
-<a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">publishCallCount</span><span class="p">)</span>
-<a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">subscribeCallCount</span><span class="p">)</span>
+<a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">publishCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
+<a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">subscribeCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
 <a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a><span class="p">}</span>
 </code></pre></div>
 <hr />
@@ -1976,7 +1976,7 @@
 <a id="__codelineno-18-22" name="__codelineno-18-22" href="#__codelineno-18-22"></a>
 <a id="__codelineno-18-23" name="__codelineno-18-23" href="#__codelineno-18-23"></a><span class="w">        </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="na">isSuccess</span><span class="p">)</span>
 <a id="__codelineno-18-24" name="__codelineno-18-24" href="#__codelineno-18-24"></a><span class="w">        </span><span class="n">assertEquals</span><span class="p">(</span><span class="n">testData</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="na">getOrNull</span><span class="p">())</span>
-<a id="__codelineno-18-25" name="__codelineno-18-25" href="#__codelineno-18-25"></a><span class="w">        </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">fetchDataCallCount</span><span class="p">)</span>
+<a id="__codelineno-18-25" name="__codelineno-18-25" href="#__codelineno-18-25"></a><span class="w">        </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">fetchDataCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
 <a id="__codelineno-18-26" name="__codelineno-18-26" href="#__codelineno-18-26"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-18-27" name="__codelineno-18-27" href="#__codelineno-18-27"></a><span class="p">}</span>
 </code></pre></div>
@@ -2105,7 +2105,7 @@
 </code></pre></div>
 <hr />
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
-<p>Fakt generates fakes for both read-only (<code>val</code>) and mutable (<code>var</code>) properties with automatic call tracking.</p>
+<p>Fakt generates fakes for both read-only (<code>val</code>) and mutable (<code>var</code>) properties with automatic call history.</p>
 <h3 id="read-only-properties-val">Read-Only Properties (val)<a class="headerlink" href="#read-only-properties-val" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="nd">@Fake</span>
 <a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">Config</span><span class="w"> </span><span class="p">{</span>
@@ -2119,7 +2119,7 @@
 <a id="__codelineno-27-10" name="__codelineno-27-10" href="#__codelineno-27-10"></a><span class="p">}</span>
 <a id="__codelineno-27-11" name="__codelineno-27-11" href="#__codelineno-27-11"></a>
 <a id="__codelineno-27-12" name="__codelineno-27-12" href="#__codelineno-27-12"></a><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;https://api.example.com&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">apiUrl</span><span class="p">)</span>
-<a id="__codelineno-27-13" name="__codelineno-27-13" href="#__codelineno-27-13"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">apiUrlCallCount</span><span class="p">)</span>
+<a id="__codelineno-27-13" name="__codelineno-27-13" href="#__codelineno-27-13"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">apiUrlCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
 </code></pre></div>
 <hr />
 <h3 id="mutable-properties-var">Mutable Properties (var)<a class="headerlink" href="#mutable-properties-var" title="Permanent link">&para;</a></h3>
@@ -2137,11 +2137,11 @@
 <a id="__codelineno-28-11" name="__codelineno-28-11" href="#__codelineno-28-11"></a>
 <a id="__codelineno-28-12" name="__codelineno-28-12" href="#__codelineno-28-12"></a><span class="c1">// Getter tracking</span>
 <a id="__codelineno-28-13" name="__codelineno-28-13" href="#__codelineno-28-13"></a><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;dark&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">theme</span><span class="p">)</span>
-<a id="__codelineno-28-14" name="__codelineno-28-14" href="#__codelineno-28-14"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">getThemeCallCount</span><span class="p">)</span>
+<a id="__codelineno-28-14" name="__codelineno-28-14" href="#__codelineno-28-14"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">getThemeCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
 <a id="__codelineno-28-15" name="__codelineno-28-15" href="#__codelineno-28-15"></a>
 <a id="__codelineno-28-16" name="__codelineno-28-16" href="#__codelineno-28-16"></a><span class="c1">// Setter tracking</span>
 <a id="__codelineno-28-17" name="__codelineno-28-17" href="#__codelineno-28-17"></a><span class="n">fake</span><span class="p">.</span><span class="na">theme</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;light&quot;</span>
-<a id="__codelineno-28-18" name="__codelineno-28-18" href="#__codelineno-28-18"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">setThemeCallCount</span><span class="p">)</span>
+<a id="__codelineno-28-18" name="__codelineno-28-18" href="#__codelineno-28-18"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">setThemeCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
 </code></pre></div>
 <hr />
 <h2 id="generics">Generics<a class="headerlink" href="#generics" title="Permanent link">&para;</a></h2>
@@ -2194,9 +2194,9 @@
 <a id="__codelineno-32-9" name="__codelineno-32-9" href="#__codelineno-32-9"></a><span class="p">}</span>
 </code></pre></div>
 <hr />
-<h2 id="call-tracking-verification">Call Tracking &amp; Verification<a class="headerlink" href="#call-tracking-verification" title="Permanent link">&para;</a></h2>
-<p>Every Fakt-generated fake includes automatic, thread-safe call tracking with a powerful verification DSL.</p>
-<h3 id="basic-call-tracking">Basic Call Tracking<a class="headerlink" href="#basic-call-tracking" title="Permanent link">&para;</a></h3>
+<h2 id="call-history-verification">Call History &amp; Verification<a class="headerlink" href="#call-history-verification" title="Permanent link">&para;</a></h2>
+<p>Every Fakt-generated fake includes automatic, thread-safe call history with a powerful verification DSL.</p>
+<h3 id="basic-call-history">Basic Call History<a class="headerlink" href="#basic-call-history" title="Permanent link">&para;</a></h3>
 <p>Every method automatically tracks calls:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a><span class="nd">@Fake</span>
 <a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">Logger</span><span class="w"> </span><span class="p">{</span>
@@ -2206,7 +2206,7 @@
 </code></pre></div>
 <p><strong>Usage:</strong></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN fake logger WHEN logging messages THEN tracks call counts`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN fake logger WHEN logging messages THEN tracks calls`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-34-3" name="__codelineno-34-3" href="#__codelineno-34-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeLogger</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-34-4" name="__codelineno-34-4" href="#__codelineno-34-4"></a><span class="w">        </span><span class="n">log</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">message</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">println</span><span class="p">(</span><span class="n">message</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 <a id="__codelineno-34-5" name="__codelineno-34-5" href="#__codelineno-34-5"></a><span class="w">        </span><span class="n">error</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">message</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">System</span><span class="p">.</span><span class="na">err</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">message</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
@@ -2216,8 +2216,8 @@
 <a id="__codelineno-34-9" name="__codelineno-34-9" href="#__codelineno-34-9"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">log</span><span class="p">(</span><span class="s">&quot;Another info&quot;</span><span class="p">)</span>
 <a id="__codelineno-34-10" name="__codelineno-34-10" href="#__codelineno-34-10"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">error</span><span class="p">(</span><span class="s">&quot;Error occurred&quot;</span><span class="p">)</span>
 <a id="__codelineno-34-11" name="__codelineno-34-11" href="#__codelineno-34-11"></a>
-<a id="__codelineno-34-12" name="__codelineno-34-12" href="#__codelineno-34-12"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">logCallCount</span><span class="p">)</span>
-<a id="__codelineno-34-13" name="__codelineno-34-13" href="#__codelineno-34-13"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">errorCallCount</span><span class="p">)</span>
+<a id="__codelineno-34-12" name="__codelineno-34-12" href="#__codelineno-34-12"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">logCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
+<a id="__codelineno-34-13" name="__codelineno-34-13" href="#__codelineno-34-13"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">errorCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
 <a id="__codelineno-34-14" name="__codelineno-34-14" href="#__codelineno-34-14"></a><span class="p">}</span>
 </code></pre></div>
 <hr />
@@ -2300,8 +2300,8 @@
 <a id="__codelineno-36-12" name="__codelineno-36-12" href="#__codelineno-36-12"></a><span class="p">}</span>
 </code></pre></div>
 <p><strong>Zero-Parameter Methods:</strong></p>
-<p>Methods without parameters still track call counts:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">clearCallCount</span><span class="p">)</span>
+<p>Methods without parameters still track calls:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">clearCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
 <a id="__codelineno-37-2" name="__codelineno-37-2" href="#__codelineno-37-2"></a><span class="n">fake</span><span class="p">.</span><span class="na">verifyClear</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-37-3" name="__codelineno-37-3" href="#__codelineno-37-3"></a><span class="w">    </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">wasCalledTimes</span><span class="p">(</span><span class="m">2</span><span class="p">))</span>
 <a id="__codelineno-37-4" name="__codelineno-37-4" href="#__codelineno-37-4"></a><span class="p">}</span>
@@ -2329,7 +2329,7 @@
 <a id="__codelineno-38-18" name="__codelineno-38-18" href="#__codelineno-38-18"></a><span class="p">}</span>
 </code></pre></div>
 <hr />
-<h3 id="property-call-tracking">Property Call Tracking<a class="headerlink" href="#property-call-tracking" title="Permanent link">&para;</a></h3>
+<h3 id="property-call-history">Property Call History<a class="headerlink" href="#property-call-history" title="Permanent link">&para;</a></h3>
 <p>Properties track both getter and setter calls:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a><span class="nd">@Fake</span>
 <a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">Settings</span><span class="w"> </span><span class="p">{</span>
@@ -2341,16 +2341,16 @@
 <a id="__codelineno-39-8" name="__codelineno-39-8" href="#__codelineno-39-8"></a><span class="p">}</span>
 <a id="__codelineno-39-9" name="__codelineno-39-9" href="#__codelineno-39-9"></a>
 <a id="__codelineno-39-10" name="__codelineno-39-10" href="#__codelineno-39-10"></a><span class="kd">val</span><span class="w"> </span><span class="nv">_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">theme</span><span class="w">  </span><span class="c1">// Getter</span>
-<a id="__codelineno-39-11" name="__codelineno-39-11" href="#__codelineno-39-11"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">getThemeCallCount</span><span class="p">)</span>
+<a id="__codelineno-39-11" name="__codelineno-39-11" href="#__codelineno-39-11"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">getThemeCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
 <a id="__codelineno-39-12" name="__codelineno-39-12" href="#__codelineno-39-12"></a>
 <a id="__codelineno-39-13" name="__codelineno-39-13" href="#__codelineno-39-13"></a><span class="n">fake</span><span class="p">.</span><span class="na">theme</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;light&quot;</span><span class="w">  </span><span class="c1">// Setter</span>
-<a id="__codelineno-39-14" name="__codelineno-39-14" href="#__codelineno-39-14"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">setThemeCallCount</span><span class="p">)</span>
+<a id="__codelineno-39-14" name="__codelineno-39-14" href="#__codelineno-39-14"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">setThemeCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
 </code></pre></div>
 <hr />
 <h3 id="thread-safety">Thread Safety<a class="headerlink" href="#thread-safety" title="Permanent link">&para;</a></h3>
-<p>Call counts are derived from thread-safe internal state. All tracking operations are safe for concurrent access:</p>
+<p>Call history is backed by thread-safe internal state. All tracking operations are safe for concurrent access:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN fake WHEN calling from multiple threads THEN counts correctly`</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runTest</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN fake WHEN calling from multiple threads THEN tracks correctly`</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runTest</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-40-3" name="__codelineno-40-3" href="#__codelineno-40-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeAnalytics</span><span class="p">()</span>
 <a id="__codelineno-40-4" name="__codelineno-40-4" href="#__codelineno-40-4"></a>
 <a id="__codelineno-40-5" name="__codelineno-40-5" href="#__codelineno-40-5"></a><span class="w">    </span><span class="n">withContext</span><span class="p">(</span><span class="n">Dispatchers</span><span class="p">.</span><span class="na">Default</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -2361,12 +2361,12 @@
 <a id="__codelineno-40-10" name="__codelineno-40-10" href="#__codelineno-40-10"></a><span class="w">        </span><span class="p">}</span>
 <a id="__codelineno-40-11" name="__codelineno-40-11" href="#__codelineno-40-11"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-40-12" name="__codelineno-40-12" href="#__codelineno-40-12"></a>
-<a id="__codelineno-40-13" name="__codelineno-40-13" href="#__codelineno-40-13"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1000</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">trackCallCount</span><span class="p">)</span>
+<a id="__codelineno-40-13" name="__codelineno-40-13" href="#__codelineno-40-13"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1000</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">trackCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
 <a id="__codelineno-40-14" name="__codelineno-40-14" href="#__codelineno-40-14"></a><span class="p">}</span>
 </code></pre></div>
 <hr />
 <h3 id="configuring-call-history">Configuring Call History<a class="headerlink" href="#configuring-call-history" title="Permanent link">&para;</a></h3>
-<p>By default, Fakt generates full call tracking for every fake. You can disable this for lightweight fakes that don&rsquo;t need verification.</p>
+<p>By default, Fakt generates full call history for every fake. You can disable this for lightweight fakes that don&rsquo;t need verification.</p>
 <h4 id="project-wide-default">Project-Wide Default<a class="headerlink" href="#project-wide-default" title="Permanent link">&para;</a></h4>
 <p>Configure the default for all fakes in your project:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a><span class="c1">// build.gradle.kts</span>
@@ -2399,7 +2399,7 @@
 <ul>
 <li>Fakes are only used for stubbing, not verification</li>
 <li>You want smaller generated code</li>
-<li>Migrating legacy tests that don&rsquo;t need call tracking</li>
+<li>Migrating legacy tests that don&rsquo;t need call history</li>
 </ul>
 <p>Enable call history when:</p>
 <ul>
@@ -2412,7 +2412,7 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeLogger</span><span class="p">()</span>
 <a id="__codelineno-43-2" name="__codelineno-43-2" href="#__codelineno-43-2"></a><span class="n">fake</span><span class="p">.</span><span class="na">log</span><span class="p">(</span><span class="s">&quot;message&quot;</span><span class="p">)</span>
 <a id="__codelineno-43-3" name="__codelineno-43-3" href="#__codelineno-43-3"></a>
-<a id="__codelineno-43-4" name="__codelineno-43-4" href="#__codelineno-43-4"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">logCallCount</span><span class="p">)</span><span class="w">  </span><span class="c1">// Available</span>
+<a id="__codelineno-43-4" name="__codelineno-43-4" href="#__codelineno-43-4"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">logCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span><span class="w">  </span><span class="c1">// Available</span>
 <a id="__codelineno-43-5" name="__codelineno-43-5" href="#__codelineno-43-5"></a><span class="n">fake</span><span class="p">.</span><span class="na">verifyLog</span><span class="w"> </span><span class="p">{</span><span class="w">                     </span><span class="c1">// Available</span>
 <a id="__codelineno-43-6" name="__codelineno-43-6" href="#__codelineno-43-6"></a><span class="w">    </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">wasCalledWith</span><span class="p">(</span><span class="s">&quot;message&quot;</span><span class="p">))</span>
 <a id="__codelineno-43-7" name="__codelineno-43-7" href="#__codelineno-43-7"></a><span class="p">}</span>
@@ -2421,7 +2421,7 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeLogger</span><span class="p">()</span>
 <a id="__codelineno-44-2" name="__codelineno-44-2" href="#__codelineno-44-2"></a><span class="n">fake</span><span class="p">.</span><span class="na">log</span><span class="p">(</span><span class="s">&quot;message&quot;</span><span class="p">)</span>
 <a id="__codelineno-44-3" name="__codelineno-44-3" href="#__codelineno-44-3"></a>
-<a id="__codelineno-44-4" name="__codelineno-44-4" href="#__codelineno-44-4"></a><span class="c1">// fake.logCallCount         // Not generated</span>
+<a id="__codelineno-44-4" name="__codelineno-44-4" href="#__codelineno-44-4"></a><span class="c1">// fake.logCalls             // Not generated</span>
 <a id="__codelineno-44-5" name="__codelineno-44-5" href="#__codelineno-44-5"></a><span class="c1">// fake.verifyLog { ... }    // Not generated</span>
 </code></pre></div>
 <hr />
@@ -2451,9 +2451,9 @@
 <a id="__codelineno-46-10" name="__codelineno-46-10" href="#__codelineno-46-10"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">getUser</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">).</span><span class="na">name</span><span class="p">)</span>
 <a id="__codelineno-46-11" name="__codelineno-46-11" href="#__codelineno-46-11"></a><span class="w">    </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">fake</span><span class="p">.</span><span class="na">stop</span><span class="p">())</span>
 <a id="__codelineno-46-12" name="__codelineno-46-12" href="#__codelineno-46-12"></a>
-<a id="__codelineno-46-13" name="__codelineno-46-13" href="#__codelineno-46-13"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">startCallCount</span><span class="p">)</span>
-<a id="__codelineno-46-14" name="__codelineno-46-14" href="#__codelineno-46-14"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">getUserCallCount</span><span class="p">)</span>
-<a id="__codelineno-46-15" name="__codelineno-46-15" href="#__codelineno-46-15"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">stopCallCount</span><span class="p">)</span>
+<a id="__codelineno-46-13" name="__codelineno-46-13" href="#__codelineno-46-13"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">startCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
+<a id="__codelineno-46-14" name="__codelineno-46-14" href="#__codelineno-46-14"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">getUserCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
+<a id="__codelineno-46-15" name="__codelineno-46-15" href="#__codelineno-46-15"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">stopCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
 <a id="__codelineno-46-16" name="__codelineno-46-16" href="#__codelineno-46-16"></a><span class="p">}</span>
 </code></pre></div>
 <hr />

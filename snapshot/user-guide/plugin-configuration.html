@@ -1222,9 +1222,9 @@ No output except errors. Use for CI/CD pipelines and production builds.
 <td><strong>true</strong><br>(default)</td>
 <td>
 
-Full call tracking with:
+Full call history with:
 
-- `methodNameCallCount` properties
+- `methodNameCalls` StateFlow properties
 - `methodNameCallHistory` lists
 - `verifyMethodName { }` DSL
 
@@ -1242,7 +1242,7 @@ Full call tracking with:
 <td><strong>false</strong></td>
 <td>
 
-Lightweight fakes with only behavior configuration. No call tracking overhead.
+Lightweight fakes with only behavior configuration. No call history overhead.
 
 </td>
 <td>

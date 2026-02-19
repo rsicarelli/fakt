@@ -1086,15 +1086,12 @@
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="c1">// Behavior properties (immutable after construction)</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="err">{</span><span class="nv">method</span><span class="p">}</span><span class="n">Behavior</span><span class="p">:</span><span class="w"> </span><span class="p">({</span><span class="n">params</span><span class="p">})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">{</span><span class="k">return</span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">},</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="n">Interface</span><span class="p">}</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="c1">// Call counters (derived from history)</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="err">{</span><span class="nv">method</span><span class="p">}</span><span class="n">CallCount</span><span class="p">:</span><span class="w"> </span><span class="kt">Int</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="c1">// Call history</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="err">{</span><span class="nv">method</span><span class="p">}</span><span class="n">Calls</span><span class="p">:</span><span class="w"> </span><span class="n">MutableStateFlow</span><span class="o">&lt;</span><span class="n">List</span><span class="o">&lt;</span><span class="kt">Unit</span><span class="o">&gt;&gt;</span>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="c1">// Call history</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="err">{</span><span class="nv">method</span><span class="p">}</span><span class="n">CallHistory</span><span class="p">:</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="p">{</span><span class="n">Interface</span><span class="p">}{</span><span class="n">Method</span><span class="p">}</span><span class="n">Call</span><span class="o">&gt;</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">    </span><span class="c1">// Override interface members</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="err">{</span><span class="nf">method</span><span class="p">}({</span><span class="n">params</span><span class="p">}):</span><span class="w"> </span><span class="p">{</span><span class="k">return</span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="n">method</span><span class="p">}</span><span class="n">Behavior</span><span class="p">({</span><span class="n">params</span><span class="p">})</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="p">}</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="c1">// Override interface members</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="err">{</span><span class="nf">method</span><span class="p">}({</span><span class="n">params</span><span class="p">}):</span><span class="w"> </span><span class="p">{</span><span class="k">return</span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="n">method</span><span class="p">}</span><span class="n">Behavior</span><span class="p">({</span><span class="n">params</span><span class="p">})</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="p">}</span>
 </code></pre></div>
 <p>Fakes are <strong>immutable after construction</strong> — all behavior is set via constructor parameters with smart defaults.</p>
 <h3 id="factory-function">Factory Function<a class="headerlink" href="#factory-function" title="Permanent link">&para;</a></h3>
@@ -1242,7 +1239,7 @@
 </ul>
 <p><strong>Not Generated:</strong></p>
 <ul>
-<li><code>{method}CallCount</code> properties</li>
+<li><code>{method}Calls</code> StateFlow properties</li>
 <li><code>{method}CallHistory</code> lists</li>
 <li><code>Fake{Interface}{Method}Call</code> data classes</li>
 <li><code>Fake{Interface}{Method}Verifier</code> classes</li>
@@ -1276,9 +1273,9 @@
 <td><code>FakeAnalyticsConfig</code></td>
 </tr>
 <tr>
-<td>Call counter</td>
-<td><code>{method}CallCount</code></td>
-<td><code>trackCallCount</code></td>
+<td>Call history</td>
+<td><code>{method}Calls</code></td>
+<td><code>trackCalls</code></td>
 </tr>
 <tr>
 <td>Call history</td>

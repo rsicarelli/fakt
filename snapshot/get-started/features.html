@@ -450,9 +450,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#call-tracking-verification" class="md-nav__link">
+  <a href="#call-history-verification" class="md-nav__link">
     <span class="md-ellipsis">
-      Call Tracking &amp; Verification
+      Call History &amp; Verification
     </span>
   </a>
   
@@ -929,9 +929,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#call-tracking-verification" class="md-nav__link">
+  <a href="#call-history-verification" class="md-nav__link">
     <span class="md-ellipsis">
-      Call Tracking &amp; Verification
+      Call History &amp; Verification
     </span>
   </a>
   
@@ -1145,7 +1145,7 @@
 <td><strong>Properties (val)</strong></td>
 <td>
 
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kd">val</span><span class="w"> </span><span class="nv">apiUrl</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="w"> </span><span class="c1">// fake.apiUrl + fake.apiUrlCallCount</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kd">val</span><span class="w"> </span><span class="nv">apiUrl</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="w"> </span><span class="c1">// fake.apiUrl + fake.apiUrlCalls.value.size</span>
 </code></pre></div>
 
 </td>
@@ -1154,7 +1154,7 @@
 <td><strong>Properties (var)</strong></td>
 <td>
 
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kd">var</span><span class="w"> </span><span class="nv">theme</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="w"> </span><span class="c1">// getThemeCallCount + setThemeCallCount</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kd">var</span><span class="w"> </span><span class="nv">theme</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="w"> </span><span class="c1">// getThemeCalls.value.size + setThemeCalls.value.size</span>
 </code></pre></div>
 
 </td>
@@ -1180,14 +1180,14 @@
 </table>
 
 <hr />
-<h2 id="call-tracking-verification">Call Tracking &amp; Verification<a class="headerlink" href="#call-tracking-verification" title="Permanent link">&para;</a></h2>
+<h2 id="call-history-verification">Call History &amp; Verification<a class="headerlink" href="#call-history-verification" title="Permanent link">&para;</a></h2>
 <table>
 <tr><th>Case</th><th>Example</th></tr>
 <tr>
 <td><strong>Call Counts</strong></td>
 <td>
 
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">fake</span><span class="p">.</span><span class="na">trackCallCount</span><span class="w"> </span><span class="c1">// Thread-safe Int counter</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">fake</span><span class="p">.</span><span class="na">trackCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="w"> </span><span class="c1">// Thread-safe call count</span>
 </code></pre></div>
 
 </td>
@@ -1218,8 +1218,8 @@
 <td><strong>Property Tracking</strong></td>
 <td>
 
-<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">fake</span><span class="p">.</span><span class="na">getThemeCallCount</span>
-<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="n">fake</span><span class="p">.</span><span class="na">setThemeCallCount</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">fake</span><span class="p">.</span><span class="na">getThemeCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="n">fake</span><span class="p">.</span><span class="na">setThemeCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span>
 </code></pre></div>
 
 </td>
@@ -1228,7 +1228,7 @@
 <td><strong>Thread Safety</strong></td>
 <td>
 
-Call counts are derived from thread-safe internal state.
+Call history is backed by thread-safe internal state.
 
 </td>
 </tr>

@@ -606,9 +606,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#basic-call-count-verification" class="md-nav__link">
+  <a href="#basic-call-history-verification" class="md-nav__link">
     <span class="md-ellipsis">
-      Basic Call Count Verification
+      Basic Call History Verification
     </span>
   </a>
   
@@ -1005,9 +1005,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#basic-call-count-verification" class="md-nav__link">
+  <a href="#basic-call-history-verification" class="md-nav__link">
     <span class="md-ellipsis">
-      Basic Call Count Verification
+      Basic Call History Verification
     </span>
   </a>
   
@@ -1153,7 +1153,7 @@
 - Smart defaults handle unconfigured methods</p>
 <hr />
 <h2 id="verify-behavior-not-implementation">Verify Behavior, Not Implementation<a class="headerlink" href="#verify-behavior-not-implementation" title="Permanent link">&para;</a></h2>
-<p>Use call counters to verify interactions:</p>
+<p>Use call history to verify interactions:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nd">@Test</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN service WHEN processing user THEN calls repository once`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fakeRepo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeRepository</span><span class="p">()</span>
@@ -1161,8 +1161,8 @@
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="n">service</span><span class="p">.</span><span class="na">processUser</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">)</span>
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fakeRepo</span><span class="p">.</span><span class="na">getUserCallCount</span><span class="p">)</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fakeRepo</span><span class="p">.</span><span class="na">saveUserCallCount</span><span class="p">)</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fakeRepo</span><span class="p">.</span><span class="na">getUserCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fakeRepo</span><span class="p">.</span><span class="na">saveUserCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
 <a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="p">}</span>
 </code></pre></div>
 <p><strong>State-based verification example:</strong></p>
@@ -1205,9 +1205,9 @@
 <hr />
 <h2 id="verification-patterns">Verification Patterns<a class="headerlink" href="#verification-patterns" title="Permanent link">&para;</a></h2>
 <p>Use the verification DSL to assert on call history:</p>
-<h3 id="basic-call-count-verification">Basic Call Count Verification<a class="headerlink" href="#basic-call-count-verification" title="Permanent link">&para;</a></h3>
+<h3 id="basic-call-history-verification">Basic Call History Verification<a class="headerlink" href="#basic-call-history-verification" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN repository WHEN saving users THEN tracks call count`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN repository WHEN saving users THEN tracks calls`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeRepository</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">        </span><span class="n">saveUser</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Result</span><span class="p">.</span><span class="na">success</span><span class="p">(</span><span class="kt">Unit</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 <a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="p">}</span>
@@ -1215,7 +1215,7 @@
 <a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">saveUser</span><span class="p">(</span><span class="n">alice</span><span class="p">)</span>
 <a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">saveUser</span><span class="p">(</span><span class="n">bob</span><span class="p">)</span>
 <a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">saveUserCallCount</span><span class="p">)</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">saveUserCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
 <a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="p">}</span>
 </code></pre></div>
 <h3 id="scoped-verification-dsl">Scoped Verification DSL<a class="headerlink" href="#scoped-verification-dsl" title="Permanent link">&para;</a></h3>
@@ -1264,7 +1264,7 @@
 <a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">        </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">wasNeverCalled</span><span class="p">())</span>
 <a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="w">    </span><span class="c1">// Or simply:</span>
-<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">fetchDataCallCount</span><span class="p">)</span>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">fetchDataCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
 <a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="p">}</span>
 </code></pre></div>
 <hr />
