@@ -53,9 +53,10 @@ jobs:
           pip install --requirement .github/workflows/mkdocs-requirements.txt
 
       - name: Configure Git for Mike
-        run: |
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        uses: ./.github/actions/configure-release-bot
+        with:
+          bot-name: ${{ vars.RELEASE_BOT_NAME }}
+          bot-app-id: ${{ vars.RELEASE_BOT_APP_ID }}
 
       - name: Show current Mike versions
         run: |
