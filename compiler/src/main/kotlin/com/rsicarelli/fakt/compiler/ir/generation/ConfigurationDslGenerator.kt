@@ -5,6 +5,8 @@ package com.rsicarelli.fakt.compiler.ir.generation
 import com.rsicarelli.fakt.codegen.builder.ClassBuilder
 import com.rsicarelli.fakt.codegen.builder.codeFile
 import com.rsicarelli.fakt.codegen.builder.parseType
+import com.rsicarelli.fakt.codegen.extensions.eraseTypeParamsToAny
+import com.rsicarelli.fakt.codegen.extensions.typeContainsAnyParam
 import com.rsicarelli.fakt.codegen.model.CodeClass
 import com.rsicarelli.fakt.codegen.model.CodeFile
 import com.rsicarelli.fakt.codegen.renderer.CodeBuilder
@@ -36,6 +38,73 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
     }
 
     private val defaultValueResolver = DefaultValueResolver()
+
+    /** Extracts method-level type parameter names from a function analysis. */
+    private fun extractMethodTypeParamNames(function: FunctionAnalysis): Set<String> =
+        function.typeParameters.map { it.split(" : ", limit = 2)[0].trim() }.toSet()
+
+    /** Extracts class-level type parameter names from type parameter declarations. */
+    private fun extractClassTypeParamNames(typeParameters: List<String>): Set<String> =
+        typeParameters.map { it.split(" : ", limit = 2)[0].trim() }.toSet()
+
+    /**
+     * Detects single-param identity pattern: param type == return type → `{ it }`.
+     *
+     * Extension functions are excluded because the behavior lambda requires TWO parameters.
+     */
+    private fun shouldUseIdentityDefault(function: FunctionAnalysis): Boolean {
+        if (function.extensionReceiverType != null || function.parameters.size != 1) return false
+        val paramType =
+            typeResolver
+                .irTypeToKotlinString(function.parameters[0].type, preserveTypeParameters = true)
+                .replace("?", "")
+                .trim()
+        val returnType =
+            typeResolver
+                .irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+                .replace("?", "")
+                .trim()
+        return paramType == returnType
+    }
+
+    /**
+     * Detects function invocation pattern: `fun <T> m(f: () -> T): T` → `{ p0 -> p0() }`.
+     *
+     * Strict pattern requires:
+     * - Method has type parameters and exactly one parameter
+     * - Parameter is a zero-arg function type `() -> T` or `suspend () -> T`
+     * - Method return type exactly matches the function's return type
+     */
+    private fun detectFunctionInvocationDefault(function: FunctionAnalysis): Boolean {
+        if (function.typeParameters.isEmpty() || function.parameters.size != 1) return false
+        val typeParamNames = extractMethodTypeParamNames(function)
+        val returnType =
+            typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+        if (!typeContainsAnyParam(returnType, typeParamNames)) return false
+        val paramType =
+            typeResolver.irTypeToKotlinString(
+                function.parameters[0].type,
+                preserveTypeParameters = true,
+            )
+        if (!paramType.contains("->")) return false
+        val funcSignature = paramType.replace("suspend ", "").trim()
+        val beforeArrow = funcSignature.substringBefore("->").trim()
+        if (beforeArrow != "()") return false
+        val returnPart = funcSignature.substringAfter("->").trim()
+        if (!typeContainsAnyParam(returnPart, typeParamNames)) return false
+        return returnType.trim() == returnPart.trim()
+    }
+
+    /** Builds a method signature string for error messages (matches FakeImpl format). */
+    private fun buildMethodSignature(function: FunctionAnalysis): String {
+        val params =
+            function.parameters.joinToString {
+                typeResolver.irTypeToKotlinString(it.type, preserveTypeParameters = true)
+            }
+        val returnType =
+            typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+        return "${function.name}($params): $returnType"
+    }
 
     /**
      * Generates a configuration DSL CodeFile for the fake implementation.
@@ -75,14 +144,16 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
                     annotation(annotation.simpleName, annotation.renderedArguments)
                 }
 
+                val classTypeParamNames = extractClassTypeParamNames(analysis.typeParameters)
+
                 // Generate internal behavior properties + DSL configurator methods
                 analysis.functions.forEach { func ->
-                    generateFunctionBehaviorProperty(func, withDefault = true)
+                    generateFunctionBehaviorProperty(func, withDefault = true, classTypeParamNames)
                     generateFunctionConfigurator(func, analysis.visibility)
                 }
 
                 analysis.properties.forEach { prop ->
-                    generatePropertyBehaviorProperty(prop, withDefault = true)
+                    generatePropertyBehaviorProperty(prop, withDefault = true, classTypeParamNames)
                     generatePropertyConfigurator(prop, analysis.visibility)
                 }
 
@@ -150,27 +221,34 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
                     annotation(annotation.simpleName, annotation.renderedArguments)
                 }
 
+                val classTypeParamNames = extractClassTypeParamNames(analysis.typeParameters)
+
                 // Generate configuration methods for abstract methods
                 analysis.abstractMethods.forEach { func ->
-                    generateFunctionBehaviorProperty(func, withDefault = true)
+                    generateFunctionBehaviorProperty(
+                        func,
+                        withDefault = true,
+                        classTypeParamNames,
+                        abstractClassName = analysis.className,
+                    )
                     generateFunctionConfigurator(func, analysis.visibility)
                 }
 
                 // Generate configuration methods for open methods
                 analysis.openMethods.forEach { func ->
-                    generateFunctionBehaviorProperty(func, withDefault = false)
+                    generateFunctionBehaviorProperty(func, withDefault = false, classTypeParamNames)
                     generateFunctionConfigurator(func, analysis.visibility)
                 }
 
                 // Generate configuration methods for abstract properties
                 analysis.abstractProperties.forEach { prop ->
-                    generatePropertyBehaviorProperty(prop, withDefault = true)
+                    generatePropertyBehaviorProperty(prop, withDefault = true, classTypeParamNames)
                     generatePropertyConfigurator(prop, analysis.visibility)
                 }
 
                 // Generate configuration methods for open properties
                 analysis.openProperties.forEach { prop ->
-                    generatePropertyBehaviorProperty(prop, withDefault = false)
+                    generatePropertyBehaviorProperty(prop, withDefault = false, classTypeParamNames)
                     generatePropertyConfigurator(prop, analysis.visibility)
                 }
 
@@ -243,29 +321,65 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
     private fun ClassBuilder.generateFunctionBehaviorProperty(
         function: FunctionAnalysis,
         withDefault: Boolean,
+        classTypeParamNames: Set<String> = emptySet(),
+        abstractClassName: String? = null,
     ) {
         val baseType = buildBaseBehaviorType(function)
+        val methodTypeParamNames = extractMethodTypeParamNames(function)
 
-        // Methods with method-level type params must stay nullable — their property types
-        // reference unresolved type params (e.g., K, V, T), so a non-null default lambda would
-        // trigger unresolvable type inference. FakeImpl constructor defaults handle these.
-        val effectiveWithDefault = withDefault && function.typeParameters.isEmpty()
+        // For methods with method-level type params, erase to Any? so the property type
+        // doesn't reference unresolved type params (e.g., K, V, T).
+        val propertyType =
+            if (methodTypeParamNames.isNotEmpty()) {
+                eraseTypeParamsToAny(baseType, methodTypeParamNames)
+            } else {
+                baseType
+            }
 
-        if (effectiveWithDefault) {
+        // Generic methods now get defaults too — their property types are fully erased.
+        if (withDefault) {
             val returnTypeStr =
                 typeResolver.irTypeToKotlinString(
                     function.returnType,
                     preserveTypeParameters = true,
                 )
-            val defaultExpr = computeDefaultExpr(returnTypeStr)
-            val lambdaParams = buildLambdaParams(function)
-            property("${function.name}Behavior", "($baseType)") {
+            val effectiveReturnType =
+                if (methodTypeParamNames.isNotEmpty()) {
+                    eraseTypeParamsToAny(returnTypeStr, methodTypeParamNames)
+                } else {
+                    returnTypeStr
+                }
+            val defaultExpr = computeDefaultExpr(effectiveReturnType, classTypeParamNames)
+            val lambdaParams = buildErasedLambdaParams(function, methodTypeParamNames)
+
+            // 4-tier default decision matching FakeImpl:
+            // 1. Abstract class method → error(...)
+            // 2. Function invocation pattern → { p0 -> p0() }
+            // 3. Identity pattern → { it }
+            // 4. Fallback → DefaultValueResolver
+            val behaviorDefault =
+                when {
+                    abstractClassName != null -> {
+                        val sig = buildMethodSignature(function)
+                        val escapedClassName =
+                            abstractClassName.replaceFirstChar { it.uppercase() }
+                        val errorMsg =
+                            "Abstract method '$sig' in class '$abstractClassName' must be configured. " +
+                                "Use the DSL: fake$escapedClassName { ${function.name} { ... } }"
+                        "{ ${lambdaParams}error(\"$errorMsg\") }"
+                    }
+                    detectFunctionInvocationDefault(function) -> "{ p0 -> p0() }"
+                    shouldUseIdentityDefault(function) -> "{ it }"
+                    else -> "{ $lambdaParams$defaultExpr }"
+                }
+
+            property("${function.name}Behavior", "($propertyType)") {
                 internal()
                 mutable()
-                initializer = "{ $lambdaParams$defaultExpr }"
+                initializer = behaviorDefault
             }
         } else {
-            property("${function.name}Behavior", "($baseType)?") {
+            property("${function.name}Behavior", "($propertyType)?") {
                 internal()
                 mutable()
                 initializer = "null"
@@ -285,12 +399,13 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
     private fun ClassBuilder.generatePropertyBehaviorProperty(
         property: PropertyAnalysis,
         withDefault: Boolean,
+        classTypeParamNames: Set<String> = emptySet(),
     ) {
         val propertyType =
             typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
 
         if (withDefault) {
-            val defaultExpr = computeDefaultExpr(propertyType)
+            val defaultExpr = computeDefaultExpr(propertyType, classTypeParamNames)
             property("${property.name}Behavior", "(() -> $propertyType)") {
                 internal()
                 mutable()
@@ -337,6 +452,7 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
         visibility: FirVisibility,
     ) {
         val functionName = function.name
+        val methodTypeParamNames = extractMethodTypeParamNames(function)
 
         // Use the base type directly (non-nullable) as the parameter type
         val paramSignature = "(${buildBaseBehaviorType(function)})"
@@ -347,6 +463,11 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
                 FirVisibility.PUBLIC -> public()
                 FirVisibility.INTERNAL -> internal()
                 else -> public()
+            }
+
+            // Generic methods need @Suppress for the bridging casts
+            if (methodTypeParamNames.isNotEmpty()) {
+                annotation("Suppress", "\"UNCHECKED_CAST\"")
             }
 
             // Add type parameters if present
@@ -363,7 +484,14 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
 
             parameter("behavior", paramSignature)
             returns("Unit")
-            expressionBody = "run { ${functionName}Behavior = behavior }"
+
+            if (methodTypeParamNames.isNotEmpty()) {
+                // Build wrapping closure that bridges typed → erased
+                val closureBody = buildWrappingClosure(function, methodTypeParamNames)
+                body = "${functionName}Behavior = $closureBody"
+            } else {
+                expressionBody = "run { ${functionName}Behavior = behavior }"
+            }
         }
     }
 
@@ -577,10 +705,7 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
     }
 
     /** Adds constructor argument(s) for a property behavior to the build args list. */
-    private fun addPropertyBuildArg(
-        args: MutableList<String>,
-        prop: PropertyAnalysis,
-    ) {
+    private fun addPropertyBuildArg(args: MutableList<String>, prop: PropertyAnalysis) {
         val propType = typeResolver.irTypeToKotlinString(prop.type, preserveTypeParameters = true)
         // StateFlow properties are handled separately (not constructor params)
         if (propType.contains("StateFlow<")) return
@@ -597,22 +722,27 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
     /**
      * Adds a constructor argument for a function behavior to the build args list.
      *
-     * Methods with method-level type parameters are skipped — their config properties are nullable
-     * (erased types) while the FakeImpl constructor parameters are non-null with semantic defaults
-     * (e.g., identity function). Letting the constructor defaults handle these preserves correct
-     * behavior for unconfigured methods.
+     * All methods (including those with method-level type params) are now included — generic method
+     * config properties use erased types (Any?) with non-null defaults, matching the FakeImpl
+     * constructor parameter types.
      */
-    private fun addFunctionBuildArg(
-        args: MutableList<String>,
-        func: FunctionAnalysis,
-    ) {
-        if (func.typeParameters.isNotEmpty()) return
+    private fun addFunctionBuildArg(args: MutableList<String>, func: FunctionAnalysis) {
         args.add("${func.name}Behavior = ${func.name}Behavior")
     }
 
     /** Resolves a default value expression for the given type string. */
-    private fun computeDefaultExpr(typeStr: String): String =
-        defaultValueResolver.resolve(type = parseType(typeString = typeStr)).render()
+    private fun computeDefaultExpr(
+        typeStr: String,
+        classLevelTypeParams: Set<String> = emptySet(),
+    ): String {
+        val resolver =
+            if (classLevelTypeParams.isNotEmpty()) {
+                DefaultValueResolver(classLevelTypeParams)
+            } else {
+                defaultValueResolver
+            }
+        return resolver.resolve(type = parseType(typeString = typeStr)).render()
+    }
 
     /** Builds lambda parameter placeholders for a function's default behavior. */
     private fun buildLambdaParams(func: FunctionAnalysis): String {
@@ -624,6 +754,109 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
                 baseParamNames
             }
         return if (paramNames.isEmpty()) "" else "${paramNames.joinToString(", ")} -> "
+    }
+
+    /**
+     * Builds lambda parameter placeholders for erased default behavior.
+     *
+     * Same as [buildLambdaParams] but uses underscore-prefixed names to avoid unused warnings when
+     * the default simply returns a default value.
+     */
+    private fun buildErasedLambdaParams(
+        func: FunctionAnalysis,
+        methodTypeParamNames: Set<String>,
+    ): String {
+        if (methodTypeParamNames.isEmpty()) return buildLambdaParams(func)
+
+        val baseParamNames = func.parameters.mapIndexed { i, _ -> "_p$i" }
+        val paramNames =
+            if (func.extensionReceiverType != null) {
+                listOf("_p_receiver") + baseParamNames
+            } else {
+                baseParamNames
+            }
+        return if (paramNames.isEmpty()) "" else "${paramNames.joinToString(", ")} -> "
+    }
+
+    /**
+     * Builds a wrapping closure that bridges from typed user lambda to erased property storage.
+     *
+     * For a method like `fun <K, V> transformMap(map: Map<K, V>, transform: (K, V) -> String):
+     * Map<K, String>`, generates:
+     * ```
+     * { p0, p1 -> behavior(p0 as Map<K, V>, p1 as (K, V) -> String) as Map<Any?, String> }
+     * ```
+     *
+     * The closure's parameters match the erased property type. Inside, it casts erased args back to
+     * the typed signature, invokes the user's behavior, then casts the result back to erased.
+     */
+    private fun buildWrappingClosure(
+        function: FunctionAnalysis,
+        methodTypeParamNames: Set<String>,
+    ): String {
+        // Build the list of erased parameter names and their typed cast targets
+        val closureParams = mutableListOf<String>()
+        val behaviorArgs = mutableListOf<String>()
+
+        // Extension receiver as first parameter
+        if (function.extensionReceiverType != null) {
+            val receiverType =
+                typeResolver.irTypeToKotlinString(
+                    function.extensionReceiverType,
+                    preserveTypeParameters = true,
+                )
+            closureParams.add("p_receiver")
+            if (typeContainsAnyParam(receiverType, methodTypeParamNames)) {
+                behaviorArgs.add("p_receiver as $receiverType")
+            } else {
+                behaviorArgs.add("p_receiver")
+            }
+        }
+
+        // Regular parameters
+        function.parameters.forEachIndexed { i, param ->
+            val paramName = "p$i"
+            closureParams.add(paramName)
+
+            val paramType =
+                if (param.isVararg) {
+                    val arrayType =
+                        typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                    "Array<out ${unwrapVarargsType(param)}>"
+                } else {
+                    typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
+                }
+
+            if (typeContainsAnyParam(paramType, methodTypeParamNames)) {
+                behaviorArgs.add("$paramName as $paramType")
+            } else {
+                behaviorArgs.add(paramName)
+            }
+        }
+
+        // Return type — check if it needs a cast back to erased
+        val returnType =
+            typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+        val needsReturnCast =
+            typeContainsAnyParam(returnType, methodTypeParamNames) && returnType != "Unit"
+        val erasedReturnType =
+            if (needsReturnCast) eraseTypeParamsToAny(returnType, methodTypeParamNames) else null
+
+        // Build the closure string
+        val paramsStr =
+            if (closureParams.isEmpty()) "" else "${closureParams.joinToString(", ")} -> "
+        val argsStr = behaviorArgs.joinToString(", ")
+
+        val invocation = "behavior($argsStr)"
+
+        val returnExpr =
+            if (erasedReturnType != null) {
+                "$invocation as $erasedReturnType"
+            } else {
+                invocation
+            }
+
+        return "{ $paramsStr$returnExpr }"
     }
 
     /** Emits the `@PublishedApi internal fun build()` function into the class. */
