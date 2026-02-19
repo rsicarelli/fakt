@@ -77,22 +77,23 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
      */
     private fun detectFunctionInvocationDefault(function: FunctionAnalysis): Boolean {
         if (function.typeParameters.isEmpty() || function.parameters.size != 1) return false
+
         val typeParamNames = extractMethodTypeParamNames(function)
         val returnType =
             typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
-        if (!typeContainsAnyParam(returnType, typeParamNames)) return false
         val paramType =
             typeResolver.irTypeToKotlinString(
                 function.parameters[0].type,
                 preserveTypeParameters = true,
             )
-        if (!paramType.contains("->")) return false
         val funcSignature = paramType.replace("suspend ", "").trim()
-        val beforeArrow = funcSignature.substringBefore("->").trim()
-        if (beforeArrow != "()") return false
         val returnPart = funcSignature.substringAfter("->").trim()
-        if (!typeContainsAnyParam(returnPart, typeParamNames)) return false
-        return returnType.trim() == returnPart.trim()
+
+        return typeContainsAnyParam(returnType, typeParamNames) &&
+            paramType.contains("->") &&
+            funcSignature.substringBefore("->").trim() == "()" &&
+            typeContainsAnyParam(returnPart, typeParamNames) &&
+            returnType.trim() == returnPart.trim()
     }
 
     /** Builds a method signature string for error messages (matches FakeImpl format). */
@@ -254,12 +255,9 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
 
                 // Generate @PublishedApi build() method
                 generateClassBuildMethod(
+                    analysis = analysis,
                     fakeClassName = fakeClassName,
                     typeArgs = typeArgs,
-                    abstractMethods = analysis.abstractMethods,
-                    openMethods = analysis.openMethods,
-                    abstractProperties = analysis.abstractProperties,
-                    openProperties = analysis.openProperties,
                 )
             }
         }
@@ -688,18 +686,15 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
      * behaviors are passed through directly — defaults are already in the config properties.
      */
     private fun ClassBuilder.generateClassBuildMethod(
+        analysis: ClassAnalysis,
         fakeClassName: String,
         typeArgs: String,
-        abstractMethods: List<FunctionAnalysis>,
-        openMethods: List<FunctionAnalysis>,
-        abstractProperties: List<PropertyAnalysis>,
-        openProperties: List<PropertyAnalysis>,
     ) {
         val args = mutableListOf<String>()
-        abstractProperties.forEach { addPropertyBuildArg(args = args, prop = it) }
-        openProperties.forEach { addPropertyBuildArg(args = args, prop = it) }
-        abstractMethods.forEach { addFunctionBuildArg(args = args, func = it) }
-        openMethods.forEach { addFunctionBuildArg(args = args, func = it) }
+        analysis.abstractProperties.forEach { addPropertyBuildArg(args = args, prop = it) }
+        analysis.openProperties.forEach { addPropertyBuildArg(args = args, prop = it) }
+        analysis.abstractMethods.forEach { addFunctionBuildArg(args = args, func = it) }
+        analysis.openMethods.forEach { addFunctionBuildArg(args = args, func = it) }
         emitBuildFunction(fakeClassName = fakeClassName, typeArgs = typeArgs, args = args)
     }
 

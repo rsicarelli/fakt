@@ -662,38 +662,76 @@ private fun generateMethodBehaviorConstructorParam(
     val lambdaParams = if (paramNames.isEmpty()) "" else "${paramNames.joinToString(", ")} -> "
 
     val behaviorDefault =
-        when {
-            isClass && method.isAbstract -> {
-                val methodSignature = buildString {
-                    append(method.name)
-                    append("(")
-                    append(method.params.joinToString { it.second })
-                    append("): ")
-                    append(method.returnType)
-                }
-                val errorMessage =
-                    "Abstract method '$methodSignature' in class '$className' must be configured. " +
-                        "Use the DSL: fake${className.replaceFirstChar { it.uppercase() }} { ${method.name} { ... } }"
-                "{ ${lambdaParams}error(\"$errorMessage\") }"
-            }
+        resolveBehaviorDefault(
+            method = method,
+            isAbstractClassMethod = isClass && method.isAbstract,
+            className = className,
+            lambdaParams = lambdaParams,
+            defaultExpr = defaultExpr,
+        )
 
-            else -> {
-                val functionInvocationDefault = detectIdentityFunction(method)
-                val identityDefault =
-                    if (functionInvocationDefault == null) {
-                        shouldUseIdentityDefault(method)
-                    } else {
-                        null
-                    }
+    val functionType = buildErasedBehaviorType(method = method, isOpenMethod = isOpenMethod)
 
-                when {
-                    functionInvocationDefault != null -> functionInvocationDefault
-                    identityDefault != null -> identityDefault
-                    else -> "{ $lambdaParams$defaultExpr }"
-                }
+    // Direct private val constructor property — no intermediate member needed
+    classBuilder.constructorProperty("${method.name}Behavior", functionType) {
+        private()
+        this.defaultValue = if (isOpenMethod) "null" else behaviorDefault
+    }
+}
+
+/**
+ * Resolves the default behavior expression for a method.
+ *
+ * For abstract class methods: produces an error-throwing lambda with a descriptive message. For
+ * other methods: tries identity function detection, then identity default, then falls back to a
+ * lambda returning the type's default value.
+ */
+private fun resolveBehaviorDefault(
+    method: MethodSpec,
+    isAbstractClassMethod: Boolean,
+    className: String,
+    lambdaParams: String,
+    defaultExpr: String,
+): String =
+    when {
+        isAbstractClassMethod -> {
+            val methodSignature = buildString {
+                append(method.name)
+                append("(")
+                append(method.params.joinToString { it.second })
+                append("): ")
+                append(method.returnType)
             }
+            val errorMessage =
+                "Abstract method '$methodSignature' in class '$className' must be configured. " +
+                    "Use the DSL: fake${className.replaceFirstChar { it.uppercase() }} { ${method.name} { ... } }"
+            "{ ${lambdaParams}error(\"$errorMessage\") }"
         }
 
+        else -> {
+            val functionInvocationDefault = detectIdentityFunction(method)
+            val identityDefault =
+                if (functionInvocationDefault == null) {
+                    shouldUseIdentityDefault(method)
+                } else {
+                    null
+                }
+
+            when {
+                functionInvocationDefault != null -> functionInvocationDefault
+                identityDefault != null -> identityDefault
+                else -> "{ $lambdaParams$defaultExpr }"
+            }
+        }
+    }
+
+/**
+ * Builds the erased function type string for a method's behavior constructor parameter.
+ *
+ * Erases method-level type parameters to `Any?`, handles vararg array covariance, and includes
+ * extension receiver types when present.
+ */
+private fun buildErasedBehaviorType(method: MethodSpec, isOpenMethod: Boolean): String {
     val behaviorParamTypes =
         method.params.map { (_, paramType, isVararg) ->
             if (isVararg && paramType.startsWith("Array<")) {
@@ -716,19 +754,12 @@ private fun generateMethodBehaviorConstructorParam(
             erasedParamTypes
         }
 
-    val functionType =
-        buildBehaviorFunctionType(
-            paramTypes = behaviorFinalParamTypes,
-            returnType = erasedReturnType,
-            isSuspend = method.isSuspend,
-            isNullable = isOpenMethod,
-        )
-
-    // Direct private val constructor property — no intermediate member needed
-    classBuilder.constructorProperty("${method.name}Behavior", functionType) {
-        private()
-        this.defaultValue = if (isOpenMethod) "null" else behaviorDefault
-    }
+    return buildBehaviorFunctionType(
+        paramTypes = behaviorFinalParamTypes,
+        returnType = erasedReturnType,
+        isSuspend = method.isSuspend,
+        isNullable = isOpenMethod,
+    )
 }
 
 /**
