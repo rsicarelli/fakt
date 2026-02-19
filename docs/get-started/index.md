@@ -179,8 +179,9 @@ Fakt generates three components for each `@Fake` interface:
 ### 1. Implementation Class
 
 ```kotlin
-class FakeAnalyticsImpl : Analytics {
-    private var trackBehavior: (String) -> Unit = { }
+class FakeAnalyticsImpl(
+    private val trackBehavior: (String) -> Unit = { },
+) : Analytics {
     private val _trackCallCount = MutableStateFlow(0)
     val trackCallCount: StateFlow<Int> get() = _trackCallCount
 
@@ -188,29 +189,32 @@ class FakeAnalyticsImpl : Analytics {
         _trackCallCount.update { it + 1 }
         trackBehavior(event)
     }
-
-    internal fun configureTrack(behavior: (String) -> Unit) {
-        trackBehavior = behavior
-    }
 }
 ```
+
+Fakes are **immutable after construction** — behavior is set via constructor parameters with sensible defaults.
 
 ### 2. Factory Function
 
 ```kotlin
 fun fakeAnalytics(
     configure: FakeAnalyticsConfig.() -> Unit = {}
-): FakeAnalyticsImpl = FakeAnalyticsImpl().apply {
-    FakeAnalyticsConfig(this).configure()
+): FakeAnalyticsImpl {
+    val config = FakeAnalyticsConfig().apply(configure)
+    return FakeAnalyticsImpl(
+        trackBehavior = config.trackBehavior ?: { },
+    )
 }
 ```
 
 ### 3. Configuration DSL
 
 ```kotlin
-class FakeAnalyticsConfig(private val fake: FakeAnalyticsImpl) {
+class FakeAnalyticsConfig {
+    internal var trackBehavior: ((String) -> Unit)? = null
+
     fun track(behavior: (String) -> Unit) {
-        fake.configureTrack(behavior)
+        trackBehavior = behavior
     }
 }
 ```

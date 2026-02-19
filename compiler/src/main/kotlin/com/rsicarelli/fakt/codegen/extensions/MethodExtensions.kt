@@ -78,13 +78,11 @@ fun ClassBuilder.overrideMethod(
 ) {
     val classTypeParamNames = config.classTypeParameters.map(::extractTypeParamName).toSet()
     val methodTypeParamNames = config.typeParameters.map(::extractTypeParamName).toSet()
-    val allTypeParams = classTypeParamNames + methodTypeParamNames
 
-    val paramsContainTypeParams =
-        params
-            .filterNot { it.third }
-            .any { (_, type, _) -> typeContainsAnyParam(type, allTypeParams) }
-    val needsCast = config.typeParameters.isNotEmpty() || paramsContainTypeParams
+    // Only method-level type params require unchecked casts — their types are erased to Any? in
+    // the behavior constructor param. Class-level type params are preserved in the constructor,
+    // so no cast is needed for behavior invocation or return.
+    val needsCast = config.typeParameters.isNotEmpty()
 
     function(name) {
         if (needsCast) annotation("Suppress", "\"UNCHECKED_CAST\"")
@@ -141,13 +139,13 @@ fun ClassBuilder.overrideMethod(
                 val superCall = "super.$name($superCallParams)"
                 if (returnType == "Unit") {
                     if (callTracking != null) {
-                        "$callTracking\n        $invocation ?: $superCall"
+                        "$callTracking\n$invocation ?: $superCall"
                     } else {
                         "$invocation ?: $superCall"
                     }
                 } else {
                     if (callTracking != null) {
-                        "$callTracking\n        return ($invocation ?: $superCall)$returnCast"
+                        "$callTracking\nreturn ($invocation ?: $superCall)$returnCast"
                     } else {
                         "return ($invocation ?: $superCall)$returnCast"
                     }
@@ -155,13 +153,13 @@ fun ClassBuilder.overrideMethod(
             } else {
                 if (returnType == "Unit") {
                     if (callTracking != null) {
-                        "$callTracking\n        ${name}Behavior($paramNames)"
+                        "$callTracking\n${name}Behavior($paramNames)"
                     } else {
                         "${name}Behavior($paramNames)"
                     }
                 } else {
                     if (callTracking != null) {
-                        "$callTracking\n        return ${name}Behavior($paramNames)$returnCast"
+                        "$callTracking\nreturn ${name}Behavior($paramNames)$returnCast"
                     } else {
                         "return ${name}Behavior($paramNames)$returnCast"
                     }
@@ -282,13 +280,13 @@ fun ClassBuilder.overrideVarargMethod(
 
                 if (returnType == "Unit") {
                     if (callTracking != null) {
-                        "$callTracking\n        $invocation ?: $superCall"
+                        "$callTracking\n$invocation ?: $superCall"
                     } else {
                         "$invocation ?: $superCall"
                     }
                 } else {
                     if (callTracking != null) {
-                        "$callTracking\n        return $invocation ?: $superCall"
+                        "$callTracking\nreturn $invocation ?: $superCall"
                     } else {
                         "return $invocation ?: $superCall"
                     }
@@ -297,13 +295,13 @@ fun ClassBuilder.overrideVarargMethod(
                 // Abstract or interface method: direct behavior call
                 if (returnType == "Unit") {
                     if (callTracking != null) {
-                        "$callTracking\n        ${name}Behavior($paramNames)"
+                        "$callTracking\n${name}Behavior($paramNames)"
                     } else {
                         "${name}Behavior($paramNames)"
                     }
                 } else {
                     if (callTracking != null) {
-                        "$callTracking\n        return ${name}Behavior($paramNames)"
+                        "$callTracking\nreturn ${name}Behavior($paramNames)"
                     } else {
                         "return ${name}Behavior($paramNames)"
                     }

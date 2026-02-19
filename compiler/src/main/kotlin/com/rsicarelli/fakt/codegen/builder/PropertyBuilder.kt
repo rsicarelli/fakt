@@ -134,8 +134,8 @@ internal constructor(private val name: String, private val typeString: String) {
             getter =
                 getter?.let {
                     if (it.contains("\n") || it.contains("return")) {
-                        // Multi-line statements, needs block syntax: get() { ... }
-                        CodeBlock.Statements(listOf(it))
+                        // Split on newlines so each statement gets its own indentation
+                        CodeBlock.Statements(it.split("\n"))
                     } else {
                         // Simple expression, can use expression syntax: get() = ...
                         CodeBlock.Expression(CodeExpression.Raw(it))
@@ -145,9 +145,8 @@ internal constructor(private val name: String, private val typeString: String) {
             setter =
                 setter?.let {
                     if (it.contains("\n") || it.contains("return") || it.contains("=")) {
-                        // Multi-line or statement with assignment, needs block syntax: set(value) {
-                        // ... }
-                        CodeBlock.Statements(listOf(it))
+                        // Split on newlines so each statement gets its own indentation
+                        CodeBlock.Statements(it.split("\n"))
                     } else {
                         // Pure expression, can use expression syntax: set(value) = ...
                         CodeBlock.Expression(CodeExpression.Raw(it))

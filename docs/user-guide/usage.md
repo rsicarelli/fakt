@@ -939,27 +939,29 @@ fun `GIVEN service fake WHEN calling inherited methods THEN works correctly`() {
 
 ---
 
-### Reconfiguring Fakes
+### Immutable Fakes
 
-You can reconfigure behavior mid-test if needed:
+Fakt-generated fakes are **immutable after construction**. To use different behavior, create a new fake:
 
 ```kotlin
 @Test
-fun `GIVEN fake WHEN reconfiguring behavior THEN uses new behavior`() {
-    val fake = fakeUserRepository()
+fun `GIVEN different scenarios WHEN needing different behavior THEN create new fakes`() {
+    // Scenario 1: User found
+    val fakeFound = fakeUserRepository {
+        getUser { id -> User(id, "Alice") }
+    }
+    assertEquals("Alice", fakeFound.getUser("123").name)
 
-    // Initial configuration
-    fake.configureGetUser { id -> User(id, "Alice") }
-    assertEquals("Alice", fake.getUser("123").name)
-
-    // Reconfigure
-    fake.configureGetUser { id -> User(id, "Bob") }
-    assertEquals("Bob", fake.getUser("123").name)
+    // Scenario 2: User not found
+    val fakeNotFound = fakeUserRepository {
+        getUser { id -> null }
+    }
+    assertNull(fakeNotFound.getUser("123"))
 }
 ```
 
-!!! warning "Advanced Usage"
-    Reconfiguring via `configureXxx()` methods is an advanced pattern. Prefer creating new fakes for different test scenarios.
+!!! tip "Why Immutable?"
+    Immutable fakes are safer: no shared mutable state between tests, no accidental mid-test reconfiguration, and predictable behavior from construction to completion.
 
 ---
 

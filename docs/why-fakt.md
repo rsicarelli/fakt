@@ -55,6 +55,7 @@ interface AnalyticsService {
 A proper, production-quality fake requires ~60-80 lines of boilerplate:
 
 ```kotlin
+// Typical handwritten fake — mutable, error-prone, tedious
 class FakeAnalyticsService : AnalyticsService {
     // Behavior configuration
     private var trackBehavior: ((String) -> Unit)? = null
@@ -88,6 +89,9 @@ class FakeAnalyticsService : AnalyticsService {
     }
 }
 ```
+
+!!! note "Fakt does it differently"
+    Unlike the mutable handwritten pattern above, Fakt generates **immutable** fakes where behavior is set via constructor parameters and cannot change after construction. This eliminates shared mutable state and makes fakes thread-safe by design.
 
 The problems: call tracking uses mutable variables that break under concurrent tests. N methods require ~30N lines. Interface changes don't break unused fakes—they silently drift. For 50 interfaces, this means thousands of lines of brittle boilerplate.
 

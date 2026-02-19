@@ -223,26 +223,36 @@ class FakeGenerationTest {
 
 ### **Fake Builder Pattern**
 ```kotlin
-// ✅ Use fakes with builder pattern
+// ✅ Use fakes with builder pattern (immutable after construction)
 fun fakeInterfaceAnalyzer(configure: FakeInterfaceAnalyzerScope.() -> Unit = {}): InterfaceAnalyzer =
-    FakeInterfaceAnalyzer().apply { FakeInterfaceAnalyzerScope(this).configure() }
+    FakeInterfaceAnalyzerScope().apply(configure).let { scope ->
+        FakeInterfaceAnalyzer(
+            analyzeHandler = scope.analyzeHandler ?: { InterfaceMetadata.empty() },
+            shouldFail = scope.shouldFail,
+            errorMessage = scope.errorMessage,
+        )
+    }
 
-class FakeInterfaceAnalyzerScope(private val fake: FakeInterfaceAnalyzer) {
+class FakeInterfaceAnalyzerScope {
+    internal var analyzeHandler: ((IrClass) -> InterfaceMetadata)? = null
+    internal var shouldFail: Boolean = false
+    internal var errorMessage: String = ""
+
     fun onAnalyze(block: (IrClass) -> InterfaceMetadata) {
-        fake.analyzeHandler = block
+        analyzeHandler = block
     }
 
     fun simulateError(message: String = "Analysis failed") {
-        fake.shouldFail = true
-        fake.errorMessage = message
+        shouldFail = true
+        errorMessage = message
     }
 }
 
-class FakeInterfaceAnalyzer : InterfaceAnalyzer {
-    var analyzeHandler: (IrClass) -> InterfaceMetadata = { InterfaceMetadata.empty() }
-    var shouldFail: Boolean = false
-    var errorMessage: String = ""
-
+class FakeInterfaceAnalyzer(
+    private val analyzeHandler: (IrClass) -> InterfaceMetadata = { InterfaceMetadata.empty() },
+    private val shouldFail: Boolean = false,
+    private val errorMessage: String = "",
+) : InterfaceAnalyzer {
     override fun analyze(irClass: IrClass): InterfaceMetadata {
         if (shouldFail) {
             throw AnalysisException(errorMessage)
@@ -258,8 +268,8 @@ class FakeInterfaceAnalyzer : InterfaceAnalyzer {
 fun createTestInterface(
     name: String = "TestInterface",
     configure: TestInterfaceScope.() -> Unit = {}
-): IrClass = TestInterfaceBuilder(name).apply {
-    TestInterfaceScope(this).configure()
+): IrClass = TestInterfaceBuilder(name).also { builder ->
+    TestInterfaceScope(builder).configure()
 }.build()
 
 fun createCompilerContext(

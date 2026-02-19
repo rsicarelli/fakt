@@ -262,6 +262,9 @@ public class ConstructorPropertyBuilder
 internal constructor(private val name: String, private val type: String) {
     private val modifiers = mutableSetOf<CodeModifier>()
 
+    /** Default value expression for this constructor property. */
+    public var defaultValue: String? = null
+
     /** Makes property private. */
     public fun private() {
         modifiers.add(CodeModifier.PRIVATE)
@@ -284,5 +287,10 @@ internal constructor(private val name: String, private val type: String) {
      */
     @PublishedApi
     internal fun build(): ConstructorProperty =
-        ConstructorProperty(name = name, type = type, modifiers = modifiers.toSet())
+        ConstructorProperty(
+            name = name,
+            type = type,
+            modifiers = modifiers.toSet(),
+            defaultValue = defaultValue,
+        )
 }

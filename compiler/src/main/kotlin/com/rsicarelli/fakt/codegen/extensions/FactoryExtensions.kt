@@ -65,10 +65,8 @@ fun generateFactoryFunctionCodeFile(
             // Set return type
             returns("${names.fakeClassName}${names.typeArgs}")
 
-            // Set expression body
-            val impl = "${names.fakeClassName}${names.typeArgs}()"
-            val config = "${names.configClassName}${names.typeArgs}(this)"
-            expressionBody = "$impl.apply { $config.configure() }"
+            // Delegate to config.build() — avoids inline/internal visibility conflict
+            expressionBody = "${names.configClassName}${names.typeArgs}().apply(configure).build()"
 
             // Add KDoc if requested
             if (includeKDoc) {

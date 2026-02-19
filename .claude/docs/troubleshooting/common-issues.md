@@ -165,18 +165,15 @@ interface GenericService<T> {
     fun process(data: T): T
 }
 
-// Generated (current approach):
-private var processBehavior: (Any?) -> Any? = { it }
-override fun <T> process(data: T): T {
-    @Suppress("UNCHECKED_CAST")
-    return processBehavior(data) as T
+// Generated (current approach — immutable constructor param):
+class FakeGenericServiceImpl(
+    private val processBehavior: (Any?) -> Any? = { it },
+) : GenericService<Any?> {
+    override fun <T> process(data: T): T {
+        @Suppress("UNCHECKED_CAST")
+        return processBehavior(data) as T
+    }
 }
-```
-
-2. **Phase 2A Enhancement** (upcoming):
-```kotlin
-// Identity function approach
-private var processBehavior: (Any?) -> Any? = { it }
 ```
 
 **Root Cause**: Method-level generics not accessible at class level - core architectural challenge

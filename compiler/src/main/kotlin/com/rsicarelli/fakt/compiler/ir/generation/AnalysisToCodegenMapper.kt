@@ -2,8 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.generation
 
+import com.rsicarelli.fakt.codegen.builder.parseType
 import com.rsicarelli.fakt.codegen.extensions.MethodSpec
 import com.rsicarelli.fakt.codegen.extensions.PropertySpec
+import com.rsicarelli.fakt.codegen.renderer.render
+import com.rsicarelli.fakt.codegen.strategy.DefaultValueResolver
 import com.rsicarelli.fakt.compiler.core.types.TypeResolution
 import com.rsicarelli.fakt.compiler.ir.analysis.FunctionAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
@@ -13,7 +16,11 @@ import com.rsicarelli.fakt.compiler.ir.analysis.PropertyAnalysis
  * Maps IR analysis models to codegen DSL models.
  *
  * Bridges the gap between IR/FIR compiler analysis and type-safe code generation.
+ * Includes default behavior computation so both FakeImpl and factory can use them.
  */
+
+/** Shared resolver for computing default behavior expressions. */
+private val defaultValueResolver = DefaultValueResolver()
 
 /**
  * Converts FunctionAnalysis to MethodSpec for DSL-based code generation.
@@ -49,6 +56,22 @@ internal fun FunctionAnalysis.toMethodSpec(typeResolver: TypeResolution): Method
             typeResolver.irTypeToKotlinString(it, preserveTypeParameters = true)
         }
 
+    // Compute default behavior expression for the return type
+    val parsedReturnType = parseType(returnTypeStr)
+    val defaultExpr = defaultValueResolver.resolve(parsedReturnType).render()
+
+    // Build the default lambda with parameter placeholders
+    val baseParamNames = paramTriples.mapIndexed { i, _ -> "p$i" }
+    val lambdaParamNames =
+        if (extensionReceiverTypeStr != null) {
+            listOf("p_receiver") + baseParamNames
+        } else {
+            baseParamNames
+        }
+    val lambdaParams =
+        if (lambdaParamNames.isEmpty()) "" else "${lambdaParamNames.joinToString(", ")} -> "
+    val defaultBehavior = "{ $lambdaParams$defaultExpr }"
+
     return MethodSpec(
         name = name,
         params = paramTriples,
@@ -58,6 +81,7 @@ internal fun FunctionAnalysis.toMethodSpec(typeResolver: TypeResolution): Method
         typeParameters = formattedTypeParams,
         isOperator = isOperator,
         extensionReceiverType = extensionReceiverTypeStr,
+        defaultBehavior = defaultBehavior,
     )
 }
 
@@ -72,11 +96,17 @@ internal fun PropertyAnalysis.toPropertySpec(typeResolver: TypeResolution): Prop
     // Detect if this is a StateFlow property by checking the type name
     val isStateFlow = typeStr.contains("StateFlow<")
 
+    // Compute default behavior expression for the property type
+    val parsedType = parseType(typeStr)
+    val defaultExpr = defaultValueResolver.resolve(parsedType).render()
+    val defaultBehavior = "{ $defaultExpr }"
+
     return PropertySpec(
         name = name,
         type = typeStr,
         isStateFlow = isStateFlow,
         isMutable = isMutable,
+        defaultBehavior = defaultBehavior,
     )
 }
 

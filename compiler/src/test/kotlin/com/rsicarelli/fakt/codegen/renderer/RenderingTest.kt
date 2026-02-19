@@ -11,6 +11,7 @@ import com.rsicarelli.fakt.codegen.model.CodeModifier
 import com.rsicarelli.fakt.codegen.model.CodeParameter
 import com.rsicarelli.fakt.codegen.model.CodeProperty
 import com.rsicarelli.fakt.codegen.model.CodeType
+import com.rsicarelli.fakt.codegen.model.ConstructorProperty
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -244,5 +245,121 @@ class RenderingTest {
         assertTrue(rendered.contains("import com.example.User"))
         assertTrue(rendered.contains("class Simple"))
         assertTrue(rendered.contains("val value: String = \"\""))
+    }
+
+    // ==========================================
+    // ConstructorProperty Rendering
+    // ==========================================
+
+    @Test
+    fun `GIVEN ConstructorProperty with no modifiers WHEN rendering THEN renders val with type`() {
+        // GIVEN
+        val prop = ConstructorProperty(name = "value", type = "String")
+
+        // WHEN
+        val rendered = prop.render()
+
+        // THEN
+        assertEquals("val value: String", rendered)
+    }
+
+    @Test
+    fun `GIVEN ConstructorProperty with private modifier WHEN rendering THEN includes private val`() {
+        // GIVEN
+        val prop =
+            ConstructorProperty(
+                name = "getBehavior",
+                type = "(String) -> User?",
+                modifiers = setOf(CodeModifier.PRIVATE),
+            )
+
+        // WHEN
+        val rendered = prop.render()
+
+        // THEN
+        assertEquals("private val getBehavior: (String) -> User?", rendered)
+    }
+
+    @Test
+    fun `GIVEN ConstructorProperty with default value WHEN rendering THEN includes default`() {
+        // GIVEN
+        val prop =
+            ConstructorProperty(
+                name = "getBehavior",
+                type = "(String) -> User?",
+                modifiers = setOf(CodeModifier.PRIVATE),
+                defaultValue = "{ p0 -> null }",
+            )
+
+        // WHEN
+        val rendered = prop.render()
+
+        // THEN
+        assertEquals("private val getBehavior: (String) -> User? = { p0 -> null }", rendered)
+    }
+
+    @Test
+    fun `GIVEN ConstructorProperty with null default WHEN rendering THEN omits default expression`() {
+        // GIVEN
+        val prop = ConstructorProperty(name = "count", type = "Int", defaultValue = null)
+
+        // WHEN
+        val rendered = prop.render()
+
+        // THEN - No " = " in output
+        assertEquals("val count: Int", rendered)
+    }
+
+    @Test
+    fun `GIVEN ConstructorProperty always renders val WHEN rendering THEN never renders var`() {
+        // GIVEN
+        val prop =
+            ConstructorProperty(
+                name = "behavior",
+                type = "() -> Unit",
+                modifiers = setOf(CodeModifier.PRIVATE),
+                defaultValue = "{ }",
+            )
+
+        // WHEN
+        val rendered = prop.render()
+
+        // THEN - Always val, never var
+        assertTrue(rendered.contains("val behavior"))
+        assertTrue(!rendered.contains("var behavior"))
+    }
+
+    @Test
+    fun `GIVEN ConstructorProperty in class via DSL WHEN rendering class THEN appears in constructor`() {
+        // GIVEN
+        val file =
+            codeFile("com.example") {
+                klass("FakeServiceImpl") {
+                    implements("Service")
+
+                    constructorProperty("getBehavior", "(String) -> String") {
+                        private()
+                        defaultValue = "{ \"\" }"
+                    }
+
+                    function("get") {
+                        override()
+                        parameter("id", "String")
+                        returns("String")
+                        body = "return getBehavior(id)"
+                    }
+                }
+            }
+        val builder = CodeBuilder()
+
+        // WHEN
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Constructor property appears in constructor parentheses
+        assertTrue(result.contains("class FakeServiceImpl("))
+        assertTrue(result.contains("private val getBehavior: (String) -> String = { \"\" }"))
+        // THEN - Override method works
+        assertTrue(result.contains("override fun get(id: String): String"))
     }
 }
