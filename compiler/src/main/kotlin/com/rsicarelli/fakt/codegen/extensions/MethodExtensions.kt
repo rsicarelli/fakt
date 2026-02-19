@@ -29,7 +29,7 @@ private fun buildHistoryUpdateStatement(
 
     // 0-param or vararg-only methods use Unit
     if (regularParams.isEmpty()) {
-        return "_${methodName}Calls.update { it + Unit }"
+        return "${methodName}Calls.update { it + Unit }"
     }
 
     val allTypeParams = classTypeParams + methodTypeParams
@@ -49,7 +49,7 @@ private fun buildHistoryUpdateStatement(
             }
         }
 
-    return "_${methodName}Calls.update { it + $dataClassName($constructorArgs) }"
+    return "${methodName}Calls.update { it + $dataClassName($constructorArgs) }"
 }
 
 /**
@@ -262,7 +262,7 @@ fun ClassBuilder.overrideVarargMethod(
         // Vararg-only methods use Unit for history (call count derived from history size)
         // Only generate if call history is enabled
         val callTracking =
-            if (config.generateCallHistory) "_${name}Calls.update { it + Unit }" else null
+            if (config.generateCallHistory) "${name}Calls.update { it + Unit }" else null
 
         // For extension functions, prepend 'this' receiver as first argument
         val paramNames =

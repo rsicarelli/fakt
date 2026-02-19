@@ -34,7 +34,7 @@ class JvmOnlyServiceTest {
 
         // Then
         assertEquals("Test content", result)
-        assertEquals(1, fake.readFileCallCount)
+        assertEquals(1, fake.readFileCalls.value.size)
     }
 
     @Test
@@ -51,7 +51,7 @@ class JvmOnlyServiceTest {
         // Then
         assertTrue(successResult)
         assertFalse(failureResult)
-        assertEquals(2, fake.writeFileCallCount)
+        assertEquals(2, fake.writeFileCalls.value.size)
     }
 
     @Test
@@ -73,7 +73,7 @@ class JvmOnlyServiceTest {
         // Then
         assertEquals("11.0.0", javaVersion)
         assertNull(unknownProp)
-        assertEquals(2, fake.getSystemPropertyCallCount)
+        assertEquals(2, fake.getSystemPropertyCalls.value.size)
     }
 
     @Test
@@ -88,7 +88,7 @@ class JvmOnlyServiceTest {
 
         // Then
         assertEquals("/home/user/project", result)
-        assertEquals(1, fake.workingDirectoryCallCount)
+        assertEquals(1, fake.workingDirectoryCalls.value.size)
     }
 
     @Test

@@ -38,7 +38,7 @@ sealed class NotificationsState {
  * This serves as a real-world example for testing with Fakt + Turbine.
  *
  * NOTE: Call counts are automatically tracked by Fakt fakes!
- * Use `notificationUseCase.getNotificationsCallCount` and `markAsReadCallCount` in tests.
+ * Use `notificationUseCase.getNotificationsCalls.value.size` and `markAsReadCalls.value.size` in tests.
  */
 class NotificationsViewModel(
     private val notificationUseCase: NotificationUseCase,

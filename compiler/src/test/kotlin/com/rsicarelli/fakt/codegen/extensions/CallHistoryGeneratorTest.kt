@@ -255,7 +255,7 @@ class CallHistoryGeneratorTest {
         assertTrue(result.contains("inline fun FakeAuthServiceImpl.verifyLogout"))
         assertTrue(result.contains("block: AuthServiceLogoutCallVerifier.() -> Unit"))
         assertTrue(
-            result.contains("AuthServiceLogoutCallVerifier(_logoutCalls.value).apply(block)")
+            result.contains("AuthServiceLogoutCallVerifier(logoutCalls.value).apply(block)")
         )
     }
 

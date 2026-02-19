@@ -191,9 +191,9 @@ Control whether generated fakes include call tracking and verification capabilit
 <td><strong>true</strong><br>(default)</td>
 <td>
 
-Full call tracking with:
+Full call history with:
 
-- `methodNameCallCount` properties
+- `methodNameCalls` StateFlow properties
 - `methodNameCallHistory` lists
 - `verifyMethodName { }` DSL
 
@@ -212,7 +212,7 @@ fakt {
 <td><strong>false</strong></td>
 <td>
 
-Lightweight fakes with only behavior configuration. No call tracking overhead.
+Lightweight fakes with only behavior configuration. No call history overhead.
 
 </td>
 <td>

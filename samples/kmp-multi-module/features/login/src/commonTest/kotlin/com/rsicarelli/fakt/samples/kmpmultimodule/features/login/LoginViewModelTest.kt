@@ -127,7 +127,7 @@ class LoginViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt tracks the reset call!
-            assertEquals(1, repository.resetFailedAttemptsCallCount)
+            assertEquals(1, repository.resetFailedAttemptsCalls.value.size)
 
             viewModel.failedAttempts.test {
                 assertEquals(0, awaitItem())
@@ -165,7 +165,7 @@ class LoginViewModelTest {
             advanceUntilIdle()
 
             // Then
-            assertEquals(1, repository.incrementFailedAttemptsCallCount)
+            assertEquals(1, repository.incrementFailedAttemptsCalls.value.size)
 
             viewModel.failedAttempts.test {
                 assertEquals(1, awaitItem())
@@ -236,7 +236,7 @@ class LoginViewModelTest {
             advanceUntilIdle()
 
             // Then - Should NOT call login use case
-            assertEquals(0, loginUseCase.loginCallCount)
+            assertEquals(0, loginUseCase.loginCalls.value.size)
 
             viewModel.state.test {
                 val state = awaitItem()
@@ -370,7 +370,7 @@ class LoginViewModelTest {
                 assertEquals(2, awaitItem())
             }
 
-            assertEquals(1, repository.getFailedAttemptsCallCount)
+            assertEquals(1, repository.getFailedAttemptsCalls.value.size)
         }
 
     // ============================================================================
@@ -414,7 +414,7 @@ class LoginViewModelTest {
             advanceUntilIdle()
 
             // Then - Fakt tracks all 10 calls!
-            assertEquals(10, loginUseCase.loginCallCount)
+            assertEquals(10, loginUseCase.loginCalls.value.size)
         }
 
     // ============================================================================

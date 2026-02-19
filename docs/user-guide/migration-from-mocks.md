@@ -46,7 +46,7 @@ fun `GIVEN fake repository WHEN processing user THEN calls getUser`() {
     val service = UserService(fake)
     service.processUser("123")
 
-    assertEquals(1, fake.getUserCallCount)
+    assertEquals(1, fake.getUserCalls.value.size)
 }
 ```
 
@@ -118,7 +118,7 @@ fun `GIVEN repository WHEN saving user THEN returns success`() = runTest {
     val result = service.createUser("Alice")
 
     assertTrue(result.isSuccess)
-    assertEquals(1, fake.saveUserCallCount)
+    assertEquals(1, fake.saveUserCalls.value.size)
 }
 ```
 
@@ -154,7 +154,7 @@ fun `GIVEN fake analytics WHEN tracking event THEN records event`() = runTest {
     val service = AnalyticsService(fake)
     service.logUserAction("button_click")
 
-    assertEquals(1, fake.trackCallCount)
+    assertEquals(1, fake.trackCalls.value.size)
     assertEquals("button_click", trackedEvents.first())
 }
 ```
@@ -163,7 +163,7 @@ fun `GIVEN fake analytics WHEN tracking event THEN records event`() = runTest {
 
 - Replace `mock<T>()` with `fakeT {}`
 - Replace `everySuspend { }` with DSL lambda configuration
-- Replace `verifySuspend { }` with StateFlow call counters
+- Replace `verifySuspend { }` with StateFlow call history
 - State-based verification (checking `trackedEvents`) is more resilient than interaction verification
 
 ---
@@ -198,7 +198,7 @@ fun `GIVEN repository WHEN fetching user THEN returns user`() = runTest {
     viewModel.loadUser("123")
 
     assertEquals("Alice", viewModel.userName.value)
-    assertEquals(1, fake.getUserCallCount)
+    assertEquals(1, fake.getUserCalls.value.size)
 }
 ```
 
@@ -233,7 +233,7 @@ fun `GIVEN generic repository WHEN saving item THEN returns success`() {
     val service = CrudService(fake)
     service.createUser(User("123", "Alice"))
 
-    assertEquals(1, fake.saveCallCount)
+    assertEquals(1, fake.saveCalls.value.size)
 }
 ```
 

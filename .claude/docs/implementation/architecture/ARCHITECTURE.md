@@ -244,13 +244,12 @@ import kotlinx.coroutines.flow.StateFlow
 internal class FakeUserServiceImpl(
     private val getUserBehavior: () -> User = { User("default") },
 ) : UserService {
-    // Call tracking
-    private val _getUserCalls = MutableStateFlow(0)
-    val getUserCalls: StateFlow<Int> = _getUserCalls
+    // Call History
+    val getUserCalls = MutableStateFlow<List<Unit>>(emptyList())
 
     // Implementation
     override fun getUser(): User {
-        _getUserCalls.value++
+        getUserCalls.update { it + Unit }
         return getUserBehavior()
     }
 }

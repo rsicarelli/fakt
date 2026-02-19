@@ -15,11 +15,8 @@ class Fake{Interface}Impl(
     // Behavior properties (immutable after construction)
     private val {method}Behavior: ({params}) -> {return} = { default },
 ) : {Interface} {
-    // Call counters (derived from history)
-    val {method}CallCount: Int
-
     // Call history
-    val {method}CallHistory: List<{Interface}{Method}Call>
+    val {method}Calls: MutableStateFlow<List<Unit>>
 
     // Override interface members
     override fun {method}({params}): {return} = {method}Behavior({params})
@@ -173,7 +170,7 @@ When call history is disabled via `enableCallHistory.set(false)` or `@Fake(callH
 
 **Not Generated:**
 
-- `{method}CallCount` properties
+- `{method}Calls` StateFlow properties
 - `{method}CallHistory` lists
 - `Fake{Interface}{Method}Call` data classes
 - `Fake{Interface}{Method}Verifier` classes
@@ -190,7 +187,7 @@ This results in smaller, simpler generated code for fakes that only need stubbin
 | Implementation class   | `Fake{Interface}Impl`             | `FakeAnalyticsImpl`               |
 | Factory function       | `fake{Interface}`                 | `fakeAnalytics`                   |
 | Configuration DSL      | `Fake{Interface}Config`           | `FakeAnalyticsConfig`             |
-| Call counter           | `{method}CallCount`               | `trackCallCount`                  |
+| Call history           | `{method}Calls`                   | `trackCalls`                      |
 | Call history           | `{method}CallHistory`             | `trackCallHistory`                |
 | Call data class        | `Fake{Interface}{Method}Call`     | `FakeAnalyticsTrackCall`          |
 | Verifier class         | `Fake{Interface}{Method}Verifier` | `FakeAnalyticsTrackVerifier`      |

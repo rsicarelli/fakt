@@ -31,7 +31,7 @@ class CallHistoryControlTest {
 
         // THEN: It works correctly (no call tracking API available)
         assertEquals("processed: test", result)
-        // Note: fake.processCallCount would not compile as it's not generated
+        // Note: fake.processCalls.value.size would not compile as it's not generated
     }
 
     @Test
@@ -80,7 +80,7 @@ class CallHistoryControlTest {
         fake.execute("")
 
         // THEN: Call tracking is available
-        assertEquals(3, fake.executeCallCount)
+        assertEquals(3, fake.executeCalls.value.size)
     }
 
     @Test
@@ -96,7 +96,7 @@ class CallHistoryControlTest {
             fake.asyncExecute(listOf("cmd2", "cmd3"))
 
             // THEN: Call tracking is available
-            assertEquals(2, fake.asyncExecuteCallCount)
+            assertEquals(2, fake.asyncExecuteCalls.value.size)
         }
 
     @Test
@@ -110,7 +110,7 @@ class CallHistoryControlTest {
         repeat(5) { fake.isReady }
 
         // THEN: Call tracking is available
-        assertEquals(5, fake.isReadyCallCount)
+        assertEquals(5, fake.isReadyCalls.value.size)
     }
 
     // ==========================================
@@ -130,7 +130,7 @@ class CallHistoryControlTest {
         fake.doWork(2)
 
         // THEN: Call tracking is available (plugin default is enabled)
-        assertEquals(2, fake.doWorkCallCount)
+        assertEquals(2, fake.doWorkCalls.value.size)
     }
 
     @Test
@@ -145,7 +145,7 @@ class CallHistoryControlTest {
 
         // THEN: Value is correct and tracking works
         assertEquals(42, value)
-        assertEquals(1, fake.workCountCallCount)
+        assertEquals(1, fake.workCountCalls.value.size)
     }
 
     // ==========================================
@@ -169,7 +169,7 @@ class CallHistoryControlTest {
             tracked.execute("cmd")
 
             // THEN: Tracked service has call count, lightweight doesn't
-            assertEquals(1, tracked.executeCallCount)
-            // lightweight.processCallCount would not compile
+            assertEquals(1, tracked.executeCalls.value.size)
+            // lightweight.processCalls.value.size would not compile
         }
 }

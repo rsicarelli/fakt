@@ -333,7 +333,7 @@ class AppTest {
         analytics.track("user_signup")
 
         assertEquals(listOf("user_login", "user_signup"), events)
-        assertEquals(2, analytics.trackCallCount)
+        assertEquals(2, analytics.trackCalls.value.size)
     }
 
     @Test
@@ -344,7 +344,7 @@ class AppTest {
 
         analytics.identify("user-123")
 
-        assertEquals(1, analytics.identifyCallCount)
+        assertEquals(1, analytics.identifyCalls.value.size)
     }
 }
 ```

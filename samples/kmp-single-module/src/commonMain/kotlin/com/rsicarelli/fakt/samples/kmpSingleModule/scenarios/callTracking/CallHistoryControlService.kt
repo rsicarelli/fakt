@@ -9,7 +9,7 @@ import com.rsicarelli.fakt.Fake
  * Interface with call history explicitly DISABLED.
  *
  * When `callHistory = CallHistoryMode.DISABLED`, the generated fake will:
- * - NOT have `xxxCallCount` properties
+ * - NOT have `xxxCalls.value.size` properties
  * - NOT have `_xxxCalls` backing fields
  * - NOT have `verifyXxx` extension functions
  * - Have smaller generated code footprint (lightweight fakes)
@@ -38,7 +38,7 @@ interface LightweightService {
  * Interface with call history explicitly ENABLED.
  *
  * When `callHistory = CallHistoryMode.ENABLED`, the generated fake will:
- * - ALWAYS have `xxxCallCount` properties
+ * - ALWAYS have `xxxCalls.value.size` properties
  * - ALWAYS have `_xxxCalls` backing fields
  * - ALWAYS have `verifyXxx` extension functions
  *

@@ -94,7 +94,7 @@ val fake = fakeAnalytics {
 fake.track("user_signup")
 
 assertEquals(listOf("user_signup"), events)
-assertEquals(1, fake.trackCallCount)
+assertEquals(1, fake.trackCalls.value.size)
 ```
 
 ## 🤝 Contributing

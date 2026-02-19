@@ -401,41 +401,20 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
             endRegion()
 
             // ==========================================
-            // SECTION 2: Call Tracking (public getters)
-            // Only generated when call history is enabled
+            // SECTION 2: Call History
+            // Public MutableStateFlow fields for tracking calls.
             // ==========================================
             if (generateCallHistory) {
-                region("Call Tracking")
+                region("Call History")
 
-                // Generate public call tracking getters for all properties
+                // Generate call history fields for properties
                 simpleProperties.forEach { prop ->
-                    generatePropertyCallTrackingPublicGetter(this, prop, visibility)
-                }
-
-                // Generate public call tracking getters for all methods
-                methods.forEach { method ->
-                    generateMethodCallTrackingPublicGetter(this, method, visibility)
-                }
-
-                endRegion()
-            }
-
-            // ==========================================
-            // SECTION 3: Private State (call tracking only)
-            // Behavior properties are now immutable constructor
-            // params — only call tracking state remains here.
-            // ==========================================
-            if (generateCallHistory) {
-                region("Private State")
-
-                // Generate private backing fields for call tracking (properties only)
-                simpleProperties.forEach { prop ->
-                    generatePropertyCallTrackingBackingField(this, prop)
+                    generatePropertyCallHistoryFields(this, prop, visibility)
                 }
 
                 // Generate call history backing fields for ALL methods
                 methods.forEach { method ->
-                    generateMethodCallHistoryBackingField(this, method, interfaceName)
+                    generateMethodCallHistoryBackingField(this, method, interfaceName, visibility)
                 }
 
                 endRegion()
@@ -575,52 +554,30 @@ private fun isValidFunctionInvocationPattern(
     return method.returnType.trim() == returnPart.trim()
 }
 
-/** Generates ONLY the public getter for method call tracking. Part of Section 2: Call Tracking */
-private fun generateMethodCallTrackingPublicGetter(
-    classBuilder: ClassBuilder,
-    method: MethodSpec,
-    visibility: FirVisibility,
-) {
-    classBuilder.callTrackingPublicGetter(method.name, visibility)
-}
-
 /**
- * Generates the private backing field for call history tracking. Generated for ALL methods:
+ * Generates public call history backing field for method tracking. Generated for ALL methods:
  * - Methods with params: stores data class instances
- * - 0-param/vararg-only methods: stores Unit Part of Section 4: Private State
+ * - 0-param/vararg-only methods: stores Unit
  */
 private fun generateMethodCallHistoryBackingField(
     classBuilder: ClassBuilder,
     method: MethodSpec,
     interfaceName: String,
+    visibility: FirVisibility,
 ) {
     val storageInfo = resolveHistoryStorageType(interfaceName, method.name, method.params)
-    classBuilder.callHistoryBackingField(method.name, storageInfo.dataClassName)
+    classBuilder.callHistoryBackingField(method.name, storageInfo.dataClassName, visibility)
 }
 
-/** Generates ONLY the public getter for property call tracking. Part of Section 2: Call Tracking */
-private fun generatePropertyCallTrackingPublicGetter(
+/** Generates public call history fields for property tracking (getter + optional setter). */
+private fun generatePropertyCallHistoryFields(
     classBuilder: ClassBuilder,
     prop: PropertySpec,
     visibility: FirVisibility,
 ) {
-    classBuilder.propertyGetterTrackingPublicGetter(prop.name, visibility)
+    classBuilder.propertyGetterCallHistoryField(prop.name, visibility)
     if (prop.isMutable) {
-        classBuilder.propertySetterTrackingPublicGetter(prop.name, visibility)
-    }
-}
-
-/**
- * Generates ONLY the private backing field for property call tracking. Part of Section 4: Private
- * State
- */
-private fun generatePropertyCallTrackingBackingField(
-    classBuilder: ClassBuilder,
-    prop: PropertySpec,
-) {
-    classBuilder.propertyGetterTrackingBackingField(prop.name)
-    if (prop.isMutable) {
-        classBuilder.propertySetterTrackingBackingField(prop.name)
+        classBuilder.propertySetterCallHistoryField(prop.name, visibility)
     }
 }
 
@@ -936,7 +893,7 @@ private fun buildMutablePropertyGetter(
     if (isOpenProperty) {
         if (generateCallHistory) {
             listOf(
-                    "_${propName}CallCount.update { it + 1 }",
+                    "${propName}Calls.update { it + Unit }",
                     "return ${propName}Getter?.invoke() ?: super.$propName",
                 )
                 .joinToString("\n")
@@ -945,7 +902,7 @@ private fun buildMutablePropertyGetter(
         }
     } else {
         if (generateCallHistory) {
-            listOf("_${propName}CallCount.update { it + 1 }", "return ${propName}Getter()")
+            listOf("${propName}Calls.update { it + Unit }", "return ${propName}Getter()")
                 .joinToString("\n")
         } else {
             "${propName}Getter()"
@@ -962,7 +919,7 @@ private fun buildMutablePropertySetter(
     if (isOpenProperty) {
         if (generateCallHistory) {
             listOf(
-                    "_set${capitalizedName}CallCount.update { it + 1 }",
+                    "set${capitalizedName}Calls.update { it + Unit }",
                     "${propName}Setter?.invoke(value) ?: run { super.$propName = value }",
                 )
                 .joinToString("\n")
@@ -971,7 +928,7 @@ private fun buildMutablePropertySetter(
         }
     } else {
         if (generateCallHistory) {
-            listOf("_set${capitalizedName}CallCount.update { it + 1 }", "${propName}Setter(value)")
+            listOf("set${capitalizedName}Calls.update { it + Unit }", "${propName}Setter(value)")
                 .joinToString("\n")
         } else {
             "${propName}Setter(value)"
@@ -1006,7 +963,7 @@ private fun buildImmutablePropertyGetter(
     if (isOpenProperty) {
         if (generateCallHistory) {
             listOf(
-                    "_${propName}CallCount.update { it + 1 }",
+                    "${propName}Calls.update { it + Unit }",
                     "return ${propName}Behavior?.invoke() ?: super.$propName",
                 )
                 .joinToString("\n")
@@ -1015,7 +972,7 @@ private fun buildImmutablePropertyGetter(
         }
     } else {
         if (generateCallHistory) {
-            listOf("_${propName}CallCount.update { it + 1 }", "return ${propName}Behavior()")
+            listOf("${propName}Calls.update { it + Unit }", "return ${propName}Behavior()")
                 .joinToString("\n")
         } else {
             "${propName}Behavior()"
