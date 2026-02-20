@@ -140,7 +140,21 @@ public fun CodeClass.renderTo(builder: CodeBuilder) {
     // Render annotations first (before class declaration)
     annotations.forEach { annotation -> annotation.renderTo(builder) }
 
-    // Build class header
+    val header = buildClassHeader()
+
+    // Render class
+    builder.block(header) {
+        members.forEachIndexed { index, member ->
+            member.renderTo(this)
+            if (index < members.lastIndex && !areCompactSiblings(member, members[index + 1])) {
+                appendLine()
+            }
+        }
+    }
+}
+
+/** Builds the full class header string (modifiers, name, type params, constructor, supertypes). */
+private fun CodeClass.buildClassHeader(): String {
     val modifiersStr = modifiers.joinToString(" ") { it.name.lowercase() }
     val modifierPrefix = if (modifiersStr.isNotEmpty()) "$modifiersStr " else ""
 
@@ -151,21 +165,7 @@ public fun CodeClass.renderTo(builder: CodeBuilder) {
             ""
         }
 
-    // Render constructor properties if present
-    // Use multi-line format when there are multiple properties for readability
-    val constructorStr =
-        if (constructorProperties.isNotEmpty()) {
-            if (constructorProperties.size > 1) {
-                // Multi-line constructor for readability
-                val props = constructorProperties.joinToString(",\n    ") { it.render() }
-                "(\n    $props,\n)"
-            } else {
-                val props = constructorProperties.joinToString(", ") { it.render() }
-                "($props)"
-            }
-        } else {
-            ""
-        }
+    val constructorStr = renderConstructorProperties()
 
     val superTypesStr =
         if (superTypes.isNotEmpty()) {
@@ -176,26 +176,24 @@ public fun CodeClass.renderTo(builder: CodeBuilder) {
 
     val whereClauseStr = whereClause?.let { " where $it" } ?: ""
 
-    // Render class
-    builder.block(
-        "${modifierPrefix}class $name$typeParamsStr$constructorStr$superTypesStr$whereClauseStr"
-    ) {
-        members.forEachIndexed { index, member ->
-            member.renderTo(this)
-            if (index < members.lastIndex) {
-                // Suppress blank line between consecutive compact members of the same kind
-                val next = members[index + 1]
-                val bothCompactProperties =
-                    member is CodeProperty && member.compact && next is CodeProperty && next.compact
-                val bothCompactFunctions =
-                    member is CodeFunction && member.compact && next is CodeFunction && next.compact
-                if (!(bothCompactProperties || bothCompactFunctions)) {
-                    appendLine()
-                }
-            }
-        }
-    }
+    return "${modifierPrefix}class $name$typeParamsStr$constructorStr$superTypesStr$whereClauseStr"
 }
+
+/** Renders constructor properties — multi-line when more than one, single-line otherwise. */
+private fun CodeClass.renderConstructorProperties(): String =
+    when {
+        constructorProperties.isEmpty() -> ""
+        constructorProperties.size > 1 -> {
+            val props = constructorProperties.joinToString(",\n    ") { it.render() }
+            "(\n    $props,\n)"
+        }
+        else -> "(${constructorProperties.joinToString(", ") { it.render() }})"
+    }
+
+/** Returns true if two adjacent members are both compact and of the same kind. */
+private fun areCompactSiblings(current: CodeMember, next: CodeMember): Boolean =
+    (current is CodeProperty && current.compact && next is CodeProperty && next.compact) ||
+        (current is CodeFunction && current.compact && next is CodeFunction && next.compact)
 
 /**
  * Renders [ConstructorProperty] to string.
