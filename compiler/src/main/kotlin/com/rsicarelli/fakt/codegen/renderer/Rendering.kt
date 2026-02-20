@@ -152,11 +152,10 @@ public fun CodeClass.renderTo(builder: CodeBuilder) {
         }
 
     // Render constructor properties if present
-    // Use multi-line format when any property has a default value (typically behavior lambdas)
-    val hasDefaults = constructorProperties.any { it.defaultValue != null }
+    // Use multi-line format when there are multiple properties for readability
     val constructorStr =
         if (constructorProperties.isNotEmpty()) {
-            if (hasDefaults) {
+            if (constructorProperties.size > 1) {
                 // Multi-line constructor for readability
                 val props = constructorProperties.joinToString(",\n    ") { it.render() }
                 "(\n    $props,\n)"
@@ -184,7 +183,15 @@ public fun CodeClass.renderTo(builder: CodeBuilder) {
         members.forEachIndexed { index, member ->
             member.renderTo(this)
             if (index < members.lastIndex) {
-                appendLine()
+                // Suppress blank line between consecutive compact members of the same kind
+                val next = members[index + 1]
+                val bothCompactProperties =
+                    member is CodeProperty && member.compact && next is CodeProperty && next.compact
+                val bothCompactFunctions =
+                    member is CodeFunction && member.compact && next is CodeFunction && next.compact
+                if (!(bothCompactProperties || bothCompactFunctions)) {
+                    appendLine()
+                }
             }
         }
     }
@@ -548,6 +555,53 @@ private val KOTLIN_KEYWORDS =
         "when",
         "while",
     )
+
+/**
+ * Renders only the file header (header comment, file annotations, package, imports).
+ *
+ * Used when rendering a CodeFile's declarations separately from its header, e.g., to reorder
+ * sections in the output file.
+ *
+ * @param builder The [CodeBuilder] to write to
+ */
+public fun CodeFile.renderHeaderOnly(builder: CodeBuilder) {
+    // File header
+    header?.let { builder.appendLine("// $it") }
+
+    // File-level annotations (before package declaration)
+    if (fileAnnotations.isNotEmpty()) {
+        fileAnnotations.forEach { annotation -> annotation.renderAsFileAnnotation(builder) }
+        builder.appendLine()
+    }
+
+    // Package
+    val escapedPackage = packageName.escapePackageName()
+    builder.appendLine("package $escapedPackage")
+    builder.appendLine()
+
+    // Imports (sorted)
+    if (imports.isNotEmpty()) {
+        imports.sorted().forEach { import -> builder.appendLine("import $import") }
+        builder.appendLine()
+    }
+}
+
+/**
+ * Renders only the declarations (classes, functions, properties) without header.
+ *
+ * Used when the header has already been rendered via [renderHeaderOnly], e.g., to reorder sections
+ * in the output file.
+ *
+ * @param builder The [CodeBuilder] to write to
+ */
+public fun CodeFile.renderDeclarationsOnly(builder: CodeBuilder) {
+    declarations.forEachIndexed { index, decl ->
+        decl.renderTo(builder)
+        if (index < declarations.lastIndex) {
+            builder.appendLine()
+        }
+    }
+}
 
 /**
  * Convenience extension to render [CodeFile] directly to a String.

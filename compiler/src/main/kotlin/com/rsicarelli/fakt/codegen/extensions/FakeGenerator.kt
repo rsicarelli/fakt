@@ -363,20 +363,19 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
 
             // ==========================================
             // Constructor: Behavior parameters (immutable)
-            // Behaviors are constructor params with defaults,
-            // making the fake immutable after construction.
+            // Behaviors are constructor params without defaults —
+            // the Config DSL provides defaults via build().
             // ==========================================
             simpleProperties.forEach { prop ->
-                generatePropertyBehaviorConstructorParam(this, prop, isClass, className)
+                generatePropertyBehaviorConstructorParam(this, prop, isClass)
             }
             methods.forEach { method ->
-                generateMethodBehaviorConstructorParam(this, method, resolver, isClass, className)
+                generateMethodBehaviorConstructorParam(this, method, isClass)
             }
 
             // ==========================================
             // SECTION 1: Interface/Class Implementation
             // ==========================================
-            region("$interfaceName Implementation")
 
             // Generate StateFlow property overrides (these handle tracking internally)
             properties
@@ -398,15 +397,11 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
                 )
             methods.forEach { method -> generateMethodOverride(this, method, methodContext) }
 
-            endRegion()
-
             // ==========================================
             // SECTION 2: Call History
             // Public MutableStateFlow fields for tracking calls.
             // ==========================================
             if (generateCallHistory) {
-                region("Call History")
-
                 // Generate call history fields for properties
                 simpleProperties.forEach { prop ->
                     generatePropertyCallHistoryFields(this, prop, visibility)
@@ -416,8 +411,6 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
                 methods.forEach { method ->
                     generateMethodCallHistoryBackingField(this, method, interfaceName, visibility)
                 }
-
-                endRegion()
             }
         }
     }
@@ -442,116 +435,6 @@ private fun generateStateFlowProperty(
         elementType = elementType,
         defaultValue = defaultExpr,
     )
-}
-
-/**
- * Detects if a method should use identity function as default.
- *
- * Universal Identity Pattern: `(T) -> T` (input type == output type)
- * - Method has exactly ONE parameter
- * - Parameter type matches return type (ignoring nullability)
- * - Default should be identity: `{ it }`
- *
- * Examples (MATCHES):
- * - `fun transform(input: T): T` → `{ it }`
- * - `fun save(user: User): User` → `{ it }`
- * - `fun handle(input: String?): String?` → `{ it }`
- * - `suspend fun process(items: List<String>): List<String>` → `{ it }`
- *
- * Examples (DOES NOT MATCH):
- * - `fun combine(a: T, b: T): T` → null (multiple parameters)
- * - `fun convert(input: String): Int` → null (different types)
- *
- * @return Identity lambda `{ it }` if pattern matches, null otherwise
- */
-private fun shouldUseIdentityDefault(method: MethodSpec): String? {
-    // Extension functions have an implicit receiver parameter, so identity doesn't work
-    // The behavior lambda needs TWO parameters: receiver + regular parameter
-    // Must have exactly ONE parameter (not extension function)
-    if (method.extensionReceiverType != null || method.params.size != 1) return null
-
-    val (_, paramType, _) = method.params.first()
-    val returnType = method.returnType
-
-    // Compare types ignoring nullability
-    val paramBase = paramType.replace("?", "").trim()
-    val returnBase = returnType.replace("?", "").trim()
-
-    // If param type == return type, use identity
-    return if (paramBase == returnBase) "{ it }" else null
-}
-
-/**
- * Detects if a method matches the function invocation pattern for generics.
- *
- * Strict Pattern: `fun <T> method(func: () -> T): T`
- * - Method has exactly ONE parameter
- * - That parameter is a function that takes NO arguments: `() -> T` or `suspend () -> T`
- * - Method returns the same generic type `T`
- * - Default should invoke that function parameter
- *
- * Examples (MATCHES):
- * - `fun <T> executeStep(step: () -> T): T` → `{ step -> step() }`
- * - `suspend fun <T> executeAsyncStep(step: suspend () -> T): T` → `{ step -> step() }`
- *
- * Examples (DOES NOT MATCH):
- * - `fun <T> process(input: T): T` → null (no function parameter)
- * - `fun <R> transform(items: List<T>, mapper: (T) -> R): List<R>` → null (mapper takes argument)
- * - `fun <T> combine(a: T, b: T): T` → null (multiple parameters)
- *
- * @return Identity lambda string if pattern matches, null otherwise
- */
-private fun detectIdentityFunction(method: MethodSpec): String? {
-    // Must have at least one type parameter and exactly ONE parameter (strict requirement)
-    if (method.typeParameters.isEmpty() || method.params.size != 1) return null
-
-    // Extract type parameter names (e.g., "T", "R")
-    val typeParamNames =
-        method.typeParameters.map { param -> param.substringBefore(" :").trim() }.toSet()
-
-    val (_, paramType, _) = method.params.first()
-
-    // Validate function invocation pattern: () -> T where method returns T
-    // Generate identity lambda if valid: { p0 -> p0() }
-    return if (isValidFunctionInvocationPattern(method, paramType, typeParamNames)) {
-        "{ p0 -> p0() }"
-    } else {
-        null
-    }
-}
-
-/**
- * Validates if method matches function invocation pattern.
- *
- * Pattern: fun <T> method(func: () -> T): T
- * - Parameter is a function type
- * - Function takes NO arguments: () -> T
- * - Method returns same type T
- */
-private fun isValidFunctionInvocationPattern(
-    method: MethodSpec,
-    paramType: String,
-    typeParamNames: Set<String>,
-): Boolean {
-    // Method must return a type parameter
-    if (!typeContainsAnyParam(method.returnType, typeParamNames)) return false
-
-    // Parameter must be a function type
-    if (!paramType.contains("->")) return false
-
-    // Function must take NO arguments: () -> T or suspend () -> T
-    val funcSignature = paramType.replace("suspend ", "").trim()
-    val beforeArrow = funcSignature.substringBefore("->").trim()
-    if (beforeArrow != "()") return false
-
-    // Check if return type contains a type parameter
-    val returnPart = funcSignature.substringAfter("->").trim()
-    if (!typeContainsAnyParam(returnPart, typeParamNames)) return false
-
-    // CRITICAL: Method return type must EXACTLY match function return type
-    // Good: fun <T> execute(step: () -> T): T  (both return T)
-    // Bad:  fun <T> tryOp(op: () -> T): Result<T>  (T vs Result<T>)
-    return method.returnType.trim() == returnPart.trim()
 }
 
 /**
@@ -599,88 +482,18 @@ private fun generatePropertyCallHistoryFields(
 private fun generateMethodBehaviorConstructorParam(
     classBuilder: ClassBuilder,
     method: MethodSpec,
-    resolver: DefaultValueResolver,
     isClass: Boolean = false,
-    className: String = "",
 ) {
     val isOpenMethod = isClass && !method.isAbstract
-
-    val parsedReturnType = parseType(method.returnType)
-    val defaultValue = resolver.resolve(parsedReturnType)
-    val defaultExpr = defaultValue.render()
-
-    val baseParamNames = method.params.mapIndexed { i, _ -> "p$i" }
-    val paramNames =
-        if (method.extensionReceiverType != null) {
-            listOf("p_receiver") + baseParamNames
-        } else {
-            baseParamNames
-        }
-    val lambdaParams = if (paramNames.isEmpty()) "" else "${paramNames.joinToString(", ")} -> "
-
-    val behaviorDefault =
-        resolveBehaviorDefault(
-            method = method,
-            isAbstractClassMethod = isClass && method.isAbstract,
-            className = className,
-            lambdaParams = lambdaParams,
-            defaultExpr = defaultExpr,
-        )
-
     val functionType = buildErasedBehaviorType(method = method, isOpenMethod = isOpenMethod)
 
-    // Direct private val constructor property — no intermediate member needed
+    // Direct private val constructor property — defaults live in the Config class only
     classBuilder.constructorProperty("${method.name}Behavior", functionType) {
         private()
-        this.defaultValue = if (isOpenMethod) "null" else behaviorDefault
+        // Open methods use null to signal "delegate to super"
+        if (isOpenMethod) this.defaultValue = "null"
     }
 }
-
-/**
- * Resolves the default behavior expression for a method.
- *
- * For abstract class methods: produces an error-throwing lambda with a descriptive message. For
- * other methods: tries identity function detection, then identity default, then falls back to a
- * lambda returning the type's default value.
- */
-private fun resolveBehaviorDefault(
-    method: MethodSpec,
-    isAbstractClassMethod: Boolean,
-    className: String,
-    lambdaParams: String,
-    defaultExpr: String,
-): String =
-    when {
-        isAbstractClassMethod -> {
-            val methodSignature = buildString {
-                append(method.name)
-                append("(")
-                append(method.params.joinToString { it.second })
-                append("): ")
-                append(method.returnType)
-            }
-            val errorMessage =
-                "Abstract method '$methodSignature' in class '$className' must be configured. " +
-                    "Use the DSL: fake${className.replaceFirstChar { it.uppercase() }} { ${method.name} { ... } }"
-            "{ ${lambdaParams}error(\"$errorMessage\") }"
-        }
-
-        else -> {
-            val functionInvocationDefault = detectIdentityFunction(method)
-            val identityDefault =
-                if (functionInvocationDefault == null) {
-                    shouldUseIdentityDefault(method)
-                } else {
-                    null
-                }
-
-            when {
-                functionInvocationDefault != null -> functionInvocationDefault
-                identityDefault != null -> identityDefault
-                else -> "{ $lambdaParams$defaultExpr }"
-            }
-        }
-    }
 
 /**
  * Builds the erased function type string for a method's behavior constructor parameter.
@@ -728,13 +541,8 @@ private fun generatePropertyBehaviorConstructorParam(
     classBuilder: ClassBuilder,
     prop: PropertySpec,
     isClass: Boolean = false,
-    @Suppress("UNUSED_PARAMETER") className: String = "",
 ) {
     val isOpenProperty = isClass && !prop.isAbstract
-    val parsedType = parseType(prop.type)
-    val resolver = DefaultValueResolver()
-    val defaultValue = resolver.resolve(parsedType)
-    val defaultExpr = defaultValue.render()
 
     if (prop.isMutable) {
         if (isOpenProperty) {
@@ -749,11 +557,9 @@ private fun generatePropertyBehaviorConstructorParam(
         } else {
             classBuilder.constructorProperty("${prop.name}Getter", "() -> ${prop.type}") {
                 private()
-                this.defaultValue = "{ $defaultExpr }"
             }
             classBuilder.constructorProperty("${prop.name}Setter", "(${prop.type}) -> Unit") {
                 private()
-                this.defaultValue = "{ }"
             }
         }
     } else {
@@ -765,7 +571,6 @@ private fun generatePropertyBehaviorConstructorParam(
         } else {
             classBuilder.constructorProperty("${prop.name}Behavior", "() -> ${prop.type}") {
                 private()
-                this.defaultValue = "{ $defaultExpr }"
             }
         }
     }
