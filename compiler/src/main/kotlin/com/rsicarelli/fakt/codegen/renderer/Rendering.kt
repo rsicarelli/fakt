@@ -140,7 +140,21 @@ public fun CodeClass.renderTo(builder: CodeBuilder) {
     // Render annotations first (before class declaration)
     annotations.forEach { annotation -> annotation.renderTo(builder) }
 
-    // Build class header
+    val header = buildClassHeader()
+
+    // Render class
+    builder.block(header) {
+        members.forEachIndexed { index, member ->
+            member.renderTo(this)
+            if (index < members.lastIndex && !areCompactSiblings(member, members[index + 1])) {
+                appendLine()
+            }
+        }
+    }
+}
+
+/** Builds the full class header string (modifiers, name, type params, constructor, supertypes). */
+private fun CodeClass.buildClassHeader(): String {
     val modifiersStr = modifiers.joinToString(" ") { it.name.lowercase() }
     val modifierPrefix = if (modifiersStr.isNotEmpty()) "$modifiersStr " else ""
 
@@ -151,22 +165,7 @@ public fun CodeClass.renderTo(builder: CodeBuilder) {
             ""
         }
 
-    // Render constructor properties if present
-    // Use multi-line format when any property has a default value (typically behavior lambdas)
-    val hasDefaults = constructorProperties.any { it.defaultValue != null }
-    val constructorStr =
-        if (constructorProperties.isNotEmpty()) {
-            if (hasDefaults) {
-                // Multi-line constructor for readability
-                val props = constructorProperties.joinToString(",\n    ") { it.render() }
-                "(\n    $props,\n)"
-            } else {
-                val props = constructorProperties.joinToString(", ") { it.render() }
-                "($props)"
-            }
-        } else {
-            ""
-        }
+    val constructorStr = renderConstructorProperties()
 
     val superTypesStr =
         if (superTypes.isNotEmpty()) {
@@ -177,18 +176,24 @@ public fun CodeClass.renderTo(builder: CodeBuilder) {
 
     val whereClauseStr = whereClause?.let { " where $it" } ?: ""
 
-    // Render class
-    builder.block(
-        "${modifierPrefix}class $name$typeParamsStr$constructorStr$superTypesStr$whereClauseStr"
-    ) {
-        members.forEachIndexed { index, member ->
-            member.renderTo(this)
-            if (index < members.lastIndex) {
-                appendLine()
-            }
-        }
-    }
+    return "${modifierPrefix}class $name$typeParamsStr$constructorStr$superTypesStr$whereClauseStr"
 }
+
+/** Renders constructor properties — multi-line when more than one, single-line otherwise. */
+private fun CodeClass.renderConstructorProperties(): String =
+    when {
+        constructorProperties.isEmpty() -> ""
+        constructorProperties.size > 1 -> {
+            val props = constructorProperties.joinToString(",\n    ") { it.render() }
+            "(\n    $props,\n)"
+        }
+        else -> "(${constructorProperties.joinToString(", ") { it.render() }})"
+    }
+
+/** Returns true if two adjacent members are both compact and of the same kind. */
+private fun areCompactSiblings(current: CodeMember, next: CodeMember): Boolean =
+    (current is CodeProperty && current.compact && next is CodeProperty && next.compact) ||
+        (current is CodeFunction && current.compact && next is CodeFunction && next.compact)
 
 /**
  * Renders [ConstructorProperty] to string.
@@ -548,6 +553,53 @@ private val KOTLIN_KEYWORDS =
         "when",
         "while",
     )
+
+/**
+ * Renders only the file header (header comment, file annotations, package, imports).
+ *
+ * Used when rendering a CodeFile's declarations separately from its header, e.g., to reorder
+ * sections in the output file.
+ *
+ * @param builder The [CodeBuilder] to write to
+ */
+public fun CodeFile.renderHeaderOnly(builder: CodeBuilder) {
+    // File header
+    header?.let { builder.appendLine("// $it") }
+
+    // File-level annotations (before package declaration)
+    if (fileAnnotations.isNotEmpty()) {
+        fileAnnotations.forEach { annotation -> annotation.renderAsFileAnnotation(builder) }
+        builder.appendLine()
+    }
+
+    // Package
+    val escapedPackage = packageName.escapePackageName()
+    builder.appendLine("package $escapedPackage")
+    builder.appendLine()
+
+    // Imports (sorted)
+    if (imports.isNotEmpty()) {
+        imports.sorted().forEach { import -> builder.appendLine("import $import") }
+        builder.appendLine()
+    }
+}
+
+/**
+ * Renders only the declarations (classes, functions, properties) without header.
+ *
+ * Used when the header has already been rendered via [renderHeaderOnly], e.g., to reorder sections
+ * in the output file.
+ *
+ * @param builder The [CodeBuilder] to write to
+ */
+public fun CodeFile.renderDeclarationsOnly(builder: CodeBuilder) {
+    declarations.forEachIndexed { index, decl ->
+        decl.renderTo(builder)
+        if (index < declarations.lastIndex) {
+            builder.appendLine()
+        }
+    }
+}
 
 /**
  * Convenience extension to render [CodeFile] directly to a String.

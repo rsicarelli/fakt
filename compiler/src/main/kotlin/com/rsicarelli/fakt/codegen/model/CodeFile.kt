@@ -164,6 +164,7 @@ data class DataClassProperty(val name: String, val type: String)
  *   Vector.plus())
  * @property annotations Function-level annotations (e.g., @Suppress)
  * @property kdoc Optional KDoc documentation for the function
+ * @property compact When true, suppresses the blank line before this function in class rendering
  */
 data class CodeFunction(
     val name: String,
@@ -178,6 +179,7 @@ data class CodeFunction(
     val annotations: List<CodeAnnotation> = emptyList(),
     val whereClause: String? = null,
     val kdoc: String? = null,
+    val compact: Boolean = false,
 ) : CodeDeclaration, CodeMember
 
 /**
@@ -191,6 +193,7 @@ data class CodeFunction(
  * @property setter Optional custom setter
  * @property isMutable Whether this is a var (true) or val (false)
  * @property annotations Property-level annotations (e.g., @PublishedApi)
+ * @property compact When true, suppresses the blank line before this property in class rendering
  */
 data class CodeProperty(
     val name: String,
@@ -201,6 +204,7 @@ data class CodeProperty(
     val setter: CodeBlock? = null,
     val isMutable: Boolean = false,
     val annotations: List<CodeAnnotation> = emptyList(),
+    val compact: Boolean = false,
 ) : CodeDeclaration, CodeMember
 
 /**

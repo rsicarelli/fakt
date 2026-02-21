@@ -43,6 +43,9 @@ public class FunctionBuilder @PublishedApi internal constructor(private val name
     /** Whether this is an inline function. */
     public var isInline: Boolean = false
 
+    /** When true, suppresses the blank line before this function in class rendering. */
+    public var compact: Boolean = false
+
     /**
      * Optional KDoc documentation for the function.
      *
@@ -276,5 +279,6 @@ public class FunctionBuilder @PublishedApi internal constructor(private val name
             annotations = annotations,
             whereClause = whereClause,
             kdoc = kdoc,
+            compact = compact,
         )
 }

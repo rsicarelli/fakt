@@ -147,14 +147,19 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
 
                 val classTypeParamNames = extractClassTypeParamNames(analysis.typeParameters)
 
-                // Generate internal behavior properties + DSL configurator methods
+                // Generate internal behavior properties (grouped)
                 analysis.functions.forEach { func ->
                     generateFunctionBehaviorProperty(func, withDefault = true, classTypeParamNames)
-                    generateFunctionConfigurator(func, analysis.visibility)
                 }
-
                 analysis.properties.forEach { prop ->
                     generatePropertyBehaviorProperty(prop, withDefault = true, classTypeParamNames)
+                }
+
+                // Generate DSL configurator methods (grouped)
+                analysis.functions.forEach { func ->
+                    generateFunctionConfigurator(func, analysis.visibility)
+                }
+                analysis.properties.forEach { prop ->
                     generatePropertyConfigurator(prop, analysis.visibility)
                 }
 
@@ -224,7 +229,7 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
 
                 val classTypeParamNames = extractClassTypeParamNames(analysis.typeParameters)
 
-                // Generate configuration methods for abstract methods
+                // Generate internal behavior properties (grouped)
                 analysis.abstractMethods.forEach { func ->
                     generateFunctionBehaviorProperty(
                         func,
@@ -232,24 +237,28 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
                         classTypeParamNames,
                         abstractClassName = analysis.className,
                     )
-                    generateFunctionConfigurator(func, analysis.visibility)
                 }
-
-                // Generate configuration methods for open methods
                 analysis.openMethods.forEach { func ->
                     generateFunctionBehaviorProperty(func, withDefault = false, classTypeParamNames)
-                    generateFunctionConfigurator(func, analysis.visibility)
                 }
-
-                // Generate configuration methods for abstract properties
                 analysis.abstractProperties.forEach { prop ->
                     generatePropertyBehaviorProperty(prop, withDefault = true, classTypeParamNames)
-                    generatePropertyConfigurator(prop, analysis.visibility)
                 }
-
-                // Generate configuration methods for open properties
                 analysis.openProperties.forEach { prop ->
                     generatePropertyBehaviorProperty(prop, withDefault = false, classTypeParamNames)
+                }
+
+                // Generate DSL configurator methods (grouped)
+                analysis.abstractMethods.forEach { func ->
+                    generateFunctionConfigurator(func, analysis.visibility)
+                }
+                analysis.openMethods.forEach { func ->
+                    generateFunctionConfigurator(func, analysis.visibility)
+                }
+                analysis.abstractProperties.forEach { prop ->
+                    generatePropertyConfigurator(prop, analysis.visibility)
+                }
+                analysis.openProperties.forEach { prop ->
                     generatePropertyConfigurator(prop, analysis.visibility)
                 }
 
@@ -374,12 +383,14 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
                 internal()
                 mutable()
                 initializer = behaviorDefault
+                compact = true
             }
         } else {
             property("${function.name}Behavior", "($propertyType)?") {
                 internal()
                 mutable()
                 initializer = "null"
+                compact = true
             }
         }
     }
@@ -407,12 +418,14 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
                 internal()
                 mutable()
                 initializer = "{ $defaultExpr }"
+                compact = true
             }
         } else {
             property("${property.name}Behavior", "(() -> $propertyType)?") {
                 internal()
                 mutable()
                 initializer = "null"
+                compact = true
             }
         }
 
@@ -425,6 +438,7 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
                     internal()
                     mutable()
                     initializer = "{ }"
+                    compact = true
                 }
             } else {
                 property(
@@ -434,6 +448,7 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
                     internal()
                     mutable()
                     initializer = "null"
+                    compact = true
                 }
             }
         }
@@ -455,6 +470,8 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
         val paramSignature = "(${buildBaseBehaviorType(function)})"
 
         function(functionName) {
+            compact = true
+
             // Apply visibility
             when (visibility) {
                 FirVisibility.PUBLIC -> public()
@@ -508,6 +525,7 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
 
         // Getter configuration
         function(propertyName) {
+            compact = true
             when (visibility) {
                 FirVisibility.PUBLIC -> public()
                 FirVisibility.INTERNAL -> internal()
@@ -522,6 +540,7 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
         // Setter configuration for mutable properties
         if (property.isMutable) {
             function("set$capitalizedName") {
+                compact = true
                 when (visibility) {
                     FirVisibility.PUBLIC -> public()
                     FirVisibility.INTERNAL -> internal()

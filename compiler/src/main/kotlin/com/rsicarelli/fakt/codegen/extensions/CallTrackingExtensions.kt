@@ -31,6 +31,7 @@ fun ClassBuilder.callHistoryBackingField(
             FirVisibility.PROTECTED -> public()
         }
         initializer = "MutableStateFlow(emptyList())"
+        compact = true
     }
 }
 
@@ -53,6 +54,7 @@ fun ClassBuilder.propertyGetterCallHistoryField(propertyName: String, visibility
             FirVisibility.PROTECTED -> public()
         }
         initializer = "MutableStateFlow(emptyList())"
+        compact = true
     }
 }
 
@@ -76,5 +78,6 @@ fun ClassBuilder.propertySetterCallHistoryField(propertyName: String, visibility
             FirVisibility.PROTECTED -> public()
         }
         initializer = "MutableStateFlow(emptyList())"
+        compact = true
     }
 }

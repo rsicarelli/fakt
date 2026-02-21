@@ -65,6 +65,9 @@ internal constructor(private val name: String, private val typeString: String) {
     /** Whether this is a mutable property (var vs val). */
     public var isMutable: Boolean = false
 
+    /** When true, suppresses the blank line before this property in class rendering. */
+    public var compact: Boolean = false
+
     /** Makes property private. */
     public fun private() {
         modifiers.add(CodeModifier.PRIVATE)
@@ -154,5 +157,6 @@ internal constructor(private val name: String, private val typeString: String) {
                 },
             isMutable = isMutable,
             annotations = annotations.toList(),
+            compact = compact,
         )
 }

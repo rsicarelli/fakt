@@ -4,6 +4,8 @@ package com.rsicarelli.fakt.compiler.ir.generation
 
 import com.rsicarelli.fakt.codegen.model.CodeFile
 import com.rsicarelli.fakt.codegen.renderer.CodeBuilder
+import com.rsicarelli.fakt.codegen.renderer.renderDeclarationsOnly
+import com.rsicarelli.fakt.codegen.renderer.renderHeaderOnly
 import com.rsicarelli.fakt.codegen.renderer.renderTo
 import com.rsicarelli.fakt.codegen.renderer.renderToString
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
@@ -292,23 +294,25 @@ internal class CodeGenerator(
     /**
      * Renders GeneratedCode (all CodeFile parts) to a single string.
      *
-     * The implementation CodeFile has package + imports + class + call history. Factory and
-     * configDsl CodeFiles have empty package, so we extract just their declarations.
+     * Order: package/imports → factory (API entry point) → config DSL → implementation class. This
+     * puts user-facing API first and internal implementation details last.
      */
     private fun renderGeneratedCode(code: GeneratedCode): String {
         val builder = CodeBuilder()
 
-        // Render implementation (has package, imports, class, call history)
-        code.implementation.renderTo(builder)
-        builder.appendLine()
+        // 1. Package + imports (from implementation CodeFile)
+        code.implementation.renderHeaderOnly(builder)
 
-        // Render factory function declarations only (no package/imports)
+        // 2. Factory function (API entry point — first thing user sees)
         code.factory.declarations.forEach { declaration -> declaration.renderTo(builder) }
         builder.appendLine()
-        builder.appendLine() // Blank line before config class
 
-        // Render config DSL declarations only (no package/imports)
+        // 3. Config DSL (what the user configures)
         code.configDsl.declarations.forEach { declaration -> declaration.renderTo(builder) }
+        builder.appendLine()
+
+        // 4. Implementation class + call history (internals)
+        code.implementation.renderDeclarationsOnly(builder)
 
         return builder.build()
     }

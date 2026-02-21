@@ -45,8 +45,9 @@ class FakeGeneratorTest {
         assertContains(result, "package com.example")
         assertContains(result, "class FakeUserServiceImpl")
 
-        // THEN - Direct private val constructor property with default
-        assertContains(result, "private val getUserBehavior: (String) -> User? = { p0 -> null }")
+        // THEN - Direct private val constructor property (no default — Config DSL provides
+        // defaults)
+        assertContains(result, "private val getUserBehavior: (String) -> User?")
 
         // THEN - No intermediate member properties (simplified pattern)
         assertFalse(
@@ -89,9 +90,9 @@ class FakeGeneratorTest {
         file.renderTo(builder)
         val result = builder.build()
 
-        // THEN - Direct private val constructor property with suspend default
+        // THEN - Direct private val constructor property (no default — Config DSL provides
+        // defaults)
         assertContains(result, "private val saveUserBehavior: suspend (User) -> Result<Unit>")
-        assertContains(result, "Result.success(Unit)")
 
         // THEN - Override method
         assertContains(result, "override suspend fun saveUser(user: User): Result<Unit> {")
@@ -174,8 +175,9 @@ class FakeGeneratorTest {
         file.renderTo(builder)
         val result = builder.build()
 
-        // THEN - Direct private val constructor property with default
-        assertContains(result, "private val countBehavior: () -> Int = { 0 }")
+        // THEN - Direct private val constructor property (no default — Config DSL provides
+        // defaults)
+        assertContains(result, "private val countBehavior: () -> Int")
 
         // THEN - Override delegates (block body due to call tracking)
         assertContains(result, "override val count: Int")
@@ -697,11 +699,11 @@ class FakeGeneratorTest {
         file.renderTo(builder)
         val result = builder.build()
 
-        // THEN - Getter constructor property with default
-        assertContains(result, "private val currentUserGetter: () -> User? = { null }")
+        // THEN - Getter constructor property (no default — Config DSL provides defaults)
+        assertContains(result, "private val currentUserGetter: () -> User?")
 
-        // THEN - Setter constructor property with no-op default
-        assertContains(result, "private val currentUserSetter: (User?) -> Unit = { }")
+        // THEN - Setter constructor property (no default — Config DSL provides defaults)
+        assertContains(result, "private val currentUserSetter: (User?) -> Unit")
 
         // THEN - Override mutable property with getter and setter (block body due to call tracking)
         assertContains(result, "override var currentUser: User?")
@@ -730,11 +732,11 @@ class FakeGeneratorTest {
         file.renderTo(builder)
         val result = builder.build()
 
-        // THEN - Getter with typed default
-        assertContains(result, "private val countGetter: () -> Int = { 0 }")
+        // THEN - Getter constructor property (no default — Config DSL provides defaults)
+        assertContains(result, "private val countGetter: () -> Int")
 
-        // THEN - Setter with no-op default
-        assertContains(result, "private val countSetter: (Int) -> Unit = { }")
+        // THEN - Setter constructor property (no default — Config DSL provides defaults)
+        assertContains(result, "private val countSetter: (Int) -> Unit")
 
         // THEN - Override var property
         assertContains(result, "override var count: Int")
@@ -804,10 +806,9 @@ class FakeGeneratorTest {
         file.renderTo(builder)
         val result = builder.build()
 
-        // THEN - Abstract method gets non-null constructor property with error default
-        // (abstract class methods require explicit configuration via DSL)
-        assertContains(result, "private val validateBehavior: (String) -> Boolean = { p0 -> error(")
-        assertContains(result, "Abstract method 'validate(String): Boolean'")
+        // THEN - Abstract method gets non-null constructor property (no default — Config DSL
+        // provides defaults)
+        assertContains(result, "private val validateBehavior: (String) -> Boolean")
     }
 
     @Test
