@@ -13,6 +13,7 @@ import com.rsicarelli.fakt.compiler.api.SerializablePropertyInfo
 import com.rsicarelli.fakt.compiler.api.SerializableTypeParameterInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirAnnotationArgument
 import com.rsicarelli.fakt.compiler.fir.metadata.FirAnnotationInfo
+import com.rsicarelli.fakt.compiler.fir.metadata.FirCallHistoryMode
 import com.rsicarelli.fakt.compiler.fir.metadata.FirFunctionInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirParameterInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirPropertyInfo
@@ -90,6 +91,7 @@ object MetadataCacheSerializer {
             sourceFileSignature = sourceFileSignature,
             validationTimeNanos = validated.validationTimeNanos,
             visibility = validated.visibility.name,
+            callHistoryMode = validated.callHistoryMode.name,
         )
     }
 
@@ -111,6 +113,7 @@ object MetadataCacheSerializer {
             sourceFileSignature = sourceFileSignature,
             validationTimeNanos = validated.validationTimeNanos,
             visibility = validated.visibility.name,
+            callHistoryMode = validated.callHistoryMode.name,
         )
     }
 
@@ -160,6 +163,8 @@ object MetadataCacheSerializer {
             sourceSourceSet = sourceLocation.extractSourceSetName(),
             // Restore visibility from cache for explicitApi() support
             visibility = FirVisibility.valueOf(serializable.visibility),
+            // Restore call history mode from cache
+            callHistoryMode = FirCallHistoryMode.valueOf(serializable.callHistoryMode),
         )
     }
 
@@ -200,6 +205,8 @@ object MetadataCacheSerializer {
             sourceSourceSet = sourceLocation.extractSourceSetName(),
             // Restore visibility from cache for explicitApi() support
             visibility = FirVisibility.valueOf(serializable.visibility),
+            // Restore call history mode from cache
+            callHistoryMode = FirCallHistoryMode.valueOf(serializable.callHistoryMode),
         )
     }
 

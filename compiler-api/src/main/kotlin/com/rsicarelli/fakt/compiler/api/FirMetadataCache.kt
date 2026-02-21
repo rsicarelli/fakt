@@ -75,8 +75,10 @@ data class FirMetadataCache(
          * - Added visibility field for explicitApi() support (Issue #21)
          * - Added annotations support (Issue #22)
          * - Added isOptInMarker field for @RequiresOptIn detection (Issue #22)
+         * - v3:
+         * - Added callHistoryMode field for per-interface call history control
          */
-        const val CURRENT_VERSION: Int = 2
+        const val CURRENT_VERSION: Int = 3
     }
 }
 
@@ -98,6 +100,7 @@ data class FirMetadataCache(
  * @property sourceFileSignature MD5 hash of source file (for cache invalidation)
  * @property validationTimeNanos Time spent validating this interface in FIR phase
  * @property visibility Visibility modifier (PUBLIC, INTERNAL, etc.) for explicitApi() support
+ * @property callHistoryMode Call history generation mode (DEFAULT, ENABLED, DISABLED)
  */
 @Serializable
 data class SerializableFakeInterface(
@@ -114,6 +117,7 @@ data class SerializableFakeInterface(
     val sourceFileSignature: String,
     val validationTimeNanos: Long,
     val visibility: String = "PUBLIC",
+    val callHistoryMode: String = "DEFAULT",
 )
 
 /**
@@ -133,6 +137,7 @@ data class SerializableFakeInterface(
  * @property sourceFileSignature MD5 hash of source file
  * @property validationTimeNanos Time spent validating this class in FIR phase
  * @property visibility Visibility modifier (PUBLIC, INTERNAL, etc.) for explicitApi() support
+ * @property callHistoryMode Call history generation mode (DEFAULT, ENABLED, DISABLED)
  */
 @Serializable
 data class SerializableFakeClass(
@@ -149,6 +154,7 @@ data class SerializableFakeClass(
     val sourceFileSignature: String,
     val validationTimeNanos: Long,
     val visibility: String = "PUBLIC",
+    val callHistoryMode: String = "DEFAULT",
 )
 
 /**
