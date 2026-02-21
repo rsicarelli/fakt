@@ -45,7 +45,8 @@ class FakeGeneratorTest {
         assertContains(result, "package com.example")
         assertContains(result, "class FakeUserServiceImpl")
 
-        // THEN - Direct private val constructor property (no default — Config DSL provides defaults)
+        // THEN - Direct private val constructor property (no default — Config DSL provides
+        // defaults)
         assertContains(result, "private val getUserBehavior: (String) -> User?")
 
         // THEN - No intermediate member properties (simplified pattern)
@@ -89,7 +90,8 @@ class FakeGeneratorTest {
         file.renderTo(builder)
         val result = builder.build()
 
-        // THEN - Direct private val constructor property (no default — Config DSL provides defaults)
+        // THEN - Direct private val constructor property (no default — Config DSL provides
+        // defaults)
         assertContains(result, "private val saveUserBehavior: suspend (User) -> Result<Unit>")
 
         // THEN - Override method
@@ -173,7 +175,8 @@ class FakeGeneratorTest {
         file.renderTo(builder)
         val result = builder.build()
 
-        // THEN - Direct private val constructor property (no default — Config DSL provides defaults)
+        // THEN - Direct private val constructor property (no default — Config DSL provides
+        // defaults)
         assertContains(result, "private val countBehavior: () -> Int")
 
         // THEN - Override delegates (block body due to call tracking)
@@ -803,7 +806,8 @@ class FakeGeneratorTest {
         file.renderTo(builder)
         val result = builder.build()
 
-        // THEN - Abstract method gets non-null constructor property (no default — Config DSL provides defaults)
+        // THEN - Abstract method gets non-null constructor property (no default — Config DSL
+        // provides defaults)
         assertContains(result, "private val validateBehavior: (String) -> Boolean")
     }
 
