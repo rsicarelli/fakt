@@ -133,7 +133,11 @@ internal object SourceSetDiscovery {
      * @return Complete [SourceSetContext] ready for serialization to compiler plugin
      * @see SourceSetContext
      */
-    fun buildContext(compilation: KotlinCompilation<*>, buildDir: String): SourceSetContext {
+    fun buildContext(
+        compilation: KotlinCompilation<*>,
+        buildDir: String,
+        useTestFixtures: Boolean = false,
+    ): SourceSetContext {
         // 1. Classify compilation (test vs main)
         val isTest = compilation.isTestCompilation
 
@@ -179,7 +183,8 @@ internal object SourceSetDiscovery {
         //   - Metadata compilation generates commonMain fakes → writes cache
         //   - Platform compilations read cache → skip commonMain fakes, generate own
         val hasCommonMain = allSourceSets.any { it.name == "commonMain" }
-        val testSourceSet = mapToTestSourceSet(defaultSourceSet.name)
+        val testSourceSet =
+            if (useTestFixtures) "testFixtures" else mapToTestSourceSet(defaultSourceSet.name)
         val outputDirectory = "$buildDir/generated/fakt/$testSourceSet/kotlin"
 
         // 7b. Compute commonTest output directory for cached (common) interfaces

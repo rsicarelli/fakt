@@ -51,7 +51,10 @@ import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
  * @see FaktGradleSubplugin
  * @see SourceSetDiscovery
  */
-internal class SourceSetConfigurator(private val project: Project) {
+internal class SourceSetConfigurator(
+    private val project: Project,
+    private val useTestFixtures: Boolean = false,
+) {
     /**
      * Automatically configure source sets for multiplatform projects. This ensures generated fakes
      * are accessible from test source sets.
@@ -127,6 +130,11 @@ internal class SourceSetConfigurator(private val project: Project) {
      * AbstractKotlinCompile, which is the parent class for all Kotlin compilation tasks.
      */
     private fun configureJvmSourceSets() {
+        if (useTestFixtures) {
+            configureTestFixturesSourceSet()
+            return
+        }
+
         // For JVM-only and Android projects, add generated sources to test source sets
         // Uses AbstractKotlinCompile to catch both JVM (KotlinCompile) and Android tasks
         project.tasks.withType(AbstractKotlinCompile::class.java) { task ->
@@ -142,6 +150,32 @@ internal class SourceSetConfigurator(private val project: Project) {
                 )
             }
         }
+    }
+
+    /**
+     * Configure testFixtures source set to include generated fakes.
+     *
+     * When `useGradleTestFixtures` is enabled, generated fakes go to
+     * `build/generated/fakt/testFixtures/kotlin/` and are added to the `testFixtures` Java source
+     * set. This makes fakes available to:
+     * - The module's own tests (automatically via Gradle)
+     * - Other modules via `testFixtures(project(":this-module"))` dependency
+     */
+    private fun configureTestFixturesSourceSet() {
+        val generatedDir =
+            File(project.layout.buildDirectory.get().asFile, "generated/fakt/testFixtures/kotlin")
+
+        // Add generated directory to the testFixtures Java source set
+        project.extensions
+            .findByType(org.gradle.api.plugins.JavaPluginExtension::class.java)
+            ?.sourceSets
+            ?.findByName("testFixtures")
+            ?.java
+            ?.srcDir(generatedDir)
+
+        project.logger.info(
+            "Fakt: Configured testFixtures source set to include generated sources at $generatedDir"
+        )
     }
 
     /**

@@ -102,13 +102,47 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 // GENERATOR MODE: Generate fakes from @Fake annotations
                 target.logger.info("Fakt: Generator mode enabled - generating fakes")
 
+                // Validate test fixtures configuration
+                val useTestFixtures = resolveTestFixturesMode(target, extension)
+
                 // Configure source sets for generated code
-                val configurator = SourceSetConfigurator(target)
+                val configurator = SourceSetConfigurator(target, useTestFixtures)
                 configurator.configureSourceSets()
             }
         }
 
         target.logger.info("Fakt: Applied Gradle plugin to project ${target.name}")
+    }
+
+    /**
+     * Resolves whether test fixtures mode should be active.
+     *
+     * Returns `true` only when both conditions are met:
+     * 1. `useGradleTestFixtures` is set to `true` in the extension
+     * 2. The `java-test-fixtures` Gradle plugin is applied to the project
+     *
+     * If the option is enabled but the plugin is missing, emits a warning and returns `false`.
+     */
+    private fun resolveTestFixturesMode(project: Project, extension: FaktPluginExtension): Boolean {
+        if (!extension.useGradleTestFixtures.get()) return false
+
+        val hasTestFixturesPlugin = project.plugins.hasPlugin("java-test-fixtures")
+        if (!hasTestFixturesPlugin) {
+            project.logger.warn(
+                "Fakt: useGradleTestFixtures is enabled but the 'java-test-fixtures' plugin " +
+                    "is not applied. Add `java-test-fixtures` to your plugins block:\n" +
+                    "  plugins {\n" +
+                    "      `java-test-fixtures`\n" +
+                    "  }\n" +
+                    "Falling back to default 'test' source set."
+            )
+            return false
+        }
+
+        project.logger.info(
+            "Fakt: Test fixtures mode enabled - generating fakes to testFixtures source set"
+        )
+        return true
     }
 
     /**
@@ -243,7 +277,9 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 )
 
                 val buildDir = project.layout.buildDirectory.get().asFile.absolutePath
-                val context = SourceSetDiscovery.buildContext(kotlinCompilation, buildDir)
+                val useTestFixtures = resolveTestFixturesMode(project, extension)
+                val context =
+                    SourceSetDiscovery.buildContext(kotlinCompilation, buildDir, useTestFixtures)
 
                 // Serialize context to Base64-encoded JSON for compiler plugin
                 val json = Json { prettyPrint = false }
