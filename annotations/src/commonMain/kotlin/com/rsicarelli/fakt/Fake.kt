@@ -42,8 +42,14 @@ package com.rsicarelli.fakt
  *
  * @property callHistory Controls call history generation for this fake. Defaults to
  *   [CallHistoryMode.DEFAULT] which follows the plugin configuration.
+ * @property mutability Controls mutability of the generated fake. Defaults to
+ *   [MutabilityMode.DEFAULT] which follows the plugin configuration.
  * @see CallHistoryMode
+ * @see MutabilityMode
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
-public annotation class Fake(val callHistory: CallHistoryMode = CallHistoryMode.DEFAULT)
+public annotation class Fake(
+    val callHistory: CallHistoryMode = CallHistoryMode.DEFAULT,
+    val mutability: MutabilityMode = MutabilityMode.DEFAULT,
+)

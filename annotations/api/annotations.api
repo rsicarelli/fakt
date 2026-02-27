@@ -9,5 +9,15 @@ public final class com/rsicarelli/fakt/CallHistoryMode : java/lang/Enum {
 
 public abstract interface annotation class com/rsicarelli/fakt/Fake : java/lang/annotation/Annotation {
 	public abstract fun callHistory ()Lcom/rsicarelli/fakt/CallHistoryMode;
+	public abstract fun mutability ()Lcom/rsicarelli/fakt/MutabilityMode;
+}
+
+public final class com/rsicarelli/fakt/MutabilityMode : java/lang/Enum {
+	public static final field DEFAULT Lcom/rsicarelli/fakt/MutabilityMode;
+	public static final field IMMUTABLE Lcom/rsicarelli/fakt/MutabilityMode;
+	public static final field MUTABLE Lcom/rsicarelli/fakt/MutabilityMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/rsicarelli/fakt/MutabilityMode;
+	public static fun values ()[Lcom/rsicarelli/fakt/MutabilityMode;
 }
 

@@ -261,6 +261,8 @@ public class ConstructorPropertyBuilder
 @PublishedApi
 internal constructor(private val name: String, private val type: String) {
     private val modifiers = mutableSetOf<CodeModifier>()
+    private var isMutable: Boolean = false
+    private var isPlainParam: Boolean = false
 
     /** Default value expression for this constructor property. */
     public var defaultValue: String? = null
@@ -280,6 +282,16 @@ internal constructor(private val name: String, private val type: String) {
         modifiers.add(CodeModifier.INTERNAL)
     }
 
+    /** Makes property mutable (var instead of val). */
+    public fun mutable() {
+        isMutable = true
+    }
+
+    /** Makes this a plain parameter (no val/var keyword, no modifiers). */
+    public fun plainParam() {
+        isPlainParam = true
+    }
+
     /**
      * Builds the final [ConstructorProperty].
      *
@@ -292,5 +304,7 @@ internal constructor(private val name: String, private val type: String) {
             type = type,
             modifiers = modifiers.toSet(),
             defaultValue = defaultValue,
+            isMutable = isMutable,
+            isPlainParam = isPlainParam,
         )
 }

@@ -235,6 +235,12 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                         value = extension.enableCallHistory.get().toString(),
                     )
                 )
+                add(
+                    SubpluginOption(
+                        key = "enableMutableFakes",
+                        value = extension.enableMutableFakes.get().toString(),
+                    )
+                )
 
                 val buildDir = project.layout.buildDirectory.get().asFile.absolutePath
                 val context = SourceSetDiscovery.buildContext(kotlinCompilation, buildDir)

@@ -146,13 +146,24 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
                 }
 
                 val classTypeParamNames = extractClassTypeParamNames(analysis.typeParameters)
+                val isMutable = analysis.generateMutableBehaviors
 
                 // Generate internal behavior properties (grouped)
+                // When mutable: nullable (null = not configured by user)
+                // When immutable: non-nullable with computed defaults
                 analysis.functions.forEach { func ->
-                    generateFunctionBehaviorProperty(func, withDefault = true, classTypeParamNames)
+                    generateFunctionBehaviorProperty(
+                        func,
+                        withDefault = !isMutable,
+                        classTypeParamNames,
+                    )
                 }
                 analysis.properties.forEach { prop ->
-                    generatePropertyBehaviorProperty(prop, withDefault = true, classTypeParamNames)
+                    generatePropertyBehaviorProperty(
+                        prop,
+                        withDefault = !isMutable,
+                        classTypeParamNames,
+                    )
                 }
 
                 // Generate DSL configurator methods (grouped)
@@ -169,6 +180,8 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
                     typeArgs = typeArgs,
                     functions = analysis.functions,
                     properties = analysis.properties,
+                    generateMutableBehaviors = isMutable,
+                    classTypeParamNames = classTypeParamNames,
                 )
             }
         }
@@ -228,21 +241,28 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
                 }
 
                 val classTypeParamNames = extractClassTypeParamNames(analysis.typeParameters)
+                val isMutable = analysis.generateMutableBehaviors
 
                 // Generate internal behavior properties (grouped)
+                // When mutable: all behaviors are nullable (null = not configured)
+                // When immutable: abstract = non-nullable with default, open = nullable
                 analysis.abstractMethods.forEach { func ->
                     generateFunctionBehaviorProperty(
                         func,
-                        withDefault = true,
+                        withDefault = !isMutable,
                         classTypeParamNames,
-                        abstractClassName = analysis.className,
+                        abstractClassName = if (!isMutable) analysis.className else null,
                     )
                 }
                 analysis.openMethods.forEach { func ->
                     generateFunctionBehaviorProperty(func, withDefault = false, classTypeParamNames)
                 }
                 analysis.abstractProperties.forEach { prop ->
-                    generatePropertyBehaviorProperty(prop, withDefault = true, classTypeParamNames)
+                    generatePropertyBehaviorProperty(
+                        prop,
+                        withDefault = !isMutable,
+                        classTypeParamNames,
+                    )
                 }
                 analysis.openProperties.forEach { prop ->
                     generatePropertyBehaviorProperty(prop, withDefault = false, classTypeParamNames)
@@ -267,6 +287,8 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
                     analysis = analysis,
                     fakeClassName = fakeClassName,
                     typeArgs = typeArgs,
+                    generateMutableBehaviors = isMutable,
+                    classTypeParamNames = classTypeParamNames,
                 )
             }
         }
@@ -683,52 +705,122 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
     /**
      * Generates `@PublishedApi internal fun build()` for interface config classes.
      *
-     * All interface behaviors have non-nullable defaults in their config properties, so build()
-     * simply passes them through to the FakeImpl constructor.
+     * When immutable: behaviors have non-nullable defaults, passed through directly. When mutable:
+     * behaviors are nullable (null = not configured), build() applies `?: default`.
      */
     private fun ClassBuilder.generateInterfaceBuildMethod(
         fakeClassName: String,
         typeArgs: String,
         functions: List<FunctionAnalysis>,
         properties: List<PropertyAnalysis>,
+        generateMutableBehaviors: Boolean = false,
+        classTypeParamNames: Set<String> = emptySet(),
     ) {
         val args = mutableListOf<String>()
-        properties.forEach { addPropertyBuildArg(args = args, prop = it) }
-        functions.forEach { addFunctionBuildArg(args = args, func = it) }
+        properties.forEach { prop ->
+            val fallbackDefault =
+                if (generateMutableBehaviors) {
+                    computePropertyDefaultLambda(prop, classTypeParamNames)
+                } else {
+                    null
+                }
+            addPropertyBuildArg(args = args, prop = prop, fallbackDefault = fallbackDefault)
+        }
+        functions.forEach { func ->
+            val fallbackDefault =
+                if (generateMutableBehaviors) {
+                    computeFunctionDefaultLambda(func, classTypeParamNames)
+                } else {
+                    null
+                }
+            addFunctionBuildArg(args = args, func = func, fallbackDefault = fallbackDefault)
+        }
         emitBuildFunction(fakeClassName = fakeClassName, typeArgs = typeArgs, args = args)
     }
 
     /**
      * Generates `@PublishedApi internal fun build()` for class config classes.
      *
-     * Both abstract (non-nullable with defaults) and open (nullable, null = delegate to super)
-     * behaviors are passed through directly — defaults are already in the config properties.
+     * When immutable: abstract = non-nullable with defaults, open = nullable (super delegation).
+     * When mutable: abstract behaviors are nullable, build() applies `?: default`. Open behaviors
+     * remain nullable regardless (null = delegate to super).
      */
     private fun ClassBuilder.generateClassBuildMethod(
         analysis: ClassAnalysis,
         fakeClassName: String,
         typeArgs: String,
+        generateMutableBehaviors: Boolean = false,
+        classTypeParamNames: Set<String> = emptySet(),
     ) {
         val args = mutableListOf<String>()
-        analysis.abstractProperties.forEach { addPropertyBuildArg(args = args, prop = it) }
+        // Abstract members: need fallback default when mutable
+        analysis.abstractProperties.forEach { prop ->
+            val fallbackDefault =
+                if (generateMutableBehaviors) {
+                    computePropertyDefaultLambda(prop, classTypeParamNames)
+                } else {
+                    null
+                }
+            addPropertyBuildArg(args = args, prop = prop, fallbackDefault = fallbackDefault)
+        }
+        // Open members: already nullable (null = super delegation), no fallback needed
         analysis.openProperties.forEach { addPropertyBuildArg(args = args, prop = it) }
-        analysis.abstractMethods.forEach { addFunctionBuildArg(args = args, func = it) }
+        analysis.abstractMethods.forEach { func ->
+            val fallbackDefault =
+                if (generateMutableBehaviors) {
+                    computeFunctionDefaultLambda(
+                        func,
+                        classTypeParamNames,
+                        abstractClassName = analysis.className,
+                    )
+                } else {
+                    null
+                }
+            addFunctionBuildArg(args = args, func = func, fallbackDefault = fallbackDefault)
+        }
         analysis.openMethods.forEach { addFunctionBuildArg(args = args, func = it) }
         emitBuildFunction(fakeClassName = fakeClassName, typeArgs = typeArgs, args = args)
     }
 
-    /** Adds constructor argument(s) for a property behavior to the build args list. */
-    private fun addPropertyBuildArg(args: MutableList<String>, prop: PropertyAnalysis) {
+    /**
+     * Adds constructor argument(s) for a property behavior to the build args list.
+     *
+     * @param fallbackDefault When non-null, adds `?: fallbackDefault` for nullable-because-mutable
+     *   properties. Used by mutable fakes where Config behaviors are nullable.
+     */
+    private fun addPropertyBuildArg(
+        args: MutableList<String>,
+        prop: PropertyAnalysis,
+        fallbackDefault: String? = null,
+    ) {
         val propType = typeResolver.irTypeToKotlinString(prop.type, preserveTypeParameters = true)
         // StateFlow properties are handled separately (not constructor params)
         if (propType.contains("StateFlow<")) return
 
         if (prop.isMutable) {
             val cap = prop.name.replaceFirstChar { it.uppercase() }
-            args.add("${prop.name}Getter = ${prop.name}Behavior")
-            args.add("${prop.name}Setter = set${cap}Behavior")
+            val getterValue =
+                if (fallbackDefault != null) {
+                    "${prop.name}Behavior ?: $fallbackDefault"
+                } else {
+                    "${prop.name}Behavior"
+                }
+            val setterValue =
+                if (fallbackDefault != null) {
+                    "set${cap}Behavior ?: { }"
+                } else {
+                    "set${cap}Behavior"
+                }
+            args.add("${prop.name}Getter = $getterValue")
+            args.add("${prop.name}Setter = $setterValue")
         } else {
-            args.add("${prop.name}Behavior = ${prop.name}Behavior")
+            val value =
+                if (fallbackDefault != null) {
+                    "${prop.name}Behavior ?: $fallbackDefault"
+                } else {
+                    "${prop.name}Behavior"
+                }
+            args.add("${prop.name}Behavior = $value")
         }
     }
 
@@ -738,9 +830,22 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
      * All methods (including those with method-level type params) are now included — generic method
      * config properties use erased types (Any?) with non-null defaults, matching the FakeImpl
      * constructor parameter types.
+     *
+     * @param fallbackDefault When non-null, adds `?: fallbackDefault` for nullable-because-mutable
+     *   behaviors. Used by mutable fakes where Config behaviors are nullable.
      */
-    private fun addFunctionBuildArg(args: MutableList<String>, func: FunctionAnalysis) {
-        args.add("${func.name}Behavior = ${func.name}Behavior")
+    private fun addFunctionBuildArg(
+        args: MutableList<String>,
+        func: FunctionAnalysis,
+        fallbackDefault: String? = null,
+    ) {
+        val value =
+            if (fallbackDefault != null) {
+                "${func.name}Behavior ?: $fallbackDefault"
+            } else {
+                "${func.name}Behavior"
+            }
+        args.add("${func.name}Behavior = $value")
     }
 
     /** Resolves a default value expression for the given type string. */
@@ -755,6 +860,59 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
                 defaultValueResolver
             }
         return resolver.resolve(type = parseType(typeString = typeStr)).render()
+    }
+
+    /**
+     * Computes the default behavior lambda for a function.
+     *
+     * Used in build() for mutable fakes to provide `?: default` fallback when Config behaviors are
+     * nullable. Mirrors the 4-tier default logic from [generateFunctionBehaviorProperty].
+     */
+    private fun computeFunctionDefaultLambda(
+        function: FunctionAnalysis,
+        classTypeParamNames: Set<String>,
+        abstractClassName: String? = null,
+    ): String {
+        val methodTypeParamNames = extractMethodTypeParamNames(function)
+        val returnTypeStr =
+            typeResolver.irTypeToKotlinString(function.returnType, preserveTypeParameters = true)
+        val effectiveReturnType =
+            if (methodTypeParamNames.isNotEmpty()) {
+                eraseTypeParamsToAny(returnTypeStr, methodTypeParamNames)
+            } else {
+                returnTypeStr
+            }
+        val defaultExpr = computeDefaultExpr(effectiveReturnType, classTypeParamNames)
+        val lambdaParams = buildErasedLambdaParams(function, methodTypeParamNames)
+
+        return when {
+            abstractClassName != null -> {
+                val sig = buildMethodSignature(function)
+                val escapedClassName = abstractClassName.replaceFirstChar { it.uppercase() }
+                val errorMsg =
+                    "Abstract method '$sig' in class '$abstractClassName' must be configured. " +
+                        "Use the DSL: fake$escapedClassName { ${function.name} { ... } }"
+                "{ ${lambdaParams}error(\"$errorMsg\") }"
+            }
+            detectFunctionInvocationDefault(function) -> "{ p0 -> p0() }"
+            shouldUseIdentityDefault(function) -> "{ it }"
+            else -> "{ $lambdaParams$defaultExpr }"
+        }
+    }
+
+    /**
+     * Computes the default getter lambda for a property.
+     *
+     * Used in build() for mutable fakes to provide `?: default` fallback.
+     */
+    private fun computePropertyDefaultLambda(
+        property: PropertyAnalysis,
+        classTypeParamNames: Set<String>,
+    ): String {
+        val propertyType =
+            typeResolver.irTypeToKotlinString(property.type, preserveTypeParameters = true)
+        val defaultExpr = computeDefaultExpr(propertyType, classTypeParamNames)
+        return "{ $defaultExpr }"
     }
 
     /** Builds lambda parameter placeholders for a function's default behavior. */

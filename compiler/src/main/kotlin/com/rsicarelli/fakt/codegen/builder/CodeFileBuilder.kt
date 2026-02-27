@@ -76,6 +76,7 @@ public class CodeFileBuilder @PublishedApi internal constructor(private val pack
      * - kotlin.native.* (e.g., HiddenFromObjC) - not auto-imported
      * - kotlin.experimental.* (e.g., ExperimentalObjCRefinement) - not auto-imported
      * - kotlin.reflect.* (e.g., KClass) - not auto-imported
+     * - kotlin.concurrent.* (e.g., Volatile) - not auto-imported
      *
      * @param fqName Fully-qualified class name to import
      */
@@ -84,7 +85,8 @@ public class CodeFileBuilder @PublishedApi internal constructor(private val pack
         val alwaysInclude =
             fqName.startsWith("kotlin.native.") ||
                 fqName.startsWith("kotlin.experimental.") ||
-                fqName.startsWith("kotlin.reflect.")
+                fqName.startsWith("kotlin.reflect.") ||
+                fqName.startsWith("kotlin.concurrent.")
         if (alwaysInclude || !fqName.startsWith("kotlin.")) {
             imports.add(fqName)
         }

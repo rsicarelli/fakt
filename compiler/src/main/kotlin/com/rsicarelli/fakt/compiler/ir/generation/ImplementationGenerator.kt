@@ -69,6 +69,7 @@ internal class ImplementationGenerator(private val typeResolver: TypeResolution)
                 visibility = analysis.visibility,
                 annotations = annotationSpecs,
                 generateCallHistory = analysis.generateCallHistory,
+                generateMutableBehaviors = analysis.generateMutableBehaviors,
             )
 
         // Generate factory function CodeFile with visibility for explicitApi() support
@@ -141,6 +142,7 @@ internal class ImplementationGenerator(private val typeResolver: TypeResolution)
                 visibility = analysis.visibility,
                 annotations = annotationSpecs,
                 generateCallHistory = analysis.generateCallHistory,
+                generateMutableBehaviors = analysis.generateMutableBehaviors,
             )
 
         // Generate factory function CodeFile with visibility for explicitApi() support

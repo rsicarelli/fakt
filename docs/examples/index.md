@@ -56,6 +56,8 @@ Fakt includes working sample projects demonstrating different use cases.
 - Property fakes (val/var)
 - Generic interfaces
 - Call tracking with StateFlow
+- Mutable fakes with mid-test reconfiguration
+- Mutable + call history composition
 
 **Best for**: Learning Fakt basics and KMP setup
 

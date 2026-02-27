@@ -939,9 +939,9 @@ fun `GIVEN service fake WHEN calling inherited methods THEN works correctly`() {
 
 ---
 
-### Immutable Fakes
+### Immutable Fakes (Default)
 
-Fakt-generated fakes are **immutable after construction**. To use different behavior, create a new fake:
+Fakt-generated fakes are **immutable after construction** by default. To use different behavior, create a new fake:
 
 ```kotlin
 @Test
@@ -960,8 +960,58 @@ fun `GIVEN different scenarios WHEN needing different behavior THEN create new f
 }
 ```
 
-!!! tip "Why Immutable?"
-    Immutable fakes are safer: no shared mutable state between tests, no accidental mid-test reconfiguration, and predictable behavior from construction to completion.
+!!! tip "Why Immutable by Default?"
+    Immutable fakes are safer: no shared mutable state between tests, no accidental mid-test reconfiguration, and predictable behavior from construction to completion. This is the recommended approach for unit tests.
+
+---
+
+### Mutable Fakes (Opt-In)
+
+For integration tests where behavior needs to change mid-test, Fakt supports **mutable fakes**:
+
+```kotlin
+import com.rsicarelli.fakt.MutabilityMode
+
+@Fake(mutability = MutabilityMode.MUTABLE)
+interface UserRepository {
+    fun findById(id: String): User?
+    suspend fun save(user: User): User
+    val status: String
+}
+```
+
+Mutable fakes include a `modify {}` method for selective reconfiguration:
+
+```kotlin
+@Test
+fun `GIVEN repository WHEN database fails mid-test THEN handles failure gracefully`() {
+    // GIVEN: A mutable repository that initially succeeds
+    val fake = fakeUserRepository {
+        findById { id -> User(id, "Alice") }
+        status { "active" }
+    }
+
+    // Initial behavior works
+    assertEquals("Alice", fake.findById("1")?.name)
+
+    // WHEN: Simulating database failure mid-test
+    fake.modify {
+        findById { null }  // Now returns null
+    }
+
+    // THEN: New behavior applies, non-reconfigured behaviors unchanged
+    assertNull(fake.findById("1"))
+    assertEquals("active", fake.status)  // Unchanged
+}
+```
+
+!!! note "Selective Reconfiguration"
+    The `modify {}` method only updates the behaviors you specify. All other behaviors remain unchanged from their previous configuration.
+
+!!! warning "Use Judiciously"
+    Mutable fakes are designed for integration tests where the same injected fake needs to simulate state changes. For unit tests, prefer immutable fakes with separate instances per scenario.
+
+**Learn more:** [Immutable vs Mutable](immutable-vs-mutable.md) for an in-depth comparison, and [Plugin Configuration](plugin-configuration.md#mutable-fakes-configuration) for enabling mutable fakes project-wide.
 
 ---
 
@@ -974,6 +1024,7 @@ fun `GIVEN different scenarios WHEN needing different behavior THEN create new f
 - **[Performance](performance.md)** - Build performance and optimization
 
 **Advanced Configuration:**
+- **[Immutable vs Mutable](immutable-vs-mutable.md)** - In-depth comparison of immutable and mutable fakes
 - **[Plugin Configuration](plugin-configuration.md)** - Compiler plugin configuration and log levels
 - **[Generated Code Reference](generated-code-reference.md)** - Understanding generated fake implementations
 - **[Platform Support](platform-support.md)** - KMP target support and platform-specific patterns

@@ -201,10 +201,12 @@ private fun areCompactSiblings(current: CodeMember, next: CodeMember): Boolean =
  * @return Constructor property as Kotlin source string
  */
 public fun ConstructorProperty.render(): String {
+    val defaultStr = defaultValue?.let { " = $it" } ?: ""
+    if (isPlainParam) return "$name: $type$defaultStr"
     val modifiersStr = modifiers.joinToString(" ") { it.name.lowercase() }
     val modifierPrefix = if (modifiersStr.isNotEmpty()) "$modifiersStr " else ""
-    val defaultStr = defaultValue?.let { " = $it" } ?: ""
-    return "${modifierPrefix}val $name: $type$defaultStr"
+    val keyword = if (isMutable) "var" else "val"
+    return "${modifierPrefix}$keyword $name: $type$defaultStr"
 }
 
 /**

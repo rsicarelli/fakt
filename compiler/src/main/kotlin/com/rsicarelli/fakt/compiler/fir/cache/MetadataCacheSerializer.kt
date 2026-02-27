@@ -15,6 +15,7 @@ import com.rsicarelli.fakt.compiler.fir.metadata.FirAnnotationArgument
 import com.rsicarelli.fakt.compiler.fir.metadata.FirAnnotationInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirCallHistoryMode
 import com.rsicarelli.fakt.compiler.fir.metadata.FirFunctionInfo
+import com.rsicarelli.fakt.compiler.fir.metadata.FirMutabilityMode
 import com.rsicarelli.fakt.compiler.fir.metadata.FirParameterInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirPropertyInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirSourceLocation
@@ -92,6 +93,7 @@ object MetadataCacheSerializer {
             validationTimeNanos = validated.validationTimeNanos,
             visibility = validated.visibility.name,
             callHistoryMode = validated.callHistoryMode.name,
+            mutabilityMode = validated.mutabilityMode.name,
         )
     }
 
@@ -114,6 +116,7 @@ object MetadataCacheSerializer {
             validationTimeNanos = validated.validationTimeNanos,
             visibility = validated.visibility.name,
             callHistoryMode = validated.callHistoryMode.name,
+            mutabilityMode = validated.mutabilityMode.name,
         )
     }
 
@@ -165,6 +168,8 @@ object MetadataCacheSerializer {
             visibility = FirVisibility.valueOf(serializable.visibility),
             // Restore call history mode from cache
             callHistoryMode = FirCallHistoryMode.valueOf(serializable.callHistoryMode),
+            // Restore mutability mode from cache
+            mutabilityMode = FirMutabilityMode.valueOf(serializable.mutabilityMode),
         )
     }
 
@@ -207,6 +212,8 @@ object MetadataCacheSerializer {
             visibility = FirVisibility.valueOf(serializable.visibility),
             // Restore call history mode from cache
             callHistoryMode = FirCallHistoryMode.valueOf(serializable.callHistoryMode),
+            // Restore mutability mode from cache
+            mutabilityMode = FirMutabilityMode.valueOf(serializable.mutabilityMode),
         )
     }
 

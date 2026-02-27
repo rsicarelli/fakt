@@ -7,10 +7,12 @@
 
 // Library unique name: <com.rsicarelli.fakt:annotations>
 open annotation class com.rsicarelli.fakt/Fake : kotlin/Annotation { // com.rsicarelli.fakt/Fake|null[0]
-    constructor <init>(com.rsicarelli.fakt/CallHistoryMode = ...) // com.rsicarelli.fakt/Fake.<init>|<init>(com.rsicarelli.fakt.CallHistoryMode){}[0]
+    constructor <init>(com.rsicarelli.fakt/CallHistoryMode = ..., com.rsicarelli.fakt/MutabilityMode = ...) // com.rsicarelli.fakt/Fake.<init>|<init>(com.rsicarelli.fakt.CallHistoryMode;com.rsicarelli.fakt.MutabilityMode){}[0]
 
     final val callHistory // com.rsicarelli.fakt/Fake.callHistory|{}callHistory[0]
         final fun <get-callHistory>(): com.rsicarelli.fakt/CallHistoryMode // com.rsicarelli.fakt/Fake.callHistory.<get-callHistory>|<get-callHistory>(){}[0]
+    final val mutability // com.rsicarelli.fakt/Fake.mutability|{}mutability[0]
+        final fun <get-mutability>(): com.rsicarelli.fakt/MutabilityMode // com.rsicarelli.fakt/Fake.mutability.<get-mutability>|<get-mutability>(){}[0]
 }
 
 final enum class com.rsicarelli.fakt/CallHistoryMode : kotlin/Enum<com.rsicarelli.fakt/CallHistoryMode> { // com.rsicarelli.fakt/CallHistoryMode|null[0]
@@ -23,4 +25,16 @@ final enum class com.rsicarelli.fakt/CallHistoryMode : kotlin/Enum<com.rsicarell
 
     final fun valueOf(kotlin/String): com.rsicarelli.fakt/CallHistoryMode // com.rsicarelli.fakt/CallHistoryMode.valueOf|valueOf#static(kotlin.String){}[0]
     final fun values(): kotlin/Array<com.rsicarelli.fakt/CallHistoryMode> // com.rsicarelli.fakt/CallHistoryMode.values|values#static(){}[0]
+}
+
+final enum class com.rsicarelli.fakt/MutabilityMode : kotlin/Enum<com.rsicarelli.fakt/MutabilityMode> { // com.rsicarelli.fakt/MutabilityMode|null[0]
+    enum entry DEFAULT // com.rsicarelli.fakt/MutabilityMode.DEFAULT|null[0]
+    enum entry IMMUTABLE // com.rsicarelli.fakt/MutabilityMode.IMMUTABLE|null[0]
+    enum entry MUTABLE // com.rsicarelli.fakt/MutabilityMode.MUTABLE|null[0]
+
+    final val entries // com.rsicarelli.fakt/MutabilityMode.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.rsicarelli.fakt/MutabilityMode> // com.rsicarelli.fakt/MutabilityMode.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.rsicarelli.fakt/MutabilityMode // com.rsicarelli.fakt/MutabilityMode.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.rsicarelli.fakt/MutabilityMode> // com.rsicarelli.fakt/MutabilityMode.values|values#static(){}[0]
 }

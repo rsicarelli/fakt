@@ -31,6 +31,30 @@ enum class FirCallHistoryMode {
 }
 
 /**
+ * Mutability mode extracted from @Fake annotation.
+ *
+ * This enum mirrors [com.rsicarelli.fakt.MutabilityMode] from the annotations module, used
+ * internally by the compiler to avoid runtime dependency on annotations.
+ *
+ * Resolution logic (in IR phase):
+ * - [DEFAULT]: Use plugin-level `enableMutableFakesDefault` setting
+ * - [MUTABLE]: Always generate mutable fake (overrides plugin default)
+ * - [IMMUTABLE]: Always generate immutable fake (overrides plugin default)
+ *
+ * @see com.rsicarelli.fakt.MutabilityMode
+ */
+enum class FirMutabilityMode {
+    /** Use the plugin-level default from `fakt { enableMutableFakes.set(...) }`. */
+    DEFAULT,
+
+    /** Always generate immutable fake, regardless of plugin default. */
+    IMMUTABLE,
+
+    /** Always generate mutable fake, regardless of plugin default. */
+    MUTABLE,
+}
+
+/**
  * Metadata for a validated @Fake interface, analyzed in FIR phase and passed to IR generation.
  *
  * This data class represents the complete structural analysis of an interface that:
@@ -64,6 +88,7 @@ enum class FirCallHistoryMode {
  * @property visibility Visibility of the interface (PUBLIC, INTERNAL, etc.) for explicitApi()
  *   support
  * @property callHistoryMode Call history generation mode from @Fake annotation
+ * @property mutabilityMode Mutability mode from @Fake annotation
  */
 data class ValidatedFakeInterface(
     val classId: ClassId,
@@ -81,6 +106,7 @@ data class ValidatedFakeInterface(
     val sourceSourceSet: String? = null,
     val visibility: FirVisibility = FirVisibility.PUBLIC,
     val callHistoryMode: FirCallHistoryMode = FirCallHistoryMode.DEFAULT,
+    val mutabilityMode: FirMutabilityMode = FirMutabilityMode.DEFAULT,
 )
 
 /**
@@ -100,6 +126,7 @@ data class ValidatedFakeInterface(
  * @property validationTimeNanos Time spent validating this class in FIR phase (nanoseconds)
  * @property visibility Visibility of the class (PUBLIC, INTERNAL, etc.) for explicitApi() support
  * @property callHistoryMode Call history generation mode from @Fake annotation
+ * @property mutabilityMode Mutability mode from @Fake annotation
  */
 data class ValidatedFakeClass(
     val classId: ClassId,
@@ -117,6 +144,7 @@ data class ValidatedFakeClass(
     val sourceSourceSet: String? = null,
     val visibility: FirVisibility = FirVisibility.PUBLIC,
     val callHistoryMode: FirCallHistoryMode = FirCallHistoryMode.DEFAULT,
+    val mutabilityMode: FirMutabilityMode = FirMutabilityMode.DEFAULT,
 )
 
 /**

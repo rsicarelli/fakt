@@ -114,6 +114,41 @@ constructor(objects: ObjectFactory, private val project: Project) {
         objects.property(Boolean::class.java).convention(true)
 
     /**
+     * Controls default mutability for all generated fakes.
+     *
+     * When set to `true`, generated fakes are mutable and include a `configure {}` method that
+     * allows reconfiguring behaviors mid-test. Behavior properties become `internal var` instead of
+     * `private val`.
+     *
+     * When set to `false` (default), generated fakes are immutable — behaviors are set at
+     * construction time and cannot be changed afterwards.
+     *
+     * Individual fakes can override this default using the `@Fake` annotation:
+     * ```kotlin
+     * @Fake(mutability = MutabilityMode.MUTABLE)    // Always generate mutable fake
+     * @Fake(mutability = MutabilityMode.IMMUTABLE)  // Always generate immutable fake
+     * @Fake(mutability = MutabilityMode.DEFAULT)    // Follow this setting
+     * ```
+     *
+     * **Default:** `false`
+     *
+     * **Usage:**
+     *
+     * ```kotlin
+     * fakt {
+     *     enableMutableFakes.set(true)  // Enable mutable fakes for all fakes by default
+     * }
+     * ```
+     *
+     * **Common use cases:**
+     * - Set to `true` for projects with many integration tests
+     * - Set to `false` (default) for unit tests where immutability is preferred
+     * - Use annotation overrides for fine-grained control per interface
+     */
+    public val enableMutableFakes: Property<Boolean> =
+        objects.property(Boolean::class.java).convention(false)
+
+    /**
      * Source project to collect generated fakes from (collector mode).
      *
      * When set, this module switches to **collector mode**:
