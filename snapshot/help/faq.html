@@ -508,6 +508,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../user-guide/immutable-vs-mutable.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Immutable vs Mutable
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../user-guide/testing-patterns.html" class="md-nav__link">
         
   
@@ -859,6 +882,24 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#can-i-change-fake-behavior-after-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I change fake behavior after creation?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#when-should-i-use-mutable-vs-immutable-fakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      When should I use mutable vs immutable fakes?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#can-i-fake-data-classes-or-sealed-classes" class="md-nav__link">
     <span class="md-ellipsis">
       Can I fake data classes or sealed classes?
@@ -1131,6 +1172,24 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#can-i-change-fake-behavior-after-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I change fake behavior after creation?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#when-should-i-use-mutable-vs-immutable-fakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      When should I use mutable vs immutable fakes?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#can-i-fake-data-classes-or-sealed-classes" class="md-nav__link">
     <span class="md-ellipsis">
       Can I fake data classes or sealed classes?
@@ -1339,6 +1398,67 @@
 <p><strong>Yes</strong>. Suspend functions preserve coroutine semantics. See <a href="../user-guide/usage.html#suspend-functions">Usage Guide: Suspend Functions</a> for details.</p>
 <h3 id="does-fakt-support-properties-valvar">Does Fakt support properties (val/var)?<a class="headerlink" href="#does-fakt-support-properties-valvar" title="Permanent link">&para;</a></h3>
 <p><strong>Yes</strong>. Both read-only (<code>val</code>) and mutable (<code>var</code>) properties with call tracking. See <a href="../user-guide/usage.html#properties">Usage Guide: Properties</a> for examples.</p>
+<h3 id="can-i-change-fake-behavior-after-creation">Can I change fake behavior after creation?<a class="headerlink" href="#can-i-change-fake-behavior-after-creation" title="Permanent link">&para;</a></h3>
+<p><strong>Yes, with mutable fakes.</strong> By default, Fakt generates immutable fakes where behavior is fixed at construction time. For integration tests that need mid-test reconfiguration, opt in to mutable fakes:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">import</span><span class="w"> </span><span class="nn">com.rsicarelli.fakt.MutabilityMode</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nd">@Fake</span><span class="p">(</span><span class="n">mutability</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MutabilityMode</span><span class="p">.</span><span class="na">MUTABLE</span><span class="p">)</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">UserRepository</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">findById</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">):</span><span class="w"> </span><span class="n">User?</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">}</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="c1">// Create with initial behavior</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">    </span><span class="n">findById</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="p">}</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="c1">// Reconfigure mid-test</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="n">fake</span><span class="p">.</span><span class="na">modify</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">    </span><span class="n">findById</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">}</span><span class="w">  </span><span class="c1">// Now returns null</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="p">}</span>
+</code></pre></div>
+<p>See <a href="../user-guide/immutable-vs-mutable.html">Immutable vs Mutable</a> for detailed usage and <a href="../user-guide/plugin-configuration.html#mutable-fakes-configuration">Plugin Configuration</a> for project-wide settings.</p>
+<hr />
+<h3 id="when-should-i-use-mutable-vs-immutable-fakes">When should I use mutable vs immutable fakes?<a class="headerlink" href="#when-should-i-use-mutable-vs-immutable-fakes" title="Permanent link">&para;</a></h3>
+<p><strong>Use immutable fakes (default) for unit tests.</strong> They are safer, more predictable, and prevent accidental shared state. Create a new fake instance for each scenario.</p>
+<p><strong>Use mutable fakes for integration tests</strong> where:</p>
+<ul>
+<li>The same injected fake needs to simulate state changes (e.g., database failure after success)</li>
+<li>You are testing feature flag toggling or configuration changes</li>
+<li>Multiple test phases need different behavior from the same dependency</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Recommendation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Unit testing a single method</td>
+<td>Immutable (default)</td>
+</tr>
+<tr>
+<td>Testing error handling branches</td>
+<td>Immutable (new fake per scenario)</td>
+</tr>
+<tr>
+<td>Integration test with injected dependency</td>
+<td>Mutable</td>
+</tr>
+<tr>
+<td>Simulating intermittent failures</td>
+<td>Mutable</td>
+</tr>
+<tr>
+<td>Testing state machine transitions</td>
+<td>Mutable</td>
+</tr>
+</tbody>
+</table>
+<p>See <a href="../user-guide/immutable-vs-mutable.html">Immutable vs Mutable</a> for an in-depth exploration of trade-offs, concurrency considerations, and recommendations.</p>
+<hr />
 <h3 id="can-i-fake-data-classes-or-sealed-classes">Can I fake data classes or sealed classes?<a class="headerlink" href="#can-i-fake-data-classes-or-sealed-classes" title="Permanent link">&para;</a></h3>
 <p><strong>No</strong>. Fakt only generates fakes for interfaces, abstract classes, and open classes. Data/sealed classes work fine as parameter/return types.</p>
 <hr />
@@ -1351,38 +1471,38 @@
 <li><strong>Cached targets</strong>: near-zero overhead (~1-2ms each)</li>
 </ul>
 <p>Example from a real KMP project:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>DISCOVERY: 1ms (100 interfaces, 21 classes)
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>GENERATION: 39ms (121 new fakes, avg 333µs/fake)
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>TOTAL: 40ms (iosArm64 first compilation)
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>compileKotlinJvm:     1ms (121 from cache)
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>compileKotlinAndroid: 1ms (121 from cache)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>DISCOVERY: 1ms (100 interfaces, 21 classes)
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>GENERATION: 39ms (121 new fakes, avg 333µs/fake)
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>TOTAL: 40ms (iosArm64 first compilation)
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>compileKotlinJvm:     1ms (121 from cache)
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>compileKotlinAndroid: 1ms (121 from cache)
 </code></pre></div>
 <p>See <a href="../user-guide/performance.html">Performance Guide</a> for detailed benchmarks and telemetry configuration.</p>
 <hr />
 <h2 id="multi-module-projects">Multi-Module Projects<a class="headerlink" href="#multi-module-projects" title="Permanent link">&para;</a></h2>
 <h3 id="does-fakt-work-with-multi-module-projects">Does Fakt work with multi-module projects?<a class="headerlink" href="#does-fakt-work-with-multi-module-projects" title="Permanent link">&para;</a></h3>
 <p><strong>Yes, with experimental multi-module support</strong>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1">// Producer module: :core:analytics/build.gradle.kts</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nd">@Fake</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">Analytics</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1">// Collector module: :core:analytics-fakes/build.gradle.kts</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">plugins</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="n">id</span><span class="p">(</span><span class="s">&quot;com.rsicarelli.fakt&quot;</span><span class="p">)</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="p">}</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="p">}</span>
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="c1">// Consumer module: :app/build.gradle.kts</span>
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="n">dependencies</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">    </span><span class="n">commonTest</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">        </span><span class="n">implementation</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analyticsFakes</span><span class="p">)</span>
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// Producer module: :core:analytics/build.gradle.kts</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nd">@Fake</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">Analytics</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1">// Collector module: :core:analytics-fakes/build.gradle.kts</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">plugins</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="n">id</span><span class="p">(</span><span class="s">&quot;com.rsicarelli.fakt&quot;</span><span class="p">)</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="p">}</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="p">}</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="c1">// Consumer module: :app/build.gradle.kts</span>
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="n">dependencies</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">    </span><span class="n">commonTest</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">        </span><span class="n">implementation</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analyticsFakes</span><span class="p">)</span>
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="p">}</span>
 </code></pre></div>
 <p><strong>For comprehensive documentation</strong>, see:<br />
 - <a href="../user-guide/multi-module.html">Multi-Module</a> - Architecture, setup, and implementation details<br />
@@ -1425,9 +1545,9 @@
 - Description of what&rsquo;s happening vs what you expected<br />
 - Steps to reproduce<br />
 - Build logs with DEBUG logging:<br />
-  <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="n">logLevel</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">LogLevel</span><span class="p">.</span><span class="na">DEBUG</span><span class="p">)</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="p">}</span>
+  <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="n">logLevel</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">LogLevel</span><span class="p">.</span><span class="na">DEBUG</span><span class="p">)</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="p">}</span>
 </code></pre></div><br />
 - Minimal reproduction code</p>
 <p>For KMP projects, also include Gradle version and target platforms.</p>

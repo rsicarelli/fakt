@@ -917,9 +917,18 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#immutable-fakes" class="md-nav__link">
+  <a href="#immutable-fakes-default" class="md-nav__link">
     <span class="md-ellipsis">
-      Immutable Fakes
+      Immutable Fakes (Default)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mutable-fakes-opt-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mutable Fakes (Opt-In)
     </span>
   </a>
   
@@ -961,6 +970,29 @@
   
   <span class="md-ellipsis">
     Multi-Module
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="immutable-vs-mutable.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Immutable vs Mutable
     
   </span>
   
@@ -1659,9 +1691,18 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#immutable-fakes" class="md-nav__link">
+  <a href="#immutable-fakes-default" class="md-nav__link">
     <span class="md-ellipsis">
-      Immutable Fakes
+      Immutable Fakes (Default)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mutable-fakes-opt-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mutable Fakes (Opt-In)
     </span>
   </a>
   
@@ -2457,8 +2498,8 @@
 <a id="__codelineno-46-16" name="__codelineno-46-16" href="#__codelineno-46-16"></a><span class="p">}</span>
 </code></pre></div>
 <hr />
-<h3 id="immutable-fakes">Immutable Fakes<a class="headerlink" href="#immutable-fakes" title="Permanent link">&para;</a></h3>
-<p>Fakt-generated fakes are <strong>immutable after construction</strong>. To use different behavior, create a new fake:</p>
+<h3 id="immutable-fakes-default">Immutable Fakes (Default)<a class="headerlink" href="#immutable-fakes-default" title="Permanent link">&para;</a></h3>
+<p>Fakt-generated fakes are <strong>immutable after construction</strong> by default. To use different behavior, create a new fake:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a><span class="nd">@Test</span>
 <a id="__codelineno-47-2" name="__codelineno-47-2" href="#__codelineno-47-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN different scenarios WHEN needing different behavior THEN create new fakes`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-47-3" name="__codelineno-47-3" href="#__codelineno-47-3"></a><span class="w">    </span><span class="c1">// Scenario 1: User found</span>
@@ -2475,9 +2516,52 @@
 <a id="__codelineno-47-14" name="__codelineno-47-14" href="#__codelineno-47-14"></a><span class="p">}</span>
 </code></pre></div>
 <div class="admonition tip">
-<p class="admonition-title">Why Immutable?</p>
-<p>Immutable fakes are safer: no shared mutable state between tests, no accidental mid-test reconfiguration, and predictable behavior from construction to completion.</p>
+<p class="admonition-title">Why Immutable by Default?</p>
+<p>Immutable fakes are safer: no shared mutable state between tests, no accidental mid-test reconfiguration, and predictable behavior from construction to completion. This is the recommended approach for unit tests.</p>
 </div>
+<hr />
+<h3 id="mutable-fakes-opt-in">Mutable Fakes (Opt-In)<a class="headerlink" href="#mutable-fakes-opt-in" title="Permanent link">&para;</a></h3>
+<p>For integration tests where behavior needs to change mid-test, Fakt supports <strong>mutable fakes</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-48-1" name="__codelineno-48-1" href="#__codelineno-48-1"></a><span class="k">import</span><span class="w"> </span><span class="nn">com.rsicarelli.fakt.MutabilityMode</span>
+<a id="__codelineno-48-2" name="__codelineno-48-2" href="#__codelineno-48-2"></a>
+<a id="__codelineno-48-3" name="__codelineno-48-3" href="#__codelineno-48-3"></a><span class="nd">@Fake</span><span class="p">(</span><span class="n">mutability</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MutabilityMode</span><span class="p">.</span><span class="na">MUTABLE</span><span class="p">)</span>
+<a id="__codelineno-48-4" name="__codelineno-48-4" href="#__codelineno-48-4"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">UserRepository</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-48-5" name="__codelineno-48-5" href="#__codelineno-48-5"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">findById</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">):</span><span class="w"> </span><span class="n">User?</span>
+<a id="__codelineno-48-6" name="__codelineno-48-6" href="#__codelineno-48-6"></a><span class="w">    </span><span class="kd">suspend</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="n">user</span><span class="p">:</span><span class="w"> </span><span class="n">User</span><span class="p">):</span><span class="w"> </span><span class="n">User</span>
+<a id="__codelineno-48-7" name="__codelineno-48-7" href="#__codelineno-48-7"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">status</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span>
+<a id="__codelineno-48-8" name="__codelineno-48-8" href="#__codelineno-48-8"></a><span class="p">}</span>
+</code></pre></div>
+<p>Mutable fakes include a <code>modify {}</code> method for selective reconfiguration:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-49-1" name="__codelineno-49-1" href="#__codelineno-49-1"></a><span class="nd">@Test</span>
+<a id="__codelineno-49-2" name="__codelineno-49-2" href="#__codelineno-49-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN repository WHEN database fails mid-test THEN handles failure gracefully`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-49-3" name="__codelineno-49-3" href="#__codelineno-49-3"></a><span class="w">    </span><span class="c1">// GIVEN: A mutable repository that initially succeeds</span>
+<a id="__codelineno-49-4" name="__codelineno-49-4" href="#__codelineno-49-4"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-49-5" name="__codelineno-49-5" href="#__codelineno-49-5"></a><span class="w">        </span><span class="n">findById</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-49-6" name="__codelineno-49-6" href="#__codelineno-49-6"></a><span class="w">        </span><span class="n">status</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s">&quot;active&quot;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-49-7" name="__codelineno-49-7" href="#__codelineno-49-7"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-49-8" name="__codelineno-49-8" href="#__codelineno-49-8"></a>
+<a id="__codelineno-49-9" name="__codelineno-49-9" href="#__codelineno-49-9"></a><span class="w">    </span><span class="c1">// Initial behavior works</span>
+<a id="__codelineno-49-10" name="__codelineno-49-10" href="#__codelineno-49-10"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">findById</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">)</span><span class="o">?.</span><span class="na">name</span><span class="p">)</span>
+<a id="__codelineno-49-11" name="__codelineno-49-11" href="#__codelineno-49-11"></a>
+<a id="__codelineno-49-12" name="__codelineno-49-12" href="#__codelineno-49-12"></a><span class="w">    </span><span class="c1">// WHEN: Simulating database failure mid-test</span>
+<a id="__codelineno-49-13" name="__codelineno-49-13" href="#__codelineno-49-13"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">modify</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-49-14" name="__codelineno-49-14" href="#__codelineno-49-14"></a><span class="w">        </span><span class="n">findById</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">}</span><span class="w">  </span><span class="c1">// Now returns null</span>
+<a id="__codelineno-49-15" name="__codelineno-49-15" href="#__codelineno-49-15"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-49-16" name="__codelineno-49-16" href="#__codelineno-49-16"></a>
+<a id="__codelineno-49-17" name="__codelineno-49-17" href="#__codelineno-49-17"></a><span class="w">    </span><span class="c1">// THEN: New behavior applies, non-reconfigured behaviors unchanged</span>
+<a id="__codelineno-49-18" name="__codelineno-49-18" href="#__codelineno-49-18"></a><span class="w">    </span><span class="n">assertNull</span><span class="p">(</span><span class="n">fake</span><span class="p">.</span><span class="na">findById</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">))</span>
+<a id="__codelineno-49-19" name="__codelineno-49-19" href="#__codelineno-49-19"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;active&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">status</span><span class="p">)</span><span class="w">  </span><span class="c1">// Unchanged</span>
+<a id="__codelineno-49-20" name="__codelineno-49-20" href="#__codelineno-49-20"></a><span class="p">}</span>
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Selective Reconfiguration</p>
+<p>The <code>modify {}</code> method only updates the behaviors you specify. All other behaviors remain unchanged from their previous configuration.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Use Judiciously</p>
+<p>Mutable fakes are designed for integration tests where the same injected fake needs to simulate state changes. For unit tests, prefer immutable fakes with separate instances per scenario.</p>
+</div>
+<p><strong>Learn more:</strong> <a href="immutable-vs-mutable.html">Immutable vs Mutable</a> for an in-depth comparison, and <a href="plugin-configuration.html#mutable-fakes-configuration">Plugin Configuration</a> for enabling mutable fakes project-wide.</p>
 <hr />
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <p><strong>Learn More:</strong><br />
@@ -2486,6 +2570,7 @@
 - <strong><a href="migration-from-mocks.html">Migration from Mocks</a></strong> - Migrating from MockK or Mockito<br />
 - <strong><a href="performance.html">Performance</a></strong> - Build performance and optimization</p>
 <p><strong>Advanced Configuration:</strong><br />
+- <strong><a href="immutable-vs-mutable.html">Immutable vs Mutable</a></strong> - In-depth comparison of immutable and mutable fakes<br />
 - <strong><a href="plugin-configuration.html">Plugin Configuration</a></strong> - Compiler plugin configuration and log levels<br />
 - <strong><a href="generated-code-reference.html">Generated Code Reference</a></strong> - Understanding generated fake implementations<br />
 - <strong><a href="platform-support.html">Platform Support</a></strong> - KMP target support and platform-specific patterns</p>

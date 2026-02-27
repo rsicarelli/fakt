@@ -670,6 +670,29 @@
   
   
     <li class="md-nav__item">
+      <a href="user-guide/immutable-vs-mutable.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Immutable vs Mutable
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="user-guide/testing-patterns.html" class="md-nav__link">
         
   
@@ -1159,7 +1182,8 @@
 </code></pre></div>
 <div class="admonition note">
 <p class="admonition-title">Fakt does it differently</p>
-<p>Unlike the mutable handwritten pattern above, Fakt generates <strong>immutable</strong> fakes where behavior is set via constructor parameters and cannot change after construction. This eliminates shared mutable state and makes fakes thread-safe by design.</p>
+<p>By default, Fakt generates <strong>immutable</strong> fakes where behavior is set via constructor parameters and cannot change after construction. This eliminates shared mutable state and makes fakes thread-safe by design.</p>
+<p>For advanced integration test scenarios, Fakt also supports <a href="user-guide/immutable-vs-mutable.html">opt-in mutable fakes</a> with <code>@Fake(mutability = MutabilityMode.MUTABLE)</code>. Unlike the handwritten pattern above, mutable Fakt fakes are still compiler-generated (never drift from the interface), use a type-safe <code>modify {}</code> DSL (not raw setters), and compose cleanly with call history.</p>
 </div>
 <p>The problems: call history uses mutable variables that break under concurrent tests. N methods require ~30N lines. Interface changes don&rsquo;t break unused fakes—they silently drift. For 50 interfaces, this means thousands of lines of brittle boilerplate.</p>
 <h3 id="the-mock-tax">The Mock Tax<a class="headerlink" href="#the-mock-tax" title="Permanent link">&para;</a></h3>
