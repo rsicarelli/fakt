@@ -34,6 +34,17 @@ A single KMP module demonstrating core Fakt features:
 
 **Source Set Targets**: `commonMain` → `commonTest`, `jvmMain` → `jvmTest`
 
+### 🧪 **jvm-test-fixtures**
+A multi-module JVM project demonstrating Fakt with [Gradle test fixtures](https://docs.gradle.org/current/userguide/java_testing.html#sec:java_test_fixtures):
+- **Cross-Module Fakes**: Fakes generated in `testFixtures` source set, consumed by other modules
+- **No Collector Module**: Standard Gradle `testFixtures()` dependency — no `-fakes` module needed
+- **Multiple Type Support**: Interface, abstract class, and open class with `@Fake`
+- **Suspend Functions**: Async operations in abstract class fakes
+
+**Structure**: `core/` (producer with `java-test-fixtures` plugin) → `app/` (consumer via `testFixtures(projects.core)`)
+
+**Source Set Targets**: `main` → `testFixtures` (instead of `test`)
+
 ### 🏗️ **kmp-multi-module**
 A complex multi-module KMP project showcasing:
 - **Cross-Module Faking**: Interfaces defined in one module, faked in another
@@ -115,6 +126,9 @@ cd samples/android-single-module
 
 # KMP samples
 cd samples/kmp-single-module
+../../gradlew build
+
+cd samples/jvm-test-fixtures  # Gradle test fixtures multi-module
 ../../gradlew build
 
 cd samples/kmp-multi-target  # ⭐ NEW: Hierarchy validation sample

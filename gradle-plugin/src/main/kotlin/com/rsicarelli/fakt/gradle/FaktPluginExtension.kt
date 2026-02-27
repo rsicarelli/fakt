@@ -149,6 +149,47 @@ constructor(objects: ObjectFactory, private val project: Project) {
         objects.property(Boolean::class.java).convention(false)
 
     /**
+     * Controls whether generated fakes are placed in the `testFixtures` source set.
+     *
+     * When set to `true`, Fakt generates fakes into `build/generated/fakt/testFixtures/kotlin/`
+     * instead of the default `build/generated/fakt/test/kotlin/`. This enables other modules to
+     * consume generated fakes via Gradle's standard `testFixtures()` dependency mechanism:
+     * ```kotlin
+     * // Consumer module
+     * dependencies {
+     *     testImplementation(testFixtures(project(":core")))
+     * }
+     * ```
+     *
+     * **Requirements:**
+     * - The `java-test-fixtures` Gradle plugin must be applied to the project
+     * - JVM-only projects (not supported for KMP)
+     *
+     * If enabled without the `java-test-fixtures` plugin applied, a warning is emitted and Fakt
+     * falls back to the default `test` source set behavior.
+     *
+     * **Default:** `false`
+     *
+     * **Usage:**
+     *
+     * ```kotlin
+     * plugins {
+     *     `java-test-fixtures`
+     * }
+     *
+     * fakt {
+     *     useGradleTestFixtures.set(true)
+     * }
+     * ```
+     *
+     * @see <a
+     *   href="https://docs.gradle.org/current/userguide/java_testing.html#sec:java_test_fixtures">Gradle
+     *   Test Fixtures</a>
+     */
+    public val useGradleTestFixtures: Property<Boolean> =
+        objects.property(Boolean::class.java).convention(false)
+
+    /**
      * Source project to collect generated fakes from (collector mode).
      *
      * When set, this module switches to **collector mode**:

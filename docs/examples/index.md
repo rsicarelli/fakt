@@ -42,6 +42,28 @@ Fakt includes working sample projects demonstrating different use cases.
 
 ---
 
+## jvm-test-fixtures
+
+**Location**: [`samples/jvm-test-fixtures/`](https://github.com/rsicarelli/fakt/tree/main/samples/jvm-test-fixtures)
+
+**Demonstrates**: Cross-module fake sharing via Gradle's `java-test-fixtures` plugin
+
+**Structure**:
+
+- `core/` — Producer with `@Fake` interface, abstract class, and open class
+- `app/` — Consumer using fakes from core's testFixtures
+
+**Key Examples**:
+
+- `useGradleTestFixtures` plugin configuration
+- Cross-module fake consumption via `testFixtures(projects.core)`
+- No collector module or Fakt plugin needed in consumer
+- Interface, abstract class, and open class support
+
+**Best for**: JVM multi-module projects wanting simple cross-module fake sharing
+
+---
+
 ## kmp-single-module
 
 **Location**: [`samples/kmp-single-module/`](https://github.com/rsicarelli/fakt/tree/main/samples/kmp-single-module)
@@ -153,6 +175,10 @@ cd fakt/samples/jvm-single-module
 
 # Android sample
 cd fakt/samples/android-single-module
+./gradlew build
+
+# JVM test fixtures multi-module
+cd fakt/samples/jvm-test-fixtures
 ./gradlew build
 
 # KMP samples

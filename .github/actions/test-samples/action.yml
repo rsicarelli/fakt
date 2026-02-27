@@ -29,6 +29,11 @@ runs:
       shell: bash
       run: ./gradlew -p samples/android-single-module build
 
+    # Test JVM test fixtures multi-module sample
+    - name: Test jvm-test-fixtures sample
+      shell: bash
+      run: ./gradlew -p samples/jvm-test-fixtures build
+
     # Using 'allTests' to ensure ALL KMP targets are tested (jvmTest, jsTest, etc.)
     # Then 'check' for additional validations (apiCheck, compilation validation).
 
