@@ -477,9 +477,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#multi-module-experimental" class="md-nav__link">
+  <a href="#multi-module" class="md-nav__link">
     <span class="md-ellipsis">
-      Multi-Module (Experimental)
+      Multi-Module
     </span>
   </a>
   
@@ -616,6 +616,29 @@
   
   <span class="md-ellipsis">
     Multi-Module
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-guide/test-fixtures.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Test Fixtures (JVM)
     
   </span>
   
@@ -988,9 +1011,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#multi-module-experimental" class="md-nav__link">
+  <a href="#multi-module" class="md-nav__link">
     <span class="md-ellipsis">
-      Multi-Module (Experimental)
+      Multi-Module
     </span>
   </a>
   
@@ -1375,17 +1398,35 @@ Compiler catches type errors at build time.
 </table>
 
 <hr />
-<h2 id="multi-module-experimental">Multi-Module (Experimental)<a class="headerlink" href="#multi-module-experimental" title="Permanent link">&para;</a></h2>
+<h2 id="multi-module">Multi-Module<a class="headerlink" href="#multi-module" title="Permanent link">&para;</a></h2>
 <table>
 <tr><th>Case</th><th>Example</th></tr>
 <tr>
-<td><strong>Collector Module</strong></td>
+<td><strong>Test Fixtures (JVM)</strong></td>
 <td>
 
-<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
-<a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
-<a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="n">plugins</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="w">    </span><span class="n">`java-test-fixtures`</span>
+<a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="p">}</span>
+<a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a>
+<a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a><span class="w">    </span><span class="n">useGradleTestFixtures</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
+<a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="p">}</span>
+<a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a>
+<a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a><span class="c1">// Consumer:</span>
+<a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a><span class="n">testImplementation</span><span class="p">(</span><span class="n">testFixtures</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">))</span>
+</code></pre></div>
+
+</td>
+</tr>
+<tr>
+<td><strong>Collector Module</strong><br>(Experimental)</td>
+<td>
+
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
+<a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
+<a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="p">}</span>
 </code></pre></div>
 
 </td>
@@ -1394,11 +1435,11 @@ Compiler catches type errors at build time.
 <td><strong>Consumer Module</strong></td>
 <td>
 
-<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="n">dependencies</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="w">    </span><span class="n">commonTest</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="w">        </span><span class="n">implementation</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analyticsFakes</span><span class="p">)</span>
-<a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="n">dependencies</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="w">    </span><span class="n">commonTest</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="w">        </span><span class="n">implementation</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analyticsFakes</span><span class="p">)</span>
+<a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="p">}</span>
 </code></pre></div>
 
 </td>
@@ -1432,7 +1473,8 @@ Compiler catches type errors at build time.
 <ul>
 <li><a href="../user-guide/usage.html">Usage Guide</a> - Comprehensive usage reference with detailed examples</li>
 <li><a href="../why-fakt.html">Why Fakt?</a> - Design philosophy and advantages</li>
-<li><a href="../user-guide/multi-module.html">Multi-Module</a> - Cross-module fakes</li>
+<li><a href="../user-guide/test-fixtures.html">Test Fixtures (JVM)</a> - Cross-module fakes for JVM projects</li>
+<li><a href="../user-guide/multi-module.html">Multi-Module (KMP)</a> - Cross-module fakes with collector modules</li>
 </ul>
 
 

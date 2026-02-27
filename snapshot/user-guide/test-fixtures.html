@@ -12,13 +12,13 @@
         <meta name="author" content="Rodrigo Sicarelli">
       
       
-        <link rel="canonical" href="https://rsicarelli.github.io/fakt/snapshot/examples/index.html">
+        <link rel="canonical" href="https://rsicarelli.github.io/fakt/snapshot/user-guide/test-fixtures.html">
       
       
-        <link rel="prev" href="../user-guide/known-issues.html">
+        <link rel="prev" href="multi-module.html">
       
       
-        <link rel="next" href="../help/faq.html">
+        <link rel="next" href="immutable-vs-mutable.html">
       
       
       <link rel="icon" href="../assets/logo.png">
@@ -26,7 +26,7 @@
     
     
       
-        <title>Samples - Fakt</title>
+        <title>Test Fixtures (JVM) - Fakt</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#sample-projects" class="md-skip">
+        <a href="#test-fixtures-jvm" class="md-skip">
           Skip to content
         </a>
       
@@ -119,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Samples
+              Test Fixtures (JVM)
             
           </span>
         </div>
@@ -394,7 +394,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/plugin-configuration.html" class="md-nav__link">
+      <a href="plugin-configuration.html" class="md-nav__link">
         
   
   
@@ -421,18 +421,20 @@
       
   
   
+    
   
   
+  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
           <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
@@ -448,7 +450,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             User Guide
@@ -462,7 +464,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/usage.html" class="md-nav__link">
+      <a href="usage.html" class="md-nav__link">
         
   
   
@@ -485,7 +487,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/multi-module.html" class="md-nav__link">
+      <a href="multi-module.html" class="md-nav__link">
         
   
   
@@ -505,10 +507,32 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../user-guide/test-fixtures.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Test Fixtures (JVM)
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="test-fixtures.html" class="md-nav__link md-nav__link--active">
         
   
   
@@ -519,6 +543,104 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#test-fixtures-vs-collector-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      Test Fixtures vs Collector Module
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setup
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Setup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-configure-the-producer-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1: Configure the Producer Module
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-consume-in-another-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2: Consume in Another Module
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      How It Works
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Validation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sample-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sample Project
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      Next Steps
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -531,7 +653,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/immutable-vs-mutable.html" class="md-nav__link">
+      <a href="immutable-vs-mutable.html" class="md-nav__link">
         
   
   
@@ -554,7 +676,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/testing-patterns.html" class="md-nav__link">
+      <a href="testing-patterns.html" class="md-nav__link">
         
   
   
@@ -577,7 +699,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/migration-from-mocks.html" class="md-nav__link">
+      <a href="migration-from-mocks.html" class="md-nav__link">
         
   
   
@@ -600,7 +722,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/performance.html" class="md-nav__link">
+      <a href="performance.html" class="md-nav__link">
         
   
   
@@ -623,7 +745,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/generated-code-reference.html" class="md-nav__link">
+      <a href="generated-code-reference.html" class="md-nav__link">
         
   
   
@@ -646,7 +768,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/platform-support.html" class="md-nav__link">
+      <a href="platform-support.html" class="md-nav__link">
         
   
   
@@ -669,7 +791,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/known-issues.html" class="md-nav__link">
+      <a href="known-issues.html" class="md-nav__link">
         
   
   
@@ -696,32 +818,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    Samples
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="index.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../examples/index.html" class="md-nav__link">
         
   
   
@@ -732,107 +832,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#jvm-single-module" class="md-nav__link">
-    <span class="md-ellipsis">
-      jvm-single-module
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#android-single-module" class="md-nav__link">
-    <span class="md-ellipsis">
-      android-single-module
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#jvm-test-fixtures" class="md-nav__link">
-    <span class="md-ellipsis">
-      jvm-test-fixtures
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#kmp-single-module" class="md-nav__link">
-    <span class="md-ellipsis">
-      kmp-single-module
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#kmp-multi-module" class="md-nav__link">
-    <span class="md-ellipsis">
-      kmp-multi-module
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#kmp-multi-target" class="md-nav__link">
-    <span class="md-ellipsis">
-      kmp-multi-target
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#fake-publishing" class="md-nav__link">
-    <span class="md-ellipsis">
-      fake-publishing
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#running-samples" class="md-nav__link">
-    <span class="md-ellipsis">
-      Running Samples
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      Next Steps
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -955,72 +954,69 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#jvm-single-module" class="md-nav__link">
+  <a href="#test-fixtures-vs-collector-module" class="md-nav__link">
     <span class="md-ellipsis">
-      jvm-single-module
+      Test Fixtures vs Collector Module
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#android-single-module" class="md-nav__link">
+  <a href="#setup" class="md-nav__link">
     <span class="md-ellipsis">
-      android-single-module
+      Setup
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Setup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-configure-the-producer-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1: Configure the Producer Module
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-consume-in-another-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2: Consume in Another Module
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      How It Works
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#jvm-test-fixtures" class="md-nav__link">
+  <a href="#validation" class="md-nav__link">
     <span class="md-ellipsis">
-      jvm-test-fixtures
+      Validation
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#kmp-single-module" class="md-nav__link">
+  <a href="#sample-project" class="md-nav__link">
     <span class="md-ellipsis">
-      kmp-single-module
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#kmp-multi-module" class="md-nav__link">
-    <span class="md-ellipsis">
-      kmp-multi-module
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#kmp-multi-target" class="md-nav__link">
-    <span class="md-ellipsis">
-      kmp-multi-target
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#fake-publishing" class="md-nav__link">
-    <span class="md-ellipsis">
-      fake-publishing
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#running-samples" class="md-nav__link">
-    <span class="md-ellipsis">
-      Running Samples
+      Sample Project
     </span>
   </a>
   
@@ -1054,164 +1050,142 @@
   
 
 
-<h1 id="sample-projects">Sample Projects<a class="headerlink" href="#sample-projects" title="Permanent link">&para;</a></h1>
-<p>Fakt includes working sample projects demonstrating different use cases.</p>
+<h1 id="test-fixtures-jvm">Test Fixtures (JVM)<a class="headerlink" href="#test-fixtures-jvm" title="Permanent link">&para;</a></h1>
+<p>Share generated fakes across JVM modules using Gradle&rsquo;s built-in <a href="https://docs.gradle.org/current/userguide/java_testing.html#sec:java_test_fixtures">test fixtures</a> plugin — no collector module needed.</p>
+<div class="admonition note">
+<p class="admonition-title">JVM Only</p>
+<p>This feature requires the <code>java-test-fixtures</code> Gradle plugin, which is only available for JVM and Android projects. For KMP multi-module projects, use the <a href="multi-module.html">Collector Module</a> approach instead.</p>
+</div>
 <hr />
-<h2 id="jvm-single-module">jvm-single-module<a class="headerlink" href="#jvm-single-module" title="Permanent link">&para;</a></h2>
-<p><strong>Location</strong>: <a href="https://github.com/rsicarelli/fakt/tree/main/samples/jvm-single-module"><code>samples/jvm-single-module/</code></a></p>
-<p><strong>Demonstrates</strong>: JVM-only projects with standard kotlin-jvm plugin</p>
-<p><strong>Targets</strong>: JVM only</p>
-<p><strong>Key Examples</strong>:</p>
-<ul>
-<li>UserRepository (CRUD with call tracking)</li>
-<li>AuthenticationService (suspend functions + Result types)</li>
-<li>PropertyAndMethodInterface (properties + methods)</li>
-<li>No platform-specific setup required</li>
-</ul>
-<p><strong>Best for</strong>: Learning Fakt basics without KMP complexity</p>
+<h2 id="test-fixtures-vs-collector-module">Test Fixtures vs Collector Module<a class="headerlink" href="#test-fixtures-vs-collector-module" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Test Fixtures</th>
+<th>Collector Module</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Platform</strong></td>
+<td>JVM / Android only</td>
+<td>KMP + JVM + Android</td>
+</tr>
+<tr>
+<td><strong>Extra module needed?</strong></td>
+<td>No</td>
+<td>Yes (<code>:module-fakes</code>)</td>
+</tr>
+<tr>
+<td><strong>Setup complexity</strong></td>
+<td>Minimal (2 lines)</td>
+<td>Moderate (new module + config)</td>
+</tr>
+<tr>
+<td><strong>Consumer dependency</strong></td>
+<td><code>testFixtures(projects.core)</code></td>
+<td><code>implementation(projects.core.fakes)</code></td>
+</tr>
+<tr>
+<td><strong>Best for</strong></td>
+<td>JVM multi-module projects</td>
+<td>KMP projects, Maven publishing</td>
+</tr>
+</tbody>
+</table>
 <hr />
-<h2 id="android-single-module">android-single-module<a class="headerlink" href="#android-single-module" title="Permanent link">&para;</a></h2>
-<p><strong>Location</strong>: <a href="https://github.com/rsicarelli/fakt/tree/main/samples/android-single-module"><code>samples/android-single-module/</code></a></p>
-<p><strong>Demonstrates</strong>: Android Library projects with AGP integration</p>
-<p><strong>Targets</strong>: Android (compileSdk=35, minSdk=24)</p>
-<p><strong>Key Examples</strong>:</p>
-<ul>
-<li>Same scenarios as jvm-single-module for consistency</li>
-<li>Unit tests in <code>src/test/kotlin</code></li>
-<li>Instrumented tests support in <code>src/androidTest/kotlin</code></li>
-<li>Works with Android Gradle Plugin 8.12.3+</li>
-</ul>
-<p><strong>Best for</strong>: Android developers wanting test fakes without KMP</p>
+<h2 id="setup">Setup<a class="headerlink" href="#setup" title="Permanent link">&para;</a></h2>
+<h3 id="step-1-configure-the-producer-module">Step 1: Configure the Producer Module<a class="headerlink" href="#step-1-configure-the-producer-module" title="Permanent link">&para;</a></h3>
+<p>Apply the <code>java-test-fixtures</code> plugin and enable <code>useGradleTestFixtures</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">// core/build.gradle.kts</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">plugins</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="n">kotlin</span><span class="p">(</span><span class="s">&quot;jvm&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="n">`java-test-fixtures`</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="n">alias</span><span class="p">(</span><span class="n">libs</span><span class="p">.</span><span class="na">plugins</span><span class="p">.</span><span class="na">fakt</span><span class="p">)</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">}</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="n">useGradleTestFixtures</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="p">}</span>
+</code></pre></div>
+<p>Define your <code>@Fake</code> annotated types as usual:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1">// core/src/main/kotlin/com/example/core/UserRepository.kt</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nd">@Fake</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">UserRepository</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">findById</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">):</span><span class="w"> </span><span class="n">User?</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="n">user</span><span class="p">:</span><span class="w"> </span><span class="n">User</span><span class="p">):</span><span class="w"> </span><span class="n">User</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">delete</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">):</span><span class="w"> </span><span class="kt">Boolean</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="p">}</span>
+</code></pre></div>
+<p>Build the module to generate fakes:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>./gradlew<span class="w"> </span>:core:build
+</code></pre></div>
+<p>Verify fakes are generated in the <code>testFixtures</code> directory:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>core/build/generated/fakt/testFixtures/kotlin/
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>└── com/example/core/
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    └── FakeUserRepositoryImpl.kt
+</code></pre></div>
+<h3 id="step-2-consume-in-another-module">Step 2: Consume in Another Module<a class="headerlink" href="#step-2-consume-in-another-module" title="Permanent link">&para;</a></h3>
+<p>In the consumer module, add a <code>testFixtures()</code> dependency — no Fakt plugin needed:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1">// app/build.gradle.kts</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">plugins</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="n">kotlin</span><span class="p">(</span><span class="s">&quot;jvm&quot;</span><span class="p">)</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">}</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="n">dependencies</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">)</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="n">testImplementation</span><span class="p">(</span><span class="n">testFixtures</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">))</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="p">}</span>
+</code></pre></div>
+<p>Use the generated fakes in tests:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1">// app/src/test/kotlin/com/example/app/UserServiceTest.kt</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kd">class</span><span class="w"> </span><span class="nc">UserServiceTest</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="nd">@Test</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN user exists WHEN getUser THEN returns user`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">        </span><span class="kd">val</span><span class="w"> </span><span class="nv">repo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">            </span><span class="n">findById</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">        </span><span class="p">}</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">        </span><span class="kd">val</span><span class="w"> </span><span class="nv">service</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UserService</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">        </span><span class="kd">val</span><span class="w"> </span><span class="nv">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">service</span><span class="p">.</span><span class="na">getUser</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">)</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">        </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="o">?.</span><span class="na">name</span><span class="p">)</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="p">}</span>
+</code></pre></div>
 <hr />
-<h2 id="jvm-test-fixtures">jvm-test-fixtures<a class="headerlink" href="#jvm-test-fixtures" title="Permanent link">&para;</a></h2>
-<p><strong>Location</strong>: <a href="https://github.com/rsicarelli/fakt/tree/main/samples/jvm-test-fixtures"><code>samples/jvm-test-fixtures/</code></a></p>
-<p><strong>Demonstrates</strong>: Cross-module fake sharing via Gradle&rsquo;s <code>java-test-fixtures</code> plugin</p>
-<p><strong>Structure</strong>:</p>
+<h2 id="how-it-works">How It Works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Fakt detects <code>java-test-fixtures</code> plugin and <code>useGradleTestFixtures.set(true)</code></li>
+<li>Generated fakes go to <code>build/generated/fakt/testFixtures/kotlin/</code> instead of <code>test/</code></li>
+<li>The <code>testFixtures</code> source set is configured to include the generated directory</li>
+<li>The module&rsquo;s own tests can use the fakes (Gradle makes testFixtures visible to test automatically)</li>
+<li>Other modules import fakes via <code>testFixtures(project(":core"))</code> — standard Gradle mechanism</li>
+</ol>
+<hr />
+<h2 id="validation">Validation<a class="headerlink" href="#validation" title="Permanent link">&para;</a></h2>
+<p>If <code>useGradleTestFixtures</code> is enabled but the <code>java-test-fixtures</code> plugin is not applied, Fakt emits a warning and falls back to the default <code>test</code> source set:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Fakt: useGradleTestFixtures is enabled but the &#39;java-test-fixtures&#39; plugin
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>is not applied. Add `java-test-fixtures` to your plugins block:
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>  plugins {
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>      `java-test-fixtures`
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>  }
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>Falling back to default &#39;test&#39; source set.
+</code></pre></div>
+<hr />
+<h2 id="sample-project">Sample Project<a class="headerlink" href="#sample-project" title="Permanent link">&para;</a></h2>
+<p>See <a href="https://github.com/rsicarelli/fakt/tree/main/samples/jvm-test-fixtures"><code>samples/jvm-test-fixtures/</code></a> for a working multi-module example with:</p>
 <ul>
-<li><code>core/</code> — Producer with <code>@Fake</code> interface, abstract class, and open class</li>
+<li><code>core/</code> — Producer with interface, abstract class, and open class</li>
 <li><code>app/</code> — Consumer using fakes from core&rsquo;s testFixtures</li>
 </ul>
-<p><strong>Key Examples</strong>:</p>
-<ul>
-<li><code>useGradleTestFixtures</code> plugin configuration</li>
-<li>Cross-module fake consumption via <code>testFixtures(projects.core)</code></li>
-<li>No collector module or Fakt plugin needed in consumer</li>
-<li>Interface, abstract class, and open class support</li>
-</ul>
-<p><strong>Best for</strong>: JVM multi-module projects wanting simple cross-module fake sharing</p>
-<hr />
-<h2 id="kmp-single-module">kmp-single-module<a class="headerlink" href="#kmp-single-module" title="Permanent link">&para;</a></h2>
-<p><strong>Location</strong>: <a href="https://github.com/rsicarelli/fakt/tree/main/samples/kmp-single-module"><code>samples/kmp-single-module/</code></a></p>
-<p><strong>Demonstrates</strong>: Basic KMP usage with single module</p>
-<p><strong>Targets</strong>: JVM, iOS, Android, JS, Native</p>
-<p><strong>Key Examples</strong>:</p>
-<ul>
-<li>Simple interfaces with suspend functions</li>
-<li>Property fakes (val/var)</li>
-<li>Generic interfaces</li>
-<li>Call tracking with StateFlow</li>
-<li>Mutable fakes with mid-test reconfiguration</li>
-<li>Mutable + call history composition</li>
-</ul>
-<p><strong>Best for</strong>: Learning Fakt basics and KMP setup</p>
-<hr />
-<h2 id="kmp-multi-module">kmp-multi-module<a class="headerlink" href="#kmp-multi-module" title="Permanent link">&para;</a></h2>
-<p><strong>Location</strong>: <a href="https://github.com/rsicarelli/fakt/tree/main/samples/kmp-multi-module"><code>samples/kmp-multi-module/</code></a></p>
-<p><strong>Demonstrates</strong>: Advanced multi-module architecture with dedicated fake modules</p>
-<p><strong>Structure</strong>:</p>
-<ul>
-<li>11 producer modules with <code>@Fake</code> interfaces</li>
-<li>11 dedicated <code>-fakes</code> collector modules</li>
-<li>1 consumer app module using all fakes</li>
-</ul>
-<p><strong>Key Examples</strong>:</p>
-<ul>
-<li>Cross-module fake consumption (experimental)</li>
-<li>Gradle project references with version catalogs</li>
-<li>Large-scale KMP project patterns</li>
-<li>Fake module organization</li>
-</ul>
-<p><strong>Best for</strong>: Understanding multi-module setups and scaling Fakt</p>
-<hr />
-<h2 id="kmp-multi-target">kmp-multi-target<a class="headerlink" href="#kmp-multi-target" title="Permanent link">&para;</a></h2>
-<p><strong>Location</strong>: <a href="https://github.com/rsicarelli/fakt/tree/main/samples/kmp-multi-target"><code>samples/kmp-multi-target/</code></a></p>
-<p><strong>Demonstrates</strong>: KMP source set hierarchy validation and platform-specific fake generation</p>
-<p><strong>Structure</strong>:</p>
-<ul>
-<li>6 platform-specific <code>@Fake</code> interfaces (one per source set)</li>
-<li>11 test classes (6 basic + 5 hierarchy validation)</li>
-<li>45+ test cases validating fake generation and hierarchy</li>
-</ul>
-<p><strong>Key Validations</strong>:</p>
-<ul>
-<li>✅ Platform-specific fake generation (jvmMain → jvmTest, iosMain → iosTest)</li>
-<li>✅ Vertical hierarchy (child source sets access parent fakes)</li>
-<li>✅ Multi-level inheritance (iOS accesses commonMain + nativeMain + iosMain)</li>
-<li>✅ Horizontal isolation (jvmTest cannot access iosFakes)</li>
-</ul>
-<p><strong>Source Sets Tested</strong>:</p>
-<ul>
-<li><code>commonMain</code> → <code>commonTest</code> (base for all platforms)</li>
-<li><code>jvmMain</code> → <code>jvmTest</code> (JVM-specific)</li>
-<li><code>iosMain</code> → <code>iosTest</code> (iOS-specific, inherits from nativeMain)</li>
-<li><code>jsMain</code> → <code>jsTest</code> (JavaScript-specific)</li>
-<li><code>wasmJsMain</code> → <code>wasmJsTest</code> (WebAssembly-specific)</li>
-<li><code>nativeMain</code> → <code>nativeTest</code> (shared across all native targets)</li>
-</ul>
-<p><strong>Best for</strong>: Validating Fakt&rsquo;s source set mapping and KMP hierarchy support</p>
-<hr />
-<h2 id="fake-publishing">fake-publishing<a class="headerlink" href="#fake-publishing" title="Permanent link">&para;</a></h2>
-<p><strong>Location</strong>: <a href="https://github.com/rsicarelli/fakt/tree/main/samples/fake-publishing"><code>samples/fake-publishing/</code></a></p>
-<p><strong>Demonstrates</strong>: Publishing Fakt-generated fakes as Maven artifacts for external consumption</p>
-<p><strong>Structure</strong>:</p>
-<ul>
-<li><code>kmp-publisher/</code> - Library project that publishes fakes</li>
-<li><code>kmp-consumer/</code> - External project that consumes published fakes</li>
-</ul>
-<p><strong>Key Examples</strong>:</p>
-<ul>
-<li>Publishing collector modules to Maven Local</li>
-<li>Consuming pre-generated fakes from Maven artifacts</li>
-<li>Cross-project fake usage without Fakt plugin</li>
-<li>Interface, abstract class, and open class support</li>
-</ul>
-<p><strong>Best for</strong>: Library authors who want to ship pre-generated fakes alongside their APIs</p>
-<hr />
-<h2 id="running-samples">Running Samples<a class="headerlink" href="#running-samples" title="Permanent link">&para;</a></h2>
-<p>Clone the repository and build:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/rsicarelli/fakt.git
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># JVM-only sample</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="nb">cd</span><span class="w"> </span>fakt/samples/jvm-single-module
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>./gradlew<span class="w"> </span>build
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># Android sample</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="nb">cd</span><span class="w"> </span>fakt/samples/android-single-module
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>./gradlew<span class="w"> </span>build
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="c1"># JVM test fixtures multi-module</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="nb">cd</span><span class="w"> </span>fakt/samples/jvm-test-fixtures
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>./gradlew<span class="w"> </span>build
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="c1"># KMP samples</span>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="nb">cd</span><span class="w"> </span>fakt/samples/kmp-single-module
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>./gradlew<span class="w"> </span>build
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="c1"># KMP hierarchy validation</span>
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="nb">cd</span><span class="w"> </span>fakt/samples/kmp-multi-target
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>./gradlew<span class="w"> </span>allTests
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="c1"># Fake publishing sample (requires sequential steps)</span>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="nb">cd</span><span class="w"> </span>fakt/samples/fake-publishing/kmp-publisher
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>./gradlew<span class="w"> </span>publishToMavenLocal
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="nb">cd</span><span class="w"> </span>fakt/samples/fake-publishing/kmp-consumer
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>./gradlew<span class="w"> </span>build
-</code></pre></div>
 <hr />
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../user-guide/multi-module.html">Multi-Module Usage</a> - Cross-module fakes</li>
+<li><strong><a href="multi-module.html">Multi-Module (KMP)</a></strong> — Collector module approach for KMP projects</li>
+<li><strong><a href="plugin-configuration.html">Plugin Configuration</a></strong> — All configuration options</li>
+<li><strong><a href="../examples/index.html">Samples</a></strong> — All sample projects</li>
 </ul>
 
 
