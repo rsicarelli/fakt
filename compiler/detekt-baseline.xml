@@ -5,7 +5,6 @@
     <ID>CyclomaticComplexMethod:CollectionDefaultStrategy.kt$CollectionDefaultStrategy$override fun defaultValue(type: CodeType): CodeExpression</ID>
     <ID>CyclomaticComplexMethod:FakeClassChecker.kt$FakeClassChecker$override fun check(declaration: FirClass)</ID>
     <ID>CyclomaticComplexMethod:FakeGenerator.kt$private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile</ID>
-    <ID>CyclomaticComplexMethod:FakeGenerator.kt$private fun generateMethodBehaviorProperty( classBuilder: ClassBuilder, method: MethodSpec, resolver: DefaultValueResolver, isClass: Boolean = false, className: String = "", )</ID>
     <ID>CyclomaticComplexMethod:FirExpressionRenderer.kt$private fun renderLiteral(literal: FirLiteralExpression): String?</ID>
     <ID>CyclomaticComplexMethod:FunctionTypeHandler.kt$FunctionTypeHandler$fun renderFunctionType( irType: IrType, preserveTypeParameters: Boolean, typeRenderer: (IrType, Boolean) -&gt; String, ): String</ID>
     <ID>CyclomaticComplexMethod:GenericTypeHandler.kt$GenericTypeHandler$fun renderGenericType( irType: IrSimpleType, preserveTypeParameters: Boolean, typeRenderer: (IrType, Boolean) -&gt; String, ): String</ID>
@@ -13,15 +12,18 @@
     <ID>CyclomaticComplexMethod:Rendering.kt$public fun CodeProperty.renderTo(builder: CodeBuilder)</ID>
     <ID>CyclomaticComplexMethod:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension$private fun processClassesFromMetadata( classMetadata: List&lt;IrClassGenerationMetadata&gt;, firMetricsMap: Map&lt;String, FirMetrics&gt;, collectDetailedMetrics: Boolean, ): ProcessingResult</ID>
     <ID>CyclomaticComplexMethod:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension$private fun processInterfacesFromMetadata( interfaceMetadata: List&lt;IrGenerationMetadata&gt;, firMetricsMap: Map&lt;String, FirMetrics&gt;, collectDetailedMetrics: Boolean, ): ProcessingResult</ID>
+    <ID>LargeClass:ConfigurationDslGenerator.kt$ConfigurationDslGenerator</ID>
+    <ID>LongMethod:ConfigurationDslGenerator.kt$ConfigurationDslGenerator$fun generateConfigurationDslCodeFile(analysis: ClassAnalysis, fakeClassName: String): CodeFile</ID>
     <ID>LongMethod:FakeClassChecker.kt$FakeClassChecker$override fun check(declaration: FirClass)</ID>
     <ID>LongMethod:FakeGenerator.kt$private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile</ID>
-    <ID>LongMethod:FakeGenerator.kt$private fun generateMethodBehaviorProperty( classBuilder: ClassBuilder, method: MethodSpec, resolver: DefaultValueResolver, isClass: Boolean = false, className: String = "", )</ID>
     <ID>LongMethod:MethodExtensions.kt$fun ClassBuilder.overrideMethod( name: String, params: List&lt;Triple&lt;String, String, Boolean&gt;&gt;, returnType: String, config: OverrideMethodConfig = OverrideMethodConfig(), )</ID>
     <ID>LongMethod:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension$private fun generateFromFirMetadata(moduleFragment: IrModuleFragment)</ID>
     <ID>LongMethod:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension$private fun processClassesFromMetadata( classMetadata: List&lt;IrClassGenerationMetadata&gt;, firMetricsMap: Map&lt;String, FirMetrics&gt;, collectDetailedMetrics: Boolean, ): ProcessingResult</ID>
     <ID>LongMethod:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension$private fun processInterfacesFromMetadata( interfaceMetadata: List&lt;IrGenerationMetadata&gt;, firMetricsMap: Map&lt;String, FirMetrics&gt;, collectDetailedMetrics: Boolean, ): ProcessingResult</ID>
     <ID>LongMethod:UnifiedMetricsTree.kt$UnifiedMetricsTree$fun toTreeString(targetColumn: Int = 80): String</ID>
-    <ID>LongParameterList:FakeGenerator.kt$( packageName: String, interfaceName: String, methods: List&lt;MethodSpec&gt; = emptyList(), properties: List&lt;PropertySpec&gt; = emptyList(), imports: List&lt;String&gt; = emptyList(), header: String? = null, typeParameters: List&lt;String&gt; = emptyList(), isClass: Boolean = false, visibility: FirVisibility = FirVisibility.PUBLIC, annotations: List&lt;AnnotationSpec&gt; = emptyList(), generateCallHistory: Boolean = true, )</ID>
+    <ID>LongParameterList:ConfigurationDslGenerator.kt$ConfigurationDslGenerator$( fakeClassName: String, typeArgs: String, functions: List&lt;FunctionAnalysis&gt;, properties: List&lt;PropertyAnalysis&gt;, generateMutableBehaviors: Boolean = false, classTypeParamNames: Set&lt;String&gt; = emptySet(), )</ID>
+    <ID>LongParameterList:FakeGenerator.kt$( classBuilder: ClassBuilder, configClassName: String, methods: List&lt;MethodSpec&gt;, properties: List&lt;PropertySpec&gt;, typeParamNames: List&lt;String&gt;, visibility: FirVisibility, interfaceName: String, )</ID>
+    <ID>LongParameterList:FakeGenerator.kt$( packageName: String, interfaceName: String, methods: List&lt;MethodSpec&gt; = emptyList(), properties: List&lt;PropertySpec&gt; = emptyList(), imports: List&lt;String&gt; = emptyList(), header: String? = null, typeParameters: List&lt;String&gt; = emptyList(), isClass: Boolean = false, visibility: FirVisibility = FirVisibility.PUBLIC, annotations: List&lt;AnnotationSpec&gt; = emptyList(), generateCallHistory: Boolean = true, generateMutableBehaviors: Boolean = false, )</ID>
     <ID>LongParameterList:IrGenerationMetadata.kt$IrClassGenerationMetadata$( val className: String, val packageName: String, val typeParameters: List&lt;String&gt;, private val members: IrClassMembers, val sourceClass: IrClass, private val patternAnalyzer: GenericPatternAnalyzer, private val config: IrGenerationConfig = IrGenerationConfig(), )</ID>
     <ID>LongParameterList:IrGenerationMetadata.kt$IrGenerationMetadata$( val interfaceName: String, val packageName: String, val typeParameters: List&lt;String&gt;, private val members: IrInterfaceMembers, val sourceInterface: IrClass, private val patternAnalyzer: GenericPatternAnalyzer, private val config: IrGenerationConfig = IrGenerationConfig(), )</ID>
     <ID>LoopWithTooManyJumpStatements:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension$for</ID>
@@ -31,7 +33,6 @@
     <ID>NestedBlockDepth:FunctionTypeHandler.kt$FunctionTypeHandler$fun renderFunctionType( irType: IrType, preserveTypeParameters: Boolean, typeRenderer: (IrType, Boolean) -&gt; String, ): String</ID>
     <ID>NestedBlockDepth:ImportResolver.kt$ImportResolver$private fun collectImportsFromType( irType: IrType, currentPackage: String, imports: MutableSet&lt;String&gt;, )</ID>
     <ID>ReturnCount:FakeClassChecker.kt$FakeClassChecker$override fun check(declaration: FirClass)</ID>
-    <ID>ReturnCount:FakeGenerator.kt$private fun isValidFunctionInvocationPattern( method: MethodSpec, paramType: String, typeParamNames: Set&lt;String&gt;, ): Boolean</ID>
     <ID>ReturnCount:FakeInterfaceChecker.kt$FakeInterfaceChecker$override fun check(declaration: FirClass)</ID>
     <ID>ReturnCount:MetadataCacheManager.kt$MetadataCacheManager$fun tryLoadCache(storage: FirMetadataStorage): Boolean</ID>
     <ID>ReturnCount:MetadataCacheManager.kt$MetadataCacheManager$fun writeCache(storage: FirMetadataStorage): CacheWriteResult?</ID>
@@ -48,7 +49,9 @@
     <ID>TooManyFunctions:AnnotationExtractor.kt$AnnotationExtractor</ID>
     <ID>TooManyFunctions:ClassBuilder.kt$ClassBuilder</ID>
     <ID>TooManyFunctions:ConfigurationDslGenerator.kt$ConfigurationDslGenerator</ID>
+    <ID>TooManyFunctions:FakeClassChecker.kt$FakeClassChecker : FirClassChecker</ID>
     <ID>TooManyFunctions:FakeGenerator.kt$com.rsicarelli.fakt.codegen.extensions.FakeGenerator.kt</ID>
+    <ID>TooManyFunctions:FakeInterfaceChecker.kt$FakeInterfaceChecker : FirClassChecker</ID>
     <ID>TooManyFunctions:FirMetadataStorage.kt$FirMetadataStorage</ID>
     <ID>TooManyFunctions:FunctionBuilder.kt$FunctionBuilder</ID>
     <ID>TooManyFunctions:MetadataCacheSerializer.kt$MetadataCacheSerializer</ID>
