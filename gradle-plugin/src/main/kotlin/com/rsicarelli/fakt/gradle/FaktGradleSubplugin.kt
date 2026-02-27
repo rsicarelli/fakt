@@ -136,13 +136,13 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                     "  }\n" +
                     "Falling back to default 'test' source set."
             )
-            return false
+        } else {
+            project.logger.info(
+                "Fakt: Test fixtures mode enabled - generating fakes to testFixtures source set"
+            )
         }
 
-        project.logger.info(
-            "Fakt: Test fixtures mode enabled - generating fakes to testFixtures source set"
-        )
-        return true
+        return hasTestFixturesPlugin
     }
 
     /**
