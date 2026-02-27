@@ -6,8 +6,8 @@ import com.rsicarelli.fakt.compiler.core.context.FaktSharedContext
 import com.rsicarelli.fakt.compiler.core.telemetry.measureTimeNanos
 import com.rsicarelli.fakt.compiler.fir.extraction.AnnotationExtractor
 import com.rsicarelli.fakt.compiler.fir.metadata.FirCallHistoryMode
-import com.rsicarelli.fakt.compiler.fir.metadata.FirMutabilityMode
 import com.rsicarelli.fakt.compiler.fir.metadata.FirFunctionInfo
+import com.rsicarelli.fakt.compiler.fir.metadata.FirMutabilityMode
 import com.rsicarelli.fakt.compiler.fir.metadata.FirParameterInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirPropertyInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirSourceLocation

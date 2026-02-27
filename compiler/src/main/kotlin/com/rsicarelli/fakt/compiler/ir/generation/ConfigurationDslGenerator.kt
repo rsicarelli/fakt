@@ -705,8 +705,8 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
     /**
      * Generates `@PublishedApi internal fun build()` for interface config classes.
      *
-     * When immutable: behaviors have non-nullable defaults, passed through directly.
-     * When mutable: behaviors are nullable (null = not configured), build() applies `?: default`.
+     * When immutable: behaviors have non-nullable defaults, passed through directly. When mutable:
+     * behaviors are nullable (null = not configured), build() applies `?: default`.
      */
     private fun ClassBuilder.generateInterfaceBuildMethod(
         fakeClassName: String,
@@ -742,8 +742,8 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
      * Generates `@PublishedApi internal fun build()` for class config classes.
      *
      * When immutable: abstract = non-nullable with defaults, open = nullable (super delegation).
-     * When mutable: abstract behaviors are nullable, build() applies `?: default`.
-     * Open behaviors remain nullable regardless (null = delegate to super).
+     * When mutable: abstract behaviors are nullable, build() applies `?: default`. Open behaviors
+     * remain nullable regardless (null = delegate to super).
      */
     private fun ClassBuilder.generateClassBuildMethod(
         analysis: ClassAnalysis,
@@ -865,8 +865,8 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
     /**
      * Computes the default behavior lambda for a function.
      *
-     * Used in build() for mutable fakes to provide `?: default` fallback when Config behaviors
-     * are nullable. Mirrors the 4-tier default logic from [generateFunctionBehaviorProperty].
+     * Used in build() for mutable fakes to provide `?: default` fallback when Config behaviors are
+     * nullable. Mirrors the 4-tier default logic from [generateFunctionBehaviorProperty].
      */
     private fun computeFunctionDefaultLambda(
         function: FunctionAnalysis,

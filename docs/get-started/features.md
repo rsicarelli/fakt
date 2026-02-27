@@ -306,7 +306,7 @@ interface UserService { ... }
 interface UserRepository { ... }
 
 val fake = fakeUserRepository { findById { User("1", "Alice") } }
-fake.configure { findById { null } }  // Reconfigure mid-test
+fake.modify { findById { null } }  // Reconfigure mid-test
 ```
 
 </td>

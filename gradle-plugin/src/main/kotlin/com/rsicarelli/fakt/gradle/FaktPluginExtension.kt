@@ -116,9 +116,9 @@ constructor(objects: ObjectFactory, private val project: Project) {
     /**
      * Controls default mutability for all generated fakes.
      *
-     * When set to `true`, generated fakes are mutable and include a `configure {}` method
-     * that allows reconfiguring behaviors mid-test. Behavior properties become `internal var`
-     * instead of `private val`.
+     * When set to `true`, generated fakes are mutable and include a `configure {}` method that
+     * allows reconfiguring behaviors mid-test. Behavior properties become `internal var` instead of
+     * `private val`.
      *
      * When set to `false` (default), generated fakes are immutable — behaviors are set at
      * construction time and cannot be changed afterwards.

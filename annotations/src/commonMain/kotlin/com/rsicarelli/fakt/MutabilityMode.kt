@@ -7,7 +7,7 @@ package com.rsicarelli.fakt
  *
  * By default, generated fakes are immutable — behaviors are set at construction time via the
  * factory function and cannot be changed afterwards. Mutable fakes allow reconfiguring behaviors
- * mid-test via a `configure {}` method, which is useful for integration tests where the same fake
+ * mid-test via a `modify {}` method, which is useful for integration tests where the same fake
  * needs to simulate different states during a single test.
  *
  * ## Usage
@@ -34,7 +34,7 @@ package com.rsicarelli.fakt
  * }
  *
  * // Later in the test, reconfigure behavior:
- * repo.configure {
+ * repo.modify {
  *     findById { null } // Now returns null
  * }
  * ```
@@ -75,7 +75,7 @@ public enum class MutabilityMode {
      * - Simulating state changes (e.g., database failures after success)
      * - Testing multiple scenarios with the same injected fake instance
      *
-     * Generated fakes have `internal var` behavior properties and a `configure {}` method
+     * Generated fakes have `@Volatile private var` behavior properties and a `modify {}` method
      * that allows selective reconfiguration of individual behaviors.
      */
     MUTABLE,

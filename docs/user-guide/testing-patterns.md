@@ -221,7 +221,7 @@ fun `GIVEN repository succeeds WHEN database goes down THEN service handles fail
     assertTrue(fake.delete("item-1"))
 
     // Phase 2: Simulate database failure
-    fake.configure {
+    fake.modify {
         delete { throw IllegalStateException("Database unavailable") }
     }
 
@@ -241,7 +241,7 @@ fun `GIVEN service initializing WHEN ready THEN status updates`() {
     }
     assertEquals("initializing", fake.status)
 
-    fake.configure {
+    fake.modify {
         status { "ready" }
     }
     assertEquals("ready", fake.status)
@@ -263,7 +263,7 @@ fun `GIVEN mutable tracked fake WHEN reconfigured THEN call history persists`() 
     fake.find("query2")
     assertEquals(2, fake.findCalls.value.size)
 
-    fake.configure {
+    fake.modify {
         find { emptyList() }
     }
 

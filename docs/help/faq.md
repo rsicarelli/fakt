@@ -89,7 +89,7 @@ val fake = fakeUserRepository {
 }
 
 // Reconfigure mid-test
-fake.configure {
+fake.modify {
     findById { null }  // Now returns null
 }
 ```

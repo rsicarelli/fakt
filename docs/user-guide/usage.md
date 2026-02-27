@@ -980,7 +980,7 @@ interface UserRepository {
 }
 ```
 
-Mutable fakes include a `configure {}` method for selective reconfiguration:
+Mutable fakes include a `modify {}` method for selective reconfiguration:
 
 ```kotlin
 @Test
@@ -995,7 +995,7 @@ fun `GIVEN repository WHEN database fails mid-test THEN handles failure graceful
     assertEquals("Alice", fake.findById("1")?.name)
 
     // WHEN: Simulating database failure mid-test
-    fake.configure {
+    fake.modify {
         findById { null }  // Now returns null
     }
 
@@ -1006,7 +1006,7 @@ fun `GIVEN repository WHEN database fails mid-test THEN handles failure graceful
 ```
 
 !!! note "Selective Reconfiguration"
-    The `configure {}` method only updates the behaviors you specify. All other behaviors remain unchanged from their previous configuration.
+    The `modify {}` method only updates the behaviors you specify. All other behaviors remain unchanged from their previous configuration.
 
 !!! warning "Use Judiciously"
     Mutable fakes are designed for integration tests where the same injected fake needs to simulate state changes. For unit tests, prefer immutable fakes with separate instances per scenario.

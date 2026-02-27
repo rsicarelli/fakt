@@ -67,6 +67,7 @@ data class OverrideMethodConfig(
     val interfaceName: String = "",
     val classTypeParameters: List<String> = emptyList(),
     val generateCallHistory: Boolean = true,
+    val behaviorPrefix: String = "",
 )
 
 /** Creates an override method that delegates to a behavior property. */
@@ -133,9 +134,10 @@ fun ClassBuilder.overrideMethod(
         val returnCast = if (needsCast && returnType != "Unit") " as $returnType" else ""
         val superCallParams = buildSuperCallParams(params)
 
+        val bp = config.behaviorPrefix
         body =
             if (config.useSuperDelegation) {
-                val invocation = "${name}Behavior?.invoke($paramNames)"
+                val invocation = "$bp${name}Behavior?.invoke($paramNames)"
                 val superCall = "super.$name($superCallParams)"
                 if (returnType == "Unit") {
                     if (callTracking != null) {
@@ -153,15 +155,15 @@ fun ClassBuilder.overrideMethod(
             } else {
                 if (returnType == "Unit") {
                     if (callTracking != null) {
-                        "$callTracking\n${name}Behavior($paramNames)"
+                        "$callTracking\n$bp${name}Behavior($paramNames)"
                     } else {
-                        "${name}Behavior($paramNames)"
+                        "$bp${name}Behavior($paramNames)"
                     }
                 } else {
                     if (callTracking != null) {
-                        "$callTracking\nreturn ${name}Behavior($paramNames)$returnCast"
+                        "$callTracking\nreturn $bp${name}Behavior($paramNames)$returnCast"
                     } else {
-                        "return ${name}Behavior($paramNames)$returnCast"
+                        "return $bp${name}Behavior($paramNames)$returnCast"
                     }
                 }
             }
@@ -222,6 +224,7 @@ data class OverrideVarargConfig(
     val extensionReceiverType: String? = null,
     val isOperator: Boolean = false,
     val generateCallHistory: Boolean = true,
+    val behaviorPrefix: String = "",
 )
 
 /**
@@ -272,10 +275,11 @@ fun ClassBuilder.overrideVarargMethod(
                 varargName
             }
 
+        val bp = config.behaviorPrefix
         body =
             if (config.useSuperDelegation) {
                 // Open method: nullable invoke with super delegation
-                val invocation = "${name}Behavior?.invoke($paramNames)"
+                val invocation = "$bp${name}Behavior?.invoke($paramNames)"
                 val superCall = "super.$name(*$varargName)"
 
                 if (returnType == "Unit") {
@@ -295,15 +299,15 @@ fun ClassBuilder.overrideVarargMethod(
                 // Abstract or interface method: direct behavior call
                 if (returnType == "Unit") {
                     if (callTracking != null) {
-                        "$callTracking\n${name}Behavior($paramNames)"
+                        "$callTracking\n$bp${name}Behavior($paramNames)"
                     } else {
-                        "${name}Behavior($paramNames)"
+                        "$bp${name}Behavior($paramNames)"
                     }
                 } else {
                     if (callTracking != null) {
-                        "$callTracking\nreturn ${name}Behavior($paramNames)"
+                        "$callTracking\nreturn $bp${name}Behavior($paramNames)"
                     } else {
-                        "return ${name}Behavior($paramNames)"
+                        "return $bp${name}Behavior($paramNames)"
                     }
                 }
             }

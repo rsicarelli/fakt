@@ -25,8 +25,7 @@ class FaktCommandLineProcessor : CommandLineProcessor {
         val SOURCE_SET_CONTEXT_KEY =
             CompilerConfigurationKey<SourceSetContext>("fakt.sourceSetContext")
         val ENABLE_CALL_HISTORY_KEY = CompilerConfigurationKey<Boolean>("fakt.enableCallHistory")
-        val ENABLE_MUTABLE_FAKES_KEY =
-            CompilerConfigurationKey<Boolean>("fakt.enableMutableFakes")
+        val ENABLE_MUTABLE_FAKES_KEY = CompilerConfigurationKey<Boolean>("fakt.enableMutableFakes")
 
         val ENABLED_OPTION =
             CliOption(
@@ -99,8 +98,7 @@ class FaktCommandLineProcessor : CommandLineProcessor {
             "logLevel" -> configuration.put(LOG_LEVEL_KEY, value)
             "outputDir" -> configuration.put(OUTPUT_DIR_KEY, value)
             "enableCallHistory" -> configuration.put(ENABLE_CALL_HISTORY_KEY, value.toBoolean())
-            "enableMutableFakes" ->
-                configuration.put(ENABLE_MUTABLE_FAKES_KEY, value.toBoolean())
+            "enableMutableFakes" -> configuration.put(ENABLE_MUTABLE_FAKES_KEY, value.toBoolean())
             "sourceSetContext" -> {
                 val messageCollector =
                     configuration.get(

@@ -281,7 +281,7 @@ Immutable fakes with:
 
 - `private val` behavior properties
 - Behavior fixed at construction time
-- No `configure {}` method
+- No `modify {}` method
 
 </td>
 <td>
@@ -300,8 +300,8 @@ fakt {
 
 Mutable fakes with:
 
-- `internal var` behavior properties
-- `configure {}` method for selective reconfiguration
+- `@Volatile private var` behavior properties
+- `modify {}` method for selective reconfiguration
 - Mid-test behavior changes
 
 </td>

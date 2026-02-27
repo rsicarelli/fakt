@@ -27,31 +27,34 @@ Fakes are **immutable after construction** by default — all behavior is set vi
 
 #### Mutable Implementation Class
 
-When `@Fake(mutability = MutabilityMode.MUTABLE)` is used, the generated class includes mutable behavior properties and a `configure {}` method:
+When `@Fake(mutability = MutabilityMode.MUTABLE)` is used, the generated class includes mutable behavior properties and a `modify {}` method:
 
 ```kotlin
 class Fake{Interface}Impl(
-    // Behavior properties (mutable — can be reconfigured via configure {})
-    internal var {method}Behavior: ({params}) -> {return} = { default },
+    // Behavior properties (mutable — can be reconfigured via modify {})
+    {method}Behavior: ({params}) -> {return} = { default },
 ) : {Interface} {
+    // Volatile backing fields for thread-visible mutations
+    @Volatile private var _{method}Behavior: ({params}) -> {return} = {method}Behavior
+
     // Call history (unchanged)
     val {method}Calls: MutableStateFlow<List<Unit>>
 
     // Override interface members
-    override fun {method}({params}): {return} = {method}Behavior({params})
+    override fun {method}({params}): {return} = _{method}Behavior({params})
 
     // Reconfiguration method
-    fun configure(block: Fake{Interface}Config.() -> Unit) {
+    fun modify(block: Fake{Interface}Config.() -> Unit) {
         val config = Fake{Interface}Config().apply(block)
-        config.{method}Behavior?.let { {method}Behavior = it }
+        config.{method}Behavior?.let { _{method}Behavior = it }
     }
 }
 ```
 
-Mutable fakes use `internal var` instead of `private val` for behavior properties, and the `configure {}` method selectively updates only the behaviors specified in the block.
+Mutable fakes use `@Volatile private var` backing fields (with `_` prefix) instead of `private val` for behavior properties, and the `modify {}` method selectively updates only the behaviors specified in the block. Constructor parameters are plain (no `val`/`var`) to keep them as initializers only.
 
-!!! note "Mutable Fakes are Configurable"
-    The `configure {}` method and `internal var` behavior properties are only generated when mutability is enabled. See [Plugin Configuration](plugin-configuration.md#mutable-fakes-configuration) for details.
+!!! note "Mutable Fakes are Modifiable"
+    The `modify {}` method and `@Volatile private var` behavior properties are only generated when mutability is enabled. See [Plugin Configuration](plugin-configuration.md#mutable-fakes-configuration) for details.
 
 ### Factory Function
 
@@ -214,20 +217,20 @@ When mutable fakes are enabled via `enableMutableFakes.set(true)` or `@Fake(muta
 
 **Additional Generated:**
 
-- `configure {}` method on `Fake{Interface}Impl`
-- `internal var` behavior properties (instead of `private val`)
+- `modify {}` method on `Fake{Interface}Impl`
+- `@Volatile private var` behavior properties (instead of `private val`)
 
 **Behavior Differences:**
 
 | Aspect | Immutable (Default) | Mutable |
 |--------|-------------------|---------|
-| Behavior properties | `private val` | `internal var` |
-| Reconfiguration | Not possible | Via `configure {}` |
+| Behavior properties | `private val` | `@Volatile private var` |
+| Reconfiguration | Not possible | Via `modify {}` |
 | Thread safety | Guaranteed | Caller responsibility |
 | Recommended for | Unit tests | Integration tests |
 
 !!! tip "Composition with Call History"
-    Mutable fakes and call history work independently. When both are enabled, call history continues accumulating across reconfigurations — the history is never reset by `configure {}`.
+    Mutable fakes and call history work independently. When both are enabled, call history continues accumulating across reconfigurations — the history is never reset by `modify {}`.
 
 For an in-depth comparison, see **[Immutable vs Mutable](immutable-vs-mutable.md)**.
 
@@ -246,7 +249,7 @@ For an in-depth comparison, see **[Immutable vs Mutable](immutable-vs-mutable.md
 | Verifier class         | `Fake{Interface}{Method}Verifier` | `FakeAnalyticsTrackVerifier`      |
 | Verify function        | `verify{Method}`                  | `verifyTrack`                     |
 | Configuration method   | `{method}`                        | `track { }`                       |
-| Configure method       | `configure`                       | `fake.configure { }`              |
+| Modify method          | `modify`                          | `fake.modify { }`                 |
 
 ---
 

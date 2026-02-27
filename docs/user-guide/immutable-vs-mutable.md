@@ -109,7 +109,7 @@ interface UserRepository {
 }
 ```
 
-Mutable fakes include a `configure {}` method that allows selective reconfiguration:
+Mutable fakes include a `modify {}` method that allows selective reconfiguration:
 
 ```kotlin
 @Test
@@ -125,7 +125,7 @@ fun `GIVEN repository WHEN database fails mid-operation THEN service recovers`()
     assertEquals("Alice", user?.name)
 
     // Phase 2: Simulate database failure
-    fake.configure {
+    fake.modify {
         findById { null }
         status { "disconnected" }
     }
@@ -155,7 +155,7 @@ fun `GIVEN cache working WHEN cache becomes unavailable THEN falls back to datab
     assertEquals("cached_value", service.fetch("key"))
 
     // Cache goes down
-    fakeCache.configure {
+    fakeCache.modify {
         get { throw ConnectionException("Cache unavailable") }
     }
 
@@ -179,7 +179,7 @@ fun `GIVEN auth service WHEN token expires THEN refreshes automatically`() {
     assertTrue(client.makeRequest("/api/data").isSuccess)
 
     // Token expires
-    fakeAuth.configure {
+    fakeAuth.modify {
         isAuthenticated { false }
         getToken { throw TokenExpiredException() }
     }
@@ -202,7 +202,7 @@ fun `GIVEN feature disabled WHEN feature enabled mid-session THEN new UI renders
 
     assertFalse(viewModel.showNewFeature.value)
 
-    fakeFlags.configure {
+    fakeFlags.modify {
         isEnabled { true }
     }
 
@@ -212,10 +212,10 @@ fun `GIVEN feature disabled WHEN feature enabled mid-session THEN new UI renders
 
 ### Selective Reconfiguration
 
-The `configure {}` method only updates the behaviors you explicitly set. All other behaviors remain unchanged:
+The `modify {}` method only updates the behaviors you explicitly set. All other behaviors remain unchanged:
 
 ```kotlin
-fake.configure {
+fake.modify {
     findById { null }  // Only this changes
     // save, status — remain as previously configured
 }
@@ -238,20 +238,20 @@ Behavior properties are `private val` — they cannot change after construction.
 
 ### Mutable Fakes: Caller Responsibility
 
-Behavior properties are `internal var` — they **can** be reassigned via `configure {}`. This means:
+Behavior properties are `@Volatile private var` — they **can** be reassigned via `modify {}`. This means:
 
-- **Do not call `configure {}` from multiple threads/coroutines simultaneously**
-- **Do not call `configure {}` while other coroutines are actively calling the fake**
-- Use `configure {}` in sequential test phases, not during concurrent execution
+- **Do not call `modify {}` from multiple threads/coroutines simultaneously**
+- **Do not call `modify {}` while other coroutines are actively calling the fake**
+- Use `modify {}` in sequential test phases, not during concurrent execution
 
 ```kotlin
 // SAFE: Sequential phases
 fake.findById("1")           // Phase 1
-fake.configure { ... }        // Reconfigure between phases
+fake.modify { ... }        // Reconfigure between phases
 fake.findById("2")           // Phase 2
 
 // UNSAFE: Concurrent mutation
-launch { fake.configure { findById { null } } }  // Don't do this
+launch { fake.modify { findById { null } } }  // Don't do this
 launch { fake.findById("1") }                      // while this runs
 ```
 
@@ -264,11 +264,11 @@ launch { fake.findById("1") }                      // while this runs
 
 | Aspect | Immutable (Default) | Mutable (Opt-In) |
 |--------|-------------------|---------|
-| **Behavior properties** | `private val` | `internal var` |
-| **Reconfiguration** | Not possible — create a new fake | Via `configure {}` method |
+| **Behavior properties** | `private val` | `@Volatile private var` |
+| **Reconfiguration** | Not possible — create a new fake | Via `modify {}` method |
 | **Thread safety** | Guaranteed | Caller responsibility |
 | **Recommended for** | Unit tests, concurrent tests | Integration tests, state simulation |
-| **`configure {}` method** | Not generated | Generated |
+| **`modify {}` method** | Not generated | Generated |
 | **Annotation** | `@Fake` (default) | `@Fake(mutability = MutabilityMode.MUTABLE)` |
 | **Plugin setting** | `enableMutableFakes.set(false)` | `enableMutableFakes.set(true)` |
 
@@ -278,7 +278,7 @@ launch { fake.findById("1") }                      // while this runs
 
 Mutable fakes and call history are independent features that compose without conflicts. When both are enabled:
 
-- Call history **accumulates across reconfigurations** — it is never reset by `configure {}`
+- Call history **accumulates across reconfigurations** — it is never reset by `modify {}`
 - This means you can verify the total number of calls across all phases of a test
 
 ```kotlin
@@ -294,7 +294,7 @@ fun `GIVEN mutable tracked fake WHEN reconfigured THEN call history persists`() 
     assertEquals(2, fake.findCalls.value.size)
 
     // Reconfigure
-    fake.configure {
+    fake.modify {
         find { emptyList() }
     }
 
@@ -347,7 +347,7 @@ See [Plugin Configuration](plugin-configuration.md#mutable-fakes-configuration) 
 1. **Start with immutable fakes** — they are the safe default for the vast majority of tests
 2. **Use mutable fakes sparingly** — only when a single test truly needs mid-test behavior changes
 3. **Prefer separate immutable fakes** over mutable reconfiguration when testing multiple scenarios
-4. **Avoid concurrent `configure {}` calls** — use mutable fakes in sequential test phases only
+4. **Avoid concurrent `modify {}` calls** — use mutable fakes in sequential test phases only
 5. **Combine with call history** when you need to verify interactions across reconfiguration boundaries
 
 ---
@@ -356,5 +356,5 @@ See [Plugin Configuration](plugin-configuration.md#mutable-fakes-configuration) 
 
 - **[Plugin Configuration](plugin-configuration.md#mutable-fakes-configuration)** - Enable mutable fakes project-wide or per-interface
 - **[Testing Patterns](testing-patterns.md#mid-test-reconfiguration-mutable-fakes)** - Practical testing patterns for mutable fakes
-- **[Generated Code Reference](generated-code-reference.md#generated-code-with-mutable-fakes)** - Understanding the generated `configure {}` method
+- **[Generated Code Reference](generated-code-reference.md#generated-code-with-mutable-fakes)** - Understanding the generated `modify {}` method
 - **[Usage Guide](usage.md#mutable-fakes-opt-in)** - Quick start with mutable fakes

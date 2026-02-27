@@ -3,6 +3,8 @@
 package com.rsicarelli.fakt.samples.kmpSingleModule.scenarios.mutability
 
 import com.rsicarelli.fakt.samples.kmpSingleModule.models.User
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -14,7 +16,7 @@ import kotlin.test.assertTrue
  * Integration tests for mutable fakes feature.
  *
  * Tests the three MutabilityMode options:
- * - MUTABLE: Behaviors can be reconfigured mid-test via configure {}
+ * - MUTABLE: Behaviors can be reconfigured mid-test via modify {}
  * - IMMUTABLE: Behaviors are fixed at construction time (standard)
  * - DEFAULT: Follows plugin configuration (immutable by default)
  */
@@ -54,7 +56,7 @@ class MutableFakeTest {
         assertTrue(fake.delete("1"))
 
         // WHEN: Reconfiguring the fake mid-test
-        fake.configure {
+        fake.modify {
             findById { null } // Now returns null (simulating "not found")
         }
 
@@ -77,7 +79,7 @@ class MutableFakeTest {
         assertTrue(fake.delete("item-1"))
 
         // WHEN: Reconfiguring to simulate failure
-        fake.configure {
+        fake.modify {
             delete { throw IllegalStateException("Database unavailable") }
         }
 
@@ -102,7 +104,7 @@ class MutableFakeTest {
 
             // WHEN: Reconfiguring the suspend method
             val updatedUser = User(id = "1", name = "Updated")
-            fake.configure {
+            fake.modify {
                 save { updatedUser }
             }
 
@@ -119,7 +121,7 @@ class MutableFakeTest {
         assertEquals("initializing", fake.status)
 
         // WHEN: Reconfiguring the property behavior
-        fake.configure {
+        fake.modify {
             status { "ready" }
         }
 
@@ -128,7 +130,7 @@ class MutableFakeTest {
     }
 
     @Test
-    fun `GIVEN mutable fake WHEN configure called multiple times THEN last config wins`() {
+    fun `GIVEN mutable fake WHEN modify called multiple times THEN last config wins`() {
         // GIVEN: A mutable repository
         val fake = fakeMutableRepository {
             findById { User(id = "v1", name = "Version 1") }
@@ -136,8 +138,8 @@ class MutableFakeTest {
         }
 
         // WHEN: Reconfiguring multiple times
-        fake.configure { findById { User(id = "v2", name = "Version 2") } }
-        fake.configure { findById { User(id = "v3", name = "Version 3") } }
+        fake.modify { findById { User(id = "v2", name = "Version 2") } }
+        fake.modify { findById { User(id = "v3", name = "Version 3") } }
 
         // THEN: Last configuration wins
         assertEquals("Version 3", fake.findById("any")?.name)
@@ -146,7 +148,7 @@ class MutableFakeTest {
     }
 
     @Test
-    fun `GIVEN mutable fake WHEN configure with selective update THEN only updated behaviors change`() {
+    fun `GIVEN mutable fake WHEN modify with selective update THEN only updated behaviors change`() {
         // GIVEN: A mutable repository with all behaviors configured
         val fake = fakeMutableRepository {
             findById { id -> User(id = id, name = "Found") }
@@ -155,7 +157,7 @@ class MutableFakeTest {
         }
 
         // WHEN: Only reconfiguring findById
-        fake.configure {
+        fake.modify {
             findById { null }
         }
 
@@ -181,7 +183,7 @@ class MutableFakeTest {
 
         // THEN: It works correctly
         assertEquals("processed: test", result)
-        // Note: fake.configure {} would not compile as it's not generated
+        // Note: fake.modify {} would not compile as it's not generated
     }
 
     // ==========================================
@@ -198,9 +200,9 @@ class MutableFakeTest {
         // WHEN: Using the fake
         val result = fake.execute("test")
 
-        // THEN: It works correctly (immutable, no configure method)
+        // THEN: It works correctly (immutable, no modify method)
         assertTrue(result)
-        // Note: fake.configure {} would not compile (default is immutable)
+        // Note: fake.modify {} would not compile (default is immutable)
     }
 
     // ==========================================
@@ -221,7 +223,7 @@ class MutableFakeTest {
         assertEquals(2, fake.findCalls.value.size)
 
         // WHEN: Reconfiguring the behavior
-        fake.configure {
+        fake.modify {
             find { emptyList() }
         }
 
@@ -246,7 +248,7 @@ class MutableFakeTest {
         assertEquals(2, fake.countCalls.value.size)
 
         // WHEN: Reconfiguring
-        fake.configure {
+        fake.modify {
             count { 20 }
         }
 
@@ -257,4 +259,86 @@ class MutableFakeTest {
         // THEN: Call count accumulated across reconfiguration
         assertEquals(4, fake.countCalls.value.size)
     }
+
+    // ==========================================
+    // Concurrency Tests
+    // ==========================================
+
+    @Test
+    fun `GIVEN mutable fake WHEN modify called between concurrent reads THEN all reads get valid behavior`() =
+        runTest {
+            // GIVEN: A mutable repository with initial behavior
+            val fake = fakeMutableRepository {
+                findById { id -> User(id = id, name = "Initial") }
+                status { "active" }
+            }
+
+            // WHEN: Modify is called between concurrent reads
+            val results = (1..100).map { i ->
+                async {
+                    if (i == 50) {
+                        fake.modify { findById { id -> User(id = id, name = "Modified") } }
+                    }
+                    fake.findById("$i")
+                }
+            }.awaitAll()
+
+            // THEN: All reads return a valid user (either Initial or Modified)
+            results.forEach { user ->
+                assertTrue(
+                    user?.name == "Initial" || user?.name == "Modified",
+                    "Expected 'Initial' or 'Modified', got '${user?.name}'",
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN mutable fake WHEN concurrent reads and modify THEN no crashes`() = runTest {
+        // GIVEN: A mutable repository
+        val fake = fakeMutableRepository {
+            findById { id -> User(id = id, name = "User $id") }
+            delete { true }
+            status { "ok" }
+        }
+
+        // WHEN: Concurrent reads and modifications
+        val jobs = (1..100).map { i ->
+            async {
+                when (i % 3) {
+                    0 -> fake.modify {
+                        findById { id -> User(id = id, name = "V$i") }
+                    }
+                    1 -> fake.findById("$i")
+                    else -> fake.status
+                }
+            }
+        }
+
+        // THEN: No crashes (all coroutines complete successfully)
+        jobs.awaitAll()
+    }
+
+    @Test
+    fun `GIVEN mutable tracked fake WHEN concurrent modify and invocations THEN call history is consistent`() =
+        runTest {
+            // GIVEN: A mutable tracked repository
+            val fake = fakeMutableTrackedRepository {
+                find { listOf(User(id = "1", name = "Test")) }
+                count { 1 }
+            }
+
+            // WHEN: Concurrent modifications and invocations
+            val jobs = (1..50).map { i ->
+                async {
+                    if (i % 10 == 0) {
+                        fake.modify { count { i } }
+                    }
+                    fake.count()
+                }
+            }
+            jobs.awaitAll()
+
+            // THEN: Call history size matches number of invocations
+            assertEquals(50, fake.countCalls.value.size)
+        }
 }

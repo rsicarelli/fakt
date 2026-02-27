@@ -64,8 +64,8 @@ data class PropertySpec(
  *
  * @property generateCallHistory When true, generates call tracking code (call count, call history).
  *   When false, generates lightweight fakes without tracking. Default: true.
- * @property generateMutableBehaviors When true, generates mutable behavior properties (internal var)
- *   and a configure {} method. When false, generates immutable private val behaviors. Default:
+ * @property generateMutableBehaviors When true, generates mutable behavior properties (internal
+ *   var) and a configure {} method. When false, generates immutable private val behaviors. Default:
  *   false.
  */
 data class FakeGenerationConfig(
@@ -259,6 +259,11 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
             import("kotlin.reflect.KClass")
         }
 
+        // Add @Volatile import for mutable behaviors
+        if (generateMutableBehaviors) {
+            import("kotlin.concurrent.Volatile")
+        }
+
         // Add custom imports
         imports.forEach { import(it) }
 
@@ -405,7 +410,13 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
 
             // Generate property overrides for simple properties
             simpleProperties.forEach { prop ->
-                generatePropertyOverride(this, prop, isClass, generateCallHistory)
+                generatePropertyOverride(
+                    this,
+                    prop,
+                    isClass,
+                    generateCallHistory,
+                    generateMutableBehaviors,
+                )
             }
 
             // Generate method overrides
@@ -415,6 +426,7 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
                     interfaceName = interfaceName,
                     classTypeParameters = typeParameters,
                     generateCallHistory = generateCallHistory,
+                    generateMutableBehaviors = generateMutableBehaviors,
                 )
             methods.forEach { method -> generateMethodOverride(this, method, methodContext) }
 
@@ -435,18 +447,18 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
             }
 
             // ==========================================
-            // SECTION 3: Configure Method (mutable fakes only)
+            // SECTION 3: Modify Method (mutable fakes only)
             // Allows selective reconfiguration of behaviors mid-test.
             // ==========================================
             if (generateMutableBehaviors) {
-                generateConfigureMethod(
+                generateModifyMethod(
                     classBuilder = this,
                     configClassName = "Fake${interfaceName}Config",
                     methods = methods,
                     properties = simpleProperties,
                     typeParamNames = typeParamNames,
                     visibility = visibility,
-                    isClass = isClass,
+                    interfaceName = interfaceName,
                 )
             }
         }
@@ -502,19 +514,10 @@ private fun generatePropertyCallHistoryFields(
 }
 
 /**
- * Generates a `private val` constructor property for a method behavior.
+ * Generates a constructor property for a method behavior.
  *
- * The behavior lambda is a direct constructor property with a sensible default. No intermediate
- * member properties needed — the override methods reference the constructor `val` directly.
- *
- * Generated pattern:
- * ```kotlin
- * class FakeXxxImpl(
- *     private val findByIdBehavior: (String) -> User? = { null },
- * ) : Xxx {
- *     override fun findById(id: String): User? = findByIdBehavior(id)
- * }
- * ```
+ * When immutable: `private val findByIdBehavior: (String) -> User?` When mutable: plain constructor
+ * param + `@Volatile private var _findByIdBehavior = findByIdBehavior`
  */
 private fun generateMethodBehaviorConstructorParam(
     classBuilder: ClassBuilder,
@@ -527,13 +530,22 @@ private fun generateMethodBehaviorConstructorParam(
 
     classBuilder.constructorProperty("${method.name}Behavior", functionType) {
         if (isMutableBehavior) {
-            internal()
-            mutable()
+            plainParam()
         } else {
             private()
         }
         // Open methods use null to signal "delegate to super"
         if (isOpenMethod) this.defaultValue = "null"
+    }
+
+    // For mutable behaviors, add @Volatile private var backing field
+    if (isMutableBehavior) {
+        classBuilder.property("_${method.name}Behavior", functionType) {
+            annotation("Volatile")
+            private()
+            mutable()
+            initializer = "${method.name}Behavior"
+        }
     }
 }
 
@@ -575,9 +587,10 @@ private fun buildErasedBehaviorType(method: MethodSpec, isOpenMethod: Boolean): 
 }
 
 /**
- * Generates `private val` constructor properties for a property behavior.
+ * Generates constructor properties for a property behavior.
  *
- * Direct constructor properties with sensible defaults — no intermediate member properties needed.
+ * When immutable: `private val` constructor properties. When mutable: plain constructor params +
+ * `@Volatile private var` backing fields.
  */
 private fun generatePropertyBehaviorConstructorParam(
     classBuilder: ClassBuilder,
@@ -589,10 +602,20 @@ private fun generatePropertyBehaviorConstructorParam(
 
     fun ConstructorPropertyBuilder.applyVisibility() {
         if (isMutableBehavior) {
-            internal()
-            mutable()
+            plainParam()
         } else {
             private()
+        }
+    }
+
+    fun ClassBuilder.addVolatileBackingField(name: String, type: String) {
+        if (isMutableBehavior) {
+            property("_$name", type) {
+                annotation("Volatile")
+                private()
+                mutable()
+                initializer = name
+            }
         }
     }
 
@@ -614,6 +637,16 @@ private fun generatePropertyBehaviorConstructorParam(
                 applyVisibility()
             }
         }
+        if (isMutableBehavior) {
+            classBuilder.addVolatileBackingField(
+                "${prop.name}Getter",
+                if (isOpenProperty) "(() -> ${prop.type})?" else "() -> ${prop.type}",
+            )
+            classBuilder.addVolatileBackingField(
+                "${prop.name}Setter",
+                if (isOpenProperty) "((${prop.type}) -> Unit)?" else "(${prop.type}) -> Unit",
+            )
+        }
     } else {
         if (isOpenProperty) {
             classBuilder.constructorProperty("${prop.name}Behavior", "(() -> ${prop.type})?") {
@@ -625,6 +658,10 @@ private fun generatePropertyBehaviorConstructorParam(
                 applyVisibility()
             }
         }
+        classBuilder.addVolatileBackingField(
+            "${prop.name}Behavior",
+            if (isOpenProperty) "(() -> ${prop.type})?" else "() -> ${prop.type}",
+        )
     }
 }
 
@@ -643,6 +680,7 @@ private data class MethodOverrideContext(
     val interfaceName: String = "",
     val classTypeParameters: List<String> = emptyList(),
     val generateCallHistory: Boolean = true,
+    val generateMutableBehaviors: Boolean = false,
 )
 
 /**
@@ -654,6 +692,7 @@ private fun generateMethodOverride(
     context: MethodOverrideContext,
 ) {
     val isOpenMethod = context.isClass && !method.isAbstract
+    val behaviorPrefix = if (context.generateMutableBehaviors) "_" else ""
 
     if (method.isVararg && method.params.size == 1) {
         val (varargName, varargType, _) = method.params.first()
@@ -668,6 +707,7 @@ private fun generateMethodOverride(
                     extensionReceiverType = method.extensionReceiverType,
                     isOperator = method.isOperator,
                     generateCallHistory = context.generateCallHistory,
+                    behaviorPrefix = behaviorPrefix,
                 ),
         )
     } else {
@@ -685,6 +725,7 @@ private fun generateMethodOverride(
                     interfaceName = context.interfaceName,
                     classTypeParameters = context.classTypeParameters,
                     generateCallHistory = context.generateCallHistory,
+                    behaviorPrefix = behaviorPrefix,
                 ),
         )
     }
@@ -703,12 +744,26 @@ private fun generatePropertyOverride(
     prop: PropertySpec,
     isClass: Boolean = false,
     generateCallHistory: Boolean = true,
+    generateMutableBehaviors: Boolean = false,
 ) {
     val isOpenProperty = isClass && !prop.isAbstract
+    val behaviorPrefix = if (generateMutableBehaviors) "_" else ""
     if (prop.isMutable) {
-        generateMutablePropertyOverride(classBuilder, prop, isOpenProperty, generateCallHistory)
+        generateMutablePropertyOverride(
+            classBuilder,
+            prop,
+            isOpenProperty,
+            generateCallHistory,
+            behaviorPrefix,
+        )
     } else {
-        generateImmutablePropertyOverride(classBuilder, prop, isOpenProperty, generateCallHistory)
+        generateImmutablePropertyOverride(
+            classBuilder,
+            prop,
+            isOpenProperty,
+            generateCallHistory,
+            behaviorPrefix,
+        )
     }
 }
 
@@ -724,19 +779,27 @@ private fun generateMutablePropertyOverride(
     prop: PropertySpec,
     isOpenProperty: Boolean,
     generateCallHistory: Boolean,
+    behaviorPrefix: String = "",
 ) {
     val capitalizedName = prop.name.replaceFirstChar { it.uppercase() }
 
     classBuilder.property(prop.name, prop.type) {
         override()
         mutable()
-        getter = buildMutablePropertyGetter(prop.name, isOpenProperty, generateCallHistory)
+        getter =
+            buildMutablePropertyGetter(
+                prop.name,
+                isOpenProperty,
+                generateCallHistory,
+                behaviorPrefix,
+            )
         setter =
             buildMutablePropertySetter(
                 prop.name,
                 capitalizedName,
                 isOpenProperty,
                 generateCallHistory,
+                behaviorPrefix,
             )
     }
 }
@@ -746,23 +809,27 @@ private fun buildMutablePropertyGetter(
     propName: String,
     isOpenProperty: Boolean,
     generateCallHistory: Boolean,
+    behaviorPrefix: String = "",
 ): String =
     if (isOpenProperty) {
         if (generateCallHistory) {
             listOf(
                     "${propName}Calls.update { it + Unit }",
-                    "return ${propName}Getter?.invoke() ?: super.$propName",
+                    "return $behaviorPrefix${propName}Getter?.invoke() ?: super.$propName",
                 )
                 .joinToString("\n")
         } else {
-            "${propName}Getter?.invoke() ?: super.$propName"
+            "$behaviorPrefix${propName}Getter?.invoke() ?: super.$propName"
         }
     } else {
         if (generateCallHistory) {
-            listOf("${propName}Calls.update { it + Unit }", "return ${propName}Getter()")
+            listOf(
+                    "${propName}Calls.update { it + Unit }",
+                    "return $behaviorPrefix${propName}Getter()",
+                )
                 .joinToString("\n")
         } else {
-            "${propName}Getter()"
+            "$behaviorPrefix${propName}Getter()"
         }
     }
 
@@ -772,23 +839,27 @@ private fun buildMutablePropertySetter(
     capitalizedName: String,
     isOpenProperty: Boolean,
     generateCallHistory: Boolean,
+    behaviorPrefix: String = "",
 ): String =
     if (isOpenProperty) {
         if (generateCallHistory) {
             listOf(
                     "set${capitalizedName}Calls.update { it + Unit }",
-                    "${propName}Setter?.invoke(value) ?: run { super.$propName = value }",
+                    "$behaviorPrefix${propName}Setter?.invoke(value) ?: run { super.$propName = value }",
                 )
                 .joinToString("\n")
         } else {
-            "${propName}Setter?.invoke(value) ?: run { super.$propName = value }"
+            "$behaviorPrefix${propName}Setter?.invoke(value) ?: run { super.$propName = value }"
         }
     } else {
         if (generateCallHistory) {
-            listOf("set${capitalizedName}Calls.update { it + Unit }", "${propName}Setter(value)")
+            listOf(
+                    "set${capitalizedName}Calls.update { it + Unit }",
+                    "$behaviorPrefix${propName}Setter(value)",
+                )
                 .joinToString("\n")
         } else {
-            "${propName}Setter(value)"
+            "$behaviorPrefix${propName}Setter(value)"
         }
     }
 
@@ -804,10 +875,17 @@ private fun generateImmutablePropertyOverride(
     prop: PropertySpec,
     isOpenProperty: Boolean,
     generateCallHistory: Boolean,
+    behaviorPrefix: String = "",
 ) {
     classBuilder.property(prop.name, prop.type) {
         override()
-        getter = buildImmutablePropertyGetter(prop.name, isOpenProperty, generateCallHistory)
+        getter =
+            buildImmutablePropertyGetter(
+                prop.name,
+                isOpenProperty,
+                generateCallHistory,
+                behaviorPrefix,
+            )
     }
 }
 
@@ -816,23 +894,27 @@ private fun buildImmutablePropertyGetter(
     propName: String,
     isOpenProperty: Boolean,
     generateCallHistory: Boolean,
+    behaviorPrefix: String = "",
 ): String =
     if (isOpenProperty) {
         if (generateCallHistory) {
             listOf(
                     "${propName}Calls.update { it + Unit }",
-                    "return ${propName}Behavior?.invoke() ?: super.$propName",
+                    "return $behaviorPrefix${propName}Behavior?.invoke() ?: super.$propName",
                 )
                 .joinToString("\n")
         } else {
-            "${propName}Behavior?.invoke() ?: super.$propName"
+            "$behaviorPrefix${propName}Behavior?.invoke() ?: super.$propName"
         }
     } else {
         if (generateCallHistory) {
-            listOf("${propName}Calls.update { it + Unit }", "return ${propName}Behavior()")
+            listOf(
+                    "${propName}Calls.update { it + Unit }",
+                    "return $behaviorPrefix${propName}Behavior()",
+                )
                 .joinToString("\n")
         } else {
-            "${propName}Behavior()"
+            "$behaviorPrefix${propName}Behavior()"
         }
     }
 
@@ -858,62 +940,56 @@ private fun buildBehaviorFunctionType(
 }
 
 /**
- * Generates the `configure {}` method on a mutable fake implementation.
+ * Generates the `modify {}` method on a mutable fake implementation.
  *
- * The configure method:
+ * The modify method:
  * 1. Creates a fresh Config instance (with null behavior defaults)
  * 2. Applies the user's DSL block
  * 3. Selectively updates only behaviors that were explicitly set (non-null)
  *
  * This allows partial reconfiguration:
  * ```kotlin
- * fake.configure {
+ * fake.modify {
  *     findById { null }  // Only changes this, other behaviors unchanged
  * }
  * ```
  */
-private fun generateConfigureMethod(
+private fun generateModifyMethod(
     classBuilder: ClassBuilder,
     configClassName: String,
     methods: List<MethodSpec>,
     properties: List<PropertySpec>,
     typeParamNames: List<String>,
     visibility: FirVisibility,
-    isClass: Boolean,
+    interfaceName: String,
 ) {
-    val configTypeArgs = if (typeParamNames.isNotEmpty()) "<${typeParamNames.joinToString(", ")}>" else ""
+    val configTypeArgs =
+        if (typeParamNames.isNotEmpty()) "<${typeParamNames.joinToString(", ")}>" else ""
 
     val bodyLines = mutableListOf<String>()
     bodyLines.add("val config = $configClassName$configTypeArgs().apply(block)")
 
-    // Generate selective updates for method behaviors
+    // Generate selective updates for method behaviors (using _ prefix for backing fields)
     methods.forEach { method ->
-        val isOpenMethod = isClass && !method.isAbstract
-        if (isOpenMethod) {
-            // Open methods: config behavior is already nullable, just assign
-            bodyLines.add("config.${method.name}Behavior?.let { ${method.name}Behavior = it }")
-        } else {
-            bodyLines.add("config.${method.name}Behavior?.let { ${method.name}Behavior = it }")
-        }
+        bodyLines.add("config.${method.name}Behavior?.let { _${method.name}Behavior = it }")
     }
 
-    // Generate selective updates for property behaviors
+    // Generate selective updates for property behaviors (using _ prefix for backing fields)
     properties.forEach { prop ->
-        val isOpenProperty = isClass && !prop.isAbstract
         if (prop.isMutable) {
-            if (isOpenProperty) {
-                bodyLines.add("config.${prop.name}Getter?.let { ${prop.name}Getter = it }")
-                bodyLines.add("config.set${prop.name.replaceFirstChar { it.uppercase() }}Behavior?.let { ${prop.name}Setter = it }")
-            } else {
-                bodyLines.add("config.${prop.name}Getter?.let { ${prop.name}Getter = it }")
-                bodyLines.add("config.set${prop.name.replaceFirstChar { it.uppercase() }}Behavior?.let { ${prop.name}Setter = it }")
-            }
+            bodyLines.add("config.${prop.name}Getter?.let { _${prop.name}Getter = it }")
+            bodyLines.add(
+                "config.set${prop.name.replaceFirstChar { it.uppercase() }}Behavior?.let { _${prop.name}Setter = it }"
+            )
         } else {
-            bodyLines.add("config.${prop.name}Behavior?.let { ${prop.name}Behavior = it }")
+            bodyLines.add("config.${prop.name}Behavior?.let { _${prop.name}Behavior = it }")
         }
     }
 
-    classBuilder.function("configure") {
+    val kdoc = buildModifyKDoc(interfaceName, methods, properties)
+
+    classBuilder.function("modify") {
+        this.kdoc = kdoc
         when (visibility) {
             FirVisibility.PUBLIC -> public()
             FirVisibility.INTERNAL -> internal()
@@ -923,4 +999,45 @@ private fun generateConfigureMethod(
         parameter("block", "$configClassName$configTypeArgs.() -> Unit")
         body = bodyLines.joinToString("\n")
     }
+}
+
+/** Builds contextual KDoc for the `modify` method showing actual behaviors. */
+private fun buildModifyKDoc(
+    interfaceName: String,
+    methods: List<MethodSpec>,
+    properties: List<PropertySpec>,
+): String = buildString {
+    appendLine("Selectively modifies fake behaviors.")
+    appendLine()
+    appendLine("Only behaviors specified in [block] are updated; all others remain unchanged.")
+    appendLine()
+    appendLine("Thread-safe: backing fields use @Volatile for cross-thread visibility.")
+    appendLine()
+
+    // Generate contextual example showing first behavior
+    appendLine("```kotlin")
+    appendLine("fake.modify {")
+    val firstBehavior = methods.firstOrNull()
+    val firstProperty = properties.firstOrNull()
+    when {
+        firstBehavior != null -> appendLine("    ${firstBehavior.name} { /* new behavior */ }")
+        firstProperty != null -> appendLine("    ${firstProperty.name} { /* new behavior */ }")
+    }
+    appendLine("}")
+    appendLine("```")
+
+    // List modifiable behaviors
+    if (methods.isNotEmpty() || properties.isNotEmpty()) {
+        appendLine()
+        appendLine("## Modifiable Behaviors")
+        appendLine()
+        methods.forEach { method ->
+            val params = method.params.joinToString(", ") { (name, type, _) -> "$name: $type" }
+            val suspend = if (method.isSuspend) " (suspend)" else ""
+            appendLine("- `${method.name}`: ($params) -> ${method.returnType}$suspend")
+        }
+        properties.forEach { prop -> appendLine("- `${prop.name}`: ${prop.type}") }
+    }
+    appendLine()
+    append("@see Fake${interfaceName}Config")
 }

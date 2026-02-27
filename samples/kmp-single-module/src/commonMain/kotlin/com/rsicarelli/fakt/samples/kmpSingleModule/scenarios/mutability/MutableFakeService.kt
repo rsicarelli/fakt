@@ -10,8 +10,8 @@ import com.rsicarelli.fakt.samples.kmpSingleModule.models.User
  * Interface with mutable fake enabled.
  *
  * When `mutability = MutabilityMode.MUTABLE`, the generated fake will:
- * - Have `internal var` behavior properties (instead of `private val`)
- * - Have a `configure {}` method for selective reconfiguration mid-test
+ * - Have `@Volatile private var` behavior properties (instead of `private val`)
+ * - Have a `modify {}` method for selective reconfiguration mid-test
  * - Allow changing behavior after construction
  *
  * Use case: Integration tests where mock behavior needs to change during the test
@@ -33,7 +33,7 @@ interface MutableRepository {
  *
  * When `mutability = MutabilityMode.IMMUTABLE`, the generated fake will:
  * - Have `private val` behavior properties (standard, immutable)
- * - NOT have a `configure {}` method
+ * - NOT have a `modify {}` method
  * - Behavior is fixed at construction time
  *
  * Use case: Override plugin-level default for interfaces that should never be mutable.
