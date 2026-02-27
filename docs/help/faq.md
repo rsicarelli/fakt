@@ -71,6 +71,55 @@ Fakt doesn't replace hand-written fakes for complex scenarios (stateful mocks, p
 
 **Yes**. Both read-only (`val`) and mutable (`var`) properties with call tracking. See [Usage Guide: Properties](../user-guide/usage.md#properties) for examples.
 
+### Can I change fake behavior after creation?
+
+**Yes, with mutable fakes.** By default, Fakt generates immutable fakes where behavior is fixed at construction time. For integration tests that need mid-test reconfiguration, opt in to mutable fakes:
+
+```kotlin
+import com.rsicarelli.fakt.MutabilityMode
+
+@Fake(mutability = MutabilityMode.MUTABLE)
+interface UserRepository {
+    fun findById(id: String): User?
+}
+
+// Create with initial behavior
+val fake = fakeUserRepository {
+    findById { id -> User(id, "Alice") }
+}
+
+// Reconfigure mid-test
+fake.configure {
+    findById { null }  // Now returns null
+}
+```
+
+See [Immutable vs Mutable](../user-guide/immutable-vs-mutable.md) for detailed usage and [Plugin Configuration](../user-guide/plugin-configuration.md#mutable-fakes-configuration) for project-wide settings.
+
+---
+
+### When should I use mutable vs immutable fakes?
+
+**Use immutable fakes (default) for unit tests.** They are safer, more predictable, and prevent accidental shared state. Create a new fake instance for each scenario.
+
+**Use mutable fakes for integration tests** where:
+
+- The same injected fake needs to simulate state changes (e.g., database failure after success)
+- You are testing feature flag toggling or configuration changes
+- Multiple test phases need different behavior from the same dependency
+
+| Scenario | Recommendation |
+|----------|---------------|
+| Unit testing a single method | Immutable (default) |
+| Testing error handling branches | Immutable (new fake per scenario) |
+| Integration test with injected dependency | Mutable |
+| Simulating intermittent failures | Mutable |
+| Testing state machine transitions | Mutable |
+
+See [Immutable vs Mutable](../user-guide/immutable-vs-mutable.md) for an in-depth exploration of trade-offs, concurrency considerations, and recommendations.
+
+---
+
 ### Can I fake data classes or sealed classes?
 
 **No**. Fakt only generates fakes for interfaces, abstract classes, and open classes. Data/sealed classes work fine as parameter/return types.

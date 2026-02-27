@@ -23,7 +23,35 @@ class Fake{Interface}Impl(
 }
 ```
 
-Fakes are **immutable after construction** — all behavior is set via constructor parameters with smart defaults.
+Fakes are **immutable after construction** by default — all behavior is set via constructor parameters with smart defaults.
+
+#### Mutable Implementation Class
+
+When `@Fake(mutability = MutabilityMode.MUTABLE)` is used, the generated class includes mutable behavior properties and a `configure {}` method:
+
+```kotlin
+class Fake{Interface}Impl(
+    // Behavior properties (mutable — can be reconfigured via configure {})
+    internal var {method}Behavior: ({params}) -> {return} = { default },
+) : {Interface} {
+    // Call history (unchanged)
+    val {method}Calls: MutableStateFlow<List<Unit>>
+
+    // Override interface members
+    override fun {method}({params}): {return} = {method}Behavior({params})
+
+    // Reconfiguration method
+    fun configure(block: Fake{Interface}Config.() -> Unit) {
+        val config = Fake{Interface}Config().apply(block)
+        config.{method}Behavior?.let { {method}Behavior = it }
+    }
+}
+```
+
+Mutable fakes use `internal var` instead of `private val` for behavior properties, and the `configure {}` method selectively updates only the behaviors specified in the block.
+
+!!! note "Mutable Fakes are Configurable"
+    The `configure {}` method and `internal var` behavior properties are only generated when mutability is enabled. See [Plugin Configuration](plugin-configuration.md#mutable-fakes-configuration) for details.
 
 ### Factory Function
 
@@ -180,6 +208,31 @@ This results in smaller, simpler generated code for fakes that only need stubbin
 
 ---
 
+## Generated Code with Mutable Fakes
+
+When mutable fakes are enabled via `enableMutableFakes.set(true)` or `@Fake(mutability = MutabilityMode.MUTABLE)`, generated fakes include additional capabilities:
+
+**Additional Generated:**
+
+- `configure {}` method on `Fake{Interface}Impl`
+- `internal var` behavior properties (instead of `private val`)
+
+**Behavior Differences:**
+
+| Aspect | Immutable (Default) | Mutable |
+|--------|-------------------|---------|
+| Behavior properties | `private val` | `internal var` |
+| Reconfiguration | Not possible | Via `configure {}` |
+| Thread safety | Guaranteed | Caller responsibility |
+| Recommended for | Unit tests | Integration tests |
+
+!!! tip "Composition with Call History"
+    Mutable fakes and call history work independently. When both are enabled, call history continues accumulating across reconfigurations — the history is never reset by `configure {}`.
+
+For an in-depth comparison, see **[Immutable vs Mutable](immutable-vs-mutable.md)**.
+
+---
+
 ## Naming Conventions
 
 | Element                | Pattern                           | Example                           |
@@ -193,6 +246,7 @@ This results in smaller, simpler generated code for fakes that only need stubbin
 | Verifier class         | `Fake{Interface}{Method}Verifier` | `FakeAnalyticsTrackVerifier`      |
 | Verify function        | `verify{Method}`                  | `verifyTrack`                     |
 | Configuration method   | `{method}`                        | `track { }`                       |
+| Configure method       | `configure`                       | `fake.configure { }`              |
 
 ---
 

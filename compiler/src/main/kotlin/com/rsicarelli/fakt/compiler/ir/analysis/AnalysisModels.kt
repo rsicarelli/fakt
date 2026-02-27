@@ -25,6 +25,10 @@ import org.jetbrains.kotlin.ir.types.IrType
  * @property generateCallHistory Controls whether call history and call count tracking code is
  *   generated. Resolved from @Fake annotation's callHistory attribute and plugin-level
  *   enableCallHistory default.
+ * @property generateMutableBehaviors Controls whether mutable behavior support is generated.
+ *   Resolved from @Fake annotation's mutability attribute and plugin-level enableMutableFakes
+ *   default. When true, behavior properties are `internal var` and a `configure {}` method is
+ *   generated.
  */
 data class InterfaceAnalysis(
     val interfaceName: String,
@@ -37,6 +41,7 @@ data class InterfaceAnalysis(
     val visibility: FirVisibility = FirVisibility.PUBLIC,
     val annotations: List<AnnotationAnalysis> = emptyList(),
     val generateCallHistory: Boolean = true,
+    val generateMutableBehaviors: Boolean = false,
 )
 
 /**
@@ -47,6 +52,10 @@ data class InterfaceAnalysis(
  * @property generateCallHistory Controls whether call history and call count tracking code is
  *   generated. Resolved from @Fake annotation's callHistory attribute and plugin-level
  *   enableCallHistory default.
+ * @property generateMutableBehaviors Controls whether mutable behavior support is generated.
+ *   Resolved from @Fake annotation's mutability attribute and plugin-level enableMutableFakes
+ *   default. When true, behavior properties are `internal var` and a `configure {}` method is
+ *   generated.
  */
 data class ClassAnalysis(
     val className: String,
@@ -59,6 +68,7 @@ data class ClassAnalysis(
     val visibility: FirVisibility = FirVisibility.PUBLIC,
     val annotations: List<AnnotationAnalysis> = emptyList(),
     val generateCallHistory: Boolean = true,
+    val generateMutableBehaviors: Boolean = false,
 )
 
 /** Analysis of a property within an interface or class. */

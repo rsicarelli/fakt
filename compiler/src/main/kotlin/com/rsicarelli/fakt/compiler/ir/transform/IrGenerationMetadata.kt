@@ -3,6 +3,7 @@
 package com.rsicarelli.fakt.compiler.ir.transform
 
 import com.rsicarelli.fakt.compiler.fir.metadata.FirCallHistoryMode
+import com.rsicarelli.fakt.compiler.fir.metadata.FirMutabilityMode
 import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 import com.rsicarelli.fakt.compiler.ir.analysis.AnnotationAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
@@ -27,12 +28,14 @@ import org.jetbrains.kotlin.ir.types.IrType
  * @property sourceSourceSet Source set identifier for generated code placement
  * @property visibility Visibility of the interface/class for explicitApi() support
  * @property callHistoryMode Call history generation mode from @Fake annotation
+ * @property mutabilityMode Mutability mode from @Fake annotation
  */
 data class IrGenerationConfig(
     val isFromCache: Boolean = false,
     val sourceSourceSet: String? = null,
     val visibility: FirVisibility = FirVisibility.PUBLIC,
     val callHistoryMode: FirCallHistoryMode = FirCallHistoryMode.DEFAULT,
+    val mutabilityMode: FirMutabilityMode = FirMutabilityMode.DEFAULT,
 )
 
 /**
@@ -132,6 +135,10 @@ internal constructor(
     /** Call history generation mode from @Fake annotation. */
     val callHistoryMode: FirCallHistoryMode
         get() = config.callHistoryMode
+
+    /** Mutability mode from @Fake annotation. */
+    val mutabilityMode: FirMutabilityMode
+        get() = config.mutabilityMode
 
     /**
      * Lazy generic pattern analysis - computed on first access only.
@@ -283,6 +290,10 @@ internal constructor(
     val callHistoryMode: FirCallHistoryMode
         get() = config.callHistoryMode
 
+    /** Mutability mode from @Fake annotation. */
+    val mutabilityMode: FirMutabilityMode
+        get() = config.mutabilityMode
+
     /**
      * Lazy generic pattern analysis - computed on first access only. See
      * IrGenerationMetadata.genericPattern for details.
@@ -304,7 +315,8 @@ internal constructor(
  * @return InterfaceAnalysis compatible with existing generators
  */
 fun IrGenerationMetadata.toInterfaceAnalysis(
-    enableCallHistoryDefault: Boolean = true
+    enableCallHistoryDefault: Boolean = true,
+    enableMutableFakesDefault: Boolean = false,
 ): InterfaceAnalysis =
     InterfaceAnalysis(
         interfaceName = interfaceName,
@@ -317,6 +329,8 @@ fun IrGenerationMetadata.toInterfaceAnalysis(
         visibility = visibility,
         annotations = annotations.map { it.toAnnotationAnalysis() },
         generateCallHistory = resolveCallHistoryEnabled(callHistoryMode, enableCallHistoryDefault),
+        generateMutableBehaviors =
+            resolveMutabilityEnabled(mutabilityMode, enableMutableFakesDefault),
     )
 
 /**
@@ -342,6 +356,28 @@ private fun resolveCallHistoryEnabled(
     }
 
 /**
+ * Resolves whether mutable behaviors should be generated for a fake.
+ *
+ * Resolution priority:
+ * 1. If annotation specifies MUTABLE → true (override plugin default)
+ * 2. If annotation specifies IMMUTABLE → false (override plugin default)
+ * 3. If annotation specifies DEFAULT → follow plugin default
+ *
+ * @param annotationMode Mutability mode from @Fake annotation
+ * @param pluginDefault Plugin-level default from fakt { enableMutableFakes.set(...) }
+ * @return true if mutable behaviors should be generated, false otherwise
+ */
+private fun resolveMutabilityEnabled(
+    annotationMode: FirMutabilityMode,
+    pluginDefault: Boolean,
+): Boolean =
+    when (annotationMode) {
+        FirMutabilityMode.MUTABLE -> true
+        FirMutabilityMode.IMMUTABLE -> false
+        FirMutabilityMode.DEFAULT -> pluginDefault
+    }
+
+/**
  * Adapter function: Convert IrClassGenerationMetadata to ClassAnalysis.
  *
  * Use ClassAnalysis to preserve abstract/open distinction for proper super delegation generation.
@@ -356,7 +392,8 @@ private fun resolveCallHistoryEnabled(
  * @return ClassAnalysis with separated abstract and open members
  */
 fun IrClassGenerationMetadata.toClassAnalysis(
-    enableCallHistoryDefault: Boolean = true
+    enableCallHistoryDefault: Boolean = true,
+    enableMutableFakesDefault: Boolean = false,
 ): ClassAnalysis =
     ClassAnalysis(
         className = className,
@@ -369,6 +406,8 @@ fun IrClassGenerationMetadata.toClassAnalysis(
         visibility = visibility,
         annotations = annotations.map { it.toAnnotationAnalysis() },
         generateCallHistory = resolveCallHistoryEnabled(callHistoryMode, enableCallHistoryDefault),
+        generateMutableBehaviors =
+            resolveMutabilityEnabled(mutabilityMode, enableMutableFakesDefault),
     )
 
 /** Convert IrPropertyMetadata to PropertyAnalysis. */

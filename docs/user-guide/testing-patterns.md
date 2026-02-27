@@ -204,6 +204,79 @@ fun `GIVEN cached data WHEN loading THEN does not call API`() {
 
 ---
 
+## Mid-Test Reconfiguration (Mutable Fakes)
+
+For integration tests where a fake needs to simulate state changes during a single test, use [mutable fakes](immutable-vs-mutable.md):
+
+### Simulating Failure After Success
+
+```kotlin
+@Test
+fun `GIVEN repository succeeds WHEN database goes down THEN service handles failure`() {
+    val fake = fakeMutableRepository {
+        delete { true }
+    }
+
+    // Phase 1: Operations succeed
+    assertTrue(fake.delete("item-1"))
+
+    // Phase 2: Simulate database failure
+    fake.configure {
+        delete { throw IllegalStateException("Database unavailable") }
+    }
+
+    assertFailsWith<IllegalStateException> {
+        fake.delete("item-2")
+    }
+}
+```
+
+### Property State Changes
+
+```kotlin
+@Test
+fun `GIVEN service initializing WHEN ready THEN status updates`() {
+    val fake = fakeMutableRepository {
+        status { "initializing" }
+    }
+    assertEquals("initializing", fake.status)
+
+    fake.configure {
+        status { "ready" }
+    }
+    assertEquals("ready", fake.status)
+}
+```
+
+### Mutable Fakes with Call History
+
+Call history accumulates across reconfigurations — it is never reset:
+
+```kotlin
+@Test
+fun `GIVEN mutable tracked fake WHEN reconfigured THEN call history persists`() {
+    val fake = fakeMutableTrackedRepository {
+        find { listOf(User("1", "Test")) }
+    }
+
+    fake.find("query1")
+    fake.find("query2")
+    assertEquals(2, fake.findCalls.value.size)
+
+    fake.configure {
+        find { emptyList() }
+    }
+
+    assertEquals(emptyList(), fake.find("query3"))
+    assertEquals(3, fake.findCalls.value.size)  // Accumulated
+}
+```
+
+!!! warning "Prefer Immutable Fakes for Unit Tests"
+    Mutable fakes are designed for integration tests where the same injected instance must simulate different states. For unit tests, create separate immutable fake instances per scenario — this is safer and easier to reason about.
+
+---
+
 ## Anti-Patterns to Avoid
 
 ### ❌ Shared Fakes Across Tests

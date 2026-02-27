@@ -26,6 +26,9 @@ fakt {
     // Control call history generation (default: true)
     enableCallHistory.set(true)  // Set to false for lightweight fakes
 
+    // Control mutable fake generation (default: false)
+    enableMutableFakes.set(false)  // Set to true for mutable fakes by default
+
     // Multi-module: Collect fakes from another module (default: not set)
     @OptIn(com.rsicarelli.fakt.compiler.api.ExperimentalFaktMultiModule::class)
     collectFakesFrom(projects.core.analytics)
@@ -72,6 +75,19 @@ fakt {
 ```kotlin
 fakt {
     enableCallHistory.set(false)
+}
+```
+
+</td>
+</tr>
+<tr>
+<td><strong>enableMutableFakes</strong></td>
+<td><code>false</code></td>
+<td>
+
+```kotlin
+fakt {
+    enableMutableFakes.set(true)
 }
 ```
 
@@ -244,6 +260,80 @@ interface Logger { ... }
 
 // Follow plugin default
 @Fake  // or @Fake(callHistory = CallHistoryMode.DEFAULT)
+interface UserService { ... }
+```
+
+**Resolution order:** Annotation setting takes precedence over plugin default.
+
+---
+
+## Mutable Fakes Configuration
+
+Control whether generated fakes are mutable (reconfigurable mid-test) or immutable (fixed at construction). For an in-depth exploration of when to use each mode, see **[Immutable vs Mutable](immutable-vs-mutable.md)**.
+
+<table>
+<tr><th>Setting</th><th>Description</th><th>Example</th></tr>
+<tr>
+<td><strong>false</strong><br>(default)</td>
+<td>
+
+Immutable fakes with:
+
+- `private val` behavior properties
+- Behavior fixed at construction time
+- No `configure {}` method
+
+</td>
+<td>
+
+```kotlin
+fakt {
+    enableMutableFakes.set(false)
+}
+```
+
+</td>
+</tr>
+<tr>
+<td><strong>true</strong></td>
+<td>
+
+Mutable fakes with:
+
+- `internal var` behavior properties
+- `configure {}` method for selective reconfiguration
+- Mid-test behavior changes
+
+</td>
+<td>
+
+```kotlin
+fakt {
+    enableMutableFakes.set(true)
+}
+```
+
+</td>
+</tr>
+</table>
+
+### Per-Interface Override
+
+Individual interfaces can override the project default:
+
+```kotlin
+import com.rsicarelli.fakt.MutabilityMode
+
+// Always generate mutable fake (even if plugin default is false)
+@Fake(mutability = MutabilityMode.MUTABLE)
+interface UserRepository { ... }
+
+// Always generate immutable fake (even if plugin default is true)
+@Fake(mutability = MutabilityMode.IMMUTABLE)
+interface Logger { ... }
+
+// Follow plugin default
+@Fake  // or @Fake(mutability = MutabilityMode.DEFAULT)
 interface UserService { ... }
 ```
 

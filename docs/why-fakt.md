@@ -91,7 +91,9 @@ class FakeAnalyticsService : AnalyticsService {
 ```
 
 !!! note "Fakt does it differently"
-    Unlike the mutable handwritten pattern above, Fakt generates **immutable** fakes where behavior is set via constructor parameters and cannot change after construction. This eliminates shared mutable state and makes fakes thread-safe by design.
+    By default, Fakt generates **immutable** fakes where behavior is set via constructor parameters and cannot change after construction. This eliminates shared mutable state and makes fakes thread-safe by design.
+
+    For advanced integration test scenarios, Fakt also supports [opt-in mutable fakes](user-guide/immutable-vs-mutable.md) with `@Fake(mutability = MutabilityMode.MUTABLE)`. Unlike the handwritten pattern above, mutable Fakt fakes are still compiler-generated (never drift from the interface), use a type-safe `configure {}` DSL (not raw setters), and compose cleanly with call history.
 
 The problems: call history uses mutable variables that break under concurrent tests. N methods require ~30N lines. Interface changes don't break unused fakes—they silently drift. For 50 interfaces, this means thousands of lines of brittle boilerplate.
 

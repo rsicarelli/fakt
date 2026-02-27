@@ -77,8 +77,10 @@ data class FirMetadataCache(
          * - Added isOptInMarker field for @RequiresOptIn detection (Issue #22)
          * - v3:
          * - Added callHistoryMode field for per-interface call history control
+         * - v4:
+         * - Added mutabilityMode field for per-interface mutability control
          */
-        const val CURRENT_VERSION: Int = 3
+        const val CURRENT_VERSION: Int = 4
     }
 }
 
@@ -101,6 +103,7 @@ data class FirMetadataCache(
  * @property validationTimeNanos Time spent validating this interface in FIR phase
  * @property visibility Visibility modifier (PUBLIC, INTERNAL, etc.) for explicitApi() support
  * @property callHistoryMode Call history generation mode (DEFAULT, ENABLED, DISABLED)
+ * @property mutabilityMode Mutability mode (DEFAULT, IMMUTABLE, MUTABLE)
  */
 @Serializable
 data class SerializableFakeInterface(
@@ -118,6 +121,7 @@ data class SerializableFakeInterface(
     val validationTimeNanos: Long,
     val visibility: String = "PUBLIC",
     val callHistoryMode: String = "DEFAULT",
+    val mutabilityMode: String = "DEFAULT",
 )
 
 /**
@@ -138,6 +142,7 @@ data class SerializableFakeInterface(
  * @property validationTimeNanos Time spent validating this class in FIR phase
  * @property visibility Visibility modifier (PUBLIC, INTERNAL, etc.) for explicitApi() support
  * @property callHistoryMode Call history generation mode (DEFAULT, ENABLED, DISABLED)
+ * @property mutabilityMode Mutability mode (DEFAULT, IMMUTABLE, MUTABLE)
  */
 @Serializable
 data class SerializableFakeClass(
@@ -155,6 +160,7 @@ data class SerializableFakeClass(
     val validationTimeNanos: Long,
     val visibility: String = "PUBLIC",
     val callHistoryMode: String = "DEFAULT",
+    val mutabilityMode: String = "DEFAULT",
 )
 
 /**

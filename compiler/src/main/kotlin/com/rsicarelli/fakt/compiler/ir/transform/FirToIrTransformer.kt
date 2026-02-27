@@ -127,6 +127,7 @@ internal class FirToIrTransformer {
                     sourceSourceSet = firMetadata.sourceSourceSet,
                     visibility = firMetadata.visibility,
                     callHistoryMode = firMetadata.callHistoryMode,
+                    mutabilityMode = firMetadata.mutabilityMode,
                 ),
         )
     }
@@ -196,6 +197,7 @@ internal class FirToIrTransformer {
                     sourceSourceSet = firMetadata.sourceSourceSet,
                     visibility = firMetadata.visibility,
                     callHistoryMode = firMetadata.callHistoryMode,
+                    mutabilityMode = firMetadata.mutabilityMode,
                 ),
         )
     }

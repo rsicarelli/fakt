@@ -7,6 +7,7 @@ import com.rsicarelli.fakt.compiler.core.telemetry.measureTimeNanos
 import com.rsicarelli.fakt.compiler.fir.extraction.AnnotationExtractor
 import com.rsicarelli.fakt.compiler.fir.metadata.FirCallHistoryMode
 import com.rsicarelli.fakt.compiler.fir.metadata.FirFunctionInfo
+import com.rsicarelli.fakt.compiler.fir.metadata.FirMutabilityMode
 import com.rsicarelli.fakt.compiler.fir.metadata.FirParameterInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirPropertyInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirSourceLocation
@@ -176,6 +177,9 @@ internal class FakeInterfaceChecker(private val sharedContext: FaktSharedContext
         // Extract call history mode from @Fake annotation
         val callHistoryMode = extractCallHistoryMode(declaration, session)
 
+        // Extract mutability mode from @Fake annotation
+        val mutabilityMode = extractMutabilityMode(declaration, session)
+
         return ValidatedFakeInterface(
             classId = classId,
             simpleName = simpleName,
@@ -191,6 +195,7 @@ internal class FakeInterfaceChecker(private val sharedContext: FaktSharedContext
             sourceSourceSet = sourceLocation.extractSourceSetName(),
             visibility = visibility,
             callHistoryMode = callHistoryMode,
+            mutabilityMode = mutabilityMode,
         )
     }
 
@@ -234,6 +239,49 @@ internal class FakeInterfaceChecker(private val sharedContext: FaktSharedContext
                 }
             }
             else -> FirCallHistoryMode.DEFAULT
+        }
+    }
+
+    /**
+     * Extract mutability attribute from @Fake annotation.
+     *
+     * Reads the `mutability` parameter from the @Fake annotation:
+     * - `@Fake` → DEFAULT (no parameter specified)
+     * - `@Fake(mutability = MutabilityMode.MUTABLE)` → MUTABLE
+     * - `@Fake(mutability = MutabilityMode.IMMUTABLE)` → IMMUTABLE
+     *
+     * @param declaration FIR class declaration with @Fake annotation
+     * @param session FIR session for annotation resolution
+     * @return The extracted mutability mode, or DEFAULT if not specified
+     */
+    private fun extractMutabilityMode(
+        declaration: FirClass,
+        session: FirSession,
+    ): FirMutabilityMode {
+        // Find the @Fake annotation
+        val fakeAnnotation =
+            declaration.annotations.find { annotation ->
+                annotation.toAnnotationClassIdSafe(session) == FAKE_ANNOTATION_CLASS_ID
+            } ?: return FirMutabilityMode.DEFAULT
+
+        // Look for the mutability argument in the annotation
+        val mutabilityArg =
+            fakeAnnotation.argumentMapping.mapping.entries
+                .find { it.key.asString() == "mutability" }
+                ?.value
+
+        // Parse the enum value from the expression
+        return when (mutabilityArg) {
+            is FirPropertyAccessExpression -> {
+                // Resolve the enum entry symbol
+                val enumEntry = mutabilityArg.calleeReference.toResolvedEnumEntrySymbol()
+                when (enumEntry?.name?.asString()) {
+                    "MUTABLE" -> FirMutabilityMode.MUTABLE
+                    "IMMUTABLE" -> FirMutabilityMode.IMMUTABLE
+                    else -> FirMutabilityMode.DEFAULT
+                }
+            }
+            else -> FirMutabilityMode.DEFAULT
         }
     }
 

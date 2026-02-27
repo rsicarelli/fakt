@@ -509,7 +509,8 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
             // Pass plugin default for call history resolution
             val interfaceAnalysis =
                 metadata.toInterfaceAnalysis(
-                    enableCallHistoryDefault = sharedContext.options.enableCallHistoryDefault
+                    enableCallHistoryDefault = sharedContext.options.enableCallHistoryDefault,
+                    enableMutableFakesDefault = sharedContext.options.enableMutableFakesDefault,
                 )
 
             // Validate pattern (reuses existing validation logic)
@@ -656,7 +657,8 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
             // Pass plugin default for call history resolution
             val classAnalysis =
                 metadata.toClassAnalysis(
-                    enableCallHistoryDefault = sharedContext.options.enableCallHistoryDefault
+                    enableCallHistoryDefault = sharedContext.options.enableCallHistoryDefault,
+                    enableMutableFakesDefault = sharedContext.options.enableMutableFakesDefault,
                 )
 
             // Generate fake implementation with timing

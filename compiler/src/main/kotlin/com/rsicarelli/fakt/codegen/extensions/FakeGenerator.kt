@@ -3,6 +3,7 @@
 package com.rsicarelli.fakt.codegen.extensions
 
 import com.rsicarelli.fakt.codegen.builder.ClassBuilder
+import com.rsicarelli.fakt.codegen.builder.ConstructorPropertyBuilder
 import com.rsicarelli.fakt.codegen.builder.codeFile
 import com.rsicarelli.fakt.codegen.builder.parseType
 import com.rsicarelli.fakt.codegen.model.CodeFile
@@ -63,6 +64,9 @@ data class PropertySpec(
  *
  * @property generateCallHistory When true, generates call tracking code (call count, call history).
  *   When false, generates lightweight fakes without tracking. Default: true.
+ * @property generateMutableBehaviors When true, generates mutable behavior properties (internal var)
+ *   and a configure {} method. When false, generates immutable private val behaviors. Default:
+ *   false.
  */
 data class FakeGenerationConfig(
     val packageName: String,
@@ -76,6 +80,7 @@ data class FakeGenerationConfig(
     val visibility: FirVisibility = FirVisibility.PUBLIC,
     val annotations: List<AnnotationSpec> = emptyList(),
     val generateCallHistory: Boolean = true,
+    val generateMutableBehaviors: Boolean = false,
 )
 
 /**
@@ -161,6 +166,9 @@ private val ANNOTATIONS_REQUIRING_OPTIN =
  * @param annotations Annotations to propagate to the generated class
  * @param generateCallHistory When true, generates call tracking code. When false, generates
  *   lightweight fakes without call count or call history tracking. Default: true.
+ * @param generateMutableBehaviors When true, generates mutable behavior properties (internal var)
+ *   and a configure {} method. When false, generates immutable private val behaviors. Default:
+ *   false.
  * @return CodeFile with complete fake implementation
  */
 fun generateCompleteFake(
@@ -175,6 +183,7 @@ fun generateCompleteFake(
     visibility: FirVisibility = FirVisibility.PUBLIC,
     annotations: List<AnnotationSpec> = emptyList(),
     generateCallHistory: Boolean = true,
+    generateMutableBehaviors: Boolean = false,
 ): CodeFile =
     generateCompleteFakeInternal(
         FakeGenerationConfig(
@@ -189,6 +198,7 @@ fun generateCompleteFake(
             visibility = visibility,
             annotations = annotations,
             generateCallHistory = generateCallHistory,
+            generateMutableBehaviors = generateMutableBehaviors,
         )
     )
 
@@ -204,6 +214,7 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
     val visibility = config.visibility
     val annotations = config.annotations
     val generateCallHistory = config.generateCallHistory
+    val generateMutableBehaviors = config.generateMutableBehaviors
     val className = "Fake${interfaceName}Impl"
 
     // Extract type parameter names for interface type arguments
@@ -362,15 +373,25 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
             val simpleProperties = properties.filter { !it.isStateFlow }
 
             // ==========================================
-            // Constructor: Behavior parameters (immutable)
-            // Behaviors are constructor params without defaults —
-            // the Config DSL provides defaults via build().
+            // Constructor: Behavior parameters
+            // When mutable: internal var — behaviors can be reassigned via configure {}
+            // When immutable: private val — set at construction time via Config DSL
             // ==========================================
             simpleProperties.forEach { prop ->
-                generatePropertyBehaviorConstructorParam(this, prop, isClass)
+                generatePropertyBehaviorConstructorParam(
+                    this,
+                    prop,
+                    isClass,
+                    generateMutableBehaviors,
+                )
             }
             methods.forEach { method ->
-                generateMethodBehaviorConstructorParam(this, method, isClass)
+                generateMethodBehaviorConstructorParam(
+                    this,
+                    method,
+                    isClass,
+                    generateMutableBehaviors,
+                )
             }
 
             // ==========================================
@@ -411,6 +432,22 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
                 methods.forEach { method ->
                     generateMethodCallHistoryBackingField(this, method, interfaceName, visibility)
                 }
+            }
+
+            // ==========================================
+            // SECTION 3: Configure Method (mutable fakes only)
+            // Allows selective reconfiguration of behaviors mid-test.
+            // ==========================================
+            if (generateMutableBehaviors) {
+                generateConfigureMethod(
+                    classBuilder = this,
+                    configClassName = "Fake${interfaceName}Config",
+                    methods = methods,
+                    properties = simpleProperties,
+                    typeParamNames = typeParamNames,
+                    visibility = visibility,
+                    isClass = isClass,
+                )
             }
         }
     }
@@ -483,13 +520,18 @@ private fun generateMethodBehaviorConstructorParam(
     classBuilder: ClassBuilder,
     method: MethodSpec,
     isClass: Boolean = false,
+    isMutableBehavior: Boolean = false,
 ) {
     val isOpenMethod = isClass && !method.isAbstract
     val functionType = buildErasedBehaviorType(method = method, isOpenMethod = isOpenMethod)
 
-    // Direct private val constructor property — defaults live in the Config class only
     classBuilder.constructorProperty("${method.name}Behavior", functionType) {
-        private()
+        if (isMutableBehavior) {
+            internal()
+            mutable()
+        } else {
+            private()
+        }
         // Open methods use null to signal "delegate to super"
         if (isOpenMethod) this.defaultValue = "null"
     }
@@ -541,36 +583,46 @@ private fun generatePropertyBehaviorConstructorParam(
     classBuilder: ClassBuilder,
     prop: PropertySpec,
     isClass: Boolean = false,
+    isMutableBehavior: Boolean = false,
 ) {
     val isOpenProperty = isClass && !prop.isAbstract
+
+    fun ConstructorPropertyBuilder.applyVisibility() {
+        if (isMutableBehavior) {
+            internal()
+            mutable()
+        } else {
+            private()
+        }
+    }
 
     if (prop.isMutable) {
         if (isOpenProperty) {
             classBuilder.constructorProperty("${prop.name}Getter", "(() -> ${prop.type})?") {
-                private()
+                applyVisibility()
                 this.defaultValue = "null"
             }
             classBuilder.constructorProperty("${prop.name}Setter", "((${prop.type}) -> Unit)?") {
-                private()
+                applyVisibility()
                 this.defaultValue = "null"
             }
         } else {
             classBuilder.constructorProperty("${prop.name}Getter", "() -> ${prop.type}") {
-                private()
+                applyVisibility()
             }
             classBuilder.constructorProperty("${prop.name}Setter", "(${prop.type}) -> Unit") {
-                private()
+                applyVisibility()
             }
         }
     } else {
         if (isOpenProperty) {
             classBuilder.constructorProperty("${prop.name}Behavior", "(() -> ${prop.type})?") {
-                private()
+                applyVisibility()
                 this.defaultValue = "null"
             }
         } else {
             classBuilder.constructorProperty("${prop.name}Behavior", "() -> ${prop.type}") {
-                private()
+                applyVisibility()
             }
         }
     }
@@ -803,4 +855,72 @@ private fun buildBehaviorFunctionType(
     val paramsStr = paramTypes.joinToString(", ")
     val baseType = "$suspendPrefix($paramsStr) -> $returnType"
     return if (isNullable) "($baseType)?" else baseType
+}
+
+/**
+ * Generates the `configure {}` method on a mutable fake implementation.
+ *
+ * The configure method:
+ * 1. Creates a fresh Config instance (with null behavior defaults)
+ * 2. Applies the user's DSL block
+ * 3. Selectively updates only behaviors that were explicitly set (non-null)
+ *
+ * This allows partial reconfiguration:
+ * ```kotlin
+ * fake.configure {
+ *     findById { null }  // Only changes this, other behaviors unchanged
+ * }
+ * ```
+ */
+private fun generateConfigureMethod(
+    classBuilder: ClassBuilder,
+    configClassName: String,
+    methods: List<MethodSpec>,
+    properties: List<PropertySpec>,
+    typeParamNames: List<String>,
+    visibility: FirVisibility,
+    isClass: Boolean,
+) {
+    val configTypeArgs = if (typeParamNames.isNotEmpty()) "<${typeParamNames.joinToString(", ")}>" else ""
+
+    val bodyLines = mutableListOf<String>()
+    bodyLines.add("val config = $configClassName$configTypeArgs().apply(block)")
+
+    // Generate selective updates for method behaviors
+    methods.forEach { method ->
+        val isOpenMethod = isClass && !method.isAbstract
+        if (isOpenMethod) {
+            // Open methods: config behavior is already nullable, just assign
+            bodyLines.add("config.${method.name}Behavior?.let { ${method.name}Behavior = it }")
+        } else {
+            bodyLines.add("config.${method.name}Behavior?.let { ${method.name}Behavior = it }")
+        }
+    }
+
+    // Generate selective updates for property behaviors
+    properties.forEach { prop ->
+        val isOpenProperty = isClass && !prop.isAbstract
+        if (prop.isMutable) {
+            if (isOpenProperty) {
+                bodyLines.add("config.${prop.name}Getter?.let { ${prop.name}Getter = it }")
+                bodyLines.add("config.set${prop.name.replaceFirstChar { it.uppercase() }}Behavior?.let { ${prop.name}Setter = it }")
+            } else {
+                bodyLines.add("config.${prop.name}Getter?.let { ${prop.name}Getter = it }")
+                bodyLines.add("config.set${prop.name.replaceFirstChar { it.uppercase() }}Behavior?.let { ${prop.name}Setter = it }")
+            }
+        } else {
+            bodyLines.add("config.${prop.name}Behavior?.let { ${prop.name}Behavior = it }")
+        }
+    }
+
+    classBuilder.function("configure") {
+        when (visibility) {
+            FirVisibility.PUBLIC -> public()
+            FirVisibility.INTERNAL -> internal()
+            FirVisibility.PRIVATE,
+            FirVisibility.PROTECTED -> public()
+        }
+        parameter("block", "$configClassName$configTypeArgs.() -> Unit")
+        body = bodyLines.joinToString("\n")
+    }
 }

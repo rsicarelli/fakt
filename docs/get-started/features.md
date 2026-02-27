@@ -282,6 +282,65 @@ interface Logger { ... }  // Lightweight, no tracking
 
 ---
 
+## Behavior Mutability
+
+<table>
+<tr><th>Case</th><th>Example</th></tr>
+<tr>
+<td><strong>Immutable (Default)</strong></td>
+<td>
+
+```kotlin
+@Fake  // Immutable by default
+interface UserService { ... }
+```
+
+</td>
+</tr>
+<tr>
+<td><strong>Mutable (Opt-In)</strong></td>
+<td>
+
+```kotlin
+@Fake(mutability = MutabilityMode.MUTABLE)
+interface UserRepository { ... }
+
+val fake = fakeUserRepository { findById { User("1", "Alice") } }
+fake.configure { findById { null } }  // Reconfigure mid-test
+```
+
+</td>
+</tr>
+<tr>
+<td><strong>Explicit Immutable</strong></td>
+<td>
+
+```kotlin
+@Fake(mutability = MutabilityMode.IMMUTABLE)
+interface Logger { ... }  // Always immutable, overrides plugin default
+```
+
+</td>
+</tr>
+<tr>
+<td><strong>Configurable</strong></td>
+<td>
+
+```kotlin
+fakt {
+    enableMutableFakes.set(true)  // All fakes mutable by default
+}
+
+@Fake(mutability = MutabilityMode.IMMUTABLE)
+interface Logger { ... }  // Override: always immutable
+```
+
+</td>
+</tr>
+</table>
+
+---
+
 ## Code Generation
 
 <table>
