@@ -380,12 +380,31 @@ Compiler catches type errors at build time.
 
 ---
 
-## Multi-Module (Experimental)
+## Multi-Module
 
 <table>
 <tr><th>Case</th><th>Example</th></tr>
 <tr>
-<td><strong>Collector Module</strong></td>
+<td><strong>Test Fixtures (JVM)</strong></td>
+<td>
+
+```kotlin
+plugins {
+    `java-test-fixtures`
+}
+
+fakt {
+    useGradleTestFixtures.set(true)
+}
+
+// Consumer:
+testImplementation(testFixtures(projects.core))
+```
+
+</td>
+</tr>
+<tr>
+<td><strong>Collector Module</strong><br>(Experimental)</td>
 <td>
 
 ```kotlin
@@ -443,4 +462,5 @@ dependencies {
 
 - [Usage Guide](../user-guide/usage.md) - Comprehensive usage reference with detailed examples
 - [Why Fakt?](../why-fakt.md) - Design philosophy and advantages
-- [Multi-Module](../user-guide/multi-module.md) - Cross-module fakes
+- [Test Fixtures (JVM)](../user-guide/test-fixtures.md) - Cross-module fakes for JVM projects
+- [Multi-Module (KMP)](../user-guide/multi-module.md) - Cross-module fakes with collector modules

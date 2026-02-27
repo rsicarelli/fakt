@@ -90,6 +90,7 @@ nav:
   - 'User Guide':
       - 'Usage': user-guide/usage.md
       - 'Multi-Module': user-guide/multi-module.md
+      - 'Test Fixtures (JVM)': user-guide/test-fixtures.md
       - 'Immutable vs Mutable': user-guide/immutable-vs-mutable.md
       - 'Testing Patterns': user-guide/testing-patterns.md
       - 'Migration from Mocks': user-guide/migration-from-mocks.md

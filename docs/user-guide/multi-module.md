@@ -5,6 +5,9 @@ Fakt's multi-module support enables fake reuse across multiple Gradle modules th
 !!! info "Experimental API"
     Multi-module support is marked `@ExperimentalFaktMultiModule`. The API is production-ready but may evolve based on real-world feedback. Explicit opt-in is required.
 
+!!! tip "Simpler JVM-Only Alternative"
+    For pure JVM projects, consider [Gradle Test Fixtures](test-fixtures.md) — share fakes across modules with no collector module needed, using Gradle's built-in `java-test-fixtures` plugin.
+
 ---
 
 ## What is Multi-Module Support?

@@ -29,6 +29,9 @@ fakt {
     // Control mutable fake generation (default: false)
     enableMutableFakes.set(false)  // Set to true for mutable fakes by default
 
+    // Generate fakes to testFixtures source set (default: false, JVM only)
+    useGradleTestFixtures.set(false)  // Requires `java-test-fixtures` plugin
+
     // Multi-module: Collect fakes from another module (default: not set)
     @OptIn(com.rsicarelli.fakt.compiler.api.ExperimentalFaktMultiModule::class)
     collectFakesFrom(projects.core.analytics)
@@ -88,6 +91,19 @@ fakt {
 ```kotlin
 fakt {
     enableMutableFakes.set(true)
+}
+```
+
+</td>
+</tr>
+<tr>
+<td><strong>useGradleTestFixtures</strong></td>
+<td><code>false</code></td>
+<td>
+
+```kotlin
+fakt {
+    useGradleTestFixtures.set(true)
 }
 ```
 
@@ -399,11 +415,13 @@ K2 mode improves factory function autocomplete and type inference.
 | `jvmTest/` | `build/generated/fakt/jvmTest/kotlin/` |
 | `iosTest/` | `build/generated/fakt/iosTest/kotlin/` |
 | `androidUnitTest/` | `build/generated/fakt/androidUnitTest/kotlin/` |
+| `testFixtures/` | `build/generated/fakt/testFixtures/kotlin/` (requires `useGradleTestFixtures`) |
 
 ---
 
 ## Next Steps
 
-- **[Multi-Module Setup](multi-module.md)** - Cross-module fakes architecture
+- **[Test Fixtures (JVM)](test-fixtures.md)** - Cross-module fakes for JVM projects
+- **[Multi-Module (KMP)](multi-module.md)** - Cross-module fakes with collector modules
 - **[Usage Guide](usage.md)** - Comprehensive usage patterns and examples
 - **[Troubleshooting](../help/troubleshooting.md)** - Common configuration issues
