@@ -58,6 +58,7 @@ public class com/rsicarelli/fakt/gradle/FaktPluginExtension {
 	public final fun collectFakesFrom (Lorg/gradle/api/artifacts/ProjectDependency;)V
 	public final fun getCollectFrom ()Lorg/gradle/api/provider/Property;
 	public final fun getEnableCallHistory ()Lorg/gradle/api/provider/Property;
+	public final fun getEnableMutableFakes ()Lorg/gradle/api/provider/Property;
 	public final fun getEnabled ()Lorg/gradle/api/provider/Property;
 	public final fun getLogLevel ()Lorg/gradle/api/provider/Property;
 }
