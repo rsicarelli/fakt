@@ -34,8 +34,6 @@ fun Project.applyKotlinCompiler() {
                     // JVM-specific compiler flags
                     freeCompilerArgs.addAll(
                         "-Xjsr305=strict", // Strict JSR-305 null safety
-                        "-Xjvm-default=all", // Generate default methods for interfaces
-                        "-Xtype-enhancement-improvements-strict-mode", // Strict type enhancements
                         "-Xcontext-parameters", // Enable context parameters
                     )
                 } else {

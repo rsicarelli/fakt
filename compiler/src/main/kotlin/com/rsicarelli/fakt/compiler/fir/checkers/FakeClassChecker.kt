@@ -23,7 +23,7 @@ import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirClassChecker
 import org.jetbrains.kotlin.fir.declarations.FirClass
-import org.jetbrains.kotlin.fir.declarations.FirSimpleFunction
+import org.jetbrains.kotlin.fir.declarations.FirNamedFunction
 import org.jetbrains.kotlin.fir.declarations.FirValueParameter
 import org.jetbrains.kotlin.fir.declarations.hasAnnotation
 import org.jetbrains.kotlin.fir.declarations.processAllDeclarations
@@ -482,7 +482,7 @@ internal class FakeClassChecker(private val sharedContext: FaktSharedContext) :
 
     /** Extract function metadata from FIR function declaration. */
     @OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class)
-    private fun extractFunctionInfo(function: FirSimpleFunction): FirFunctionInfo {
+    private fun extractFunctionInfo(function: FirNamedFunction): FirFunctionInfo {
         val parameters = function.valueParameters.map(::extractParameterInfo)
         val typeParameters =
             function.typeParameters.map { typeParamRef ->

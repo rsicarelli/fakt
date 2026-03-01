@@ -5,7 +5,7 @@
 [![Build](https://img.shields.io/github/actions/workflow/status/rsicarelli/fakt/continuous-deploy.yml)](https://github.com/rsicarelli/fakt/actions/workflows/continuous-deploy.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/com.rsicarelli.fakt/annotations)](https://search.maven.org/search?q=g:com.rsicarelli.fakt)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.2.21%2B-blue)](https://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.3.20--RC%2B-blue)](https://kotlinlang.org)
 
 Automate the fake-over-mock pattern. Fakt generates type-safe test doubles that eliminate boilerplate.
 
@@ -92,7 +92,7 @@ Single-platform projects (JVM-only, Android-only) are fully supported.
 
 ## Requirements
 
-- **Kotlin:** 2.2.21+
+- **Kotlin:** 2.3.20-RC+
 - **Gradle:** 8.0+
 - **JVM:** 11+
 

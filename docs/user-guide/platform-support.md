@@ -8,7 +8,7 @@ Platform and version requirements.
 
 | Fakt Version | Kotlin Version |
 |--------------|----------------|
-| Latest       | 2.2.21         |
+| Latest       | 2.3.20-RC         |
 
 Fakt follows forward compatibility on a best-effort basis. Check the [releases page](https://github.com/rsicarelli/fakt/releases) for the latest supported Kotlin version.
 
