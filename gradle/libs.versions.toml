@@ -18,17 +18,18 @@ fakt = "1.0.0-beta04"
 android-gradle-plugin = "8.12.3"
 binaryCompatibilityValidator = "0.18.1"
 detekt = "1.23.8"
-google-java-format = "1.33.0"
-junit5 = "5.13.4"
+google-java-format = "1.34.1"
+junit5 = "5.14.3"
 kotlin = "2.3.20-RC"
 kotlin-compile-testing = "0.12.1"
 kotlinx-coroutines = "1.10.2"
 kotlinx-serialization = "1.10.0"
 ktfmt = "0.61"
-licenseReport = "3.0.1"
+licenseReport = "3.1.1"
 mavenPublish = "0.35.0"
+shadow = "9.3.2"
 spotless = "8.2.1"
-turbine = "1.2.0"
+turbine = "1.2.1"
 
 [libraries]
 coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
@@ -61,6 +62,6 @@ kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
-shadow = { id = "com.gradleup.shadow", version = "9.1.0" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 # Fakt Plugin
 fakt = { id = "com.rsicarelli.fakt", version.ref = "fakt" }
