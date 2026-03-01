@@ -97,9 +97,6 @@ internal class FakeKotlinCompilation(
 
     override fun associateWith(other: KotlinCompilation<*>) = error("Not used")
 
-    @Suppress("OVERRIDE_DEPRECATION")
-    override fun source(sourceSet: KotlinSourceSet) = error("Not used")
-
     override val implementationConfigurationName
         get() = error("Not used")
 
