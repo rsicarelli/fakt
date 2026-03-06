@@ -1,626 +1,159 @@
 ---
 name: interface-analyzer
-description: Deep structural analysis of @Fake annotated interfaces examining method signatures, property definitions, generic type parameters, suspend functions, complexity assessment, and generation strategy recommendations. Use when analyzing interface structure, examining method signatures, checking generic patterns, assessing generation complexity, or when user mentions "analyze interface", "interface structure", "check methods", "assess complexity", interface names, or "generation strategy".
+description: Deep structural analysis of @Fake annotated interfaces — method signatures, properties, generics, suspend functions, complexity scoring, and generation strategy. Use when analyzing interfaces for fake generation, assessing complexity, understanding what code will be generated for an interface, or debugging unexpected generated output. Make sure to use this skill whenever you need to understand an interface's structure before modifying generation logic — it reveals edge cases like nested generics and suspend overloads that affect code generation.
 allowed-tools: Read, Grep, Glob, Bash
 ---
 
 # Interface Structure Deep Analyzer
 
-Comprehensive @Fake interface structural analysis with generation complexity assessment and strategy recommendations.
-
-## Core Mission
-
-Analyzes the structural characteristics of @Fake annotated interfaces to understand:
-- Method signatures and parameter types
-- Property definitions and types
-- Generic type parameters and constraints
-- Suspend function usage patterns
-- Complex type relationships
-- Generation complexity and recommended strategy
+Structural analysis of @Fake interfaces with complexity assessment and generation strategy recommendations.
 
 ## Instructions
 
 ### 1. Identify Target Interface
 
 **Extract from conversation:**
-- Interface name from user's message
-- Look for patterns: "analyze UserService", "check AsyncDataService structure", "examine Repository interface"
-- Common targets: Service interfaces, Repository interfaces, Data access interfaces
+- "analyze UserService", "check AsyncDataService structure"
+- If unclear, ask: "Which interface would you like me to analyze?"
 
-**If unclear or missing:**
-```
-Ask: "Which interface would you like me to analyze?"
-Suggest: Check recent @Fake interfaces | Analyze all | Specific name
-```
+### 2. Locate Interface
 
-### 2. Locate Interface Definition
-
-**Search in source code:**
 ```bash
 # Find interface file
 find . -path "*/src/*/kotlin/*" -name "*.kt" -exec grep -l "interface ${INTERFACE_NAME}" {} \;
 
-# Common locations:
-# - src/commonMain/kotlin/ (KMP)
-# - src/main/kotlin/ (JVM)
-# - src/test/kotlin/ or src/commonTest/kotlin/ (test interfaces)
-```
-
-**Verify @Fake annotation:**
-```bash
-# Check for @Fake annotation
+# Verify @Fake annotation
 grep -B 5 "interface ${INTERFACE_NAME}" ${INTERFACE_FILE} | grep "@Fake"
 ```
 
 **If not found:**
 ```
-❌ ERROR: Interface '${INTERFACE_NAME}' not found
-
-💡 Suggestions:
+Interface '${INTERFACE_NAME}' not found
 1. Check spelling (case-sensitive)
-2. Verify interface exists in source
-3. Check if @Fake annotation is present
-4. Try: find . -name "*.kt" -exec grep -l "interface.*Service" {} \;
+2. Verify @Fake annotation present
+3. Try: find . -name "*.kt" -exec grep -l "interface.*Service" {} \;
 ```
 
-### 3. Extract Interface Definition
+### 3. Extract & Analyze
 
-**Read interface file:**
-```bash
-Read ${INTERFACE_FILE}
+**Read the interface file and parse:**
+- Package declaration and imports
+- Generic type parameters (if any)
+- Supertypes (if any)
+- All property declarations
+- All method declarations
+
+### 4. Analyze Methods
+
+**For each method, document:**
+
 ```
-
-**Extract complete interface:**
-```kotlin
-// Look for pattern:
-@Fake
-interface ${INTERFACE_NAME}<Generic Parameters> : SuperType {
-    // Properties
-    // Methods
-    // Nested declarations
-}
-```
-
-**Parse key components:**
-- [ ] Package declaration
-- [ ] Imports (for type resolution)
-- [ ] @Fake annotation presence
-- [ ] Interface name
-- [ ] Generic type parameters (if any)
-- [ ] Supertype(s) (if any)
-- [ ] Property declarations
-- [ ] Method declarations
-- [ ] Nested types/interfaces
-
-### 4. Analyze Method Signatures
-
-**Extract all methods:**
-
-**For each method:**
-```kotlin
-fun methodName(param: Type): ReturnType
-suspend fun asyncMethod(param: Type): ReturnType
-fun <T> genericMethod(data: T): T
-```
-
-**Analyze each method:**
-
-**Signature structure:**
-```
-📋 METHOD: ${method_name}
-
+METHOD: ${name}
 Signature: ${full_signature}
-
-Components:
-- Modifiers: suspend? | operator? | infix?
-- Method-level generics: <T, R>? | none
-- Parameters: (name: Type, ...)
-- Return type: ReturnType
-- Nullability: nullable? | non-null?
+Modifiers: suspend? | operator? | infix?
+Method-level generics: <T, R>? | none
+Parameters: (name: Type, ...)
+Return type: ReturnType
+Complexity: LOW | MEDIUM | HIGH
 ```
 
 **Complexity indicators:**
-- **Low**: Simple types (String, Int, Boolean), no generics
-- **Medium**: Complex types (User, Result<T>), suspend functions
-- **High**: Method-level generics, function types, complex constraints
+- LOW: Simple types (String, Int, Boolean), no generics
+- MEDIUM: Complex types (User, Result<T>), suspend functions
+- HIGH: Method-level generics, function types, complex constraints
 
-**Example analysis:**
-```
-📋 METHOD: getUser
-
-Signature: suspend fun getUser(id: String): Result<User>
-
-Components:
-- Modifiers: suspend ✅
-- Method-level generics: none
-- Parameters: (id: String)
-- Return type: Result<User>
-- Nullability: non-null
-
-Complexity: MEDIUM
-Reason: Suspend function + generic return type (Result<User>)
-Strategy: Supported in Phase 1 ✅
-```
-
-### 5. Analyze Property Definitions
-
-**Extract all properties:**
+### 5. Analyze Properties
 
 **For each property:**
-```kotlin
-val readOnlyProp: Type
-var mutableProp: Type
-val nullableProp: Type?
+```
+PROPERTY: ${name}
+Declaration: val/var ${name}: Type
+Nullable: yes/no
+Default strategy: "" | 0 | false | null | emptyList() | emptyMap()
 ```
 
-**Analyze each property:**
+### 6. Analyze Generic Types
 
-```
-📋 PROPERTY: ${property_name}
+**Classify patterns:**
 
-Declaration: ${full_declaration}
-
-Components:
-- Mutability: val (read-only) | var (mutable)
-- Type: ${type}
-- Nullability: nullable? | non-null?
-- Getter/Setter: custom? | default?
-
-Default value strategy: ${default}
-```
-
-**Default value mapping:**
-```
-String → ""
-Int, Long → 0
-Boolean → false
-Nullable (Type?) → null
-Collections → emptyList() / emptySet() / emptyMap()
-Complex types → null or Type()
-```
-
-**Example analysis:**
-```
-📋 PROPERTY: currentUser
-
-Declaration: val currentUser: User?
-
-Components:
-- Mutability: val (read-only)
-- Type: User
-- Nullability: nullable ✅
-- Getter/Setter: default
-
-Default value strategy: null
-Complexity: LOW
-```
-
-### 6. Analyze Generic Type Parameters
-
-**Classify generic patterns:**
-
-**Interface-level generics:**
-```kotlin
-interface Repository<T> {
-    fun save(item: T): T
-}
-
-📋 GENERIC ANALYSIS: Repository<T>
-
-Classification: Interface-level generic
-Type parameters: T (class-level)
-Scope: Available throughout interface
-Methods using T: save (parameter and return)
-
-Phase 1 Status: ⚠️ Type erasure (T becomes Any)
-Phase 2B Solution: Generic fake class FakeRepository<T>
-```
-
-**Method-level generics:**
-```kotlin
-interface DataService {
-    fun <T> process(data: T): T
-}
-
-📋 GENERIC ANALYSIS: DataService
-
-Classification: Method-level generic
-Type parameters: none (interface), T (method-level)
-Scope: T only accessible within process() method
-
-Phase 1 Status: ❌ Scoping challenge
-Phase 2A Solution: Identity function + dynamic casting
-```
-
-**Mixed generics:**
-```kotlin
-interface CacheService<K, V> {
-    fun get(key: K): V?
-    fun <R : V> compute(key: K, fn: (K) -> R): R
-}
-
-📋 GENERIC ANALYSIS: CacheService<K, V>
-
-Classification: Mixed (interface + method level)
-Interface parameters: K, V
-Method parameters: R (with constraint R : V)
-
-Complexity: HIGH
-Phase 2A: Handle method-level R
-Phase 2B: Handle interface-level K, V
-```
-
-**Generic complexity scoring:**
-```
-No generics: LOW
-Interface-level only: MEDIUM (Phase 2B)
-Method-level only: MEDIUM (Phase 2A)
-Mixed generics: HIGH (Phase 2A + 2B)
-Complex constraints: VERY HIGH (Phase 3)
-```
+| Pattern | Example | Complexity | Support |
+|---------|---------|-----------|---------|
+| No generics | `interface UserService` | LOW | Phase 1 ✅ |
+| Interface-level | `interface Repository<T>` | MEDIUM | Type erasure (T→Any) |
+| Method-level | `fun <T> process(data: T): T` | MEDIUM | Scoping challenge |
+| Mixed | `interface Cache<K,V> { fun <R:V> compute(...): R }` | HIGH | Phase 2A+2B |
 
 ### 7. Detect Special Patterns
 
-**Suspend functions:**
-```kotlin
-suspend fun fetchData(): Result<Data>
+- **Suspend functions** → Phase 1 ✅, behavior must also be suspend
+- **Function type params** → Phase 1 ✅, default = empty lambda `{}`
+- **Nullable returns** → Phase 1 ✅, default = `null`
+- **Collections** → Phase 1 ✅, default = `emptyList()` / `emptySet()` / `emptyMap()`
 
-✅ PATTERN: Suspend function
-Support: Phase 1 (fully supported)
-Generation: Behavior property must also be suspend
+### 8. Complexity Assessment
+
+**Scoring:**
+```
+No generics + simple types       = LOW
+Suspend + generic return types   = MEDIUM
+Interface-level generics         = MEDIUM (Phase 2B)
+Method-level generics            = MEDIUM (Phase 2A)
+Mixed generics + constraints     = HIGH (Phase 2A+2B)
 ```
 
-**Function types:**
-```kotlin
-fun onClick(handler: (Event) -> Unit)
+### 9. Generation Strategy
 
-✅ PATTERN: Function type parameter
-Support: Phase 1 (fully supported)
-Generation: Smart default = empty lambda { }
-```
+**Based on complexity:**
 
-**Nullable types:**
-```kotlin
-fun findUser(id: String): User?
+**LOW** — Full Phase 1 support, 100% expected success
+- Generate with current plugin, verify compilation, write tests
 
-✅ PATTERN: Nullable return type
-Support: Phase 1 (fully supported)
-Default: null
-```
+**MEDIUM** — Partial support, may need workarounds
+- Suspend: fully supported
+- Generic return types (Result<T>): supported
+- Interface-level generics: type erasure (T→Any)
 
-**Collections:**
-```kotlin
-fun getAllUsers(): List<User>
+**HIGH** — Limited support, consider simplifications
+- Split into simpler interfaces
+- Use concrete types instead of generics
+- Or wait for Phase 2A/2B
 
-✅ PATTERN: Collection return type
-Support: Phase 1 (fully supported)
-Default: emptyList()
-```
-
-### 8. Assess Generation Complexity
-
-**Generate complexity report:**
+### 10. Report
 
 ```
-═══════════════════════════════════════════════════
-📊 INTERFACE STRUCTURE ANALYSIS: ${INTERFACE_NAME}
-═══════════════════════════════════════════════════
+INTERFACE ANALYSIS: ${INTERFACE_NAME}
 
-📋 OVERVIEW:
-- Name: ${INTERFACE_NAME}
+Overview:
 - Package: ${package}
-- @Fake annotation: ✅ Present | ❌ Missing
-- Type parameters: ${generic_params} | none
-- Supertypes: ${supertypes} | none
+- @Fake: present/missing
+- Type params: ${list} | none
+- Methods: ${count} | Properties: ${count}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Methods:
+1. ${name} — ${complexity} — ${support_status}
+...
 
-📋 METHODS (${method_count} total):
+Properties:
+1. ${name}: ${type} — default: ${default}
+...
 
-1. ${method_name_1}
-   Signature: ${full_signature}
-   Complexity: ${LOW|MEDIUM|HIGH}
-   Reason: ${explanation}
-   Support: Phase 1 ✅ | Phase 2A ⚠️ | Phase 2B 🔮
+Generics: ${NONE|INTERFACE|METHOD|MIXED}
+Special Patterns: suspend(${n}), function types(${n}), nullable(${n}), collections(${n})
 
-2. ${method_name_2}
-   ...
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📋 PROPERTIES (${property_count} total):
-
-1. ${property_name_1}
-   Type: ${type}
-   Nullable: ${yes|no}
-   Default: ${default_value}
-   Complexity: ${LOW|MEDIUM}
-
-2. ${property_name_2}
-   ...
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📋 GENERIC TYPE ANALYSIS:
-
-Classification: ${NONE|INTERFACE|METHOD|MIXED}
-Parameters: ${list}
-Scoping: ${description}
-Complexity: ${LOW|MEDIUM|HIGH|VERY HIGH}
-
-Phase Support:
-- Phase 1: ${supported_features}
-- Phase 2A needed: ${yes|no} (${reason})
-- Phase 2B needed: ${yes|no} (${reason})
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📋 SPECIAL PATTERNS DETECTED:
-- ✅ Suspend functions: ${count}
-- ✅ Function types: ${count}
-- ✅ Nullable types: ${count}
-- ✅ Collections: ${count}
-- ⚠️ Complex generics: ${count}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-🎯 OVERALL COMPLEXITY ASSESSMENT:
-
-Complexity: ${LOW|MEDIUM|HIGH|VERY HIGH}
-
-Breakdown:
-- Method complexity: ${avg_method_complexity}
-- Generic complexity: ${generic_complexity}
-- Type complexity: ${type_complexity}
-- Special patterns: ${special_pattern_impact}
-
-═══════════════════════════════════════════════════
-```
-
-### 9. Recommend Generation Strategy
-
-**Based on complexity assessment:**
-
-**Low Complexity Example:**
-```
-🎯 RECOMMENDED GENERATION STRATEGY: ${INTERFACE_NAME}
-
-Complexity: LOW
-
-✅ Phase 1 Support: FULL
-- All methods have simple signatures
-- No generic type parameters
-- Standard types (String, Int, Boolean)
-- Nullable types handled
-
-Generation approach:
-1. Use unified IR-native generation
-2. Smart defaults for all types
-3. Standard DSL configuration
-4. Expected success: 100%
+COMPLEXITY: ${LOW|MEDIUM|HIGH}
+STRATEGY: ${recommendation}
 
 Next steps:
-1. Generate fake with current plugin
-2. Verify compilation
-3. Write GIVEN-WHEN-THEN tests
-```
-
-**Medium Complexity (Suspend + Generics):**
-```
-🎯 RECOMMENDED GENERATION STRATEGY: ${INTERFACE_NAME}
-
-Complexity: MEDIUM
-
-✅ Phase 1 Support: PARTIAL
-- Suspend functions: ✅ Fully supported
-- Generic return types (Result<T>): ✅ Supported
-- Method-level generics: ⚠️ Requires Phase 2A
-
-Generation approach:
-1. Generate with current plugin (Phase 1)
-2. Expect type erasure for generics (T → Any)
-3. Plan Phase 2A upgrade for full type safety
-
-Workarounds:
-- Use interface-level generics instead of method-level
-- Accept Any casting with @Suppress annotations
-- Document type safety limitations
-
-Expected success: 85%
-```
-
-**High Complexity (Mixed Generics):**
-```
-🎯 RECOMMENDED GENERATION STRATEGY: ${INTERFACE_NAME}
-
-Complexity: HIGH
-
-⚠️ Phase 1 Support: LIMITED
-- Interface-level generics: ⚠️ Type erasure
-- Method-level generics: ❌ Scoping issues
-- Complex constraints: ❌ Not fully supported
-
-Recommended path:
-1. Simplify interface for Phase 1:
-   - Remove method-level generics
-   - Use concrete types
-   - Split into multiple simpler interfaces
-
-2. OR wait for Phase 2:
-   - Phase 2A: Method-level generics (2-3 weeks)
-   - Phase 2B: Interface-level generics (2-3 months)
-
-Complexity reduction:
-- Original: interface Cache<K, V> { fun <R> compute(...): R }
-- Simplified: interface StringCache { fun compute(...): String }
-
-Expected success: 60% (original) vs 100% (simplified)
-```
-
-### 10. Provide Actionable Next Steps
-
-**Based on analysis:**
-
-**If fully supported:**
-```
-✅ NEXT STEPS:
-
-1. Generate fake implementation:
-   ./gradlew :module:compileKotlinJvm
-
-2. Verify generated code:
-   cat build/generated/fakt/test/kotlin/Fake${INTERFACE_NAME}Impl.kt
-
-3. Write tests:
-   @Test
-   fun `GIVEN ${INTERFACE_NAME} fake WHEN ...` = runTest { ... }
-
-4. Use in tests:
-   val fake = fake${INTERFACE_NAME} {
-       ${method_name} { ${behavior} }
-   }
-```
-
-**If requires workarounds:**
-```
-⚠️ NEXT STEPS:
-
-1. Consider simplifications:
-   - Option A: Use interface-level generics
-   - Option B: Use concrete types
-   - Option C: Wait for Phase 2A/2B
-
-3. If proceeding with limitations:
-   - Document type safety trade-offs
-   - Add @Suppress annotations where needed
-   - Plan migration to Phase 2
-
-4. Track in roadmap:
-   .claude/docs/implementation/generics/complex-generics-strategy.md
+- ${actionable items}
 ```
 
 ## Supporting Files
 
-Progressive disclosure for interface analysis:
-
-- **`resources/structural-patterns.md`** - Common interface patterns and idioms (loaded on-demand)
-- **`resources/complexity-assessment.md`** - Detailed complexity scoring logic (loaded on-demand)
-- **`resources/generation-strategies.md`** - Strategy selection guide and decision tree (loaded on-demand)
+- **`resources/structural-patterns.md`** — Common interface patterns
+- **`resources/complexity-assessment.md`** — Detailed scoring logic
+- **`resources/generation-strategies.md`** — Strategy selection guide
 
 ## Related Skills
 
-This Skill composes with:
-- **`kotlin-api-consultant`** - Validate Kotlin API usage in interface
-- **`compilation-validator`** - Validate generated code after analysis
-- **`compilation-error-analyzer`** - Debug compilation issues
-
-## Analysis Categories
-
-### By Complexity
-- **Simple**: No generics, basic types, no special patterns
-- **Moderate**: Suspend functions, nullable types, collections
-- **Complex**: Generics (interface or method level)
-- **Very Complex**: Mixed generics, complex constraints
-
-### By Pattern
-- **Data Access**: Repository, DAO patterns
-- **Services**: Business logic interfaces
-- **Utilities**: Helper/tool interfaces
-- **Event Handlers**: Callback/listener interfaces
-
-## Best Practices
-
-1. **Analyze before generating** - Understand complexity upfront
-2. **Check generic patterns** - Biggest source of complexity
-3. **Assess Phase support** - Know what's supported when
-4. **Recommend simplifications** - When appropriate
-5. **Provide clear next steps** - Actionable guidance
-
-## Common Interface Patterns
-
-### Pattern: Simple Service
-```kotlin
-@Fake
-interface UserService {
-    fun getUser(id: String): User
-    fun saveUser(user: User): Boolean
-}
-```
-**Complexity**: LOW (Phase 1 ✅)
-
-### Pattern: Async Service
-```kotlin
-@Fake
-interface AsyncDataService {
-    suspend fun fetchData(): Result<Data>
-    suspend fun saveData(data: Data): Result<Unit>
-}
-```
-**Complexity**: MEDIUM (Phase 1 ✅ - suspend supported)
-
-### Pattern: Generic Repository
-```kotlin
-@Fake
-interface Repository<T> {
-    fun save(item: T): T
-    fun findById(id: String): T?
-}
-```
-**Complexity**: MEDIUM (Phase 2B needed for full type safety)
-
-### Pattern: Complex Generics
-```kotlin
-@Fake
-interface CacheService<K, V> {
-    fun get(key: K): V?
-    fun <R : V> compute(key: K, fn: (K) -> R): R
-}
-```
-**Complexity**: HIGH (Phase 2A + 2B needed)
-
-## Quick Analysis
-
-**One-liner for simple checks:**
-```bash
-# Count methods
-grep -c "fun " ${INTERFACE_FILE}
-
-# Check for generics
-grep -E "<.*>" ${INTERFACE_FILE}
-
-# Check for suspend
-grep -c "suspend fun" ${INTERFACE_FILE}
-```
-
-## Error Handling
-
-### Interface Not Found
-```
-❌ Interface not found: ${INTERFACE_NAME}
-
-Debugging:
-1. Check spelling
-2. Verify @Fake annotation
-3. Search all Kotlin files:
-   find . -name "*.kt" -exec grep -l "interface ${INTERFACE_NAME}" {} \;
-```
-
-### Ambiguous Interface Name
-```
-⚠️ Multiple interfaces found: ${INTERFACE_NAME}
-
-Found:
-1. com.example.service.UserService
-2. com.example.data.UserService
-
-Please specify full package name
-```
-
-## Performance Notes
-
-- Interface file read: ~1-2 seconds
-- Method/property extraction: ~2-5 seconds
-- Generic analysis: ~5-10 seconds
-- Total analysis: ~10-20 seconds per interface
-
-Fast enough for interactive development!
+- **`kotlin-api-consultant`** — Validate Kotlin API usage
+- **`compilation`** — Validate generated code after analysis

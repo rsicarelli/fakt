@@ -3,55 +3,48 @@
 > **Specialized skills for Kotlin compiler plugin development**
 > **Location**: `.claude/skills/`
 
-## What are Skills?
-
-Skills are specialized, reusable knowledge modules that provide deep expertise in specific domains of Fakt compiler plugin development. They provide **comprehensive guidance** and are **automatically suggested** by Claude Code based on their description field.
-
-## How Skills Work
-
-Claude Code's native auto-activation system uses the `description` field in each skill's YAML frontmatter to determine when to suggest the skill. Write trigger-rich descriptions that include:
-
-- What the skill does
-- When to use it ("Use when...")
-- Keywords that should trigger activation
-
-Example:
-```yaml
----
-name: compilation-validator
-description: Validates compilation of generated Fakt fake code ensuring zero errors. Use when validating compilation, checking generated code, or when user mentions "validate compilation", "compile fakes", or "type safety".
-allowed-tools: Read, Bash, Grep, Glob
----
-```
-
-## Available Skills (13 Total)
+## Available Skills (15 Total)
 
 | Skill | Purpose |
 |-------|---------|
-| `kotlin-api-consultant` | Validates Kotlin compiler API usage against source code |
-| `compilation-error-analyzer` | Systematic compilation error diagnosis and resolution |
-| `interface-analyzer` | Deep structural analysis of @Fake annotated interfaces |
-| `bdd-test-runner` | Executes BDD-compliant GIVEN-WHEN-THEN tests |
-| `behavior-analyzer-tester` | Deep behavior analysis and test generation |
-| `git-commit-guardian` | Enforces Conventional Commits format |
-| `pr-creator` | Creates professional PRs using project template |
-| `compilation-validator` | Production-grade compilation validation |
+| `behavior-analyzer-tester` | Deep behavior analysis and GIVEN-WHEN-THEN test generation |
+| `bdd-test-runner` | Executes and validates BDD-compliant tests |
+| `codegen` | Documents the code generation pipeline (model → builder → renderer) |
+| `compilation` | Validates compilation and diagnoses build failures |
 | `compiler-architecture-validator` | Validates compiler plugin best practices |
-| `implementation-tracker` | Monitors implementation progress |
-| `fakt-docs-navigator` | Navigate internal contributor documentation |
-| `public-docs-navigator` | Navigate public MkDocs documentation |
+| `docs-navigator` | Navigates internal + public documentation |
+| `feature-option` | Guides adding new @Fake annotation options (11 touchpoints) |
+| `git-commit-guardian` | Enforces Conventional Commits, blocks AI attribution |
+| `interface-analyzer` | Deep structural analysis of @Fake interfaces |
+| `issue-creator` | Creates GitHub issues with auto-detected project context |
+| `kotlin-api-consultant` | Validates Kotlin compiler API usage |
+| `pr-creator` | Creates professional draft PRs |
+| `sample-scaffolder` | Scaffolds new sample projects (JVM, KMP, Android) |
 | `skill-creator` | Meta-skill for creating new skills |
+| `workflow` | Orchestrates full development pipeline |
+
+## How Skills Work
+
+Claude Code auto-activates skills based on the `description` field in each skill's YAML frontmatter. Write natural prompts and relevant skills are suggested automatically:
+
+```
+"Run tests and check BDD compliance"          → bdd-test-runner
+"Compilation failed, help me debug"           → compilation
+"Create a PR for this branch"                 → pr-creator
+"Analyze the UserService interface"           → interface-analyzer
+"Start working on the new feature"            → workflow
+"Add a new option to @Fake"                   → feature-option
+"How does the codegen pipeline work?"         → codegen
+"Create a new sample project"                 → sample-scaffolder
+"Create an issue for this bug"                → issue-creator
+```
 
 ## Skill Structure
-
-Each skill follows this structure:
 
 ```
 .claude/skills/{skill-name}/
 ├── SKILL.md              # Main skill file (required)
-└── resources/            # Supporting files (optional)
-    ├── reference.md
-    └── examples.md
+└── resources/            # Supporting files (optional, loaded on-demand)
 ```
 
 ### SKILL.md Format
@@ -59,66 +52,23 @@ Each skill follows this structure:
 ```yaml
 ---
 name: skill-name
-description: Rich description with trigger keywords. Use when...
-allowed-tools: Read, Grep, Glob, Bash
+description: What it does. Use when {scenarios}.
+allowed-tools: Read, Grep, Glob
 ---
 
 # Skill Title
 
-Brief overview
-
-## Core Mission
-What this skill does
-
 ## Instructions
-Step-by-step guidance
+### 1. First Step
+### 2. Second Step
 
 ## Supporting Files
-- resources/reference.md - Detailed reference
-```
-
-## Using Skills
-
-### Automatic Activation
-
-Simply write natural prompts and Claude Code will auto-suggest relevant skills based on their descriptions:
-
-```
-"Run tests and check BDD compliance"
-→ Activates: bdd-test-runner
-
-"Check if IrFactory API changed"
-→ Activates: kotlin-api-consultant
-
-"Create a PR for this branch"
-→ Activates: pr-creator
-```
-
-### Manual Invocation
-
-Use the slash command to invoke a skill directly:
-
-```
-/pr-creator
-/git-commit-guardian
-```
-
-Or ask Claude to use a specific skill:
-
-```
-"Use the kotlin-api-consultant skill to check this API"
-"Apply git-commit-guardian guidelines"
+## Related Skills
 ```
 
 ## Creating New Skills
 
-Use the `skill-creator` skill for guidance on creating new skills. Key requirements:
-
-1. **Trigger-rich description** - Include "Use when..." clause and relevant keywords
-2. **Proper frontmatter** - Use comma-separated format for allowed-tools (not brackets)
-3. **Progressive disclosure** - Keep SKILL.md under 500 lines, use resources/ for details
-
-## Related Documentation
-
-- [CLAUDE.md](../../CLAUDE.md) - Main project documentation
-- [Testing Guidelines](../docs/development/validation/testing-guidelines.md) - BDD standards
+Use the `skill-creator` skill. Key requirements:
+1. Description < 1024 chars with "Use when" clause
+2. Minimal allowed-tools (only what's needed)
+3. Progressive disclosure (extract to resources/ if > 500 lines)
