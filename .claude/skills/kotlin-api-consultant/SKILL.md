@@ -1,6 +1,6 @@
 ---
 name: kotlin-api-consultant
-description: Queries Kotlin compiler source code for API validation, compatibility checks, breaking change detection, and best practice recommendations. Use when validating Kotlin APIs, checking compiler compatibility, analyzing API usage patterns, detecting breaking changes, or when user mentions "Kotlin API", "compiler API", "IrGenerationExtension", "IrPluginContext", "API validation", or specific Kotlin compiler class/interface names.
+description: Queries Kotlin compiler source code for API validation, compatibility checks, and breaking change detection. Use when validating Kotlin compiler APIs, checking IrGenerationExtension compatibility, analyzing compiler plugin API usage, or verifying that an API hasn't been deprecated or removed in a newer Kotlin version. Make sure to use this skill whenever compiler plugin code references Kotlin internal APIs — these APIs change frequently between Kotlin versions and silent breakage is common.
 allowed-tools: Read, Grep, Glob, Bash, WebFetch
 ---
 
@@ -120,8 +120,8 @@ RECOMMENDATIONS:
 ## Related Skills
 
 - **`compiler-architecture-validator`** - Validate architectural patterns
-- **`compilation-error-analyzer`** - Debug compilation errors
-- **`fakt-docs-navigator`** - Access documentation
+- **`compilation`** — Debug compilation errors
+- **`docs-navigator`** — Access documentation
 
 ## API Categories
 

@@ -1,464 +1,174 @@
 ---
 name: skill-creator
-description: Creates new Claude Code Skills following best practices from migration patterns. Use when creating new Skills, converting slash commands to Skills, scaffolding Skill structure, or when user mentions "create skill", "new skill", "migrate command", or "skill from scratch". Enforces trigger-rich descriptions, progressive disclosure, and model-agnostic design.
+description: Creates new Claude Code Skills following project patterns with trigger-rich descriptions and progressive disclosure. Use when creating new skills, converting commands to skills, scaffolding skill structure, or updating an existing skill's structure. Make sure to use this skill whenever a new skill needs to be created — it enforces the project's conventions for descriptions, body structure, allowed-tools, and progressive disclosure that are easy to get wrong.
 allowed-tools: Read, Write, Bash, Grep, Glob
 ---
 
-# Skill Creator - Meta-Skill for Skill Development
+# Skill Creator
 
-Creates well-structured Claude Code Skills following Fakt migration patterns and Gemini research best practices.
-
-## Core Mission
-
-This meta-Skill scaffolds new Skills with:
-- Trigger-rich descriptions (<1024 chars)
-- Progressive disclosure structure (SKILL.md + resources/)
-- Model-agnostic instructions
-- Activation test prompts
-- Migration pattern compliance
+Scaffolds new Claude Code Skills with proper structure, trigger-rich descriptions, and progressive disclosure.
 
 ## Instructions
 
-### 1. Gather Skill Requirements
+### 1. Gather Requirements
 
-**Ask clarifying questions:**
+**Required:**
+- [ ] Skill name (kebab-case)
+- [ ] Core purpose (what problem does it solve?)
+- [ ] Trigger keywords (how will users invoke it?)
 
-**Required information:**
-- [ ] **Skill name** (kebab-case, descriptive)
-- [ ] **Core purpose** (what problem does it solve?)
-- [ ] **Trigger keywords** (how will users invoke it?)
-- [ ] **Source** (migrating from slash command OR new from scratch)
-
-**Optional information:**
+**Optional:**
 - [ ] Required tools (Read, Bash, etc.)
-- [ ] Supporting files needed (scripts, docs)
-- [ ] Complexity level (simple/medium/complex)
-- [ ] Dependencies on other Skills
-
-**Example dialogue:**
-```
-Q: "What's the Skill name?"
-A: "kotlin-api-consultant"
-
-Q: "What problem does it solve?"
-A: "Validates Kotlin compiler API usage against source code"
-
-Q: "How might users invoke it?"
-A: "validate API", "check Kotlin API", "consult compiler source"
-
-Q: "Migrating from slash command or creating new?"
-A: "Migrating from /consult-kotlin-api"
-```
-
-### 2. Read Source Material (If Migrating)
+- [ ] Supporting files needed
+- [ ] Dependencies on other skills
 
 **If migrating from slash command:**
-
 ```bash
-# Read the original command
 cat .claude/commands/{command-name}.md
-
-# Extract:
-- allowed-tools
-- Core logic/instructions
-- Dependencies (scripts, docs)
-- Arguments pattern
+# Extract: allowed-tools, core logic, dependencies, arguments
 ```
 
-**Analysis checklist:**
-- [ ] What are the explicit arguments? (need context extraction)
-- [ ] What tools does it use?
-- [ ] Are there supporting files?
-- [ ] Does it specify model? (will lose this)
-- [ ] What's the core workflow?
+### 2. Craft Description
 
-### 3. Craft Trigger-Rich Description
+Descriptions must be **"pushy"** — they should actively combat under-triggering by covering edge cases and using assertive language. The goal is to make sure the skill gets activated whenever it's relevant.
 
-**Use description template:**
-
+**Template:**
 ```
-{What it does in detail}. Use when {trigger scenario 1}, {trigger scenario 2}, {trigger scenario 3}, or when user mentions "{keyword 1}", "{keyword 2}", "{keyword 3}", or "{related concept}" context.
+{What it does}. Use when {scenario 1}, {scenario 2}, {scenario 3}, or {scenario 4}. Make sure to use this skill whenever {broader activation context} — {reason why this matters}.
 ```
 
-**Follow description best practices:**
-
-1. **Be specific** (not "helps with X", but "does Y by doing Z")
-2. **Third person** (never "I can" or "you can")
-3. **List triggers** (all synonyms user might say)
-4. **Max 1024 chars** (use them!)
-5. **Include "use when"** clause
+**Rules:**
+- Max 1024 chars
+- Must include "Use when" clause with 3+ specific scenarios
+- Must include "Make sure to use this skill whenever" for broader activation
+- Third person (never "I can" or "you can")
+- Be specific, not vague
+- No quoted keyword lists — trust semantic matching
+- Explain **why** the skill matters, not just what it does
 
 **Example:**
 ```yaml
-# ❌ Bad (too vague):
-description: Validates Kotlin APIs
-
-# ✅ Good (trigger-rich):
-description: Validates Kotlin compiler API usage against source code, checking for deprecations, compatibility, and correct patterns. Use when validating API calls, checking compiler API compatibility, debugging API issues, or when user mentions "validate API", "check Kotlin API", "IrFactory", "IrPluginContext", "compiler API", or API class names.
+# Bad: Validates Kotlin APIs
+# Mediocre: Validates Kotlin compiler API usage against source code. Use when validating API calls or checking compatibility.
+# Good: Validates Kotlin compiler API usage against source code, checking deprecations and compatibility. Use when validating API calls, checking compiler API compatibility, verifying API hasn't been deprecated, or debugging API issues. Make sure to use this skill whenever compiler plugin code references Kotlin internal APIs — these APIs change frequently between versions and silent breakage is common.
 ```
 
-**Validation:**
-```python
-# Check length
-assert len(description) <= 1024, "Description too long"
-assert len(description) > 100, "Description too vague"
+### 3. Design Structure
 
-# Check structure
-assert "use when" in description.lower(), "Missing 'use when' clause"
-assert not any(p in description.lower() for p in ["i can", "you can"]), "Not third person"
-```
-
-### 4. Design Progressive Disclosure Structure
-
-**Determine file structure:**
-
-**Simple Skill** (no supporting files):
+**Simple (no supporting files):**
 ```
 skill-name/
-└── SKILL.md  (<300 lines, all logic here)
+└── SKILL.md  (<300 lines)
 ```
 
-**Medium Skill** (some supporting files):
+**Medium (some references):**
 ```
 skill-name/
-├── SKILL.md            # <500 lines core logic
+├── SKILL.md            # <500 lines
 └── resources/
-    ├── reference.md    # Detailed reference (on-demand)
-    └── examples.md     # Code examples (on-demand)
+    └── reference.md    # On-demand
 ```
 
-**Complex Skill** (scripts + docs):
+**Complex (scripts + docs):**
 ```
 skill-name/
-├── SKILL.md            # <500 lines core logic
+├── SKILL.md
 ├── scripts/
-│   ├── validate.sh     # Executable helper
-│   └── analyze.py
 └── resources/
-    ├── patterns.md     # Loaded on-demand
-    ├── troubleshooting.md
-    └── api-reference.md
 ```
 
-**Rule**: If SKILL.md would exceed 500 lines, extract to resources/
+**Rule:** If SKILL.md would exceed 500 lines, extract details to resources/.
 
-### 5. Generate Skill Directory Structure
+### Writing Style: Explain the "Why"
 
-**Execute scaffolding:**
+Instructions should explain **why** each step exists, not just what to do. This helps the agent make better decisions when encountering edge cases.
 
-```bash
-SKILL_NAME="{skill-name}"
+```markdown
+# Bad — just commands:
+### 3. Run tests
+Run `make test-sample`.
 
-# Create structure (flat - no category subdirectories)
-mkdir -p ".claude/skills/${SKILL_NAME}/{scripts,resources}"
-
-echo "✅ Created: .claude/skills/${SKILL_NAME}/"
+# Good — explains why:
+### 3. Run tests
+Run `make test-sample` to verify generated code compiles against the published plugin.
+This catches issues that unit tests miss because it exercises the full compilation pipeline.
 ```
 
-### 6. Write SKILL.md from Template
+Keep instructions lean and imperative. Add context lines only where the "why" isn't obvious.
 
-**Use template from resources/skill-template.md:**
+### 4. Generate SKILL.md
 
 ```yaml
 ---
 name: {skill-name}
-description: {trigger-rich description from step 3}
-allowed-tools: {Tool1, Tool2, Tool3}
+description: {description from step 2}
+allowed-tools: {minimal set — only what's needed}
 ---
 
 # {Skill Title}
 
-{One-line mission statement}
-
-## Core Mission
-
-{2-3 sentences explaining purpose and value}
+{One-line purpose.}
 
 ## Instructions
 
-### 1. {First Major Step}
+### 1. {First Step}
+{Details}
 
-{Detailed substeps}
-
-### 2. {Second Major Step}
-
-{Detailed substeps}
+### 2. {Second Step}
+{Details}
 
 ...
 
 ## Supporting Files
-
-{List resources/ files and when they're loaded}
+{List resources/ if any}
 
 ## Related Skills
-
 {Skills this composes with}
-
-## Best Practices
-
-1. {Practice 1}
-2. {Practice 2}
-...
-
-## Known Limitations
-
-{Current constraints or Phase limitations}
 ```
 
-**Key sections:**
-- **Instructions**: Numbered, explicit, handle edge cases
-- **Supporting Files**: Document progressive disclosure
-- **Related Skills**: Enable composition
-- **Best Practices**: Guide model behavior
+**Allowed-tools guidelines:**
+- Analysis: `Read, Grep, Glob`
+- Execution: `Read, Bash, TaskCreate, TaskUpdate`
+- Generation: `Read, Write, Grep, Glob`
+- Complex: `Read, Write, Edit, Bash, Grep, Glob, TaskCreate, TaskUpdate`
 
-### 7. Handle Argument-Based Conversion
+### 5. Create Files
 
-**If migrating command with arguments:**
-
-**Slash command pattern:**
 ```bash
-/command-name <argument> [optional]
+SKILL_NAME="{skill-name}"
+mkdir -p ".claude/skills/${SKILL_NAME}/resources"
+# Write SKILL.md and any supporting files
 ```
 
-**Skill pattern (context extraction):**
-```markdown
-## Instructions
+### 6. Verify
 
-### 1. Extract {Argument} from Context
+- [ ] SKILL.md has valid YAML frontmatter
+- [ ] Description < 1024 chars
+- [ ] Description includes "Use when" with 3+ scenarios
+- [ ] Description includes "Make sure to use this skill whenever" (pushy tone)
+- [ ] allowed-tools is minimal
+- [ ] Instructions are numbered, clear, and explain "why" where non-obvious
+- [ ] Supporting files documented with `## Supporting Files` if resources/ exists
+- [ ] SKILL.md body < 500 lines (extract to resources/ if over)
 
-**Look for in user's messages:**
-- Direct mention: "command for {value}"
-- Contextual: "{value} isn't working"
-- Pattern: "analyze {value}"
-
-**If ambiguous or missing:**
-- Ask: "Which {argument} would you like me to {action}?"
-- Do NOT proceed with assumptions
-
-### 2. Validate {Argument}
-
-**Checks:**
-- {Validation 1}
-- {Validation 2}
-
-**If invalid:**
-- Report error clearly
-- Suggest corrections
-```
-
-**Example (from compilation-error-analyzer):**
-```markdown
-### 1. Identify Target Interface
-- Extract interface name from user's recent messages
-- Look for: "debug AsyncService", "analyze UserRepository IR"
-- If missing, ask: "Which interface would you like me to debug?"
-```
-
-### 8. Define Minimal allowed-tools
-
-**Be restrictive:**
-
-```yaml
-# ❌ Too permissive:
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob, TaskCreate, TaskUpdate, Task, WebFetch
-
-# ✅ Minimal (only what's needed):
-allowed-tools: Read, Grep, Bash
-```
-
-**Common tool sets:**
-
-**Analysis Skills:**
-```yaml
-allowed-tools: Read, Grep, Glob
-```
-
-**Execution Skills:**
-```yaml
-allowed-tools: Read, Bash, TaskCreate, TaskUpdate
-```
-
-**Generation Skills:**
-```yaml
-allowed-tools: Read, Write, Grep, Glob
-```
-
-**Complex Workflows:**
-```yaml
-allowed-tools: Read, Write, Bash, Grep, Glob, TaskCreate, TaskUpdate
-```
-
-### 9. Create Activation Test Prompts
-
-**Generate 5-10 test prompts:**
-
-**Template:**
-```markdown
-## Skill: {skill-name}
-
-### Test Prompts (Should Activate)
-
-**Direct invocation:**
-1. "{direct command phrase}"
-2. "{variation 1}"
-
-**Contextual triggers:**
-3. "{contextual phrase with keywords}"
-4. "{problem-solving context}"
-
-**Synonyms:**
-5. "{using synonym 1}"
-6. "{using synonym 2}"
-
-### Negative Tests (Should NOT Activate)
-
-**Wrong domain:**
-- "{phrase that should trigger different Skill}"
-- "{general question not Skill-specific}"
-```
-
-**Add to .claude/skills/SKILLS-ACTIVATION-TESTS.md**
-
-### 10. Document in Migration Log
-
-**Create entry in MIGRATION-PATTERNS.md:**
-
-```markdown
-## Skill: {skill-name}
-
-**Migrated from**: {slash command or "created new"}
-**Date**: {date}
-**Complexity**: {simple/medium/complex}
-
-**Key Decisions:**
-- {Decision 1}
-- {Decision 2}
-
-**Challenges:**
-- {Challenge 1 and solution}
-
-**Learnings:**
-- {Pattern learned}
-```
-
-### 11. Output Skill Summary
-
-**Provide user with complete summary:**
+### 7. Summary
 
 ```
-✅ SKILL CREATED: {skill-name}
+SKILL CREATED: {skill-name}
 
-📁 Location:
-.claude/skills/{skill-name}/
+Location: .claude/skills/{skill-name}/
+Files: SKILL.md ({lines} lines), resources/ ({count} files)
+Description: {description}
+Tools: {allowed-tools}
 
-📝 Files Created:
-- SKILL.md ({X} lines)
-- resources/ ({count} files)
-- scripts/ ({count} files)
-
-🎯 Description (trigger keywords):
-{description}
-
-🛠️ Tools Allowed:
-{allowed-tools}
-
-🧪 Test Prompts:
-1. "{test prompt 1}"
-2. "{test prompt 2}"
-...
-
-📋 Next Steps:
-1. Review SKILL.md for accuracy
-2. Test activation with prompts
-3. Refine description if activation fails
-4. Document learnings in MIGRATION-PATTERNS.md
-
-🔗 Related Skills:
-- {related-skill-1}
-- {related-skill-2}
+Test by asking naturally: "{example prompt that should trigger this skill}"
 ```
 
-## Supporting Files
+## Templates
 
-**Templates:**
-- `templates/SKILL-template.md` - Base SKILL.md structure
-- `templates/resource-template.md` - Supporting file template
-- `templates/script-template.sh` - Bash script template
-
-**References:**
-- `resources/description-best-practices.md` - Crafting trigger-rich descriptions
-- `resources/progressive-disclosure-guide.md` - When to extract to resources/
-- `resources/migration-checklist.md` - Step-by-step migration guide
+- **`templates/SKILL-template.md`** — Base SKILL.md structure
+- **`templates/script-template.sh`** — Bash script template
 
 ## Related Skills
 
-This Skill uses:
-- **`fakt-docs-navigator`** - Access migration patterns and best practices
-- **`behavior-analyzer-tester`** - Generate activation test cases
-
-This Skill enables:
-- All future Skill development
-- Consistent Skill quality
-- Fast migration velocity
-
-## Best Practices
-
-1. **Always ask for requirements first** - don't assume
-2. **Validate description length** - max 1024 chars
-3. **Test activation immediately** - create test prompts
-4. **Document patterns** - update MIGRATION-PATTERNS.md
-5. **Progressive disclosure** - extract resources/ if >500 lines
-
-## Skill Creation Workflow
-
-### Quick Skill (Simple, no dependencies)
-```
-User: "Create skill to validate import statements"
-→ Gather: name, triggers, tools
-→ Generate: Simple structure (SKILL.md only)
-→ Test: 5 activation prompts
-→ Time: ~30 minutes
-```
-
-### Standard Skill (Medium complexity)
-```
-User: "Migrate /analyze-interface-structure to Skill"
-→ Read: Source slash command
-→ Extract: Logic, tools, dependencies
-→ Convert: Arguments to context extraction
-→ Generate: SKILL.md + resources/
-→ Test: 10 activation prompts
-→ Time: ~2 hours
-```
-
-### Complex Skill (Scripts, multiple resources)
-```
-User: "Create multi-module validator Skill"
-→ Gather: Full requirements
-→ Design: Progressive disclosure structure
-→ Generate: SKILL.md + scripts/ + resources/
-→ Test: 15 activation prompts + edge cases
-→ Document: Migration patterns
-→ Time: ~4 hours
-```
-
-## Known Patterns
-
-**From successful migrations:**
-
-1. **Error Analyzer Pattern** - Complex analysis with diagnostic output
-2. **Test Runner Pattern** - Execution + compliance validation
-3. **Knowledge Navigator Pattern** - 80+ docs with intelligent routing
-4. **Behavior Analyzer Pattern** - Deep analysis + generation
-
-**Consult**: `resources/skill-archetypes.md` for pattern library
-
-## Meta Note
-
-This Skill is self-improving:
-- Document new patterns as discovered
-- Update templates based on learnings
-- Refine description based on activation tests
-- Iterate on best practices
-
-**Current Status**: v1.0 - Created during Phase 1 migration (Day 1)
+- **`docs-navigator`** — Access existing skill patterns
