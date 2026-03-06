@@ -1,9 +1,8 @@
 # Kotlin Compiler IR API Reference - Fakt Development Guide
 
 > **Purpose**: Comprehensive reference for Kotlin IR APIs used in Fakt development
-> **Version**: Based on Kotlin 2.2.21 source code
-> **Scope**: IR-Native code generation for fake implementation generation
-> **Testing Standard**: [📋 Testing Guidelines](.claude/docs/validation/testing-guidelines.md)
+> **Version**: Based on Kotlin 2.2.21
+> **Scope**: IR code generation for fake implementation generation
 
 ## 🎯 **Overview**
 
@@ -37,9 +36,9 @@ IrElement (base class)
 
 ## 📦 **Essential IR Modules**
 
-### **Key Source Directories**
+### **Key Source Directories** (github.com/JetBrains/kotlin)
 ```
-kotlin/compiler/ir/
+compiler/ir/
 ├── ir.tree/                    # Core IR data structures (IrClass, IrFunction)
 ├── backend.common/             # Extension points (IrGenerationExtension)
 ├── ir.psi2ir/                 # PSI to IR conversion utilities
@@ -113,7 +112,6 @@ interface IrGenerationExtension {
 ```kotlin
 class UnifiedFaktIrGenerationExtension : IrGenerationExtension {
     override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
-        // Create context following Metro patterns
         val context = IrFaktContext(pluginContext, messageCollector, ...)
 
         context(context) { generateInner(moduleFragment) }
@@ -394,24 +392,14 @@ private fun generateImports(usedTypes: Set<String>): List<String> {
 }
 ```
 
-## 🔗 **Related Documentation**
+## Related Documentation
 
-- **Generic Scoping Analysis**: [📋 Core Challenge](.claude/docs/analysis/generic-scoping-analysis.md)
-- **Metro Alignment**: [📋 Context Patterns](.claude/docs/development/metro-alignment.md)
-- **Type Safety Validation**: [📋 Testing Strategy](.claude/docs/validation/type-safety-validation.md)
+- [Architecture](.claude/docs/implementation/architecture/ARCHITECTURE.md)
+- [Testing Guidelines](.claude/docs/development/validation/testing-guidelines.md)
+- [Kotlin API Reference](.claude/docs/development/kotlin-api-reference.md)
 
-## 📚 **Kotlin Compiler Source References**
+## External References
 
-### **Key Source Files**
-- `/kotlin/compiler/ir/tree/src/org/jetbrains/kotlin/ir/declarations/IrClass.kt`
-- `/kotlin/compiler/ir/tree/src/org/jetbrains/kotlin/ir/expressions/IrCall.kt`
-- `/kotlin/compiler/ir/backend.common/src/org/jetbrains/kotlin/backend/common/extensions/IrGenerationExtension.kt`
-- `/kotlin/compiler/ir/ir.psi2ir/src/org/jetbrains/kotlin/psi2ir/generators/DeclarationGenerator.kt`
-
-### **API Documentation**
-- Kotlin Compiler Plugin Guide: [Official Docs](https://kotlinlang.org/docs/compiler-plugins.html)
-- IR API Reference: [KotlinConf Examples](https://github.com/JetBrains/kotlin/tree/master/plugins)
-
----
-
-**This guide provides the foundation for understanding and using Kotlin IR APIs in Fakt development, with focus on the Phase 2 generic scoping challenge.**
+- [Kotlin Compiler Plugin Guide](https://kotlinlang.org/docs/compiler-plugins.html)
+- [Kotlin Compiler Source (GitHub)](https://github.com/JetBrains/kotlin/tree/master/compiler)
+- [Kotlin Compiler Plugin Examples](https://github.com/JetBrains/kotlin/tree/master/plugins)

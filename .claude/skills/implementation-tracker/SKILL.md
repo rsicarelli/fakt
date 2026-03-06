@@ -262,7 +262,7 @@ Key Achievements:
 ✅ Function type resolution (Perfect syntax)
 ✅ GIVEN-WHEN-THEN test standard (53+ tests)
 ✅ 85% compilation success rate
-✅ Metro-inspired architecture
+✅ Two-phase FIR→IR architecture
 
 Remaining:
 {List if any}
@@ -303,7 +303,6 @@ Compilation:
 
 Code Quality:
 - TODO markers: {count} {✅/❌}
-- Metro alignment: {percentage}%
 - Type safety: {status}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -374,8 +373,7 @@ Upcoming:
 
 Recommended Skills:
 - For compilation issues: compilation-validator
-- For generic issues: generic-scoping-analyzer
-- For Metro alignment: metro-pattern-validator
+- For error analysis: compilation-error-analyzer
 ```
 
 ## Supporting Files
@@ -391,8 +389,7 @@ Progressive disclosure for status tracking:
 This Skill composes with:
 - **`compilation-validator`** - Validate compilation metrics
 - **`bdd-test-runner`** - Get test metrics
-- **`metro-pattern-validator`** - Check Metro alignment percentage
-- **`generic-scoping-analyzer`** - Analyze Phase 2 progress
+- **`compiler-architecture-validator`** - Validate architectural patterns
 
 ## Status Categories
 

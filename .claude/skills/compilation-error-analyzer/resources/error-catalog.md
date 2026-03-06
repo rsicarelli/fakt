@@ -74,7 +74,7 @@ Error: java.lang.IllegalStateException: IR generation failed
 ```
 
 **Cause**: Bug in IR generation code
-**Solution**: Check logs for specific error, debug with kotlin-ir-debugger Skill
+**Solution**: Check logs for specific error, use `make debug` for detailed output
 
 ---
 

@@ -43,7 +43,7 @@ Options: specific interface | all generated fakes | verbose report
 **Ensure fresh compilation:**
 ```bash
 # Navigate to project root
-cd /Users/rsicarelli/Workspace/Personal/fakt
+cd fakt
 
 # Clean build artifacts
 ./gradlew clean
@@ -447,8 +447,7 @@ DSL Type Safety:
 
 Next steps:
 1. Run tests: bdd-test-runner Skill
-2. Validate Metro patterns: metro-pattern-validator
-3. Continue development
+2. Continue development
 ```
 
 **If errors found:**
@@ -461,8 +460,7 @@ Recommended actions:
 3. Re-validate after fixes
 
 For generic-related errors:
-- Consult: generic-scoping-analyzer Skill
-- Reference: .claude/docs/implementation/generics/technical-reference.md
+- Reference: .claude/docs/development/kotlin-compiler-ir-api.md
 ```
 
 ## Supporting Files
@@ -478,8 +476,6 @@ Progressive disclosure for validation patterns:
 
 This Skill composes with:
 - **`compilation-error-analyzer`** - Analyze specific errors
-- **`generic-scoping-analyzer`** - Debug generic type issues
-- **`kotlin-ir-debugger`** - Debug IR generation
 - **`bdd-test-runner`** - Run tests after validation
 
 ## Validation Checklist

@@ -10,7 +10,7 @@ Executes GIVEN-WHEN-THEN tests with comprehensive compliance validation and cove
 
 ## Core Mission
 
-This Skill enforces THE ABSOLUTE TESTING STANDARD: GIVEN-WHEN-THEN pattern with vanilla JUnit5 + kotlin-test, ensuring all tests follow project guidelines and Metro-inspired patterns.
+Enforces GIVEN-WHEN-THEN pattern with vanilla JUnit5 + kotlin-test, ensuring all tests follow project guidelines.
 
 ## Instructions
 
@@ -163,32 +163,7 @@ Missing coverage for:
 📚 Reference: `.claude/docs/development/validation/testing-guidelines.md`
 ```
 
-### 6. Metro Pattern Validation
-
-**Check if tests follow Metro testing approach:**
-
-**Metro testing patterns:**
-- Compiler plugin tests in compiler/src/test/
-- Compilation validation tests
-- Generated code verification
-- API compatibility tests
-
-**Validation:**
-```bash
-# Check for compilation tests
-grep -r "compiles successfully" compiler/src/test/kotlin/
-
-# Check for Metro-style context tests
-grep -r "IrPluginContext" compiler/src/test/kotlin/
-
-# Check for generated code validation
-grep -r "build/generated" compiler/src/test/kotlin/
-```
-
-**For detailed Metro patterns:**
-- Consult `resources/metro-testing-patterns.md`
-
-### 7. Output Structured Report
+### 6. Output Structured Report
 
 **Standard test execution report:**
 ```
@@ -212,11 +187,6 @@ grep -r "build/generated" compiler/src/test/kotlin/
 - Test files: 17
 - Coverage gaps: 3 files
 
-🏆 Metro Alignment: ✅
-- Compiler plugin tests: Present
-- Compilation validation: Present
-- Generated code tests: Present
-
 📁 Test output: build/test-results/
 ```
 
@@ -226,9 +196,8 @@ Based on test results:
 
 **If tests fail:**
 - Analyze errors and suggest relevant Skills
-- For generic issues → `generic-scoping-analyzer`
 - For compilation → `compilation-validator`
-- For IR issues → `kotlin-ir-debugger`
+- For error analysis → `compilation-error-analyzer`
 
 **If coverage gaps:**
 - Suggest files needing tests
@@ -250,12 +219,7 @@ Based on test results:
 
 ## Supporting Files
 
-Progressive disclosure for detailed testing documentation:
-
-- **`resources/testing-guidelines-reference.md`** - Complete GIVEN-WHEN-THEN standard (loaded on-demand)
-- **`resources/metro-testing-patterns.md`** - Metro compiler testing approach (loaded on-demand)
-- **`resources/coverage-analysis-guide.md`** - Coverage analysis techniques (loaded on-demand)
-- **`resources/test-failure-diagnostics.md`** - Common test failure patterns (loaded on-demand)
+- Full testing standard: `.claude/docs/development/validation/testing-guidelines.md`
 
 ## Test Execution Patterns
 
@@ -294,8 +258,7 @@ User: "Run tests and check coverage"
 This Skill composes with:
 - **`behavior-analyzer-tester`** - Generate missing tests
 - **`compilation-validator`** - Validate generated code
-- **`kotlin-ir-debugger`** - Debug IR generation issues
-- **`metro-pattern-validator`** - Check Metro alignment
+- **`compilation-error-analyzer`** - Debug compilation errors
 
 ## Best Practices
 
@@ -318,9 +281,3 @@ From `.claude/docs/development/validation/testing-guidelines.md`:
 - ❌ **Custom BDD frameworks** (not allowed)
 - ❌ **Mocks** (use fakes instead)
 
-## Current Status (Phase 1)
-
-- 53 tests passing with GIVEN-WHEN-THEN pattern
-- 85% compilation success rate target
-- Zero "should" violations (enforced)
-- Metro-aligned testing approach

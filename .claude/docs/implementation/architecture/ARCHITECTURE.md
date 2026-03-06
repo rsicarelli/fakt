@@ -1,8 +1,7 @@
 # Fakt Compiler Plugin Architecture
 
 **Status**: Production Implementation
-**Last Updated**: January 2025
-**Philosophy**: MAP (Minimum Awesome Product) - Type-safe, maintainable, transparent
+**Last Updated**: March 2026
 
 ---
 
@@ -15,7 +14,7 @@ Fakt is a Kotlin compiler plugin that generates type-safe test fakes from `@Fake
 1. **Developer Transparency** - Generated `.kt` files are readable and debuggable
 2. **Type Safety** - Leverages Kotlin's type system at compile time
 3. **Modular Design** - Clear separation of concerns with dedicated modules
-4. **Metro-Inspired** - Follows proven patterns from production DI frameworks
+4. **Industry patterns** - Two-phase FIR->IR approach (originally inspired by Metro DI framework)
 
 ---
 
@@ -164,7 +163,7 @@ val sourceCode = builder.build()  // Complete .kt file as string
 
 ## Component Architecture
 
-### Shared Context (Metro Pattern)
+### Shared Context
 
 **Location**: `compiler/src/main/kotlin/com/rsicarelli/fakt/compiler/core/context/`
 
@@ -179,7 +178,6 @@ data class FaktSharedContext(
 
 **Benefits**:
 - Thread-safe communication between FIR and IR phases
-- Follows Metro's proven architectural pattern
 - No serialization overhead
 
 ### Type System
@@ -306,14 +304,14 @@ Parses generated .kt files
 
 ### Why Not Pure IR Node Generation?
 
-**Metro uses pure IR generation**, but Fakt's requirements differ:
+String-based code generation with a type-safe DSL was chosen over pure IR node manipulation:
 
-| Aspect | Metro (DI Framework) | Fakt (Test Fakes) |
-|--------|----------------------|-------------------|
-| **Visibility** | Internal infrastructure | Developers read/debug frequently |
-| **Performance** | Runtime DI critical | Compile-time generation (~10-50ms/fake) |
-| **Debugging** | IR dumps (complex) | Source code (readable) |
-| **Complexity** | Justified for DI | Overkill for fakes |
+| Aspect | Pure IR Generation | String-Based (Fakt) |
+|--------|-------------------|---------------------|
+| **Visibility** | IR dumps only | Generated `.kt` files in IDE |
+| **Debugging** | Complex | Set breakpoints, inspect code |
+| **Stability** | IR APIs change between Kotlin versions | Kotlin syntax is stable |
+| **Complexity** | High | Lower, easier to maintain |
 
 **When we'd reconsider IR-native:**
 - Generating 1000+ fakes per build (performance critical)
@@ -444,12 +442,11 @@ fakt/
 
 ## Related Documentation
 
-- **Compiler Optimizations**: `.claude/docs/architecture/compiler-optimizations.md` - Caching and incremental compilation
-- **Gradle Plugin**: `.claude/docs/architecture/gradle-plugin.md` - Build system integration
-- **Testing Guidelines**: `.claude/docs/validation/testing-guidelines.md` - BDD testing standards
-- **Metro Alignment**: `.claude/docs/development/metro-alignment.md` - Architectural inspiration
-- **Current Status**: `.claude/docs/implementation/current-status.md` - Implementation progress
-- **Decision Tree**: `.claude/docs/development/decision-tree.md` - Architectural decisions
+- [KMP Optimization Strategy](.claude/docs/implementation/architecture/kmp-optimization-strategy.md)
+- [Testing Guidelines](.claude/docs/development/validation/testing-guidelines.md)
+- [Kotlin API Reference](.claude/docs/development/kotlin-api-reference.md)
+- [Kotlin IR API](.claude/docs/development/kotlin-compiler-ir-api.md)
+- [Troubleshooting](.claude/docs/troubleshooting/common-issues.md)
 
 ---
 

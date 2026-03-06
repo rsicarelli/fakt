@@ -289,10 +289,7 @@ Root Cause:
 - Class-level generic type erasure (Phase 2B)
 
 Solution:
-1. Identify generic pattern:
-   Use generic-scoping-analyzer Skill
-
-2. Check Phase support:
+1. Check phase support:
    - Method-level: Phase 2A needed
    - Class-level: Phase 2B or use concrete types
 
@@ -302,8 +299,7 @@ Solution:
    - OR use concrete types
 
 For details:
-- Consult: generic-scoping-analyzer Skill
-- Reference: .claude/docs/implementation/generics/technical-reference.md
+- Reference: .claude/docs/development/kotlin-compiler-ir-api.md
 ```
 
 ### 7. Analyze Generated Code Errors
@@ -514,8 +510,7 @@ Progressive disclosure for error analysis:
 
 This Skill composes with:
 - **`compilation-validator`** - Validate after fixing errors
-- **`generic-scoping-analyzer`** - For generic-related errors
-- **`kotlin-ir-debugger`** - Debug IR generation issues
+- **`kotlin-api-consultant`** - Validate Kotlin API usage
 - **`interface-analyzer`** - Analyze problematic interfaces
 
 ## Error Categories

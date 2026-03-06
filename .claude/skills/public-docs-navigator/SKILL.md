@@ -176,7 +176,7 @@ User: "How do I set up multi-module support?"
 - `codegen-strategy.md` (387 lines) - Why type-safe DSL + string generation
   - IR-native vs string-based comparison
   - KotlinPoet decision
-  - Metro comparison
+  - IR-native vs string-based comparison
 
 - `fakes-over-mocks.md` (1,683 lines) - Strategic analysis
   - "Fakes over mocks" philosophy
@@ -225,7 +225,7 @@ Grep "{user's error message}" docs/ -r --output_mode=content
 ## Related Skills
 
 - **fakt-docs-navigator**: For internal contributor documentation (`.claude/docs/`, 66 files)
-  - Use when discussing compiler architecture, Metro alignment, implementation details
+  - Use when discussing compiler architecture, implementation details
   - This skill is for **external users**; that skill is for **contributors**
 
 ## Best Practices
@@ -265,7 +265,7 @@ User: "Why does Fakt use string-based generation instead of IR?"
 Response:
 1. Read docs/reference/codegen-strategy.md
 2. Summarize: Transparency, debuggability, stability > marginal performance
-3. Reference: Metro comparison, IR-native trade-offs
+3. Reference: IR-native vs string-based trade-offs
 ```
 
 ### Scenario 4: Troubleshooting

@@ -304,13 +304,10 @@ git log --oneline --all -- \
 ```
 
 ### 3. Annotation Scanning
-```bash
-# Find newly deprecated APIs
-grep -r "@Deprecated" /kotlin/compiler/plugin-api/ --include="*.kt"
 
-# Find unsafe/experimental APIs
-grep -r "@UnsafeApi\|@ExperimentalCompilerApi" /kotlin/compiler/ --include="*.kt"
-```
+Search the Kotlin GitHub repo for deprecated or experimental APIs:
+- https://github.com/JetBrains/kotlin - search for `@Deprecated` in `compiler/plugin-api/`
+- Search for `@UnsafeApi` or `@ExperimentalCompilerApi` annotations
 
 ### 4. Test Across Versions
 ```kotlin
@@ -402,4 +399,4 @@ Minimum: Kotlin 2.0.0
 - **Kotlin Releases**: https://github.com/JetBrains/kotlin/releases
 - **Compiler Plugin Guide**: https://kotlinlang.org/docs/compiler-plugins.html
 - **K2 Compiler Docs**: https://github.com/JetBrains/kotlin/blob/master/docs/fir/fir-basics.md
-- **Metro Examples**: `/metro/compiler/` (real-world K2 support)
+- **K2 Plugin Examples**: https://github.com/JetBrains/kotlin/tree/master/plugins

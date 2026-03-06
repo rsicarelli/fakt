@@ -485,10 +485,7 @@ Expected success: 60% (original) vs 100% (simplified)
 ```
 ⚠️ NEXT STEPS:
 
-1. Review generic scoping analysis:
-   Use generic-scoping-analyzer Skill
-
-2. Consider simplifications:
+1. Consider simplifications:
    - Option A: Use interface-level generics
    - Option B: Use concrete types
    - Option C: Wait for Phase 2A/2B
@@ -514,9 +511,8 @@ Progressive disclosure for interface analysis:
 
 This Skill composes with:
 - **`kotlin-api-consultant`** - Validate Kotlin API usage in interface
-- **`generic-scoping-analyzer`** - Deep dive into generic challenges
 - **`compilation-validator`** - Validate generated code after analysis
-- **`kotlin-ir-debugger`** - Debug IR generation for complex interfaces
+- **`compilation-error-analyzer`** - Debug compilation issues
 
 ## Analysis Categories
 
