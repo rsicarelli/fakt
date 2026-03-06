@@ -48,13 +48,20 @@ See **[Skills README](skills/README.md)** for the complete skills system.
 │   │       └── kmp-optimization-strategy.md
 │   └── troubleshooting/
 │       └── common-issues.md
-├── skills/                # Claude Code skills
-│   ├── analysis/
-│   ├── core-workflows/
-│   ├── development/
-│   ├── knowledge-base/
-│   └── validation/
-└── hooks/                 # Claude Code hooks
+└── skills/                # Claude Code skills (flat structure, 13 skills)
+    ├── bdd-test-runner/
+    ├── behavior-analyzer-tester/
+    ├── compilation-error-analyzer/
+    ├── compilation-validator/
+    ├── compiler-architecture-validator/
+    ├── fakt-docs-navigator/
+    ├── git-commit-guardian/
+    ├── implementation-tracker/
+    ├── interface-analyzer/
+    ├── kotlin-api-consultant/
+    ├── pr-creator/
+    ├── public-docs-navigator/
+    └── skill-creator/
 ```
 
 ## Quick Commands

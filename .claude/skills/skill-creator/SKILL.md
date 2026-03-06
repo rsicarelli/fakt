@@ -137,7 +137,7 @@ skill-name/
 └── resources/
     ├── patterns.md     # Loaded on-demand
     ├── troubleshooting.md
-    └── metro-reference.md
+    └── api-reference.md
 ```
 
 **Rule**: If SKILL.md would exceed 500 lines, extract to resources/
@@ -246,7 +246,7 @@ allowed-tools: {Tool1, Tool2, Tool3}
 - Suggest corrections
 ```
 
-**Example (from kotlin-ir-debugger):**
+**Example (from compilation-error-analyzer):**
 ```markdown
 ### 1. Identify Target Interface
 - Extract interface name from user's recent messages
@@ -446,7 +446,7 @@ User: "Create multi-module validator Skill"
 
 **From successful migrations:**
 
-1. **IR Debugger Pattern** - Complex analysis with Metro validation
+1. **Error Analyzer Pattern** - Complex analysis with diagnostic output
 2. **Test Runner Pattern** - Execution + compliance validation
 3. **Knowledge Navigator Pattern** - 80+ docs with intelligent routing
 4. **Behavior Analyzer Pattern** - Deep analysis + generation

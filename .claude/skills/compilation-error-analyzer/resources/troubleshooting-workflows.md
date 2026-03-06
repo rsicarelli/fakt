@@ -208,12 +208,7 @@ Step-by-step procedures for diagnosing Fakt compilation errors.
    - Method-level: Phase 2A needed OR refactor
    - Mixed: Both phases needed
 
-3. **Use generic-scoping-analyzer Skill**
-   ```
-   Invoke: generic-scoping-analyzer ${interface_name}
-   ```
-
-4. **Choose Strategy**
+3. **Choose Strategy**
    - **Option A**: Use concrete types (Phase 1)
    - **Option B**: Accept type erasure (Phase 1)
    - **Option C**: Wait for Phase 2A/2B

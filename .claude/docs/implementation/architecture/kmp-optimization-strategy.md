@@ -524,9 +524,8 @@ import my.library.fakeMyService
 
 ### Related Documentation
 
-- `.claude/docs/architecture/ARCHITECTURE.md` - Overall Fakt architecture
-- `.claude/docs/development/metro-alignment.md` - Metro pattern alignment
-- `.claude/docs/validation/testing-guidelines.md` - Testing standards
+- [Architecture](.claude/docs/implementation/architecture/ARCHITECTURE.md)
+- [Testing Guidelines](.claude/docs/development/validation/testing-guidelines.md)
 
 ---
 

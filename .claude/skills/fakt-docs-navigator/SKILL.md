@@ -1,6 +1,6 @@
 ---
 name: fakt-docs-navigator
-description: Navigate Fakt internal docs. Use when asking about testing guidelines, Metro alignment, compiler architecture, or contributor documentation.
+description: Navigate Fakt internal docs. Use when asking about testing guidelines, compiler architecture, or contributor documentation.
 allowed-tools: Read, Grep, Glob
 ---
 
@@ -26,7 +26,7 @@ Activate when the user asks:
 - `docs/implementation/architecture/ARCHITECTURE.md` - Main system overview
 - `docs/implementation/architecture/gradle-plugin.md` - Plugin implementation
 - `docs/implementation/architecture/compiler-optimizations.md` - Caching strategy
-- `docs/development/metro-alignment.md` - Metro patterns
+- `docs/development/kotlin-api-reference.md` - Kotlin compiler API reference
 
 ### Code Generation
 - `docs/implementation/codegen-v2/README.md` - Production-ready DSL
@@ -43,7 +43,6 @@ Activate when the user asks:
 - `docs/implementation/architecture/kmp-optimization-strategy.md` - KMP optimization
 
 ### Getting Started
-- `docs/development/decision-tree.md` - Context-based navigation
 - `docs/development/examples/quick-start-demo.md` - Quick start
 - `docs/development/examples/working-examples.md` - Working examples
 
