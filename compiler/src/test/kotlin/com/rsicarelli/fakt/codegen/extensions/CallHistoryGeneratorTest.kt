@@ -283,6 +283,62 @@ class CallHistoryGeneratorTest {
         assertTrue(result.contains("FakeRepositoryImpl<T>.verifyClear"))
     }
 
+    @Test
+    fun `GIVEN bounded type parameters WHEN unitVerifyFunction THEN includes type bounds`() {
+        // GIVEN
+        val fakeClassName = "FakeConverterImpl"
+        val interfaceName = "Converter"
+        val methodName = "clear"
+        val typeParams = listOf("NetworkType : Any", "LocalType : Any")
+
+        // WHEN
+        val result =
+            codeFile("") {
+                    unitVerifyFunction(
+                        fakeClassName,
+                        interfaceName,
+                        methodName,
+                        FirVisibility.PUBLIC,
+                        typeParams,
+                    )
+                }
+                .renderToString()
+
+        // THEN
+        assertTrue(result.contains("<NetworkType : Any, LocalType : Any>"))
+        assertTrue(result.contains("FakeConverterImpl<NetworkType, LocalType>.verifyClear"))
+    }
+
+    // endregion
+
+    // region DSL-based verifyFunction
+
+    @Test
+    fun `GIVEN bounded type parameters WHEN verifyFunction THEN includes type bounds`() {
+        // GIVEN
+        val fakeClassName = "FakeConverterImpl"
+        val interfaceName = "Converter"
+        val methodName = "toDomain"
+        val typeParams = listOf("NetworkType : Any", "LocalType : Any")
+
+        // WHEN
+        val result =
+            codeFile("") {
+                    verifyFunction(
+                        fakeClassName,
+                        interfaceName,
+                        methodName,
+                        FirVisibility.PUBLIC,
+                        typeParams,
+                    )
+                }
+                .renderToString()
+
+        // THEN
+        assertTrue(result.contains("<NetworkType : Any, LocalType : Any>"))
+        assertTrue(result.contains("FakeConverterImpl<NetworkType, LocalType>.verifyToDomain"))
+    }
+
     // endregion
 
     // region generateCallHistoryDeclarations integration

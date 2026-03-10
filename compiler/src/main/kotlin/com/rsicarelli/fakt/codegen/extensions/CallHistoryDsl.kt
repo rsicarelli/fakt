@@ -246,13 +246,20 @@ internal fun CodeFileBuilder.verifyFunction(
         visibility.applyVisibility(this)
         isInline = true
 
-        // Add type parameters without constraints (just names)
-        // The constraints go in the where clause
+        // Add type parameters with constraints when present
+        // Complex constraints (Comparable, multiple) go in the where clause instead
         if (classTypeParameters.isNotEmpty()) {
+            val hasWhereClause = typeParams.whereClause.isNotEmpty()
             classTypeParameters.forEach { param ->
                 val cleanParam = param.removePrefix("out ").removePrefix("in ").trim()
                 val name = cleanParam.substringBefore(" :").trim()
-                typeParam(name)
+                if (!hasWhereClause) {
+                    val constraint =
+                        if (" :" in cleanParam) cleanParam.substringAfter(" :").trim() else null
+                    if (constraint != null) typeParam(name, constraint) else typeParam(name)
+                } else {
+                    typeParam(name)
+                }
             }
         }
 
@@ -300,13 +307,20 @@ internal fun CodeFileBuilder.unitVerifyFunction(
         visibility.applyVisibility(this)
         isInline = true
 
-        // Add type parameters without constraints (just names)
-        // The constraints go in the where clause
+        // Add type parameters with constraints when present
+        // Complex constraints (Comparable, multiple) go in the where clause instead
         if (classTypeParameters.isNotEmpty()) {
+            val hasWhereClause = typeParams.whereClause.isNotEmpty()
             classTypeParameters.forEach { param ->
                 val cleanParam = param.removePrefix("out ").removePrefix("in ").trim()
                 val name = cleanParam.substringBefore(" :").trim()
-                typeParam(name)
+                if (!hasWhereClause) {
+                    val constraint =
+                        if (" :" in cleanParam) cleanParam.substringAfter(" :").trim() else null
+                    if (constraint != null) typeParam(name, constraint) else typeParam(name)
+                } else {
+                    typeParam(name)
+                }
             }
         }
 
