@@ -1,7 +1,7 @@
 # Kotlin Compiler IR API Reference - Fakt Development Guide
 
 > **Purpose**: Comprehensive reference for Kotlin IR APIs used in Fakt development
-> **Version**: Based on Kotlin 2.2.21
+> **Version**: Based on Kotlin 2.3.10
 > **Scope**: IR code generation for fake implementation generation
 
 ## 🎯 **Overview**
@@ -69,6 +69,7 @@ import org.jetbrains.kotlin.ir.util.*
 abstract class CompilerPluginRegistrar {
     abstract fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration)
     abstract val supportsK2: Boolean
+    abstract val pluginId: String
 }
 ```
 
@@ -76,6 +77,8 @@ abstract class CompilerPluginRegistrar {
 ```kotlin
 class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
     override val supportsK2: Boolean = true
+    
+    override val pluginId: String = "com.rsicarelli.fakt"
 
     override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
         // Phase 1: FIR extension for @Fake detection

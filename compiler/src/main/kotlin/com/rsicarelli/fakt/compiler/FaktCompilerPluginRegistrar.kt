@@ -36,6 +36,8 @@ import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
 class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
     override val supportsK2: Boolean = true
 
+    override val pluginId: String = "com.rsicarelli.fakt"
+
     override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
         val messageCollector =
             configuration.get(CommonConfigurationKeys.MESSAGE_COLLECTOR_KEY, MessageCollector.NONE)

@@ -42,7 +42,7 @@ Common issues and solutions for single-module and multi-module setups.
 ```kotlin
 // gradle/libs.versions.toml
 [versions]
-kotlin = "2.2.21"
+kotlin = "2.3.10"
 fakt = "x.y.z"  // Check latest version
 ```
 

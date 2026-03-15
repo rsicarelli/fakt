@@ -331,7 +331,7 @@ Use `--info` logging to verify output directory.
 
 - **Minimum**: 2.0.0
 - **Recommended**: 2.2.21+
-- **Tested**: 2.2.21
+- **Tested**: 2.3.10
 
 ## 🤝 Contributing
 
