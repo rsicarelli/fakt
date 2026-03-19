@@ -19,7 +19,7 @@ Thank you for your interest in contributing to Fakt! This document provides guid
 ### Prerequisites
 
 - **JDK 21** (Temurin recommended)
-- **Kotlin 2.3.20-RC+**
+- **Kotlin 2.3.20+**
 - **Gradle 8.0+** (wrapper provided)
 - **Git**
 
