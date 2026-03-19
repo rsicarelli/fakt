@@ -716,6 +716,28 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../compatibility.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Kotlin Compatibility
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -729,10 +751,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   
@@ -745,8 +767,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_6">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             Help
           </label>
@@ -1464,14 +1486,14 @@
 <h3 id="compilation-fails-with-irtypealiassymbol-not-found">Compilation Fails with &ldquo;IrTypeAliasSymbol not found&rdquo;<a class="headerlink" href="#compilation-fails-with-irtypealiassymbol-not-found" title="Permanent link">&para;</a></h3>
 <p><strong>Causes</strong>:</p>
 <ol>
-<li><strong>Kotlin version mismatch</strong>: Ensure you&rsquo;re on Kotlin 2.3.20+</li>
+<li><strong>Kotlin version mismatch</strong>: Ensure you&rsquo;re on Kotlin 2.2.0+ (<a href="../compatibility.html">compatibility matrix</a>)</li>
 <li><strong>Fakt version incompatibility</strong>: Update Fakt to match your Kotlin version</li>
 </ol>
 <p><strong>Solution</strong>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">// gradle/libs.versions.toml</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="o">[</span><span class="n">versions</span><span class="o">]</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">kotlin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;2.3.20&quot;</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">fakt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;x.y.z&quot;</span><span class="w">  </span><span class="c1">// Check latest version</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">kotlin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;2.3.20&quot;</span><span class="w">  </span><span class="c1">// or any version from 2.2.0+</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">fakt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;x.y.z&quot;</span><span class="w">    </span><span class="c1">// Check latest version</span>
 </code></pre></div>
 <hr />
 <h3 id="build-is-slow">Build is Slow<a class="headerlink" href="#build-is-slow" title="Permanent link">&para;</a></h3>
@@ -1766,7 +1788,7 @@
 - [ ] Project builds successfully (<code>./gradlew build</code>)<br />
 - [ ] Fakes generated (<code>ls build/generated/fakt/</code>)<br />
 - [ ] Gradle synced in IDE<br />
-- [ ] Using Kotlin 2.3.20+</p>
+- [ ] Using Kotlin 2.2.0+ (<a href="../compatibility.html">compatibility matrix</a>)</p>
 <p><strong>Multi-Module:</strong><br />
 - [ ] Producer module has <code>@Fake</code> annotated interfaces<br />
 - [ ] Producer builds successfully (<code>./gradlew :core:analytics:build</code>)<br />
@@ -1777,7 +1799,7 @@
 - [ ] Consumer depends on collector module<br />
 - [ ] Gradle synced in IDE<br />
 - [ ] Using latest Fakt version<br />
-- [ ] Kotlin 2.3.20+</p>
+- [ ] Kotlin 2.2.0+ (<a href="../compatibility.html">compatibility matrix</a>)</p>
 <hr />
 <h2 id="getting-help">Getting Help<a class="headerlink" href="#getting-help" title="Permanent link">&para;</a></h2>
 <h3 id="before-reporting-issues">Before Reporting Issues<a class="headerlink" href="#before-reporting-issues" title="Permanent link">&para;</a></h3>

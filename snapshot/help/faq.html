@@ -15,7 +15,7 @@
         <link rel="canonical" href="https://rsicarelli.github.io/fakt/snapshot/help/faq.html">
       
       
-        <link rel="prev" href="../examples/index.html">
+        <link rel="prev" href="../compatibility.html">
       
       
         <link rel="next" href="troubleshooting.html">
@@ -718,6 +718,28 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../compatibility.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Kotlin Compatibility
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -731,10 +753,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   
@@ -747,8 +769,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_6">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             Help
           </label>
@@ -1353,8 +1375,8 @@
 <p><strong>Longer answer</strong>: Fakt follows a two-phase FIR → IR compilation architecture inspired by production compiler plugins like <a href="https://github.com/ZacSweers/metro">Metro</a>. While the Kotlin compiler plugin API is not a stable API (marked <code>@UnsafeApi</code>), Fakt:</p>
 <ul>
 <li>Generates code at compile-time with <strong>zero runtime dependencies</strong></li>
-<li>Has been tested across Kotlin 2.3.20+ and all KMP targets</li>
-<li>Uses forward compatibility patterns (N+.2 version support)</li>
+<li>Has been tested across Kotlin 2.2.0–2.3.20 and all KMP targets (<a href="../compatibility.html">full matrix</a>)</li>
+<li>Maintains intentional backward compatibility across multiple Kotlin versions</li>
 </ul>
 <p>Generated fakes are production-quality code that compiles to native binaries without reflection.</p>
 <div class="admonition warning">
