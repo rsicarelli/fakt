@@ -482,7 +482,10 @@ internal class FakeClassChecker(private val sharedContext: FaktSharedContext) :
 
     /** Extract function metadata from FIR function declaration. */
     @OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class)
-    private fun extractFunctionInfo(function: FirFunction, functionName: org.jetbrains.kotlin.name.Name): FirFunctionInfo {
+    private fun extractFunctionInfo(
+        function: FirFunction,
+        functionName: org.jetbrains.kotlin.name.Name,
+    ): FirFunctionInfo {
         val parameters = function.valueParameters.map(::extractParameterInfo)
         val typeParameters =
             function.typeParameters.map { typeParamRef ->
