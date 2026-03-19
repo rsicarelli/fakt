@@ -1,7 +1,7 @@
 # Fakt Development Commands
 # Run from fakt/ directory (or from project root)
 
-.PHONY: build test compile clean format shadowJar test-sample test-fake-publishing validate quick-test full-rebuild
+.PHONY: build test compile clean format shadowJar test-sample test-fake-publishing validate quick-test full-rebuild test-compat-all
 
 # Core build commands
 build:
@@ -59,6 +59,20 @@ test-fake-publishing:
 	cd samples/fake-publishing/kmp-publisher && ./gradlew publishToMavenLocal
 	@echo "Step 2: Building and testing kmp-consumer..."
 	cd samples/fake-publishing/kmp-consumer && ./gradlew build
+
+# Compat sample testing (multi-version Kotlin verification)
+test-compat-all: publish-local
+	@echo "Testing all compat samples..."
+	@for dir in samples/compat/kotlin-*/; do \
+		version=$$(basename "$$dir" | sed 's/kotlin-//'); \
+		echo "Testing Kotlin $$version..."; \
+		./gradlew -p "$$dir" jvmTest --no-daemon || exit 1; \
+		echo "Kotlin $$version: PASS"; \
+	done
+	@echo "All compat samples passed!"
+
+test-compat-%: publish-local
+	./gradlew -p samples/compat/kotlin-$* jvmTest --no-daemon
 
 # Comprehensive validation workflow (runs all checks like CI)
 validate:
@@ -123,6 +137,8 @@ help:
 	@echo "  test-kmp-multi-module - Test kmp-multi-module sample (composite build)"
 	@echo "  test-kmp-multi-target - Test kmp-multi-target sample (hierarchy validation)"
 	@echo "  test-fake-publishing - Test fake-publishing sample (two-step workflow)"
+	@echo "  test-compat-all     - Test all compat samples (Kotlin 2.2.0-2.3.20)"
+	@echo "  test-compat-VERSION - Test specific compat sample (e.g., test-compat-2.2.0)"
 	@echo ""
 	@echo "  validate        - ⭐ Run all validations (format, lint, tests, samples)"
 	@echo "  quick-test      - Quick development cycle (auto-rebuilds plugin!)"

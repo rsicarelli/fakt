@@ -99,6 +99,7 @@ nav:
       - 'Platform Support': user-guide/platform-support.md
       - 'Known Issues': user-guide/known-issues.md
   - 'Samples': examples/index.md
+  - 'Kotlin Compatibility': compatibility.md
   - 'Help':
       - 'FAQ': help/faq.md
       - 'Troubleshooting': help/troubleshooting.md

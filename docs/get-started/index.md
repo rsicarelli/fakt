@@ -8,7 +8,7 @@ Install the Fakt plugin, annotate an interface with `@Fake`, and start using typ
 
 | Requirement      | Version    |
 |------------------|------------|
-| **Kotlin**       | 2.3.20+    |
+| **Kotlin**       | 2.2.0+ ([full matrix](../compatibility.md)) |
 | **Gradle**       | 8.0+       |
 | **JVM**          | 11+        |
 

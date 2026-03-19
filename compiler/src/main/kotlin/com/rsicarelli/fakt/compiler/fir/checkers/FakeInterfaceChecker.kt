@@ -35,7 +35,7 @@ import org.jetbrains.kotlin.fir.references.toResolvedEnumEntrySymbol
 import org.jetbrains.kotlin.fir.resolve.providers.firProvider
 import org.jetbrains.kotlin.fir.resolve.toSymbol
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
-import org.jetbrains.kotlin.fir.symbols.impl.FirNamedFunctionSymbol
+import org.jetbrains.kotlin.fir.symbols.impl.FirFunctionSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirPropertySymbol
 import org.jetbrains.kotlin.fir.types.ConeClassLikeType
 import org.jetbrains.kotlin.fir.types.coneType
@@ -395,9 +395,9 @@ internal class FakeInterfaceChecker(private val sharedContext: FaktSharedContext
         // Use processAllDeclarations to iterate through class members
         declaration.processAllDeclarations(session = declaration.moduleData.session) { symbol ->
             // Only process function symbols
-            if (symbol is FirNamedFunctionSymbol) {
+            if (symbol is FirFunctionSymbol<*>) {
                 val function = symbol.fir
-                val name = function.name.asString()
+                val name = symbol.name.asString()
 
                 // Extract parameters
                 // Extract default value expressions and render to code strings

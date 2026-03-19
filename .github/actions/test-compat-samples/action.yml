@@ -1,0 +1,24 @@
+name: Test Compat Sample
+description: Test a single compat sample to verify Kotlin version compatibility
+
+inputs:
+  kotlin-version:
+    description: Kotlin version to test (e.g., 2.2.0, 2.3.20)
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Clean stale Fakt artifacts
+      shell: bash
+      run: rm -rf ~/.m2/repository/com/rsicarelli/fakt/
+
+    - name: Publish Fakt plugin to Maven Local
+      shell: bash
+      env:
+        ORG_GRADLE_PROJECT_SKIP_SIGNING: true
+      run: ./gradlew clean publishToMavenLocal --no-daemon --no-build-cache --no-configuration-cache
+
+    - name: Test compat sample (Kotlin ${{ inputs.kotlin-version }})
+      shell: bash
+      run: ./gradlew -p samples/compat/kotlin-${{ inputs.kotlin-version }} jvmTest --no-daemon

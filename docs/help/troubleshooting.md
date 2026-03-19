@@ -34,7 +34,7 @@ Common issues and solutions for single-module and multi-module setups.
 
 **Causes**:
 
-1. **Kotlin version mismatch**: Ensure you're on Kotlin 2.3.20+
+1. **Kotlin version mismatch**: Ensure you're on Kotlin 2.2.0+ ([compatibility matrix](../compatibility.md))
 2. **Fakt version incompatibility**: Update Fakt to match your Kotlin version
 
 **Solution**:
@@ -42,8 +42,8 @@ Common issues and solutions for single-module and multi-module setups.
 ```kotlin
 // gradle/libs.versions.toml
 [versions]
-kotlin = "2.3.20"
-fakt = "x.y.z"  // Check latest version
+kotlin = "2.3.20"  // or any version from 2.2.0+
+fakt = "x.y.z"    // Check latest version
 ```
 
 ---
@@ -462,7 +462,7 @@ Before reporting issues, verify:
 - [ ] Project builds successfully (`./gradlew build`)
 - [ ] Fakes generated (`ls build/generated/fakt/`)
 - [ ] Gradle synced in IDE
-- [ ] Using Kotlin 2.3.20+
+- [ ] Using Kotlin 2.2.0+ ([compatibility matrix](../compatibility.md))
 
 **Multi-Module:**
 - [ ] Producer module has `@Fake` annotated interfaces
@@ -474,7 +474,7 @@ Before reporting issues, verify:
 - [ ] Consumer depends on collector module
 - [ ] Gradle synced in IDE
 - [ ] Using latest Fakt version
-- [ ] Kotlin 2.3.20+
+- [ ] Kotlin 2.2.0+ ([compatibility matrix](../compatibility.md))
 
 ---
 
