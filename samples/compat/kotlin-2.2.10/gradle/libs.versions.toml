@@ -1,0 +1,13 @@
+[versions]
+kotlin = "2.2.10"
+fakt = "1.0.0-beta04"
+kotlinx-coroutines = "1.10.2"
+
+[plugins]
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+fakt = { id = "com.rsicarelli.fakt", version.ref = "fakt" }
+
+[libraries]
+fakt-annotations = { module = "com.rsicarelli.fakt:annotations", version.ref = "fakt" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
