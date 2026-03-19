@@ -23,7 +23,7 @@ import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirClassChecker
 import org.jetbrains.kotlin.fir.declarations.FirClass
-import org.jetbrains.kotlin.fir.declarations.FirNamedFunction
+import org.jetbrains.kotlin.fir.declarations.FirFunction
 import org.jetbrains.kotlin.fir.declarations.FirValueParameter
 import org.jetbrains.kotlin.fir.declarations.hasAnnotation
 import org.jetbrains.kotlin.fir.declarations.processAllDeclarations
@@ -35,7 +35,7 @@ import org.jetbrains.kotlin.fir.declarations.utils.modality
 import org.jetbrains.kotlin.fir.expressions.FirPropertyAccessExpression
 import org.jetbrains.kotlin.fir.references.toResolvedEnumEntrySymbol
 import org.jetbrains.kotlin.fir.resolve.providers.firProvider
-import org.jetbrains.kotlin.fir.symbols.impl.FirNamedFunctionSymbol
+import org.jetbrains.kotlin.fir.symbols.impl.FirFunctionSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirPropertySymbol
 import org.jetbrains.kotlin.fir.types.coneType
 import org.jetbrains.kotlin.fir.types.isMarkedNullable
@@ -185,7 +185,7 @@ internal class FakeClassChecker(private val sharedContext: FaktSharedContext) :
                     }
                 }
 
-                is FirNamedFunctionSymbol -> {
+                is FirFunctionSymbol<*> -> {
                     if (symbol.fir.modality == Modality.OPEN) {
                         hasOpen = true
                     }
@@ -465,9 +465,9 @@ internal class FakeClassChecker(private val sharedContext: FaktSharedContext) :
         val openMethods = mutableListOf<FirFunctionInfo>()
 
         declaration.processAllDeclarations(session = declaration.moduleData.session) { symbol ->
-            if (symbol is FirNamedFunctionSymbol) {
+            if (symbol is FirFunctionSymbol<*>) {
                 val function = symbol.fir
-                val functionInfo = extractFunctionInfo(function)
+                val functionInfo = extractFunctionInfo(function, symbol.name)
 
                 when (function.modality) {
                     Modality.ABSTRACT -> abstractMethods.add(functionInfo)
@@ -482,7 +482,7 @@ internal class FakeClassChecker(private val sharedContext: FaktSharedContext) :
 
     /** Extract function metadata from FIR function declaration. */
     @OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class)
-    private fun extractFunctionInfo(function: FirNamedFunction): FirFunctionInfo {
+    private fun extractFunctionInfo(function: FirFunction, functionName: org.jetbrains.kotlin.name.Name): FirFunctionInfo {
         val parameters = function.valueParameters.map(::extractParameterInfo)
         val typeParameters =
             function.typeParameters.map { typeParamRef ->
@@ -492,7 +492,7 @@ internal class FakeClassChecker(private val sharedContext: FaktSharedContext) :
             }
 
         return FirFunctionInfo(
-            name = function.name.asString(),
+            name = functionName.asString(),
             parameters = parameters,
             returnType = function.returnTypeRef.coneType.toString(),
             isSuspend = function.isSuspend,
