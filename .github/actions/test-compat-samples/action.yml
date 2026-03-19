@@ -9,11 +9,15 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Clean compiler module
+      shell: bash
+      run: ./gradlew :compiler:clean --no-daemon
+
     - name: Publish Fakt plugin to Maven Local
       shell: bash
       env:
         ORG_GRADLE_PROJECT_SKIP_SIGNING: true
-      run: ./gradlew publishToMavenLocal --no-daemon
+      run: ./gradlew publishToMavenLocal --no-daemon --no-build-cache --no-configuration-cache
 
     - name: Test compat sample (Kotlin ${{ inputs.kotlin-version }})
       shell: bash
