@@ -34,6 +34,7 @@ import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
  */
 @OptIn(ExperimentalCompilerApi::class)
 class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
+    override val pluginId: String = "com.rsicarelli.fakt"
     override val supportsK2: Boolean = true
 
     override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {

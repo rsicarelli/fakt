@@ -8,7 +8,7 @@ Install the Fakt plugin, annotate an interface with `@Fake`, and start using typ
 
 | Requirement      | Version    |
 |------------------|------------|
-| **Kotlin**       | 2.2.21+    |
+| **Kotlin**       | 2.3.20+    |
 | **Gradle**       | 8.0+       |
 | **JVM**          | 11+        |
 
@@ -23,7 +23,7 @@ Install the Fakt plugin, annotate an interface with `@Fake`, and start using typ
 ```toml
 [versions]
 fakt = "x.y.z"
-kotlin = "2.2.21"
+kotlin = "2.3.20"
 
 [plugins]
 fakt = { id = "com.rsicarelli.fakt", version.ref = "fakt" }

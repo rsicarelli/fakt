@@ -9,7 +9,7 @@ import org.jetbrains.kotlin.fir.declarations.FirClass
 import org.jetbrains.kotlin.fir.declarations.toAnnotationClassIdSafe
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
 import org.jetbrains.kotlin.fir.expressions.FirAnnotationArgumentMapping
-import org.jetbrains.kotlin.fir.expressions.FirArrayLiteral
+import org.jetbrains.kotlin.fir.expressions.FirCollectionLiteral
 import org.jetbrains.kotlin.fir.expressions.FirExpression
 import org.jetbrains.kotlin.fir.expressions.FirGetClassCall
 import org.jetbrains.kotlin.fir.expressions.FirLiteralExpression
@@ -39,7 +39,7 @@ import org.jetbrains.kotlin.name.FqName
  *
  * **API Reference** (Kotlin 2.0-2.1.x stable):
  * - FirAnnotation.argumentMapping.mapping: Map<Name, FirExpression>
- * - FirArrayLiteral.argumentList.arguments: List<FirExpression>
+ * - FirCollectionLiteral.argumentList.arguments: List<FirExpression>
  * - FirGetClassCall.argument: FirExpression (singular!)
  * - FirVarargArgumentsExpression.arguments: List<FirExpression>
  */
@@ -178,7 +178,7 @@ object AnnotationExtractor {
             is FirPropertyAccessExpression -> extractEnumValue(expression)
 
             // Array literal: [a, b, c]
-            is FirArrayLiteral -> extractArrayValue(expression, session)
+            is FirCollectionLiteral -> extractArrayValue(expression, session)
 
             // Vararg arguments (spread into array)
             is FirVarargArgumentsExpression -> extractVarargValue(expression, session)
@@ -249,16 +249,16 @@ object AnnotationExtractor {
         }
 
     /**
-     * Extract array value from FirArrayLiteral.
+     * Extract array value from FirCollectionLiteral.
      *
      * Handles `[a, b, c]` expressions. Uses `argumentList.arguments` (NOT direct `arguments`
      * property!).
      */
     private fun extractArrayValue(
-        expression: FirArrayLiteral,
+        expression: FirCollectionLiteral,
         session: FirSession,
     ): FirAnnotationArgument.ArrayValue {
-        // FirArrayLiteral implements FirCall, access via argumentList.arguments
+        // FirCollectionLiteral implements FirCall, access via argumentList.arguments
         val elements =
             expression.argumentList.arguments.mapNotNull { element ->
                 extractArgumentValue(element, session)
@@ -270,7 +270,7 @@ object AnnotationExtractor {
      * Extract vararg value from FirVarargArgumentsExpression.
      *
      * Handles vararg parameters spread as arrays. Uses direct `arguments` property (unlike
-     * FirArrayLiteral!).
+     * FirCollectionLiteral!).
      */
     private fun extractVarargValue(
         expression: FirVarargArgumentsExpression,

@@ -3,6 +3,7 @@
 package com.rsicarelli.fakt.gradle.fakes
 
 import org.gradle.api.Action
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
 import org.jetbrains.kotlin.gradle.plugin.KotlinDependencyHandler
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
@@ -61,19 +62,13 @@ internal class FakeKotlinSourceSet(
     override val runtimeOnlyConfigurationName
         get() = error("Not used")
 
-    @Suppress("OVERRIDE_DEPRECATION")
-    override val apiMetadataConfigurationName
-        get() = error("Deprecated")
-
-    @Suppress("OVERRIDE_DEPRECATION")
     override val implementationMetadataConfigurationName
-        get() = error("Deprecated")
+        get() = error("Not used")
 
-    @Suppress("OVERRIDE_DEPRECATION")
-    override val compileOnlyMetadataConfigurationName
-        get() = error("Deprecated")
+    override val allKotlinSources: FileCollection
+        get() = error("Not used")
 
-    @Suppress("OVERRIDE_DEPRECATION")
-    override val runtimeOnlyMetadataConfigurationName
-        get() = error("Deprecated")
+    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
+    override val generatedKotlin: SourceDirectorySet
+        get() = error("Not used")
 }

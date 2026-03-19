@@ -317,9 +317,6 @@ private class FakeKotlinCompilation(
     override fun dependencies(configure: Action<KotlinDependencyHandler>) = error("Not used")
 
     @Suppress("OVERRIDE_DEPRECATION")
-    override fun source(sourceSet: KotlinSourceSet) = error("Not used")
-
-    @Suppress("OVERRIDE_DEPRECATION")
     override fun kotlinOptions(
         configure: org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions.() -> Unit
     ) = error("Not used")

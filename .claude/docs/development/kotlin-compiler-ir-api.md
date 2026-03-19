@@ -1,7 +1,7 @@
 # Kotlin Compiler IR API Reference - Fakt Development Guide
 
 > **Purpose**: Comprehensive reference for Kotlin IR APIs used in Fakt development
-> **Version**: Based on Kotlin 2.2.21
+> **Version**: Based on Kotlin 2.3.20
 > **Scope**: IR code generation for fake implementation generation
 
 ## 🎯 **Overview**
