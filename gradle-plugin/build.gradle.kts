@@ -11,8 +11,8 @@ plugins {
 description = "Fakt Gradle plugin for seamless build integration"
 
 dependencies {
-    // Compiler API for SourceSetContext serialization
-    implementation(projects.compilerApi)
+    // Compiler API — exposed as `api` so consumers can use LogLevel, etc.
+    api(projects.compilerApi)
 
     // Kotlin Gradle Plugin APIs (compileOnly like Metro)
     compileOnly(libs.kotlin.gradlePlugin)
