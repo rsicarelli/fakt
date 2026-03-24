@@ -81,6 +81,7 @@ data class FakeGenerationConfig(
     val annotations: List<AnnotationSpec> = emptyList(),
     val generateCallHistory: Boolean = true,
     val generateMutableBehaviors: Boolean = false,
+    val superConstructorCall: String = "",
 )
 
 /**
@@ -184,6 +185,7 @@ fun generateCompleteFake(
     annotations: List<AnnotationSpec> = emptyList(),
     generateCallHistory: Boolean = true,
     generateMutableBehaviors: Boolean = false,
+    superConstructorCall: String = "",
 ): CodeFile =
     generateCompleteFakeInternal(
         FakeGenerationConfig(
@@ -199,6 +201,7 @@ fun generateCompleteFake(
             annotations = annotations,
             generateCallHistory = generateCallHistory,
             generateMutableBehaviors = generateMutableBehaviors,
+            superConstructorCall = superConstructorCall,
         )
     )
 
@@ -215,6 +218,7 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
     val annotations = config.annotations
     val generateCallHistory = config.generateCallHistory
     val generateMutableBehaviors = config.generateMutableBehaviors
+    val superConstructorCall = config.superConstructorCall
     val className = "Fake${interfaceName}Impl"
 
     // Extract type parameter names for interface type arguments
@@ -369,9 +373,10 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
                         "$interfaceName<${typeParamNames.joinToString(", ")}>"
                     else -> interfaceName
                 }
-            // Classes need constructor call: ClassName() or ClassName<T>()
+            // Classes need constructor call: ClassName(args) or ClassName<T>(args)
             // Interfaces don't: InterfaceName or InterfaceName<T>
-            val superTypeWithConstructor = if (isClass) "$superType()" else superType
+            val superTypeWithConstructor =
+                if (isClass) "$superType($superConstructorCall)" else superType
             implements(superTypeWithConstructor)
 
             // Filter out StateFlow properties (they have their own tracking)
