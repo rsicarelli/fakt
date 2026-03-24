@@ -197,33 +197,21 @@ internal class ImplementationGenerator(private val typeResolver: TypeResolution)
      * DefaultValueResolver strategy used for method return types. Parameters with defaults are
      * omitted (the class's own defaults apply).
      *
+     * Uses pre-extracted [ClassAnalysis.constructorParameters] — no direct IR access needed.
+     *
      * Example: `DataFormatter<T>(locale: String, precision: Int = 2)` → `locale = ""` (precision
      * omitted — has default)
      */
-    @OptIn(org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI::class)
     private fun buildSuperConstructorCall(analysis: ClassAnalysis): String {
-        val constructor =
-            analysis.sourceClass.declarations
-                .filterIsInstance<org.jetbrains.kotlin.ir.declarations.IrConstructor>()
-                .firstOrNull { it.isPrimary } ?: return ""
+        val params = analysis.constructorParameters.filter { !it.hasDefault }
+        if (params.isEmpty()) return ""
 
         val resolver = DefaultValueResolver()
-
-        val args =
-            constructor.parameters
-                .filter {
-                    it.kind == org.jetbrains.kotlin.ir.declarations.IrParameterKind.Regular &&
-                        it.defaultValue == null
-                }
-                .map { param ->
-                    val typeStr =
-                        typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true)
-                    val parsedType = parseType(typeStr)
-                    val defaultExpr = resolver.resolve(parsedType).render()
-                    "${param.name.asString()} = $defaultExpr"
-                }
-
-        return args.joinToString(", ")
+        return params.joinToString(", ") { param ->
+            val parsedType = parseType(param.typeString)
+            val defaultExpr = resolver.resolve(parsedType).render()
+            "${param.name} = $defaultExpr"
+        }
     }
 }
 

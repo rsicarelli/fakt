@@ -659,6 +659,7 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
                 metadata.toClassAnalysis(
                     enableCallHistoryDefault = sharedContext.options.enableCallHistoryDefault,
                     enableMutableFakesDefault = sharedContext.options.enableMutableFakesDefault,
+                    typeResolver = typeResolver,
                 )
 
             // Generate fake implementation with timing

@@ -65,10 +65,24 @@ data class ClassAnalysis(
     val abstractProperties: List<PropertyAnalysis>,
     val openProperties: List<PropertyAnalysis>,
     val sourceClass: IrClass,
+    val constructorParameters: List<ConstructorParameterInfo> = emptyList(),
     val visibility: FirVisibility = FirVisibility.PUBLIC,
     val annotations: List<AnnotationAnalysis> = emptyList(),
     val generateCallHistory: Boolean = true,
     val generateMutableBehaviors: Boolean = false,
+)
+
+/**
+ * Constructor parameter from the parent abstract class.
+ *
+ * @property name Parameter name
+ * @property typeString Rendered type string (e.g., "String", "Int")
+ * @property hasDefault Whether the parameter has a default value
+ */
+data class ConstructorParameterInfo(
+    val name: String,
+    val typeString: String,
+    val hasDefault: Boolean,
 )
 
 /** Analysis of a property within an interface or class. */
