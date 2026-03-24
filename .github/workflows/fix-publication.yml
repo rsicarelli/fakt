@@ -1,0 +1,149 @@
+name: Fix Publication
+
+on:
+  workflow_dispatch:
+    inputs:
+      published_version:
+        required: true
+        type: string
+        description: 'Version published to Maven Central (e.g., 1.0.0-beta05)'
+      bump:
+        required: true
+        type: choice
+        description: 'Version bump type for next development version'
+        default: 'minor'
+        options:
+          - major
+          - minor
+          - patch
+      release_type:
+        required: true
+        type: choice
+        description: 'Release type for next development version'
+        default: 'alpha'
+        options:
+          - alpha
+          - beta
+          - stable
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IS_CI: true
+
+jobs:
+  fix-publication:
+    name: Fix Post-Publish Steps
+    runs-on: ubuntu-latest
+    outputs:
+      version_published: ${{ github.event.inputs.published_version }}
+    steps:
+      - name: Fail if branch is not main
+        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master'
+        run: |
+          echo "This workflow should only be triggered from main/master branch"
+          exit 1
+
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          fetch-depth: 0
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Configure Release Bot
+        uses: ./.github/actions/configure-release-bot
+        with:
+          bot-name: ${{ vars.RELEASE_BOT_NAME }}
+          bot-app-id: ${{ vars.RELEASE_BOT_APP_ID }}
+
+      - name: Verify version
+        id: verify
+        run: |
+          CURRENT=$(grep "version=" gradle.properties | cut -d'=' -f2)
+          echo "current_version=$CURRENT" >> $GITHUB_OUTPUT
+          echo "Published version (input): ${{ github.event.inputs.published_version }}"
+          echo "Current version (gradle.properties): $CURRENT"
+
+          if [ "$CURRENT" != "${{ github.event.inputs.published_version }}" ]; then
+            echo "::warning::Version mismatch: gradle.properties='$CURRENT', published_version='${{ github.event.inputs.published_version }}'"
+            echo "version_already_bumped=true" >> $GITHUB_OUTPUT
+          else
+            echo "Version matches. Proceeding with full post-publish recovery."
+            echo "version_already_bumped=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create tag if missing
+        run: |
+          TAG="v${{ github.event.inputs.published_version }}"
+          if git ls-remote --tags origin "$TAG" | grep -q "$TAG"; then
+            echo "Tag $TAG already exists on remote. Skipping."
+          else
+            echo "Creating tag $TAG..."
+            git tag "$TAG"
+            git push origin "$TAG"
+            echo "Tag $TAG created and pushed."
+          fi
+
+      - name: Check if GitHub Release exists
+        id: check-release
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          TAG="v${{ github.event.inputs.published_version }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "GitHub Release for $TAG already exists. Skipping."
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "GitHub Release for $TAG does not exist. Will create it."
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
+        if: steps.check-release.outputs.exists != 'true'
+        uses: ./.github/actions/create-github-release
+        with:
+          tag: "v${{ github.event.inputs.published_version }}"
+          github-token: ${{ steps.app-token.outputs.token }}
+
+      - name: Prepare for Next Version
+        if: steps.verify.outputs.version_already_bumped != 'true'
+        run: |
+          bash .github/scripts/prepare-next-release.sh \
+            "${{ github.event.inputs.published_version }}" \
+            "${{ github.event.inputs.bump }}" \
+            "${{ github.event.inputs.release_type }}"
+
+      - name: Push Changes
+        if: steps.verify.outputs.version_already_bumped != 'true'
+        run: |
+          if [ "$(git rev-list HEAD...origin/$(git branch --show-current) --count 2>/dev/null)" -gt 0 ]; then
+            echo "Pushing changes to origin..."
+            git push origin HEAD
+          else
+            echo "No new commits to push. Skipping."
+          fi
+
+  deploy-docs:
+    name: Deploy Release Documentation
+    needs: fix-publication
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/deploy-docs.yml
+    with:
+      version: ${{ needs.fix-publication.outputs.version_published }}
+      alias: 'latest'
+      set-default: true
