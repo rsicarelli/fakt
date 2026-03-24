@@ -10,8 +10,9 @@ import org.gradle.api.Project
  * Applies the following conventions in order:
  * 1. JVM compilation (explicit Java 11 target, no toolchains)
  * 2. Kotlin compiler settings (progressive mode, JVM target, flags)
- * 3. Explicit API mode (for annotations module only)
- * 4. Test configuration (JUnit 5, parallel execution, memory settings)
+ * 3. Gradle compatibility (Kotlin 2.0 metadata for buildscript modules)
+ * 4. Explicit API mode (for annotations module only)
+ * 5. Test configuration (JUnit 5, parallel execution, memory settings)
  *
  * This is the main entry point for configuring Kotlin modules.
  * All logic is delegated to specific convention functions for modularity.
@@ -19,6 +20,7 @@ import org.gradle.api.Project
 fun Project.applyCommonConventions() {
     applyJvmCompilation()
     applyKotlinCompiler()
+    applyGradleCompatibility()
     applyExplicitApiForRuntime()
     applyTestConventions()
 }
