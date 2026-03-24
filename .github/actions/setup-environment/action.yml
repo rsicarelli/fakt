@@ -5,7 +5,7 @@ runs:
   using: 'composite'
   steps:
     - name: Set up JDK 21
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
         distribution: 'temurin'
         java-version: '21'
@@ -17,12 +17,12 @@ runs:
       run: echo "version=$(grep nodejs .tool-versions | awk '{print $2}')" >> $GITHUB_OUTPUT
 
     - name: Set up Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: ${{ steps.node-version.outputs.version }}
 
     - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v4
+      uses: gradle/actions/setup-gradle@v6
       with:
         validate-wrappers: true
         cache-read-only: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master' }}

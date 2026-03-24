@@ -22,10 +22,10 @@ jobs:
       has-changes: ${{ steps.check.outputs.has-changes }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Check for documentation-only changes
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         id: check
         with:
           script: |
@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Environment
         uses: ./.github/actions/setup-environment
@@ -59,7 +59,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Environment
         uses: ./.github/actions/setup-environment
@@ -74,7 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Environment
         uses: ./.github/actions/setup-environment
@@ -89,7 +89,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Environment
         uses: ./.github/actions/setup-environment
@@ -104,7 +104,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Environment
         uses: ./.github/actions/setup-environment
@@ -114,7 +114,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results-compiler
           path: |
@@ -159,7 +159,7 @@ jobs:
             pre-publish: samples/fake-publishing/kmp-publisher
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Environment
         uses: ./.github/actions/setup-environment
@@ -187,7 +187,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results-sample-${{ matrix.sample }}
           path: ${{ matrix.path }}/**/build/test-results/**/TEST-*.xml
@@ -211,7 +211,7 @@ jobs:
           - "2.3.20"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Environment
         uses: ./.github/actions/setup-environment
@@ -236,14 +236,14 @@ jobs:
       - test-compat
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Environment
         uses: ./.github/actions/setup-environment
 
       - name: Download compiler test results
         if: needs.check-code-changes.outputs.has-changes == 'true'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: test-results-compiler
           path: test-results
@@ -251,7 +251,7 @@ jobs:
 
       - name: Download sample test results
         if: needs.check-code-changes.outputs.has-changes == 'true'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: test-results-sample-*
           path: test-results
