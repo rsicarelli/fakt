@@ -77,7 +77,7 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         public const val PLUGIN_ID: String = "com.rsicarelli.fakt"
         public const val PLUGIN_ARTIFACT_NAME: String = "compiler"
         public const val PLUGIN_GROUP_ID: String = "com.rsicarelli.fakt"
-        public const val PLUGIN_VERSION: String = "1.0.0-beta05"
+        public const val PLUGIN_VERSION: String = "1.0.0-beta06"
     }
 
     @OptIn(ExperimentalFaktMultiModule::class)
