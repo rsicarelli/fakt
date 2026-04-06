@@ -868,4 +868,121 @@ class FakeGeneratorTest {
         // THEN - Open property gets nullable constructor property
         assertContains(result, "private val labelBehavior: (() -> String)? = null")
     }
+
+    // ========================================================================
+    // Bug #70: Super constructor call with arguments
+    // ========================================================================
+
+    @Test
+    fun `GIVEN class with superConstructorCall WHEN generating THEN super type includes args`() {
+        // GIVEN
+        val methods =
+            listOf(MethodSpec(name = "format", params = emptyList(), returnType = "String"))
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "DataFormatter",
+                methods = methods,
+                isClass = true,
+                superConstructorCall = "locale = \"\"",
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Super type call includes constructor args
+        assertContains(result, ": DataFormatter(locale = \"\")")
+    }
+
+    @Test
+    fun `GIVEN class with empty superConstructorCall WHEN generating THEN super type has empty parens`() {
+        // GIVEN
+        val methods = listOf(MethodSpec(name = "doWork", params = emptyList(), returnType = "Unit"))
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "Worker",
+                methods = methods,
+                isClass = true,
+                superConstructorCall = "",
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Super type call has empty parens (no-arg constructor)
+        assertContains(result, ": Worker()")
+    }
+
+    @Test
+    fun `GIVEN class with multiple super constructor args WHEN generating THEN all args present`() {
+        // GIVEN
+        val methods = listOf(MethodSpec(name = "process", params = emptyList(), returnType = "Int"))
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "Processor",
+                methods = methods,
+                isClass = true,
+                superConstructorCall = "name = \"\", count = 0",
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN
+        assertContains(result, ": Processor(name = \"\", count = 0)")
+    }
+
+    @Test
+    fun `GIVEN generic class with superConstructorCall WHEN generating THEN type params and args present`() {
+        // GIVEN
+        val methods = listOf(MethodSpec(name = "format", params = emptyList(), returnType = "T"))
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "DataFormatter",
+                methods = methods,
+                typeParameters = listOf("T"),
+                isClass = true,
+                superConstructorCall = "locale = \"\"",
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Super type includes both type params and constructor args
+        assertContains(result, ": DataFormatter<T>(locale = \"\")")
+    }
+
+    @Test
+    fun `GIVEN interface WHEN superConstructorCall provided THEN ignored (no parens)`() {
+        // GIVEN
+        val methods = listOf(MethodSpec(name = "doWork", params = emptyList(), returnType = "Unit"))
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "Worker",
+                methods = methods,
+                isClass = false,
+                superConstructorCall = "should be ignored",
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - Interface has no parens in super type
+        assertContains(result, ": Worker {")
+        assertFalse(result.contains("Worker("), "Interface should not have constructor call")
+    }
 }

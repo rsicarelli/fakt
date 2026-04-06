@@ -424,9 +424,7 @@ public fun CodeProperty.renderTo(builder: CodeBuilder) {
         }
 
         initializer != null -> {
-            builder.appendLine(
-                "$modifierPrefix$varOrVal $name: $typeStr = ${initializer!!.render()}"
-            )
+            builder.appendLine("$modifierPrefix$varOrVal $name: $typeStr = ${initializer.render()}")
         }
 
         else -> {

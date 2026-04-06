@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.generation
 
+import com.rsicarelli.fakt.codegen.builder.parseType
 import com.rsicarelli.fakt.codegen.extensions.AnnotationSpec
 import com.rsicarelli.fakt.codegen.extensions.FactoryFunctionSpec
 import com.rsicarelli.fakt.codegen.extensions.MethodSpec
@@ -10,6 +11,8 @@ import com.rsicarelli.fakt.codegen.extensions.generateCallHistoryDeclarations
 import com.rsicarelli.fakt.codegen.extensions.generateCompleteFake
 import com.rsicarelli.fakt.codegen.extensions.generateFactoryFunctionCodeFile
 import com.rsicarelli.fakt.codegen.model.CodeFile
+import com.rsicarelli.fakt.codegen.renderer.render
+import com.rsicarelli.fakt.codegen.strategy.DefaultValueResolver
 import com.rsicarelli.fakt.compiler.core.types.TypeResolution
 import com.rsicarelli.fakt.compiler.ir.analysis.AnnotationAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
@@ -128,6 +131,9 @@ internal class ImplementationGenerator(private val typeResolver: TypeResolution)
         val (methodSpecs, propertySpecs) = analysis.toMemberSpecs(typeResolver)
         val annotationSpecs = analysis.annotations.map { it.toAnnotationSpec() }
 
+        // Build super constructor call with default values for required params
+        val superConstructorCall = buildSuperConstructorCall(analysis)
+
         // Generate implementation using DSL with visibility for explicitApi() support
         var implementationFile =
             generateCompleteFake(
@@ -143,6 +149,7 @@ internal class ImplementationGenerator(private val typeResolver: TypeResolution)
                 annotations = annotationSpecs,
                 generateCallHistory = analysis.generateCallHistory,
                 generateMutableBehaviors = analysis.generateMutableBehaviors,
+                superConstructorCall = superConstructorCall,
             )
 
         // Generate factory function CodeFile with visibility for explicitApi() support
@@ -181,6 +188,30 @@ internal class ImplementationGenerator(private val typeResolver: TypeResolution)
             implementationFile = implementationFile,
             factoryFunction = factoryFunction,
         )
+    }
+
+    /**
+     * Builds the super constructor call arguments for abstract class fakes.
+     *
+     * Generates default values for required constructor parameters using the same
+     * DefaultValueResolver strategy used for method return types. Parameters with defaults are
+     * omitted (the class's own defaults apply).
+     *
+     * Uses pre-extracted [ClassAnalysis.constructorParameters] — no direct IR access needed.
+     *
+     * Example: `DataFormatter<T>(locale: String, precision: Int = 2)` → `locale = ""` (precision
+     * omitted — has default)
+     */
+    private fun buildSuperConstructorCall(analysis: ClassAnalysis): String {
+        val params = analysis.constructorParameters.filter { !it.hasDefault }
+        if (params.isEmpty()) return ""
+
+        val resolver = DefaultValueResolver()
+        return params.joinToString(", ") { param ->
+            val parsedType = parseType(param.typeString)
+            val defaultExpr = resolver.resolve(parsedType).render()
+            "${param.name} = $defaultExpr"
+        }
     }
 }
 

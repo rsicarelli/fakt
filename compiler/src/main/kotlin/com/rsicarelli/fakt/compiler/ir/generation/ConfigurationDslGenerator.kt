@@ -526,7 +526,7 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
                 val closureBody = buildWrappingClosure(function, methodTypeParamNames)
                 body = "${functionName}Behavior = $closureBody"
             } else {
-                expressionBody = "run { ${functionName}Behavior = behavior }"
+                body = "${functionName}Behavior = behavior"
             }
         }
     }
@@ -556,7 +556,7 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
 
             parameter("behavior", "() -> $propertyType")
             returns("Unit")
-            expressionBody = "run { ${propertyName}Behavior = behavior }"
+            body = "${propertyName}Behavior = behavior"
         }
 
         // Setter configuration for mutable properties
@@ -571,7 +571,7 @@ internal class ConfigurationDslGenerator(private val typeResolver: TypeResolutio
 
                 parameter("behavior", "($propertyType) -> Unit")
                 returns("Unit")
-                expressionBody = "run { set${capitalizedName}Behavior = behavior }"
+                body = "set${capitalizedName}Behavior = behavior"
             }
         }
     }

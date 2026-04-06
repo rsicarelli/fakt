@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.transform
 
+import com.rsicarelli.fakt.compiler.core.types.TypeResolution
 import com.rsicarelli.fakt.compiler.fir.metadata.FirCallHistoryMode
 import com.rsicarelli.fakt.compiler.fir.metadata.FirMutabilityMode
 import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 import com.rsicarelli.fakt.compiler.ir.analysis.AnnotationAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
+import com.rsicarelli.fakt.compiler.ir.analysis.ConstructorParameterInfo
 import com.rsicarelli.fakt.compiler.ir.analysis.FunctionAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.GenericPattern
 import com.rsicarelli.fakt.compiler.ir.analysis.GenericPatternAnalyzer
@@ -14,6 +16,8 @@ import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.ParameterAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.PropertyAnalysis
 import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrConstructor
+import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.types.IrType
@@ -391,9 +395,11 @@ private fun resolveMutabilityEnabled(
  *   annotation's callHistoryMode is DEFAULT.
  * @return ClassAnalysis with separated abstract and open members
  */
-fun IrClassGenerationMetadata.toClassAnalysis(
+@OptIn(org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI::class)
+internal fun IrClassGenerationMetadata.toClassAnalysis(
     enableCallHistoryDefault: Boolean = true,
     enableMutableFakesDefault: Boolean = false,
+    typeResolver: TypeResolution? = null,
 ): ClassAnalysis =
     ClassAnalysis(
         className = className,
@@ -403,12 +409,36 @@ fun IrClassGenerationMetadata.toClassAnalysis(
         abstractProperties = abstractProperties.map { it.toPropertyAnalysis() },
         openProperties = openProperties.map { it.toPropertyAnalysis() },
         sourceClass = sourceClass,
+        constructorParameters = extractConstructorParameters(sourceClass, typeResolver),
         visibility = visibility,
         annotations = annotations.map { it.toAnnotationAnalysis() },
         generateCallHistory = resolveCallHistoryEnabled(callHistoryMode, enableCallHistoryDefault),
         generateMutableBehaviors =
             resolveMutabilityEnabled(mutabilityMode, enableMutableFakesDefault),
     )
+
+/** Extract primary constructor parameters as pre-rendered [ConstructorParameterInfo]. */
+@OptIn(org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI::class)
+private fun extractConstructorParameters(
+    irClass: IrClass,
+    typeResolver: TypeResolution?,
+): List<ConstructorParameterInfo> {
+    val resolver = typeResolver ?: return emptyList()
+    val constructor =
+        irClass.declarations.filterIsInstance<IrConstructor>().firstOrNull { it.isPrimary }
+    return constructor
+        ?.parameters
+        .orEmpty()
+        .filter { it.kind == IrParameterKind.Regular }
+        .map { param ->
+            ConstructorParameterInfo(
+                name = param.name.asString(),
+                typeString =
+                    resolver.irTypeToKotlinString(param.type, preserveTypeParameters = true),
+                hasDefault = param.defaultValue != null,
+            )
+        }
+}
 
 /** Convert IrPropertyMetadata to PropertyAnalysis. */
 private fun IrPropertyMetadata.toPropertyAnalysis(): PropertyAnalysis =
