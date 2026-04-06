@@ -423,17 +423,18 @@ private fun extractConstructorParameters(
     irClass: IrClass,
     typeResolver: TypeResolution?,
 ): List<ConstructorParameterInfo> {
-    if (typeResolver == null) return emptyList()
+    val resolver = typeResolver ?: return emptyList()
     val constructor =
         irClass.declarations.filterIsInstance<IrConstructor>().firstOrNull { it.isPrimary }
-            ?: return emptyList()
-    return constructor.parameters
+    return constructor
+        ?.parameters
+        .orEmpty()
         .filter { it.kind == IrParameterKind.Regular }
         .map { param ->
             ConstructorParameterInfo(
                 name = param.name.asString(),
                 typeString =
-                    typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true),
+                    resolver.irTypeToKotlinString(param.type, preserveTypeParameters = true),
                 hasDefault = param.defaultValue != null,
             )
         }
