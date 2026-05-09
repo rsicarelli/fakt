@@ -20,7 +20,7 @@ import com.rsicarelli.fakt.codegen.model.CodeType
  * @param typeString The type as a string
  * @return Parsed [CodeType]
  */
-internal fun parseType(typeString: String): CodeType =
+public fun parseType(typeString: String): CodeType =
     when {
         typeString.endsWith("?") -> CodeType.Nullable(parseType(typeString.dropLast(1)))
 

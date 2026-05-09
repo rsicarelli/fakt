@@ -1,0 +1,1225 @@
+public final class com/rsicarelli/fakt/codegen/builder/ClassBuilder {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun annotation (Ljava/lang/String;Ljava/util/List;)V
+	public final fun annotation (Ljava/lang/String;[Ljava/lang/String;)V
+	public final fun build ()Lcom/rsicarelli/fakt/codegen/model/CodeClass;
+	public final fun comment (Ljava/lang/String;)V
+	public final fun constructorProperty (Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun constructorProperty$default (Lcom/rsicarelli/fakt/codegen/builder/ClassBuilder;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public final fun endRegion ()V
+	public final fun function (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun getAnnotations ()Ljava/util/List;
+	public final fun getConstructorProperties ()Ljava/util/List;
+	public final fun getMembers ()Ljava/util/List;
+	public final fun getModifiers ()Ljava/util/Set;
+	public final fun getSuperTypes ()Ljava/util/List;
+	public final fun getTypeParameters ()Ljava/util/List;
+	public final fun getWhereClause ()Ljava/lang/String;
+	public final fun implements (Ljava/lang/String;[Ljava/lang/String;)V
+	public final fun internal ()V
+	public final fun property (Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun property$default (Lcom/rsicarelli/fakt/codegen/builder/ClassBuilder;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public final fun public ()V
+	public final fun region (Ljava/lang/String;)V
+	public final fun setWhereClause (Ljava/lang/String;)V
+	public final fun typeParam (Ljava/lang/String;[Ljava/lang/String;Z)V
+	public static synthetic fun typeParam$default (Lcom/rsicarelli/fakt/codegen/builder/ClassBuilder;Ljava/lang/String;[Ljava/lang/String;ZILjava/lang/Object;)V
+	public final fun where (Ljava/lang/String;)V
+}
+
+public abstract interface annotation class com/rsicarelli/fakt/codegen/builder/CodeDsl : java/lang/annotation/Annotation {
+}
+
+public final class com/rsicarelli/fakt/codegen/builder/CodeFileBuilder {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun build ()Lcom/rsicarelli/fakt/codegen/model/CodeFile;
+	public final fun dataClass (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun fileAnnotation (Ljava/lang/String;[Ljava/lang/String;)V
+	public final fun function (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun getDeclarations ()Ljava/util/List;
+	public final fun getFileAnnotations ()Ljava/util/List;
+	public final fun getHeader ()Ljava/lang/String;
+	public final fun getImports ()Ljava/util/Set;
+	public final fun import (Ljava/lang/String;)V
+	public final fun imports ([Ljava/lang/String;)V
+	public final fun klass (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun setHeader (Ljava/lang/String;)V
+}
+
+public final class com/rsicarelli/fakt/codegen/builder/CodeFileBuilderKt {
+	public static final fun codeFile (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lcom/rsicarelli/fakt/codegen/model/CodeFile;
+}
+
+public final class com/rsicarelli/fakt/codegen/builder/ConstructorPropertyBuilder {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun build ()Lcom/rsicarelli/fakt/codegen/model/ConstructorProperty;
+	public final fun getDefaultValue ()Ljava/lang/String;
+	public final fun internal ()V
+	public final fun mutable ()V
+	public final fun plainParam ()V
+	public final fun private ()V
+	public final fun public ()V
+	public final fun setDefaultValue (Ljava/lang/String;)V
+}
+
+public final class com/rsicarelli/fakt/codegen/builder/DataClassBuilder {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun annotation (Ljava/lang/String;Ljava/util/List;)V
+	public final fun annotation (Ljava/lang/String;[Ljava/lang/String;)V
+	public final fun build ()Lcom/rsicarelli/fakt/codegen/model/CodeDataClass;
+	public final fun internal ()V
+	public final fun property (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun public ()V
+}
+
+public final class com/rsicarelli/fakt/codegen/builder/FunctionBuilder {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun annotation (Ljava/lang/String;Ljava/util/List;)V
+	public final fun annotation (Ljava/lang/String;[Ljava/lang/String;)V
+	public final fun body (Lkotlin/jvm/functions/Function0;)V
+	public final fun build ()Lcom/rsicarelli/fakt/codegen/model/CodeFunction;
+	public final fun getBody ()Ljava/lang/String;
+	public final fun getCompact ()Z
+	public final fun getExpressionBody ()Ljava/lang/String;
+	public final fun getKdoc ()Ljava/lang/String;
+	public final fun internal ()V
+	public final fun isInline ()Z
+	public final fun isSuspend ()Z
+	public final fun operator ()V
+	public final fun override ()V
+	public final fun parameter (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V
+	public static synthetic fun parameter$default (Lcom/rsicarelli/fakt/codegen/builder/FunctionBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)V
+	public final fun public ()V
+	public final fun receiver (Ljava/lang/String;)V
+	public final fun returns (Ljava/lang/String;)V
+	public final fun setBody (Ljava/lang/String;)V
+	public final fun setCompact (Z)V
+	public final fun setExpressionBody (Ljava/lang/String;)V
+	public final fun setInline (Z)V
+	public final fun setKdoc (Ljava/lang/String;)V
+	public final fun setSuspend (Z)V
+	public final fun suspend ()V
+	public final fun typeParam (Ljava/lang/String;[Ljava/lang/String;Z)V
+	public static synthetic fun typeParam$default (Lcom/rsicarelli/fakt/codegen/builder/FunctionBuilder;Ljava/lang/String;[Ljava/lang/String;ZILjava/lang/Object;)V
+	public final fun where (Ljava/lang/String;)V
+}
+
+public final class com/rsicarelli/fakt/codegen/builder/PropertyBuilder {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun annotation (Ljava/lang/String;Ljava/util/List;)V
+	public final fun annotation (Ljava/lang/String;[Ljava/lang/String;)V
+	public final fun build ()Lcom/rsicarelli/fakt/codegen/model/CodeProperty;
+	public final fun getCompact ()Z
+	public final fun getGetter ()Ljava/lang/String;
+	public final fun getInitializer ()Ljava/lang/String;
+	public final fun getSetter ()Ljava/lang/String;
+	public final fun internal ()V
+	public final fun isMutable ()Z
+	public final fun mutable ()V
+	public final fun override ()V
+	public final fun private ()V
+	public final fun public ()V
+	public final fun setCompact (Z)V
+	public final fun setGetter (Ljava/lang/String;)V
+	public final fun setInitializer (Ljava/lang/String;)V
+	public final fun setMutable (Z)V
+	public final fun setSetter (Ljava/lang/String;)V
+}
+
+public final class com/rsicarelli/fakt/codegen/builder/TypeParsingKt {
+	public static final fun parseType (Ljava/lang/String;)Lcom/rsicarelli/fakt/codegen/model/CodeType;
+}
+
+public final class com/rsicarelli/fakt/codegen/extensions/AnnotationSpec {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Z
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Z)Lcom/rsicarelli/fakt/codegen/extensions/AnnotationSpec;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/extensions/AnnotationSpec;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ZILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/extensions/AnnotationSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getArguments ()Ljava/util/List;
+	public final fun getFullyQualifiedName ()Ljava/lang/String;
+	public final fun getSimpleName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isOptInMarker ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/extensions/CallHistoryGeneratorKt {
+	public static final fun generateCallHistoryDeclarations (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Ljava/util/List;)Ljava/util/List;
+	public static synthetic fun generateCallHistoryDeclarations$default (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Ljava/util/List;ILjava/lang/Object;)Ljava/util/List;
+}
+
+public final class com/rsicarelli/fakt/codegen/extensions/CallTrackingExtensionsKt {
+	public static final fun callHistoryBackingField (Lcom/rsicarelli/fakt/codegen/builder/ClassBuilder;Ljava/lang/String;Ljava/lang/String;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;)V
+	public static final fun propertyGetterCallHistoryField (Lcom/rsicarelli/fakt/codegen/builder/ClassBuilder;Ljava/lang/String;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;)V
+	public static final fun propertySetterCallHistoryField (Lcom/rsicarelli/fakt/codegen/builder/ClassBuilder;Ljava/lang/String;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;)V
+}
+
+public final class com/rsicarelli/fakt/codegen/extensions/FactoryExtensionsKt {
+	public static final fun generateFactoryFunction (Lcom/rsicarelli/fakt/codegen/extensions/FactoryFunctionSpec;)Ljava/lang/String;
+	public static final fun generateFactoryFunction (Lcom/rsicarelli/fakt/codegen/extensions/FactoryFunctionSpec;Z)Ljava/lang/String;
+	public static synthetic fun generateFactoryFunction$default (Lcom/rsicarelli/fakt/codegen/extensions/FactoryFunctionSpec;ZILjava/lang/Object;)Ljava/lang/String;
+	public static final fun generateFactoryFunctionCodeFile (Lcom/rsicarelli/fakt/codegen/extensions/FactoryFunctionSpec;Z)Lcom/rsicarelli/fakt/codegen/model/CodeFile;
+	public static synthetic fun generateFactoryFunctionCodeFile$default (Lcom/rsicarelli/fakt/codegen/extensions/FactoryFunctionSpec;ZILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/CodeFile;
+}
+
+public final class com/rsicarelli/fakt/codegen/extensions/FactoryFunctionSpec {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Ljava/util/List;Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Ljava/util/List;Ljava/util/List;Ljava/util/List;)Lcom/rsicarelli/fakt/codegen/extensions/FactoryFunctionSpec;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/extensions/FactoryFunctionSpec;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Ljava/util/List;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/extensions/FactoryFunctionSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnnotations ()Ljava/util/List;
+	public final fun getInterfaceName ()Ljava/lang/String;
+	public final fun getMethods ()Ljava/util/List;
+	public final fun getProperties ()Ljava/util/List;
+	public final fun getSuperTypeName ()Ljava/lang/String;
+	public final fun getTypeParameters ()Ljava/util/List;
+	public final fun getVisibility ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/extensions/FakeGenerationConfig {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/util/List;ZLcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Ljava/util/List;ZZLjava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/util/List;ZLcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Ljava/util/List;ZZLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component10 ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;
+	public final fun component11 ()Ljava/util/List;
+	public final fun component12 ()Z
+	public final fun component13 ()Z
+	public final fun component14 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Ljava/util/List;
+	public final fun component9 ()Z
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/util/List;ZLcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Ljava/util/List;ZZLjava/lang/String;)Lcom/rsicarelli/fakt/codegen/extensions/FakeGenerationConfig;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/extensions/FakeGenerationConfig;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/util/List;ZLcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Ljava/util/List;ZZLjava/lang/String;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/extensions/FakeGenerationConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnnotations ()Ljava/util/List;
+	public final fun getGenerateCallHistory ()Z
+	public final fun getGenerateMutableBehaviors ()Z
+	public final fun getHeader ()Ljava/lang/String;
+	public final fun getImports ()Ljava/util/List;
+	public final fun getInterfaceName ()Ljava/lang/String;
+	public final fun getMethods ()Ljava/util/List;
+	public final fun getPackageName ()Ljava/lang/String;
+	public final fun getProperties ()Ljava/util/List;
+	public final fun getSuperConstructorCall ()Ljava/lang/String;
+	public final fun getSuperTypeName ()Ljava/lang/String;
+	public final fun getTypeParameters ()Ljava/util/List;
+	public final fun getVisibility ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;
+	public fun hashCode ()I
+	public final fun isClass ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/extensions/FakeGeneratorKt {
+	public static final fun generateCompleteFake (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/util/List;ZLcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Ljava/util/List;ZZLjava/lang/String;)Lcom/rsicarelli/fakt/codegen/model/CodeFile;
+	public static synthetic fun generateCompleteFake$default (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/util/List;ZLcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Ljava/util/List;ZZLjava/lang/String;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/CodeFile;
+}
+
+public final class com/rsicarelli/fakt/codegen/extensions/HistoryStorageInfo {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Z
+	public final fun copy (Ljava/lang/String;Ljava/util/List;Z)Lcom/rsicarelli/fakt/codegen/extensions/HistoryStorageInfo;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/extensions/HistoryStorageInfo;Ljava/lang/String;Ljava/util/List;ZILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/extensions/HistoryStorageInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDataClassName ()Ljava/lang/String;
+	public final fun getParams ()Ljava/util/List;
+	public fun hashCode ()I
+	public final fun isUnitStorage ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/extensions/HistoryStorageInfoKt {
+	public static final fun buildHistoryRecordExpression (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)Ljava/lang/String;
+	public static final fun resolveHistoryStorageType (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)Lcom/rsicarelli/fakt/codegen/extensions/HistoryStorageInfo;
+}
+
+public final class com/rsicarelli/fakt/codegen/extensions/KDocGenerator {
+	public static final field INSTANCE Lcom/rsicarelli/fakt/codegen/extensions/KDocGenerator;
+	public final fun generateFactoryKDoc (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;)Ljava/lang/String;
+	public static synthetic fun generateFactoryKDoc$default (Lcom/rsicarelli/fakt/codegen/extensions/KDocGenerator;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/extensions/KDocGeneratorKt {
+	public static final fun generateFactoryKDoc (Ljava/lang/String;Ljava/util/List;Ljava/util/List;)Ljava/lang/String;
+	public static synthetic fun generateFactoryKDoc$default (Ljava/lang/String;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/extensions/MethodExtensionsKt {
+	public static final fun configureMethod (Lcom/rsicarelli/fakt/codegen/builder/ClassBuilder;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;ZLjava/util/List;)V
+	public static synthetic fun configureMethod$default (Lcom/rsicarelli/fakt/codegen/builder/ClassBuilder;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;ZLjava/util/List;ILjava/lang/Object;)V
+	public static final fun overrideMethod (Lcom/rsicarelli/fakt/codegen/builder/ClassBuilder;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lcom/rsicarelli/fakt/codegen/extensions/OverrideMethodConfig;)V
+	public static synthetic fun overrideMethod$default (Lcom/rsicarelli/fakt/codegen/builder/ClassBuilder;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lcom/rsicarelli/fakt/codegen/extensions/OverrideMethodConfig;ILjava/lang/Object;)V
+	public static final fun overrideVarargMethod (Lcom/rsicarelli/fakt/codegen/builder/ClassBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/rsicarelli/fakt/codegen/extensions/OverrideVarargConfig;)V
+	public static synthetic fun overrideVarargMethod$default (Lcom/rsicarelli/fakt/codegen/builder/ClassBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/rsicarelli/fakt/codegen/extensions/OverrideVarargConfig;ILjava/lang/Object;)V
+}
+
+public final class com/rsicarelli/fakt/codegen/extensions/MethodSpec {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;ZZLjava/util/List;ZZLjava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;ZZLjava/util/List;ZZLjava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component10 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Z
+	public final fun component5 ()Z
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Z
+	public final fun component8 ()Z
+	public final fun component9 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;ZZLjava/util/List;ZZLjava/lang/String;Ljava/lang/String;)Lcom/rsicarelli/fakt/codegen/extensions/MethodSpec;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/extensions/MethodSpec;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;ZZLjava/util/List;ZZLjava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/extensions/MethodSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDefaultBehavior ()Ljava/lang/String;
+	public final fun getExtensionReceiverType ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getParams ()Ljava/util/List;
+	public final fun getReturnType ()Ljava/lang/String;
+	public final fun getTypeParameters ()Ljava/util/List;
+	public fun hashCode ()I
+	public final fun isAbstract ()Z
+	public final fun isOperator ()Z
+	public final fun isSuspend ()Z
+	public final fun isVararg ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/extensions/OverrideMethodConfig {
+	public fun <init> ()V
+	public fun <init> (ZLjava/util/List;ZLjava/lang/String;ZLjava/lang/String;Ljava/util/List;ZLjava/lang/String;)V
+	public synthetic fun <init> (ZLjava/util/List;ZLjava/lang/String;ZLjava/lang/String;Ljava/util/List;ZLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Z
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Z
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/util/List;
+	public final fun component8 ()Z
+	public final fun component9 ()Ljava/lang/String;
+	public final fun copy (ZLjava/util/List;ZLjava/lang/String;ZLjava/lang/String;Ljava/util/List;ZLjava/lang/String;)Lcom/rsicarelli/fakt/codegen/extensions/OverrideMethodConfig;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/extensions/OverrideMethodConfig;ZLjava/util/List;ZLjava/lang/String;ZLjava/lang/String;Ljava/util/List;ZLjava/lang/String;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/extensions/OverrideMethodConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBehaviorPrefix ()Ljava/lang/String;
+	public final fun getClassTypeParameters ()Ljava/util/List;
+	public final fun getExtensionReceiverType ()Ljava/lang/String;
+	public final fun getGenerateCallHistory ()Z
+	public final fun getInterfaceName ()Ljava/lang/String;
+	public final fun getTypeParameters ()Ljava/util/List;
+	public final fun getUseSuperDelegation ()Z
+	public fun hashCode ()I
+	public final fun isOperator ()Z
+	public final fun isSuspend ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/extensions/OverrideVarargConfig {
+	public fun <init> ()V
+	public fun <init> (ZLjava/lang/String;ZZLjava/lang/String;)V
+	public synthetic fun <init> (ZLjava/lang/String;ZZLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Z
+	public final fun component4 ()Z
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (ZLjava/lang/String;ZZLjava/lang/String;)Lcom/rsicarelli/fakt/codegen/extensions/OverrideVarargConfig;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/extensions/OverrideVarargConfig;ZLjava/lang/String;ZZLjava/lang/String;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/extensions/OverrideVarargConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBehaviorPrefix ()Ljava/lang/String;
+	public final fun getExtensionReceiverType ()Ljava/lang/String;
+	public final fun getGenerateCallHistory ()Z
+	public final fun getUseSuperDelegation ()Z
+	public fun hashCode ()I
+	public final fun isOperator ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/extensions/PropertyExtensionsKt {
+	public static final fun behaviorProperty (Lcom/rsicarelli/fakt/codegen/builder/ClassBuilder;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;)V
+	public static final fun nullableBehaviorProperty (Lcom/rsicarelli/fakt/codegen/builder/ClassBuilder;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;)V
+	public static final fun nullableSuspendBehaviorProperty (Lcom/rsicarelli/fakt/codegen/builder/ClassBuilder;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;)V
+	public static final fun stateFlowProperty (Lcom/rsicarelli/fakt/codegen/builder/ClassBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public static final fun suspendBehaviorProperty (Lcom/rsicarelli/fakt/codegen/builder/ClassBuilder;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;)V
+}
+
+public final class com/rsicarelli/fakt/codegen/extensions/PropertySpec {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZZZLjava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ZZZLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Z
+	public final fun component4 ()Z
+	public final fun component5 ()Z
+	public final fun component6 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;ZZZLjava/lang/String;)Lcom/rsicarelli/fakt/codegen/extensions/PropertySpec;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/extensions/PropertySpec;Ljava/lang/String;Ljava/lang/String;ZZZLjava/lang/String;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/extensions/PropertySpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDefaultBehavior ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isAbstract ()Z
+	public final fun isMutable ()Z
+	public final fun isStateFlow ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/extensions/TypeParamRegexKt {
+	public static final fun eraseTypeParamsToAny (Ljava/lang/String;Ljava/util/Set;)Ljava/lang/String;
+	public static final fun typeContainsAnyParam (Ljava/lang/String;Ljava/util/Set;)Z
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeAnnotation {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;)Lcom/rsicarelli/fakt/codegen/model/CodeAnnotation;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/model/CodeAnnotation;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/CodeAnnotation;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getArguments ()Ljava/util/List;
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/rsicarelli/fakt/codegen/model/CodeBlock {
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeBlock$Empty : com/rsicarelli/fakt/codegen/model/CodeBlock {
+	public static final field INSTANCE Lcom/rsicarelli/fakt/codegen/model/CodeBlock$Empty;
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeBlock$Expression : com/rsicarelli/fakt/codegen/model/CodeBlock {
+	public fun <init> (Lcom/rsicarelli/fakt/codegen/model/CodeExpression;)V
+	public final fun component1 ()Lcom/rsicarelli/fakt/codegen/model/CodeExpression;
+	public final fun copy (Lcom/rsicarelli/fakt/codegen/model/CodeExpression;)Lcom/rsicarelli/fakt/codegen/model/CodeBlock$Expression;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/model/CodeBlock$Expression;Lcom/rsicarelli/fakt/codegen/model/CodeExpression;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/CodeBlock$Expression;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getExpr ()Lcom/rsicarelli/fakt/codegen/model/CodeExpression;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeBlock$Statements : com/rsicarelli/fakt/codegen/model/CodeBlock {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lcom/rsicarelli/fakt/codegen/model/CodeBlock$Statements;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/model/CodeBlock$Statements;Ljava/util/List;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/CodeBlock$Statements;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getStatements ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeClass : com/rsicarelli/fakt/codegen/model/CodeDeclaration {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/Set;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/Set;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun addMember (Lcom/rsicarelli/fakt/codegen/model/CodeMember;)Lcom/rsicarelli/fakt/codegen/model/CodeClass;
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/util/Set;
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/Set;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/util/List;)Lcom/rsicarelli/fakt/codegen/model/CodeClass;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/model/CodeClass;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/Set;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/CodeClass;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnnotations ()Ljava/util/List;
+	public final fun getConstructorProperties ()Ljava/util/List;
+	public final fun getMembers ()Ljava/util/List;
+	public final fun getModifiers ()Ljava/util/Set;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getSuperTypes ()Ljava/util/List;
+	public final fun getTypeParameters ()Ljava/util/List;
+	public final fun getWhereClause ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeComment : com/rsicarelli/fakt/codegen/model/CodeMember {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/rsicarelli/fakt/codegen/model/CodeComment;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/model/CodeComment;Ljava/lang/String;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/CodeComment;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeDataClass : com/rsicarelli/fakt/codegen/model/CodeDeclaration {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/util/Set;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/util/Set;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/util/Set;
+	public final fun component4 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;Ljava/util/Set;Ljava/util/List;)Lcom/rsicarelli/fakt/codegen/model/CodeDataClass;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/model/CodeDataClass;Ljava/lang/String;Ljava/util/List;Ljava/util/Set;Ljava/util/List;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/CodeDataClass;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnnotations ()Ljava/util/List;
+	public final fun getModifiers ()Ljava/util/Set;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getProperties ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/rsicarelli/fakt/codegen/model/CodeDeclaration {
+}
+
+public abstract interface class com/rsicarelli/fakt/codegen/model/CodeExpression {
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeExpression$FunctionCall : com/rsicarelli/fakt/codegen/model/CodeExpression {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;)Lcom/rsicarelli/fakt/codegen/model/CodeExpression$FunctionCall;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/model/CodeExpression$FunctionCall;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/CodeExpression$FunctionCall;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getArguments ()Ljava/util/List;
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeExpression$Lambda : com/rsicarelli/fakt/codegen/model/CodeExpression {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/util/List;Ljava/lang/String;)Lcom/rsicarelli/fakt/codegen/model/CodeExpression$Lambda;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/model/CodeExpression$Lambda;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/CodeExpression$Lambda;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBody ()Ljava/lang/String;
+	public final fun getParameters ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeExpression$NumberLiteral : com/rsicarelli/fakt/codegen/model/CodeExpression {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/rsicarelli/fakt/codegen/model/CodeExpression$NumberLiteral;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/model/CodeExpression$NumberLiteral;Ljava/lang/String;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/CodeExpression$NumberLiteral;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeExpression$Raw : com/rsicarelli/fakt/codegen/model/CodeExpression {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/rsicarelli/fakt/codegen/model/CodeExpression$Raw;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/model/CodeExpression$Raw;Ljava/lang/String;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/CodeExpression$Raw;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCode ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeExpression$StringLiteral : com/rsicarelli/fakt/codegen/model/CodeExpression {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/rsicarelli/fakt/codegen/model/CodeExpression$StringLiteral;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/model/CodeExpression$StringLiteral;Ljava/lang/String;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/CodeExpression$StringLiteral;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeFile {
+	public fun <init> (Ljava/lang/String;Ljava/util/Set;Ljava/util/List;Ljava/lang/String;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Set;Ljava/util/List;Ljava/lang/String;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun addDeclaration (Lcom/rsicarelli/fakt/codegen/model/CodeDeclaration;)Lcom/rsicarelli/fakt/codegen/model/CodeFile;
+	public final fun addImport (Ljava/lang/String;)Lcom/rsicarelli/fakt/codegen/model/CodeFile;
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/Set;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/Set;Ljava/util/List;Ljava/lang/String;Ljava/util/List;)Lcom/rsicarelli/fakt/codegen/model/CodeFile;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/model/CodeFile;Ljava/lang/String;Ljava/util/Set;Ljava/util/List;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/CodeFile;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDeclarations ()Ljava/util/List;
+	public final fun getFileAnnotations ()Ljava/util/List;
+	public final fun getHeader ()Ljava/lang/String;
+	public final fun getImports ()Ljava/util/Set;
+	public final fun getPackageName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeFunction : com/rsicarelli/fakt/codegen/model/CodeDeclaration, com/rsicarelli/fakt/codegen/model/CodeMember {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Lcom/rsicarelli/fakt/codegen/model/CodeType;Lcom/rsicarelli/fakt/codegen/model/CodeBlock;Ljava/util/Set;Ljava/util/List;ZZLcom/rsicarelli/fakt/codegen/model/CodeType;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Lcom/rsicarelli/fakt/codegen/model/CodeType;Lcom/rsicarelli/fakt/codegen/model/CodeBlock;Ljava/util/Set;Ljava/util/List;ZZLcom/rsicarelli/fakt/codegen/model/CodeType;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component10 ()Ljava/util/List;
+	public final fun component11 ()Ljava/lang/String;
+	public final fun component12 ()Ljava/lang/String;
+	public final fun component13 ()Z
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Lcom/rsicarelli/fakt/codegen/model/CodeType;
+	public final fun component4 ()Lcom/rsicarelli/fakt/codegen/model/CodeBlock;
+	public final fun component5 ()Ljava/util/Set;
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Z
+	public final fun component8 ()Z
+	public final fun component9 ()Lcom/rsicarelli/fakt/codegen/model/CodeType;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;Lcom/rsicarelli/fakt/codegen/model/CodeType;Lcom/rsicarelli/fakt/codegen/model/CodeBlock;Ljava/util/Set;Ljava/util/List;ZZLcom/rsicarelli/fakt/codegen/model/CodeType;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Z)Lcom/rsicarelli/fakt/codegen/model/CodeFunction;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/model/CodeFunction;Ljava/lang/String;Ljava/util/List;Lcom/rsicarelli/fakt/codegen/model/CodeType;Lcom/rsicarelli/fakt/codegen/model/CodeBlock;Ljava/util/Set;Ljava/util/List;ZZLcom/rsicarelli/fakt/codegen/model/CodeType;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/CodeFunction;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnnotations ()Ljava/util/List;
+	public final fun getBody ()Lcom/rsicarelli/fakt/codegen/model/CodeBlock;
+	public final fun getCompact ()Z
+	public final fun getKdoc ()Ljava/lang/String;
+	public final fun getModifiers ()Ljava/util/Set;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getParameters ()Ljava/util/List;
+	public final fun getReceiverType ()Lcom/rsicarelli/fakt/codegen/model/CodeType;
+	public final fun getReturnType ()Lcom/rsicarelli/fakt/codegen/model/CodeType;
+	public final fun getTypeParameters ()Ljava/util/List;
+	public final fun getWhereClause ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isInline ()Z
+	public final fun isSuspend ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/rsicarelli/fakt/codegen/model/CodeMember {
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeModifier : java/lang/Enum {
+	public static final field ABSTRACT Lcom/rsicarelli/fakt/codegen/model/CodeModifier;
+	public static final field FINAL Lcom/rsicarelli/fakt/codegen/model/CodeModifier;
+	public static final field INFIX Lcom/rsicarelli/fakt/codegen/model/CodeModifier;
+	public static final field INLINE Lcom/rsicarelli/fakt/codegen/model/CodeModifier;
+	public static final field INTERNAL Lcom/rsicarelli/fakt/codegen/model/CodeModifier;
+	public static final field OPEN Lcom/rsicarelli/fakt/codegen/model/CodeModifier;
+	public static final field OPERATOR Lcom/rsicarelli/fakt/codegen/model/CodeModifier;
+	public static final field OVERRIDE Lcom/rsicarelli/fakt/codegen/model/CodeModifier;
+	public static final field PRIVATE Lcom/rsicarelli/fakt/codegen/model/CodeModifier;
+	public static final field PROTECTED Lcom/rsicarelli/fakt/codegen/model/CodeModifier;
+	public static final field PUBLIC Lcom/rsicarelli/fakt/codegen/model/CodeModifier;
+	public static final field SUSPEND Lcom/rsicarelli/fakt/codegen/model/CodeModifier;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/rsicarelli/fakt/codegen/model/CodeModifier;
+	public static fun values ()[Lcom/rsicarelli/fakt/codegen/model/CodeModifier;
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeParameter {
+	public fun <init> (Ljava/lang/String;Lcom/rsicarelli/fakt/codegen/model/CodeType;Lcom/rsicarelli/fakt/codegen/model/CodeExpression;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/rsicarelli/fakt/codegen/model/CodeType;Lcom/rsicarelli/fakt/codegen/model/CodeExpression;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/rsicarelli/fakt/codegen/model/CodeType;
+	public final fun component3 ()Lcom/rsicarelli/fakt/codegen/model/CodeExpression;
+	public final fun component4 ()Z
+	public final fun copy (Ljava/lang/String;Lcom/rsicarelli/fakt/codegen/model/CodeType;Lcom/rsicarelli/fakt/codegen/model/CodeExpression;Z)Lcom/rsicarelli/fakt/codegen/model/CodeParameter;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/model/CodeParameter;Ljava/lang/String;Lcom/rsicarelli/fakt/codegen/model/CodeType;Lcom/rsicarelli/fakt/codegen/model/CodeExpression;ZILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/CodeParameter;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDefaultValue ()Lcom/rsicarelli/fakt/codegen/model/CodeExpression;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getType ()Lcom/rsicarelli/fakt/codegen/model/CodeType;
+	public fun hashCode ()I
+	public final fun isVararg ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeProperty : com/rsicarelli/fakt/codegen/model/CodeDeclaration, com/rsicarelli/fakt/codegen/model/CodeMember {
+	public fun <init> (Ljava/lang/String;Lcom/rsicarelli/fakt/codegen/model/CodeType;Ljava/util/Set;Lcom/rsicarelli/fakt/codegen/model/CodeExpression;Lcom/rsicarelli/fakt/codegen/model/CodeBlock;Lcom/rsicarelli/fakt/codegen/model/CodeBlock;ZLjava/util/List;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/rsicarelli/fakt/codegen/model/CodeType;Ljava/util/Set;Lcom/rsicarelli/fakt/codegen/model/CodeExpression;Lcom/rsicarelli/fakt/codegen/model/CodeBlock;Lcom/rsicarelli/fakt/codegen/model/CodeBlock;ZLjava/util/List;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/rsicarelli/fakt/codegen/model/CodeType;
+	public final fun component3 ()Ljava/util/Set;
+	public final fun component4 ()Lcom/rsicarelli/fakt/codegen/model/CodeExpression;
+	public final fun component5 ()Lcom/rsicarelli/fakt/codegen/model/CodeBlock;
+	public final fun component6 ()Lcom/rsicarelli/fakt/codegen/model/CodeBlock;
+	public final fun component7 ()Z
+	public final fun component8 ()Ljava/util/List;
+	public final fun component9 ()Z
+	public final fun copy (Ljava/lang/String;Lcom/rsicarelli/fakt/codegen/model/CodeType;Ljava/util/Set;Lcom/rsicarelli/fakt/codegen/model/CodeExpression;Lcom/rsicarelli/fakt/codegen/model/CodeBlock;Lcom/rsicarelli/fakt/codegen/model/CodeBlock;ZLjava/util/List;Z)Lcom/rsicarelli/fakt/codegen/model/CodeProperty;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/model/CodeProperty;Ljava/lang/String;Lcom/rsicarelli/fakt/codegen/model/CodeType;Ljava/util/Set;Lcom/rsicarelli/fakt/codegen/model/CodeExpression;Lcom/rsicarelli/fakt/codegen/model/CodeBlock;Lcom/rsicarelli/fakt/codegen/model/CodeBlock;ZLjava/util/List;ZILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/CodeProperty;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnnotations ()Ljava/util/List;
+	public final fun getCompact ()Z
+	public final fun getGetter ()Lcom/rsicarelli/fakt/codegen/model/CodeBlock;
+	public final fun getInitializer ()Lcom/rsicarelli/fakt/codegen/model/CodeExpression;
+	public final fun getModifiers ()Ljava/util/Set;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getSetter ()Lcom/rsicarelli/fakt/codegen/model/CodeBlock;
+	public final fun getType ()Lcom/rsicarelli/fakt/codegen/model/CodeType;
+	public fun hashCode ()I
+	public final fun isMutable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeRegionEnd : com/rsicarelli/fakt/codegen/model/CodeMember {
+	public static final field INSTANCE Lcom/rsicarelli/fakt/codegen/model/CodeRegionEnd;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeRegionStart : com/rsicarelli/fakt/codegen/model/CodeMember {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/rsicarelli/fakt/codegen/model/CodeRegionStart;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/model/CodeRegionStart;Ljava/lang/String;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/CodeRegionStart;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/rsicarelli/fakt/codegen/model/CodeType {
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeType$Generic : com/rsicarelli/fakt/codegen/model/CodeType {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;)Lcom/rsicarelli/fakt/codegen/model/CodeType$Generic;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/model/CodeType$Generic;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/CodeType$Generic;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getArguments ()Ljava/util/List;
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeType$Lambda : com/rsicarelli/fakt/codegen/model/CodeType {
+	public fun <init> (Ljava/util/List;Lcom/rsicarelli/fakt/codegen/model/CodeType;Z)V
+	public synthetic fun <init> (Ljava/util/List;Lcom/rsicarelli/fakt/codegen/model/CodeType;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Lcom/rsicarelli/fakt/codegen/model/CodeType;
+	public final fun component3 ()Z
+	public final fun copy (Ljava/util/List;Lcom/rsicarelli/fakt/codegen/model/CodeType;Z)Lcom/rsicarelli/fakt/codegen/model/CodeType$Lambda;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/model/CodeType$Lambda;Ljava/util/List;Lcom/rsicarelli/fakt/codegen/model/CodeType;ZILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/CodeType$Lambda;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getParameters ()Ljava/util/List;
+	public final fun getReturnType ()Lcom/rsicarelli/fakt/codegen/model/CodeType;
+	public fun hashCode ()I
+	public final fun isSuspend ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeType$Nullable : com/rsicarelli/fakt/codegen/model/CodeType {
+	public fun <init> (Lcom/rsicarelli/fakt/codegen/model/CodeType;)V
+	public final fun component1 ()Lcom/rsicarelli/fakt/codegen/model/CodeType;
+	public final fun copy (Lcom/rsicarelli/fakt/codegen/model/CodeType;)Lcom/rsicarelli/fakt/codegen/model/CodeType$Nullable;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/model/CodeType$Nullable;Lcom/rsicarelli/fakt/codegen/model/CodeType;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/CodeType$Nullable;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getInner ()Lcom/rsicarelli/fakt/codegen/model/CodeType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeType$Simple : com/rsicarelli/fakt/codegen/model/CodeType {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/rsicarelli/fakt/codegen/model/CodeType$Simple;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/model/CodeType$Simple;Ljava/lang/String;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/CodeType$Simple;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeTypeParameter {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;ZLcom/rsicarelli/fakt/codegen/model/CodeTypeParameter$Variance;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;ZLcom/rsicarelli/fakt/codegen/model/CodeTypeParameter$Variance;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Z
+	public final fun component4 ()Lcom/rsicarelli/fakt/codegen/model/CodeTypeParameter$Variance;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;ZLcom/rsicarelli/fakt/codegen/model/CodeTypeParameter$Variance;)Lcom/rsicarelli/fakt/codegen/model/CodeTypeParameter;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/model/CodeTypeParameter;Ljava/lang/String;Ljava/util/List;ZLcom/rsicarelli/fakt/codegen/model/CodeTypeParameter$Variance;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/CodeTypeParameter;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getConstraints ()Ljava/util/List;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getVariance ()Lcom/rsicarelli/fakt/codegen/model/CodeTypeParameter$Variance;
+	public fun hashCode ()I
+	public final fun isReified ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/model/CodeTypeParameter$Variance : java/lang/Enum {
+	public static final field IN Lcom/rsicarelli/fakt/codegen/model/CodeTypeParameter$Variance;
+	public static final field INVARIANT Lcom/rsicarelli/fakt/codegen/model/CodeTypeParameter$Variance;
+	public static final field OUT Lcom/rsicarelli/fakt/codegen/model/CodeTypeParameter$Variance;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/rsicarelli/fakt/codegen/model/CodeTypeParameter$Variance;
+	public static fun values ()[Lcom/rsicarelli/fakt/codegen/model/CodeTypeParameter$Variance;
+}
+
+public final class com/rsicarelli/fakt/codegen/model/ConstructorProperty {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Set;Ljava/lang/String;ZZ)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Set;Ljava/lang/String;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/Set;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Z
+	public final fun component6 ()Z
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/Set;Ljava/lang/String;ZZ)Lcom/rsicarelli/fakt/codegen/model/ConstructorProperty;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/model/ConstructorProperty;Ljava/lang/String;Ljava/lang/String;Ljava/util/Set;Ljava/lang/String;ZZILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/ConstructorProperty;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDefaultValue ()Ljava/lang/String;
+	public final fun getModifiers ()Ljava/util/Set;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isMutable ()Z
+	public final fun isPlainParam ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/model/DataClassProperty {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/rsicarelli/fakt/codegen/model/DataClassProperty;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/model/DataClassProperty;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/model/DataClassProperty;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/renderer/CodeBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/StringBuilder;II)V
+	public synthetic fun <init> (Ljava/lang/StringBuilder;IIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun appendLine (Ljava/lang/String;)V
+	public static synthetic fun appendLine$default (Lcom/rsicarelli/fakt/codegen/renderer/CodeBuilder;Ljava/lang/String;ILjava/lang/Object;)V
+	public final fun block (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun build ()Ljava/lang/String;
+	public final fun getBuilder ()Ljava/lang/StringBuilder;
+	public final fun getIndent ()Ljava/lang/String;
+	public final fun getIndentLevel ()I
+	public final fun getIndentSize ()I
+	public final fun indent (Lkotlin/jvm/functions/Function1;)V
+	public final fun setIndentLevel (I)V
+}
+
+public final class com/rsicarelli/fakt/codegen/renderer/RenderingKt {
+	public static final fun render (Lcom/rsicarelli/fakt/codegen/model/CodeExpression;)Ljava/lang/String;
+	public static final fun render (Lcom/rsicarelli/fakt/codegen/model/CodeParameter;)Ljava/lang/String;
+	public static final fun render (Lcom/rsicarelli/fakt/codegen/model/CodeType;)Ljava/lang/String;
+	public static final fun render (Lcom/rsicarelli/fakt/codegen/model/CodeTypeParameter;)Ljava/lang/String;
+	public static final fun render (Lcom/rsicarelli/fakt/codegen/model/ConstructorProperty;)Ljava/lang/String;
+	public static final fun renderAsFileAnnotation (Lcom/rsicarelli/fakt/codegen/model/CodeAnnotation;Lcom/rsicarelli/fakt/codegen/renderer/CodeBuilder;)V
+	public static final fun renderDeclarationsOnly (Lcom/rsicarelli/fakt/codegen/model/CodeFile;Lcom/rsicarelli/fakt/codegen/renderer/CodeBuilder;)V
+	public static final fun renderHeaderOnly (Lcom/rsicarelli/fakt/codegen/model/CodeFile;Lcom/rsicarelli/fakt/codegen/renderer/CodeBuilder;)V
+	public static final fun renderTo (Lcom/rsicarelli/fakt/codegen/model/CodeAnnotation;Lcom/rsicarelli/fakt/codegen/renderer/CodeBuilder;)V
+	public static final fun renderTo (Lcom/rsicarelli/fakt/codegen/model/CodeClass;Lcom/rsicarelli/fakt/codegen/renderer/CodeBuilder;)V
+	public static final fun renderTo (Lcom/rsicarelli/fakt/codegen/model/CodeComment;Lcom/rsicarelli/fakt/codegen/renderer/CodeBuilder;)V
+	public static final fun renderTo (Lcom/rsicarelli/fakt/codegen/model/CodeDataClass;Lcom/rsicarelli/fakt/codegen/renderer/CodeBuilder;)V
+	public static final fun renderTo (Lcom/rsicarelli/fakt/codegen/model/CodeDeclaration;Lcom/rsicarelli/fakt/codegen/renderer/CodeBuilder;)V
+	public static final fun renderTo (Lcom/rsicarelli/fakt/codegen/model/CodeFile;Lcom/rsicarelli/fakt/codegen/renderer/CodeBuilder;)V
+	public static final fun renderTo (Lcom/rsicarelli/fakt/codegen/model/CodeFunction;Lcom/rsicarelli/fakt/codegen/renderer/CodeBuilder;)V
+	public static final fun renderTo (Lcom/rsicarelli/fakt/codegen/model/CodeMember;Lcom/rsicarelli/fakt/codegen/renderer/CodeBuilder;)V
+	public static final fun renderTo (Lcom/rsicarelli/fakt/codegen/model/CodeProperty;Lcom/rsicarelli/fakt/codegen/renderer/CodeBuilder;)V
+	public static final fun renderTo (Lcom/rsicarelli/fakt/codegen/model/CodeRegionEnd;Lcom/rsicarelli/fakt/codegen/renderer/CodeBuilder;)V
+	public static final fun renderTo (Lcom/rsicarelli/fakt/codegen/model/CodeRegionStart;Lcom/rsicarelli/fakt/codegen/renderer/CodeBuilder;)V
+	public static final fun renderToString (Lcom/rsicarelli/fakt/codegen/model/CodeFile;)Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/strategy/CollectionDefaultStrategy : com/rsicarelli/fakt/codegen/strategy/DefaultValueStrategy {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Set;)V
+	public synthetic fun <init> (Ljava/util/Set;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun defaultValue (Lcom/rsicarelli/fakt/codegen/model/CodeType;)Lcom/rsicarelli/fakt/codegen/model/CodeExpression;
+	public fun supports (Lcom/rsicarelli/fakt/codegen/model/CodeType;)Z
+}
+
+public final class com/rsicarelli/fakt/codegen/strategy/DefaultValueResolver {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Set;)V
+	public synthetic fun <init> (Ljava/util/Set;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun resolve (Lcom/rsicarelli/fakt/codegen/model/CodeType;)Lcom/rsicarelli/fakt/codegen/model/CodeExpression;
+}
+
+public abstract interface class com/rsicarelli/fakt/codegen/strategy/DefaultValueStrategy {
+	public abstract fun defaultValue (Lcom/rsicarelli/fakt/codegen/model/CodeType;)Lcom/rsicarelli/fakt/codegen/model/CodeExpression;
+	public abstract fun supports (Lcom/rsicarelli/fakt/codegen/model/CodeType;)Z
+}
+
+public final class com/rsicarelli/fakt/codegen/strategy/NullableDefaultStrategy : com/rsicarelli/fakt/codegen/strategy/DefaultValueStrategy {
+	public fun <init> ()V
+	public fun defaultValue (Lcom/rsicarelli/fakt/codegen/model/CodeType;)Lcom/rsicarelli/fakt/codegen/model/CodeExpression;
+	public fun supports (Lcom/rsicarelli/fakt/codegen/model/CodeType;)Z
+}
+
+public final class com/rsicarelli/fakt/codegen/strategy/PrimitiveDefaultStrategy : com/rsicarelli/fakt/codegen/strategy/DefaultValueStrategy {
+	public fun <init> ()V
+	public fun defaultValue (Lcom/rsicarelli/fakt/codegen/model/CodeType;)Lcom/rsicarelli/fakt/codegen/model/CodeExpression;
+	public fun supports (Lcom/rsicarelli/fakt/codegen/model/CodeType;)Z
+}
+
+public final class com/rsicarelli/fakt/codegen/strategy/StdlibDefaultStrategy : com/rsicarelli/fakt/codegen/strategy/DefaultValueStrategy {
+	public fun <init> ()V
+	public fun defaultValue (Lcom/rsicarelli/fakt/codegen/model/CodeType;)Lcom/rsicarelli/fakt/codegen/model/CodeExpression;
+	public fun supports (Lcom/rsicarelli/fakt/codegen/model/CodeType;)Z
+}
+
+public abstract interface class com/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument {
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$ArrayValue : com/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$ArrayValue;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$ArrayValue;Ljava/util/List;ILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$ArrayValue;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getElements ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$BooleanLiteral : com/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument {
+	public fun <init> (Z)V
+	public final fun component1 ()Z
+	public final fun copy (Z)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$BooleanLiteral;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$BooleanLiteral;ZILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$BooleanLiteral;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$CharLiteral : com/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument {
+	public fun <init> (C)V
+	public final fun component1 ()C
+	public final fun copy (C)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$CharLiteral;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$CharLiteral;CILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$CharLiteral;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()C
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$ClassReference : com/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$ClassReference;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$ClassReference;Ljava/lang/String;ILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$ClassReference;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getClassId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$EnumValue : com/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$EnumValue;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$EnumValue;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$EnumValue;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEntryName ()Ljava/lang/String;
+	public final fun getEnumClassId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$NestedAnnotation : com/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument {
+	public fun <init> (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationInfo;)V
+	public final fun component1 ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationInfo;
+	public final fun copy (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationInfo;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$NestedAnnotation;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$NestedAnnotation;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationInfo;ILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$NestedAnnotation;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnnotation ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationInfo;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$NumberLiteral : com/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$NumberLiteral;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$NumberLiteral;Ljava/lang/String;ILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$NumberLiteral;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$StringLiteral : com/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$StringLiteral;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$StringLiteral;Ljava/lang/String;ILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument$StringLiteral;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationInfo {
+	public fun <init> (Ljava/lang/String;Ljava/util/Map;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Map;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun component3 ()Z
+	public final fun copy (Ljava/lang/String;Ljava/util/Map;Z)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationInfo;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationInfo;Ljava/lang/String;Ljava/util/Map;ZILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnnotationClassId ()Ljava/lang/String;
+	public final fun getArguments ()Ljava/util/Map;
+	public fun hashCode ()I
+	public final fun isOptInMarker ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode : java/lang/Enum {
+	public static final field DEFAULT Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;
+	public static final field DISABLED Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;
+	public static final field ENABLED Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;
+	public static fun values ()[Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/FirFakeMetadataKt {
+	public static final fun toModifier (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;)Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/FirFunctionInfo {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;ZZLjava/util/List;Ljava/util/Map;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Z
+	public final fun component5 ()Z
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;ZZLjava/util/List;Ljava/util/Map;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirFunctionInfo;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirFunctionInfo;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;ZZLjava/util/List;Ljava/util/Map;ILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirFunctionInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun getParameters ()Ljava/util/List;
+	public final fun getReturnType ()Ljava/lang/String;
+	public final fun getTypeParameterBounds ()Ljava/util/Map;
+	public final fun getTypeParameters ()Ljava/util/List;
+	public fun hashCode ()I
+	public final fun isInline ()Z
+	public final fun isSuspend ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode : java/lang/Enum {
+	public static final field DEFAULT Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;
+	public static final field IMMUTABLE Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;
+	public static final field MUTABLE Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;
+	public static fun values ()[Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/FirParameterInfo {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZLjava/lang/String;Z)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Z
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Z
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;ZLjava/lang/String;Z)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirParameterInfo;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirParameterInfo;Ljava/lang/String;Ljava/lang/String;ZLjava/lang/String;ZILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirParameterInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDefaultValueCode ()Ljava/lang/String;
+	public final fun getHasDefaultValue ()Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isVararg ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/FirPropertyInfo {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZZ)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Z
+	public final fun component4 ()Z
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;ZZ)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirPropertyInfo;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirPropertyInfo;Ljava/lang/String;Ljava/lang/String;ZZILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirPropertyInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isMutable ()Z
+	public final fun isNullable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation {
+	public static final field Companion Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation$Companion;
+	public fun <init> (Ljava/lang/String;IIII)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun component3 ()I
+	public final fun component4 ()I
+	public final fun component5 ()I
+	public final fun copy (Ljava/lang/String;IIII)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;Ljava/lang/String;IIIIILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun extractSourceSetName ()Ljava/lang/String;
+	public final fun getEndColumn ()I
+	public final fun getEndLine ()I
+	public final fun getFilePath ()Ljava/lang/String;
+	public final fun getStartColumn ()I
+	public final fun getStartLine ()I
+	public fun hashCode ()I
+	public final fun toDisplayString ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation$Companion {
+	public final fun getUNKNOWN ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/FirTypeParameterInfo {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirTypeParameterInfo;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirTypeParameterInfo;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirTypeParameterInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBounds ()Ljava/util/List;
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/FirVisibility : java/lang/Enum {
+	public static final field Companion Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility$Companion;
+	public static final field INTERNAL Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;
+	public static final field PRIVATE Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;
+	public static final field PROTECTED Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;
+	public static final field PUBLIC Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;
+	public static fun values ()[Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/FirVisibility$Companion {
+	public final fun from (Lorg/jetbrains/kotlin/descriptors/Visibility;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeClass {
+	public fun <init> (Lorg/jetbrains/kotlin/name/ClassId;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;JZLjava/lang/String;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;)V
+	public synthetic fun <init> (Lorg/jetbrains/kotlin/name/ClassId;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;JZLjava/lang/String;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/jetbrains/kotlin/name/ClassId;
+	public final fun component10 ()Ljava/util/List;
+	public final fun component11 ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;
+	public final fun component12 ()J
+	public final fun component13 ()Z
+	public final fun component14 ()Ljava/lang/String;
+	public final fun component15 ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;
+	public final fun component16 ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;
+	public final fun component17 ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Ljava/util/List;
+	public final fun component8 ()Ljava/util/List;
+	public final fun component9 ()Ljava/util/List;
+	public final fun copy (Lorg/jetbrains/kotlin/name/ClassId;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;JZLjava/lang/String;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;)Lcom/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeClass;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeClass;Lorg/jetbrains/kotlin/name/ClassId;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;JZLjava/lang/String;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;ILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeClass;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAbstractMethods ()Ljava/util/List;
+	public final fun getAbstractProperties ()Ljava/util/List;
+	public final fun getAnnotations ()Ljava/util/List;
+	public final fun getCallHistoryMode ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;
+	public final fun getClassId ()Lorg/jetbrains/kotlin/name/ClassId;
+	public final fun getMutabilityMode ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;
+	public final fun getOpenMethods ()Ljava/util/List;
+	public final fun getOpenProperties ()Ljava/util/List;
+	public final fun getPackageName ()Ljava/lang/String;
+	public final fun getQualifiedSourceName ()Ljava/lang/String;
+	public final fun getSimpleName ()Ljava/lang/String;
+	public final fun getSourceLocation ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;
+	public final fun getSourceSourceSet ()Ljava/lang/String;
+	public final fun getTypeParameters ()Ljava/util/List;
+	public final fun getValidationTimeNanos ()J
+	public final fun getVisibility ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;
+	public fun hashCode ()I
+	public final fun isFromCache ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeInterface {
+	public fun <init> (Lorg/jetbrains/kotlin/name/ClassId;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;JZLjava/lang/String;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;)V
+	public synthetic fun <init> (Lorg/jetbrains/kotlin/name/ClassId;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;JZLjava/lang/String;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/jetbrains/kotlin/name/ClassId;
+	public final fun component10 ()Ljava/util/List;
+	public final fun component11 ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;
+	public final fun component12 ()J
+	public final fun component13 ()Z
+	public final fun component14 ()Ljava/lang/String;
+	public final fun component15 ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;
+	public final fun component16 ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;
+	public final fun component17 ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Ljava/util/List;
+	public final fun component8 ()Ljava/util/List;
+	public final fun component9 ()Ljava/util/List;
+	public final fun copy (Lorg/jetbrains/kotlin/name/ClassId;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;JZLjava/lang/String;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;)Lcom/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeInterface;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeInterface;Lorg/jetbrains/kotlin/name/ClassId;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;JZLjava/lang/String;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;ILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeInterface;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnnotations ()Ljava/util/List;
+	public final fun getCallHistoryMode ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;
+	public final fun getClassId ()Lorg/jetbrains/kotlin/name/ClassId;
+	public final fun getFunctions ()Ljava/util/List;
+	public final fun getInheritedFunctions ()Ljava/util/List;
+	public final fun getInheritedProperties ()Ljava/util/List;
+	public final fun getMutabilityMode ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;
+	public final fun getPackageName ()Ljava/lang/String;
+	public final fun getProperties ()Ljava/util/List;
+	public final fun getQualifiedSourceName ()Ljava/lang/String;
+	public final fun getSimpleName ()Ljava/lang/String;
+	public final fun getSourceLocation ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;
+	public final fun getSourceSourceSet ()Ljava/lang/String;
+	public final fun getTypeParameters ()Ljava/util/List;
+	public final fun getValidationTimeNanos ()J
+	public final fun getVisibility ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;
+	public fun hashCode ()I
+	public final fun isFromCache ()Z
+	public fun toString ()Ljava/lang/String;
+}
+

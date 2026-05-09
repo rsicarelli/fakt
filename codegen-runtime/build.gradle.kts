@@ -21,4 +21,5 @@ dependencies {
     testImplementation(libs.kotlin.testJunit5)
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.coroutines.test)
+    testImplementation(libs.kotlin.compilerEmbeddable)
 }

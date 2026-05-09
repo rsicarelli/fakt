@@ -84,7 +84,7 @@ internal fun CodeFileBuilder.addCallHistoryComponents(
  * @param classTypeParameters Class-level type parameters that need to be erased to Any?
  * @return List of declarations for call history (data classes, verifier classes, verify functions)
  */
-internal fun generateCallHistoryDeclarations(
+public fun generateCallHistoryDeclarations(
     fakeClassName: String,
     interfaceName: String,
     methods: List<MethodSpec>,
