@@ -1,18 +1,19 @@
 <!--
-Source for the pinned Welcome announcement in
-https://github.com/rsicarelli/fakt/discussions
+Source for the pinned Welcome announcement in https://github.com/rsicarelli/fakt/discussions
 
 Copy/paste this content into the 📣 Announcements category when refreshing.
+Each paragraph below is intentionally on a single long line — GitHub Discussions
+renders soft newlines as hard `<br>` breaks, so wrapping mid-paragraph would
+break the live post.
+
 Last refreshed: 2026-05-09.
 -->
 
 # Welcome to Fakt Discussions 👋
 
-Fakt is a Kotlin compiler plugin that generates type-safe test fakes from
-`@Fake` interfaces, FIR → IR, KMP-first.
+Fakt is a Kotlin compiler plugin that generates type-safe test fakes from `@Fake` interfaces, FIR → IR, KMP-first.
 
-This is the place for **questions, design conversations, and showing off**.
-Reproducible bugs and regressions still go to [Issues](../../issues).
+This is the place for **questions, design conversations, and showing off**. Reproducible bugs and regressions still go to [Issues](../../issues).
 
 ## 🧭 Where to post what
 
@@ -29,9 +30,6 @@ Reproducible bugs and regressions still go to [Issues](../../issues).
 
 ## ⏱ Expectations
 
-Fakt is pre-1.0 with a **single maintainer**. Q&A is best-effort; well-formed
-posts (with version info + a reproducer) get answered first. Show & tell has
-no SLA — reactions when seen.
+Fakt is pre-1.0 with a **single maintainer**. Q&A is best-effort; well-formed posts (with version info + a reproducer) get answered first. Show & tell has no SLA — reactions when seen.
 
-If you open an Issue that's actually a question, expect it to be converted
-to a Discussion. It's not a rejection — it's filing.
+If you open an Issue that's actually a question, expect it to be converted to a Discussion. It's not a rejection — it's filing.
