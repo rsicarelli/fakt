@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.transform
 
-// RenderedType import needed for the side-channel accessors added in 3.1.d.1
 import com.rsicarelli.fakt.compiler.core.types.RenderedType
 import com.rsicarelli.fakt.compiler.fir.metadata.FirCallHistoryMode
 import com.rsicarelli.fakt.compiler.fir.metadata.FirMutabilityMode
@@ -150,28 +149,17 @@ internal constructor(
 }
 
 /**
- * Property metadata with resolved IR types.
+ * Property metadata with resolved IR types, transformed from `FirPropertyInfo`.
  *
- * Transformed from FirPropertyInfo (strings) to IR-ready structure.
- *
- * **3.1.d.1 additions**:
- * - [isTypeParameter] — pre-computed semantic flag; true when the property type is a type-parameter
- *   placeholder (T, K, V …). Mirrors the `is IrTypeParameter` check previously buried in
- *   [com.rsicarelli.fakt.compiler.core.types.TypeRenderer.handleComplexType].
- * - [requiresCollectionErasure] — pre-computed semantic flag; true when the property type is a
- *   collection whose type arguments must be erased to `Any` under the NoGenerics pattern. Mirrors
- *   the rules previously inside [com.rsicarelli.fakt.compiler.core.types.GenericTypeHandler].
- * - [renderedType] — [RenderedType] side channel (short name + FQN set). Populated during FIR→IR
- *   transform when a [com.rsicarelli.fakt.compiler.core.types.TypeResolution] is available.
- *
- * @property name Property name
  * @property type Resolved IrType (from FIR string representation)
  * @property isMutable true for `var`, false for `val`
- * @property isNullable true if type is nullable (T?)
+ * @property isNullable true if type is nullable (`T?`)
  * @property irProperty Original IR property node (for code generation)
- * @property isTypeParameter true when the property type is a type-parameter (3.1.d.1)
- * @property requiresCollectionErasure true when type args must be erased to Any (3.1.d.1)
- * @property renderedType Pre-rendered type with FQN side-channel, or null if not yet computed
+ * @property isTypeParameter true when the property type is a type-parameter placeholder
+ * @property requiresCollectionErasure true when stdlib-collection type args must be erased to `Any`
+ *   under the NoGenerics pattern
+ * @property renderedType Pre-rendered short name + FQN side-channel, or null when no
+ *   [com.rsicarelli.fakt.compiler.core.types.TypeResolution] was supplied to the transformer
  */
 data class IrPropertyMetadata(
     val name: String,
@@ -185,24 +173,16 @@ data class IrPropertyMetadata(
 )
 
 /**
- * Function metadata with resolved IR types.
+ * Function metadata with resolved IR types, transformed from `FirFunctionInfo`.
  *
- * Transformed from FirFunctionInfo (strings) to IR-ready structure.
- *
- * **3.1.d.1 addition**: [renderedReturnType] — [RenderedType] side channel for the return type
- * (short name + FQN set). Populated during FIR→IR transform when a
- * [com.rsicarelli.fakt.compiler.core.types.TypeResolution] is available.
- *
- * @property name Function name
  * @property parameters Function parameters with resolved IrTypes
- * @property returnType Resolved return IrType (from FIR string representation)
- * @property isSuspend true if function is suspend
- * @property isInline true if function is inline
- * @property typeParameters Method-level type parameters with bounds (e.g.,
- *   ["T", "R : Comparable<R>"])
- * @property typeParameterBounds Method-level type parameter bounds map (e.g., "R" → "TValue")
+ * @property returnType Resolved return IrType
+ * @property typeParameters Method-level type parameters with bounds (e.g., `["T", "R :
+ *   Comparable<R>"]`)
+ * @property typeParameterBounds Method-level type parameter bounds map (e.g., `"R" → "TValue"`)
  * @property irFunction Original IR function node (for code generation)
- * @property renderedReturnType Pre-rendered return type with FQN side-channel, or null (3.1.d.1)
+ * @property renderedReturnType Pre-rendered short name + FQN side-channel, or null when no
+ *   [com.rsicarelli.fakt.compiler.core.types.TypeResolution] was supplied to the transformer
  */
 data class IrFunctionMetadata(
     val name: String,
@@ -219,27 +199,16 @@ data class IrFunctionMetadata(
 )
 
 /**
- * Parameter metadata with resolved IR types.
+ * Parameter metadata with resolved IR types, transformed from `FirParameterInfo`.
  *
- * Transformed from FirParameterInfo (strings) to IR-ready structure.
- *
- * Added defaultValueCode for default parameter support in generated code.
- *
- * **3.1.d.1 additions**:
- * - [isTypeParameter] — pre-computed semantic flag; true when the parameter type is a
- *   type-parameter placeholder.
- * - [requiresCollectionErasure] — pre-computed semantic flag; true when the parameter type is a
- *   collection that would be erased under the NoGenerics pattern.
- * - [renderedType] — [RenderedType] side channel (short name + FQN set).
- *
- * @property name Parameter name
  * @property type Resolved IrType (from FIR string representation)
- * @property hasDefaultValue true if parameter has default value
- * @property defaultValueCode Rendered default value code (e.g., "null", "\"GET\"", "30000L")
- * @property isVararg true if parameter is vararg
- * @property isTypeParameter true when the parameter type is a type-parameter (3.1.d.1)
- * @property requiresCollectionErasure true when type args must be erased to Any (3.1.d.1)
- * @property renderedType Pre-rendered type with FQN side-channel, or null if not yet computed
+ * @property defaultValueCode Rendered default value expression (e.g. `"null"`, `"\"GET\""`,
+ *   `"30000L"`), or null when the parameter has no default
+ * @property isTypeParameter true when the parameter type is a type-parameter placeholder
+ * @property requiresCollectionErasure true when stdlib-collection type args must be erased to `Any`
+ *   under the NoGenerics pattern
+ * @property renderedType Pre-rendered short name + FQN side-channel, or null when no
+ *   [com.rsicarelli.fakt.compiler.core.types.TypeResolution] was supplied to the transformer
  */
 data class IrParameterMetadata(
     val name: String,

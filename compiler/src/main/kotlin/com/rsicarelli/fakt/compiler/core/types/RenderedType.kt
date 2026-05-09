@@ -3,18 +3,15 @@
 package com.rsicarelli.fakt.compiler.core.types
 
 /**
- * Result of rendering an IR type to a Kotlin string, bundled with all fully-qualified names
- * referenced by that string.
+ * Rendered Kotlin type string paired with the FQNs it references.
  *
- * The side-channel [fqns] set is the foundation for the import-resolution rewrite in 3.1.d.5: once
- * every [IrPropertyMetadata] and [IrFunctionMetadata] carries a pre-rolled [RenderedType],
- * [ImportResolver] no longer needs to traverse [org.jetbrains.kotlin.ir.types.IrType] trees — it
- * can simply union the sets and filter by package.
+ * Lets [com.rsicarelli.fakt.compiler.core.context.ImportResolver] union pre-collected FQN sets and
+ * filter by package, instead of walking [org.jetbrains.kotlin.ir.types.IrType] trees from
+ * codegen-runtime (which has no IR access).
  *
  * @property shortName Rendered Kotlin type string ready for code generation (e.g. `"List<User>?"`).
- * @property fqns Set of fully-qualified names for every concrete type referenced in [shortName]
- *   (e.g. `setOf("com.example.User")`). Kotlin builtins (`kotlin.*`, `kotlin.collections.*`) and
- *   primitives are excluded — they never need an explicit import.
+ * @property fqns Fully-qualified names for every concrete type referenced in [shortName]. Kotlin
+ *   builtins and primitives are excluded — they never need an explicit import.
  */
 data class RenderedType(val shortName: String, val fqns: Set<String>) {
     companion object {

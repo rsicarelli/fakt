@@ -10,21 +10,13 @@ import com.rsicarelli.fakt.codegen.renderer.render
 import com.rsicarelli.fakt.codegen.strategy.DefaultValueResolver
 
 /*
- * SpecToCodegenMapper (3.1.d.4).
- *
- * Replaces the IR-coupled `AnalysisToCodegenMapper` from `:compiler`. Inputs are the pure
- * `FakeDeclaration.*` records (types pre-rendered to strings by the IR-side translator), so the
- * `TypeResolution` parameter is gone from every signature here.
- *
- * Outputs the renderer-facing `MethodSpec`/`PropertySpec` from `codegen.extensions` — those types
- * are aliased here as `Renderable*Spec` so the analysis-side specs (with the same simple name) can
- * be referenced unqualified throughout the file.
+ * Maps the pure FakeDeclaration.* contract onto the renderer-facing MethodSpec/PropertySpec from
+ * codegen.extensions. The renderer types share the same simple names as the analysis records, so
+ * they're aliased here as Renderable*Spec to keep this file readable.
  */
 
-/** Shared resolver for computing default behavior expressions. */
 private val defaultValueResolver = DefaultValueResolver()
 
-/** Convert an analysis-side [FunctionSpec] to the renderer DSL [RenderableMethodSpec]. */
 internal fun FunctionSpec.toRenderableMethodSpec(): RenderableMethodSpec {
     val paramTriples =
         parameters.map { param -> Triple(param.name, param.typeString, param.isVararg) }
@@ -53,7 +45,6 @@ internal fun FunctionSpec.toRenderableMethodSpec(): RenderableMethodSpec {
     )
 }
 
-/** Convert an analysis-side [PropertySpec] to the renderer DSL [RenderablePropertySpec]. */
 internal fun PropertySpec.toRenderablePropertySpec(): RenderablePropertySpec {
     val isStateFlow = typeString.contains("StateFlow<")
     val parsedType = parseType(typeString)
@@ -69,7 +60,6 @@ internal fun PropertySpec.toRenderablePropertySpec(): RenderablePropertySpec {
     )
 }
 
-/** Convert a [DeclarationAnnotation] to the renderer DSL [AnnotationSpec]. */
 internal fun DeclarationAnnotation.toAnnotationSpec(): AnnotationSpec =
     AnnotationSpec(
         simpleName = simpleName,
@@ -78,11 +68,7 @@ internal fun DeclarationAnnotation.toAnnotationSpec(): AnnotationSpec =
         isOptInMarker = isOptInMarker,
     )
 
-/**
- * Convert all functions and properties of a [FakeDeclaration.Interface] to renderer DSL specs.
- *
- * @return Pair of (methods, properties) ready for `generateCompleteFake()`.
- */
+/** @return Pair of (methods, properties) ready for `generateCompleteFake()`. */
 internal fun FakeDeclaration.Interface.toCodegenSpecs():
     Pair<List<RenderableMethodSpec>, List<RenderablePropertySpec>> {
     val methodSpecs = functions.map { it.toRenderableMethodSpec() }
@@ -91,8 +77,8 @@ internal fun FakeDeclaration.Interface.toCodegenSpecs():
 }
 
 /**
- * Convert all members of a [FakeDeclaration.Class] to renderer DSL specs, preserving the abstract /
- * open distinction via [RenderableMethodSpec.isAbstract] / [RenderablePropertySpec.isAbstract].
+ * Maps class members onto renderer specs, preserving the abstract / open distinction via
+ * `RenderableMethodSpec.isAbstract` / `RenderablePropertySpec.isAbstract`.
  */
 internal fun FakeDeclaration.Class.toCodegenSpecs():
     Pair<List<RenderableMethodSpec>, List<RenderablePropertySpec>> {

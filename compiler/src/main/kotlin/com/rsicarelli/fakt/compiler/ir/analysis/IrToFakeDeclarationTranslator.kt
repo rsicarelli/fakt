@@ -34,14 +34,14 @@ import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
  */
 
 /**
- * Build a [FakeDeclaration.Interface] from an [IrGenerationMetadata] using [typeResolver] to render
- * any types whose [com.rsicarelli.fakt.compiler.core.types.RenderedType] side channel was not
- * pre-populated.
+ * Builds a [FakeDeclaration.Interface] from [IrGenerationMetadata]. Per-member helpers reuse
+ * pre-populated [com.rsicarelli.fakt.compiler.core.types.RenderedType] side channels when present
+ * and fall back to [typeResolver] otherwise.
  *
- * @param enableCallHistoryDefault Plugin-level default for call-history generation when the `@Fake`
- *   annotation's `callHistory` is `DEFAULT`.
- * @param enableMutableFakesDefault Plugin-level default for mutable-fake generation when the
- *   `@Fake` annotation's `mutability` is `DEFAULT`.
+ * @param enableCallHistoryDefault Plugin-level default applied when the `@Fake` annotation's
+ *   `callHistory` is `DEFAULT`.
+ * @param enableMutableFakesDefault Plugin-level default applied when the `@Fake` annotation's
+ *   `mutability` is `DEFAULT`.
  */
 internal fun IrGenerationMetadata.toFakeInterface(
     typeResolver: TypeResolution,
@@ -64,10 +64,8 @@ internal fun IrGenerationMetadata.toFakeInterface(
     )
 
 /**
- * Build a [FakeDeclaration.Class] from an [IrClassGenerationMetadata].
- *
- * Constructor parameters are extracted from [IrClassGenerationMetadata.sourceClass]'s primary
- * constructor.
+ * Builds a [FakeDeclaration.Class] from [IrClassGenerationMetadata]. Constructor parameters are
+ * extracted from the source class's primary constructor.
  */
 internal fun IrClassGenerationMetadata.toFakeClass(
     typeResolver: TypeResolution,
@@ -177,12 +175,8 @@ private fun GenericPattern.toPureGenericPattern(): PureGenericPattern =
     }
 
 /**
- * Resolves the @Fake annotation's call-history mode against the plugin-level default.
- *
- * Resolution priority:
- * 1. ENABLED → `true` (override plugin default)
- * 2. DISABLED → `false` (override plugin default)
- * 3. DEFAULT → follow [pluginDefault]
+ * Resolves the `@Fake` annotation's call-history mode against the plugin-level default. ENABLED and
+ * DISABLED override [pluginDefault]; DEFAULT follows it.
  */
 internal fun FirCallHistoryMode.resolveCallHistory(pluginDefault: Boolean): Boolean =
     when (this) {
@@ -192,12 +186,8 @@ internal fun FirCallHistoryMode.resolveCallHistory(pluginDefault: Boolean): Bool
     }
 
 /**
- * Resolves the @Fake annotation's mutability mode against the plugin-level default.
- *
- * Resolution priority:
- * 1. MUTABLE → `true`
- * 2. IMMUTABLE → `false`
- * 3. DEFAULT → follow [pluginDefault]
+ * Resolves the `@Fake` annotation's mutability mode against the plugin-level default. MUTABLE and
+ * IMMUTABLE override [pluginDefault]; DEFAULT follows it.
  */
 internal fun FirMutabilityMode.resolveMutability(pluginDefault: Boolean): Boolean =
     when (this) {

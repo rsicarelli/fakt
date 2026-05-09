@@ -15,11 +15,8 @@ import com.rsicarelli.fakt.codegen.renderer.render
 import com.rsicarelli.fakt.codegen.strategy.DefaultValueResolver
 
 /**
- * Holds the generated code pieces from the implementation generator.
- *
- * @property implementationFile CodeFile with package, imports, implementation class, and call
- *   history components
- * @property factoryFunction CodeFile containing the factory function
+ * @property implementationFile package + imports + implementation class + call-history components.
+ * @property factoryFunction the `fakeXxx { ... }` factory function.
  */
 public data class GeneratedFakeCode(val implementationFile: CodeFile, val factoryFunction: CodeFile)
 
@@ -31,12 +28,10 @@ public data class GeneratedFakeCode(val implementationFile: CodeFile, val factor
  */
 public class ImplementationGenerator {
     /**
-     * Generates fake implementation and factory for an interface.
+     * Generates the fake implementation and factory for an interface.
      *
-     * @param decl Interface declaration with pre-rendered specs
-     * @param packageName Package name for the generated code
-     * @param imports Additional imports required by the interface (from ImportResolver)
-     * @return [GeneratedFakeCode] with CodeFiles for implementation and factory
+     * @param imports Additional FQNs to import — typically the resolved set returned by the
+     *   compiler-side ImportResolver.
      */
     public fun generateImplementation(
         decl: FakeDeclaration.Interface,
@@ -97,12 +92,10 @@ public class ImplementationGenerator {
     }
 
     /**
-     * Generates fake implementation and factory for an abstract or open class.
+     * Generates the fake implementation and factory for an abstract or open class.
      *
-     * @param decl Class declaration with pre-rendered specs
-     * @param packageName Package name for the generated code
-     * @param imports Additional imports required by the class (from ImportResolver)
-     * @return [GeneratedFakeCode] with CodeFiles for implementation and factory
+     * @param imports Additional FQNs to import — typically the resolved set returned by the
+     *   compiler-side ImportResolver.
      */
     public fun generateClassFake(
         decl: FakeDeclaration.Class,

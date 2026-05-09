@@ -5,68 +5,33 @@ package com.rsicarelli.fakt.compiler.core.types
 import org.jetbrains.kotlin.ir.types.IrType
 
 /**
- * Facade for type resolution operations.
+ * Facade for IR-type resolution operations: rendering to Kotlin strings, default-value lookup,
+ * primitive detection, and the [RenderedType] FQN side-channel that
+ * [com.rsicarelli.fakt.compiler.core.context.ImportResolver] consumes.
  *
- * Provides a clean interface for:
- * - Converting IR types to Kotlin string representations
- * - Generating appropriate default values for types
- * - Detecting primitive types
- * - Emitting [RenderedType] side-channel data (FQN collection for import resolution, 3.1.d.1)
- * - Computing semantic flags hoisted from the renderer (3.1.d.1)
- *
- * This facade delegates to specialized handlers for different type categories.
+ * Delegates to specialized handlers for each type category.
  */
 internal interface TypeResolution {
-    /**
-     * Converts IR type to readable Kotlin string representation.
-     *
-     * @param irType The IR type to convert
-     * @param preserveTypeParameters Whether to preserve generic type parameters
-     * @return String representation of the type
-     */
+    /** Renders [irType] as a Kotlin source-form string (e.g. `"List<User>?"`). */
     fun irTypeToKotlinString(irType: IrType, preserveTypeParameters: Boolean): String
 
     /**
-     * Renders [irType] and returns a [RenderedType] bundling the short name with all
-     * fully-qualified names referenced by that string.
-     *
-     * Introduced in 3.1.d.1 as the side-channel that will eventually replace IR traversal in
-     * [com.rsicarelli.fakt.compiler.core.context.ImportResolver].
-     *
-     * @param irType The IR type to render
-     * @param preserveTypeParameters Whether to preserve generic type parameter names
-     * @return [RenderedType] with short name and FQN set
+     * Renders [irType] and returns the short name plus the set of FQNs referenced by that string.
      */
     fun irTypeToRendered(irType: IrType, preserveTypeParameters: Boolean): RenderedType
 
-    /**
-     * Generates appropriate default values for IR types.
-     *
-     * @param irType The type to generate a default value for
-     * @return String representation of the default value
-     */
+    /** Returns a Kotlin source expression for the default value of [irType]. */
     fun getDefaultValue(irType: IrType): String
 
-    /**
-     * Check if a type is primitive and doesn't need imports.
-     *
-     * @param irType The type to check
-     * @return true if the type is primitive, false otherwise
-     */
+    /** True when [irType] is a primitive that requires no import. */
     fun isPrimitiveType(irType: IrType): Boolean
 
-    /**
-     * Returns `true` when [irType] is a type-parameter placeholder (T, K, V …).
-     *
-     * Semantic flag hoisted from [TypeRenderer] in 3.1.d.1 via [IrTypeSemantics].
-     */
+    /** True when [irType] is a type-parameter placeholder (T, K, V …). */
     fun isTypeParameter(irType: IrType): Boolean
 
     /**
-     * Returns `true` when [irType] is a collection whose type arguments must be erased to `Any`
-     * under the NoGenerics pattern.
-     *
-     * Semantic flag hoisted from [GenericTypeHandler] in 3.1.d.1 via [IrTypeSemantics].
+     * True when [irType] is a stdlib collection whose type arguments must be erased to `Any` under
+     * the NoGenerics pattern.
      */
     fun requiresCollectionErasure(irType: IrType): Boolean
 }

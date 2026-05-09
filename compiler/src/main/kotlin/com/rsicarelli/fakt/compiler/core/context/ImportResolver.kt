@@ -6,10 +6,9 @@ package com.rsicarelli.fakt.compiler.core.context
  * Filters and remaps a pre-collected set of fully-qualified type names into the import list for a
  * generated fake.
  *
- * Inputs come from [com.rsicarelli.fakt.codegen.analysis.FakeDeclaration.requiredImports], which is
- * rolled up from the `RenderedType` side channel during IR-side translation. This class is
- * stateless: there is no IR walking here — only string-set filtering plus the JVM→Kotlin stdlib
- * remap that keeps generated code platform-agnostic.
+ * Stateless: no IR walking — only string-set filtering (drops same-package and stdlib FQNs) plus a
+ * JVM→Kotlin remap that keeps generated code platform-agnostic. Inputs are sourced from
+ * [com.rsicarelli.fakt.codegen.analysis.FakeDeclaration.requiredImports].
  */
 internal class ImportResolver {
     /**

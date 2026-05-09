@@ -52,15 +52,12 @@ private val IrFunction.extensionReceiverParameterCompat: IrValueParameter?
  *    node)
  * 2. **Resolves Functions**: FirFunctionInfo (string) → IrFunctionMetadata (IrType +
  *    IrSimpleFunction node)
- * 3. **Formats Type Parameters**: ["T", "K : Comparable<K>"]
- * 4. **Computes GenericPattern**: Uses [GenericPatternAnalyzer]
- * 5. **(3.1.d.1) Pre-computes semantic flags and [RenderedType] side-channels** when a
- *    [TypeResolution] is supplied. This populates [IrPropertyMetadata.isTypeParameter],
- *    [IrPropertyMetadata.requiresCollectionErasure], [IrPropertyMetadata.renderedType],
- *    [IrParameterMetadata.isTypeParameter], [IrParameterMetadata.requiresCollectionErasure],
- *    [IrParameterMetadata.renderedType], and [IrFunctionMetadata.renderedReturnType].
+ * 3. **Formats Type Parameters**: `["T", "K : Comparable<K>"]`
+ * 4. **Computes GenericPattern**: via [GenericPatternAnalyzer]
+ * 5. **Pre-computes semantic flags and [RenderedType] side-channels** when a [TypeResolution] is
+ *    supplied — populates `isTypeParameter`, `requiresCollectionErasure`, and the rendered short
+ *    name + FQN set on every property, parameter, and return type.
  *
- * @property patternAnalyzer Reused analyzer for GenericPattern classification
  * @property typeResolution Optional type-resolution facade; when provided the transformer
  *   pre-computes semantic flags and [RenderedType] side-channels on all IR metadata records.
  */
@@ -262,7 +259,7 @@ internal class FirToIrTransformer(private val typeResolution: TypeResolution? = 
                         "This should not happen for valid properties."
                 )
 
-        // 3.1.d.1: pre-compute semantic flags and RenderedType side-channel when resolver available
+        // Pre-compute semantic flags and RenderedType side-channel when resolver is available
         val rendered = typeResolution?.irTypeToRendered(resolvedType, preserveTypeParameters = true)
         val isTypeParm = typeResolution?.isTypeParameter(resolvedType) ?: false
         val needsErasure = typeResolution?.requiresCollectionErasure(resolvedType) ?: false
@@ -343,7 +340,7 @@ internal class FirToIrTransformer(private val typeResolution: TypeResolution? = 
 
         val parameters =
             firFunction.parameters.zip(irRegularParams).map { (firParam, irParam) ->
-                // 3.1.d.1: pre-compute semantic flags and RenderedType side-channel per param
+                // Pre-compute semantic flags and RenderedType side-channel per param
                 val paramRendered =
                     typeResolution?.irTypeToRendered(irParam.type, preserveTypeParameters = true)
                 val paramIsTypeParm = typeResolution?.isTypeParameter(irParam.type) ?: false
@@ -365,7 +362,7 @@ internal class FirToIrTransformer(private val typeResolution: TypeResolution? = 
         // Format method-level type parameters
         val methodTypeParameters = firFunction.typeParameters.map { formatTypeParameter(it) }
 
-        // 3.1.d.1: pre-compute RenderedType for return type
+        // Pre-compute RenderedType for the return type
         val returnTypeRendered =
             typeResolution?.irTypeToRendered(irFunction.returnType, preserveTypeParameters = true)
 

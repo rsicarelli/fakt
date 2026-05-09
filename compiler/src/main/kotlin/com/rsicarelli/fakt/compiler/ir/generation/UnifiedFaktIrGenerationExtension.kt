@@ -200,7 +200,7 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
         val irClassMap = buildIrClassMap(moduleFragment)
 
         // Transform FIR metadata → IrGenerationMetadata (NO re-analysis!)
-        // 3.1.d.1: pass typeResolver so the transformer pre-computes semantic flags + RenderedType
+        // Passing typeResolver lets the transformer pre-compute semantic flags + RenderedType
         val transformer = FirToIrTransformer(typeResolution = typeResolver)
 
         val (interfaceMetadata, interfaceTransformTime) =
@@ -604,7 +604,7 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
                 outputFile.delete()
             }
 
-            // Translate to FakeDeclaration.Interface (3.1.d.4: pure-data contract).
+            // Translate to the pure FakeDeclaration.Interface contract before generation.
             val fakeInterface =
                 metadata.toFakeInterface(
                     typeResolver = typeResolver,
@@ -612,7 +612,6 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
                     enableMutableFakesDefault = sharedContext.options.enableMutableFakesDefault,
                 )
 
-            // Validate pattern (3.1.d.2: operates on IrGenerationMetadata directly)
             validateAndLogGenericPattern(metadata = metadata, logger = logger)
 
             // Generate fake implementation with timing
@@ -746,8 +745,8 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
                 outputFile.delete()
             }
 
-            // Translate to FakeDeclaration.Class (preserves abstract/open distinction;
-            // constructorParams are extracted from sourceClass internally).
+            // Translate to the pure FakeDeclaration.Class contract; the translator extracts
+            // constructor params from sourceClass internally.
             val fakeClass =
                 metadata.toFakeClass(
                     typeResolver = typeResolver,

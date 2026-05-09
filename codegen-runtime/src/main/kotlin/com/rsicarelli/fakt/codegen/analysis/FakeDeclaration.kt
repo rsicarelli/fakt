@@ -36,12 +36,9 @@ sealed interface FakeDeclaration {
     val annotations: List<DeclarationAnnotation>
 
     /**
-     * Set of fully-qualified names that must be imported in the generated file.
-     *
-     * Rolled-up from all [PropertySpec.renderedType] and [FunctionSpec.renderedReturnType] FQN sets
-     * by the IR-side translator.
-     * [ImportResolver][com.rsicarelli.fakt.compiler.core.context.ImportResolver] will consume this
-     * set directly in 3.1.d.5.
+     * Fully-qualified names that must be imported in the generated file. Rolled up by the IR-side
+     * translator from each member type's FQN side-channel; consumed by
+     * [ImportResolver][com.rsicarelli.fakt.compiler.core.context.ImportResolver].
      */
     val requiredImports: Set<String>
 
@@ -120,11 +117,9 @@ sealed interface FakeDeclaration {
  * @property typeString Pre-rendered type string (e.g. `"List<User>?"`).
  * @property isMutable `true` for `var`, `false` for `val`.
  * @property isNullable `true` if the type is nullable (`T?`).
- * @property isTypeParameter `true` when the property type is a type-parameter placeholder. Semantic
- *   flag hoisted from the IR renderer in 3.1.d.1.
- * @property requiresCollectionErasure `true` when the type is a stdlib collection whose type
- *   arguments must be erased to `Any` under the NoGenerics pattern. Semantic flag hoisted from
- *   [GenericTypeHandler] in 3.1.d.1.
+ * @property isTypeParameter `true` when [typeString] is a type-parameter placeholder (T, K, V …).
+ * @property requiresCollectionErasure `true` when [typeString] is a stdlib collection whose type
+ *   arguments must be erased to `Any` under the NoGenerics pattern.
  */
 data class PropertySpec(
     val name: String,
@@ -138,15 +133,12 @@ data class PropertySpec(
 /**
  * Pre-rendered specification of a function to be faked.
  *
- * @property name Function name.
- * @property parameters Function parameters.
  * @property returnTypeString Pre-rendered return type (e.g. `"suspend () -> Unit"`).
- * @property extensionReceiverTypeString Pre-rendered extension receiver type, or `null`.
- * @property isSuspend `true` if the function is `suspend`.
- * @property isInline `true` if the function is `inline`.
- * @property isOperator `true` if the function has the `operator` modifier.
- * @property typeParameters Method-level type parameters (e.g. `["T", "R : Comparable<R>"]`).
- * @property typeParameterBounds Method-level type-parameter bounds map.
+ * @property extensionReceiverTypeString Pre-rendered extension receiver type, or `null` for
+ *   non-extension functions.
+ * @property typeParameters Method-level type parameters with bounds (e.g. `["T", "R :
+ *   Comparable<R>"]`).
+ * @property typeParameterBounds Method-level type-parameter bounds map (e.g. `"R" → "TValue"`).
  */
 data class FunctionSpec(
     val name: String,
@@ -163,13 +155,11 @@ data class FunctionSpec(
 /**
  * Pre-rendered specification of a function parameter.
  *
- * @property name Parameter name.
- * @property typeString Pre-rendered type string.
- * @property hasDefaultValue `true` if the parameter has a default value.
- * @property defaultValueCode Rendered default value expression, or `null`.
- * @property isVararg `true` if the parameter is `vararg`.
- * @property isTypeParameter Semantic flag from the IR renderer (3.1.d.1).
- * @property requiresCollectionErasure Semantic flag from [GenericTypeHandler] (3.1.d.1).
+ * @property defaultValueCode Rendered default-value expression, or `null` if the parameter has no
+ *   default.
+ * @property isTypeParameter `true` when [typeString] is a type-parameter placeholder.
+ * @property requiresCollectionErasure `true` when [typeString] is a stdlib collection whose type
+ *   arguments must be erased to `Any` under the NoGenerics pattern.
  */
 data class ParameterSpec(
     val name: String,
@@ -182,14 +172,13 @@ data class ParameterSpec(
 )
 
 /**
- * Pre-rendered specification of an annotation that should be propagated to the generated fake.
- *
- * Pure equivalent of `IrAnnotationMetadata` / `AnnotationAnalysis`.
+ * Pre-rendered specification of an annotation propagated to the generated fake.
  *
  * @property simpleName Simple annotation name (e.g. `"OptIn"`).
  * @property fullyQualifiedName Fully-qualified name for import resolution (e.g. `"kotlin.OptIn"`).
  * @property renderedArguments Pre-rendered argument strings (e.g. `["ExperimentalApi::class"]`).
- * @property isOptInMarker `true` if this annotation is itself marked `@RequiresOptIn`.
+ * @property isOptInMarker `true` when this annotation is itself marked `@RequiresOptIn` — the
+ *   generated fake then needs `@OptIn(ThisAnnotation::class)` to compile.
  */
 data class DeclarationAnnotation(
     val simpleName: String,

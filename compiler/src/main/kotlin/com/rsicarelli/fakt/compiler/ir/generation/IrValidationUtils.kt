@@ -24,8 +24,6 @@ internal fun validateAndLogGenericPattern(metadata: IrGenerationMetadata, logger
 /**
  * Validates the analyzed generic pattern for a class and logs warnings.
  *
- * Operates directly on [IrClassGenerationMetadata] (3.1.d.2 parity with interface variant).
- *
  * @param metadata The IR class generation metadata containing genericPattern and sourceClass
  * @param logger The FaktLogger instance for warning output
  */

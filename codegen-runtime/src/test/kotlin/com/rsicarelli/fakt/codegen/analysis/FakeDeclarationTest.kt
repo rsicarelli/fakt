@@ -10,11 +10,8 @@ import kotlin.test.assertTrue
 import org.junit.jupiter.api.TestInstance
 
 /**
- * Structural smoke tests for the pure analysis contract introduced in 3.1.d.3.
- *
- * Generators will exercise these types end-to-end once they relocate to `:codegen-runtime` in
- * 3.1.d.4. These tests just verify the records expose the right fields, default flags behave as
- * documented, and the sealed hierarchy is exhaustive enough for a `when` consumer.
+ * Structural smoke tests for the pure analysis contract: records expose the right fields, default
+ * flags behave as documented, and the sealed hierarchy is exhaustive enough for `when` consumers.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FakeDeclarationTest {

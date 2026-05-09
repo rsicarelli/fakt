@@ -16,21 +16,14 @@ import org.jetbrains.kotlin.ir.util.kotlinFqName
 /**
  * Computes IR-type semantic flags and the [RenderedType] FQN side-channel.
  *
- * Introduced in 3.1.d.1 to hoist two semantic decisions out of the renderers and into a dedicated,
- * testable unit:
- * 1. **`isTypeParameter`** — whether a type is a type-parameter placeholder (T, K, V …). Previously
- *    checked inline inside [TypeRenderer.handleComplexType].
- * 2. **`requiresCollectionErasure`** — whether a type is a stdlib collection whose type arguments
- *    must be erased to `Any` under the NoGenerics pattern. Previously evaluated inside
- *    [GenericTypeHandler.renderGenericType].
+ * Centralises two decisions that codegen-runtime cannot make for itself (it has no IR access):
+ * - [isTypeParameter] — whether a type is a type-parameter placeholder (T, K, V …)
+ * - [requiresCollectionErasure] — whether a stdlib collection's type arguments must be erased to
+ *   `Any` under the NoGenerics pattern
  *
- * Both flags are pre-computed during FIR→IR transformation and stored on [IrPropertyMetadata],
- * [IrParameterMetadata], and [IrFunctionMetadata] so that codegen-runtime never needs to traverse
- * [IrType] trees.
- *
- * The [buildRenderedType] method bundles a pre-rendered short name with the set of FQNs referenced
- * by that type — the data that [com.rsicarelli.fakt.compiler.core.context.ImportResolver] will
- * consume in 3.1.d.5.
+ * Flags are pre-computed during FIR→IR transformation and stored as plain booleans on the IR
+ * metadata records. [buildRenderedType] bundles a rendered short name with its FQN set — the input
+ * that [com.rsicarelli.fakt.compiler.core.context.ImportResolver] filters into the import list.
  *
  * @param typeRenderer Renderer used to produce the short-name half of [RenderedType].
  */
@@ -43,11 +36,7 @@ internal class IrTypeSemantics(private val typeRenderer: TypeRenderer) {
     // Public API
     // -------------------------------------------------------------------------
 
-    /**
-     * Returns `true` when [irType] is a type-parameter placeholder (T, K, V …).
-     *
-     * Mirrors the `is IrTypeParameter` check previously inside [TypeRenderer.handleComplexType].
-     */
+    /** Returns `true` when [irType] is a type-parameter placeholder (T, K, V …). */
     @OptIn(UnsafeDuringIrConstructionAPI::class)
     fun isTypeParameter(irType: IrType): Boolean =
         irType is IrSimpleType && irType.classifier.owner is IrTypeParameter
@@ -55,8 +44,6 @@ internal class IrTypeSemantics(private val typeRenderer: TypeRenderer) {
     /**
      * Returns `true` when [irType] is a stdlib collection whose type arguments must be erased to
      * `Any` under the NoGenerics pattern.
-     *
-     * Mirrors the erasure rules in [GenericTypeHandler.renderGenericType].
      */
     @OptIn(UnsafeDuringIrConstructionAPI::class)
     fun requiresCollectionErasure(irType: IrType): Boolean =
