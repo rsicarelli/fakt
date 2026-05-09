@@ -3,3 +3,12 @@ contact_links:
   - name: 📖 Read the Docs
     url: https://rsicarelli.github.io/fakt/
     about: Check out our documentation for guides and examples
+  - name: 🙏 Question / "how do I…"
+    url: https://github.com/rsicarelli/fakt/discussions/new?category=q-a
+    about: Stuck using Fakt? Ask in Discussions → Q&A. Include Kotlin/KMP/Fakt versions and a minimal reproducer.
+  - name: 💡 Idea or feature request
+    url: https://github.com/rsicarelli/fakt/discussions/new?category=ideas
+    about: Have an idea for an API change, new annotation, or pipeline improvement? Start a discussion in Ideas.
+  - name: 🙌 Show & tell
+    url: https://github.com/rsicarelli/fakt/discussions/new?category=show-and-tell
+    about: Share a project, blog post, or talk that uses Fakt.

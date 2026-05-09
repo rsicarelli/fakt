@@ -296,18 +296,29 @@ BREAKING CHANGE: The @Fake annotation now requires explicit target specification
 
 ## Community
 
+### Where to post what
+
+Fakt uses **Issues** for reproducible bugs and regressions only. Everything
+else lives in **[Discussions](https://github.com/rsicarelli/fakt/discussions)**:
+
+- **🙏 Q&A** — usage questions, "how do I…", build failures without a clear bug
+- **💡 Ideas** — API changes, new annotations, pipeline improvements (design lives in public before code)
+- **🙌 Show & tell** — projects, blog posts, or talks built with Fakt
+
+If you open an Issue that's actually a question or a feature request,
+expect it to be converted to a Discussion — it's not a rejection, it's filing.
+
 ### Getting Help
 
-- **Issues:** [Report bugs or suggest features](https://github.com/rsicarelli/fakt/issues/new)
+- **Bug reports:** [Issues → Bug Report](https://github.com/rsicarelli/fakt/issues/new?template=bug_report.yml)
+- **Questions, ideas, show & tell:** [Discussions](https://github.com/rsicarelli/fakt/discussions)
 - **Documentation:** [Read our guides](https://rsicarelli.github.io/fakt/)
-- **Slack:** [Join our channel](#) (coming soon)
 
 ### Reporting Bugs
 
 **Use the bug report template:**
-1. Go to [Issues](https://github.com/rsicarelli/fakt/issues/new)
-2. Select "Bug Report"
-3. Fill out the required information:
+1. Go to [Issues → Bug Report](https://github.com/rsicarelli/fakt/issues/new?template=bug_report.yml)
+2. Fill out the required information:
    - Fakt version
    - Kotlin version
    - Project type (single/multi-module, KMP)
@@ -316,18 +327,19 @@ BREAKING CHANGE: The @Fake annotation now requires explicit target specification
    - Build logs & minimal reproduction (with DEBUG logging enabled)
    - Platform info (if KMP)
 
-### Suggesting Features
+### Suggesting Ideas
 
-**We love feature requests!** Your ideas directly influence our roadmap.
+**We love feature ideas!** Your input directly influences the roadmap.
 
-**Use the feature request template:**
-1. Go to [Issues](https://github.com/rsicarelli/fakt/issues/new)
-2. Select "💡 Feature Request"
-3. Describe:
+**Open an idea discussion:**
+1. Go to [Discussions → 💡 Ideas](https://github.com/rsicarelli/fakt/discussions/new?category=ideas)
+2. Describe:
    - What problem this solves
    - Proposed solution (with code examples)
    - Alternatives considered (optional)
    - Your project setup (optional)
+
+Browse [open ideas](https://github.com/rsicarelli/fakt/discussions/categories/ideas) and react to ones you'd use — reactions are how I prioritize.
 
 ---
 
