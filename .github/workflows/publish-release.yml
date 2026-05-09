@@ -31,8 +31,8 @@ env:
   ORG_GRADLE_PROJECT_RELEASE_MODE: true
 
 jobs:
-  validation:
-    name: Run Validations
+  guard-release:
+    name: Guard Release
     runs-on: ubuntu-latest
     steps:
       - name: Fail if branch is not main
@@ -41,6 +41,11 @@ jobs:
           echo "This workflow should only be triggered from main/master branch"
           exit 1
 
+  validate-detekt:
+    name: Validate Detekt
+    needs: [guard-release]
+    runs-on: ubuntu-latest
+    steps:
       - name: Checkout
         uses: actions/checkout@v6
 
@@ -50,25 +55,179 @@ jobs:
       - name: Run Detekt
         uses: ./.github/actions/validate-detekt
 
+  validate-spotless:
+    name: Validate Spotless
+    needs: [guard-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
       - name: Run Spotless
         uses: ./.github/actions/validate-spotless
+
+  validate-licenses:
+    name: Validate Licenses
+    needs: [guard-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
 
       - name: Run License Check
         uses: ./.github/actions/validate-licenses
 
+  validate-api:
+    name: Validate API
+    needs: [guard-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
       - name: Run API Check
         uses: ./.github/actions/validate-api
 
-      - name: Run Tests
+  run-tests:
+    name: Run Tests
+    needs: [guard-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Execute Tests
         uses: ./.github/actions/run-tests
 
-      - name: Test Samples
-        uses: ./.github/actions/test-samples
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-compiler
+          path: |
+            **/build/test-results/**/TEST-*.xml
+            !samples/**/build/test-results/**
+          retention-days: 1
+
+  test-samples:
+    name: Sample / ${{ matrix.sample }}
+    needs: [guard-release]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - sample: jvm-single-module
+            path: samples/jvm-single-module
+            tasks: build
+          - sample: android-single-module
+            path: samples/android-single-module
+            tasks: build
+          - sample: jvm-test-fixtures
+            path: samples/jvm-test-fixtures
+            tasks: build
+          - sample: kmp-single-module
+            path: samples/kmp-single-module
+            tasks: allTests --continue
+            check: true
+          - sample: kmp-multi-target
+            path: samples/kmp-multi-target
+            tasks: allTests --continue
+            check: true
+          - sample: kmp-multi-module
+            path: samples/kmp-multi-module
+            tasks: allTests --continue
+            check: true
+          - sample: fake-publishing
+            path: samples/fake-publishing/kmp-consumer
+            tasks: allTests --continue
+            check: true
+            pre-publish: samples/fake-publishing/kmp-publisher
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Regenerate JS/WASM lock files
+        run: ./gradlew kotlinUpgradePackageLock kotlinWasmUpgradePackageLock
+
+      - name: Publish Fakt plugin to Maven Local
+        env:
+          ORG_GRADLE_PROJECT_SKIP_SIGNING: true
+        run: ./gradlew publishToMavenLocal
+
+      - name: Pre-publish dependency
+        if: ${{ matrix.pre-publish }}
+        env:
+          ORG_GRADLE_PROJECT_SKIP_SIGNING: true
+        run: ./gradlew -p ${{ matrix.pre-publish }} publishToMavenLocal
+
+      - name: Test ${{ matrix.sample }}
+        run: ./gradlew -p ${{ matrix.path }} ${{ matrix.tasks }}
+
+      - name: Check ${{ matrix.sample }}
+        if: ${{ matrix.check }}
+        run: ./gradlew -p ${{ matrix.path }} check
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-sample-${{ matrix.sample }}
+          path: ${{ matrix.path }}/**/build/test-results/**/TEST-*.xml
+          retention-days: 1
+
+  validation-summary:
+    name: Validation Summary
+    if: always()
+    runs-on: ubuntu-latest
+    needs:
+      - guard-release
+      - validate-detekt
+      - validate-spotless
+      - validate-licenses
+      - validate-api
+      - run-tests
+      - test-samples
+    steps:
+      - name: Check validation status
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            echo "❌ Some validation jobs failed"
+            exit 1
+          fi
+
+          if [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "⚠️  Some validation jobs were cancelled"
+            exit 1
+          fi
+
+          if [[ "${{ contains(needs.*.result, 'skipped') }}" == "true" ]]; then
+            echo "⚠️  Some validation jobs were skipped (upstream guard likely failed)"
+            exit 1
+          fi
+
+          echo "✅ All validation jobs passed successfully"
+          exit 0
 
   publish:
     name: Publish to Maven Central
     runs-on: ubuntu-latest
-    needs: validation
+    needs: validation-summary
     outputs:
       version_published: ${{ steps.published.outputs.version }}
       version_new: ${{ steps.bump.outputs.version_new }}
