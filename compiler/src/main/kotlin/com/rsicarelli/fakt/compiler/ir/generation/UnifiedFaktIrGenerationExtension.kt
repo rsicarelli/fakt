@@ -610,20 +610,14 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
                     enableMutableFakesDefault = sharedContext.options.enableMutableFakesDefault,
                 )
 
-            // Validate pattern (reuses existing validation logic)
-            validateAndLogGenericPattern(
-                interfaceAnalysis = interfaceAnalysis,
-                fakeInterface = metadata.sourceInterface,
-                interfaceName = interfaceName,
-                logger = logger,
-            )
+            // Validate pattern (3.1.d.2: operates on IrGenerationMetadata directly)
+            validateAndLogGenericPattern(metadata = metadata, logger = logger)
 
             // Generate fake implementation with timing
             // Pass sourceSourceSet to output to correct test source set
             val (generatedCode, generationTimeNanos) =
                 measureTimeNanos {
                     codeGenerator.generateWorkingFakeImplementation(
-                        sourceInterface = metadata.sourceInterface,
                         analysis = interfaceAnalysis,
                         sourceSourceSet = metadata.sourceSourceSet,
                     )
@@ -764,7 +758,6 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
             val (generatedCode, generationTimeNanos) =
                 measureTimeNanos {
                     codeGenerator.generateWorkingClassFake(
-                        sourceClass = metadata.sourceClass,
                         analysis = classAnalysis,
                         sourceSourceSet = metadata.sourceSourceSet,
                     )

@@ -4,32 +4,41 @@ package com.rsicarelli.fakt.compiler.ir.generation
 
 import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.ir.analysis.GenericPatternAnalyzer
-import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
-import org.jetbrains.kotlin.ir.declarations.IrClass
+import com.rsicarelli.fakt.compiler.ir.transform.IrClassGenerationMetadata
+import com.rsicarelli.fakt.compiler.ir.transform.IrGenerationMetadata
 
 /**
- * Validates the analyzed generic pattern and logs warnings.
+ * Validates the analyzed generic pattern for an interface and logs warnings.
  *
- * Checks for pattern consistency and reports any warnings to help developers understand potential
- * issues with their interface design.
+ * Operates directly on [IrGenerationMetadata] (3.1.d.2: lifted from InterfaceAnalysis level so
+ * callers no longer need to pass the `sourceInterface: IrClass` explicitly).
  *
- * @param interfaceAnalysis The analyzed interface structure
- * @param fakeInterface The IR class being processed
- * @param interfaceName Name of the interface for logging context
+ * @param metadata The IR generation metadata containing genericPattern and sourceInterface
  * @param logger The FaktLogger instance for warning output
  */
-internal fun validateAndLogGenericPattern(
-    interfaceAnalysis: InterfaceAnalysis,
-    fakeInterface: IrClass,
-    interfaceName: String,
+internal fun validateAndLogGenericPattern(metadata: IrGenerationMetadata, logger: FaktLogger) {
+    val warnings =
+        GenericPatternAnalyzer.validatePattern(metadata.genericPattern, metadata.sourceInterface)
+    if (warnings.isNotEmpty()) {
+        warnings.forEach { warning -> logger.warn("$warning in ${metadata.interfaceName}") }
+    }
+}
+
+/**
+ * Validates the analyzed generic pattern for a class and logs warnings.
+ *
+ * Operates directly on [IrClassGenerationMetadata] (3.1.d.2 parity with interface variant).
+ *
+ * @param metadata The IR class generation metadata containing genericPattern and sourceClass
+ * @param logger The FaktLogger instance for warning output
+ */
+internal fun validateAndLogClassGenericPattern(
+    metadata: IrClassGenerationMetadata,
     logger: FaktLogger,
 ) {
-    // Validate pattern for consistency using companion object methods
     val warnings =
-        GenericPatternAnalyzer.validatePattern(interfaceAnalysis.genericPattern, fakeInterface)
-
-    // Log warnings if any
+        GenericPatternAnalyzer.validatePattern(metadata.genericPattern, metadata.sourceClass)
     if (warnings.isNotEmpty()) {
-        warnings.forEach { warning -> logger.warn("$warning in $interfaceName") }
+        warnings.forEach { warning -> logger.warn("$warning in ${metadata.className}") }
     }
 }

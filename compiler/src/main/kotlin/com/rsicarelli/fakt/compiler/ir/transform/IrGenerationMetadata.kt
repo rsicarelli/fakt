@@ -364,10 +364,10 @@ fun IrGenerationMetadata.toInterfaceAnalysis(
     InterfaceAnalysis(
         interfaceName = interfaceName,
         qualifiedSourceName = qualifiedSourceName,
+        packageName = packageName,
         typeParameters = typeParameters,
         properties = properties.map { it.toPropertyAnalysis() },
         functions = functions.map { it.toFunctionAnalysis() },
-        sourceInterface = sourceInterface,
         genericPattern = genericPattern,
         debugInfo = StringBuilder("Generated from FIR metadata (FIR metadata)"),
         visibility = visibility,
@@ -444,12 +444,12 @@ internal fun IrClassGenerationMetadata.toClassAnalysis(
     ClassAnalysis(
         className = className,
         qualifiedSourceName = qualifiedSourceName,
+        packageName = packageName,
         typeParameters = typeParameters,
         abstractMethods = abstractMethods.map { it.toFunctionAnalysis() },
         openMethods = openMethods.map { it.toFunctionAnalysis() },
         abstractProperties = abstractProperties.map { it.toPropertyAnalysis() },
         openProperties = openProperties.map { it.toPropertyAnalysis() },
-        sourceClass = sourceClass,
         constructorParameters = extractConstructorParameters(sourceClass, typeResolver),
         visibility = visibility,
         annotations = annotations.map { it.toAnnotationAnalysis() },
@@ -483,13 +483,7 @@ private fun extractConstructorParameters(
 
 /** Convert IrPropertyMetadata to PropertyAnalysis. */
 private fun IrPropertyMetadata.toPropertyAnalysis(): PropertyAnalysis =
-    PropertyAnalysis(
-        name = name,
-        type = type,
-        isMutable = isMutable,
-        isNullable = isNullable,
-        irProperty = irProperty,
-    )
+    PropertyAnalysis(name = name, type = type, isMutable = isMutable, isNullable = isNullable)
 
 /** Convert IrFunctionMetadata to FunctionAnalysis. */
 private fun IrFunctionMetadata.toFunctionAnalysis(): FunctionAnalysis =
@@ -503,7 +497,6 @@ private fun IrFunctionMetadata.toFunctionAnalysis(): FunctionAnalysis =
         typeParameterBounds = typeParameterBounds,
         isOperator = isOperator,
         extensionReceiverType = extensionReceiverType,
-        irFunction = irFunction,
     )
 
 /**

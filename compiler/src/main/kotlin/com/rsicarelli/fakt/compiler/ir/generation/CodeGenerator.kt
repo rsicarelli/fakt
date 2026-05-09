@@ -14,8 +14,6 @@ import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.core.telemetry.calculateLOC
 import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
-import org.jetbrains.kotlin.ir.declarations.IrClass
-import org.jetbrains.kotlin.ir.util.packageFqName
 
 /**
  * Groups the code generators used by CodeGenerator.
@@ -135,19 +133,17 @@ internal class CodeGenerator(
     /**
      * Generates complete fake implementation including class, factory, and configuration DSL.
      *
-     * @param sourceInterface The interface to generate a fake for
-     * @param analysis The analyzed interface metadata
+     * @param analysis The analyzed interface metadata (includes pre-stored packageName)
      * @param sourceSourceSet Source set name where interface was defined (e.g., "commonMain",
      *   "iosMain")
      */
     fun generateWorkingFakeImplementation(
-        sourceInterface: IrClass,
         analysis: InterfaceAnalysis,
         sourceSourceSet: String? = null,
     ): GeneratedCode {
         val interfaceName = analysis.interfaceName
         val fakeClassName = "Fake${interfaceName}Impl"
-        val packageName = sourceInterface.packageFqName?.asString() ?: ""
+        val packageName = analysis.packageName
 
         try {
             // Collect required imports for implementation
@@ -198,19 +194,17 @@ internal class CodeGenerator(
      * Generates complete fake implementation for a class including implementation, factory, and
      * configuration DSL.
      *
-     * @param sourceClass The class to generate a fake for
-     * @param analysis The analyzed class metadata
+     * @param analysis The analyzed class metadata (includes pre-stored packageName)
      * @param sourceSourceSet Source set name where class was defined (e.g., "commonMain",
      *   "iosMain")
      */
     fun generateWorkingClassFake(
-        sourceClass: IrClass,
         analysis: ClassAnalysis,
         sourceSourceSet: String? = null,
     ): GeneratedCode {
         val className = analysis.className
         val fakeClassName = "Fake${className}Impl"
-        val packageName = sourceClass.packageFqName?.asString() ?: ""
+        val packageName = analysis.packageName
 
         try {
             // Collect required imports for implementation
