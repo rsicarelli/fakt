@@ -3,7 +3,6 @@
 package com.rsicarelli.fakt.compiler.ir.generation
 
 import com.rsicarelli.fakt.codegen.generator.ConfigurationDslGenerator
-import com.rsicarelli.fakt.codegen.generator.ImplementationGenerator
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.api.SourceSetInfo
 import com.rsicarelli.fakt.compiler.core.context.ImportResolver
@@ -119,17 +118,10 @@ class CodeGenerationModulesContractTest {
                 commonTestOutputDirectory = "/tmp/test/generated/fakt/commonTest/kotlin",
             )
 
-        val generators =
-            CodeGenerators(
-                implementation = ImplementationGenerator(),
-                configDsl = ConfigurationDslGenerator(),
-            )
-
         val codeGenerator =
             CodeGenerator(
                 importResolver = importResolver,
                 sourceSetContext = sourceSetContext,
-                generators = generators,
                 logger = FaktLogger.quiet(),
             )
 

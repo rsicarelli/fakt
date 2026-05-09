@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.generation
 
-import com.rsicarelli.fakt.codegen.generator.ConfigurationDslGenerator
-import com.rsicarelli.fakt.codegen.generator.ImplementationGenerator
 import com.rsicarelli.fakt.compiler.api.LogLevel
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.api.TimeFormatter
@@ -106,21 +104,13 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
                 "SourceSetContext is required. Ensure Gradle plugin version matches compiler plugin."
             )
 
-    // Extracted modules following DRY principles
     private val typeResolver = createTypeResolution()
     private val importResolver = ImportResolver()
-
-    private val generators =
-        CodeGenerators(
-            implementation = ImplementationGenerator(),
-            configDsl = ConfigurationDslGenerator(),
-        )
 
     private val codeGenerator =
         CodeGenerator(
             importResolver = importResolver,
             sourceSetContext = sourceSetContext,
-            generators = generators,
             logger = logger,
         )
 

@@ -2,88 +2,35 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.generation
 
+import com.rsicarelli.fakt.codegen.FaktCodegen
+import com.rsicarelli.fakt.codegen.RenderedFakeFile
 import com.rsicarelli.fakt.codegen.analysis.FakeDeclaration
-import com.rsicarelli.fakt.codegen.generator.ConfigurationDslGenerator
-import com.rsicarelli.fakt.codegen.generator.ImplementationGenerator
-import com.rsicarelli.fakt.codegen.model.CodeFile
-import com.rsicarelli.fakt.codegen.renderer.CodeBuilder
-import com.rsicarelli.fakt.codegen.renderer.renderDeclarationsOnly
-import com.rsicarelli.fakt.codegen.renderer.renderHeaderOnly
-import com.rsicarelli.fakt.codegen.renderer.renderTo
-import com.rsicarelli.fakt.codegen.renderer.renderToString
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.core.context.ImportResolver
 import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.core.telemetry.calculateLOC
 
 /**
- * Groups the code generators used by CodeGenerator.
+ * Result of generating a fake: the rendered file plus a pre-computed LOC count for telemetry.
  *
- * @property implementation Generator for fake implementation classes
- * @property configDsl Generator for configuration DSL
+ * @property file The rendered file ready for disk write.
+ * @property linesOfCode Non-blank, non-comment lines in [RenderedFakeFile.content].
  */
-internal data class CodeGenerators(
-    val implementation: ImplementationGenerator,
-    val configDsl: ConfigurationDslGenerator,
-)
-
-/**
- * Contains all generated code pieces for a fake implementation.
- *
- * Uses CodeFile for type-safe, composable code generation throughout the pipeline.
- *
- * @property implementation The generated implementation class (includes call history components)
- * @property factory The generated factory function
- * @property configDsl The generated configuration DSL class
- */
-internal data class GeneratedCode(
-    val implementation: CodeFile,
-    val factory: CodeFile,
-    val configDsl: CodeFile,
-) {
-    /**
-     * Calculates total lines of code across all generated components.
-     *
-     * @return Total non-blank, non-comment lines of code
-     */
-    fun calculateTotalLOC(): Int {
-        val combinedCode = buildString {
-            append(implementation.renderToString())
-            appendLine()
-            append(factory.renderToString())
-            appendLine()
-            append(configDsl.renderToString())
-        }
-        return calculateLOC(combinedCode)
-    }
+internal data class GeneratedCode(val file: RenderedFakeFile, val linesOfCode: Int) {
+    fun calculateTotalLOC(): Int = linesOfCode
 }
 
 /**
- * Contains metadata for writing generated code to a file.
+ * Compiler-side orchestrator: resolves imports, picks the KMP-aware output directory, delegates
+ * rendering to [FaktCodegen], and writes the result to disk.
  *
- * @property packageName The package name for the generated code
- * @property fakeClassName The name of the fake implementation class
- * @property interfaceName The original interface name
- */
-internal data class WriteContext(
-    val packageName: String,
-    val fakeClassName: String,
-    val interfaceName: String,
-)
-
-/**
- * Handles code generation for fake implementations. Orchestrates the generation of implementation
- * classes, factory functions, and configuration DSLs.
- *
- * @property importResolver Resolves import statements for generated code
- * @property sourceSetContext Context with compilation metadata from Gradle plugin
- * @property generators Code generation modules (implementation, factory, DSL)
- * @property logger Logger for compilation feedback
+ * @property importResolver Filters and remaps the FQN set into the generated file's import list.
+ * @property sourceSetContext Compilation metadata supplied by the Gradle plugin.
+ * @property logger Logger for compilation feedback.
  */
 internal class CodeGenerator(
     private val importResolver: ImportResolver,
     private val sourceSetContext: SourceSetContext,
-    private val generators: CodeGenerators,
     private val logger: FaktLogger,
 ) {
     private companion object {
@@ -123,154 +70,43 @@ internal class CodeGenerator(
     }
 
     /**
-     * Generates complete fake implementation including class, factory, and configuration DSL.
+     * Renders the fake for an interface and writes it to the source-set-appropriate test directory.
      *
-     * @param decl Pure interface declaration (types pre-rendered, no IR coupling)
-     * @param sourceSourceSet Source set name where interface was defined (e.g., "commonMain",
-     *   "iosMain")
+     * @param sourceSourceSet Source set where the interface was defined (e.g. `"commonMain"`,
+     *   `"iosMain"`); null when the source set is unknown (then the default output dir is used).
      */
     fun generateWorkingFakeImplementation(
         decl: FakeDeclaration.Interface,
         sourceSourceSet: String? = null,
-    ): GeneratedCode {
-        val interfaceName = decl.simpleName
-        val fakeClassName = "Fake${interfaceName}Impl"
-        val packageName = decl.packageName
+    ): GeneratedCode = renderAndWrite(decl, decl.simpleName, sourceSourceSet)
 
-        try {
-            val requiredImports = importResolver.resolveImports(decl.requiredImports, packageName)
-
-            val generated =
-                generators.implementation.generateImplementation(
-                    decl,
-                    packageName,
-                    requiredImports.toList(),
-                )
-
-            val generatedCode =
-                GeneratedCode(
-                    implementation = generated.implementationFile,
-                    factory = generated.factoryFunction,
-                    configDsl =
-                        generators.configDsl.generateConfigurationDslCodeFile(decl, fakeClassName),
-                )
-
-            writeGeneratedCode(
-                context =
-                    WriteContext(
-                        packageName = packageName,
-                        fakeClassName = fakeClassName,
-                        interfaceName = interfaceName,
-                    ),
-                code = generatedCode,
-                sourceSourceSet = sourceSourceSet,
-            )
-
-            return generatedCode
-        } catch (e: Exception) {
-            logger.error("Failed to generate fake for $interfaceName: ${e.message}")
-            throw e
-        }
-    }
-
-    /**
-     * Generates complete fake implementation for an abstract or open class.
-     *
-     * @param decl Pure class declaration (types pre-rendered, no IR coupling)
-     * @param sourceSourceSet Source set name where class was defined (e.g., "commonMain",
-     *   "iosMain")
-     */
+    /** Renders the fake for an abstract or open class. See [generateWorkingFakeImplementation]. */
     fun generateWorkingClassFake(
         decl: FakeDeclaration.Class,
         sourceSourceSet: String? = null,
-    ): GeneratedCode {
-        val className = decl.simpleName
-        val fakeClassName = "Fake${className}Impl"
-        val packageName = decl.packageName
+    ): GeneratedCode = renderAndWrite(decl, decl.simpleName, sourceSourceSet)
 
+    private fun renderAndWrite(
+        decl: FakeDeclaration,
+        sourceName: String,
+        sourceSourceSet: String?,
+    ): GeneratedCode =
         try {
-            val requiredImports = importResolver.resolveImports(decl.requiredImports, packageName)
-
-            val generated =
-                generators.implementation.generateClassFake(
-                    decl,
-                    packageName,
-                    requiredImports.toList(),
-                )
-
-            val generatedCode =
-                GeneratedCode(
-                    implementation = generated.implementationFile,
-                    factory = generated.factoryFunction,
-                    configDsl =
-                        generators.configDsl.generateConfigurationDslCodeFile(decl, fakeClassName),
-                )
-
-            writeGeneratedCode(
-                context =
-                    WriteContext(
-                        packageName = packageName,
-                        fakeClassName = fakeClassName,
-                        interfaceName = className,
-                    ),
-                code = generatedCode,
-                sourceSourceSet = sourceSourceSet,
-            )
-
-            return generatedCode
+            val imports = importResolver.resolveImports(decl.requiredImports, decl.packageName)
+            val rendered = FaktCodegen.render(decl, imports.toList())
+            writeToDisk(rendered, sourceSourceSet)
+            GeneratedCode(file = rendered, linesOfCode = calculateLOC(rendered.content))
         } catch (e: Exception) {
-            logger.error("Failed to generate fake for class $className: ${e.message}")
+            logger.error("Failed to generate fake for $sourceName: ${e.message}")
             throw e
         }
-    }
 
-    /**
-     * Writes the generated code to the appropriate output file.
-     *
-     * Uses per-declaration output directory selection based on source set for KMP isolation:
-     * - CommonPlatformService (commonMain) → commonTest
-     * - NativeOnlyService (nativeMain) → nativeTest
-     * - IosOnlyService (iosMain) → iosTest
-     */
-    private fun writeGeneratedCode(
-        context: WriteContext,
-        code: GeneratedCode,
-        sourceSourceSet: String?,
-    ) {
-        val packageName = context.packageName
-        val fakeClassName = context.fakeClassName
-
+    private fun writeToDisk(rendered: RenderedFakeFile, sourceSourceSet: String?) {
         val outputDir = java.io.File(selectOutputDirectory(sourceSourceSet))
-
-        val packagePath = packageName.replace('.', '/')
-        val packageDir = outputDir.resolve(packagePath)
+        val packageDir = outputDir.resolve(rendered.packageName.replace('.', '/'))
         packageDir.mkdirs()
-        val outputFile = packageDir.resolve("$fakeClassName.kt")
-
-        val fullCode = renderGeneratedCode(code)
-
-        outputFile.bufferedWriter().use { writer -> writer.write(fullCode) }
-    }
-
-    /**
-     * Renders GeneratedCode (all CodeFile parts) to a single string.
-     *
-     * Order: package/imports → factory (API entry point) → config DSL → implementation class. This
-     * puts user-facing API first and internal implementation details last.
-     */
-    private fun renderGeneratedCode(code: GeneratedCode): String {
-        val builder = CodeBuilder()
-
-        code.implementation.renderHeaderOnly(builder)
-
-        code.factory.declarations.forEach { declaration -> declaration.renderTo(builder) }
-        builder.appendLine()
-
-        code.configDsl.declarations.forEach { declaration -> declaration.renderTo(builder) }
-        builder.appendLine()
-
-        code.implementation.renderDeclarationsOnly(builder)
-
-        return builder.build()
+        packageDir.resolve(rendered.fileName).bufferedWriter().use { writer ->
+            writer.write(rendered.content)
+        }
     }
 }
