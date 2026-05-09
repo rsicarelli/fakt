@@ -93,8 +93,11 @@ class MetadataCacheSerializerTest {
             assertEquals(1, serializable.functions.size)
             assertEquals("getUser", serializable.functions[0].name)
             assertTrue(serializable.functions[0].isSuspend)
+            // Path with no "/src/" segment passes through canonicalisation unchanged.
             assertEquals("/path/to/UserService.kt", serializable.sourceFilePath)
-            assertEquals(12345L, serializable.validationTimeNanos)
+            // Always zeroed in the serialized form so the cache is byte-deterministic across
+            // machines (input was 12345L; serialized output drops it).
+            assertEquals(0L, serializable.validationTimeNanos)
         }
 
     @Test

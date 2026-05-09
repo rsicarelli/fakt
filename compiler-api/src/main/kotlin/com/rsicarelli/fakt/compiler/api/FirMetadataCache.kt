@@ -39,7 +39,10 @@ data class FirMetadataCache(
     val cacheSignature: String,
     val interfaces: List<SerializableFakeInterface>,
     val classes: List<SerializableFakeClass>,
-    val generatedAt: Long = System.currentTimeMillis(),
+    // Default 0 (not currentTimeMillis) so producers emit byte-identical caches across machines —
+    // critical for the build-cache relocation contract. The field is kept for forward
+    // compatibility with cache files written before this change; nothing in Fakt reads it.
+    val generatedAt: Long = 0L,
 ) {
     /**
      * Total FIR validation time from all cached interfaces and classes. Used to report how much

@@ -60,7 +60,7 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
     override fun execute() {
         val params = parameters
         val outputDir = params.generatedKotlinDir.asFile.get().also { it.mkdirs() }
-        val sourceSetContext = decodeContextWithProducerCachePath(params)
+        val sourceSetContext = populateSourceSetContext(params)
         val pluginJars = resolvePluginJars(params)
 
         invokeK2(
@@ -77,23 +77,25 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
     }
 
     /**
-     * Decode the caller-supplied [SourceSetContext], then — when this task is in producer mode —
-     * inject [FaktCodegenWorkParameters.firMetadataFile]'s path as `metadataOutputPath` so the
-     * compiler plugin's existing `MetadataCacheManager` writes a populated `FirMetadataCache`
-     * there. Non-producer runs keep the context as-is.
+     * Decode the caller-supplied [SourceSetContext], then overwrite every absolute-path field with
+     * values read from Gradle file properties at execution time. The
+     * [FaktCodegenWorkParameters.sourceSetContextJson] `@Input` therefore never carries
+     * machine-specific paths in the cache key, which is what makes cross-directory build-cache hits
+     * work (relocation canary).
      */
-    private fun decodeContextWithProducerCachePath(
-        params: FaktCodegenWorkParameters
-    ): SourceSetContext {
-        val context =
+    private fun populateSourceSetContext(params: FaktCodegenWorkParameters): SourceSetContext {
+        val storedContext =
             Json.decodeFromString(SourceSetContext.serializer(), params.sourceSetContextJson.get())
-        return if (!params.commonFirMetadata.isPresent) {
-            params.firMetadataFile.orNull?.asFile?.absolutePath?.let { path ->
-                context.copy(metadataOutputPath = path)
-            } ?: context
-        } else {
-            context
-        }
+        val outputDirectory = params.generatedKotlinDir.asFile.get().absolutePath
+        val isConsumerMode = params.commonFirMetadata.isPresent
+        return storedContext.copy(
+            outputDirectory = outputDirectory,
+            commonTestOutputDirectory = outputDirectory,
+            metadataOutputPath =
+                if (!isConsumerMode) params.firMetadataFile.orNull?.asFile?.absolutePath else null,
+            metadataCachePath =
+                if (isConsumerMode) params.commonFirMetadata.asFile.get().absolutePath else null,
+        )
     }
 
     private fun resolvePluginJars(params: FaktCodegenWorkParameters): List<File> =
