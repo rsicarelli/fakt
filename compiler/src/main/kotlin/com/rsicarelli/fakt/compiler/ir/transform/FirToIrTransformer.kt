@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.transform
 
+import com.rsicarelli.fakt.compiler.core.types.TypeResolution
 import com.rsicarelli.fakt.compiler.fir.metadata.FirAnnotationArgument
 import com.rsicarelli.fakt.compiler.fir.metadata.FirAnnotationInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirFunctionInfo
@@ -53,10 +54,17 @@ private val IrFunction.extensionReceiverParameterCompat: IrValueParameter?
  *    IrSimpleFunction node)
  * 3. **Formats Type Parameters**: ["T", "K : Comparable<K>"]
  * 4. **Computes GenericPattern**: Uses [GenericPatternAnalyzer]
+ * 5. **(3.1.d.1) Pre-computes semantic flags and [RenderedType] side-channels** when a
+ *    [TypeResolution] is supplied. This populates [IrPropertyMetadata.isTypeParameter],
+ *    [IrPropertyMetadata.requiresCollectionErasure], [IrPropertyMetadata.renderedType],
+ *    [IrParameterMetadata.isTypeParameter], [IrParameterMetadata.requiresCollectionErasure],
+ *    [IrParameterMetadata.renderedType], and [IrFunctionMetadata.renderedReturnType].
  *
  * @property patternAnalyzer Reused analyzer for GenericPattern classification
+ * @property typeResolution Optional type-resolution facade; when provided the transformer
+ *   pre-computes semantic flags and [RenderedType] side-channels on all IR metadata records.
  */
-internal class FirToIrTransformer {
+internal class FirToIrTransformer(private val typeResolution: TypeResolution? = null) {
     private val patternAnalyzer = GenericPatternAnalyzer()
 
     /**
@@ -254,12 +262,20 @@ internal class FirToIrTransformer {
                         "This should not happen for valid properties."
                 )
 
+        // 3.1.d.1: pre-compute semantic flags and RenderedType side-channel when resolver available
+        val rendered = typeResolution?.irTypeToRendered(resolvedType, preserveTypeParameters = true)
+        val isTypeParm = typeResolution?.isTypeParameter(resolvedType) ?: false
+        val needsErasure = typeResolution?.requiresCollectionErasure(resolvedType) ?: false
+
         return IrPropertyMetadata(
             name = firProperty.name,
             type = resolvedType,
             isMutable = firProperty.isMutable,
             isNullable = firProperty.isNullable,
             irProperty = irProperty,
+            isTypeParameter = isTypeParm,
+            requiresCollectionErasure = needsErasure,
+            renderedType = rendered,
         )
     }
 
@@ -327,17 +343,31 @@ internal class FirToIrTransformer {
 
         val parameters =
             firFunction.parameters.zip(irRegularParams).map { (firParam, irParam) ->
+                // 3.1.d.1: pre-compute semantic flags and RenderedType side-channel per param
+                val paramRendered =
+                    typeResolution?.irTypeToRendered(irParam.type, preserveTypeParameters = true)
+                val paramIsTypeParm = typeResolution?.isTypeParameter(irParam.type) ?: false
+                val paramNeedsErasure =
+                    typeResolution?.requiresCollectionErasure(irParam.type) ?: false
+
                 IrParameterMetadata(
                     name = firParam.name,
                     type = irParam.type,
                     hasDefaultValue = firParam.hasDefaultValue,
                     defaultValueCode = firParam.defaultValueCode, // Pass through default value code
                     isVararg = firParam.isVararg,
+                    isTypeParameter = paramIsTypeParm,
+                    requiresCollectionErasure = paramNeedsErasure,
+                    renderedType = paramRendered,
                 )
             }
 
         // Format method-level type parameters
         val methodTypeParameters = firFunction.typeParameters.map { formatTypeParameter(it) }
+
+        // 3.1.d.1: pre-compute RenderedType for return type
+        val returnTypeRendered =
+            typeResolution?.irTypeToRendered(irFunction.returnType, preserveTypeParameters = true)
 
         return IrFunctionMetadata(
             name = firFunction.name,
@@ -350,6 +380,7 @@ internal class FirToIrTransformer {
             isOperator = irFunction.isOperator,
             extensionReceiverType = irFunction.extensionReceiverParameterCompat?.type,
             irFunction = irFunction,
+            renderedReturnType = returnTypeRendered,
         )
     }
 

@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.transform
 
+// RenderedType import needed for the side-channel accessors added in 3.1.d.1
+import com.rsicarelli.fakt.compiler.core.types.RenderedType
 import com.rsicarelli.fakt.compiler.core.types.TypeResolution
 import com.rsicarelli.fakt.compiler.fir.metadata.FirCallHistoryMode
 import com.rsicarelli.fakt.compiler.fir.metadata.FirMutabilityMode
@@ -162,11 +164,24 @@ internal constructor(
  *
  * Transformed from FirPropertyInfo (strings) to IR-ready structure.
  *
+ * **3.1.d.1 additions**:
+ * - [isTypeParameter] — pre-computed semantic flag; true when the property type is a type-parameter
+ *   placeholder (T, K, V …). Mirrors the `is IrTypeParameter` check previously buried in
+ *   [com.rsicarelli.fakt.compiler.core.types.TypeRenderer.handleComplexType].
+ * - [requiresCollectionErasure] — pre-computed semantic flag; true when the property type is a
+ *   collection whose type arguments must be erased to `Any` under the NoGenerics pattern. Mirrors
+ *   the rules previously inside [com.rsicarelli.fakt.compiler.core.types.GenericTypeHandler].
+ * - [renderedType] — [RenderedType] side channel (short name + FQN set). Populated during FIR→IR
+ *   transform when a [com.rsicarelli.fakt.compiler.core.types.TypeResolution] is available.
+ *
  * @property name Property name
  * @property type Resolved IrType (from FIR string representation)
  * @property isMutable true for `var`, false for `val`
  * @property isNullable true if type is nullable (T?)
  * @property irProperty Original IR property node (for code generation)
+ * @property isTypeParameter true when the property type is a type-parameter (3.1.d.1)
+ * @property requiresCollectionErasure true when type args must be erased to Any (3.1.d.1)
+ * @property renderedType Pre-rendered type with FQN side-channel, or null if not yet computed
  */
 data class IrPropertyMetadata(
     val name: String,
@@ -174,12 +189,19 @@ data class IrPropertyMetadata(
     val isMutable: Boolean,
     val isNullable: Boolean,
     val irProperty: IrProperty,
+    val isTypeParameter: Boolean = false,
+    val requiresCollectionErasure: Boolean = false,
+    val renderedType: RenderedType? = null,
 )
 
 /**
  * Function metadata with resolved IR types.
  *
  * Transformed from FirFunctionInfo (strings) to IR-ready structure.
+ *
+ * **3.1.d.1 addition**: [renderedReturnType] — [RenderedType] side channel for the return type
+ * (short name + FQN set). Populated during FIR→IR transform when a
+ * [com.rsicarelli.fakt.compiler.core.types.TypeResolution] is available.
  *
  * @property name Function name
  * @property parameters Function parameters with resolved IrTypes
@@ -190,6 +212,7 @@ data class IrPropertyMetadata(
  *   ["T", "R : Comparable<R>"])
  * @property typeParameterBounds Method-level type parameter bounds map (e.g., "R" → "TValue")
  * @property irFunction Original IR function node (for code generation)
+ * @property renderedReturnType Pre-rendered return type with FQN side-channel, or null (3.1.d.1)
  */
 data class IrFunctionMetadata(
     val name: String,
@@ -202,6 +225,7 @@ data class IrFunctionMetadata(
     val isOperator: Boolean,
     val extensionReceiverType: IrType?,
     val irFunction: IrSimpleFunction,
+    val renderedReturnType: RenderedType? = null,
 )
 
 /**
@@ -211,11 +235,21 @@ data class IrFunctionMetadata(
  *
  * Added defaultValueCode for default parameter support in generated code.
  *
+ * **3.1.d.1 additions**:
+ * - [isTypeParameter] — pre-computed semantic flag; true when the parameter type is a
+ *   type-parameter placeholder.
+ * - [requiresCollectionErasure] — pre-computed semantic flag; true when the parameter type is a
+ *   collection that would be erased under the NoGenerics pattern.
+ * - [renderedType] — [RenderedType] side channel (short name + FQN set).
+ *
  * @property name Parameter name
  * @property type Resolved IrType (from FIR string representation)
  * @property hasDefaultValue true if parameter has default value
  * @property defaultValueCode Rendered default value code (e.g., "null", "\"GET\"", "30000L")
  * @property isVararg true if parameter is vararg
+ * @property isTypeParameter true when the parameter type is a type-parameter (3.1.d.1)
+ * @property requiresCollectionErasure true when type args must be erased to Any (3.1.d.1)
+ * @property renderedType Pre-rendered type with FQN side-channel, or null if not yet computed
  */
 data class IrParameterMetadata(
     val name: String,
@@ -223,6 +257,9 @@ data class IrParameterMetadata(
     val hasDefaultValue: Boolean,
     val defaultValueCode: String?,
     val isVararg: Boolean,
+    val isTypeParameter: Boolean = false,
+    val requiresCollectionErasure: Boolean = false,
+    val renderedType: RenderedType? = null,
 )
 
 /**

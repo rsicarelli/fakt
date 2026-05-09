@@ -198,7 +198,8 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
         val irClassMap = buildIrClassMap(moduleFragment)
 
         // Transform FIR metadata → IrGenerationMetadata (NO re-analysis!)
-        val transformer = FirToIrTransformer()
+        // 3.1.d.1: pass typeResolver so the transformer pre-computes semantic flags + RenderedType
+        val transformer = FirToIrTransformer(typeResolution = typeResolver)
 
         val (interfaceMetadata, interfaceTransformTime) =
             measureTimeNanos {
