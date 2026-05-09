@@ -9,15 +9,8 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Clean stale Fakt artifacts
-      shell: bash
-      run: rm -rf ~/.m2/repository/com/rsicarelli/fakt/
-
-    - name: Publish Fakt plugin to Maven Local
-      shell: bash
-      env:
-        ORG_GRADLE_PROJECT_SKIP_SIGNING: true
-      run: ./gradlew clean publishToMavenLocal --no-daemon --no-build-cache --no-configuration-cache
+    - name: Restore Plugin Bundle
+      uses: ./.github/actions/restore-plugin-bundle
 
     - name: Test compat sample (Kotlin ${{ inputs.kotlin-version }})
       shell: bash
