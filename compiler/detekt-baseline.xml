@@ -26,11 +26,6 @@
     <ID>NestedBlockDepth:ImportResolver.kt$ImportResolver$private fun collectImportsFromType( irType: IrType, currentPackage: String, imports: MutableSet&lt;String&gt;, )</ID>
     <ID>ReturnCount:FakeClassChecker.kt$FakeClassChecker$override fun check(declaration: FirClass)</ID>
     <ID>ReturnCount:FakeInterfaceChecker.kt$FakeInterfaceChecker$override fun check(declaration: FirClass)</ID>
-    <ID>ReturnCount:MetadataCacheManager.kt$MetadataCacheManager$fun tryLoadCache(storage: FirMetadataStorage): Boolean</ID>
-    <ID>ReturnCount:MetadataCacheManager.kt$MetadataCacheManager$fun writeCache(storage: FirMetadataStorage): CacheWriteResult?</ID>
-    <ID>ReturnCount:MetadataCacheManager.kt$MetadataCacheManager$private fun validateCache(cache: FirMetadataCache): Boolean</ID>
-    <ID>ReturnCount:MetadataCacheSerializer.kt$MetadataCacheSerializer$fun computeFileSignature(filePath: String): String</ID>
-    <ID>ReturnCount:MetadataCacheSerializer.kt$MetadataCacheSerializer$fun deserialize(cachePath: String): FirMetadataCache?</ID>
     <ID>TooGenericExceptionCaught:CodeGenerator.kt$CodeGenerator$e: Exception</ID>
     <ID>TooGenericExceptionCaught:CompilerOptimizations.kt$CompilerOptimizations.Companion.&lt;no name provided&gt;$e: Exception</ID>
     <ID>TooGenericExceptionCaught:FaktCommandLineProcessor.kt$FaktCommandLineProcessor$e: Exception</ID>
@@ -39,8 +34,6 @@
     <ID>TooManyFunctions:ConfigurationDslGenerator.kt$ConfigurationDslGenerator</ID>
     <ID>TooManyFunctions:FakeClassChecker.kt$FakeClassChecker : FirClassChecker</ID>
     <ID>TooManyFunctions:FakeInterfaceChecker.kt$FakeInterfaceChecker : FirClassChecker</ID>
-    <ID>TooManyFunctions:FirMetadataStorage.kt$FirMetadataStorage</ID>
-    <ID>TooManyFunctions:MetadataCacheSerializer.kt$MetadataCacheSerializer</ID>
     <ID>TooManyFunctions:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension : IrGenerationExtension</ID>
   </CurrentIssues>
 </SmellBaseline>

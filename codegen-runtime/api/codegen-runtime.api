@@ -891,6 +891,46 @@ public final class com/rsicarelli/fakt/codegen/strategy/StdlibDefaultStrategy : 
 	public fun supports (Lcom/rsicarelli/fakt/codegen/model/CodeType;)Z
 }
 
+public final class com/rsicarelli/fakt/compiler/fir/cache/CacheWriteResult {
+	public fun <init> (IIJLjava/lang/String;)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun component3 ()J
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (IIJLjava/lang/String;)Lcom/rsicarelli/fakt/compiler/fir/cache/CacheWriteResult;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/cache/CacheWriteResult;IIJLjava/lang/String;ILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/cache/CacheWriteResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getClassCount ()I
+	public final fun getDurationNanos ()J
+	public final fun getInterfaceCount ()I
+	public final fun getOutputPath ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/cache/MetadataCacheManager {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun getLastWriteResult ()Lcom/rsicarelli/fakt/compiler/fir/cache/CacheWriteResult;
+	public final fun getSavedFirTimeNanos ()J
+	public final fun isConsumerMode ()Z
+	public final fun isEnabled ()Z
+	public final fun isProducerMode ()Z
+	public final fun tryLoadCache (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMetadataStorage;)Z
+	public final fun writeCache (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMetadataStorage;)Lcom/rsicarelli/fakt/compiler/fir/cache/CacheWriteResult;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/cache/MetadataCacheSerializer {
+	public static final field INSTANCE Lcom/rsicarelli/fakt/compiler/fir/cache/MetadataCacheSerializer;
+	public final fun computeCombinedSignature (Ljava/util/List;)Ljava/lang/String;
+	public final fun computeFileSignature (Ljava/lang/String;)Ljava/lang/String;
+	public final fun deserialize (Ljava/lang/String;)Lcom/rsicarelli/fakt/compiler/api/FirMetadataCache;
+	public final fun serialize (Lcom/rsicarelli/fakt/compiler/api/FirMetadataCache;Ljava/lang/String;)V
+	public final fun toSerializable (Lcom/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeClass;)Lcom/rsicarelli/fakt/compiler/api/SerializableFakeClass;
+	public final fun toSerializable (Lcom/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeInterface;)Lcom/rsicarelli/fakt/compiler/api/SerializableFakeInterface;
+	public final fun toValidated (Lcom/rsicarelli/fakt/compiler/api/SerializableFakeClass;)Lcom/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeClass;
+	public final fun toValidated (Lcom/rsicarelli/fakt/compiler/api/SerializableFakeInterface;)Lcom/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeInterface;
+}
+
 public abstract interface class com/rsicarelli/fakt/compiler/fir/metadata/FirAnnotationArgument {
 }
 
@@ -1034,6 +1074,24 @@ public final class com/rsicarelli/fakt/compiler/fir/metadata/FirFunctionInfo {
 	public final fun isInline ()Z
 	public final fun isSuspend ()Z
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/FirMetadataStorage {
+	public fun <init> ()V
+	public final fun getAllClasses ()Ljava/util/Collection;
+	public final fun getAllInterfaces ()Ljava/util/Collection;
+	public final fun getClass (Lorg/jetbrains/kotlin/name/ClassId;)Lcom/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeClass;
+	public final fun getClassCacheHits ()I
+	public final fun getInterface (Lorg/jetbrains/kotlin/name/ClassId;)Lcom/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeInterface;
+	public final fun getInterfaceCacheHits ()I
+	public final fun getTotalCacheHits ()I
+	public final fun incrementClassCacheHits ()V
+	public final fun incrementInterfaceCacheHits ()V
+	public final fun isEmpty ()Z
+	public final fun storeClass (Lcom/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeClass;)V
+	public final fun storeInterface (Lcom/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeInterface;)V
+	public fun toString ()Ljava/lang/String;
+	public final fun totalCount ()I
 }
 
 public final class com/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode : java/lang/Enum {

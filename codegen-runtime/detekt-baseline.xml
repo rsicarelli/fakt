@@ -10,12 +10,19 @@
     <ID>LongMethod:MethodExtensions.kt$fun ClassBuilder.overrideMethod( name: String, params: List&lt;Triple&lt;String, String, Boolean&gt;&gt;, returnType: String, config: OverrideMethodConfig = OverrideMethodConfig(), )</ID>
     <ID>LongParameterList:FakeGenerator.kt$( classBuilder: ClassBuilder, configClassName: String, methods: List&lt;MethodSpec&gt;, properties: List&lt;PropertySpec&gt;, typeParamNames: List&lt;String&gt;, visibility: FirVisibility, interfaceName: String, )</ID>
     <ID>LongParameterList:FakeGenerator.kt$( packageName: String, interfaceName: String, superTypeName: String = interfaceName, methods: List&lt;MethodSpec&gt; = emptyList(), properties: List&lt;PropertySpec&gt; = emptyList(), imports: List&lt;String&gt; = emptyList(), header: String? = null, typeParameters: List&lt;String&gt; = emptyList(), isClass: Boolean = false, visibility: FirVisibility = FirVisibility.PUBLIC, annotations: List&lt;AnnotationSpec&gt; = emptyList(), generateCallHistory: Boolean = true, generateMutableBehaviors: Boolean = false, superConstructorCall: String = "", )</ID>
+    <ID>ReturnCount:MetadataCacheManager.kt$MetadataCacheManager$fun tryLoadCache(storage: FirMetadataStorage): Boolean</ID>
+    <ID>ReturnCount:MetadataCacheManager.kt$MetadataCacheManager$fun writeCache(storage: FirMetadataStorage): CacheWriteResult?</ID>
+    <ID>ReturnCount:MetadataCacheManager.kt$MetadataCacheManager$private fun validateCache(cache: FirMetadataCache): Boolean</ID>
+    <ID>ReturnCount:MetadataCacheSerializer.kt$MetadataCacheSerializer$fun computeFileSignature(filePath: String): String</ID>
+    <ID>ReturnCount:MetadataCacheSerializer.kt$MetadataCacheSerializer$fun deserialize(cachePath: String): FirMetadataCache?</ID>
     <ID>SpreadOperator:FakeGenerator.kt$("OptIn", *optInArgs.distinct().toTypedArray())</ID>
     <ID>SpreadOperator:FakeGenerator.kt$(annotationSpec.simpleName, *annotationSpec.arguments.toTypedArray())</ID>
     <ID>SpreadOperator:MethodExtensions.kt$(name, *constraints)</ID>
     <ID>TooManyFunctions:ClassBuilder.kt$ClassBuilder</ID>
     <ID>TooManyFunctions:FakeGenerator.kt$com.rsicarelli.fakt.codegen.extensions.FakeGenerator.kt</ID>
+    <ID>TooManyFunctions:FirMetadataStorage.kt$FirMetadataStorage</ID>
     <ID>TooManyFunctions:FunctionBuilder.kt$FunctionBuilder</ID>
+    <ID>TooManyFunctions:MetadataCacheSerializer.kt$MetadataCacheSerializer</ID>
     <ID>TooManyFunctions:Rendering.kt$com.rsicarelli.fakt.codegen.renderer.Rendering.kt</ID>
   </CurrentIssues>
 </SmellBaseline>
