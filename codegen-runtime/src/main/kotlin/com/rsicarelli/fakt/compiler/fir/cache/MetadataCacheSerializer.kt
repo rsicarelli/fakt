@@ -76,6 +76,7 @@ object MetadataCacheSerializer {
      * @return Serializable representation
      */
     fun toSerializable(validated: ValidatedFakeInterface): SerializableFakeInterface {
+        val canonicalPath = canonicalizeSourcePath(validated.sourceLocation.filePath)
         val sourceFileSignature = computeFileSignature(validated.sourceLocation.filePath)
 
         return SerializableFakeInterface(
@@ -88,9 +89,12 @@ object MetadataCacheSerializer {
             inheritedProperties = validated.inheritedProperties.map { it.toSerializable() },
             inheritedFunctions = validated.inheritedFunctions.map { it.toSerializable() },
             annotations = validated.annotations.map { it.toSerializable() },
-            sourceFilePath = validated.sourceLocation.filePath,
+            sourceFilePath = canonicalPath,
             sourceFileSignature = sourceFileSignature,
-            validationTimeNanos = validated.validationTimeNanos,
+            // Always 0 in the serialized cache so cross-machine producers emit byte-identical
+            // bytes; consumers also load the cache with `validationTimeNanos = 0L` (see
+            // [toValidated]).
+            validationTimeNanos = 0L,
             visibility = validated.visibility.name,
             callHistoryMode = validated.callHistoryMode.name,
             mutabilityMode = validated.mutabilityMode.name,
@@ -99,6 +103,7 @@ object MetadataCacheSerializer {
 
     /** Convert ValidatedFakeClass to serializable format. */
     fun toSerializable(validated: ValidatedFakeClass): SerializableFakeClass {
+        val canonicalPath = canonicalizeSourcePath(validated.sourceLocation.filePath)
         val sourceFileSignature = computeFileSignature(validated.sourceLocation.filePath)
 
         return SerializableFakeClass(
@@ -111,13 +116,27 @@ object MetadataCacheSerializer {
             abstractMethods = validated.abstractMethods.map { it.toSerializable() },
             openMethods = validated.openMethods.map { it.toSerializable() },
             annotations = validated.annotations.map { it.toSerializable() },
-            sourceFilePath = validated.sourceLocation.filePath,
+            sourceFilePath = canonicalPath,
             sourceFileSignature = sourceFileSignature,
-            validationTimeNanos = validated.validationTimeNanos,
+            validationTimeNanos = 0L,
             visibility = validated.visibility.name,
             callHistoryMode = validated.callHistoryMode.name,
             mutabilityMode = validated.mutabilityMode.name,
         )
+    }
+
+    /**
+     * Strip the build-machine prefix from a source-file path so the cache JSON is byte-identical
+     * across hosts. Looks for the standard `/src/` segment (matching what
+     * [FirSourceLocation.extractSourceSetName] expects on the way out) and keeps everything from
+     * `src/` onward, leaving paths like `src/commonMain/kotlin/com/example/Foo.kt`. Falls back to
+     * the original path when no `/src/` segment is found — out-of-tree sources stay
+     * machine-specific, but they're a vanishing edge case in real Gradle builds.
+     */
+    internal fun canonicalizeSourcePath(absolutePath: String): String {
+        val marker = "/src/"
+        val idx = absolutePath.indexOf(marker)
+        return if (idx >= 0) absolutePath.substring(idx + 1) else absolutePath
     }
 
     // ========================================================================

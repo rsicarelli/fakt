@@ -93,13 +93,6 @@ class FaktGenerateTaskTest {
         )
     }
 
-    @org.junit.jupiter.api.Disabled(
-        "Relocation canary fails today: sourceSetContextJson encodes absolute outputDir paths " +
-            "that vary per project dir, so the @Input string differs and the cache key differs. " +
-            "Real fix requires routing absolute paths through Gradle file-property normalization " +
-            "(or using @PathSensitive providers instead of @Input String). Tracked as follow-up; " +
-            "out of scope for the PR 2.1 cleanup pass."
-    )
     @Test
     fun `GIVEN identical inputs in two project dirs sharing a build cache WHEN both run THEN second reports FROM-CACHE`(
         @TempDir projectA: File,
@@ -150,15 +143,6 @@ class FaktGenerateTaskTest {
         assertEquals("UserService", cache.interfaces.single().simpleName)
     }
 
-    @org.junit.jupiter.api.Disabled(
-        "MetadataCacheSerializer is not byte-deterministic across machines: it serialises " +
-            "ValidatedFakeInterface.sourceLocation.filePath as an absolute path and " +
-            "FirMetadataCache.generatedAt as System.currentTimeMillis(). Plan §R5 calls this out " +
-            "as a real bug. Fix requires path-relativisation in the serializer (probably " +
-            "passing project root through to the converter) and fixing generatedAt to a stable " +
-            "value or removing it. Out of scope for the PR 2.1 cleanup pass; tracked as " +
-            "follow-up before PR 3 KMP wiring lands."
-    )
     @Test
     fun `GIVEN producer mode WHEN running twice THEN firMetadataFile is byte-identical across runs`(
         @TempDir projectA: File,
@@ -269,15 +253,11 @@ class FaktGenerateTaskTest {
 
     private fun buildScriptForTask(projectDir: File, firMetadataFile: File? = null): String {
         val outputDir = projectDir.resolve("build/generated/fakt/jvm/jvmTest/kotlin")
-        // Point both context paths at the task's @OutputDirectory so every generated file the
-        // plugin writes ends up inside Gradle's declared output — otherwise the build cache only
-        // restores half of the files and the FROM-CACHE assertion catches it.
-        val context =
-            STUB_CONTEXT.copy(
-                outputDirectory = outputDir.absolutePath,
-                commonTestOutputDirectory = outputDir.absolutePath,
-            )
-        val sourceSetContextJson = json.encodeToString(SourceSetContext.serializer(), context)
+        // The stored context carries placeholder paths only — the worker overwrites
+        // outputDirectory / commonTestOutputDirectory / metadataOutputPath / metadataCachePath at
+        // execution time from Gradle file properties. Keeps the @Input cache key relocatable
+        // across project directories.
+        val sourceSetContextJson = json.encodeToString(SourceSetContext.serializer(), STUB_CONTEXT)
         val cp = workerClasspath()
         val classpathLiteral =
             cp.joinToString(",\n        ") { jar ->
