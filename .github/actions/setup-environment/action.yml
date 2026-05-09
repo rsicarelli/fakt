@@ -9,7 +9,6 @@ runs:
       with:
         distribution: 'temurin'
         java-version: '21'
-        cache: 'gradle'
 
     - name: Read Node.js version from .tool-versions
       id: node-version
@@ -38,6 +37,14 @@ runs:
         key: ${{ runner.os }}-konan-${{ hashFiles('gradle/libs.versions.toml') }}
         restore-keys: |
           ${{ runner.os }}-konan-
+
+    - name: Cache Gradle wrapper distributions
+      uses: actions/cache@v4
+      with:
+        path: ~/.gradle/wrapper/dists
+        key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-wrapper-
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v6
