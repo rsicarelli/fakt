@@ -95,22 +95,3 @@ public final class com/rsicarelli/fakt/gradle/SourceSetDiscoveryKt {
 	public static final fun isTestCompilation (Lorg/jetbrains/kotlin/gradle/plugin/KotlinCompilation;)Z
 }
 
-public abstract class com/rsicarelli/fakt/gradle/worker/FaktCodegenWorkAction : org/gradle/workers/WorkAction {
-	public fun <init> ()V
-	public fun execute ()V
-}
-
-public abstract interface class com/rsicarelli/fakt/gradle/worker/FaktCodegenWorkParameters : org/gradle/workers/WorkParameters {
-	public abstract fun getCommonFirMetadata ()Lorg/gradle/api/file/RegularFileProperty;
-	public abstract fun getCompileClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
-	public abstract fun getFaktCompilerClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
-	public abstract fun getFaktVersion ()Lorg/gradle/api/provider/Property;
-	public abstract fun getFirMetadataFile ()Lorg/gradle/api/file/RegularFileProperty;
-	public abstract fun getGeneratedKotlinDir ()Lorg/gradle/api/file/DirectoryProperty;
-	public abstract fun getImports ()Lorg/gradle/api/provider/ListProperty;
-	public abstract fun getLogLevel ()Lorg/gradle/api/provider/Property;
-	public abstract fun getScratchDir ()Lorg/gradle/api/file/DirectoryProperty;
-	public abstract fun getSourceSetContextJson ()Lorg/gradle/api/provider/Property;
-	public abstract fun getSources ()Lorg/gradle/api/file/ConfigurableFileCollection;
-}
-

@@ -100,3 +100,13 @@ PUBLISHED_PLUGIN_DEBUGGING.md
 # Spotless
 # ================================
 spotless/
+
+# ================================
+# Claude Code working files
+# ================================
+.claude/scheduled_tasks.lock
+handoff-prompt-*.txt
+research-prompts-*.txt
+
+# JVM heap dumps from OOM crashes during local test runs
+**/*.hprof

@@ -30,7 +30,6 @@ dependencyResolutionManagement {
 include(
     ":compiler",
     ":compiler-api",
-    ":compiler-runner",
     ":codegen-runtime",
     ":gradle-plugin",
     ":annotations",
