@@ -29,8 +29,9 @@ Reproducible bugs and regressions still go to [Issues](../../issues).
 
 ## ⏱ Expectations
 
-Fakt is pre-1.0 with a **single maintainer**. Q&A first-response target is
-**5 business days**. Show & tell has no SLA — reactions when seen.
+Fakt is pre-1.0 with a **single maintainer**. Q&A is best-effort; well-formed
+posts (with version info + a reproducer) get answered first. Show & tell has
+no SLA — reactions when seen.
 
 If you open an Issue that's actually a question, expect it to be converted
 to a Discussion. It's not a rejection — it's filing.
