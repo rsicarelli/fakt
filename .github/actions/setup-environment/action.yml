@@ -9,7 +9,6 @@ runs:
       with:
         distribution: 'temurin'
         java-version: '21'
-        cache: 'gradle'
 
     - name: Read Node.js version from .tool-versions
       id: node-version
