@@ -1,0 +1,1579 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Compile-time type-safe test fakes for Kotlin Multiplatform">
+      
+      
+        <meta name="author" content="Rodrigo Sicarelli">
+      
+      
+        <link rel="canonical" href="https://rsicarelli.github.io/fakt/1.0.0-beta07/why-fakt.html">
+      
+      
+        <link rel="prev" href="index.html">
+      
+      
+        <link rel="next" href="get-started/index.html">
+      
+      
+      <link rel="icon" href="assets/logo.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.16">
+    
+    
+      
+        <title>Why Fakt? - Fakt</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.7e37652d.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="stylesheets/fakt-brand.css">
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#why-fakt" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="index.html" title="Fakt" class="md-header__button md-logo" aria-label="Fakt" data-md-component="logo">
+      
+  <img src="assets/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Fakt
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Why Fakt?
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/rsicarelli/fakt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Fakt
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="index.html" title="Fakt" class="md-nav__button md-logo" aria-label="Fakt" data-md-component="logo">
+      
+  <img src="assets/logo.png" alt="logo">
+
+    </a>
+    Fakt
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/rsicarelli/fakt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Fakt
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Why Fakt?
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="why-fakt.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Why Fakt?
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-fakt-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      What Fakt Does
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-testing-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      The Testing Problem
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The Testing Problem">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#manual-fakes-dont-scale" class="md-nav__link">
+    <span class="md-ellipsis">
+      Manual Fakes Don&rsquo;t Scale
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-mock-tax" class="md-nav__link">
+    <span class="md-ellipsis">
+      The Mock Tax
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-kmp-dead-end" class="md-nav__link">
+    <span class="md-ellipsis">
+      The KMP Dead End
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-compiler-plugins-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why Compiler Plugins Work
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-fakes-over-mocks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why Fakes Over Mocks
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#practical-guidance" class="md-nav__link">
+    <span class="md-ellipsis">
+      Practical Guidance
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Practical Guidance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fakes-vs-mocks-quick-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fakes vs. Mocks: Quick Comparison
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#choosing-the-right-tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      Choosing the Right Tool
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#get-started" class="md-nav__link">
+    <span class="md-ellipsis">
+      Get Started
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#works-cited" class="md-nav__link">
+    <span class="md-ellipsis">
+      Works Cited
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Get Started
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Get Started
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="get-started/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Installation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="get-started/features.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Features
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="user-guide/plugin-configuration.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Plugin Configuration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    User Guide
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            User Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="user-guide/usage.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Usage
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="user-guide/multi-module.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Multi-Module
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="user-guide/test-fixtures.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Test Fixtures (JVM)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="user-guide/immutable-vs-mutable.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Immutable vs Mutable
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="user-guide/testing-patterns.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Testing Patterns
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="user-guide/migration-from-mocks.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Migration from Mocks
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="user-guide/performance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Performance & Optimization
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="user-guide/generated-code-reference.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Generated Code Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="user-guide/platform-support.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Platform Support
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="user-guide/known-issues.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Known Issues
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="examples/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Samples
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="compatibility.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Kotlin Compatibility
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Help
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            Help
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="help/faq.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FAQ
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="help/troubleshooting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-fakt-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      What Fakt Does
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-testing-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      The Testing Problem
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The Testing Problem">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#manual-fakes-dont-scale" class="md-nav__link">
+    <span class="md-ellipsis">
+      Manual Fakes Don&rsquo;t Scale
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-mock-tax" class="md-nav__link">
+    <span class="md-ellipsis">
+      The Mock Tax
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-kmp-dead-end" class="md-nav__link">
+    <span class="md-ellipsis">
+      The KMP Dead End
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-compiler-plugins-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why Compiler Plugins Work
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-fakes-over-mocks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why Fakes Over Mocks
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#practical-guidance" class="md-nav__link">
+    <span class="md-ellipsis">
+      Practical Guidance
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Practical Guidance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fakes-vs-mocks-quick-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fakes vs. Mocks: Quick Comparison
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#choosing-the-right-tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      Choosing the Right Tool
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#get-started" class="md-nav__link">
+    <span class="md-ellipsis">
+      Get Started
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#works-cited" class="md-nav__link">
+    <span class="md-ellipsis">
+      Works Cited
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="why-fakt">Why Fakt?<a class="headerlink" href="#why-fakt" title="Permanent link">&para;</a></h1>
+<p>Kotlin testing has a problem that gets worse the more successful your project becomes.</p>
+<p>Manual test fakes don&rsquo;t scale—each interface requires 60-80 lines of boilerplate that silently drifts from reality during refactoring. Runtime mocking frameworks (MockK, Mockito) solve the boilerplate but introduce severe performance penalties and don&rsquo;t work on Kotlin/Native or WebAssembly. KSP-based tools promised compile-time generation, but Kotlin 2.0 broke them all.</p>
+<p>Fakt is a compiler plugin that generates production-quality fakes through deep integration with Kotlin&rsquo;s FIR and IR compilation phases—the same extension points used by <a href="https://github.com/ZacSweers/metro">Metro</a>, a production DI framework from Zac Sweers.</p>
+<hr />
+<h2 id="what-fakt-does">What Fakt Does<a class="headerlink" href="#what-fakt-does" title="Permanent link">&para;</a></h2>
+<p>Fakt reduces fake boilerplate to an annotation:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nd">@Fake</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">AnalyticsService</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">track</span><span class="p">(</span><span class="n">event</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">)</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="kd">suspend</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">flush</span><span class="p">():</span><span class="w"> </span><span class="n">Result</span><span class="o">&lt;</span><span class="kt">Unit</span><span class="o">&gt;</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">}</span>
+</code></pre></div>
+<p>At compile time, Fakt generates a complete fake implementation. You use it through a type-safe factory:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeAnalyticsService</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="n">track</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">event</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">println</span><span class="p">(</span><span class="s">&quot;Tracked: </span><span class="si">$</span><span class="n">event</span><span class="s">&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="n">flush</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Result</span><span class="p">.</span><span class="na">success</span><span class="p">(</span><span class="kt">Unit</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="p">}</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1">// Use in tests</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">fake</span><span class="p">.</span><span class="na">track</span><span class="p">(</span><span class="s">&quot;user_signup&quot;</span><span class="p">)</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">fake</span><span class="p">.</span><span class="na">flush</span><span class="p">()</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="c1">// Verify interactions (thread-safe StateFlow)</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">trackCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">flushCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="the-testing-problem">The Testing Problem<a class="headerlink" href="#the-testing-problem" title="Permanent link">&para;</a></h2>
+<h3 id="manual-fakes-dont-scale">Manual Fakes Don&rsquo;t Scale<a class="headerlink" href="#manual-fakes-dont-scale" title="Permanent link">&para;</a></h3>
+<p>Consider a simple interface:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">AnalyticsService</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">track</span><span class="p">(</span><span class="n">event</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">)</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="kd">suspend</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">flush</span><span class="p">():</span><span class="w"> </span><span class="n">Result</span><span class="o">&lt;</span><span class="kt">Unit</span><span class="o">&gt;</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="p">}</span>
+</code></pre></div>
+<p>A proper, production-quality fake requires ~60-80 lines of boilerplate:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// Typical handwritten fake — mutable, error-prone, tedious</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kd">class</span><span class="w"> </span><span class="nc">FakeAnalyticsService</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">AnalyticsService</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="c1">// Behavior configuration</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">trackBehavior</span><span class="p">:</span><span class="w"> </span><span class="p">((</span><span class="kt">String</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">Unit</span><span class="p">)</span><span class="o">?</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">flushBehavior</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">suspend</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Result</span><span class="o">&lt;</span><span class="kt">Unit</span><span class="o">&gt;</span><span class="p">)</span><span class="o">?</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="c1">// Call history (non-thread-safe!)</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">_trackCalls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mutableListOf</span><span class="o">&lt;</span><span class="kt">Unit</span><span class="o">&gt;</span><span class="p">()</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">trackCalls</span><span class="p">:</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="kt">Unit</span><span class="o">&gt;</span><span class="w"> </span><span class="k">get</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">_trackCalls</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">_flushCalls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mutableListOf</span><span class="o">&lt;</span><span class="kt">Unit</span><span class="o">&gt;</span><span class="p">()</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">flushCalls</span><span class="p">:</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="kt">Unit</span><span class="o">&gt;</span><span class="w"> </span><span class="k">get</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">_flushCalls</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="w">    </span><span class="c1">// Interface implementation</span>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">track</span><span class="p">(</span><span class="n">event</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="w">        </span><span class="n">_trackCalls</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="kt">Unit</span><span class="p">)</span>
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="w">        </span><span class="n">trackBehavior</span><span class="o">?.</span><span class="na">invoke</span><span class="p">(</span><span class="n">event</span><span class="p">)</span><span class="w"> </span><span class="o">?:</span><span class="w"> </span><span class="kt">Unit</span>
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>
+<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">suspend</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">flush</span><span class="p">():</span><span class="w"> </span><span class="n">Result</span><span class="o">&lt;</span><span class="kt">Unit</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a><span class="w">        </span><span class="n">_flushCalls</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="kt">Unit</span><span class="p">)</span>
+<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">flushBehavior</span><span class="o">?.</span><span class="na">invoke</span><span class="p">()</span><span class="w"> </span><span class="o">?:</span><span class="w"> </span><span class="n">Result</span><span class="p">.</span><span class="na">success</span><span class="p">(</span><span class="kt">Unit</span><span class="p">)</span>
+<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>
+<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a><span class="w">    </span><span class="c1">// Configuration methods</span>
+<a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">configureTrack</span><span class="p">(</span><span class="n">behavior</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="kt">String</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">Unit</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a><span class="w">        </span><span class="n">trackBehavior</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">behavior</span>
+<a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>
+<a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">configureFlush</span><span class="p">(</span><span class="n">behavior</span><span class="p">:</span><span class="w"> </span><span class="n">suspend</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Result</span><span class="o">&lt;</span><span class="kt">Unit</span><span class="o">&gt;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a><span class="w">        </span><span class="n">flushBehavior</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">behavior</span>
+<a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a><span class="p">}</span>
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Fakt does it differently</p>
+<p>By default, Fakt generates <strong>immutable</strong> fakes where behavior is set via constructor parameters and cannot change after construction. This eliminates shared mutable state and makes fakes thread-safe by design.</p>
+<p>For advanced integration test scenarios, Fakt also supports <a href="user-guide/immutable-vs-mutable.html">opt-in mutable fakes</a> with <code>@Fake(mutability = MutabilityMode.MUTABLE)</code>. Unlike the handwritten pattern above, mutable Fakt fakes are still compiler-generated (never drift from the interface), use a type-safe <code>modify {}</code> DSL (not raw setters), and compose cleanly with call history.</p>
+</div>
+<p>The problems: call history uses mutable variables that break under concurrent tests. N methods require ~30N lines. Interface changes don&rsquo;t break unused fakes—they silently drift. For 50 interfaces, this means thousands of lines of brittle boilerplate.</p>
+<h3 id="the-mock-tax">The Mock Tax<a class="headerlink" href="#the-mock-tax" title="Permanent link">&para;</a></h3>
+<p>Runtime mocking frameworks solve the boilerplate but pay a different cost. Kotlin classes are <code>final</code> by default, so MockK and Mockito resort to bytecode instrumentation. Independent benchmarks<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup> quantify the penalty:</p>
+<table>
+<thead>
+<tr>
+<th>Mocking Pattern</th>
+<th>Framework</th>
+<th>Comparison</th>
+<th>Verified Penalty</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mockkObject</code> (Singletons)</td>
+<td>MockK</td>
+<td>vs. Dependency Injection</td>
+<td><strong>1,391x slower</strong></td>
+</tr>
+<tr>
+<td><code>mockkStatic</code> (Top-level functions)</td>
+<td>MockK</td>
+<td>vs. Interface-based DI</td>
+<td><strong>146x slower</strong></td>
+</tr>
+<tr>
+<td><code>verify { ... }</code> (Interaction verification)</td>
+<td>MockK</td>
+<td>vs. State-based testing</td>
+<td><strong>47x slower</strong></td>
+</tr>
+<tr>
+<td><code>relaxed</code> mocks (Unstubbed calls)</td>
+<td>MockK</td>
+<td>vs. Strict mocks</td>
+<td><strong>3.7x slower</strong></td>
+</tr>
+<tr>
+<td><code>mock-maker-inline</code></td>
+<td>Mockito</td>
+<td>vs. <code>all-open</code> plugin</td>
+<td><strong>2.7-3x slower</strong><sup id="fnref:2"><a class="footnote-ref" href="#fn:2">12</a></sup><sup id="fnref2:3"><a class="footnote-ref" href="#fn:3">2</a></sup></td>
+</tr>
+</tbody>
+</table>
+<p>A production test suite with 2,668 tests experienced a 2.7x slowdown (7.3s → 20.0s) when using <code>mock-maker-inline</code><sup id="fnref:3"><a class="footnote-ref" href="#fn:3">2</a></sup>. For large projects, the mock tax accumulates to 40% slower test suites<sup id="fnref2:1"><a class="footnote-ref" href="#fn:1">1</a></sup>.</p>
+<h3 id="the-kmp-dead-end">The KMP Dead End<a class="headerlink" href="#the-kmp-dead-end" title="Permanent link">&para;</a></h3>
+<p>Runtime mocking relies on JVM-specific features: reflection, bytecode instrumentation, dynamic proxies. Kotlin/Native and Kotlin/Wasm compile to machine code. There is no JVM. MockK and Mockito cannot run in <code>commonTest</code> source sets targeting Native or Wasm<sup id="fnref:6"><a class="footnote-ref" href="#fn:6">3</a></sup><sup id="fnref:7"><a class="footnote-ref" href="#fn:7">4</a></sup>.</p>
+<p>The community attempted KSP-based solutions, but Kotlin 2.0&rsquo;s K2 compiler broke them. The StreetComplete app (10,000+ tests) was forced to migrate mid-project<sup id="fnref:8"><a class="footnote-ref" href="#fn:8">5</a></sup>.</p>
+<hr />
+<h2 id="why-compiler-plugins-work">Why Compiler Plugins Work<a class="headerlink" href="#why-compiler-plugins-work" title="Permanent link">&para;</a></h2>
+<p>KSP-based tools (Mockative, MocKMP) operated at the symbol level—after type resolution, with limited access to the type system. When K2 landed, they broke. Compiler plugins operate during compilation, with full access to FIR and IR. They survive Kotlin version updates.</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>KSP</th>
+<th>Compiler Plugin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Access</td>
+<td>After type resolution</td>
+<td>During compilation</td>
+</tr>
+<tr>
+<td>Type System</td>
+<td>Read-only symbols</td>
+<td>Full manipulation</td>
+</tr>
+<tr>
+<td>K2 Stability</td>
+<td>Broken</td>
+<td>Stable</td>
+</tr>
+</tbody>
+</table>
+<p>Fakt uses a two-phase FIR → IR architecture:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>┌──────────────────────────────────────────────────────┐
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>│  PHASE 1: FIR (Frontend IR)                         │
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>│  • Detects @Fake annotations                        │
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>│  • Validates interface structure                    │
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>│  • Full type system access                          │
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>└──────────────────────────────────────────────────────┘
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>                         ↓
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>┌──────────────────────────────────────────────────────┐
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>│  PHASE 2: IR (Intermediate Representation)          │
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>│  • Analyzes interface methods and properties        │
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>│  • Generates readable .kt source files              │
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>│  • Thread-safe StateFlow call history               │
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>└──────────────────────────────────────────────────────┘
+</code></pre></div>
+<p>This is the same pattern used by <a href="https://github.com/ZacSweers/metro">Metro</a>, Zac Sweers&rsquo; DI compiler plugin. Metro&rsquo;s architecture has proven stable across Kotlin 1.9, 2.0, and 2.1.</p>
+<hr />
+<h2 id="why-fakes-over-mocks">Why Fakes Over Mocks<a class="headerlink" href="#why-fakes-over-mocks" title="Permanent link">&para;</a></h2>
+<p>Beyond performance, fakes represent a different testing philosophy. Martin Fowler&rsquo;s &ldquo;Mocks Aren&rsquo;t Stubs&rdquo;<sup id="fnref:10"><a class="footnote-ref" href="#fn:10">6</a></sup> describes two schools: state-based testing (verify outcomes) and interaction-based testing (verify method calls).</p>
+<p>The problem with interaction-based tests: they couple to implementation details<sup id="fnref:11"><a class="footnote-ref" href="#fn:11">7</a></sup>. Refactor a method signature without changing behavior, and mock-based tests break. Google&rsquo;s Testing Blog defines resilience as a critical test quality—&ldquo;a test shouldn&rsquo;t fail if the code under test isn&rsquo;t defective&rdquo;<sup id="fnref:12"><a class="footnote-ref" href="#fn:12">8</a></sup>. Mock-based tests often violate this.</p>
+<p>Google&rsquo;s &ldquo;Now in Android&rdquo; app makes this explicit<sup id="fnref:14"><a class="footnote-ref" href="#fn:14">9</a></sup>:</p>
+<blockquote>
+<p><strong>&ldquo;Don&rsquo;t use mocking frameworks. Instead, use fakes.&rdquo;</strong></p>
+</blockquote>
+<p>The goal: &ldquo;less brittle tests that may exercise more production code, instead of just verifying specific calls against mocks&rdquo;<sup id="fnref:15"><a class="footnote-ref" href="#fn:15">10</a></sup>.</p>
+<p>Kotlin&rsquo;s async testing stack—<code>runTest</code>, <code>TestDispatcher</code>, Turbine<sup id="fnref:17"><a class="footnote-ref" href="#fn:17">11</a></sup>—is inherently state-based. Turbine&rsquo;s <code>awaitItem()</code> verifies emitted values, not method calls. The natural data source for this stack is a fake with <code>MutableStateFlow</code> backing. Fakt automates this pattern.</p>
+<hr />
+<h2 id="practical-guidance">Practical Guidance<a class="headerlink" href="#practical-guidance" title="Permanent link">&para;</a></h2>
+<h3 id="fakes-vs-mocks-quick-comparison">Fakes vs. Mocks: Quick Comparison<a class="headerlink" href="#fakes-vs-mocks-quick-comparison" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>MockK/Mockito</th>
+<th>Fakt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>KMP Support</strong></td>
+<td>Limited (JVM only)</td>
+<td>Universal (all targets)</td>
+</tr>
+<tr>
+<td><strong>Compile-time Safety</strong></td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><strong>Runtime Overhead</strong></td>
+<td>Heavy (reflection)</td>
+<td>Zero</td>
+</tr>
+<tr>
+<td><strong>Type Safety</strong></td>
+<td>Partial (<code>any()</code> matchers)</td>
+<td>Complete</td>
+</tr>
+<tr>
+<td><strong>Learning Curve</strong></td>
+<td>Steep (complex DSL)</td>
+<td>Gentle (typed functions)</td>
+</tr>
+<tr>
+<td><strong>Call History</strong></td>
+<td>Manual (<code>verify { }</code>)</td>
+<td>Built-in (StateFlow)</td>
+</tr>
+<tr>
+<td><strong>Thread Safety</strong></td>
+<td>Not guaranteed</td>
+<td>StateFlow-based</td>
+</tr>
+<tr>
+<td><strong>Debuggability</strong></td>
+<td>Reflection (opaque)</td>
+<td>Generated <code>.kt</code> files</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="choosing-the-right-tool">Choosing the Right Tool<a class="headerlink" href="#choosing-the-right-tool" title="Permanent link">&para;</a></h3>
+<p>Fakt and mocking libraries solve overlapping but distinct problems. Choosing between them depends on your constraints and testing needs.</p>
+<p><strong>Fakt works best when:</strong></p>
+<ul>
+<li>
+<p>You&rsquo;ve already chosen fakes over mocks. If you understand the state-based testing philosophy and prefer testing outcomes over verifying interactions, Fakt automates what you&rsquo;d otherwise write by hand.</p>
+</li>
+<li>
+<p>You only use mocks for convenience. Many developers reach for mocking frameworks not for <code>verify { }</code> features, but simply because writing manual fakes is tedious. Fakt gives you the factory convenience without the mock overhead—generated fakes are plain Kotlin classes.</p>
+</li>
+<li>
+<p>You&rsquo;re building for Kotlin Multiplatform. Fakt generates plain Kotlin that compiles on JVM, Native, and WebAssembly—no reflection required. This applies to any source set, not just <code>commonTest</code>.</p>
+</li>
+<li>
+<p>You value exercising production code in tests. Fakt-generated fakes are real implementations your tests compile against, catching interface drift at build time rather than runtime.</p>
+</li>
+<li>
+<p>Tests run concurrently. Fakt tracks call history with StateFlow, which is thread-safe by design. Manual fakes with <code>var count = 0</code> break under parallel execution.</p>
+</li>
+</ul>
+<p><strong>Mocking libraries (Mokkery, MockK) work best when:</strong></p>
+<ul>
+<li>
+<p>You need strict call ordering verification. Verifying that <code>validate()</code> was called before <code>charge()</code> before <code>ship()</code> in exact sequence requires <code>verify(exhaustiveOrder)</code>. Fakt tracks call history, not call order.</p>
+</li>
+<li>
+<p>You need spy behavior. Partial mocking of real implementations—calling real methods while intercepting others—is something only mocking frameworks can do. Fakt generates new implementations, it doesn&rsquo;t wrap existing ones.</p>
+</li>
+<li>
+<p>You&rsquo;re mocking third-party classes without interfaces. If a library exposes final classes with no interface to program against, mocking frameworks can instrument the bytecode. Fakt requires an interface to annotate.</p>
+</li>
+</ul>
+<p><strong>Neither tool replaces contract testing.</strong> For third-party HTTP APIs, use WireMock or Pact. Hand-written fakes for external services drift from reality without contract validation—they create dangerous illusions of fidelity that break in production.</p>
+<hr />
+<h2 id="get-started">Get Started<a class="headerlink" href="#get-started" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="get-started/index.html">Getting Started</a> - Install Fakt and create your first fake</li>
+<li><a href="get-started/features.html">Features</a> - Complete feature reference</li>
+<li><a href="user-guide/usage.html">Usage Guide</a> - Common patterns and examples</li>
+<li><a href="user-guide/migration-from-mocks.html">Migration from Mocks</a> - Moving from MockK/Mockito</li>
+</ul>
+<hr />
+<h2 id="works-cited">Works Cited<a class="headerlink" href="#works-cited" title="Permanent link">&para;</a></h2>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:1">
+<p>Benchmarking Mockk — Avoid these patterns for fast unit tests. Kevin Block. <a href="https://medium.com/@_kevinb/benchmarking-mockk-avoid-these-patterns-for-fast-unit-tests-220fc225da55">https://medium.com/@_kevinb/benchmarking-mockk-avoid-these-patterns-for-fast-unit-tests-220fc225da55</a>&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:3">
+<p>Mocking Kotlin classes with Mockito — the fast way. Brais Gabín Moreira. <a href="https://medium.com/21buttons-tech/mocking-kotlin-classes-with-mockito-the-fast-way-631824edd5ba">https://medium.com/21buttons-tech/mocking-kotlin-classes-with-mockito-the-fast-way-631824edd5ba</a>&#160;<a class="footnote-backref" href="#fnref:3" title="Jump back to footnote 2 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:3" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:6">
+<p>Did someone try to use Mockk on KMM project. Kotlin Slack. <a href="https://slack-chats.kotlinlang.org/t/10131532/did-someone-try-to-use-mockk-on-kmm-project">https://slack-chats.kotlinlang.org/t/10131532/did-someone-try-to-use-mockk-on-kmm-project</a>&#160;<a class="footnote-backref" href="#fnref:6" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+<li id="fn:7">
+<p>Mock common tests in kotlin using multiplatform. Stack Overflow. <a href="https://stackoverflow.com/questions/65491916/mock-common-tests-in-kotlin-using-multiplatform">https://stackoverflow.com/questions/65491916/mock-common-tests-in-kotlin-using-multiplatform</a>&#160;<a class="footnote-backref" href="#fnref:7" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+</li>
+<li id="fn:8">
+<p>Mocking in Kotlin Multiplatform: KSP vs Compiler Plugins. Martin Hristev. <a href="https://medium.com/@mhristev/mocking-in-kotlin-multiplatform-ksp-vs-compiler-plugins-4424751b83d7">https://medium.com/@mhristev/mocking-in-kotlin-multiplatform-ksp-vs-compiler-plugins-4424751b83d7</a>&#160;<a class="footnote-backref" href="#fnref:8" title="Jump back to footnote 5 in the text">&#8617;</a></p>
+</li>
+<li id="fn:10">
+<p>Mocks Aren&rsquo;t Stubs. Martin Fowler. <a href="https://martinfowler.com/articles/mocksArentStubs.html">https://martinfowler.com/articles/mocksArentStubs.html</a>&#160;<a class="footnote-backref" href="#fnref:10" title="Jump back to footnote 6 in the text">&#8617;</a></p>
+</li>
+<li id="fn:11">
+<p>Unit Testing — Why must you mock me? Craig Walker. <a href="https://medium.com/@walkercp/unit-testing-why-must-you-mock-me-69293508dd13">https://medium.com/@walkercp/unit-testing-why-must-you-mock-me-69293508dd13</a>&#160;<a class="footnote-backref" href="#fnref:11" title="Jump back to footnote 7 in the text">&#8617;</a></p>
+</li>
+<li id="fn:12">
+<p>Testing on the Toilet: Effective Testing. Google Testing Blog. <a href="https://testing.googleblog.com/2014/05/testing-on-toilet-effective-testing.html">https://testing.googleblog.com/2014/05/testing-on-toilet-effective-testing.html</a>&#160;<a class="footnote-backref" href="#fnref:12" title="Jump back to footnote 8 in the text">&#8617;</a></p>
+</li>
+<li id="fn:14">
+<p>Testing strategy and how to test. Now in Android Wiki. <a href="https://github.com/android/nowinandroid/wiki/Testing-strategy-and-how-to-test">https://github.com/android/nowinandroid/wiki/Testing-strategy-and-how-to-test</a>&#160;<a class="footnote-backref" href="#fnref:14" title="Jump back to footnote 9 in the text">&#8617;</a></p>
+</li>
+<li id="fn:15">
+<p>android/nowinandroid: A fully functional Android app built entirely with Kotlin and Jetpack Compose. GitHub. <a href="https://github.com/android/nowinandroid">https://github.com/android/nowinandroid</a>&#160;<a class="footnote-backref" href="#fnref:15" title="Jump back to footnote 10 in the text">&#8617;</a></p>
+</li>
+<li id="fn:17">
+<p>Flow testing with Turbine. Cash App Code Blog. <a href="https://code.cash.app/flow-testing-with-turbine">https://code.cash.app/flow-testing-with-turbine</a>&#160;<a class="footnote-backref" href="#fnref:17" title="Jump back to footnote 11 in the text">&#8617;</a></p>
+</li>
+<li id="fn:2">
+<p>Effective migration to Kotlin on Android. Aris Papadopoulos. <a href="https://medium.com/android-news/effective-migration-to-kotlin-on-android-cfb92bfaa49b">https://medium.com/android-news/effective-migration-to-kotlin-on-android-cfb92bfaa49b</a>&#160;<a class="footnote-backref" href="#fnref:2" title="Jump back to footnote 12 in the text">&#8617;</a></p>
+</li>
+<li id="fn:4">
+<p>Reflection | Kotlin Documentation. <a href="https://kotlinlang.org/docs/reflection.html">https://kotlinlang.org/docs/reflection.html</a>&#160;<a class="footnote-backref" href="#fnref:4" title="Jump back to footnote 13 in the text">&#8617;</a></p>
+</li>
+<li id="fn:5">
+<p>Reflection? - Native - Kotlin Discussions. <a href="https://discuss.kotlinlang.org/t/reflection/4054">https://discuss.kotlinlang.org/t/reflection/4054</a>&#160;<a class="footnote-backref" href="#fnref:5" title="Jump back to footnote 14 in the text">&#8617;</a></p>
+</li>
+<li id="fn:9">
+<p>MocKMP: a Mocking processor for Kotlin/Multiplatform. Salomon BRYS. <a href="https://medium.com/kodein-koders/mockmp-a-mocking-processor-for-kotlin-multiplatform-51957c484fe5">https://medium.com/kodein-koders/mockmp-a-mocking-processor-for-kotlin-multiplatform-51957c484fe5</a>&#160;<a class="footnote-backref" href="#fnref:9" title="Jump back to footnote 15 in the text">&#8617;</a></p>
+</li>
+<li id="fn:13">
+<p>Trade-offs to consider when choosing to use Mocks vs Fakes. HackMD. <a href="https://hackmd.io/@pierodibello/Trade-offs-to-consider-when-choosing-to-use-Mocks-vs-Fakes">https://hackmd.io/@pierodibello/Trade-offs-to-consider-when-choosing-to-use-Mocks-vs-Fakes</a>&#160;<a class="footnote-backref" href="#fnref:13" title="Jump back to footnote 16 in the text">&#8617;</a></p>
+</li>
+<li id="fn:16">
+<p>Testing Kotlin coroutines on Android. Android Developers. <a href="https://developer.android.com/kotlin/coroutines/test">https://developer.android.com/kotlin/coroutines/test</a>&#160;<a class="footnote-backref" href="#fnref:16" title="Jump back to footnote 17 in the text">&#8617;</a></p>
+</li>
+<li id="fn:18">
+<p>Why we should use wiremock instead of Mockito. Stack Overflow. <a href="https://stackoverflow.com/questions/50726017/why-we-should-use-wiremock-instead-of-mockito">https://stackoverflow.com/questions/50726017/why-we-should-use-wiremock-instead-of-mockito</a>&#160;<a class="footnote-backref" href="#fnref:18" title="Jump back to footnote 18 in the text">&#8617;</a></p>
+</li>
+<li id="fn:19">
+<p>Stop Breaking My API: A Practical Guide to Contract Testing with Pact. Medium. <a href="https://medium.com/@mohsenny/stop-breaking-my-api-a-practical-guide-to-contract-testing-with-pact-33858d113386">https://medium.com/@mohsenny/stop-breaking-my-api-a-practical-guide-to-contract-testing-with-pact-33858d113386</a>&#160;<a class="footnote-backref" href="#fnref:19" title="Jump back to footnote 19 in the text">&#8617;</a></p>
+</li>
+<li id="fn:20">
+<p>lupuuss/Mokkery: The mocking library for Kotlin Multiplatform. GitHub. <a href="https://github.com/lupuuss/Mokkery">https://github.com/lupuuss/Mokkery</a>&#160;<a class="footnote-backref" href="#fnref:20" title="Jump back to footnote 20 in the text">&#8617;</a></p>
+</li>
+<li id="fn:21">
+<p>Kotlin 2.0.0 support · Issue #1 · lupuuss/Mokkery. GitHub. <a href="https://github.com/lupuuss/Mokkery/issues/1">https://github.com/lupuuss/Mokkery/issues/1</a>&#160;<a class="footnote-backref" href="#fnref:21" title="Jump back to footnote 21 in the text">&#8617;</a></p>
+</li>
+<li id="fn:22">
+<p>Use multiplatform mocking library for tests · Issue #5420 · streetcomplete/StreetComplete. GitHub. <a href="https://github.com/streetcomplete/StreetComplete/issues/5420">https://github.com/streetcomplete/StreetComplete/issues/5420</a>&#160;<a class="footnote-backref" href="#fnref:22" title="Jump back to footnote 22 in the text">&#8617;</a></p>
+</li>
+<li id="fn:23">
+<p>Kotlin 2.2.0 support · Issue #83 · lupuuss/Mokkery. GitHub. <a href="https://github.com/lupuuss/Mokkery/issues/83">https://github.com/lupuuss/Mokkery/issues/83</a>&#160;<a class="footnote-backref" href="#fnref:23" title="Jump back to footnote 23 in the text">&#8617;</a></p>
+</li>
+<li id="fn:24">
+<p>Mocking | Mokkery. <a href="https://mokkery.dev/docs/Guides/Mocking/">https://mokkery.dev/docs/Guides/Mocking/</a>&#160;<a class="footnote-backref" href="#fnref:24" title="Jump back to footnote 24 in the text">&#8617;</a></p>
+</li>
+<li id="fn:25">
+<p>A to Z of Testing in Kotlin Multiplatform. Kinto Technologies. <a href="https://blog.kinto-technologies.com/posts/2024-12-24-tests-in-kmp/">https://blog.kinto-technologies.com/posts/2024-12-24-tests-in-kmp/</a>&#160;<a class="footnote-backref" href="#fnref:25" title="Jump back to footnote 25 in the text">&#8617;</a></p>
+</li>
+<li id="fn:26">
+<p>Limitations | Mokkery. <a href="https://mokkery.dev/docs/Limitations/">https://mokkery.dev/docs/Limitations/</a>&#160;<a class="footnote-backref" href="#fnref:26" title="Jump back to footnote 26 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2025 Rodrigo Sicarelli
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": ".", "features": ["content.code.copy", "content.code.select", "search.suggest", "search.highlight", "content.tabs.link"], "search": "assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="assets/javascripts/bundle.50899def.min.js"></script>
+      
+    
+  </body>
+</html>
