@@ -15,12 +15,14 @@ import com.rsicarelli.fakt.codegen.model.ConstructorProperty
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for code rendering (Model → String).
  *
  * Rendering converts our model to actual Kotlin source code.
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RenderingTest {
     @Test
     fun `GIVEN Simple CodeType WHEN rendering THEN returns name`() {

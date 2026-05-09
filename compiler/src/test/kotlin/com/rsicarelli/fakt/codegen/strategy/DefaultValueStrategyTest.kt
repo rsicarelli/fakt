@@ -8,12 +8,14 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for DefaultValueStrategy interface.
  *
  * Verifies strategy pattern contract for default value generation.
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DefaultValueStrategyTest {
     @Test
     fun `GIVEN strategy implementation WHEN checking supported type THEN returns true`() {
