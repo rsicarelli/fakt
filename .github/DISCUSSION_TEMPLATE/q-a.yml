@@ -8,7 +8,7 @@ body:
       value: |
         Thanks for asking! Fakt is a compiler plugin — most "it doesn't work"
         reports need specific environment + code context. Filling this in
-        helps you get an answer within ~5 business days; skipping fields
+        helps you get an answer faster; skipping fields
         usually leads to a request for repro info and a stalled thread.
 
   - type: input
