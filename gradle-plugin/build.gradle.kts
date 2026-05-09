@@ -49,7 +49,6 @@ dependencies {
     testImplementation(libs.kotlin.gradlePlugin.api)
     testImplementation(libs.coroutines.test)
     testImplementation(gradleTestKit())
-    testImplementation(projects.compilerRunner)
     testImplementation(projects.codegenRuntime)
     // Tests pass the test process's classpath to the Worker; needs kotlin-compiler-embeddable so
     // K2JVMCompiler is resolvable at runtime.

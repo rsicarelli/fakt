@@ -4,8 +4,11 @@ package com.rsicarelli.fakt.gradle
 
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.api.SourceSetInfo
+import com.rsicarelli.fakt.compiler.fir.cache.MetadataCacheSerializer
 import java.io.File
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
 import org.gradle.testkit.runner.BuildResult
@@ -90,6 +93,100 @@ class FaktGenerateTaskTest {
         )
     }
 
+    @org.junit.jupiter.api.Disabled(
+        "Relocation canary fails today: sourceSetContextJson encodes absolute outputDir paths " +
+            "that vary per project dir, so the @Input string differs and the cache key differs. " +
+            "Real fix requires routing absolute paths through Gradle file-property normalization " +
+            "(or using @PathSensitive providers instead of @Input String). Tracked as follow-up; " +
+            "out of scope for the PR 2.1 cleanup pass."
+    )
+    @Test
+    fun `GIVEN identical inputs in two project dirs sharing a build cache WHEN both run THEN second reports FROM-CACHE`(
+        @TempDir projectA: File,
+        @TempDir projectB: File,
+        @TempDir buildCacheDir: File,
+    ) {
+        setupProject(projectA, fixtureSource = SINGLE_INTERFACE_FIXTURE)
+        configureLocalBuildCache(projectA, buildCacheDir)
+        setupProject(projectB, fixtureSource = SINGLE_INTERFACE_FIXTURE)
+        configureLocalBuildCache(projectB, buildCacheDir)
+
+        val first = runTask(projectA, "faktGenerate", "--build-cache")
+        assertEquals(TaskOutcome.SUCCESS, first.task(":faktGenerate")?.outcome, first.output)
+
+        val second = runTask(projectB, "faktGenerate", "--build-cache")
+        assertEquals(
+            TaskOutcome.FROM_CACHE,
+            second.task(":faktGenerate")?.outcome,
+            "Cross-directory cache hit failed — likely an absolute-path input slipped through (R4 relocation canary).\nproject A:\n${first.output}\nproject B:\n${second.output}",
+        )
+    }
+
+    @Test
+    fun `GIVEN producer mode WHEN faktGenerate runs THEN firMetadataFile contains validated FIR metadata`(
+        @TempDir projectDir: File
+    ) {
+        val cacheFile = projectDir.resolve("fir-metadata.json")
+        setupProject(
+            projectDir,
+            fixtureSource = SINGLE_INTERFACE_FIXTURE,
+            firMetadataFile = cacheFile,
+        )
+
+        val result = runTask(projectDir, "faktGenerate")
+
+        assertEquals(TaskOutcome.SUCCESS, result.task(":faktGenerate")?.outcome, result.output)
+        assertTrue(
+            cacheFile.exists(),
+            "Producer-mode firMetadataFile not written: ${cacheFile.absolutePath}",
+        )
+        val cache = MetadataCacheSerializer.deserialize(cacheFile.absolutePath)
+        assertNotNull(cache, "Cache file failed to deserialise:\n${cacheFile.readText()}")
+        assertEquals(
+            1,
+            cache.interfaces.size,
+            "Producer-mode cache must include the validated @Fake interface; instead got: ${cache.interfaces.map { it.simpleName }}",
+        )
+        assertEquals("UserService", cache.interfaces.single().simpleName)
+    }
+
+    @org.junit.jupiter.api.Disabled(
+        "MetadataCacheSerializer is not byte-deterministic across machines: it serialises " +
+            "ValidatedFakeInterface.sourceLocation.filePath as an absolute path and " +
+            "FirMetadataCache.generatedAt as System.currentTimeMillis(). Plan §R5 calls this out " +
+            "as a real bug. Fix requires path-relativisation in the serializer (probably " +
+            "passing project root through to the converter) and fixing generatedAt to a stable " +
+            "value or removing it. Out of scope for the PR 2.1 cleanup pass; tracked as " +
+            "follow-up before PR 3 KMP wiring lands."
+    )
+    @Test
+    fun `GIVEN producer mode WHEN running twice THEN firMetadataFile is byte-identical across runs`(
+        @TempDir projectA: File,
+        @TempDir projectB: File,
+    ) {
+        val cacheA = projectA.resolve("fir-metadata.json")
+        setupProject(projectA, fixtureSource = SINGLE_INTERFACE_FIXTURE, firMetadataFile = cacheA)
+        runTask(projectA, "faktGenerate").also {
+            assertEquals(TaskOutcome.SUCCESS, it.task(":faktGenerate")?.outcome, it.output)
+        }
+
+        val cacheB = projectB.resolve("fir-metadata.json")
+        setupProject(projectB, fixtureSource = SINGLE_INTERFACE_FIXTURE, firMetadataFile = cacheB)
+        runTask(projectB, "faktGenerate").also {
+            assertEquals(TaskOutcome.SUCCESS, it.task(":faktGenerate")?.outcome, it.output)
+        }
+
+        // Source paths differ between the two temp dirs; the serializer is supposed to be
+        // byte-deterministic regardless (research artifact 2 §R5). If this assertion ever fails,
+        // it means the cache leaks build-machine state and consumer compilations across hosts will
+        // see spurious cache misses.
+        assertContentEquals(
+            cacheA.readBytes(),
+            cacheB.readBytes(),
+            "firMetadataFile contents differ across runs — non-deterministic serializer",
+        )
+    }
+
     @Test
     fun `GIVEN cache populated WHEN running clean with --build-cache THEN second run reports FROM-CACHE`(
         @TempDir projectDir: File,
@@ -132,13 +229,25 @@ class FaktGenerateTaskTest {
             .withArguments(*arguments, "--stacktrace")
             .build()
 
-    private fun setupProject(projectDir: File, fixtureSource: String) {
+    private fun setupProject(
+        projectDir: File,
+        fixtureSource: String,
+        firMetadataFile: File? = null,
+    ) {
         projectDir
             .resolve("settings.gradle.kts")
             .writeText("""rootProject.name = "fakt-task-test"""")
+        // The TestKit-spawned Gradle daemon hosts our isolated worker that loads
+        // kotlin-compiler-embeddable. Default 384MiB metaspace is not enough — it OOMs after the
+        // first task invocation. Plan §R1 documents this for end users; tests need the same.
+        projectDir
+            .resolve("gradle.properties")
+            .writeText("org.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=1024m\n")
         projectDir.resolve("src/main/kotlin/fixture").mkdirs()
         projectDir.resolve("src/main/kotlin/fixture/Fixture.kt").writeText(fixtureSource)
-        projectDir.resolve("build.gradle.kts").writeText(buildScriptForTask(projectDir))
+        projectDir
+            .resolve("build.gradle.kts")
+            .writeText(buildScriptForTask(projectDir, firMetadataFile))
     }
 
     private fun configureLocalBuildCache(projectDir: File, buildCacheDir: File) {
@@ -158,7 +267,7 @@ class FaktGenerateTaskTest {
             )
     }
 
-    private fun buildScriptForTask(projectDir: File): String {
+    private fun buildScriptForTask(projectDir: File, firMetadataFile: File? = null): String {
         val outputDir = projectDir.resolve("build/generated/fakt/jvm/jvmTest/kotlin")
         // Point both context paths at the task's @OutputDirectory so every generated file the
         // plugin writes ends up inside Gradle's declared output — otherwise the build cache only
@@ -213,6 +322,7 @@ class FaktGenerateTaskTest {
                 imports.set(listOf<String>())
                 generatedKotlinDir.set(file("${outputDir.absolutePath.replace('\\', '/')}"))
                 scratchDir.set(layout.buildDirectory.dir("faktCaches/jvm/jvmTest"))
+                ${firMetadataFile?.let { "firMetadataFile.set(file(\"${it.absolutePath.replace('\\', '/')}\"))" } ?: ""}
             }
 
             tasks.register("clean") { doLast { delete(layout.buildDirectory) } }
@@ -220,6 +330,20 @@ class FaktGenerateTaskTest {
             .trimIndent()
     }
 
+    /**
+     * Worker classpath built from the test JVM's classpath, minus two heuristic strips:
+     * 1. **kctfork** (`dev.zacsweers.kctfork:core`) registers a `CompilerPluginRegistrar` via
+     *    `META-INF/services`. When `K2JVMCompiler` initialises and calls `ServiceLoader`, the
+     *    registrar's class is loaded, which transitively requires
+     *    `org.jetbrains.kotlin.gradle.internal.analyzer.CompilationErrorException` — a class that
+     *    was removed from `kotlin-compiler-embeddable` in Kotlin 2.x but kctfork 0.12.1 still
+     *    references. Filter is keyed to that version; any kctfork upgrade should re-validate.
+     * 2. **kotlin-gradle-plugin\*** carries dangling bytecode references to compiler classes that
+     *    moved across Kotlin versions (same family of breakage). KGP isn't needed by the worker —
+     *    only `kotlin-compiler-embeddable` is. Filter pinned to KGP 2.3.20.
+     *
+     * Both filters should be revisited (or removed) when bumping kctfork or KGP.
+     */
     private fun workerClasspath(): List<File> =
         System.getProperty("java.class.path").split(File.pathSeparator).map(::File).filter { entry
             ->
