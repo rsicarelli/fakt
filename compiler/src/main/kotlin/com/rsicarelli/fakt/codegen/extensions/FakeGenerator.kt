@@ -71,6 +71,7 @@ data class PropertySpec(
 data class FakeGenerationConfig(
     val packageName: String,
     val interfaceName: String,
+    val superTypeName: String = interfaceName,
     val methods: List<MethodSpec> = emptyList(),
     val properties: List<PropertySpec> = emptyList(),
     val imports: List<String> = emptyList(),
@@ -175,6 +176,7 @@ private val ANNOTATIONS_REQUIRING_OPTIN =
 fun generateCompleteFake(
     packageName: String,
     interfaceName: String,
+    superTypeName: String = interfaceName,
     methods: List<MethodSpec> = emptyList(),
     properties: List<PropertySpec> = emptyList(),
     imports: List<String> = emptyList(),
@@ -191,6 +193,7 @@ fun generateCompleteFake(
         FakeGenerationConfig(
             packageName = packageName,
             interfaceName = interfaceName,
+            superTypeName = superTypeName,
             methods = methods,
             properties = properties,
             imports = imports,
@@ -208,6 +211,7 @@ fun generateCompleteFake(
 private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile {
     val packageName = config.packageName
     val interfaceName = config.interfaceName
+    val superTypeName = config.superTypeName
     val methods = config.methods
     val properties = config.properties
     val imports = config.imports
@@ -366,12 +370,14 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
                 where(whereClauses.joinToString(", "))
             }
 
-            // Extends class or implements interface with type arguments
+            // Extends class or implements interface with type arguments.
+            // Use superTypeName (qualified for nested types) instead of interfaceName, which is the
+            // simple name used to derive generated identifiers like FakeXxxImpl.
             val superType =
                 when {
                     typeParamNames.isNotEmpty() ->
-                        "$interfaceName<${typeParamNames.joinToString(", ")}>"
-                    else -> interfaceName
+                        "$superTypeName<${typeParamNames.joinToString(", ")}>"
+                    else -> superTypeName
                 }
             // Classes need constructor call: ClassName(args) or ClassName<T>(args)
             // Interfaces don't: InterfaceName or InterfaceName<T>

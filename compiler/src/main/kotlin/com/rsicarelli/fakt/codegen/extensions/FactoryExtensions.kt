@@ -109,7 +109,7 @@ fun generateFactoryFunction(spec: FactoryFunctionSpec): String =
 private fun generateFactoryKDocContent(spec: FactoryFunctionSpec, names: FactoryNames): String {
     val fullKDoc =
         KDocGenerator.generateFactoryKDoc(
-            interfaceName = spec.interfaceName,
+            interfaceName = spec.superTypeName,
             factoryName = names.factoryName,
             implClassName = names.fakeClassName,
             methods = spec.methods,

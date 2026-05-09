@@ -106,6 +106,7 @@ class IrGenerationMetadata
 internal constructor(
     val interfaceName: String,
     val packageName: String,
+    val qualifiedSourceName: String,
     val typeParameters: List<String>,
     private val members: IrInterfaceMembers,
     val sourceInterface: IrClass,
@@ -252,6 +253,7 @@ class IrClassGenerationMetadata
 internal constructor(
     val className: String,
     val packageName: String,
+    val qualifiedSourceName: String,
     val typeParameters: List<String>,
     private val members: IrClassMembers,
     val sourceClass: IrClass,
@@ -324,6 +326,7 @@ fun IrGenerationMetadata.toInterfaceAnalysis(
 ): InterfaceAnalysis =
     InterfaceAnalysis(
         interfaceName = interfaceName,
+        qualifiedSourceName = qualifiedSourceName,
         typeParameters = typeParameters,
         properties = properties.map { it.toPropertyAnalysis() },
         functions = functions.map { it.toFunctionAnalysis() },
@@ -403,6 +406,7 @@ internal fun IrClassGenerationMetadata.toClassAnalysis(
 ): ClassAnalysis =
     ClassAnalysis(
         className = className,
+        qualifiedSourceName = qualifiedSourceName,
         typeParameters = typeParameters,
         abstractMethods = abstractMethods.map { it.toFunctionAnalysis() },
         openMethods = openMethods.map { it.toFunctionAnalysis() },

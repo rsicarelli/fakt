@@ -32,6 +32,7 @@ import org.jetbrains.kotlin.ir.types.IrType
  */
 data class InterfaceAnalysis(
     val interfaceName: String,
+    val qualifiedSourceName: String = interfaceName,
     val typeParameters: List<String>,
     val properties: List<PropertyAnalysis>,
     val functions: List<FunctionAnalysis>,
@@ -59,6 +60,7 @@ data class InterfaceAnalysis(
  */
 data class ClassAnalysis(
     val className: String,
+    val qualifiedSourceName: String = className,
     val typeParameters: List<String>,
     val abstractMethods: List<FunctionAnalysis>,
     val openMethods: List<FunctionAnalysis>,
