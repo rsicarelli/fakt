@@ -1,0 +1,11 @@
+public final class com/rsicarelli/fakt/compiler/runner/FaktAnalysisRunner {
+	public static final field INSTANCE Lcom/rsicarelli/fakt/compiler/runner/FaktAnalysisRunner;
+	public final fun newSession (Lcom/rsicarelli/fakt/compiler/api/SourceSetContext;Lcom/rsicarelli/fakt/compiler/api/LogLevel;)Lcom/rsicarelli/fakt/compiler/runner/RunnerSession;
+	public static synthetic fun newSession$default (Lcom/rsicarelli/fakt/compiler/runner/FaktAnalysisRunner;Lcom/rsicarelli/fakt/compiler/api/SourceSetContext;Lcom/rsicarelli/fakt/compiler/api/LogLevel;ILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/runner/RunnerSession;
+}
+
+public final class com/rsicarelli/fakt/compiler/runner/RunnerSession {
+	public final fun captured ()Ljava/util/List;
+	public final fun getPluginRegistrar ()Lorg/jetbrains/kotlin/compiler/plugin/CompilerPluginRegistrar;
+}
+
