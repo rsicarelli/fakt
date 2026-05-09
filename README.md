@@ -99,8 +99,8 @@ assertEquals(1, fake.trackCalls.value.size)
 
 ## 🤝 Contributing
 
-- **Report Bugs:** [Bug Report](https://github.com/rsicarelli/fakt/issues/new?assignees=&labels=bug%2Cneeds-triage&template=bug_report.yml)
-- **Suggest Features:** [Feature Request](https://github.com/rsicarelli/fakt/issues/new?assignees=&labels=enhancement%2Cneeds-triage&template=feature_request.yml) - Your ideas shape our roadmap!
+- **Report Bugs:** [Bug Report](https://github.com/rsicarelli/fakt/issues/new?template=bug_report.yml)
+- **Discuss & Suggest:** [GitHub Discussions](https://github.com/rsicarelli/fakt/discussions) - Ask questions, propose ideas, share work — your input shapes the roadmap!
 - **Documentation:** [User Guide](https://rsicarelli.github.io/fakt/)
 - **Contributing:** See [CONTRIBUTING.md](CONTRIBUTING.md)
 
