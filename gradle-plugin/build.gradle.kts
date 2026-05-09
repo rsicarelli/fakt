@@ -83,10 +83,10 @@ gradlePlugin {
 tasks {
     // Configure test task
     test {
-        // Standard memory for gradle plugin tests
-        jvmArgs("-Xmx1g")
-
-        // Standard timeout
-        systemProperty("junit.jupiter.execution.timeout.default", "30s")
+        // TestKit suites (FaktGenerateTaskTest) spawn a Gradle daemon + worker that hosts
+        // K2JVMCompiler — heavy on cold-cache CI runs, so bump both heap and timeout above
+        // the 1g/30s defaults that worked when this module had only ProjectBuilder tests.
+        jvmArgs("-Xmx2g")
+        systemProperty("junit.jupiter.execution.timeout.default", "5m")
     }
 }
