@@ -2,22 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.transform
 
-import com.rsicarelli.fakt.compiler.core.types.TypeResolution
+import com.rsicarelli.fakt.compiler.core.types.RenderedType
 import com.rsicarelli.fakt.compiler.fir.metadata.FirCallHistoryMode
 import com.rsicarelli.fakt.compiler.fir.metadata.FirMutabilityMode
 import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
-import com.rsicarelli.fakt.compiler.ir.analysis.AnnotationAnalysis
-import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
-import com.rsicarelli.fakt.compiler.ir.analysis.ConstructorParameterInfo
-import com.rsicarelli.fakt.compiler.ir.analysis.FunctionAnalysis
 import com.rsicarelli.fakt.compiler.ir.analysis.GenericPattern
 import com.rsicarelli.fakt.compiler.ir.analysis.GenericPatternAnalyzer
-import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
-import com.rsicarelli.fakt.compiler.ir.analysis.ParameterAnalysis
-import com.rsicarelli.fakt.compiler.ir.analysis.PropertyAnalysis
 import org.jetbrains.kotlin.ir.declarations.IrClass
-import org.jetbrains.kotlin.ir.declarations.IrConstructor
-import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.types.IrType
@@ -158,15 +149,17 @@ internal constructor(
 }
 
 /**
- * Property metadata with resolved IR types.
+ * Property metadata with resolved IR types, transformed from `FirPropertyInfo`.
  *
- * Transformed from FirPropertyInfo (strings) to IR-ready structure.
- *
- * @property name Property name
  * @property type Resolved IrType (from FIR string representation)
  * @property isMutable true for `var`, false for `val`
- * @property isNullable true if type is nullable (T?)
+ * @property isNullable true if type is nullable (`T?`)
  * @property irProperty Original IR property node (for code generation)
+ * @property isTypeParameter true when the property type is a type-parameter placeholder
+ * @property requiresCollectionErasure true when stdlib-collection type args must be erased to `Any`
+ *   under the NoGenerics pattern
+ * @property renderedType Pre-rendered short name + FQN side-channel, or null when no
+ *   [com.rsicarelli.fakt.compiler.core.types.TypeResolution] was supplied to the transformer
  */
 data class IrPropertyMetadata(
     val name: String,
@@ -174,22 +167,22 @@ data class IrPropertyMetadata(
     val isMutable: Boolean,
     val isNullable: Boolean,
     val irProperty: IrProperty,
+    val isTypeParameter: Boolean = false,
+    val requiresCollectionErasure: Boolean = false,
+    val renderedType: RenderedType? = null,
 )
 
 /**
- * Function metadata with resolved IR types.
+ * Function metadata with resolved IR types, transformed from `FirFunctionInfo`.
  *
- * Transformed from FirFunctionInfo (strings) to IR-ready structure.
- *
- * @property name Function name
  * @property parameters Function parameters with resolved IrTypes
- * @property returnType Resolved return IrType (from FIR string representation)
- * @property isSuspend true if function is suspend
- * @property isInline true if function is inline
- * @property typeParameters Method-level type parameters with bounds (e.g.,
- *   ["T", "R : Comparable<R>"])
- * @property typeParameterBounds Method-level type parameter bounds map (e.g., "R" → "TValue")
+ * @property returnType Resolved return IrType
+ * @property typeParameters Method-level type parameters with bounds (e.g., `["T", "R :
+ *   Comparable<R>"]`)
+ * @property typeParameterBounds Method-level type parameter bounds map (e.g., `"R" → "TValue"`)
  * @property irFunction Original IR function node (for code generation)
+ * @property renderedReturnType Pre-rendered short name + FQN side-channel, or null when no
+ *   [com.rsicarelli.fakt.compiler.core.types.TypeResolution] was supplied to the transformer
  */
 data class IrFunctionMetadata(
     val name: String,
@@ -202,20 +195,20 @@ data class IrFunctionMetadata(
     val isOperator: Boolean,
     val extensionReceiverType: IrType?,
     val irFunction: IrSimpleFunction,
+    val renderedReturnType: RenderedType? = null,
 )
 
 /**
- * Parameter metadata with resolved IR types.
+ * Parameter metadata with resolved IR types, transformed from `FirParameterInfo`.
  *
- * Transformed from FirParameterInfo (strings) to IR-ready structure.
- *
- * Added defaultValueCode for default parameter support in generated code.
- *
- * @property name Parameter name
  * @property type Resolved IrType (from FIR string representation)
- * @property hasDefaultValue true if parameter has default value
- * @property defaultValueCode Rendered default value code (e.g., "null", "\"GET\"", "30000L")
- * @property isVararg true if parameter is vararg
+ * @property defaultValueCode Rendered default value expression (e.g. `"null"`, `"\"GET\""`,
+ *   `"30000L"`), or null when the parameter has no default
+ * @property isTypeParameter true when the parameter type is a type-parameter placeholder
+ * @property requiresCollectionErasure true when stdlib-collection type args must be erased to `Any`
+ *   under the NoGenerics pattern
+ * @property renderedType Pre-rendered short name + FQN side-channel, or null when no
+ *   [com.rsicarelli.fakt.compiler.core.types.TypeResolution] was supplied to the transformer
  */
 data class IrParameterMetadata(
     val name: String,
@@ -223,6 +216,9 @@ data class IrParameterMetadata(
     val hasDefaultValue: Boolean,
     val defaultValueCode: String?,
     val isVararg: Boolean,
+    val isTypeParameter: Boolean = false,
+    val requiresCollectionErasure: Boolean = false,
+    val renderedType: RenderedType? = null,
 )
 
 /**
@@ -306,191 +302,6 @@ internal constructor(
      */
     val genericPattern: GenericPattern by lazy { patternAnalyzer.analyzeInterface(sourceClass) }
 }
-
-/**
- * Adapter function: Convert IrGenerationMetadata to InterfaceAnalysis.
- *
- * This allows reusing existing code generators (ImplementationGenerator, FactoryGenerator,
- * ConfigurationDslGenerator) without refactoring them to accept IrGenerationMetadata directly.
- *
- * Adapter pattern for backward compatibility. **Future**: Refactor generators to accept
- * IrGenerationMetadata directly.
- *
- * @param enableCallHistoryDefault Plugin-level default for call history generation. Used when
- *   annotation's callHistoryMode is DEFAULT.
- * @return InterfaceAnalysis compatible with existing generators
- */
-fun IrGenerationMetadata.toInterfaceAnalysis(
-    enableCallHistoryDefault: Boolean = true,
-    enableMutableFakesDefault: Boolean = false,
-): InterfaceAnalysis =
-    InterfaceAnalysis(
-        interfaceName = interfaceName,
-        qualifiedSourceName = qualifiedSourceName,
-        typeParameters = typeParameters,
-        properties = properties.map { it.toPropertyAnalysis() },
-        functions = functions.map { it.toFunctionAnalysis() },
-        sourceInterface = sourceInterface,
-        genericPattern = genericPattern,
-        debugInfo = StringBuilder("Generated from FIR metadata (FIR metadata)"),
-        visibility = visibility,
-        annotations = annotations.map { it.toAnnotationAnalysis() },
-        generateCallHistory = resolveCallHistoryEnabled(callHistoryMode, enableCallHistoryDefault),
-        generateMutableBehaviors =
-            resolveMutabilityEnabled(mutabilityMode, enableMutableFakesDefault),
-    )
-
-/**
- * Resolves whether call history should be generated for a fake.
- *
- * Resolution priority:
- * 1. If annotation specifies ENABLED → true (override plugin default)
- * 2. If annotation specifies DISABLED → false (override plugin default)
- * 3. If annotation specifies DEFAULT → follow plugin default
- *
- * @param annotationMode Call history mode from @Fake annotation
- * @param pluginDefault Plugin-level default from fakt { enableCallHistory.set(...) }
- * @return true if call history should be generated, false otherwise
- */
-private fun resolveCallHistoryEnabled(
-    annotationMode: FirCallHistoryMode,
-    pluginDefault: Boolean,
-): Boolean =
-    when (annotationMode) {
-        FirCallHistoryMode.ENABLED -> true
-        FirCallHistoryMode.DISABLED -> false
-        FirCallHistoryMode.DEFAULT -> pluginDefault
-    }
-
-/**
- * Resolves whether mutable behaviors should be generated for a fake.
- *
- * Resolution priority:
- * 1. If annotation specifies MUTABLE → true (override plugin default)
- * 2. If annotation specifies IMMUTABLE → false (override plugin default)
- * 3. If annotation specifies DEFAULT → follow plugin default
- *
- * @param annotationMode Mutability mode from @Fake annotation
- * @param pluginDefault Plugin-level default from fakt { enableMutableFakes.set(...) }
- * @return true if mutable behaviors should be generated, false otherwise
- */
-private fun resolveMutabilityEnabled(
-    annotationMode: FirMutabilityMode,
-    pluginDefault: Boolean,
-): Boolean =
-    when (annotationMode) {
-        FirMutabilityMode.MUTABLE -> true
-        FirMutabilityMode.IMMUTABLE -> false
-        FirMutabilityMode.DEFAULT -> pluginDefault
-    }
-
-/**
- * Adapter function: Convert IrClassGenerationMetadata to ClassAnalysis.
- *
- * Use ClassAnalysis to preserve abstract/open distinction for proper super delegation generation.
- *
- * Unlike toInterfaceAnalysis(), this keeps abstract and open members separate so generators can
- * apply the correct defaults:
- * - Abstract members → error() defaults
- * - Open members → super.method() defaults
- *
- * @param enableCallHistoryDefault Plugin-level default for call history generation. Used when
- *   annotation's callHistoryMode is DEFAULT.
- * @return ClassAnalysis with separated abstract and open members
- */
-@OptIn(org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI::class)
-internal fun IrClassGenerationMetadata.toClassAnalysis(
-    enableCallHistoryDefault: Boolean = true,
-    enableMutableFakesDefault: Boolean = false,
-    typeResolver: TypeResolution? = null,
-): ClassAnalysis =
-    ClassAnalysis(
-        className = className,
-        qualifiedSourceName = qualifiedSourceName,
-        typeParameters = typeParameters,
-        abstractMethods = abstractMethods.map { it.toFunctionAnalysis() },
-        openMethods = openMethods.map { it.toFunctionAnalysis() },
-        abstractProperties = abstractProperties.map { it.toPropertyAnalysis() },
-        openProperties = openProperties.map { it.toPropertyAnalysis() },
-        sourceClass = sourceClass,
-        constructorParameters = extractConstructorParameters(sourceClass, typeResolver),
-        visibility = visibility,
-        annotations = annotations.map { it.toAnnotationAnalysis() },
-        generateCallHistory = resolveCallHistoryEnabled(callHistoryMode, enableCallHistoryDefault),
-        generateMutableBehaviors =
-            resolveMutabilityEnabled(mutabilityMode, enableMutableFakesDefault),
-    )
-
-/** Extract primary constructor parameters as pre-rendered [ConstructorParameterInfo]. */
-@OptIn(org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI::class)
-private fun extractConstructorParameters(
-    irClass: IrClass,
-    typeResolver: TypeResolution?,
-): List<ConstructorParameterInfo> {
-    val resolver = typeResolver ?: return emptyList()
-    val constructor =
-        irClass.declarations.filterIsInstance<IrConstructor>().firstOrNull { it.isPrimary }
-    return constructor
-        ?.parameters
-        .orEmpty()
-        .filter { it.kind == IrParameterKind.Regular }
-        .map { param ->
-            ConstructorParameterInfo(
-                name = param.name.asString(),
-                typeString =
-                    resolver.irTypeToKotlinString(param.type, preserveTypeParameters = true),
-                hasDefault = param.defaultValue != null,
-            )
-        }
-}
-
-/** Convert IrPropertyMetadata to PropertyAnalysis. */
-private fun IrPropertyMetadata.toPropertyAnalysis(): PropertyAnalysis =
-    PropertyAnalysis(
-        name = name,
-        type = type,
-        isMutable = isMutable,
-        isNullable = isNullable,
-        irProperty = irProperty,
-    )
-
-/** Convert IrFunctionMetadata to FunctionAnalysis. */
-private fun IrFunctionMetadata.toFunctionAnalysis(): FunctionAnalysis =
-    FunctionAnalysis(
-        name = name,
-        parameters = parameters.map { it.toParameterAnalysis() },
-        returnType = returnType,
-        isSuspend = isSuspend,
-        isInline = isInline,
-        typeParameters = typeParameters,
-        typeParameterBounds = typeParameterBounds,
-        isOperator = isOperator,
-        extensionReceiverType = extensionReceiverType,
-        irFunction = irFunction,
-    )
-
-/**
- * Convert IrParameterMetadata to ParameterAnalysis.
- *
- * Pass through defaultValueCode for default parameter support.
- */
-private fun IrParameterMetadata.toParameterAnalysis(): ParameterAnalysis =
-    ParameterAnalysis(
-        name = name,
-        type = type,
-        hasDefaultValue = hasDefaultValue,
-        defaultValueCode = defaultValueCode,
-        isVararg = isVararg,
-    )
-
-/** Convert IrAnnotationMetadata to AnnotationAnalysis. */
-private fun IrAnnotationMetadata.toAnnotationAnalysis(): AnnotationAnalysis =
-    AnnotationAnalysis(
-        simpleName = simpleName,
-        fullyQualifiedName = fullyQualifiedName,
-        renderedArguments = renderedArguments,
-        isOptInMarker = isOptInMarker,
-    )
 
 /**
  * Annotation metadata for IR code generation.

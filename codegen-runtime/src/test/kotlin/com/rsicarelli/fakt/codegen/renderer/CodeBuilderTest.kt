@@ -5,6 +5,7 @@ package com.rsicarelli.fakt.codegen.renderer
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for CodeBuilder - Format-by-Construction DSL.
@@ -14,6 +15,7 @@ import kotlin.test.assertTrue
  * - Zero memory allocations (single StringBuilder)
  * - Clean, fluent API
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CodeBuilderTest {
     @Test
     fun `GIVEN CodeBuilder WHEN appending line at level 0 THEN no indentation`() {

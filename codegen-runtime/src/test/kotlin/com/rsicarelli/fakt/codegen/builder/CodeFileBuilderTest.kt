@@ -9,12 +9,14 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Tests for CodeFileBuilder DSL.
  *
  * CodeFileBuilder provides a type-safe DSL for building code files.
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CodeFileBuilderTest {
     @Test
     fun `GIVEN codeFile DSL WHEN building empty file THEN creates CodeFile`() {

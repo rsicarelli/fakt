@@ -16,6 +16,7 @@ kotlin {
 
 dependencies {
     implementation(projects.compilerApi)
+    implementation(projects.codegenRuntime)
     implementation(libs.kotlinx.serialization.json)
 
     compileOnly(libs.kotlin.compilerEmbeddable)

@@ -16,11 +16,11 @@ import com.rsicarelli.fakt.compiler.core.types.TypeInfo
 import com.rsicarelli.fakt.compiler.core.types.createTypeResolution
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeClass
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeInterface
+import com.rsicarelli.fakt.compiler.ir.analysis.toFakeClass
+import com.rsicarelli.fakt.compiler.ir.analysis.toFakeInterface
 import com.rsicarelli.fakt.compiler.ir.transform.FirToIrTransformer
 import com.rsicarelli.fakt.compiler.ir.transform.IrClassGenerationMetadata
 import com.rsicarelli.fakt.compiler.ir.transform.IrGenerationMetadata
-import com.rsicarelli.fakt.compiler.ir.transform.toClassAnalysis
-import com.rsicarelli.fakt.compiler.ir.transform.toInterfaceAnalysis
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.declarations.IrClass
@@ -104,21 +104,13 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
                 "SourceSetContext is required. Ensure Gradle plugin version matches compiler plugin."
             )
 
-    // Extracted modules following DRY principles
     private val typeResolver = createTypeResolution()
-    private val importResolver = ImportResolver(typeResolver)
-
-    private val generators =
-        CodeGenerators(
-            implementation = ImplementationGenerator(typeResolver),
-            configDsl = ConfigurationDslGenerator(typeResolver),
-        )
+    private val importResolver = ImportResolver()
 
     private val codeGenerator =
         CodeGenerator(
             importResolver = importResolver,
             sourceSetContext = sourceSetContext,
-            generators = generators,
             logger = logger,
         )
 
@@ -198,7 +190,8 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
         val irClassMap = buildIrClassMap(moduleFragment)
 
         // Transform FIR metadata → IrGenerationMetadata (NO re-analysis!)
-        val transformer = FirToIrTransformer()
+        // Passing typeResolver lets the transformer pre-compute semantic flags + RenderedType
+        val transformer = FirToIrTransformer(typeResolution = typeResolver)
 
         val (interfaceMetadata, interfaceTransformTime) =
             measureTimeNanos {
@@ -601,29 +594,22 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
                 outputFile.delete()
             }
 
-            // Convert to InterfaceAnalysis using adapter (NO re-analysis!)
-            // Pass plugin default for call history resolution
-            val interfaceAnalysis =
-                metadata.toInterfaceAnalysis(
+            // Translate to the pure FakeDeclaration.Interface contract before generation.
+            val fakeInterface =
+                metadata.toFakeInterface(
+                    typeResolver = typeResolver,
                     enableCallHistoryDefault = sharedContext.options.enableCallHistoryDefault,
                     enableMutableFakesDefault = sharedContext.options.enableMutableFakesDefault,
                 )
 
-            // Validate pattern (reuses existing validation logic)
-            validateAndLogGenericPattern(
-                interfaceAnalysis = interfaceAnalysis,
-                fakeInterface = metadata.sourceInterface,
-                interfaceName = interfaceName,
-                logger = logger,
-            )
+            validateAndLogGenericPattern(metadata = metadata, logger = logger)
 
             // Generate fake implementation with timing
             // Pass sourceSourceSet to output to correct test source set
             val (generatedCode, generationTimeNanos) =
                 measureTimeNanos {
                     codeGenerator.generateWorkingFakeImplementation(
-                        sourceInterface = metadata.sourceInterface,
-                        analysis = interfaceAnalysis,
+                        decl = fakeInterface,
                         sourceSourceSet = metadata.sourceSourceSet,
                     )
                 }
@@ -749,13 +735,13 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
                 outputFile.delete()
             }
 
-            // Convert to ClassAnalysis using adapter (preserves abstract/open distinction)
-            // Pass plugin default for call history resolution
-            val classAnalysis =
-                metadata.toClassAnalysis(
+            // Translate to the pure FakeDeclaration.Class contract; the translator extracts
+            // constructor params from sourceClass internally.
+            val fakeClass =
+                metadata.toFakeClass(
+                    typeResolver = typeResolver,
                     enableCallHistoryDefault = sharedContext.options.enableCallHistoryDefault,
                     enableMutableFakesDefault = sharedContext.options.enableMutableFakesDefault,
-                    typeResolver = typeResolver,
                 )
 
             // Generate fake implementation with timing
@@ -763,8 +749,7 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
             val (generatedCode, generationTimeNanos) =
                 measureTimeNanos {
                     codeGenerator.generateWorkingClassFake(
-                        sourceClass = metadata.sourceClass,
-                        analysis = classAnalysis,
+                        decl = fakeClass,
                         sourceSourceSet = metadata.sourceSourceSet,
                     )
                 }

@@ -7,6 +7,7 @@ import com.rsicarelli.fakt.codegen.renderer.render
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Comprehensive tests for type parsing.
@@ -14,6 +15,7 @@ import kotlin.test.assertTrue
  * Tests parseType() function which converts string type representations into structured CodeType
  * instances.
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TypeParsingTest {
     // ========================================
     // Simple Types

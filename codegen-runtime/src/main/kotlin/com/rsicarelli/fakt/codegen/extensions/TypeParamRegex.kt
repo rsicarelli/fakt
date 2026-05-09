@@ -64,7 +64,7 @@ internal fun typeContainsParam(type: String, typeParam: String): Boolean =
  * @param typeParams The set of type parameter names to look for
  * @return True if the type contains any of the type parameters
  */
-internal fun typeContainsAnyParam(type: String, typeParams: Set<String>): Boolean =
+public fun typeContainsAnyParam(type: String, typeParams: Set<String>): Boolean =
     typeParams.any { typeContainsParam(type, it) }
 
 /**
@@ -80,7 +80,7 @@ internal fun typeContainsAnyParam(type: String, typeParams: Set<String>): Boolea
  * @param typeParams The set of type parameter names to erase
  * @return The type string with all type parameters replaced by Any?
  */
-internal fun eraseTypeParamsToAny(type: String, typeParams: Set<String>): String {
+public fun eraseTypeParamsToAny(type: String, typeParams: Set<String>): String {
     if (typeParams.isEmpty()) return type
 
     var result = type

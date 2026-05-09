@@ -7,8 +7,10 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotSame
 import kotlin.test.assertTrue
+import org.junit.jupiter.api.TestInstance
 
 /** Tests for code model immutability and structure. */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CodeModelTest {
     @Test
     fun `GIVEN CodeFile WHEN adding declaration THEN returns new instance with preserved immutability`() {

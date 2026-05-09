@@ -3,6 +3,7 @@
 package com.rsicarelli.fakt.compiler.ir.transform
 
 import com.rsicarelli.fakt.compiler.fir.metadata.FirCallHistoryMode
+import com.rsicarelli.fakt.compiler.ir.analysis.resolveCallHistory
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -16,31 +17,11 @@ import org.junit.jupiter.api.TestInstance
  * 1. If annotation specifies ENABLED → true (override plugin default)
  * 2. If annotation specifies DISABLED → false (override plugin default)
  * 3. If annotation specifies DEFAULT → follow plugin default
- *
- * Uses reflection to test the private resolveCallHistoryEnabled function.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CallHistoryResolutionTest {
-    /**
-     * Access the private resolveCallHistoryEnabled function via reflection.
-     *
-     * Function signature: private fun resolveCallHistoryEnabled( annotationMode:
-     * FirCallHistoryMode, pluginDefault: Boolean ): Boolean
-     */
-    private val resolveMethod by lazy {
-        val companionClass =
-            Class.forName("com.rsicarelli.fakt.compiler.ir.transform.IrGenerationMetadataKt")
-        companionClass
-            .getDeclaredMethod(
-                "resolveCallHistoryEnabled",
-                FirCallHistoryMode::class.java,
-                Boolean::class.javaPrimitiveType,
-            )
-            .apply { isAccessible = true }
-    }
-
     private fun resolve(mode: FirCallHistoryMode, pluginDefault: Boolean): Boolean =
-        resolveMethod.invoke(null, mode, pluginDefault) as Boolean
+        mode.resolveCallHistory(pluginDefault)
 
     // ==========================================
     // ENABLED mode tests - always returns true

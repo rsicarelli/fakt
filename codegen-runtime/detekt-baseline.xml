@@ -1,0 +1,32 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:CollectionDefaultStrategy.kt$CollectionDefaultStrategy$override fun defaultValue(type: CodeType): CodeExpression</ID>
+    <ID>CyclomaticComplexMethod:FakeGenerator.kt$private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile</ID>
+    <ID>CyclomaticComplexMethod:MethodExtensions.kt$fun ClassBuilder.overrideMethod( name: String, params: List&lt;Triple&lt;String, String, Boolean&gt;&gt;, returnType: String, config: OverrideMethodConfig = OverrideMethodConfig(), )</ID>
+    <ID>CyclomaticComplexMethod:Rendering.kt$public fun CodeProperty.renderTo(builder: CodeBuilder)</ID>
+    <ID>LargeClass:ConfigurationDslGenerator.kt$ConfigurationDslGenerator</ID>
+    <ID>LongMethod:ConfigurationDslGenerator.kt$ConfigurationDslGenerator$public fun generateConfigurationDslCodeFile( decl: FakeDeclaration.Class, fakeClassName: String, ): CodeFile</ID>
+    <ID>LongMethod:FakeGenerator.kt$private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile</ID>
+    <ID>LongMethod:MethodExtensions.kt$fun ClassBuilder.overrideMethod( name: String, params: List&lt;Triple&lt;String, String, Boolean&gt;&gt;, returnType: String, config: OverrideMethodConfig = OverrideMethodConfig(), )</ID>
+    <ID>LongParameterList:ConfigurationDslGenerator.kt$ConfigurationDslGenerator$( fakeClassName: String, typeArgs: String, functions: List&lt;FunctionSpec&gt;, properties: List&lt;PropertySpec&gt;, generateMutableBehaviors: Boolean = false, classTypeParamNames: Set&lt;String&gt; = emptySet(), )</ID>
+    <ID>LongParameterList:FakeGenerator.kt$( classBuilder: ClassBuilder, configClassName: String, methods: List&lt;MethodSpec&gt;, properties: List&lt;PropertySpec&gt;, typeParamNames: List&lt;String&gt;, visibility: FirVisibility, interfaceName: String, )</ID>
+    <ID>LongParameterList:FakeGenerator.kt$( packageName: String, interfaceName: String, superTypeName: String = interfaceName, methods: List&lt;MethodSpec&gt; = emptyList(), properties: List&lt;PropertySpec&gt; = emptyList(), imports: List&lt;String&gt; = emptyList(), header: String? = null, typeParameters: List&lt;String&gt; = emptyList(), isClass: Boolean = false, visibility: FirVisibility = FirVisibility.PUBLIC, annotations: List&lt;AnnotationSpec&gt; = emptyList(), generateCallHistory: Boolean = true, generateMutableBehaviors: Boolean = false, superConstructorCall: String = "", )</ID>
+    <ID>ReturnCount:MetadataCacheManager.kt$MetadataCacheManager$fun tryLoadCache(storage: FirMetadataStorage): Boolean</ID>
+    <ID>ReturnCount:MetadataCacheManager.kt$MetadataCacheManager$fun writeCache(storage: FirMetadataStorage): CacheWriteResult?</ID>
+    <ID>ReturnCount:MetadataCacheManager.kt$MetadataCacheManager$private fun validateCache(cache: FirMetadataCache): Boolean</ID>
+    <ID>ReturnCount:MetadataCacheSerializer.kt$MetadataCacheSerializer$fun computeFileSignature(filePath: String): String</ID>
+    <ID>ReturnCount:MetadataCacheSerializer.kt$MetadataCacheSerializer$fun deserialize(cachePath: String): FirMetadataCache?</ID>
+    <ID>SpreadOperator:FakeGenerator.kt$("OptIn", *optInArgs.distinct().toTypedArray())</ID>
+    <ID>SpreadOperator:FakeGenerator.kt$(annotationSpec.simpleName, *annotationSpec.arguments.toTypedArray())</ID>
+    <ID>SpreadOperator:MethodExtensions.kt$(name, *constraints)</ID>
+    <ID>TooManyFunctions:ClassBuilder.kt$ClassBuilder</ID>
+    <ID>TooManyFunctions:ConfigurationDslGenerator.kt$ConfigurationDslGenerator</ID>
+    <ID>TooManyFunctions:FakeGenerator.kt$com.rsicarelli.fakt.codegen.extensions.FakeGenerator.kt</ID>
+    <ID>TooManyFunctions:FirMetadataStorage.kt$FirMetadataStorage</ID>
+    <ID>TooManyFunctions:FunctionBuilder.kt$FunctionBuilder</ID>
+    <ID>TooManyFunctions:MetadataCacheSerializer.kt$MetadataCacheSerializer</ID>
+    <ID>TooManyFunctions:Rendering.kt$com.rsicarelli.fakt.codegen.renderer.Rendering.kt</ID>
+  </CurrentIssues>
+</SmellBaseline>
