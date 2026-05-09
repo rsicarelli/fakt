@@ -97,8 +97,8 @@ jobs:
       - name: Run API Check
         uses: ./.github/actions/validate-api
 
-  build-plugin:
-    name: Build Plugin
+  publish-plugin-bundle:
+    name: Publish Plugin Bundle
     needs: [check-code-changes]
     if: ${{ needs.check-code-changes.outputs.has-changes == 'true' }}
     runs-on: ubuntu-latest
@@ -139,7 +139,7 @@ jobs:
 
   test-samples:
     name: Sample / ${{ matrix.sample }}
-    needs: [check-code-changes, build-plugin]
+    needs: [check-code-changes, publish-plugin-bundle]
     if: ${{ needs.check-code-changes.outputs.has-changes == 'true' }}
     runs-on: ubuntu-latest
     strategy:
@@ -205,7 +205,7 @@ jobs:
 
   test-compat:
     name: Compat / Kotlin ${{ matrix.kotlin-version }}
-    needs: [check-code-changes]
+    needs: [check-code-changes, publish-plugin-bundle]
     if: ${{ needs.check-code-changes.outputs.has-changes == 'true' }}
     runs-on: ubuntu-latest
     strategy:
@@ -242,7 +242,7 @@ jobs:
       - validate-licenses
       - validate-api
       - run-tests
-      - build-plugin
+      - publish-plugin-bundle
       - test-samples
       - test-compat
     steps:

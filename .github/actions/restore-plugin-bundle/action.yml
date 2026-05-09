@@ -1,5 +1,5 @@
 name: Restore Plugin Bundle
-description: Download the Fakt plugin Maven Local subtree published by the upstream build-plugin job and install it into the runner's local Maven repository
+description: Download the Fakt plugin Maven Local subtree published by the upstream publish-plugin-bundle job and install it into the runner's local Maven repository
 
 inputs:
   artifact-name:

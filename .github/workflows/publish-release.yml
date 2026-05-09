@@ -97,8 +97,8 @@ jobs:
       - name: Run API Check
         uses: ./.github/actions/validate-api
 
-  build-plugin:
-    name: Build Plugin
+  publish-plugin-bundle:
+    name: Publish Plugin Bundle
     needs: [guard-release]
     runs-on: ubuntu-latest
     steps:
@@ -137,7 +137,7 @@ jobs:
 
   test-samples:
     name: Sample / ${{ matrix.sample }}
-    needs: [guard-release, build-plugin]
+    needs: [guard-release, publish-plugin-bundle]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -211,7 +211,7 @@ jobs:
       - validate-licenses
       - validate-api
       - run-tests
-      - build-plugin
+      - publish-plugin-bundle
       - test-samples
     steps:
       - name: Check validation status
