@@ -1,0 +1,93 @@
+name: 🙏 Q&A
+description: Ask a question about using Fakt
+title: "[Question]: "
+labels: ["needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for asking! Fakt is a compiler plugin — most "it doesn't work"
+        reports need specific environment + code context. Filling this in
+        helps you get an answer within ~5 business days; skipping fields
+        usually leads to a request for repro info and a stalled thread.
+
+  - type: input
+    id: fakt-version
+    attributes:
+      label: Fakt Version
+      description: Which version of Fakt are you using? (Gradle plugin & runtime should match.)
+      placeholder: "e.g., 1.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: kotlin-version
+    attributes:
+      label: Kotlin Version
+      description: Which version of Kotlin are you using?
+      placeholder: "e.g., 2.3.20"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: What platform are you targeting?
+      options:
+        - Kotlin Multiplatform (KMP)
+        - JVM only
+        - Android only
+    validations:
+      required: true
+
+  - type: input
+    id: kmp-targets
+    attributes:
+      label: KMP Targets (if applicable)
+      description: Which KMP targets are involved? "All of them" is not a list.
+      placeholder: "e.g., jvm, iosArm64, iosSimulatorArm64, wasmJs"
+    validations:
+      required: false
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+      description: |
+        Describe what you're trying to do, what you tried, and what's not working.
+        Include code, build logs, or generated output where relevant.
+      placeholder: |
+        **What I'm trying to do:**
+        Generate a fake for a sealed interface used across KMP targets…
+
+        **What I tried:**
+        ```kotlin
+        @Fake
+        sealed interface Result { ... }
+        ```
+
+        **What happened:**
+        ```
+        ./gradlew :app:compileKotlinJvm --info
+        e: Error message here…
+        ```
+    validations:
+      required: true
+
+  - type: input
+    id: repro
+    attributes:
+      label: Minimal reproducer (optional, URL)
+      description: Public repo or gist with a tiny example. Significantly increases the chance of a useful answer.
+      placeholder: "https://github.com/your-username/fakt-question-repro"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing discussions and didn't find an answer
+        - label: I read the documentation at https://rsicarelli.github.io/fakt/
