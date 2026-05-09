@@ -1191,11 +1191,11 @@
 <h3 id="why-mokkery-succeeded">Why Mokkery Succeeded<a class="headerlink" href="#why-mokkery-succeeded" title="Permanent link">&para;</a></h3>
 <p>Mokkery operates <em>inside</em> the Kotlin compiler as an IR transformer. When you write <code>mock&lt;UserRepository&gt;()</code>, Mokkery&rsquo;s plugin replaces that call with a fully-generated implementation class at the IR level<sup id="fnref:5"><a class="footnote-ref" href="#fn:5">5</a></sup>. This eliminates KSP&rsquo;s fundamental problem: fragile source-set code generation.</p>
 <p>Mokkery&rsquo;s API is intentionally designed as a MockK analogue<sup id="fnref:6"><a class="footnote-ref" href="#fn:6">6</a></sup>, providing zero-friction migration for KMP developers:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">// Mokkery: Familiar MockK-like DSL</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">val</span><span class="w"> </span><span class="nv">repository</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mock</span><span class="o">&lt;</span><span class="n">BookRepository</span><span class="o">&gt;</span><span class="p">()</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">every</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">repository</span><span class="p">.</span><span class="na">findAll</span><span class="p">()</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="n">returns</span><span class="w"> </span><span class="n">flowOf</span><span class="p">(</span><span class="n">Book</span><span class="p">(</span><span class="s">&quot;...&quot;</span><span class="p">))</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">verify</span><span class="p">(</span><span class="n">exhaustiveOrder</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">repository</span><span class="p">.</span><span class="na">findById</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-</code></pre></div>
+<p><code>kotlin
+// Mokkery: Familiar MockK-like DSL
+val repository = mock&lt;BookRepository&gt;()
+every { repository.findAll() } returns flowOf(Book("..."))
+verify(exhaustiveOrder) { repository.findById("1") }</code></p>
 <p>Mokkery is production-ready (v2.10.2), actively maintained, and the current incumbent for KMP mocking<sup id="fnref:7"><a class="footnote-ref" href="#fn:7">7</a></sup>. For teams committed to interaction-based testing, Mokkery is a credible, stable solution.</p>
 <hr />
 <h2 id="architectural-comparison">Architectural Comparison<a class="headerlink" href="#architectural-comparison" title="Permanent link">&para;</a></h2>
@@ -1267,45 +1267,42 @@
 <li><strong>Thread-safety</strong> (no <code>var count = 0</code> footguns)</li>
 </ul>
 <p>The same Fakt fake can verify state <em>and</em> interactions:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="n">save</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">user</span><span class="p">.</span><span class="na">copy</span><span class="p">(</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;generated-id&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="p">}</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1">// State-based verification</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="kd">val</span><span class="w"> </span><span class="nv">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">))</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;generated-id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="na">id</span><span class="p">)</span><span class="w"> </span><span class="c1">// What happened?</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="c1">// Interaction-based verification (same fake)</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">saveCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span><span class="w"> </span><span class="c1">// How many times?</span>
-</code></pre></div>
+<p>```kotlin<br />
+val fake = fakeUserRepository {<br />
+    save { user -&gt; user.copy(id = &ldquo;generated-id&rdquo;) }<br />
+}</p>
+<p>// State-based verification<br />
+val result = fake.save(User(&ldquo;test&rdquo;))<br />
+assertEquals(&ldquo;generated-id&rdquo;, result.id) // What happened?</p>
+<p>// Interaction-based verification (same fake)<br />
+assertEquals(1, fake.saveCalls.value.size) // How many times?<br />
+```</p>
 <p>This dual paradigm support means you&rsquo;re not forced to choose philosophies—Fakt adapts to your testing needs.</p>
 <hr />
 <h2 id="the-brittleness-trade-off">The Brittleness Trade-off<a class="headerlink" href="#the-brittleness-trade-off" title="Permanent link">&para;</a></h2>
 <p>Consider this refactoring scenario that highlights the paradigm difference:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// Original implementation</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">checkout</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="n">repository</span><span class="p">.</span><span class="na">saveOrder</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="p">}</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="c1">// Mokkery test (interaction-based ONLY)</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">verify</span><span class="p">(</span><span class="n">exactly</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">repository</span><span class="p">.</span><span class="na">saveOrder</span><span class="p">(</span><span class="n">order</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="c1">// Refactored implementation (same outcome, different method signature)</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">checkout</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">    </span><span class="n">repository</span><span class="p">.</span><span class="na">saveOrderWithAudit</span><span class="p">(</span><span class="n">order</span><span class="p">,</span><span class="w"> </span><span class="n">auditLog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="p">}</span>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="c1">// Result: Mokkery test BREAKS (false negative)</span>
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="c1">// The outcome is identical, but the process changed</span>
-</code></pre></div>
+<p>```kotlin<br />
+// Original implementation<br />
+fun checkout() {<br />
+    repository.saveOrder(order)<br />
+}</p>
+<p>// Mokkery test (interaction-based ONLY)<br />
+verify(exactly = 1) { repository.saveOrder(order) }</p>
+<p>// Refactored implementation (same outcome, different method signature)<br />
+fun checkout() {<br />
+    repository.saveOrderWithAudit(order, auditLog = true)<br />
+}</p>
+<p>// Result: Mokkery test BREAKS (false negative)<br />
+// The outcome is identical, but the process changed<br />
+```</p>
 <p>The outcome is identical (order saved), but the <em>process</em> changed. The mock-based test fails even though no bug exists. This is the brittleness Martin Fowler warned about—tests coupled to <em>how</em> code works, not <em>what</em> it achieves<sup id="fnref:9"><a class="footnote-ref" href="#fn:9">9</a></sup>.</p>
 <h3 id="the-same-refactoring-with-fakt">The same refactoring with Fakt<a class="headerlink" href="#the-same-refactoring-with-fakt" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// Fakt test (state-based verification)</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeRepository</span><span class="p">()</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">viewModel</span><span class="p">.</span><span class="na">checkout</span><span class="p">()</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">orders</span><span class="p">.</span><span class="na">size</span><span class="p">)</span><span class="w"> </span><span class="c1">// Assert OUTCOME, not process</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="c1">// Test survives refactoring</span>
-</code></pre></div>
+<p><code>kotlin
+// Fakt test (state-based verification)
+val fake = fakeRepository()
+viewModel.checkout()
+assertEquals(1, fake.orders.size) // Assert OUTCOME, not process
+// Test survives refactoring</code></p>
 <p>This test survives because it verifies <strong>state</strong> (was the order saved?), not <strong>interactions</strong> (which method was called?). And when you <em>do</em> need interaction verification, Fakt provides it through StateFlow: <code>assertEquals(1, fake.saveOrderCalls.value.size)</code>.</p>
 <hr />
 <h2 id="decision-matrix">Decision Matrix<a class="headerlink" href="#decision-matrix" title="Permanent link">&para;</a></h2>
@@ -1482,18 +1479,20 @@
 <h2 id="real-world-example-comparison">Real-World Example Comparison<a class="headerlink" href="#real-world-example-comparison" title="Permanent link">&para;</a></h2>
 <h3 id="scenario-testing-a-viewmodel-with-repository-dependency">Scenario: Testing a ViewModel with Repository Dependency<a class="headerlink" href="#scenario-testing-a-viewmodel-with-repository-dependency" title="Permanent link">&para;</a></h3>
 <h4 id="mokkery-approach-interaction-based">Mokkery Approach (Interaction-Based)<a class="headerlink" href="#mokkery-approach-interaction-based" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN repository WHEN loading user THEN calls getUser once`</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runTest</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">repository</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mock</span><span class="o">&lt;</span><span class="n">UserRepository</span><span class="o">&gt;</span><span class="p">()</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="n">every</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">repository</span><span class="p">.</span><span class="na">getUser</span><span class="p">(</span><span class="n">any</span><span class="p">())</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="n">returns</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">viewModel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UserViewModel</span><span class="p">(</span><span class="n">repository</span><span class="p">)</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span><span class="n">viewModel</span><span class="p">.</span><span class="na">loadUser</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">)</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="n">verify</span><span class="p">(</span><span class="n">exactly</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">repository</span><span class="p">.</span><span class="na">getUser</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">viewModel</span><span class="p">.</span><span class="na">uiState</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">userName</span><span class="p">)</span>
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="p">}</span>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN repository WHEN loading user THEN calls getUser once`() = runTest {<br />
+    val repository = mock<UserRepository>()<br />
+    every { repository.getUser(any()) } returns User(&ldquo;123&rdquo;, &ldquo;Alice&rdquo;)</p>
+<div class="codehilite"><pre><span></span><code>val viewModel = UserViewModel(repository)
+viewModel.loadUser(&quot;123&quot;)
+
+verify(exactly = 1) { repository.getUser(&quot;123&quot;) }
+assertEquals(&quot;Alice&quot;, viewModel.uiState.value.userName)
 </code></pre></div>
+
+<p>}<br />
+```</p>
 <p><strong>Pros</strong>:<br />
 - Explicit call verification<br />
 - Familiar to MockK users<br />
@@ -1504,22 +1503,24 @@
 - Can&rsquo;t reuse mock across tests easily</p>
 <hr />
 <h4 id="fakt-approach-state-based-with-optional-interaction-tracking">Fakt Approach (State-Based with Optional Interaction Tracking)<a class="headerlink" href="#fakt-approach-state-based-with-optional-interaction-tracking" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN repository WHEN loading user THEN displays user name`</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runTest</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">        </span><span class="n">getUser</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">viewModel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UserViewModel</span><span class="p">(</span><span class="n">fake</span><span class="p">)</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">    </span><span class="n">viewModel</span><span class="p">.</span><span class="na">loadUser</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">)</span>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">    </span><span class="c1">// State-based: Verify outcome</span>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">viewModel</span><span class="p">.</span><span class="na">uiState</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">userName</span><span class="p">)</span>
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">    </span><span class="c1">// Optional: Interaction verification if needed</span>
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">getUserCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="p">}</span>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN repository WHEN loading user THEN displays user name`() = runTest {<br />
+    val fake = fakeUserRepository {<br />
+        getUser { id -&gt; User(id, &ldquo;Alice&rdquo;) }<br />
+    }</p>
+<div class="codehilite"><pre><span></span><code>val viewModel = UserViewModel(fake)
+viewModel.loadUser(&quot;123&quot;)
+
+// State-based: Verify outcome
+assertEquals(&quot;Alice&quot;, viewModel.uiState.value.userName)
+
+// Optional: Interaction verification if needed
+assertEquals(1, fake.getUserCalls.value.size)
 </code></pre></div>
+
+<p>}<br />
+```</p>
 <p><strong>Pros</strong>:<br />
 - Survives refactoring (verifies outcome, not process)<br />
 - Reusable fake across tests<br />
@@ -1531,43 +1532,43 @@
 <hr />
 <h2 id="migration-paths">Migration Paths<a class="headerlink" href="#migration-paths" title="Permanent link">&para;</a></h2>
 <h3 id="from-mockk-to-mokkery-kmp-teams">From MockK to Mokkery (KMP Teams)<a class="headerlink" href="#from-mockk-to-mokkery-kmp-teams" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1">// Before: MockK (JVM only)</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kd">val</span><span class="w"> </span><span class="nv">mock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mockk</span><span class="o">&lt;</span><span class="n">UserService</span><span class="o">&gt;</span><span class="p">()</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">every</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">mock</span><span class="p">.</span><span class="na">getUser</span><span class="p">(</span><span class="n">any</span><span class="p">())</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="n">returns</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Test&quot;</span><span class="p">)</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1">// After: Mokkery (KMP)</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="kd">val</span><span class="w"> </span><span class="nv">mock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mock</span><span class="o">&lt;</span><span class="n">UserService</span><span class="o">&gt;</span><span class="p">()</span>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="n">every</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">mock</span><span class="p">.</span><span class="na">getUser</span><span class="p">(</span><span class="n">any</span><span class="p">())</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="n">returns</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Test&quot;</span><span class="p">)</span>
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="c1">// API is nearly identical!</span>
-</code></pre></div>
+<p>```kotlin<br />
+// Before: MockK (JVM only)<br />
+val mock = mockk<UserService>()<br />
+every { mock.getUser(any()) } returns User(&ldquo;123&rdquo;, &ldquo;Test&rdquo;)</p>
+<p>// After: Mokkery (KMP)<br />
+val mock = mock<UserService>()<br />
+every { mock.getUser(any()) } returns User(&ldquo;123&rdquo;, &ldquo;Test&rdquo;)<br />
+// API is nearly identical!<br />
+```</p>
 <hr />
 <h3 id="from-handwritten-fakes-to-fakt">From Handwritten Fakes to Fakt<a class="headerlink" href="#from-handwritten-fakes-to-fakt" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1">// Before: Manual fake (60+ lines)</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="kd">class</span><span class="w"> </span><span class="nc">FakeUserService</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">UserService</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">getUserBehavior</span><span class="p">:</span><span class="w"> </span><span class="p">((</span><span class="kt">String</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">)</span><span class="o">?</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">_getUserCalls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mutableListOf</span><span class="o">&lt;</span><span class="kt">Unit</span><span class="o">&gt;</span><span class="p">()</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">getUserCalls</span><span class="p">:</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="kt">Unit</span><span class="o">&gt;</span><span class="w"> </span><span class="k">get</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">_getUserCalls</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">getUser</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">):</span><span class="w"> </span><span class="n">User</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">        </span><span class="n">_getUserCalls</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="kt">Unit</span><span class="p">)</span>
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">getUserBehavior</span><span class="o">?.</span><span class="na">invoke</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="o">?:</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span>
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>
-<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">configureGetUser</span><span class="p">(</span><span class="n">behavior</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="kt">String</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">        </span><span class="n">getUserBehavior</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">behavior</span>
-<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="p">}</span>
-<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>
-<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="c1">// After: Fakt (zero boilerplate)</span>
-<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="nd">@Fake</span>
-<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">UserService</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">getUser</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">):</span><span class="w"> </span><span class="n">User</span>
-<a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="p">}</span>
-<a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a>
-<a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserService</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a><span class="w">    </span><span class="n">getUser</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Test&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a><span class="p">}</span>
+<p>```kotlin<br />
+// Before: Manual fake (60+ lines)<br />
+class FakeUserService : UserService {<br />
+    private var getUserBehavior: ((String) -&gt; User)? = null<br />
+    private val _getUserCalls = mutableListOf<Unit>()<br />
+    val getUserCalls: List<Unit> get() = _getUserCalls</p>
+<div class="codehilite"><pre><span></span><code>override fun getUser(id: String): User {
+    _getUserCalls.add(Unit)
+    return getUserBehavior?.invoke(id) ?: User(id, &quot;&quot;)
+}
+
+fun configureGetUser(behavior: (String) -&gt; User) {
+    getUserBehavior = behavior
+}
 </code></pre></div>
+
+<p>}</p>
+<p>// After: Fakt (zero boilerplate)<br />
+@Fake<br />
+interface UserService {<br />
+    fun getUser(id: String): User<br />
+}</p>
+<p>val fake = fakeUserService {<br />
+    getUser { id -&gt; User(id, &ldquo;Test&rdquo;) }<br />
+}<br />
+```</p>
 <hr />
 <h2 id="conclusion">Conclusion<a class="headerlink" href="#conclusion" title="Permanent link">&para;</a></h2>
 <p>Mokkery and Fakt are complementary solutions, not competitors:</p>

@@ -1161,70 +1161,71 @@
 <hr />
 <h2 id="what-fakt-does">What Fakt Does<a class="headerlink" href="#what-fakt-does" title="Permanent link">&para;</a></h2>
 <p>Fakt reduces fake boilerplate to an annotation:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nd">@Fake</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">AnalyticsService</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">track</span><span class="p">(</span><span class="n">event</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">)</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="kd">suspend</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">flush</span><span class="p">():</span><span class="w"> </span><span class="n">Result</span><span class="o">&lt;</span><span class="kt">Unit</span><span class="o">&gt;</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">}</span>
-</code></pre></div>
+<p><code>kotlin
+@Fake
+interface AnalyticsService {
+    fun track(event: String)
+    suspend fun flush(): Result&lt;Unit&gt;
+}</code></p>
 <p>At compile time, Fakt generates a complete fake implementation. You use it through a type-safe factory:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeAnalyticsService</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="n">track</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">event</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">println</span><span class="p">(</span><span class="s">&quot;Tracked: </span><span class="si">$</span><span class="n">event</span><span class="s">&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="n">flush</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Result</span><span class="p">.</span><span class="na">success</span><span class="p">(</span><span class="kt">Unit</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="p">}</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1">// Use in tests</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">fake</span><span class="p">.</span><span class="na">track</span><span class="p">(</span><span class="s">&quot;user_signup&quot;</span><span class="p">)</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">fake</span><span class="p">.</span><span class="na">flush</span><span class="p">()</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="c1">// Verify interactions (thread-safe StateFlow)</span>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">trackCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">flushCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
-</code></pre></div>
+<p>```kotlin<br />
+val fake = fakeAnalyticsService {<br />
+    track { event -&gt; println(&ldquo;Tracked: $event&rdquo;) }<br />
+    flush { Result.success(Unit) }<br />
+}</p>
+<p>// Use in tests<br />
+fake.track(&ldquo;user_signup&rdquo;)<br />
+fake.flush()</p>
+<p>// Verify interactions (thread-safe StateFlow)<br />
+assertEquals(1, fake.trackCalls.value.size)<br />
+assertEquals(1, fake.flushCalls.value.size)<br />
+```</p>
 <hr />
 <h2 id="the-testing-problem">The Testing Problem<a class="headerlink" href="#the-testing-problem" title="Permanent link">&para;</a></h2>
 <h3 id="manual-fakes-dont-scale">Manual Fakes Don&rsquo;t Scale<a class="headerlink" href="#manual-fakes-dont-scale" title="Permanent link">&para;</a></h3>
 <p>Consider a simple interface:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">AnalyticsService</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">track</span><span class="p">(</span><span class="n">event</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">)</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="kd">suspend</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">flush</span><span class="p">():</span><span class="w"> </span><span class="n">Result</span><span class="o">&lt;</span><span class="kt">Unit</span><span class="o">&gt;</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="p">}</span>
-</code></pre></div>
+<p><code>kotlin
+interface AnalyticsService {
+    fun track(event: String)
+    suspend fun flush(): Result&lt;Unit&gt;
+}</code></p>
 <p>A proper, production-quality fake requires ~60-80 lines of boilerplate:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// Typical handwritten fake — mutable, error-prone, tedious</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kd">class</span><span class="w"> </span><span class="nc">FakeAnalyticsService</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">AnalyticsService</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="c1">// Behavior configuration</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">trackBehavior</span><span class="p">:</span><span class="w"> </span><span class="p">((</span><span class="kt">String</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">Unit</span><span class="p">)</span><span class="o">?</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">flushBehavior</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">suspend</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Result</span><span class="o">&lt;</span><span class="kt">Unit</span><span class="o">&gt;</span><span class="p">)</span><span class="o">?</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="c1">// Call history (non-thread-safe!)</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">_trackCalls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mutableListOf</span><span class="o">&lt;</span><span class="kt">Unit</span><span class="o">&gt;</span><span class="p">()</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">trackCalls</span><span class="p">:</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="kt">Unit</span><span class="o">&gt;</span><span class="w"> </span><span class="k">get</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">_trackCalls</span>
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">_flushCalls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mutableListOf</span><span class="o">&lt;</span><span class="kt">Unit</span><span class="o">&gt;</span><span class="p">()</span>
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">flushCalls</span><span class="p">:</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="kt">Unit</span><span class="o">&gt;</span><span class="w"> </span><span class="k">get</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">_flushCalls</span>
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="w">    </span><span class="c1">// Interface implementation</span>
-<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">track</span><span class="p">(</span><span class="n">event</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="w">        </span><span class="n">_trackCalls</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="kt">Unit</span><span class="p">)</span>
-<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="w">        </span><span class="n">trackBehavior</span><span class="o">?.</span><span class="na">invoke</span><span class="p">(</span><span class="n">event</span><span class="p">)</span><span class="w"> </span><span class="o">?:</span><span class="w"> </span><span class="kt">Unit</span>
-<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>
-<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="w">    </span><span class="kd">override</span><span class="w"> </span><span class="kd">suspend</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">flush</span><span class="p">():</span><span class="w"> </span><span class="n">Result</span><span class="o">&lt;</span><span class="kt">Unit</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a><span class="w">        </span><span class="n">_flushCalls</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="kt">Unit</span><span class="p">)</span>
-<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">flushBehavior</span><span class="o">?.</span><span class="na">invoke</span><span class="p">()</span><span class="w"> </span><span class="o">?:</span><span class="w"> </span><span class="n">Result</span><span class="p">.</span><span class="na">success</span><span class="p">(</span><span class="kt">Unit</span><span class="p">)</span>
-<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>
-<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a><span class="w">    </span><span class="c1">// Configuration methods</span>
-<a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">configureTrack</span><span class="p">(</span><span class="n">behavior</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="kt">String</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">Unit</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a><span class="w">        </span><span class="n">trackBehavior</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">behavior</span>
-<a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>
-<a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">configureFlush</span><span class="p">(</span><span class="n">behavior</span><span class="p">:</span><span class="w"> </span><span class="n">suspend</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Result</span><span class="o">&lt;</span><span class="kt">Unit</span><span class="o">&gt;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a><span class="w">        </span><span class="n">flushBehavior</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">behavior</span>
-<a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a><span class="p">}</span>
+<p>```kotlin<br />
+// Typical handwritten fake — mutable, error-prone, tedious<br />
+class FakeAnalyticsService : AnalyticsService {<br />
+    // Behavior configuration<br />
+    private var trackBehavior: ((String) -&gt; Unit)? = null<br />
+    private var flushBehavior: (suspend () -&gt; Result<Unit>)? = null</p>
+<div class="codehilite"><pre><span></span><code>// Call history (non-thread-safe!)
+private var _trackCalls = mutableListOf&lt;Unit&gt;()
+val trackCalls: List&lt;Unit&gt; get() = _trackCalls
+
+private var _flushCalls = mutableListOf&lt;Unit&gt;()
+val flushCalls: List&lt;Unit&gt; get() = _flushCalls
+
+// Interface implementation
+override fun track(event: String) {
+    _trackCalls.add(Unit)
+    trackBehavior?.invoke(event) ?: Unit
+}
+
+override suspend fun flush(): Result&lt;Unit&gt; {
+    _flushCalls.add(Unit)
+    return flushBehavior?.invoke() ?: Result.success(Unit)
+}
+
+// Configuration methods
+fun configureTrack(behavior: (String) -&gt; Unit) {
+    trackBehavior = behavior
+}
+
+fun configureFlush(behavior: suspend () -&gt; Result&lt;Unit&gt;) {
+    flushBehavior = behavior
+}
 </code></pre></div>
+
+<p>}<br />
+```</p>
 <div class="admonition note">
 <p class="admonition-title">Fakt does it differently</p>
 <p>By default, Fakt generates <strong>immutable</strong> fakes where behavior is set via constructor parameters and cannot change after construction. This eliminates shared mutable state and makes fakes thread-safe by design.</p>
@@ -1309,20 +1310,19 @@
 </tbody>
 </table>
 <p>Fakt uses a two-phase FIR → IR architecture:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>┌──────────────────────────────────────────────────────┐
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>│  PHASE 1: FIR (Frontend IR)                         │
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>│  • Detects @Fake annotations                        │
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>│  • Validates interface structure                    │
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>│  • Full type system access                          │
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>└──────────────────────────────────────────────────────┘
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>                         ↓
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>┌──────────────────────────────────────────────────────┐
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>│  PHASE 2: IR (Intermediate Representation)          │
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>│  • Analyzes interface methods and properties        │
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>│  • Generates readable .kt source files              │
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>│  • Thread-safe StateFlow call history               │
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>└──────────────────────────────────────────────────────┘
-</code></pre></div>
+<p><code>┌──────────────────────────────────────────────────────┐
+│  PHASE 1: FIR (Frontend IR)                         │
+│  • Detects @Fake annotations                        │
+│  • Validates interface structure                    │
+│  • Full type system access                          │
+└──────────────────────────────────────────────────────┘
+                         ↓
+┌──────────────────────────────────────────────────────┐
+│  PHASE 2: IR (Intermediate Representation)          │
+│  • Analyzes interface methods and properties        │
+│  • Generates readable .kt source files              │
+│  • Thread-safe StateFlow call history               │
+└──────────────────────────────────────────────────────┘</code></p>
 <p>This is the same pattern used by <a href="https://github.com/ZacSweers/metro">Metro</a>, Zac Sweers&rsquo; DI compiler plugin. Metro&rsquo;s architecture has proven stable across Kotlin 1.9, 2.0, and 2.1.</p>
 <hr />
 <h2 id="why-fakes-over-mocks">Why Fakes Over Mocks<a class="headerlink" href="#why-fakes-over-mocks" title="Permanent link">&para;</a></h2>

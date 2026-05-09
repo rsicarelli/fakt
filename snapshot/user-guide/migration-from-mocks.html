@@ -1189,115 +1189,130 @@
 <h2 id="mockk-fakt">MockK → Fakt<a class="headerlink" href="#mockk-fakt" title="Permanent link">&para;</a></h2>
 <h3 id="basic-usage">Basic Usage<a class="headerlink" href="#basic-usage" title="Permanent link">&para;</a></h3>
 <p><strong>MockK:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN mock repository WHEN processing user THEN calls getUser`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">mock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mockk</span><span class="o">&lt;</span><span class="n">UserRepository</span><span class="o">&gt;</span><span class="p">()</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="n">every</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">mock</span><span class="p">.</span><span class="na">getUser</span><span class="p">(</span><span class="n">any</span><span class="p">())</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="n">returns</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">service</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UserService</span><span class="p">(</span><span class="n">mock</span><span class="p">)</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="n">service</span><span class="p">.</span><span class="na">processUser</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="n">verify</span><span class="p">(</span><span class="n">exactly</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">mock</span><span class="p">.</span><span class="na">getUser</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="p">}</span>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN mock repository WHEN processing user THEN calls getUser`() {<br />
+    val mock = mockk<UserRepository>()<br />
+    every { mock.getUser(any()) } returns User(&ldquo;123&rdquo;, &ldquo;Alice&rdquo;)</p>
+<div class="codehilite"><pre><span></span><code>val service = UserService(mock)
+service.processUser(&quot;123&quot;)
+
+verify(exactly = 1) { mock.getUser(&quot;123&quot;) }
 </code></pre></div>
+
+<p>}<br />
+```</p>
 <p><strong>Fakt:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN fake repository WHEN processing user THEN calls getUser`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">        </span><span class="n">getUser</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">service</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UserService</span><span class="p">(</span><span class="n">fake</span><span class="p">)</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="n">service</span><span class="p">.</span><span class="na">processUser</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">)</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">getUserCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="p">}</span>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN fake repository WHEN processing user THEN calls getUser`() {<br />
+    val fake = fakeUserRepository {<br />
+        getUser { id -&gt; User(id, &ldquo;Alice&rdquo;) }<br />
+    }</p>
+<div class="codehilite"><pre><span></span><code>val service = UserService(fake)
+service.processUser(&quot;123&quot;)
+
+assertEquals(1, fake.getUserCalls.value.size)
 </code></pre></div>
+
+<p>}<br />
+```</p>
 <h3 id="suspend-functions-with-error-handling">Suspend Functions with Error Handling<a class="headerlink" href="#suspend-functions-with-error-handling" title="Permanent link">&para;</a></h3>
 <p><strong>MockK:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN repository failure WHEN fetching data THEN handles error`</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runTest</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">mock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mockk</span><span class="o">&lt;</span><span class="n">DataService</span><span class="o">&gt;</span><span class="p">()</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="n">coEvery</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">mock</span><span class="p">.</span><span class="na">fetchData</span><span class="p">()</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="n">throws</span><span class="w"> </span><span class="n">NetworkException</span><span class="p">(</span><span class="s">&quot;Connection timeout&quot;</span><span class="p">)</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">viewModel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataViewModel</span><span class="p">(</span><span class="n">mock</span><span class="p">)</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="n">viewModel</span><span class="p">.</span><span class="na">loadData</span><span class="p">()</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">viewModel</span><span class="p">.</span><span class="na">errorState</span><span class="p">.</span><span class="na">value</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">Error</span><span class="p">.</span><span class="na">Network</span><span class="p">)</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="p">}</span>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN repository failure WHEN fetching data THEN handles error`() = runTest {<br />
+    val mock = mockk<DataService>()<br />
+    coEvery { mock.fetchData() } throws NetworkException(&ldquo;Connection timeout&rdquo;)</p>
+<div class="codehilite"><pre><span></span><code>val viewModel = DataViewModel(mock)
+viewModel.loadData()
+
+assertTrue(viewModel.errorState.value is Error.Network)
 </code></pre></div>
+
+<p>}<br />
+```</p>
 <p><strong>Fakt:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN repository failure WHEN fetching data THEN handles error`</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runTest</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeDataService</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">        </span><span class="n">fetchData</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">throw</span><span class="w"> </span><span class="n">NetworkException</span><span class="p">(</span><span class="s">&quot;Connection timeout&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">viewModel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataViewModel</span><span class="p">(</span><span class="n">fake</span><span class="p">)</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="n">viewModel</span><span class="p">.</span><span class="na">loadData</span><span class="p">()</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">    </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">viewModel</span><span class="p">.</span><span class="na">errorState</span><span class="p">.</span><span class="na">value</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">Error</span><span class="p">.</span><span class="na">Network</span><span class="p">)</span>
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="p">}</span>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN repository failure WHEN fetching data THEN handles error`() = runTest {<br />
+    val fake = fakeDataService {<br />
+        fetchData { throw NetworkException(&ldquo;Connection timeout&rdquo;) }<br />
+    }</p>
+<div class="codehilite"><pre><span></span><code>val viewModel = DataViewModel(fake)
+viewModel.loadData()
+
+assertTrue(viewModel.errorState.value is Error.Network)
 </code></pre></div>
+
+<p>}<br />
+```</p>
 <p><strong>Key difference</strong>: Fakt&rsquo;s DSL lambda has the same signature as the original interface method. No need to learn separate stubbing APIs (<code>coEvery</code>, <code>every</code>, <code>returns</code>).</p>
 <hr />
 <h2 id="mockito-fakt">Mockito → Fakt<a class="headerlink" href="#mockito-fakt" title="Permanent link">&para;</a></h2>
 <p><strong>Mockito:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN repository WHEN saving user THEN returns success`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">mock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mock</span><span class="p">(</span><span class="n">UserRepository</span><span class="o">::</span><span class="n">class</span><span class="p">.</span><span class="na">java</span><span class="p">)</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="n">`when`</span><span class="p">(</span><span class="n">mock</span><span class="p">.</span><span class="na">saveUser</span><span class="p">(</span><span class="n">any</span><span class="p">())).</span><span class="na">thenReturn</span><span class="p">(</span><span class="n">Result</span><span class="p">.</span><span class="na">success</span><span class="p">(</span><span class="kt">Unit</span><span class="p">))</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">service</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UserService</span><span class="p">(</span><span class="n">mock</span><span class="p">)</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">service</span><span class="p">.</span><span class="na">createUser</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">)</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="na">isSuccess</span><span class="p">)</span>
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">    </span><span class="n">verify</span><span class="p">(</span><span class="n">mock</span><span class="p">,</span><span class="w"> </span><span class="n">times</span><span class="p">(</span><span class="m">1</span><span class="p">)).</span><span class="na">saveUser</span><span class="p">(</span><span class="n">any</span><span class="p">())</span>
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="p">}</span>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN repository WHEN saving user THEN returns success<code>() {
+    val mock = mock(UserRepository::class.java)</code>when`(mock.saveUser(any())).thenReturn(Result.success(Unit))</p>
+<div class="codehilite"><pre><span></span><code>val service = UserService(mock)
+val result = service.createUser(&quot;Alice&quot;)
+
+assertTrue(result.isSuccess)
+verify(mock, times(1)).saveUser(any())
 </code></pre></div>
+
+<p>}<br />
+```</p>
 <p><strong>Fakt:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN repository WHEN saving user THEN returns success`</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runTest</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">        </span><span class="n">saveUser</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Result</span><span class="p">.</span><span class="na">success</span><span class="p">(</span><span class="kt">Unit</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">service</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UserService</span><span class="p">(</span><span class="n">fake</span><span class="p">)</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">service</span><span class="p">.</span><span class="na">createUser</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">)</span>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">    </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="na">isSuccess</span><span class="p">)</span>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">saveUserCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="p">}</span>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN repository WHEN saving user THEN returns success`() = runTest {<br />
+    val fake = fakeUserRepository {<br />
+        saveUser { user -&gt; Result.success(Unit) }<br />
+    }</p>
+<div class="codehilite"><pre><span></span><code>val service = UserService(fake)
+val result = service.createUser(&quot;Alice&quot;)
+
+assertTrue(result.isSuccess)
+assertEquals(1, fake.saveUserCalls.value.size)
 </code></pre></div>
+
+<p>}<br />
+```</p>
 <hr />
 <h2 id="mokkery-fakt">Mokkery → Fakt<a class="headerlink" href="#mokkery-fakt" title="Permanent link">&para;</a></h2>
 <p><strong>Mokkery:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN mock analytics WHEN tracking event THEN records event`</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runTest</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">mock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mock</span><span class="o">&lt;</span><span class="n">Analytics</span><span class="o">&gt;</span><span class="p">()</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="n">everySuspend</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">mock</span><span class="p">.</span><span class="na">track</span><span class="p">(</span><span class="n">any</span><span class="p">())</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="n">returns</span><span class="w"> </span><span class="kt">Unit</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">service</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AnalyticsService</span><span class="p">(</span><span class="n">mock</span><span class="p">)</span>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">    </span><span class="n">service</span><span class="p">.</span><span class="na">logUserAction</span><span class="p">(</span><span class="s">&quot;button_click&quot;</span><span class="p">)</span>
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">    </span><span class="n">verifySuspend</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">mock</span><span class="p">.</span><span class="na">track</span><span class="p">(</span><span class="s">&quot;button_click&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="p">}</span>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN mock analytics WHEN tracking event THEN records event`() = runTest {<br />
+    val mock = mock<Analytics>()<br />
+    everySuspend { mock.track(any()) } returns Unit</p>
+<div class="codehilite"><pre><span></span><code>val service = AnalyticsService(mock)
+service.logUserAction(&quot;button_click&quot;)
+
+verifySuspend { mock.track(&quot;button_click&quot;) }
 </code></pre></div>
+
+<p>}<br />
+```</p>
 <p><strong>Fakt:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN fake analytics WHEN tracking event THEN records event`</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runTest</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">trackedEvents</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mutableListOf</span><span class="o">&lt;</span><span class="kt">String</span><span class="o">&gt;</span><span class="p">()</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeAnalytics</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">        </span><span class="n">track</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">event</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">trackedEvents</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="n">event</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">service</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AnalyticsService</span><span class="p">(</span><span class="n">fake</span><span class="p">)</span>
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">    </span><span class="n">service</span><span class="p">.</span><span class="na">logUserAction</span><span class="p">(</span><span class="s">&quot;button_click&quot;</span><span class="p">)</span>
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>
-<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">trackCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
-<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;button_click&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">trackedEvents</span><span class="p">.</span><span class="na">first</span><span class="p">())</span>
-<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="p">}</span>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN fake analytics WHEN tracking event THEN records event`() = runTest {<br />
+    val trackedEvents = mutableListOf<String>()<br />
+    val fake = fakeAnalytics {<br />
+        track { event -&gt; trackedEvents.add(event) }<br />
+    }</p>
+<div class="codehilite"><pre><span></span><code>val service = AnalyticsService(fake)
+service.logUserAction(&quot;button_click&quot;)
+
+assertEquals(1, fake.trackCalls.value.size)
+assertEquals(&quot;button_click&quot;, trackedEvents.first())
 </code></pre></div>
+
+<p>}<br />
+```</p>
 <p><strong>Migration notes</strong>:</p>
 <ul>
 <li>Replace <code>mock&lt;T&gt;()</code> with <code>fakeT {}</code></li>
@@ -1308,171 +1323,193 @@
 <hr />
 <h2 id="mockative-fakt">Mockative → Fakt<a class="headerlink" href="#mockative-fakt" title="Permanent link">&para;</a></h2>
 <p><strong>Mockative:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN repository WHEN fetching user THEN returns user`</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runTest</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">mock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mock</span><span class="o">&lt;</span><span class="n">UserRepository</span><span class="o">&gt;</span><span class="p">()</span>
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span><span class="n">given</span><span class="p">(</span><span class="n">mock</span><span class="p">).</span><span class="na">coroutine</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">getUser</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}.</span><span class="na">thenReturn</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">))</span>
-<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>
-<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">viewModel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UserViewModel</span><span class="p">(</span><span class="n">mock</span><span class="p">)</span>
-<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">    </span><span class="n">viewModel</span><span class="p">.</span><span class="na">loadUser</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">)</span>
-<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>
-<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">viewModel</span><span class="p">.</span><span class="na">userName</span><span class="p">.</span><span class="na">value</span><span class="p">)</span>
-<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="p">}</span>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN repository WHEN fetching user THEN returns user`() = runTest {<br />
+    val mock = mock<UserRepository>()<br />
+    given(mock).coroutine { getUser(&ldquo;123&rdquo;) }.thenReturn(User(&ldquo;123&rdquo;, &ldquo;Alice&rdquo;))</p>
+<div class="codehilite"><pre><span></span><code>val viewModel = UserViewModel(mock)
+viewModel.loadUser(&quot;123&quot;)
+
+assertEquals(&quot;Alice&quot;, viewModel.userName.value)
 </code></pre></div>
+
+<p>}<br />
+```</p>
 <p><strong>Fakt:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN repository WHEN fetching user THEN returns user`</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runTest</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">        </span><span class="n">getUser</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>
-<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">viewModel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UserViewModel</span><span class="p">(</span><span class="n">fake</span><span class="p">)</span>
-<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">    </span><span class="n">viewModel</span><span class="p">.</span><span class="na">loadUser</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">)</span>
-<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>
-<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">viewModel</span><span class="p">.</span><span class="na">userName</span><span class="p">.</span><span class="na">value</span><span class="p">)</span>
-<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">getUserCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
-<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="p">}</span>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN repository WHEN fetching user THEN returns user`() = runTest {<br />
+    val fake = fakeUserRepository {<br />
+        getUser { id -&gt; User(id, &ldquo;Alice&rdquo;) }<br />
+    }</p>
+<div class="codehilite"><pre><span></span><code>val viewModel = UserViewModel(fake)
+viewModel.loadUser(&quot;123&quot;)
+
+assertEquals(&quot;Alice&quot;, viewModel.userName.value)
+assertEquals(1, fake.getUserCalls.value.size)
 </code></pre></div>
+
+<p>}<br />
+```</p>
 <hr />
 <h2 id="generic-repositories">Generic Repositories<a class="headerlink" href="#generic-repositories" title="Permanent link">&para;</a></h2>
 <p><strong>MockK:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN generic repository WHEN saving item THEN returns success`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">mock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mockk</span><span class="o">&lt;</span><span class="n">Repository</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;&gt;</span><span class="p">()</span>
-<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="n">every</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">mock</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">any</span><span class="p">())</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="n">returns</span><span class="w"> </span><span class="n">Result</span><span class="p">.</span><span class="na">success</span><span class="p">(</span><span class="kt">Unit</span><span class="p">)</span>
-<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>
-<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">service</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CrudService</span><span class="p">(</span><span class="n">mock</span><span class="p">)</span>
-<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">    </span><span class="n">service</span><span class="p">.</span><span class="na">createUser</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">))</span>
-<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>
-<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="w">    </span><span class="n">verify</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">mock</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">any</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span><span class="p">())</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="p">}</span>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN generic repository WHEN saving item THEN returns success`() {<br />
+    val mock = mockk<Repository\<User>>()<br />
+    every { mock.save(any()) } returns Result.success(Unit)</p>
+<div class="codehilite"><pre><span></span><code>val service = CrudService(mock)
+service.createUser(User(&quot;123&quot;, &quot;Alice&quot;))
+
+verify { mock.save(any&lt;User&gt;()) }
 </code></pre></div>
+
+<p>}<br />
+```</p>
 <p><strong>Fakt:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN generic repository WHEN saving item THEN returns success`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeRepository</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">        </span><span class="n">save</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Result</span><span class="p">.</span><span class="na">success</span><span class="p">(</span><span class="kt">Unit</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
-<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">service</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CrudService</span><span class="p">(</span><span class="n">fake</span><span class="p">)</span>
-<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">    </span><span class="n">service</span><span class="p">.</span><span class="na">createUser</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">))</span>
-<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>
-<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">saveCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
-<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="p">}</span>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN generic repository WHEN saving item THEN returns success`() {<br />
+    val fake = fakeRepository<User> {<br />
+        save { item -&gt; Result.success(Unit) }<br />
+    }</p>
+<div class="codehilite"><pre><span></span><code>val service = CrudService(fake)
+service.createUser(User(&quot;123&quot;, &quot;Alice&quot;))
+
+assertEquals(1, fake.saveCalls.value.size)
 </code></pre></div>
+
+<p>}<br />
+```</p>
 <p><strong>Type safety</strong>: Fakt preserves generic type parameters. The DSL lambda receives <code>item: User</code>, not <code>item: Any</code>.</p>
 <hr />
 <h2 id="verification-patterns">Verification Patterns<a class="headerlink" href="#verification-patterns" title="Permanent link">&para;</a></h2>
 <p>Fakt&rsquo;s verification DSL provides expressive assertions comparable to mocking frameworks.</p>
 <h3 id="mockk-verify-fakt-verifymethod">MockK verify → Fakt verify{Method}<a class="headerlink" href="#mockk-verify-fakt-verifymethod" title="Permanent link">&para;</a></h3>
 <p><strong>MockK:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`verify specific arguments`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">mock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mockk</span><span class="o">&lt;</span><span class="n">UserRepository</span><span class="o">&gt;</span><span class="p">()</span>
-<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">    </span><span class="n">every</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">mock</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">any</span><span class="p">(),</span><span class="w"> </span><span class="n">any</span><span class="p">())</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="n">returns</span><span class="w"> </span><span class="kt">Unit</span>
-<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>
-<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">    </span><span class="n">mock</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">),</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span>
-<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="w">    </span><span class="n">mock</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bob&quot;</span><span class="p">),</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
-<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>
-<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="w">    </span><span class="n">verify</span><span class="p">(</span><span class="n">exactly</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">2</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">mock</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">any</span><span class="p">(),</span><span class="w"> </span><span class="n">any</span><span class="p">())</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="w">    </span><span class="n">verify</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">mock</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">),</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="p">}</span>
+<p><code>``kotlin
+@Test
+fun</code>verify specific arguments`() {<br />
+    val mock = mockk<UserRepository>()<br />
+    every { mock.save(any(), any()) } returns Unit</p>
+<div class="codehilite"><pre><span></span><code>mock.save(User(&quot;1&quot;, &quot;Alice&quot;), true)
+mock.save(User(&quot;2&quot;, &quot;Bob&quot;), false)
+
+verify(exactly = 2) { mock.save(any(), any()) }
+verify { mock.save(User(&quot;1&quot;, &quot;Alice&quot;), true) }
 </code></pre></div>
+
+<p>}<br />
+```</p>
 <p><strong>Fakt:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`verify specific arguments`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">        </span><span class="n">save</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">user</span><span class="p">,</span><span class="w"> </span><span class="n">validate</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>
-<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">),</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span>
-<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bob&quot;</span><span class="p">),</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
-<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>
-<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">verifySave</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="w">        </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">wasCalledTimes</span><span class="p">(</span><span class="m">2</span><span class="p">))</span>
-<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="w">        </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">wasCalledWith</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">),</span><span class="w"> </span><span class="kc">true</span><span class="p">))</span>
-<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a><span class="p">}</span>
+<p><code>``kotlin
+@Test
+fun</code>verify specific arguments`() {<br />
+    val fake = fakeUserRepository {<br />
+        save { user, validate -&gt; }<br />
+    }</p>
+<div class="codehilite"><pre><span></span><code>fake.save(User(&quot;1&quot;, &quot;Alice&quot;), true)
+fake.save(User(&quot;2&quot;, &quot;Bob&quot;), false)
+
+fake.verifySave {
+    assertTrue(wasCalledTimes(2))
+    assertTrue(wasCalledWith(User(&quot;1&quot;, &quot;Alice&quot;), true))
+}
 </code></pre></div>
+
+<p>}<br />
+```</p>
 <h3 id="mockito-verify-fakt-verification">Mockito verify → Fakt verification<a class="headerlink" href="#mockito-verify-fakt-verification" title="Permanent link">&para;</a></h3>
 <p><strong>Mockito:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`verify call order and counts`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">mock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mock</span><span class="p">(</span><span class="n">Analytics</span><span class="o">::</span><span class="n">class</span><span class="p">.</span><span class="na">java</span><span class="p">)</span>
-<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>
-<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">    </span><span class="n">mock</span><span class="p">.</span><span class="na">track</span><span class="p">(</span><span class="s">&quot;page_view&quot;</span><span class="p">)</span>
-<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">    </span><span class="n">mock</span><span class="p">.</span><span class="na">track</span><span class="p">(</span><span class="s">&quot;purchase&quot;</span><span class="p">)</span>
-<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>
-<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="w">    </span><span class="n">verify</span><span class="p">(</span><span class="n">mock</span><span class="p">,</span><span class="w"> </span><span class="n">times</span><span class="p">(</span><span class="m">2</span><span class="p">)).</span><span class="na">track</span><span class="p">(</span><span class="n">any</span><span class="p">())</span>
-<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="w">    </span><span class="n">verify</span><span class="p">(</span><span class="n">mock</span><span class="p">).</span><span class="na">track</span><span class="p">(</span><span class="s">&quot;page_view&quot;</span><span class="p">)</span>
-<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="w">    </span><span class="n">verify</span><span class="p">(</span><span class="n">mock</span><span class="p">,</span><span class="w"> </span><span class="n">never</span><span class="p">()).</span><span class="na">track</span><span class="p">(</span><span class="s">&quot;error&quot;</span><span class="p">)</span>
-<a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="p">}</span>
+<p><code>``kotlin
+@Test
+fun</code>verify call order and counts`() {<br />
+    val mock = mock(Analytics::class.java)</p>
+<div class="codehilite"><pre><span></span><code>mock.track(&quot;page_view&quot;)
+mock.track(&quot;purchase&quot;)
+
+verify(mock, times(2)).track(any())
+verify(mock).track(&quot;page_view&quot;)
+verify(mock, never()).track(&quot;error&quot;)
 </code></pre></div>
+
+<p>}<br />
+```</p>
 <p><strong>Fakt:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`verify call order and counts`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeAnalytics</span><span class="p">()</span>
-<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>
-<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">track</span><span class="p">(</span><span class="s">&quot;page_view&quot;</span><span class="p">)</span>
-<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">track</span><span class="p">(</span><span class="s">&quot;purchase&quot;</span><span class="p">)</span>
-<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>
-<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">verifyTrack</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="w">        </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">wasCalledTimes</span><span class="p">(</span><span class="m">2</span><span class="p">))</span>
-<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="w">        </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">wasCalledWith</span><span class="p">(</span><span class="s">&quot;page_view&quot;</span><span class="p">))</span>
-<a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="w">        </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">neverCalledWith</span><span class="p">(</span><span class="s">&quot;error&quot;</span><span class="p">))</span>
-<a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="w">        </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">wasCalledInOrder</span><span class="p">(</span><span class="s">&quot;page_view&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;purchase&quot;</span><span class="p">))</span>
-<a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a><span class="p">}</span>
+<p><code>``kotlin
+@Test
+fun</code>verify call order and counts`() {<br />
+    val fake = fakeAnalytics()</p>
+<div class="codehilite"><pre><span></span><code>fake.track(&quot;page_view&quot;)
+fake.track(&quot;purchase&quot;)
+
+fake.verifyTrack {
+    assertTrue(wasCalledTimes(2))
+    assertTrue(wasCalledWith(&quot;page_view&quot;))
+    assertTrue(neverCalledWith(&quot;error&quot;))
+    assertTrue(wasCalledInOrder(&quot;page_view&quot;, &quot;purchase&quot;))
+}
 </code></pre></div>
+
+<p>}<br />
+```</p>
 <h3 id="argumentcaptor-first-lastornull-all">ArgumentCaptor → first, lastOrNull, all<a class="headerlink" href="#argumentcaptor-first-lastornull-all" title="Permanent link">&para;</a></h3>
 <p><strong>MockK with slot:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`capture and inspect arguments`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">mock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mockk</span><span class="o">&lt;</span><span class="n">UserRepository</span><span class="o">&gt;</span><span class="p">()</span>
-<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span><span class="p">()</span>
-<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">    </span><span class="n">every</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">mock</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">capture</span><span class="p">(</span><span class="n">slot</span><span class="p">),</span><span class="w"> </span><span class="n">any</span><span class="p">())</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="n">returns</span><span class="w"> </span><span class="kt">Unit</span>
-<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>
-<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="w">    </span><span class="n">mock</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">),</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span>
-<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>
-<a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="na">captured</span><span class="p">.</span><span class="na">name</span><span class="p">)</span>
-<a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a><span class="p">}</span>
+<p><code>``kotlin
+@Test
+fun</code>capture and inspect arguments`() {<br />
+    val mock = mockk<UserRepository>()<br />
+    val slot = slot<User>()<br />
+    every { mock.save(capture(slot), any()) } returns Unit</p>
+<div class="codehilite"><pre><span></span><code>mock.save(User(&quot;1&quot;, &quot;Alice&quot;), true)
+
+assertEquals(&quot;Alice&quot;, slot.captured.name)
 </code></pre></div>
+
+<p>}<br />
+```</p>
 <p><strong>Mockito with ArgumentCaptor:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`capture and inspect arguments`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">mock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mock</span><span class="p">(</span><span class="n">UserRepository</span><span class="o">::</span><span class="n">class</span><span class="p">.</span><span class="na">java</span><span class="p">)</span>
-<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">captor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ArgumentCaptor</span><span class="p">.</span><span class="na">forClass</span><span class="p">(</span><span class="n">User</span><span class="o">::</span><span class="n">class</span><span class="p">.</span><span class="na">java</span><span class="p">)</span>
-<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>
-<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="w">    </span><span class="n">mock</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">),</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span>
-<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>
-<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="w">    </span><span class="n">verify</span><span class="p">(</span><span class="n">mock</span><span class="p">).</span><span class="na">save</span><span class="p">(</span><span class="n">captor</span><span class="p">.</span><span class="na">capture</span><span class="p">(),</span><span class="w"> </span><span class="n">any</span><span class="p">())</span>
-<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">captor</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">name</span><span class="p">)</span>
-<a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="p">}</span>
+<p><code>``kotlin
+@Test
+fun</code>capture and inspect arguments`() {<br />
+    val mock = mock(UserRepository::class.java)<br />
+    val captor = ArgumentCaptor.forClass(User::class.java)</p>
+<div class="codehilite"><pre><span></span><code>mock.save(User(&quot;1&quot;, &quot;Alice&quot;), true)
+
+verify(mock).save(captor.capture(), any())
+assertEquals(&quot;Alice&quot;, captor.value.name)
 </code></pre></div>
+
+<p>}<br />
+```</p>
 <p><strong>Fakt with call history:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="nd">@Test</span>
-<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`capture and inspect arguments`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">        </span><span class="n">save</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">user</span><span class="p">,</span><span class="w"> </span><span class="n">validate</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>
-<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">),</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span>
-<a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bob&quot;</span><span class="p">),</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
-<a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>
-<a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">verifySave</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="w">        </span><span class="c1">// Access first call</span>
-<a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a><span class="w">        </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">first</span><span class="p">.</span><span class="na">user</span><span class="p">.</span><span class="na">name</span><span class="p">)</span>
-<a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a><span class="w">        </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">first</span><span class="p">.</span><span class="na">validate</span><span class="p">)</span>
-<a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a>
-<a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a><span class="w">        </span><span class="c1">// Access last call</span>
-<a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a><span class="w">        </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Bob&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">lastOrNull</span><span class="o">?.</span><span class="na">user</span><span class="o">?.</span><span class="na">name</span><span class="p">)</span>
-<a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a>
-<a id="__codelineno-18-18" name="__codelineno-18-18" href="#__codelineno-18-18"></a><span class="w">        </span><span class="c1">// Access all calls</span>
-<a id="__codelineno-18-19" name="__codelineno-18-19" href="#__codelineno-18-19"></a><span class="w">        </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="n">all</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
-<a id="__codelineno-18-20" name="__codelineno-18-20" href="#__codelineno-18-20"></a><span class="w">        </span><span class="n">assertEquals</span><span class="p">(</span><span class="n">listOf</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bob&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">all</span><span class="p">.</span><span class="na">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">it</span><span class="p">.</span><span class="na">user</span><span class="p">.</span><span class="na">name</span><span class="w"> </span><span class="p">})</span>
-<a id="__codelineno-18-21" name="__codelineno-18-21" href="#__codelineno-18-21"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-18-22" name="__codelineno-18-22" href="#__codelineno-18-22"></a><span class="p">}</span>
+<p><code>``kotlin
+@Test
+fun</code>capture and inspect arguments`() {<br />
+    val fake = fakeUserRepository {<br />
+        save { user, validate -&gt; }<br />
+    }</p>
+<div class="codehilite"><pre><span></span><code>fake.save(User(&quot;1&quot;, &quot;Alice&quot;), true)
+fake.save(User(&quot;2&quot;, &quot;Bob&quot;), false)
+
+fake.verifySave {
+    // Access first call
+    assertEquals(&quot;Alice&quot;, first.user.name)
+    assertTrue(first.validate)
+
+    // Access last call
+    assertEquals(&quot;Bob&quot;, lastOrNull?.user?.name)
+
+    // Access all calls
+    assertEquals(2, all.size)
+    assertEquals(listOf(&quot;Alice&quot;, &quot;Bob&quot;), all.map { it.user.name })
+}
 </code></pre></div>
+
+<p>}<br />
+```</p>
 <p><strong>Key differences:</strong></p>
 <ul>
 <li>No need for separate captor/slot objects</li>
