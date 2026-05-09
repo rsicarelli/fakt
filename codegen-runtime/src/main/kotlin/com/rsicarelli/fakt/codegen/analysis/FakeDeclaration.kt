@@ -7,12 +7,9 @@ import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 /**
  * Pure (compiler-API-free) contract for a `@Fake`-annotated declaration.
  *
- * Introduced in 3.1.d.3 as the all-strings replacement for the IR-coupled `InterfaceAnalysis` /
- * `ClassAnalysis` pair. Once 3.1.d.4 is complete the generators will consume this type directly and
- * the old records will be deleted (3.1.d.5).
- *
  * All type information arrives **pre-rendered** (e.g. `"List<User>?"`) so that codegen-runtime
- * never needs to import `org.jetbrains.kotlin.ir.*`.
+ * never needs to import `org.jetbrains.kotlin.ir.*`. The IR-side translator in `:compiler` is
+ * responsible for resolving every `IrType` to its rendered shape before invoking codegen.
  *
  * The [Interface] and [Class] variants share a common set of fields via the sealed interface and
  * add variant-specific ones below.

@@ -24,17 +24,13 @@ import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 
 /*
- * IR → FakeDeclaration translator (3.1.d.3).
+ * IR → FakeDeclaration translator.
  *
  * Bridges the IR-side metadata (which carries `IrType`/`IrClass` references) to the pure
- * `FakeDeclaration` contract that lives in `:codegen-runtime`. Introduced parallel to the
- * existing `toInterfaceAnalysis()` / `toClassAnalysis()` adapters so the migration is staged:
- * generators are switched to consume `FakeDeclaration` in 3.1.d.4, then the legacy adapters
- * and the IrType-flavored `*Analysis` records are deleted in 3.1.d.5.
- *
- * All `IrType` rendering happens here, in one place. Per-member helpers reuse the
- * pre-populated `RenderedType` side channel from 3.1.d.1 when available, falling back to a
- * fresh `TypeResolution.irTypeToKotlinString` call otherwise.
+ * `FakeDeclaration` contract that lives in `:codegen-runtime`. This is the single point where
+ * `IrType` rendering happens; per-member helpers reuse the pre-populated `RenderedType` side
+ * channel when available, falling back to a fresh `TypeResolution.irTypeToKotlinString` call
+ * otherwise.
  */
 
 /**
@@ -180,18 +176,34 @@ private fun GenericPattern.toPureGenericPattern(): PureGenericPattern =
             )
     }
 
-private fun FirCallHistoryMode.resolveCallHistory(default: Boolean): Boolean =
+/**
+ * Resolves the @Fake annotation's call-history mode against the plugin-level default.
+ *
+ * Resolution priority:
+ * 1. ENABLED → `true` (override plugin default)
+ * 2. DISABLED → `false` (override plugin default)
+ * 3. DEFAULT → follow [pluginDefault]
+ */
+internal fun FirCallHistoryMode.resolveCallHistory(pluginDefault: Boolean): Boolean =
     when (this) {
         FirCallHistoryMode.ENABLED -> true
         FirCallHistoryMode.DISABLED -> false
-        FirCallHistoryMode.DEFAULT -> default
+        FirCallHistoryMode.DEFAULT -> pluginDefault
     }
 
-private fun FirMutabilityMode.resolveMutability(default: Boolean): Boolean =
+/**
+ * Resolves the @Fake annotation's mutability mode against the plugin-level default.
+ *
+ * Resolution priority:
+ * 1. MUTABLE → `true`
+ * 2. IMMUTABLE → `false`
+ * 3. DEFAULT → follow [pluginDefault]
+ */
+internal fun FirMutabilityMode.resolveMutability(pluginDefault: Boolean): Boolean =
     when (this) {
         FirMutabilityMode.MUTABLE -> true
         FirMutabilityMode.IMMUTABLE -> false
-        FirMutabilityMode.DEFAULT -> default
+        FirMutabilityMode.DEFAULT -> pluginDefault
     }
 
 private fun collectFqns(

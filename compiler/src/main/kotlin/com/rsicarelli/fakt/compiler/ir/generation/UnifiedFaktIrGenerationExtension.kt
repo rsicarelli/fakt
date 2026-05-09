@@ -108,7 +108,7 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
 
     // Extracted modules following DRY principles
     private val typeResolver = createTypeResolution()
-    private val importResolver = ImportResolver(typeResolver)
+    private val importResolver = ImportResolver()
 
     private val generators =
         CodeGenerators(

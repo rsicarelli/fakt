@@ -44,8 +44,7 @@ class CodeGenerationModulesContractTest {
     @Test
     fun `GIVEN ImportResolver module WHEN instantiating THEN should create successfully`() {
         // GIVEN & WHEN
-        val typeResolution = createTypeResolution()
-        val importResolver = ImportResolver(typeResolution)
+        val importResolver = ImportResolver()
 
         // THEN - Should exist and have expected methods
         assertNotNull(importResolver, "ImportResolver should be instantiable")
@@ -100,8 +99,7 @@ class CodeGenerationModulesContractTest {
     @Test
     fun `GIVEN CodeGenerator orchestrator WHEN instantiating with all dependencies THEN should create successfully`() {
         // GIVEN & WHEN
-        val typeResolution = createTypeResolution()
-        val importResolver = ImportResolver(typeResolution)
+        val importResolver = ImportResolver()
 
         // Create SourceSetContext for testing
         val defaultSourceSet = SourceSetInfo(name = "jvmTest", parents = listOf("commonTest"))

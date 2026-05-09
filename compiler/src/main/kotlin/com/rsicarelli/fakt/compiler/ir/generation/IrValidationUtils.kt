@@ -10,9 +10,6 @@ import com.rsicarelli.fakt.compiler.ir.transform.IrGenerationMetadata
 /**
  * Validates the analyzed generic pattern for an interface and logs warnings.
  *
- * Operates directly on [IrGenerationMetadata] (3.1.d.2: lifted from InterfaceAnalysis level so
- * callers no longer need to pass the `sourceInterface: IrClass` explicitly).
- *
  * @param metadata The IR generation metadata containing genericPattern and sourceInterface
  * @param logger The FaktLogger instance for warning output
  */
