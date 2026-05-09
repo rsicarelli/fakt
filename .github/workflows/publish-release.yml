@@ -97,6 +97,20 @@ jobs:
       - name: Run API Check
         uses: ./.github/actions/validate-api
 
+  build-plugin:
+    name: Build Plugin
+    needs: [guard-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Publish Plugin Bundle
+        uses: ./.github/actions/publish-plugin-bundle
+
   run-tests:
     name: Run Tests
     needs: [guard-release]
@@ -123,7 +137,7 @@ jobs:
 
   test-samples:
     name: Sample / ${{ matrix.sample }}
-    needs: [guard-release]
+    needs: [guard-release, build-plugin]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -162,13 +176,8 @@ jobs:
       - name: Setup Environment
         uses: ./.github/actions/setup-environment
 
-      - name: Regenerate JS/WASM lock files
-        run: ./gradlew kotlinUpgradePackageLock kotlinWasmUpgradePackageLock
-
-      - name: Publish Fakt plugin to Maven Local
-        env:
-          ORG_GRADLE_PROJECT_SKIP_SIGNING: true
-        run: ./gradlew publishToMavenLocal
+      - name: Restore Plugin Bundle
+        uses: ./.github/actions/restore-plugin-bundle
 
       - name: Pre-publish dependency
         if: ${{ matrix.pre-publish }}
@@ -202,6 +211,7 @@ jobs:
       - validate-licenses
       - validate-api
       - run-tests
+      - build-plugin
       - test-samples
     steps:
       - name: Check validation status

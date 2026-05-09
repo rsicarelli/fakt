@@ -1,0 +1,23 @@
+name: Restore Plugin Bundle
+description: Download the Fakt plugin Maven Local subtree published by the upstream build-plugin job and install it into the runner's local Maven repository
+
+inputs:
+  artifact-name:
+    description: Name of the workflow artifact that holds the published Maven Local subtree
+    required: false
+    default: fakt-plugin-maven-local
+
+runs:
+  using: composite
+  steps:
+    - name: Download plugin Maven Local subtree
+      uses: actions/download-artifact@v8
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: ${{ runner.temp }}/fakt-plugin
+
+    - name: Install into local Maven repository
+      shell: bash
+      run: |
+        mkdir -p ~/.m2/repository/com/rsicarelli/fakt
+        cp -R "${{ runner.temp }}/fakt-plugin/." ~/.m2/repository/com/rsicarelli/fakt/
