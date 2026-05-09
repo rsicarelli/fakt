@@ -87,6 +87,32 @@ internal class ImportResolver(private val typeResolver: TypeResolution) {
     }
 
     /**
+     * Resolve a pre-collected set of fully-qualified names into the import list for the generated
+     * fake.
+     *
+     * Mirrors the IR-walking [collectRequiredImports] / [collectRequiredImportsForClass] methods,
+     * but operates on the FQN set carried by `FakeDeclaration.requiredImports` (rolled up from the
+     * `RenderedType` side channel during d.3 translation). The same JVM→Kotlin type remap and
+     * built-in/package-skip filtering are applied.
+     *
+     * 3.1.d.5 will replace [collectRequiredImports] / [collectRequiredImportsForClass] with this
+     * method as the only entry point.
+     *
+     * @param fqns Set of fully-qualified type names referenced by the declaration.
+     * @param currentPackage Package of the generated fake (imports in the same package are
+     *   dropped).
+     * @return Set of fully-qualified names that must be imported.
+     */
+    fun resolveImports(fqns: Set<String>, currentPackage: String): Set<String> =
+        fqns
+            .map { mapJvmTypeToKotlin(it) }
+            .filter { fqName ->
+                val packageName = fqName.substringBeforeLast('.', "")
+                shouldImportType(packageName, currentPackage)
+            }
+            .toSet()
+
+    /**
      * Extract import requirements from an IR type. Handles both simple types and generic types with
      * parameters.
      *

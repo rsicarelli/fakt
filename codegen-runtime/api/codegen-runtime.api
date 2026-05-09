@@ -620,6 +620,33 @@ public final class com/rsicarelli/fakt/codegen/extensions/TypeParamRegexKt {
 	public static final fun typeContainsAnyParam (Ljava/lang/String;Ljava/util/Set;)Z
 }
 
+public final class com/rsicarelli/fakt/codegen/generator/ConfigurationDslGenerator {
+	public fun <init> ()V
+	public final fun generateConfigurationDslCodeFile (Lcom/rsicarelli/fakt/codegen/analysis/FakeDeclaration$Class;Ljava/lang/String;)Lcom/rsicarelli/fakt/codegen/model/CodeFile;
+	public final fun generateConfigurationDslCodeFile (Lcom/rsicarelli/fakt/codegen/analysis/FakeDeclaration$Interface;Ljava/lang/String;)Lcom/rsicarelli/fakt/codegen/model/CodeFile;
+}
+
+public final class com/rsicarelli/fakt/codegen/generator/GeneratedFakeCode {
+	public fun <init> (Lcom/rsicarelli/fakt/codegen/model/CodeFile;Lcom/rsicarelli/fakt/codegen/model/CodeFile;)V
+	public final fun component1 ()Lcom/rsicarelli/fakt/codegen/model/CodeFile;
+	public final fun component2 ()Lcom/rsicarelli/fakt/codegen/model/CodeFile;
+	public final fun copy (Lcom/rsicarelli/fakt/codegen/model/CodeFile;Lcom/rsicarelli/fakt/codegen/model/CodeFile;)Lcom/rsicarelli/fakt/codegen/generator/GeneratedFakeCode;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/codegen/generator/GeneratedFakeCode;Lcom/rsicarelli/fakt/codegen/model/CodeFile;Lcom/rsicarelli/fakt/codegen/model/CodeFile;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/generator/GeneratedFakeCode;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFactoryFunction ()Lcom/rsicarelli/fakt/codegen/model/CodeFile;
+	public final fun getImplementationFile ()Lcom/rsicarelli/fakt/codegen/model/CodeFile;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/codegen/generator/ImplementationGenerator {
+	public fun <init> ()V
+	public final fun generateClassFake (Lcom/rsicarelli/fakt/codegen/analysis/FakeDeclaration$Class;Ljava/lang/String;Ljava/util/List;)Lcom/rsicarelli/fakt/codegen/generator/GeneratedFakeCode;
+	public static synthetic fun generateClassFake$default (Lcom/rsicarelli/fakt/codegen/generator/ImplementationGenerator;Lcom/rsicarelli/fakt/codegen/analysis/FakeDeclaration$Class;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/generator/GeneratedFakeCode;
+	public final fun generateImplementation (Lcom/rsicarelli/fakt/codegen/analysis/FakeDeclaration$Interface;Ljava/lang/String;Ljava/util/List;)Lcom/rsicarelli/fakt/codegen/generator/GeneratedFakeCode;
+	public static synthetic fun generateImplementation$default (Lcom/rsicarelli/fakt/codegen/generator/ImplementationGenerator;Lcom/rsicarelli/fakt/codegen/analysis/FakeDeclaration$Interface;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lcom/rsicarelli/fakt/codegen/generator/GeneratedFakeCode;
+}
+
 public final class com/rsicarelli/fakt/codegen/model/CodeAnnotation {
 	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V

@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.generation
 
+import com.rsicarelli.fakt.codegen.analysis.FakeDeclaration
+import com.rsicarelli.fakt.codegen.generator.ConfigurationDslGenerator
+import com.rsicarelli.fakt.codegen.generator.ImplementationGenerator
 import com.rsicarelli.fakt.codegen.model.CodeFile
 import com.rsicarelli.fakt.codegen.renderer.CodeBuilder
 import com.rsicarelli.fakt.codegen.renderer.renderDeclarationsOnly
@@ -12,8 +15,6 @@ import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.core.context.ImportResolver
 import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.core.telemetry.calculateLOC
-import com.rsicarelli.fakt.compiler.ir.analysis.ClassAnalysis
-import com.rsicarelli.fakt.compiler.ir.analysis.InterfaceAnalysis
 
 /**
  * Groups the code generators used by CodeGenerator.
@@ -99,20 +100,14 @@ internal class CodeGenerator(
      * - JvmOnlyService (jvmMain) → jvmTest
      * - IosOnlyService (iosMain) → iosTest
      *
-     * This is more reliable than the cache-based approach because it works regardless of
-     * compilation order and metadata compilation being skipped.
-     *
      * @param sourceSourceSet Source set name (e.g., "commonMain", "iosMain") or null
      * @return Absolute path to output directory
      */
     private fun selectOutputDirectory(sourceSourceSet: String?): String {
-        // If we don't know the source set, use the default output directory
         if (sourceSourceSet == null) {
             return sourceSetContext.outputDirectory
         }
 
-        // Map main source set to test source set
-        // e.g., "commonMain" → "commonTest", "iosMain" → "iosTest"
         val testSourceSet =
             when {
                 sourceSourceSet.equals("main", ignoreCase = true) -> "test"
@@ -121,9 +116,6 @@ internal class CodeGenerator(
                 else -> sourceSourceSet + "Test"
             }
 
-        // Derive output directory from commonTestOutputDirectory pattern
-        // commonTestOutputDirectory = "$buildDir/generated/fakt/commonTest/kotlin"
-        // We replace "commonTest" with our target test source set
         return sourceSetContext.commonTestOutputDirectory.replace(
             "/commonTest/",
             "/$testSourceSet/",
@@ -133,40 +125,34 @@ internal class CodeGenerator(
     /**
      * Generates complete fake implementation including class, factory, and configuration DSL.
      *
-     * @param analysis The analyzed interface metadata (includes pre-stored packageName)
+     * @param decl Pure interface declaration (types pre-rendered, no IR coupling)
      * @param sourceSourceSet Source set name where interface was defined (e.g., "commonMain",
      *   "iosMain")
      */
     fun generateWorkingFakeImplementation(
-        analysis: InterfaceAnalysis,
+        decl: FakeDeclaration.Interface,
         sourceSourceSet: String? = null,
     ): GeneratedCode {
-        val interfaceName = analysis.interfaceName
+        val interfaceName = decl.simpleName
         val fakeClassName = "Fake${interfaceName}Impl"
-        val packageName = analysis.packageName
+        val packageName = decl.packageName
 
         try {
-            // Collect required imports for implementation
-            val requiredImports = importResolver.collectRequiredImports(analysis, packageName)
+            val requiredImports = importResolver.resolveImports(decl.requiredImports, packageName)
 
-            // Generate implementation + factory using DSL
             val generated =
                 generators.implementation.generateImplementation(
-                    analysis,
+                    decl,
                     packageName,
                     requiredImports.toList(),
                 )
 
-            // Assemble final code using CodeFile throughout
             val generatedCode =
                 GeneratedCode(
                     implementation = generated.implementationFile,
                     factory = generated.factoryFunction,
                     configDsl =
-                        generators.configDsl.generateConfigurationDslCodeFile(
-                            analysis,
-                            fakeClassName,
-                        ),
+                        generators.configDsl.generateConfigurationDslCodeFile(decl, fakeClassName),
                 )
 
             writeGeneratedCode(
@@ -182,61 +168,50 @@ internal class CodeGenerator(
 
             return generatedCode
         } catch (e: Exception) {
-            // Top-level error boundary: Catch all exceptions during code generation
-            // This is a legitimate use of generic exception handling to provide context
-            // We log the error with interface name for debugging, then re-throw to fail fast
             logger.error("Failed to generate fake for $interfaceName: ${e.message}")
             throw e
         }
     }
 
     /**
-     * Generates complete fake implementation for a class including implementation, factory, and
-     * configuration DSL.
+     * Generates complete fake implementation for an abstract or open class.
      *
-     * @param analysis The analyzed class metadata (includes pre-stored packageName)
+     * @param decl Pure class declaration (types pre-rendered, no IR coupling)
      * @param sourceSourceSet Source set name where class was defined (e.g., "commonMain",
      *   "iosMain")
      */
     fun generateWorkingClassFake(
-        analysis: ClassAnalysis,
+        decl: FakeDeclaration.Class,
         sourceSourceSet: String? = null,
     ): GeneratedCode {
-        val className = analysis.className
+        val className = decl.simpleName
         val fakeClassName = "Fake${className}Impl"
-        val packageName = analysis.packageName
+        val packageName = decl.packageName
 
         try {
-            // Collect required imports for implementation
-            val requiredImports =
-                importResolver.collectRequiredImportsForClass(analysis, packageName)
+            val requiredImports = importResolver.resolveImports(decl.requiredImports, packageName)
 
-            // Generate implementation + factory using DSL
             val generated =
                 generators.implementation.generateClassFake(
-                    analysis,
+                    decl,
                     packageName,
                     requiredImports.toList(),
                 )
 
-            // Assemble final code using CodeFile throughout
             val generatedCode =
                 GeneratedCode(
                     implementation = generated.implementationFile,
                     factory = generated.factoryFunction,
                     configDsl =
-                        generators.configDsl.generateConfigurationDslCodeFile(
-                            analysis,
-                            fakeClassName,
-                        ),
+                        generators.configDsl.generateConfigurationDslCodeFile(decl, fakeClassName),
                 )
 
-            writeGeneratedCodeForClass(
+            writeGeneratedCode(
                 context =
                     WriteContext(
                         packageName = packageName,
                         fakeClassName = fakeClassName,
-                        interfaceName = className, // Reuse interfaceName field for class name
+                        interfaceName = className,
                     ),
                 code = generatedCode,
                 sourceSourceSet = sourceSourceSet,
@@ -252,14 +227,10 @@ internal class CodeGenerator(
     /**
      * Writes the generated code to the appropriate output file.
      *
-     * Uses per-interface output directory selection based on source set for KMP isolation:
+     * Uses per-declaration output directory selection based on source set for KMP isolation:
      * - CommonPlatformService (commonMain) → commonTest
      * - NativeOnlyService (nativeMain) → nativeTest
      * - IosOnlyService (iosMain) → iosTest
-     *
-     * @param context Write context with package and class names
-     * @param code Generated code to write
-     * @param sourceSourceSet Source set name where interface was defined
      */
     private fun writeGeneratedCode(
         context: WriteContext,
@@ -269,19 +240,15 @@ internal class CodeGenerator(
         val packageName = context.packageName
         val fakeClassName = context.fakeClassName
 
-        // Select output directory based on source set for KMP source set isolation
         val outputDir = java.io.File(selectOutputDirectory(sourceSourceSet))
 
-        // Create subdirectories matching the package structure
         val packagePath = packageName.replace('.', '/')
         val packageDir = outputDir.resolve(packagePath)
         packageDir.mkdirs()
         val outputFile = packageDir.resolve("$fakeClassName.kt")
 
-        // Render all CodeFiles to a single output string
         val fullCode = renderGeneratedCode(code)
 
-        // Use buffered writer for better I/O performance
         outputFile.bufferedWriter().use { writer -> writer.write(fullCode) }
     }
 
@@ -294,56 +261,16 @@ internal class CodeGenerator(
     private fun renderGeneratedCode(code: GeneratedCode): String {
         val builder = CodeBuilder()
 
-        // 1. Package + imports (from implementation CodeFile)
         code.implementation.renderHeaderOnly(builder)
 
-        // 2. Factory function (API entry point — first thing user sees)
         code.factory.declarations.forEach { declaration -> declaration.renderTo(builder) }
         builder.appendLine()
 
-        // 3. Config DSL (what the user configures)
         code.configDsl.declarations.forEach { declaration -> declaration.renderTo(builder) }
         builder.appendLine()
 
-        // 4. Implementation class + call history (internals)
         code.implementation.renderDeclarationsOnly(builder)
 
         return builder.build()
-    }
-
-    /**
-     * Writes the generated code for a class fake to the appropriate output file.
-     *
-     * Uses per-class output directory selection based on source set for KMP isolation:
-     * - CommonService (commonMain) → commonTest
-     * - NativeService (nativeMain) → nativeTest
-     * - IosService (iosMain) → iosTest
-     *
-     * @param context Write context with package and class names
-     * @param code Generated code to write
-     * @param sourceSourceSet Source set name where class was defined
-     */
-    private fun writeGeneratedCodeForClass(
-        context: WriteContext,
-        code: GeneratedCode,
-        sourceSourceSet: String?,
-    ) {
-        val packageName = context.packageName
-        val fakeClassName = context.fakeClassName
-
-        // Select output directory based on source set for KMP source set isolation
-        val outputDir = java.io.File(selectOutputDirectory(sourceSourceSet))
-
-        // Create subdirectories matching the package structure
-        val packagePath = packageName.replace('.', '/')
-        val packageDir = outputDir.resolve(packagePath)
-        packageDir.mkdirs()
-        val outputFile = packageDir.resolve("$fakeClassName.kt")
-
-        // Render all CodeFiles to a single output string
-        val fullCode = renderGeneratedCode(code)
-
-        // Use buffered writer for better I/O performance
-        outputFile.bufferedWriter().use { writer -> writer.write(fullCode) }
     }
 }

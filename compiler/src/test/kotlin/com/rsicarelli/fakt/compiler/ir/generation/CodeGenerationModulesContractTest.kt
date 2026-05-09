@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.generation
 
+import com.rsicarelli.fakt.codegen.generator.ConfigurationDslGenerator
+import com.rsicarelli.fakt.codegen.generator.ImplementationGenerator
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.api.SourceSetInfo
 import com.rsicarelli.fakt.compiler.core.context.ImportResolver
@@ -12,6 +14,7 @@ import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Contract tests for code generation modules.
@@ -19,6 +22,7 @@ import kotlin.test.assertTrue
  * Verifies that all code generation modules have correct constructors, can be instantiated, and
  * maintain expected method contracts.
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CodeGenerationModulesContractTest {
     @Test
     fun `GIVEN TypeResolver module WHEN instantiating THEN should create successfully`() {
@@ -48,10 +52,7 @@ class CodeGenerationModulesContractTest {
 
         // Verify key methods exist
         val methods = ImportResolver::class.java.declaredMethods.map { it.name }
-        assertTrue(
-            methods.contains("collectRequiredImports"),
-            "Should have collectRequiredImports method",
-        )
+        assertTrue(methods.contains("resolveImports"), "Should have resolveImports method")
     }
 
     @Test
@@ -81,10 +82,9 @@ class CodeGenerationModulesContractTest {
     }
 
     @Test
-    fun `GIVEN ConfigurationDslGenerator module WHEN instantiating with TypeResolver THEN should create successfully`() {
+    fun `GIVEN ConfigurationDslGenerator module WHEN instantiating THEN should create successfully`() {
         // GIVEN & WHEN
-        val typeResolution = createTypeResolution()
-        val configurationDslGenerator = ConfigurationDslGenerator(typeResolution)
+        val configurationDslGenerator = ConfigurationDslGenerator()
 
         // THEN - Should exist and have expected methods
         assertNotNull(configurationDslGenerator, "ConfigurationDslGenerator should be instantiable")
@@ -92,8 +92,8 @@ class CodeGenerationModulesContractTest {
         // Verify key methods exist
         val methods = ConfigurationDslGenerator::class.java.declaredMethods.map { it.name }
         assertTrue(
-            methods.contains("generateConfigurationDsl"),
-            "Should have generateConfigurationDsl method",
+            methods.contains("generateConfigurationDslCodeFile"),
+            "Should have generateConfigurationDslCodeFile method",
         )
     }
 
@@ -121,13 +121,10 @@ class CodeGenerationModulesContractTest {
                 commonTestOutputDirectory = "/tmp/test/generated/fakt/commonTest/kotlin",
             )
 
-        val implementationGenerator = ImplementationGenerator(typeResolution)
-        val configurationDslGenerator = ConfigurationDslGenerator(typeResolution)
-
         val generators =
             CodeGenerators(
-                implementation = implementationGenerator,
-                configDsl = configurationDslGenerator,
+                implementation = ImplementationGenerator(),
+                configDsl = ConfigurationDslGenerator(),
             )
 
         val codeGenerator =

@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.generation
 
+import com.rsicarelli.fakt.codegen.generator.ConfigurationDslGenerator
+import com.rsicarelli.fakt.codegen.generator.ImplementationGenerator
 import com.rsicarelli.fakt.compiler.api.LogLevel
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.api.TimeFormatter
@@ -16,11 +18,11 @@ import com.rsicarelli.fakt.compiler.core.types.TypeInfo
 import com.rsicarelli.fakt.compiler.core.types.createTypeResolution
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeClass
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeInterface
+import com.rsicarelli.fakt.compiler.ir.analysis.toFakeClass
+import com.rsicarelli.fakt.compiler.ir.analysis.toFakeInterface
 import com.rsicarelli.fakt.compiler.ir.transform.FirToIrTransformer
 import com.rsicarelli.fakt.compiler.ir.transform.IrClassGenerationMetadata
 import com.rsicarelli.fakt.compiler.ir.transform.IrGenerationMetadata
-import com.rsicarelli.fakt.compiler.ir.transform.toClassAnalysis
-import com.rsicarelli.fakt.compiler.ir.transform.toInterfaceAnalysis
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.declarations.IrClass
@@ -110,8 +112,8 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
 
     private val generators =
         CodeGenerators(
-            implementation = ImplementationGenerator(typeResolver),
-            configDsl = ConfigurationDslGenerator(typeResolver),
+            implementation = ImplementationGenerator(),
+            configDsl = ConfigurationDslGenerator(),
         )
 
     private val codeGenerator =
@@ -602,10 +604,10 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
                 outputFile.delete()
             }
 
-            // Convert to InterfaceAnalysis using adapter (NO re-analysis!)
-            // Pass plugin default for call history resolution
-            val interfaceAnalysis =
-                metadata.toInterfaceAnalysis(
+            // Translate to FakeDeclaration.Interface (3.1.d.4: pure-data contract).
+            val fakeInterface =
+                metadata.toFakeInterface(
+                    typeResolver = typeResolver,
                     enableCallHistoryDefault = sharedContext.options.enableCallHistoryDefault,
                     enableMutableFakesDefault = sharedContext.options.enableMutableFakesDefault,
                 )
@@ -618,7 +620,7 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
             val (generatedCode, generationTimeNanos) =
                 measureTimeNanos {
                     codeGenerator.generateWorkingFakeImplementation(
-                        analysis = interfaceAnalysis,
+                        decl = fakeInterface,
                         sourceSourceSet = metadata.sourceSourceSet,
                     )
                 }
@@ -744,13 +746,13 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
                 outputFile.delete()
             }
 
-            // Convert to ClassAnalysis using adapter (preserves abstract/open distinction)
-            // Pass plugin default for call history resolution
-            val classAnalysis =
-                metadata.toClassAnalysis(
+            // Translate to FakeDeclaration.Class (preserves abstract/open distinction;
+            // constructorParams are extracted from sourceClass internally).
+            val fakeClass =
+                metadata.toFakeClass(
+                    typeResolver = typeResolver,
                     enableCallHistoryDefault = sharedContext.options.enableCallHistoryDefault,
                     enableMutableFakesDefault = sharedContext.options.enableMutableFakesDefault,
-                    typeResolver = typeResolver,
                 )
 
             // Generate fake implementation with timing
@@ -758,7 +760,7 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
             val (generatedCode, generationTimeNanos) =
                 measureTimeNanos {
                     codeGenerator.generateWorkingClassFake(
-                        analysis = classAnalysis,
+                        decl = fakeClass,
                         sourceSourceSet = metadata.sourceSourceSet,
                     )
                 }

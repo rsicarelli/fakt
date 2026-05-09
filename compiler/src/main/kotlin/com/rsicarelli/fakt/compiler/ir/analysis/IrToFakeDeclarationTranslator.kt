@@ -18,6 +18,10 @@ import com.rsicarelli.fakt.compiler.ir.transform.IrFunctionMetadata
 import com.rsicarelli.fakt.compiler.ir.transform.IrGenerationMetadata
 import com.rsicarelli.fakt.compiler.ir.transform.IrParameterMetadata
 import com.rsicarelli.fakt.compiler.ir.transform.IrPropertyMetadata
+import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrConstructor
+import org.jetbrains.kotlin.ir.declarations.IrParameterKind
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 
 /*
  * IR → FakeDeclaration translator (3.1.d.3).
@@ -66,14 +70,13 @@ internal fun IrGenerationMetadata.toFakeInterface(
 /**
  * Build a [FakeDeclaration.Class] from an [IrClassGenerationMetadata].
  *
- * @param constructorParams Pre-rendered constructor parameters (already pure data; produced by
- *   `extractConstructorParameters` on the IR-shim side and forwarded here).
+ * Constructor parameters are extracted from [IrClassGenerationMetadata.sourceClass]'s primary
+ * constructor.
  */
 internal fun IrClassGenerationMetadata.toFakeClass(
     typeResolver: TypeResolution,
     enableCallHistoryDefault: Boolean = true,
     enableMutableFakesDefault: Boolean = false,
-    constructorParams: List<ConstructorParam> = emptyList(),
 ): FakeDeclaration.Class =
     FakeDeclaration.Class(
         simpleName = className,
@@ -86,12 +89,29 @@ internal fun IrClassGenerationMetadata.toFakeClass(
             collectFqns(abstractProperties + openProperties, abstractMethods + openMethods),
         generateCallHistory = callHistoryMode.resolveCallHistory(enableCallHistoryDefault),
         generateMutableBehaviors = mutabilityMode.resolveMutability(enableMutableFakesDefault),
-        constructorParameters = constructorParams,
+        constructorParameters = sourceClass.extractConstructorParams(typeResolver),
         abstractMethods = abstractMethods.map { it.toFunctionSpec(typeResolver) },
         openMethods = openMethods.map { it.toFunctionSpec(typeResolver) },
         abstractProperties = abstractProperties.map { it.toPropertySpec(typeResolver) },
         openProperties = openProperties.map { it.toPropertySpec(typeResolver) },
     )
+
+@OptIn(UnsafeDuringIrConstructionAPI::class)
+private fun IrClass.extractConstructorParams(typeResolver: TypeResolution): List<ConstructorParam> {
+    val constructor = declarations.filterIsInstance<IrConstructor>().firstOrNull { it.isPrimary }
+    return constructor
+        ?.parameters
+        .orEmpty()
+        .filter { it.kind == IrParameterKind.Regular }
+        .map { param ->
+            ConstructorParam(
+                name = param.name.asString(),
+                typeString =
+                    typeResolver.irTypeToKotlinString(param.type, preserveTypeParameters = true),
+                hasDefault = param.defaultValue != null,
+            )
+        }
+}
 
 private fun IrPropertyMetadata.toPropertySpec(typeResolver: TypeResolution): PropertySpec =
     PropertySpec(
