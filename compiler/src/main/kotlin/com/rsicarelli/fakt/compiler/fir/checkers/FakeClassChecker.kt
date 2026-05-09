@@ -217,6 +217,7 @@ internal class FakeClassChecker(private val sharedContext: FaktSharedContext) :
     ): ValidatedFakeClass {
         val classId = declaration.classId
         val packageName = classId.packageFqName.asString()
+        val qualifiedSourceName = classId.relativeClassName.asString()
 
         // Extract type parameters (same as interface)
         val typeParameters = extractTypeParameters(declaration)
@@ -245,6 +246,7 @@ internal class FakeClassChecker(private val sharedContext: FaktSharedContext) :
             classId = classId,
             simpleName = simpleName,
             packageName = packageName,
+            qualifiedSourceName = qualifiedSourceName,
             typeParameters = typeParameters,
             abstractProperties = abstractProps,
             openProperties = openProps,

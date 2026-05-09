@@ -235,11 +235,17 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
         // Track transformation time for unified logging
         val transformationTimeNanos = interfaceTransformTime + classTransformTime
 
+        // Detect output-file collisions: two @Fake declarations in the same package whose simple
+        // names collide produce the same `FakeXxxImpl.kt`. This typically happens with nested
+        // types (e.g., `object A { @Fake interface S }` and `object B { @Fake interface S }`),
+        // since Kotlin only enforces unique simple names at the top level of a package.
+        val deduplicatedInterfaces = reportAndDropOutputCollisions(interfaceMetadata, classMetadata)
+
         // Collect unified metrics (FIR + IR) for batch logging
         val interfaceResult =
-            if (interfaceMetadata.isNotEmpty()) {
+            if (deduplicatedInterfaces.interfaces.isNotEmpty()) {
                 processInterfacesFromMetadata(
-                    interfaceMetadata,
+                    deduplicatedInterfaces.interfaces,
                     firMetricsMap,
                     collectDetailedMetrics,
                 )
@@ -248,8 +254,12 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
             }
 
         val classResult =
-            if (classMetadata.isNotEmpty()) {
-                processClassesFromMetadata(classMetadata, firMetricsMap, collectDetailedMetrics)
+            if (deduplicatedInterfaces.classes.isNotEmpty()) {
+                processClassesFromMetadata(
+                    deduplicatedInterfaces.classes,
+                    firMetricsMap,
+                    collectDetailedMetrics,
+                )
             } else {
                 ProcessingResult(emptyList(), 0)
             }
@@ -307,29 +317,54 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
 
         moduleFragment.files.forEach { file ->
             file.declarations.filterIsInstance<IrClass>().forEach { irClass ->
-                val classId =
-                    ClassId(
-                        packageFqName = irClass.packageFqName ?: FqName.ROOT,
-                        relativeClassName = FqName(irClass.name.asString()),
-                        isLocal = false,
-                    )
-                map[classId] = irClass
-
-                // Also add nested classes
-                irClass.declarations.filterIsInstance<IrClass>().forEach { nestedClass ->
-                    val nestedClassId =
-                        ClassId(
-                            packageFqName = irClass.packageFqName ?: FqName.ROOT,
-                            relativeClassName =
-                                FqName("${irClass.name.asString()}.${nestedClass.name.asString()}"),
-                            isLocal = false,
-                        )
-                    map[nestedClassId] = nestedClass
-                }
+                indexClassRecursively(
+                    irClass = irClass,
+                    packageFqName = irClass.packageFqName ?: FqName.ROOT,
+                    relativeNameSegments = listOf(irClass.name.asString()),
+                    map = map,
+                )
             }
         }
 
         return map
+    }
+
+    /**
+     * Walk a class declaration tree and index every nested class by its full [ClassId].
+     *
+     * Handles arbitrarily deep nesting (e.g., `Outer.Companion.Inner`, `L1.L2.L3`) because
+     * `relativeClassName` for a triply-nested class is `Outer.Mid.Inner`, not just one segment.
+     *
+     * @param irClass The class to index at this level.
+     * @param packageFqName Package owning the top-level enclosing class (shared across all nested
+     *   levels — nested types live in the same package as their root).
+     * @param relativeNameSegments Class-name segments from the root of the enclosing top-level
+     *   class to [irClass], e.g. `["Outer", "Companion", "Inner"]`.
+     * @param map Accumulating ClassId → IrClass map.
+     */
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    private fun indexClassRecursively(
+        irClass: IrClass,
+        packageFqName: FqName,
+        relativeNameSegments: List<String>,
+        map: MutableMap<ClassId, IrClass>,
+    ) {
+        val classId =
+            ClassId(
+                packageFqName = packageFqName,
+                relativeClassName = FqName(relativeNameSegments.joinToString(".")),
+                isLocal = false,
+            )
+        map[classId] = irClass
+
+        irClass.declarations.filterIsInstance<IrClass>().forEach { nested ->
+            indexClassRecursively(
+                irClass = nested,
+                packageFqName = packageFqName,
+                relativeNameSegments = relativeNameSegments + nested.name.asString(),
+                map = map,
+            )
+        }
     }
 
     /**
@@ -382,6 +417,67 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
         }
 
         return map
+    }
+
+    /**
+     * Result of deduplicating output paths.
+     *
+     * @property interfaces Interfaces that survived deduplication.
+     * @property classes Classes that survived deduplication.
+     */
+    private data class DeduplicatedMetadata(
+        val interfaces: List<IrGenerationMetadata>,
+        val classes: List<IrClassGenerationMetadata>,
+    )
+
+    /**
+     * Detects @Fake declarations that would write to the same `FakeXxxImpl.kt` output file and
+     * keeps only the first occurrence per `(packageName, simpleName)` pair, logging an error for
+     * the rest.
+     *
+     * Output paths are derived from `Fake${simpleName}Impl.kt` in [packageName], so two nested
+     * declarations in the same package with the same simple name (e.g., `object A { @Fake interface
+     * S }` and `object B { @Fake interface S }`) collide. Generating both would silently overwrite,
+     * producing only one fake. Reporting the collision lets users disambiguate by renaming.
+     */
+    private fun reportAndDropOutputCollisions(
+        interfaces: List<IrGenerationMetadata>,
+        classes: List<IrClassGenerationMetadata>,
+    ): DeduplicatedMetadata {
+        // (packageName, simpleName) → list of qualifiedSourceName
+        val seen = mutableMapOf<Pair<String, String>, MutableList<String>>()
+
+        interfaces.forEach { metadata ->
+            val key = metadata.packageName to metadata.interfaceName
+            seen.getOrPut(key) { mutableListOf() }.add(metadata.qualifiedSourceName)
+        }
+        classes.forEach { metadata ->
+            val key = metadata.packageName to metadata.className
+            seen.getOrPut(key) { mutableListOf() }.add(metadata.qualifiedSourceName)
+        }
+
+        val collidingKeys =
+            seen
+                .filterValues { it.size > 1 }
+                .also { collisions ->
+                    collisions.forEach { (key, qualifiedNames) ->
+                        val (packageName, simpleName) = key
+                        logger.error(
+                            "[FAKT] Multiple @Fake declarations would generate the same " +
+                                "Fake${simpleName}Impl in package '$packageName': " +
+                                "${qualifiedNames.joinToString(", ")}. " +
+                                "Rename one of them to avoid the file collision."
+                        )
+                    }
+                }
+
+        if (collidingKeys.isEmpty()) return DeduplicatedMetadata(interfaces, classes)
+
+        // Keep only the first occurrence per (package, simple name); drop the rest.
+        val seenKeys = mutableSetOf<Pair<String, String>>()
+        val keptInterfaces = interfaces.filter { seenKeys.add(it.packageName to it.interfaceName) }
+        val keptClasses = classes.filter { seenKeys.add(it.packageName to it.className) }
+        return DeduplicatedMetadata(keptInterfaces, keptClasses)
     }
 
     /**

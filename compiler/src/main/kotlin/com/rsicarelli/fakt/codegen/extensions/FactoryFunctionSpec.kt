@@ -16,6 +16,7 @@ import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
  */
 data class FactoryFunctionSpec(
     val interfaceName: String,
+    val superTypeName: String = interfaceName,
     val typeParameters: List<String> = emptyList(),
     val visibility: FirVisibility = FirVisibility.PUBLIC,
     val annotations: List<AnnotationSpec> = emptyList(),

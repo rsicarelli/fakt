@@ -75,6 +75,10 @@ enum class FirMutabilityMode {
  *
  * @property classId Fully qualified class identifier (e.g., com.example.UserService)
  * @property simpleName Simple class name (e.g., UserService)
+ * @property qualifiedSourceName Source-side qualified name relative to the package — equals
+ *   [simpleName] for top-level types and `Outer.Inner` for types nested in an `object`/`class`
+ *   (e.g., `NestedFakes.AlphaService`). Used by codegen for super-type references and KDoc links;
+ *   generated identifiers (file, `Fake…Impl`, factory) still use [simpleName].
  * @property packageName Package name (e.g., com.example)
  * @property typeParameters Class-level type parameters with bounds (e.g.,
  *   ["T", "K : Comparable<K>"])
@@ -94,6 +98,7 @@ data class ValidatedFakeInterface(
     val classId: ClassId,
     val simpleName: String,
     val packageName: String,
+    val qualifiedSourceName: String = simpleName,
     val typeParameters: List<FirTypeParameterInfo>,
     val properties: List<FirPropertyInfo>,
     val functions: List<FirFunctionInfo>,
@@ -132,6 +137,7 @@ data class ValidatedFakeClass(
     val classId: ClassId,
     val simpleName: String,
     val packageName: String,
+    val qualifiedSourceName: String = simpleName,
     val typeParameters: List<FirTypeParameterInfo>,
     val abstractProperties: List<FirPropertyInfo>,
     val openProperties: List<FirPropertyInfo>,

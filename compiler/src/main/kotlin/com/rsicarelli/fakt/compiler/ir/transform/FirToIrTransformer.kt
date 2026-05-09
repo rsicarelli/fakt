@@ -112,6 +112,7 @@ internal class FirToIrTransformer {
         return IrGenerationMetadata(
             interfaceName = firMetadata.simpleName,
             packageName = firMetadata.packageName,
+            qualifiedSourceName = firMetadata.qualifiedSourceName,
             typeParameters = typeParameters,
             members =
                 IrInterfaceMembers(
@@ -180,6 +181,7 @@ internal class FirToIrTransformer {
         return IrClassGenerationMetadata(
             className = firMetadata.simpleName,
             packageName = firMetadata.packageName,
+            qualifiedSourceName = firMetadata.qualifiedSourceName,
             typeParameters = typeParameters,
             members =
                 IrClassMembers(

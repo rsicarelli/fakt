@@ -162,6 +162,7 @@ internal class FakeInterfaceChecker(private val sharedContext: FaktSharedContext
     ): ValidatedFakeInterface {
         val classId = declaration.classId
         val packageName = classId.packageFqName.asString()
+        val qualifiedSourceName = classId.relativeClassName.asString()
         val typeParameters = extractTypeParameters(declaration)
         val properties = extractProperties(declaration)
         val functions = extractFunctions(declaration)
@@ -184,6 +185,7 @@ internal class FakeInterfaceChecker(private val sharedContext: FaktSharedContext
             classId = classId,
             simpleName = simpleName,
             packageName = packageName,
+            qualifiedSourceName = qualifiedSourceName,
             typeParameters = typeParameters,
             properties = properties,
             functions = functions,
