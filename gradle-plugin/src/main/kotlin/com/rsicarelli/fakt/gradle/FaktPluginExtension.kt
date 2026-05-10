@@ -190,6 +190,38 @@ constructor(objects: ObjectFactory, private val project: Project) {
         objects.property(Boolean::class.java).convention(false)
 
     /**
+     * Opt in to the cache-correct `FaktGenerateTask` codepath that hosts Fakt's compiler in a
+     * Gradle Worker outside `compileKotlin*`. Fixes issue #79 — when Gradle's build cache restores
+     * `compileKotlin*`, the generated `.kt` files come back too because they're declared task
+     * outputs rather than side-effect writes.
+     *
+     * **Default:** `false` (the existing in-process compiler-plugin path runs unchanged).
+     *
+     * **Usage (build script):**
+     *
+     * ```kotlin
+     * fakt {
+     *     useExperimentalGenerateTask.set(true)
+     * }
+     * ```
+     *
+     * **Usage (Gradle property — flips the default for any project that hasn't set it
+     * explicitly):**
+     *
+     * ```
+     * gradle build -Pfakt.useExperimentalGenerateTask=true
+     * ```
+     *
+     * Setting the value in the extension wins over the property if both are present.
+     *
+     * Marked experimental during the rollout (PRs #97 → #100). The default flips in PR 5; this
+     * property becomes the explicit opt-out for one minor before the legacy in-process path is
+     * removed.
+     */
+    public val useExperimentalGenerateTask: Property<Boolean> =
+        objects.property(Boolean::class.java).convention(false)
+
+    /**
      * Source project to collect generated fakes from (collector mode).
      *
      * When set, this module switches to **collector mode**:

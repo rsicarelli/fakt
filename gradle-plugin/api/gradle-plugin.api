@@ -52,6 +52,7 @@ public abstract class com/rsicarelli/fakt/gradle/FaktGenerateTask : org/gradle/a
 
 public final class com/rsicarelli/fakt/gradle/FaktGradleSubplugin : org/jetbrains/kotlin/gradle/plugin/KotlinCompilerPluginSupportPlugin {
 	public static final field Companion Lcom/rsicarelli/fakt/gradle/FaktGradleSubplugin$Companion;
+	public static final field FAKT_KOTLIN_VERSION Ljava/lang/String;
 	public static final field PLUGIN_ARTIFACT_NAME Ljava/lang/String;
 	public static final field PLUGIN_GROUP_ID Ljava/lang/String;
 	public static final field PLUGIN_ID Ljava/lang/String;
@@ -78,6 +79,7 @@ public class com/rsicarelli/fakt/gradle/FaktPluginExtension {
 	public final fun getEnableMutableFakes ()Lorg/gradle/api/provider/Property;
 	public final fun getEnabled ()Lorg/gradle/api/provider/Property;
 	public final fun getLogLevel ()Lorg/gradle/api/provider/Property;
+	public final fun getUseExperimentalGenerateTask ()Lorg/gradle/api/provider/Property;
 	public final fun getUseGradleTestFixtures ()Lorg/gradle/api/provider/Property;
 }
 
