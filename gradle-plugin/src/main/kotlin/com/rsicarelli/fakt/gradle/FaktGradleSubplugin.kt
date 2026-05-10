@@ -78,6 +78,26 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         public const val PLUGIN_ARTIFACT_NAME: String = "compiler"
         public const val PLUGIN_GROUP_ID: String = "com.rsicarelli.fakt"
         public const val PLUGIN_VERSION: String = "1.0.0-beta08"
+
+        /**
+         * `kotlin-compiler-embeddable` version pulled into the worker's isolated classpath. Pinned
+         * to the Kotlin version Fakt was built and tested against. Users can override the
+         * `faktWorker` configuration in their project if they need a different compiler version
+         * (e.g. for a Kotlin EAP).
+         */
+        public const val FAKT_KOTLIN_VERSION: String = "2.3.20"
+
+        internal const val WORKER_CONFIGURATION: String = "faktWorker"
+        internal const val COMPILER_CLASSPATH_CONFIGURATION: String = "faktCompiler"
+        internal const val GRADLE_PROPERTY_FLAG: String = "fakt.useExperimentalGenerateTask"
+
+        /**
+         * Sentinel substituted into [SourceSetContext.outputDirectory] /
+         * [SourceSetContext.commonTestOutputDirectory] when the JSON is stored as a task `@Input` —
+         * the worker overwrites these with absolute paths from file properties at execution time so
+         * the cache key never carries machine-specific paths.
+         */
+        private const val OUTPUT_PLACEHOLDER: String = "fakt://generated"
     }
 
     @OptIn(ExperimentalFaktMultiModule::class)
@@ -102,16 +122,67 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 // GENERATOR MODE: Generate fakes from @Fake annotations
                 target.logger.info("Fakt: Generator mode enabled - generating fakes")
 
-                // Validate test fixtures configuration
-                val useTestFixtures = resolveTestFixturesMode(target, extension)
-
-                // Configure source sets for generated code
-                val configurator = SourceSetConfigurator(target, useTestFixtures)
-                configurator.configureSourceSets()
+                if (resolveExperimentalGenerateTaskFlag(target, extension)) {
+                    target.logger.info(
+                        "Fakt: useExperimentalGenerateTask=true — registering FaktGenerateTask " +
+                            "per compilation; the in-process compiler-plugin path stays disabled."
+                    )
+                    ensureFaktConfigurations(target)
+                } else {
+                    // LEGACY in-process path. Source-set wiring stays eager.
+                    val useTestFixtures = resolveTestFixturesMode(target, extension)
+                    val configurator = SourceSetConfigurator(target, useTestFixtures)
+                    configurator.configureSourceSets()
+                }
             }
         }
 
         target.logger.info("Fakt: Applied Gradle plugin to project ${target.name}")
+    }
+
+    /**
+     * Reads the experimental flag from (in priority order) the `fakt { }` extension and the Gradle
+     * property `fakt.useExperimentalGenerateTask`. Property gives end-users an opt-in switch
+     * without having to touch the build script — useful for trying the cache-correct path on a
+     * single CI run.
+     */
+    private fun resolveExperimentalGenerateTaskFlag(
+        project: Project,
+        extension: FaktPluginExtension,
+    ): Boolean {
+        if (extension.useExperimentalGenerateTask.get()) return true
+        return project.providers
+            .gradleProperty(GRADLE_PROPERTY_FLAG)
+            .orNull
+            ?.toBooleanStrictOrNull() ?: false
+    }
+
+    /**
+     * Idempotently creates the resolvable configurations that feed the worker classloader. Safe to
+     * call from both `apply` / `afterEvaluate` and `applyToCompilation` because `maybeCreate(...)`
+     * is no-op on the second call. Required at the call site that runs earliest:
+     * `applyToCompilation` fires before `afterEvaluate`, so the configurations have to exist before
+     * the task is registered.
+     */
+    internal fun ensureFaktConfigurations(target: Project) {
+        target.configurations.maybeCreate(WORKER_CONFIGURATION).apply {
+            isCanBeResolved = true
+            isCanBeConsumed = false
+            description = "Runtime classpath for Fakt's code-generation worker (K2JVMCompiler)."
+        }
+        target.configurations.maybeCreate(COMPILER_CLASSPATH_CONFIGURATION).apply {
+            isCanBeResolved = true
+            isCanBeConsumed = false
+            description = "Fakt's :compiler shadowJar classpath, attached to K2 via -Xplugin."
+        }
+        target.dependencies.add(
+            WORKER_CONFIGURATION,
+            "org.jetbrains.kotlin:kotlin-compiler-embeddable:$FAKT_KOTLIN_VERSION",
+        )
+        target.dependencies.add(
+            COMPILER_CLASSPATH_CONFIGURATION,
+            "$PLUGIN_GROUP_ID:$PLUGIN_ARTIFACT_NAME:$PLUGIN_VERSION",
+        )
     }
 
     /**
@@ -258,38 +329,48 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             "Fakt: Applying compiler plugin to compilation ${kotlinCompilation.name}"
         )
 
-        return project.provider {
-            buildList {
-                // Pass configuration options to the compiler plugin
-                add(SubpluginOption(key = "enabled", value = extension.enabled.get().toString()))
-                add(SubpluginOption(key = "logLevel", value = extension.logLevel.get().name))
-                add(
-                    SubpluginOption(
-                        key = "enableCallHistory",
-                        value = extension.enableCallHistory.get().toString(),
-                    )
-                )
-                add(
-                    SubpluginOption(
-                        key = "enableMutableFakes",
-                        value = extension.enableMutableFakes.get().toString(),
-                    )
-                )
-
-                val buildDir = project.layout.buildDirectory.get().asFile.absolutePath
-                val useTestFixtures = resolveTestFixturesMode(project, extension)
-                val context =
-                    SourceSetDiscovery.buildContext(kotlinCompilation, buildDir, useTestFixtures)
-
-                // Serialize context to Base64-encoded JSON for compiler plugin
-                val json = Json { prettyPrint = false }
-                val jsonString = json.encodeToString(context)
-                val base64Encoded = Base64.getEncoder().encodeToString(jsonString.toByteArray())
-                add(SubpluginOption(key = "sourceSetContext", value = base64Encoded))
-
-                // Also pass output directory for backwards compatibility
-                add(SubpluginOption(key = "outputDir", value = context.outputDirectory))
-            }
+        if (resolveExperimentalGenerateTaskFlag(project, extension)) {
+            // Side-effect: register FaktGenerateTask + wire its @OutputDirectory into the
+            // matching test source set. Returns `enabled=false` so the in-process compiler
+            // plugin (still loaded by KGP into compileKotlin*) skips registration — generation
+            // happens in our task instead. Empty list isn't enough: FaktCompilerPluginRegistrar
+            // defaults `enabled` to true and would explode when sourceSetContext is missing.
+            FaktGenerateTaskWiring.register(project, kotlinCompilation, extension)
+            return project.provider { listOf(SubpluginOption(key = "enabled", value = "false")) }
         }
+
+        return project.provider { legacyInProcessOptions(project, kotlinCompilation, extension) }
+    }
+
+    /** Original in-process subplugin option payload, untouched. */
+    private fun legacyInProcessOptions(
+        project: Project,
+        kotlinCompilation: KotlinCompilation<*>,
+        extension: FaktPluginExtension,
+    ): List<SubpluginOption> = buildList {
+        add(SubpluginOption(key = "enabled", value = extension.enabled.get().toString()))
+        add(SubpluginOption(key = "logLevel", value = extension.logLevel.get().name))
+        add(
+            SubpluginOption(
+                key = "enableCallHistory",
+                value = extension.enableCallHistory.get().toString(),
+            )
+        )
+        add(
+            SubpluginOption(
+                key = "enableMutableFakes",
+                value = extension.enableMutableFakes.get().toString(),
+            )
+        )
+
+        val buildDir = project.layout.buildDirectory.get().asFile.absolutePath
+        val useTestFixtures = resolveTestFixturesMode(project, extension)
+        val context = SourceSetDiscovery.buildContext(kotlinCompilation, buildDir, useTestFixtures)
+
+        val json = Json { prettyPrint = false }
+        val jsonString = json.encodeToString(context)
+        val base64Encoded = Base64.getEncoder().encodeToString(jsonString.toByteArray())
+        add(SubpluginOption(key = "sourceSetContext", value = base64Encoded))
+        add(SubpluginOption(key = "outputDir", value = context.outputDirectory))
     }
 }

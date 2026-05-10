@@ -191,7 +191,10 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         )
         bridge.setOnArgs(args, "setNoStdlib", Boolean::class.javaPrimitiveType!!, true)
         bridge.setOnArgs(args, "setNoReflect", Boolean::class.javaPrimitiveType!!, true)
-        bridge.setOnArgs(args, "setNoJdk", Boolean::class.javaPrimitiveType!!, true)
+        // Leave the JDK on the compilation classpath — production sources reference
+        // `java.io.Serializable`, `java.util.*`, etc. K2 needs JDK rt to resolve them. The PR 2
+        // smoke tests got away with `noJdk=true` because kctfork supplied the JDK via
+        // `inheritClassPath = true`; the production worker doesn't.
     }
 
     private fun populatePluginArgs(bridge: K2CompilerBridge, args: Any, call: K2Invocation) {
