@@ -122,15 +122,22 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 // GENERATOR MODE: Generate fakes from @Fake annotations
                 target.logger.info("Fakt: Generator mode enabled - generating fakes")
 
-                if (resolveExperimentalGenerateTaskFlag(target, extension)) {
+                val isKmp =
+                    target.extensions.findByType(
+                        org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension::class.java
+                    ) != null
+                val useTestFixtures = resolveTestFixturesMode(target, extension)
+                if (resolveExperimentalGenerateTaskFlag(target, extension) && !isKmp) {
                     target.logger.info(
                         "Fakt: useExperimentalGenerateTask=true — registering FaktGenerateTask " +
                             "per compilation; the in-process compiler-plugin path stays disabled."
                     )
                     ensureFaktConfigurations(target)
                 } else {
-                    // LEGACY in-process path. Source-set wiring stays eager.
-                    val useTestFixtures = resolveTestFixturesMode(target, extension)
+                    // Legacy in-process path. Also taken when the flag is on but the project is
+                    // KMP — the cache-correct worker only drives K2JVMCompiler today, so a
+                    // metadata/native producer is a deferred follow-up. Until then, KMP falls
+                    // through to the legacy wiring unchanged.
                     val configurator = SourceSetConfigurator(target, useTestFixtures)
                     configurator.configureSourceSets()
                 }
@@ -329,7 +336,10 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             "Fakt: Applying compiler plugin to compilation ${kotlinCompilation.name}"
         )
 
-        if (resolveExperimentalGenerateTaskFlag(project, extension)) {
+        if (
+            resolveExperimentalGenerateTaskFlag(project, extension) &&
+                isCacheCorrectPathSupported(kotlinCompilation)
+        ) {
             // Side-effect: register FaktGenerateTask + wire its @OutputDirectory into the
             // matching test source set. Returns `enabled=false` so the in-process compiler
             // plugin (still loaded by KGP into compileKotlin*) skips registration — generation
@@ -340,6 +350,29 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         }
 
         return project.provider { legacyInProcessOptions(project, kotlinCompilation, extension) }
+    }
+
+    /**
+     * The cache-correct worker drives `K2JVMCompiler` reflectively, so it can only analyse JVM
+     * bytecode-producing compilations. Two further constraints narrow the scope:
+     * 1. **Platform.** KMP metadata, Native, JS and Wasm compilations need their own K2 drivers
+     *    (`K2MetadataCompiler` et al.) plus matching common/native stdlib classpaths — deferred
+     *    follow-up.
+     * 2. **KMP source-set inheritance.** Even on a JVM target inside a KMP project, the `jvmMain`
+     *    compilation's analysis source set is `jvmMain + commonMain` (KGP attaches parent source
+     *    sets). The task would generate fakes for `commonMain` `@Fake` interfaces too, conflicting
+     *    with the legacy in-process path that handles `compileKotlinMetadata`. Disabling the legacy
+     *    path entirely under the flag isn't safe yet (no `K2MetadataCompiler` producer) — so for
+     *    now KMP projects stay on legacy across the board.
+     *
+     * Pure JVM Gradle projects (no `KotlinMultiplatformExtension`) take the cache-correct path.
+     */
+    private fun isCacheCorrectPathSupported(kotlinCompilation: KotlinCompilation<*>): Boolean {
+        val platform = kotlinCompilation.target.platformType.name.lowercase()
+        if (platform != "jvm" && platform != "androidjvm") return false
+        return kotlinCompilation.project.extensions.findByType(
+            org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension::class.java
+        ) == null
     }
 
     /** Original in-process subplugin option payload, untouched. */
