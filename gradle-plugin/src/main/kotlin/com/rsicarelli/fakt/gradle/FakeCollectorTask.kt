@@ -8,13 +8,19 @@ import com.rsicarelli.fakt.gradle.FakeCollectorTask.Companion.registerForKmpProj
 import java.io.File
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.IgnoreEmptyDirectories
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
@@ -50,8 +56,10 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
  *
  * @see ExperimentalFaktMultiModule
  */
+@CacheableTask
 @ExperimentalFaktMultiModule
 public abstract class FakeCollectorTask : DefaultTask() {
+
     /**
      * The path to the source project that generates fakes. Configuration cache compatible (stores
      * path, not Project object).
@@ -61,9 +69,32 @@ public abstract class FakeCollectorTask : DefaultTask() {
     /**
      * The directory where the source project generates fakes. Typically: build/generated/fakt/
      * Optional because not all source sets may have generated fakes.
+     *
+     * Used only by the legacy in-process compiler-plugin path, which writes fakes as a side effect
+     * of `compileKotlin*` and therefore cannot be declared as a Gradle task input. Under the
+     * cache-correct path (`useExperimentalGenerateTask=true`), [sourceFakeRoots] supersedes this
+     * property — see the doc on that field.
      */
     @get:Internal // Not using @InputDirectory to allow missing directories
     public abstract val sourceGeneratedDir: DirectoryProperty
+
+    /**
+     * Aggregated `generatedKotlinDir` outputs of every [FaktGenerateTask] registered on the source
+     * project. Wired through `ConfigurableFileCollection.from(Provider)` so Gradle carries the
+     * `builtBy` chain automatically — no `dependsOn(matching { name == "compile…" })` needed, which
+     * is the regression class tracked as KSP #2442 / #2595 / #2623 (R4 in the cache-correctness
+     * roadmap).
+     *
+     * Declared `@InputFiles` rather than `@Internal` so the collector's own cache key fingerprints
+     * the source `.kt` payload — the cache-correct path is end-to-end, not just at the producer.
+     *
+     * Empty when the source project still uses the legacy in-process compiler-plugin path, in which
+     * case the action falls back to polling [sourceGeneratedDir].
+     */
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:IgnoreEmptyDirectories
+    public abstract val sourceFakeRoots: ConfigurableFileCollection
 
     /**
      * The destination directory where collected fakes will be placed. Typically:
@@ -94,17 +125,138 @@ public abstract class FakeCollectorTask : DefaultTask() {
         group = "fakt"
         description = "Collects generated fakes from source project"
 
-        // Task depends on source project's compilation to ensure fakes are generated first
-        // Note: Dependency will be configured in registerForKmpProject to avoid configuration cache
-        // issues
+        // Caching is only correct when sources arrive through `sourceFakeRoots`. Under the legacy
+        // in-process path the action polls `sourceGeneratedDir` at execution time — not declared as
+        // an input, so any "cache hit" would be a stale-output bug. Once PR 5 retires the legacy
+        // path this gate can disappear and the task becomes unconditionally cacheable.
+        @Suppress("LeakingThis")
+        outputs.cacheIf("sourceFakeRoots wired (cache-correct path)") { !sourceFakeRoots.isEmpty }
     }
 
     @TaskAction
     public fun collectFakes() {
         val startTime = System.nanoTime()
         val faktLogger = GradleFaktLogger(logger, logLevel.get())
-        val faktRootDir = sourceGeneratedDir.asFile.get()
 
+        val taskProviderRoots = sourceFakeRoots.files.filter { it.isDirectory }
+        val sourceSetNames = availableSourceSets.getOrElse(mutableSetOf())
+        // `destinationDir` is the routing root — platform subdirs (`jvmMain/kotlin/...`) are
+        // written directly under it so Gradle's build cache fingerprints every routed file as part
+        // of this task's @OutputDirectory. Earlier code aliased it as a `_placeholder` dir and
+        // wrote one level up, which silently disabled cache restore for the collector (PR 4).
+        val destinationBaseDir = destinationDir.asFile.get()
+        val platformStats = mutableMapOf<String, Int>()
+        val totalCollected =
+            if (taskProviderRoots.isNotEmpty()) {
+                collectFromTaskProviderRoots(
+                    roots = taskProviderRoots,
+                    destinationBaseDir = destinationBaseDir,
+                    availableSourceSets = sourceSetNames,
+                    faktLogger = faktLogger,
+                    platformStats = platformStats,
+                )
+            } else {
+                collectFromLegacySourceDir(
+                    destinationBaseDir = destinationBaseDir,
+                    availableSourceSets = sourceSetNames,
+                    faktLogger = faktLogger,
+                    platformStats = platformStats,
+                )
+            } ?: return
+
+        val totalDuration = System.nanoTime() - startTime
+        val srcProjectName = sourceProjectPath.orNull?.substringAfterLast(":") ?: "unknown"
+
+        faktLogger.info(
+            "✅ $totalCollected fake(s) collected from $srcProjectName | " +
+                TimeFormatter.format(totalDuration)
+        )
+        platformStats.forEach { (platform, count) ->
+            faktLogger.info("  ├─ $platform: $count file(s)")
+        }
+    }
+
+    /**
+     * Cache-correct path. Each entry of [roots] is a [FaktGenerateTask.generatedKotlinDir] — a
+     * package-structured Kotlin source root. Files are routed by package-derived platform detection
+     * exactly like the legacy path; the only difference is that we never poll a source-project
+     * directory at execution time, so Gradle's build cache fingerprints the actual inputs.
+     */
+    private fun collectFromTaskProviderRoots(
+        roots: List<File>,
+        destinationBaseDir: File,
+        availableSourceSets: Set<String>,
+        faktLogger: GradleFaktLogger,
+        platformStats: MutableMap<String, Int>,
+    ): Int {
+        var totalCollected = 0
+        roots.forEach { root ->
+            val rootStartTime = System.nanoTime()
+            val result =
+                collectWithPlatformDetection(
+                    sourceDir = root,
+                    destinationBaseDir = destinationBaseDir,
+                    availableSourceSets = availableSourceSets,
+                    faktLogger = faktLogger,
+                )
+            totalCollected += result.collectedCount
+            result.platformDistribution.forEach { (platform, count) ->
+                platformStats[platform] = (platformStats[platform] ?: 0) + count
+            }
+            faktLogger.debug(
+                "Collected ${result.collectedCount} fake(s) from ${root.name} " +
+                    "(${TimeFormatter.format(System.nanoTime() - rootStartTime)})"
+            )
+        }
+        return totalCollected
+    }
+
+    /**
+     * Legacy in-process path. Walks the source project's `build/generated/fakt/` directory at
+     * execution time. Returns `null` when nothing is found (caller short-circuits the summary log).
+     */
+    private fun collectFromLegacySourceDir(
+        destinationBaseDir: File,
+        availableSourceSets: Set<String>,
+        faktLogger: GradleFaktLogger,
+        platformStats: MutableMap<String, Int>,
+    ): Int? {
+        val faktRootDir = sourceGeneratedDir.asFile.get()
+        val sourceSetDirs =
+            faktRootDir.takeIf { it.exists() }?.listFiles()?.filter { it.isDirectory }.orEmpty()
+        if (sourceSetDirs.isEmpty()) {
+            warnLegacyEmpty(faktRootDir, faktLogger)
+            return null
+        }
+
+        var totalCollected = 0
+        sourceSetDirs.forEach { sourceSetDir ->
+            val kotlinDir = sourceSetDir.resolve("kotlin")
+            if (!kotlinDir.exists() || !kotlinDir.isDirectory) {
+                faktLogger.debug("Skipping ${sourceSetDir.name} (no kotlin directory)")
+                return@forEach
+            }
+            val sourceSetStartTime = System.nanoTime()
+            val result =
+                collectWithPlatformDetection(
+                    sourceDir = kotlinDir,
+                    destinationBaseDir = destinationBaseDir,
+                    availableSourceSets = availableSourceSets,
+                    faktLogger = faktLogger,
+                )
+            totalCollected += result.collectedCount
+            result.platformDistribution.forEach { (platform, count) ->
+                platformStats[platform] = (platformStats[platform] ?: 0) + count
+            }
+            faktLogger.debug(
+                "Collected ${result.collectedCount} fake(s) from ${sourceSetDir.name} " +
+                    "(${TimeFormatter.format(System.nanoTime() - sourceSetStartTime)})"
+            )
+        }
+        return totalCollected
+    }
+
+    private fun warnLegacyEmpty(faktRootDir: File, faktLogger: GradleFaktLogger) {
         if (!faktRootDir.exists()) {
             val srcProjectName = sourceProjectPath.orNull?.substringAfterLast(":") ?: "unknown"
             faktLogger.warn(
@@ -112,72 +264,8 @@ public abstract class FakeCollectorTask : DefaultTask() {
                     "Verify that source module has @Fake annotated interfaces, " +
                     "or remove this collector module if not needed."
             )
-            return
-        }
-
-        // Auto-discover all source set directories (commonTest, jvmTest, etc.)
-        val sourceSetDirs = faktRootDir.listFiles()?.filter { it.isDirectory } ?: emptyList()
-
-        if (sourceSetDirs.isEmpty()) {
+        } else {
             faktLogger.warn("No generated fakes found in $faktRootDir")
-            return
-        }
-
-        // Destination base directory (parent of platform-specific dirs)
-        // destinationDir points to a placeholder, we use its parent
-        val destinationBaseDir = destinationDir.asFile.get().parentFile
-
-        var totalCollected = 0
-        val platformStats = mutableMapOf<String, Int>()
-
-        // Process each source set directory with platform detection
-        sourceSetDirs.forEach { sourceSetDir ->
-            val sourceSetStartTime = System.nanoTime()
-            val kotlinDir = sourceSetDir.resolve("kotlin")
-
-            if (!kotlinDir.exists() || !kotlinDir.isDirectory) {
-                faktLogger.debug("Skipping ${sourceSetDir.name} (no kotlin directory)")
-                return@forEach
-            }
-
-            // Use platform detection for this source set (with available source sets if configured)
-            val sourceSetNames = availableSourceSets.getOrElse(mutableSetOf())
-            val result =
-                collectWithPlatformDetection(
-                    sourceDir = kotlinDir,
-                    destinationBaseDir = destinationBaseDir,
-                    availableSourceSets = sourceSetNames,
-                    faktLogger = faktLogger,
-                )
-
-            totalCollected += result.collectedCount
-            result.platformDistribution.forEach { (platform, count) ->
-                platformStats[platform] = (platformStats[platform] ?: 0) + count
-            }
-
-            val sourceSetDuration = System.nanoTime() - sourceSetStartTime
-            faktLogger.debug(
-                "Collected ${result.collectedCount} fake(s) from ${sourceSetDir.name} " +
-                    "(${TimeFormatter.format(sourceSetDuration)})"
-            )
-        }
-
-        // Calculate total duration
-        val totalDuration = System.nanoTime() - startTime
-        val srcProjectName = sourceProjectPath.orNull?.substringAfterLast(":") ?: "unknown"
-
-        // Log summary (INFO level)
-        faktLogger.info(
-            "✅ $totalCollected fake(s) collected from $srcProjectName | ${
-                TimeFormatter.format(
-                    totalDuration
-                )
-            }"
-        )
-
-        // Log platform distribution (INFO level)
-        platformStats.forEach { (platform, count) ->
-            faktLogger.info("  ├─ $platform: $count file(s)")
         }
     }
 
@@ -392,15 +480,28 @@ public abstract class FakeCollectorTask : DefaultTask() {
                 project.tasks.register(taskName, FakeCollectorTask::class.java) {
                     it.sourceProjectPath.set(srcProject.path)
 
-                    // Point to root fakt directory - task will auto-discover subdirectories
+                    // Cache-correct path. `from(Provider)` carries `builtBy` automatically so the
+                    // collector waits for every `FaktGenerateTask` on the source project — no
+                    // string-matched `dependsOn(matching { ... })`, which is the regression class
+                    // tracked as KSP #2442 / #2595 / #2623. Empty under the legacy in-process path.
+                    it.sourceFakeRoots.from(
+                        srcProject.tasks.withType(FaktGenerateTask::class.java).map { generateTask
+                            ->
+                            generateTask.generatedKotlinDir
+                        }
+                    )
+
+                    // Legacy fallback: source project still on the in-process compiler-plugin path.
+                    // Polled at execution time; not a declared input. PR 5 removes this path.
                     it.sourceGeneratedDir.set(
                         srcProject.layout.buildDirectory.dir("generated/fakt")
                     )
 
-                    // Base directory for platform-specific collection
-                    // Task will create subdirectories: commonMain/, jvmMain/, etc.
+                    // Routing root for platform-specific collection. The action creates
+                    // subdirectories `commonMain/kotlin`, `jvmMain/kotlin`, … directly under this
+                    // dir, so the build cache fingerprints every routed file (PR 4).
                     it.destinationDir.set(
-                        project.layout.buildDirectory.dir("generated/collected-fakes/_placeholder")
+                        project.layout.buildDirectory.dir("generated/collected-fakes")
                     )
 
                     // Configure available source sets for dynamic platform detection
@@ -410,8 +511,10 @@ public abstract class FakeCollectorTask : DefaultTask() {
                     // Wire logLevel from extension for consistent telemetry
                     it.logLevel.set(extension.logLevel)
 
-                    // Add dependency on source project's MAIN compilation tasks only
-                    // Avoid test compilations to prevent circular dependencies
+                    // Legacy ordering fallback for the in-process path. When the source uses
+                    // `FaktGenerateTask` instead, `sourceFakeRoots` above already pulls the
+                    // implicit dependency through `builtBy`, so this matcher is redundant but
+                    // harmless.
                     it.dependsOn(
                         srcProject.tasks.matching { task ->
                             task.name.contains("compile", ignoreCase = true) &&
@@ -434,10 +537,7 @@ public abstract class FakeCollectorTask : DefaultTask() {
                 .configureEach { sourceSet ->
                     val platformDir =
                         task.map {
-                            it.destinationDir.asFile
-                                .get()
-                                .parentFile // up from _placeholder
-                                .resolve("${sourceSet.name}/kotlin")
+                            it.destinationDir.asFile.get().resolve("${sourceSet.name}/kotlin")
                         }
                     sourceSet.kotlin.srcDir(platformDir)
 
@@ -495,21 +595,28 @@ public abstract class FakeCollectorTask : DefaultTask() {
                 project.tasks.register("collectFakes", FakeCollectorTask::class.java) {
                     it.sourceProjectPath.set(srcProject.path)
 
-                    // Point to root fakt directory - task will auto-discover subdirectories
+                    // Cache-correct path; see KDoc on the KMP variant for the rationale.
+                    it.sourceFakeRoots.from(
+                        srcProject.tasks.withType(FaktGenerateTask::class.java).map { generateTask
+                            ->
+                            generateTask.generatedKotlinDir
+                        }
+                    )
+
+                    // Legacy fallback (in-process compiler plugin). Removed in PR 5.
                     it.sourceGeneratedDir.set(
                         srcProject.layout.buildDirectory.dir("generated/fakt")
                     )
 
+                    // Routing root; mirrors the KMP variant — see KDoc on the KMP setup.
                     it.destinationDir.set(
-                        project.layout.buildDirectory.dir("generated/collected-fakes/kotlin")
+                        project.layout.buildDirectory.dir("generated/collected-fakes")
                     )
 
                     // Wire logLevel from extension for consistent telemetry
                     it.logLevel.set(extension.logLevel)
 
-                    // Add dependency on source project's MAIN compilation tasks only
-                    // Avoid test compilations to prevent circular dependencies
-                    // (test compilations may depend on -fakes modules)
+                    // Legacy ordering fallback; redundant once `sourceFakeRoots` is wired.
                     it.dependsOn(
                         srcProject.tasks.matching { task ->
                             task.name.contains("compile", ignoreCase = true) &&
@@ -518,8 +625,11 @@ public abstract class FakeCollectorTask : DefaultTask() {
                     )
                 }
 
-            // Register collected fakes directory as source and wire task dependencies
-            val collectedDir = project.layout.buildDirectory.dir("generated/collected-fakes/kotlin")
+            // Single-platform projects never supply `availableSourceSets`, so the action routes
+            // every fake to the `commonMain` fallback subdir. Source set wiring follows that
+            // convention.
+            val collectedDir =
+                task.map { it.destinationDir.asFile.get().resolve("commonMain/kotlin") }
 
             // === JVM Projects ===
             project.plugins.withId("org.jetbrains.kotlin.jvm") {

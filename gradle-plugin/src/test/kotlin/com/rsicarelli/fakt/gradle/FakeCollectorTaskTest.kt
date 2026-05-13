@@ -4,9 +4,16 @@
 
 package com.rsicarelli.fakt.gradle
 
+import com.rsicarelli.fakt.compiler.api.LogLevel
 import java.io.File
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.io.TempDir
@@ -539,6 +546,111 @@ class FakeCollectorTaskTest {
             "commonMain",
             sourceSet,
             "Should fallback to commonMain when no available source sets provided",
+        )
+    }
+
+    @Test
+    fun `GIVEN sourceFakeRoots populated WHEN action runs THEN routes each fake to its platform source set`(
+        @TempDir tempDir: File
+    ) {
+        val jvmRoot =
+            tempDir.resolve("src-build/generated/fakt/jvm/main/kotlin").also { it.mkdirs() }
+        jvmRoot
+            .resolve("api/jvm")
+            .apply { mkdirs() }
+            .resolve("FakeJvmServiceImpl.kt")
+            .writeText("package api.jvm\nclass FakeJvmServiceImpl")
+        val commonRoot =
+            tempDir.resolve("src-build/generated/fakt/metadata/commonMain/kotlin").also {
+                it.mkdirs()
+            }
+        commonRoot
+            .resolve("api/shared")
+            .apply { mkdirs() }
+            .resolve("FakeNetworkServiceImpl.kt")
+            .writeText("package api.shared\nclass FakeNetworkServiceImpl")
+
+        val project = ProjectBuilder.builder().withProjectDir(tempDir).build()
+        val destDir = tempDir.resolve("dest")
+        val task =
+            project.tasks
+                .register("collectFakes", FakeCollectorTask::class.java) {
+                    it.sourceProjectPath.set(":src")
+                    it.sourceFakeRoots.from(jvmRoot, commonRoot)
+                    it.sourceGeneratedDir.set(tempDir.resolve("does-not-exist"))
+                    it.destinationDir.set(destDir)
+                    it.availableSourceSets.set(setOf("commonMain", "jvmMain"))
+                    it.logLevel.set(LogLevel.QUIET)
+                }
+                .get()
+
+        task.collectFakes()
+
+        assertTrue(
+            destDir.resolve("jvmMain/kotlin/api/jvm/FakeJvmServiceImpl.kt").exists(),
+            "Expected JVM fake routed to jvmMain via task-provider path.",
+        )
+        assertTrue(
+            destDir.resolve("commonMain/kotlin/api/shared/FakeNetworkServiceImpl.kt").exists(),
+            "Expected common fake routed to commonMain via task-provider path.",
+        )
+    }
+
+    @Test
+    fun `GIVEN empty sourceFakeRoots WHEN action runs THEN falls back to legacy sourceGeneratedDir polling`(
+        @TempDir tempDir: File
+    ) {
+        val legacyRoot = tempDir.resolve("src-build/generated/fakt").also { it.mkdirs() }
+        legacyRoot
+            .resolve("commonTest/kotlin/api/legacy")
+            .apply { mkdirs() }
+            .resolve("FakeLegacyServiceImpl.kt")
+            .writeText("package api.legacy\nclass FakeLegacyServiceImpl")
+
+        val project = ProjectBuilder.builder().withProjectDir(tempDir).build()
+        val destDir = tempDir.resolve("dest")
+        val task =
+            project.tasks
+                .register("collectFakes", FakeCollectorTask::class.java) {
+                    it.sourceProjectPath.set(":src")
+                    it.sourceGeneratedDir.set(legacyRoot)
+                    it.destinationDir.set(destDir)
+                    it.availableSourceSets.set(setOf("commonMain", "jvmMain"))
+                    it.logLevel.set(LogLevel.QUIET)
+                }
+                .get()
+
+        task.collectFakes()
+
+        assertTrue(
+            destDir.resolve("commonMain/kotlin/api/legacy/FakeLegacyServiceImpl.kt").exists(),
+            "Legacy polling path must keep working when sourceFakeRoots is empty.",
+        )
+        assertFalse(
+            destDir.resolve("jvmMain/kotlin/api/legacy/FakeLegacyServiceImpl.kt").exists(),
+            "Unambiguously-common package must not leak into jvmMain.",
+        )
+    }
+
+    @Test
+    fun `GIVEN sourceFakeRoots property WHEN inspected via reflection THEN carries InputFiles + relative path sensitivity`() {
+        val getter = FakeCollectorTask::class.java.methods.first { it.name == "getSourceFakeRoots" }
+
+        val inputFiles = getter.getAnnotation(InputFiles::class.java)
+        assertNotNull(
+            inputFiles,
+            "sourceFakeRoots must be @InputFiles so the collector's cache key fingerprints source .kt payloads.",
+        )
+
+        val pathSensitivity = getter.getAnnotation(PathSensitive::class.java)
+        assertNotNull(
+            pathSensitivity,
+            "sourceFakeRoots must declare @PathSensitive for relocatability.",
+        )
+        assertEquals(
+            PathSensitivity.RELATIVE,
+            pathSensitivity.value,
+            "RELATIVE sensitivity ignores absolute paths so cache hits work across machines.",
         )
     }
 }
