@@ -155,21 +155,7 @@ internal class SourceSetConfigurator(
         )
     }
 
-    /**
-     * Determines if a Kotlin compilation task is for tests (unit or instrumented).
-     *
-     * Includes:
-     * - JVM test tasks: compileTestKotlin, compileTestKotlinJvm
-     * - Android unit test tasks: compileDebugUnitTestKotlin, compileReleaseUnitTestKotlin
-     * - Android instrumented tests: compileDebugAndroidTestKotlin, compileReleaseAndroidTestKotlin
-     * - KMP instrumented tests: compileDebugInstrumentedTestKotlin
-     *
-     * Excludes:
-     * - Main/production tasks: compileKotlin, compileDebugKotlin, compileReleaseKotlin
-     *
-     * @param taskName The name of the compilation task
-     * @return true if this is a test compilation task (unit or instrumented), false otherwise
-     */
+    /** Matches unit and instrumented test compilations across JVM, Android, and KMP task names. */
     private fun isTestTask(taskName: String): Boolean {
         val normalized = taskName.lowercase()
         return normalized.contains("test")

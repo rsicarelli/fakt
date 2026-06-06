@@ -195,6 +195,10 @@ constructor(objects: ObjectFactory, private val project: Project) {
      * `compileKotlin*`, the generated `.kt` files come back too because they're declared task
      * outputs rather than side-effect writes.
      *
+     * When enabled, the in-process compiler-plugin registration is disabled and a
+     * `FaktGenerateTask` is registered per compilation, with its output wired into the matching
+     * test source set. KMP projects currently stay on the in-process path regardless of the flag.
+     *
      * **Default:** `false` (the existing in-process compiler-plugin path runs unchanged).
      *
      * **Usage (build script):**

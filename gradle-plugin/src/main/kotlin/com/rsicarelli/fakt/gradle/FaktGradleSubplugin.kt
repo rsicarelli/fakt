@@ -100,6 +100,13 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         private const val OUTPUT_PLACEHOLDER: String = "fakt://generated"
     }
 
+    /**
+     * Creates the `fakt { }` extension and, after evaluation, routes the project: collector mode
+     * registers [FakeCollectorTask]s for [FaktPluginExtension.collectFrom]; generator mode either
+     * wires legacy source sets ([SourceSetConfigurator]) or, with the experimental flag on,
+     * prepares the worker configurations — per-compilation [FaktGenerateTask] registration happens
+     * later in [applyToCompilation].
+     */
     @OptIn(ExperimentalFaktMultiModule::class)
     override fun apply(target: Project) {
         // Create the fakt extension for configuration

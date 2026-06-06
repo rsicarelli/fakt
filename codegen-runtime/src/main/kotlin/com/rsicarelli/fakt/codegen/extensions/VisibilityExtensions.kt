@@ -8,7 +8,6 @@ import com.rsicarelli.fakt.codegen.builder.FunctionBuilder
 import com.rsicarelli.fakt.codegen.builder.PropertyBuilder
 import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 
-/** Applies visibility modifier to a [ClassBuilder]. */
 internal fun FirVisibility.applyVisibility(builder: ClassBuilder) {
     when (this) {
         FirVisibility.PUBLIC -> builder.public()
@@ -18,7 +17,6 @@ internal fun FirVisibility.applyVisibility(builder: ClassBuilder) {
     }
 }
 
-/** Applies visibility modifier to a [DataClassBuilder]. */
 internal fun FirVisibility.applyVisibility(builder: DataClassBuilder) {
     when (this) {
         FirVisibility.PUBLIC -> builder.public()
@@ -28,7 +26,6 @@ internal fun FirVisibility.applyVisibility(builder: DataClassBuilder) {
     }
 }
 
-/** Applies visibility modifier to a [FunctionBuilder]. */
 internal fun FirVisibility.applyVisibility(builder: FunctionBuilder) {
     when (this) {
         FirVisibility.PUBLIC -> builder.public()
@@ -38,7 +35,6 @@ internal fun FirVisibility.applyVisibility(builder: FunctionBuilder) {
     }
 }
 
-/** Applies visibility modifier to a [PropertyBuilder]. */
 internal fun FirVisibility.applyVisibility(builder: PropertyBuilder) {
     when (this) {
         FirVisibility.PUBLIC -> builder.public()
