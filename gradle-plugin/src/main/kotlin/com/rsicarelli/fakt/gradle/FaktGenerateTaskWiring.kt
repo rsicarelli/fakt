@@ -13,8 +13,7 @@ import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
 
 /**
  * Registers a `FaktGenerateTask` for a single Kotlin compilation and wires its `@OutputDirectory`
- * into the matching test source set. Extracted from [FaktGradleSubplugin] so the entry-point class
- * stays under detekt's per-class function-count threshold.
+ * into the matching test source set.
  *
  * Cross-classloader contract: every method here is plain Gradle API + the Fakt
  * [com.rsicarelli.fakt.compiler.api.SourceSetContext] data class. Nothing in

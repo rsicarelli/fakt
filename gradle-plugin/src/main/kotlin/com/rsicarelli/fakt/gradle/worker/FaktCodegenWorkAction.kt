@@ -18,7 +18,7 @@ import org.gradle.workers.WorkParameters
 /**
  * Inputs to [FaktCodegenWorkAction]. All Gradle managed property types — raw `Project`,
  * `Configuration`, or `SourceDirectorySet` references would be forbidden under the configuration
- * cache (research artifact 1, R3).
+ * cache.
  */
 internal interface FaktCodegenWorkParameters : WorkParameters {
     val sources: ConfigurableFileCollection
@@ -182,7 +182,7 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
 
     private fun populateOutputArgs(bridge: K2CompilerBridge, args: Any, call: K2Invocation) {
         // K2 still needs a destination for `.class` output we never read. Route it to the task's
-        // `@LocalState scratchDir` so it never enters the build cache (audit MEDIUM #5).
+        // `@LocalState scratchDir` so it never enters the build cache.
         bridge.setOnArgs(
             args,
             "setDestination",
@@ -192,9 +192,7 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         bridge.setOnArgs(args, "setNoStdlib", Boolean::class.javaPrimitiveType!!, true)
         bridge.setOnArgs(args, "setNoReflect", Boolean::class.javaPrimitiveType!!, true)
         // Leave the JDK on the compilation classpath — production sources reference
-        // `java.io.Serializable`, `java.util.*`, etc. K2 needs JDK rt to resolve them. The PR 2
-        // smoke tests got away with `noJdk=true` because kctfork supplied the JDK via
-        // `inheritClassPath = true`; the production worker doesn't.
+        // `java.io.Serializable`, `java.util.*`, etc. K2 needs JDK rt to resolve them.
     }
 
     private fun populatePluginArgs(bridge: K2CompilerBridge, args: Any, call: K2Invocation) {

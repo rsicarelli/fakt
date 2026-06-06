@@ -81,9 +81,8 @@ public abstract class FakeCollectorTask : DefaultTask() {
     /**
      * Aggregated `generatedKotlinDir` outputs of every [FaktGenerateTask] registered on the source
      * project. Wired through `ConfigurableFileCollection.from(Provider)` so Gradle carries the
-     * `builtBy` chain automatically — no `dependsOn(matching { name == "compile…" })` needed, which
-     * is the regression class tracked as KSP #2442 / #2595 / #2623 (R4 in the cache-correctness
-     * roadmap).
+     * `builtBy` chain automatically — no string-matched `dependsOn(matching { name == "compile…"
+     * })`, which silently breaks the dependency chain when task names change.
      *
      * Declared `@InputFiles` rather than `@Internal` so the collector's own cache key fingerprints
      * the source `.kt` payload — the cache-correct path is end-to-end, not just at the producer.
@@ -127,8 +126,8 @@ public abstract class FakeCollectorTask : DefaultTask() {
 
         // Caching is only correct when sources arrive through `sourceFakeRoots`. Under the legacy
         // in-process path the action polls `sourceGeneratedDir` at execution time — not declared as
-        // an input, so any "cache hit" would be a stale-output bug. Once PR 5 retires the legacy
-        // path this gate can disappear and the task becomes unconditionally cacheable.
+        // an input, so any "cache hit" would be a stale-output bug. This gate goes away together
+        // with the legacy path, making the task unconditionally cacheable.
         @Suppress("LeakingThis")
         outputs.cacheIf("sourceFakeRoots wired (cache-correct path)") { !sourceFakeRoots.isEmpty }
     }
@@ -142,8 +141,8 @@ public abstract class FakeCollectorTask : DefaultTask() {
         val sourceSetNames = availableSourceSets.getOrElse(mutableSetOf())
         // `destinationDir` is the routing root — platform subdirs (`jvmMain/kotlin/...`) are
         // written directly under it so Gradle's build cache fingerprints every routed file as part
-        // of this task's @OutputDirectory. Earlier code aliased it as a `_placeholder` dir and
-        // wrote one level up, which silently disabled cache restore for the collector (PR 4).
+        // of this task's @OutputDirectory. Writing outside this root silently disables cache
+        // restore for the collector.
         val destinationBaseDir = destinationDir.asFile.get()
         val platformStats = mutableMapOf<String, Int>()
         val totalCollected =
@@ -482,8 +481,8 @@ public abstract class FakeCollectorTask : DefaultTask() {
 
                     // Cache-correct path. `from(Provider)` carries `builtBy` automatically so the
                     // collector waits for every `FaktGenerateTask` on the source project — no
-                    // string-matched `dependsOn(matching { ... })`, which is the regression class
-                    // tracked as KSP #2442 / #2595 / #2623. Empty under the legacy in-process path.
+                    // string-matched `dependsOn(matching { ... })`. Empty under the legacy
+                    // in-process path.
                     it.sourceFakeRoots.from(
                         srcProject.tasks.withType(FaktGenerateTask::class.java).map { generateTask
                             ->
@@ -492,14 +491,14 @@ public abstract class FakeCollectorTask : DefaultTask() {
                     )
 
                     // Legacy fallback: source project still on the in-process compiler-plugin path.
-                    // Polled at execution time; not a declared input. PR 5 removes this path.
+                    // Polled at execution time; not a declared input.
                     it.sourceGeneratedDir.set(
                         srcProject.layout.buildDirectory.dir("generated/fakt")
                     )
 
                     // Routing root for platform-specific collection. The action creates
                     // subdirectories `commonMain/kotlin`, `jvmMain/kotlin`, … directly under this
-                    // dir, so the build cache fingerprints every routed file (PR 4).
+                    // dir, so the build cache fingerprints every routed file.
                     it.destinationDir.set(
                         project.layout.buildDirectory.dir("generated/collected-fakes")
                     )
@@ -603,7 +602,7 @@ public abstract class FakeCollectorTask : DefaultTask() {
                         }
                     )
 
-                    // Legacy fallback (in-process compiler plugin). Removed in PR 5.
+                    // Legacy fallback (in-process compiler plugin).
                     it.sourceGeneratedDir.set(
                         srcProject.layout.buildDirectory.dir("generated/fakt")
                     )

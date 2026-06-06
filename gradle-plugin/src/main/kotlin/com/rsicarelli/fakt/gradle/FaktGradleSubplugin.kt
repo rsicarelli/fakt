@@ -135,9 +135,9 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                     ensureFaktConfigurations(target)
                 } else {
                     // Legacy in-process path. Also taken when the flag is on but the project is
-                    // KMP — the cache-correct worker only drives K2JVMCompiler today, so a
-                    // metadata/native producer is a deferred follow-up. Until then, KMP falls
-                    // through to the legacy wiring unchanged.
+                    // KMP — the cache-correct worker only drives K2JVMCompiler, which can't
+                    // compile metadata/native, so KMP falls through to the legacy wiring
+                    // unchanged.
                     val configurator = SourceSetConfigurator(target, useTestFixtures)
                     configurator.configureSourceSets()
                 }
@@ -356,8 +356,8 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
      * The cache-correct worker drives `K2JVMCompiler` reflectively, so it can only analyse JVM
      * bytecode-producing compilations. Two further constraints narrow the scope:
      * 1. **Platform.** KMP metadata, Native, JS and Wasm compilations need their own K2 drivers
-     *    (`K2MetadataCompiler` et al.) plus matching common/native stdlib classpaths — deferred
-     *    follow-up.
+     *    (`K2MetadataCompiler` et al.) plus matching common/native stdlib classpaths, which the
+     *    worker does not provide.
      * 2. **KMP source-set inheritance.** Even on a JVM target inside a KMP project, the `jvmMain`
      *    compilation's analysis source set is `jvmMain + commonMain` (KGP attaches parent source
      *    sets). The task would generate fakes for `commonMain` `@Fake` interfaces too, conflicting
