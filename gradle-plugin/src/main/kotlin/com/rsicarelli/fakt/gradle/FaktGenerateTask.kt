@@ -38,30 +38,31 @@ import org.gradle.workers.WorkerExecutor
  * worker so the daemon doesn't carry the compiler classpath and so static state inside the FIR
  * pipeline can't leak across invocations. The reference architecture is KSP2's `KspAATask`.
  *
- * Caching contract:
- * - Sources: [sources] is `@PathSensitive(RELATIVE)` — Kotlin file paths encode package, so
- *   relative is required for cross-machine cache hits.
- * - Classpaths use `@Classpath` / `@CompileClasspath` so ABI changes invalidate but trivial
- *   manifest edits don't.
- * - Outputs are split: [generatedKotlinDir] holds the `.kt` files (downstream `compileKotlin*`
- *   consumes via `kotlin.srcDir(taskProvider)`); [firMetadataFile] is the producer-mode KMP
- *   metadata cache, declared as a single `@OutputFile` rather than a directory so it can't overlap
- *   with platform-task outputs.
- * - [scratchDir] is `@LocalState` so a build-cache restore wipes it instead of replaying stale
- *   contents.
+ * Caching semantics (path sensitivity, classpath normalization, output split, local state) are
+ * documented on each annotated property. For KMP, the task runs in producer mode (writes
+ * [firMetadataFile]) or consumer mode (reads [commonFirMetadata]) — see those properties.
  */
 @CacheableTask
 public abstract class FaktGenerateTask @Inject constructor(private val workers: WorkerExecutor) :
     DefaultTask() {
 
-    /** Kotlin source files (or directories) that may carry `@Fake`-annotated declarations. */
+    /**
+     * Kotlin source files (or directories) that may carry `@Fake`-annotated declarations.
+     *
+     * `@PathSensitive(RELATIVE)` because Kotlin file paths encode the package; relative sensitivity
+     * keeps cache keys stable across machines and checkout locations.
+     */
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:SkipWhenEmpty
     @get:IgnoreEmptyDirectories
     public abstract val sources: ConfigurableFileCollection
 
-    /** Compile classpath the FIR + IR pipeline analyses against. */
+    /**
+     * Compile classpath the FIR + IR pipeline analyses against. `@CompileClasspath` normalization
+     * means ABI changes in dependencies invalidate cached fakes while implementation-only changes
+     * don't.
+     */
     @get:CompileClasspath public abstract val compileClasspath: ConfigurableFileCollection
 
     /**
@@ -92,15 +93,15 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
      */
     @get:Input public abstract val faktVersion: Property<String>
 
-    /** Worker log verbosity. */
     @get:Input public abstract val logLevel: Property<LogLevel>
 
     /** Imports forced into every generated file (e.g. user-extension imports). */
     @get:Input public abstract val imports: ListProperty<String>
 
     /**
-     * KMP consumer-mode input: serialized `FirMetadataCache` produced by an upstream `commonMain`
-     * task.
+     * KMP consumer-mode input: serialized `FirMetadataCache` produced by the metadata compilation's
+     * [firMetadataFile]. Its presence is what switches the worker to consumer mode — common `@Fake`
+     * declarations are read from the cache instead of being re-validated.
      *
      * `PathSensitivity.NONE` because only the file's contents matter — its absolute path on the
      * producer host is irrelevant for cache equality.
@@ -119,8 +120,9 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
 
     /**
      * KMP producer-mode output: serialized `FirMetadataCache` written when this task represents the
-     * metadata compilation. A single file (not a directory) so consumer tasks can read it via
-     * `@InputFile` without overlapping outputs.
+     * metadata (`commonMain`) compilation — [FaktGenerateTaskWiring] sets it for metadata-like
+     * compilations only. Platform tasks consume it through [commonFirMetadata]. A single file (not
+     * a directory) so consumers can declare it `@InputFile` without overlapping outputs.
      */
     @get:OutputFile @get:Optional public abstract val firMetadataFile: RegularFileProperty
 

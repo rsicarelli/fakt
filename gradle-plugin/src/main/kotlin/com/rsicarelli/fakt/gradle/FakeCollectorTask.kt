@@ -40,6 +40,11 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
  * This solves the cross-platform compilation problem where JVM-only interfaces would fail to
  * compile in commonMain.
  *
+ * Operates in one of two modes: the cache-correct path, where [sourceFakeRoots] carries the source
+ * project's `FaktGenerateTask` outputs as declared inputs, and the legacy path, where
+ * [sourceGeneratedDir] is polled at execution time. Build caching is gated on the former via
+ * `outputs.cacheIf` — a legacy-path "cache hit" would replay stale outputs.
+ *
  * Example usage:
  * ```
  * foundation/              # Generates fakes for JVM + common interfaces
@@ -132,6 +137,11 @@ public abstract class FakeCollectorTask : DefaultTask() {
         outputs.cacheIf("sourceFakeRoots wired (cache-correct path)") { !sourceFakeRoots.isEmpty }
     }
 
+    /**
+     * Routes every collected fake into its platform source-set directory under [destinationDir].
+     * Reads from [sourceFakeRoots] when wired (cache-correct path) and falls back to polling
+     * [sourceGeneratedDir] otherwise (legacy path).
+     */
     @TaskAction
     public fun collectFakes() {
         val startTime = System.nanoTime()
