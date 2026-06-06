@@ -214,9 +214,9 @@ constructor(objects: ObjectFactory, private val project: Project) {
      *
      * Setting the value in the extension wins over the property if both are present.
      *
-     * Marked experimental during the rollout (PRs #97 → #100). The default flips in PR 5; this
-     * property becomes the explicit opt-out for one minor before the legacy in-process path is
-     * removed.
+     * Experimental while the task-based path stabilizes. The cache-correct path is intended to
+     * become the default, with this property remaining as an explicit opt-out until the legacy
+     * in-process path is removed.
      */
     public val useExperimentalGenerateTask: Property<Boolean> =
         objects.property(Boolean::class.java).convention(false)

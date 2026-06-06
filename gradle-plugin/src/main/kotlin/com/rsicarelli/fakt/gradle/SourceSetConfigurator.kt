@@ -76,8 +76,7 @@ internal class SourceSetConfigurator(
     private fun configureKmpSourceSets(kotlin: KotlinMultiplatformExtension) {
         val buildDir = project.layout.buildDirectory.get().asFile
 
-        // PASS 1: Add source-set-specific generated directories
-        // Each test source set gets its own generated directory
+        // Add a per-source-set generated directory to every test source set.
         // Example: jvmTest → build/generated/fakt/jvmTest/kotlin
         kotlin.sourceSets.configureEach { sourceSet ->
             if (sourceSet.name.endsWith("Test")) {
@@ -87,39 +86,17 @@ internal class SourceSetConfigurator(
             }
         }
 
-        // PASS 2: Add commonTest directory to LEAF platform test source sets only
-        // This is CRITICAL for KMP projects where the compiler outputs fakes to commonTest
-        // when the interface is in commonMain (see SourceSetDiscovery.kt:176-184)
-        //
-        // Why: Compiler outputs to commonTest for common interfaces, but platform tests
-        // (iosX64Test, jvmTest, etc.) need to see those fakes too.
-        //
-        // IMPORTANT: We skip intermediate source sets (nativeTest, appleTest, etc.) because
-        // they already have a dependency relationship with commonTest through KMP's hierarchy.
-        // Adding the directory to them would cause "can be a part of only one module" errors.
-
-        // Only register if commonTest exists in the project
+        // Test source sets receive only their own generated directory. commonTest fakes reach
+        // platform tests (jvmTest, iosX64Test, …) through KMP's compilation model, which
+        // propagates compiled KLIBs through the source-set hierarchy. Adding commonTest's
+        // directory to platform test source sets directly would compile the same files into
+        // multiple modules and fail with "can be a part of only one module".
         val hasCommonTest = kotlin.sourceSets.findByName("commonTest") != null
 
         if (hasCommonTest) {
             project.logger.debug(
-                "Fakt: PASS 2 is disabled - KMP dependency propagation handles code visibility"
+                "Fakt: relying on KMP dependency propagation for commonTest fake visibility"
             )
-
-            // PASS 2 REMOVED: After extensive testing, we determined that explicitly adding
-            // commonTest source directories to platform test source sets causes
-            // "can be a part of only one module" compilation errors.
-            //
-            // The root cause is that KMP's compilation model propagates COMPILED code
-            // (KLIBs) from dependencies, not SOURCE directories. When we add the same
-            // source directory to multiple source sets, the Kotlin compiler sees the
-            // same files being compiled into multiple modules, which violates the
-            // "files can be a part of only one module" constraint.
-            //
-            // SOLUTION: The compiler plugin should output platform-specific fakes to
-            // platform-specific directories (e.g., iosX64Test instead of commonTest)
-            // when the interface is in a platform source set. This is tracked in
-            // compiler/src/main/kotlin/com/rsicarelli/fakt/compiler/ir/SourceSetDiscovery.kt
         }
     }
 

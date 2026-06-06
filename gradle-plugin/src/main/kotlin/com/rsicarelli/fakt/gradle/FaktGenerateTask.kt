@@ -36,23 +36,19 @@ import org.gradle.workers.WorkerExecutor
  *
  * The task hosts `kotlin-compiler-embeddable` in an isolated [WorkerExecutor.classLoaderIsolation]
  * worker so the daemon doesn't carry the compiler classpath and so static state inside the FIR
- * pipeline can't leak across invocations. The reference architecture is KSP2's `KspAATask`
- * (research artifact 1, §"KSP2 / `KspAATask`").
+ * pipeline can't leak across invocations. The reference architecture is KSP2's `KspAATask`.
  *
  * Caching contract:
  * - Sources: [sources] is `@PathSensitive(RELATIVE)` — Kotlin file paths encode package, so
- *   relative is required for cross-machine cache hits (research artifact 2, §2).
+ *   relative is required for cross-machine cache hits.
  * - Classpaths use `@Classpath` / `@CompileClasspath` so ABI changes invalidate but trivial
  *   manifest edits don't.
  * - Outputs are split: [generatedKotlinDir] holds the `.kt` files (downstream `compileKotlin*`
- *   consumes via `kotlin.srcDir(taskProvider)` from PR 3 onward); [firMetadataFile] is the
- *   producer-mode KMP metadata cache, declared as a single `@OutputFile` rather than a directory so
- *   it can't overlap with platform-task outputs (research artifact 2, §6).
+ *   consumes via `kotlin.srcDir(taskProvider)`); [firMetadataFile] is the producer-mode KMP
+ *   metadata cache, declared as a single `@OutputFile` rather than a directory so it can't overlap
+ *   with platform-task outputs.
  * - [scratchDir] is `@LocalState` so a build-cache restore wipes it instead of replaying stale
- *   contents (KSP issue #2042 lesson).
- *
- * Wiring this task into `compileKotlin*` is deliberately deferred to PR 3; this PR just defines the
- * task and exercises it through Gradle TestKit.
+ *   contents.
  */
 @CacheableTask
 public abstract class FaktGenerateTask @Inject constructor(private val workers: WorkerExecutor) :
@@ -70,8 +66,7 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
 
     /**
      * Classpath for the Fakt worker — `kotlin-compiler-embeddable` (the `K2JVMCompiler` driver).
-     * Held isolated from the Gradle daemon to avoid clashes with KGP's bundled compiler (research
-     * artifact 1, R2).
+     * Held isolated from the Gradle daemon to avoid clashes with KGP's bundled compiler.
      */
     @get:Classpath public abstract val faktWorkerClasspath: ConfigurableFileCollection
 
@@ -105,7 +100,7 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
 
     /**
      * KMP consumer-mode input: serialized `FirMetadataCache` produced by an upstream `commonMain`
-     * task. Wired in PR 3 once per-target tasks are registered.
+     * task.
      *
      * `PathSensitivity.NONE` because only the file's contents matter — its absolute path on the
      * producer host is irrelevant for cache equality.
@@ -118,7 +113,7 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
     /**
      * Generated `Fake<X>Impl.kt` files. Convention is
      * `build/generated/fakt/<target>/<sourceSet>/kotlin` — disjoint from `compileKotlin*`'s outputs
-     * to avoid Gradle's overlapping-outputs rule (research artifact 2, §6).
+     * to avoid Gradle's overlapping-outputs rule.
      */
     @get:OutputDirectory public abstract val generatedKotlinDir: DirectoryProperty
 
@@ -129,7 +124,7 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
      */
     @get:OutputFile @get:Optional public abstract val firMetadataFile: RegularFileProperty
 
-    /** Internal scratch state — cleared on cache restore (KSP #2042 lesson). */
+    /** Internal scratch state — cleared on cache restore instead of being replayed. */
     @get:LocalState public abstract val scratchDir: DirectoryProperty
 
     @TaskAction
