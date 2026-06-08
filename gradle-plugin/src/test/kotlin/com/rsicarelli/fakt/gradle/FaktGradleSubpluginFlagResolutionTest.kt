@@ -117,9 +117,10 @@ class FaktGradleSubpluginFlagResolutionTest {
     }
 
     @Test
-    fun `GIVEN flag true AND KMP platform main WHEN applyToCompilation THEN disables in-process plugin`() {
+    fun `GIVEN flag true AND drivable KMP platform main WHEN applyToCompilation THEN registers consumer and returns enabled false`() {
         val project = createKmpProject()
         project.getKotlinExtension().jvm()
+        project.getKotlinExtension().linuxX64()
         project.faktExtension().useExperimentalGenerateTask.set(true)
         project.evaluate()
 
@@ -129,11 +130,40 @@ class FaktGradleSubpluginFlagResolutionTest {
         assertEquals(
             1,
             options.size,
-            "A platform main compilation only gets enabled=false — the common producer already " +
-                "owns its fakes; keys: ${options.map { it.key }}",
+            "A drivable platform main gets enabled=false — its own source-partitioned consumer " +
+                "task owns its fakes; keys: ${options.map { it.key }}",
         )
         assertEquals("enabled", options.single().key)
         assertEquals("false", options.single().value)
+        assertTrue(
+            project.tasks.names.contains("faktGenerateJvmMain"),
+            "The drivable platform main must register a source-partitioned consumer task.",
+        )
+    }
+
+    @Test
+    fun `GIVEN flag true AND non-drivable KMP platform main WHEN applyToCompilation THEN returns legacy options and registers no task`() {
+        val project = createKmpProject()
+        project.getKotlinExtension().jvm()
+        project.getKotlinExtension().linuxX64()
+        project.faktExtension().useExperimentalGenerateTask.set(true)
+        project.evaluate()
+
+        val options =
+            project
+                .faktSubplugin()
+                .applyToCompilation(project.kmpCompilation("linuxX64", "main"))
+                .get()
+
+        assertTrue(
+            options.any { it.key == "sourceSetContext" },
+            "A non-drivable platform main keeps the in-process plugin (legacy hybrid) so it still " +
+                "generates its platform-specific fakes; keys: ${options.map { it.key }}",
+        )
+        assertTrue(
+            project.tasks.names.none { it == "faktGenerateLinuxX64Main" },
+            "Native mains can't be driven in-process — no FaktGenerateTask for them.",
+        )
     }
 
     @Test
@@ -233,6 +263,25 @@ class FaktGradleSubpluginFlagResolutionTest {
         assertTrue(
             result.output.contains("faktGenerateJvmMain"),
             "Extension false does not veto the property — only extension TRUE short-circuits.",
+        )
+    }
+
+    @Test
+    fun `GIVEN extension true and gradle property false WHEN building THEN property wins and no faktGenerate task`(
+        @TempDir projectDir: File
+    ) {
+        setupKotlinJvmFaktProject(
+            projectDir,
+            extensionBlock =
+                "extensions.getByType(com.rsicarelli.fakt.gradle.FaktPluginExtension::class.java)" +
+                    ".useExperimentalGenerateTask.set(true)",
+        )
+
+        val result = listTasks(projectDir, "-Pfakt.useExperimentalGenerateTask=false")
+
+        assertFalse(
+            result.output.contains("faktGenerate"),
+            "An explicit property false must override extension true so users can always opt out.",
         )
     }
 

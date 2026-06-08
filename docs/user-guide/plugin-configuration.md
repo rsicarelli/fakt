@@ -393,6 +393,43 @@ For complete multi-module documentation, see **[Multi-Module Guide](multi-module
 
 ---
 
+## Cache-Correct Generation (Experimental)
+
+By default Fakt generates fakes inside `compileKotlin*` as a side effect. The experimental
+cache-correct path instead runs generation in a dedicated, cacheable Gradle task so the generated
+`.kt` files are declared task outputs — when Gradle's build cache restores a compilation, the fakes
+come back with it.
+
+Opt in via the extension or a Gradle property (the property wins, so you can always opt out with
+`-Pfakt.useExperimentalGenerateTask=false`):
+
+```kotlin
+fakt {
+    useExperimentalGenerateTask.set(true)
+}
+```
+
+```bash
+gradle build -Pfakt.useExperimentalGenerateTask=true
+```
+
+**Support matrix (under the flag):**
+
+| `@Fake` declared in        | Generated | Cache-correct |
+|----------------------------|-----------|---------------|
+| `commonMain`               | ✅        | ✅            |
+| JVM / Android platform main| ✅        | ✅            |
+| JS / Wasm platform main    | ✅        | Not yet       |
+| Native platform main       | ✅        | No (permanent)|
+
+Every `@Fake` is always generated — none are dropped. JS/Wasm are not cache-correct yet, and Native
+cannot be (its compiler is not embeddable, so it can't run in a Gradle task); those platform fakes
+are produced by the in-process plugin instead.
+
+**Default:** `false` (the in-process path runs unchanged).
+
+---
+
 ## IDE Integration
 
 ### IntelliJ IDEA / Android Studio

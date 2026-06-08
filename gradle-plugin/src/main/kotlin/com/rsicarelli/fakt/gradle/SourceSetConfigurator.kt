@@ -74,17 +74,7 @@ internal class SourceSetConfigurator(
      * - etc.
      */
     private fun configureKmpSourceSets(kotlin: KotlinMultiplatformExtension) {
-        val buildDir = project.layout.buildDirectory.get().asFile
-
-        // Add a per-source-set generated directory to every test source set.
-        // Example: jvmTest → build/generated/fakt/jvmTest/kotlin
-        kotlin.sourceSets.configureEach { sourceSet ->
-            if (sourceSet.name.endsWith("Test")) {
-                val generatedDir = File(buildDir, "generated/fakt/${sourceSet.name}/kotlin")
-                sourceSet.kotlin.srcDir(generatedDir)
-                project.logger.info("Fakt: Added generated dir to ${sourceSet.name}: $generatedDir")
-            }
-        }
+        configureKmpTestSourceSetDirs(kotlin)
 
         // Test source sets receive only their own generated directory. commonTest fakes reach
         // platform tests (jvmTest, iosX64Test, …) through KMP's compilation model, which
@@ -97,6 +87,31 @@ internal class SourceSetConfigurator(
             project.logger.debug(
                 "Fakt: relying on KMP dependency propagation for commonTest fake visibility"
             )
+        }
+    }
+
+    /**
+     * Wires the in-process plugin's per-source-set generated directory into every KMP test source
+     * set (`jvmTest → build/generated/fakt/jvmTest/kotlin`, etc.). Idempotent and lazy via
+     * `configureEach`, so it composes with the cache-correct path: under the experimental flag the
+     * common producer and drivable consumers wire their own task `@OutputDirectory` into the
+     * matching test source set, and this adds the directories where a non-drivable platform main's
+     * in-process plugin (`LEGACY_HYBRID`) writes its platform-specific fakes. Empty directories are
+     * harmless.
+     */
+    fun configureKmpTestSourceSetDirs() =
+        project.extensions
+            .findByType(KotlinMultiplatformExtension::class.java)
+            ?.let(::configureKmpTestSourceSetDirs)
+
+    private fun configureKmpTestSourceSetDirs(kotlin: KotlinMultiplatformExtension) {
+        val buildDir = project.layout.buildDirectory.get().asFile
+        kotlin.sourceSets.configureEach { sourceSet ->
+            if (sourceSet.name.endsWith("Test")) {
+                val generatedDir = File(buildDir, "generated/fakt/${sourceSet.name}/kotlin")
+                sourceSet.kotlin.srcDir(generatedDir)
+                project.logger.info("Fakt: Added generated dir to ${sourceSet.name}: $generatedDir")
+            }
         }
     }
 

@@ -28,13 +28,34 @@ internal object FaktGenerateTaskWiring {
     private const val BUILD_DIR_PLACEHOLDER: String = "<task-output>"
 
     /**
-     * Registers a `FaktGenerateTask` for [kotlinCompilation], wires its output into the matching
-     * test source set, and sets up the KMP cross-target `dependsOn` chain.
+     * Registers a producer `FaktGenerateTask`: it analyses the whole compilation
+     * ([KotlinCompilation.allKotlinSourceSets], so a KMP `commonMain` producer also sees its
+     * ancestors) and, for `commonMain`, owns the common fakes the rest of the build reuses.
      */
-    fun register(
+    fun registerProducer(
         project: Project,
         kotlinCompilation: KotlinCompilation<*>,
         extension: FaktPluginExtension,
+    ) = register(project, kotlinCompilation, extension, partitionToOwnSourceSet = false)
+
+    /**
+     * Registers a consumer `FaktGenerateTask` for a drivable platform main (`jvmMain` /
+     * `androidMain`). It analyses ONLY the compilation's own source set
+     * ([KotlinCompilation.defaultSourceSet]); `commonMain` reaches it as a compiled dependency on
+     * the classpath, so the FIR checker sees only this platform's `@Fake` and never re-emits common
+     * fakes — no dependence on file-existence dedup, fully cache-correct.
+     */
+    fun registerConsumer(
+        project: Project,
+        kotlinCompilation: KotlinCompilation<*>,
+        extension: FaktPluginExtension,
+    ) = register(project, kotlinCompilation, extension, partitionToOwnSourceSet = true)
+
+    private fun register(
+        project: Project,
+        kotlinCompilation: KotlinCompilation<*>,
+        extension: FaktPluginExtension,
+        partitionToOwnSourceSet: Boolean,
     ) {
         val targetName =
             kotlinCompilation.target.targetName.ifBlank {
@@ -48,8 +69,19 @@ internal object FaktGenerateTaskWiring {
         // by the time we land here. Idempotent helper makes the call safe to repeat.
         getSubpluginInstance(project).ensureFaktConfigurations(project)
 
-        val outputDir =
-            project.layout.buildDirectory.dir("generated/fakt/$targetName/$compilationName/kotlin")
+        // A KMP `commonMain` producer writes to the canonical `commonTest` directory so the
+        // in-process plugin riding a non-drivable platform compilation (Native/JS/Wasm) finds the
+        // common fakes there and dedup-skips them, generating only its own platform-specific fakes
+        // —
+        // no `Redeclaration` in shared test sets. Every other compilation keeps a per-compilation
+        // directory.
+        val generatedKotlinPath =
+            if (kotlinCompilation.defaultSourceSet.name == "commonMain") {
+                "generated/fakt/commonTest/kotlin"
+            } else {
+                "generated/fakt/$targetName/$compilationName/kotlin"
+            }
+        val outputDir = project.layout.buildDirectory.dir(generatedKotlinPath)
         val scratchDir =
             project.layout.buildDirectory.dir("faktCaches/$targetName/$compilationName")
         val firMetadataFile =
@@ -60,12 +92,13 @@ internal object FaktGenerateTaskWiring {
         val workerClasspath = project.configurations.named(FaktGradleSubplugin.WORKER_CONFIGURATION)
         val compilerClasspath =
             project.configurations.named(FaktGradleSubplugin.COMPILER_CLASSPATH_CONFIGURATION)
+        val sourceSets =
+            if (partitionToOwnSourceSet) listOf(kotlinCompilation.defaultSourceSet)
+            else kotlinCompilation.allKotlinSourceSets.toList()
 
         val taskProvider =
             project.tasks.register(taskName, FaktGenerateTask::class.java) { task ->
-                task.sources.from(
-                    kotlinCompilation.allKotlinSourceSets.map { sourceSet -> sourceSet.kotlin }
-                )
+                task.sources.from(sourceSets.map { sourceSet -> sourceSet.kotlin })
                 task.compileClasspath.from(commonProducerClasspath(project, kotlinCompilation))
                 task.faktWorkerClasspath.from(workerClasspath)
                 task.faktCompilerClasspath.from(compilerClasspath)
@@ -82,6 +115,28 @@ internal object FaktGenerateTaskWiring {
 
         wireTestSrcDir(project, kotlinCompilation, taskProvider)
         wireKmpDependsOnCommonMain(project, kotlinCompilation, taskProvider)
+    }
+
+    /**
+     * Sequences a non-drivable platform compilation (Native/JS/Wasm) after the common producer so
+     * the producer's common fakes exist on disk before the in-process plugin's file-existence dedup
+     * runs on the platform main compile — otherwise it would regenerate them and collide. The test
+     * compile already waits for the producer transitively through the `commonTest` srcDir's
+     * `builtBy`, so only the main compile is wired here. Safe under Gradle 9 Project Isolation (no
+     * `afterEvaluate`, no task-graph reads); the producer lookup runs lazily inside
+     * `configureEach`.
+     */
+    fun wireLegacyHybridOrdering(project: Project, kotlinCompilation: KotlinCompilation<*>) {
+        if (project.extensions.findByType(KotlinMultiplatformExtension::class.java) == null) return
+        val mainCompileTask = kotlinCompilation.compileKotlinTaskName
+        project.tasks
+            .matching { it.name == mainCompileTask }
+            .configureEach { compileTask ->
+                val commonTask =
+                    project.tasks.findByName("faktGenerateMetadataCommonMain")
+                        ?: project.tasks.findByName("faktGenerateCommonMain")
+                if (commonTask != null) compileTask.dependsOn(commonTask)
+            }
     }
 
     /**
@@ -182,18 +237,18 @@ internal object FaktGenerateTaskWiring {
         val json = Json { prettyPrint = false }
         return json.encodeToString(SourceSetContext.serializer(), context)
     }
-
-    private fun taskNameFor(targetName: String, compilationName: String): String =
-        "faktGenerate" + capitalizeAscii(targetName) + capitalizeAscii(compilationName)
-
-    private fun mapMainToTest(sourceSetName: String): String =
-        when {
-            sourceSetName.equals("main", ignoreCase = true) -> "test"
-            sourceSetName.endsWith("Main", ignoreCase = true) ->
-                sourceSetName.removeSuffix("Main") + "Test"
-            else -> sourceSetName + "Test"
-        }
-
-    private fun capitalizeAscii(s: String): String =
-        if (s.isEmpty()) s else s.substring(0, 1).uppercase(Locale.ROOT) + s.substring(1)
 }
+
+private fun taskNameFor(targetName: String, compilationName: String): String =
+    "faktGenerate" + capitalizeAscii(targetName) + capitalizeAscii(compilationName)
+
+private fun mapMainToTest(sourceSetName: String): String =
+    when {
+        sourceSetName.equals("main", ignoreCase = true) -> "test"
+        sourceSetName.endsWith("Main", ignoreCase = true) ->
+            sourceSetName.removeSuffix("Main") + "Test"
+        else -> sourceSetName + "Test"
+    }
+
+private fun capitalizeAscii(s: String): String =
+    if (s.isEmpty()) s else s.substring(0, 1).uppercase(Locale.ROOT) + s.substring(1)
