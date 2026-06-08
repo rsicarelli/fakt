@@ -92,7 +92,32 @@ class FaktGradleSubpluginFlagResolutionTest {
     }
 
     @Test
-    fun `GIVEN flag true via extension AND KMP project WHEN applyToCompilation THEN returns legacy options`() {
+    fun `GIVEN flag true AND KMP commonMain WHEN applyToCompilation THEN registers producer and returns enabled false`() {
+        val project = createKmpProject()
+        project.getKotlinExtension().jvm()
+        project.getKotlinExtension().linuxX64()
+        project.faktExtension().useExperimentalGenerateTask.set(true)
+        project.evaluate()
+
+        val options =
+            project
+                .faktSubplugin()
+                .applyToCompilation(project.kmpCompilation("metadata", "commonMain"))
+                .get()
+
+        assertEquals(
+            "false",
+            options.single { it.key == "enabled" }.value,
+            "commonMain generation moves to the producer task; the in-process plugin stays off.",
+        )
+        assertTrue(
+            project.tasks.names.any { it.startsWith("faktGenerate") },
+            "The commonMain producer task must be registered for the cache-correct KMP path.",
+        )
+    }
+
+    @Test
+    fun `GIVEN flag true AND KMP platform main WHEN applyToCompilation THEN disables in-process plugin`() {
         val project = createKmpProject()
         project.getKotlinExtension().jvm()
         project.faktExtension().useExperimentalGenerateTask.set(true)
@@ -101,10 +126,33 @@ class FaktGradleSubpluginFlagResolutionTest {
         val options =
             project.faktSubplugin().applyToCompilation(project.kmpCompilation("jvm", "main")).get()
 
+        assertEquals(
+            1,
+            options.size,
+            "A platform main compilation only gets enabled=false — the common producer already " +
+                "owns its fakes; keys: ${options.map { it.key }}",
+        )
+        assertEquals("enabled", options.single().key)
+        assertEquals("false", options.single().value)
+    }
+
+    @Test
+    fun `GIVEN flag true AND KMP without a drivable target WHEN applyToCompilation THEN returns legacy options`() {
+        val project = createKmpProject()
+        project.getKotlinExtension().linuxX64()
+        project.faktExtension().useExperimentalGenerateTask.set(true)
+        project.evaluate()
+
+        val options =
+            project
+                .faktSubplugin()
+                .applyToCompilation(project.kmpCompilation("linuxX64", "main"))
+                .get()
+
         assertTrue(
             options.any { it.key == "sourceSetContext" },
-            "KMP must veto the cache-correct path — the worker only drives K2JVMCompiler; " +
-                "keys: ${options.map { it.key }}",
+            "Without a JVM/Android target the common producer can't run (no JVM classpath), so the " +
+                "project stays on the in-process path; keys: ${options.map { it.key }}",
         )
         assertTrue(project.tasks.names.none { it.startsWith("faktGenerate") })
     }
