@@ -39,6 +39,7 @@ private const val DEFAULT_KOTLIN_SOURCE_DEPTH = 8
 
 private const val MODULE_NAME = "fakt-analysis"
 private const val EXIT_CODE_OK = "OK"
+private const val COMMON_PLATFORM = "common"
 
 /**
  * Worker entry point: invokes `K2JVMCompiler` with the Fakt `:compiler` shadowJar attached as a
@@ -72,6 +73,8 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
                 bytecodeDir = params.scratchDir.asFile.get().resolve("bytecode"),
                 sourceSetContextBase64 = encodeContext(sourceSetContext),
                 logLevel = params.logLevel.getOrElse(LogLevel.QUIET),
+                commonAnalysis =
+                    sourceSetContext.platformType.equals(COMMON_PLATFORM, ignoreCase = true),
             )
         )
     }
@@ -140,6 +143,7 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         val bytecodeDir: File,
         val sourceSetContextBase64: String,
         val logLevel: LogLevel,
+        val commonAnalysis: Boolean,
     )
 
     private fun invokeK2(call: K2Invocation) {
@@ -178,6 +182,20 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
             call.compileClasspath.joinToString(File.pathSeparator) { it.absolutePath },
         )
         bridge.setOnArgs(args, "setModuleName", String::class.java, MODULE_NAME)
+        if (call.commonAnalysis) {
+            val commonFiles =
+                call.sourceFiles
+                    .map { it.absolutePath }
+                    .filter { "/commonMain/" in it || "/commonTest/" in it }
+            if (commonFiles.isNotEmpty()) {
+                bridge.setOnArgs(
+                    args,
+                    "setCommonSources",
+                    Array<String>::class.java,
+                    commonFiles.toTypedArray(),
+                )
+            }
+        }
     }
 
     private fun populateOutputArgs(bridge: K2CompilerBridge, args: Any, call: K2Invocation) {
@@ -193,6 +211,20 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         bridge.setOnArgs(args, "setNoReflect", Boolean::class.javaPrimitiveType!!, true)
         // Leave the JDK on the compilation classpath — production sources reference
         // `java.io.Serializable`, `java.util.*`, etc. K2 needs JDK rt to resolve them.
+        if (call.commonAnalysis) {
+            // Drive K2JVMCompiler over `commonMain` sources to obtain the symbols + IR file-write
+            // the Fakt plugin needs (the metadata pipeline has no IR phase, so generation can only
+            // run under a platform driver). `-Xmulti-platform` lets the frontend resolve common
+            // declarations; `-Xexpect-actual-classes` keeps unresolved `expect`s from being fatal,
+            // since this compilation has no platform `actual`s to pair them with.
+            bridge.setOnArgs(args, "setMultiPlatform", Boolean::class.javaPrimitiveType!!, true)
+            bridge.setOnArgs(
+                args,
+                "setExpectActualClasses",
+                Boolean::class.javaPrimitiveType!!,
+                true,
+            )
+        }
     }
 
     private fun populatePluginArgs(bridge: K2CompilerBridge, args: Any, call: K2Invocation) {
