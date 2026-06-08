@@ -66,7 +66,7 @@ internal object FaktGenerateTaskWiring {
                 task.sources.from(
                     kotlinCompilation.allKotlinSourceSets.map { sourceSet -> sourceSet.kotlin }
                 )
-                task.compileClasspath.from(kotlinCompilation.compileDependencyFiles)
+                task.compileClasspath.from(commonProducerClasspath(project, kotlinCompilation))
                 task.faktWorkerClasspath.from(workerClasspath)
                 task.faktCompilerClasspath.from(compilerClasspath)
                 task.sourceSetContextJson.set(placeholderJson)
@@ -127,6 +127,35 @@ internal object FaktGenerateTaskWiring {
                     ?: project.tasks.findByName("faktGenerateCommonMain")
             if (commonTask != null) task.dependsOn(commonTask)
         }
+    }
+
+    /**
+     * Compile classpath for the worker. For a KMP `commonMain` producer the worker drives
+     * `K2JVMCompiler`, which needs a JVM-resolvable classpath — the JVM (or Android) target's
+     * `main` compile dependencies, which carry the JVM stdlib plus the JVM variant of every project
+     * and external dependency. `commonMain`'s own `compileDependencyFiles` are common `.klib`s that
+     * the JVM compiler can't read, so they are not used here. Every other compilation uses its own
+     * dependencies unchanged.
+     */
+    private fun commonProducerClasspath(
+        project: Project,
+        kotlinCompilation: KotlinCompilation<*>,
+    ): Any {
+        if (kotlinCompilation.defaultSourceSet.name == "commonMain") {
+            val jvmMain =
+                project.extensions
+                    .findByType(KotlinMultiplatformExtension::class.java)
+                    ?.targets
+                    ?.firstOrNull { target ->
+                        target.platformType.name.lowercase().let {
+                            it == "jvm" || it == "androidjvm"
+                        }
+                    }
+                    ?.compilations
+                    ?.findByName("main")
+            if (jvmMain != null) return jvmMain.compileDependencyFiles
+        }
+        return kotlinCompilation.compileDependencyFiles
     }
 
     /** Locate the [FaktGradleSubplugin] instance applied to [project] to call its helpers. */

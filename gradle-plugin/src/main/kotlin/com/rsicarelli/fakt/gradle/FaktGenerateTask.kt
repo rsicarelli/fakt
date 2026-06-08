@@ -28,15 +28,23 @@ import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
 
+/** Heap ceiling for the forked codegen worker JVM. Generous enough for K2 over a large module. */
+private const val WORKER_MAX_HEAP: String = "1g"
+
+/** Metaspace ceiling for the forked worker JVM — `kotlin-compiler-embeddable` is class-heavy. */
+private const val WORKER_METASPACE_ARG: String = "-XX:MaxMetaspaceSize=512m"
+
 /**
  * Generates Fakt's `Fake<X>Impl.kt` files into a declared `@OutputDirectory` from outside
  * `compileKotlin*`. Solves issue #79: when Gradle's build cache restores `compileKotlin*`, the
  * generated `.kt` files come back too because they're now real task outputs rather than side-effect
  * writes.
  *
- * The task hosts `kotlin-compiler-embeddable` in an isolated [WorkerExecutor.classLoaderIsolation]
- * worker so the daemon doesn't carry the compiler classpath and so static state inside the FIR
- * pipeline can't leak across invocations. The reference architecture is KSP2's `KspAATask`.
+ * The task hosts `kotlin-compiler-embeddable` in an isolated [WorkerExecutor.processIsolation]
+ * worker so the daemon doesn't carry the compiler classpath, so static state inside the FIR
+ * pipeline can't leak across invocations, and so the compiler's metaspace footprint stays in a
+ * forked JVM that many concurrent producer tasks don't share. The reference architecture is KSP2's
+ * `KspAATask`.
  *
  * Caching semantics (path sensitivity, classpath normalization, output split, local state) are
  * documented on each annotated property. For KMP, the task runs in producer mode (writes
@@ -131,8 +139,23 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
 
     @TaskAction
     public fun generate() {
+        // Process isolation forks a pooled worker JVM that hosts `kotlin-compiler-embeddable` in
+        // its
+        // own metaspace, instead of loading the compiler into the Gradle daemon. On a multi-module
+        // KMP build many producer tasks run concurrently; under classloader isolation their
+        // parallel
+        // K2 invocations share the daemon's metaspace and exhaust it (`OutOfMemoryError:
+        // Metaspace`).
+        // The fork is reused across tasks with identical options, so the JVM-startup cost is paid
+        // once per pooled worker, not per task.
         val queue =
-            workers.classLoaderIsolation { spec -> spec.classpath.from(faktWorkerClasspath) }
+            workers.processIsolation { spec ->
+                spec.classpath.from(faktWorkerClasspath)
+                spec.forkOptions { options ->
+                    options.maxHeapSize = WORKER_MAX_HEAP
+                    options.jvmArgs(WORKER_METASPACE_ARG)
+                }
+            }
         queue.submit(FaktCodegenWorkAction::class.java) { params ->
             params.sources.from(sources)
             params.compileClasspath.from(compileClasspath)
