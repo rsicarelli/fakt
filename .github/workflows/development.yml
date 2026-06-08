@@ -203,6 +203,35 @@ jobs:
           path: ${{ matrix.path }}/**/build/test-results/**/TEST-*.xml
           retention-days: 1
 
+  test-cache-correctness:
+    name: Cache Contract / ${{ matrix.sample }}
+    needs: [check-code-changes, publish-plugin-bundle]
+    if: ${{ needs.check-code-changes.outputs.has-changes == 'true' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - sample: kmp-multi-module
+            path: samples/kmp-multi-module
+          - sample: fake-publishing
+            path: samples/fake-publishing/kmp-publisher
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Restore Plugin Bundle
+        uses: ./.github/actions/restore-plugin-bundle
+
+      # Issue #79: a warmed build cache must never produce empty/missing fakes. Warms the cache,
+      # cleans, then rebuilds the FaktGenerateTask producers and asserts they restore FROM-CACHE
+      # with the generated .kt present.
+      - name: Verify cache-correct fakes (#79)
+        run: ./.github/scripts/cache-correctness-check.sh ${{ matrix.path }}
+
   test-compat:
     name: Compat / Kotlin ${{ matrix.kotlin-version }}
     needs: [check-code-changes, publish-plugin-bundle]
@@ -244,6 +273,7 @@ jobs:
       - run-tests
       - publish-plugin-bundle
       - test-samples
+      - test-cache-correctness
       - test-compat
     steps:
       - name: Checkout
