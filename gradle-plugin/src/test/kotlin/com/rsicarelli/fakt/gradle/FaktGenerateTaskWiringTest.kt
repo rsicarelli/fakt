@@ -19,16 +19,16 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.io.TempDir
 
 /**
- * Pins the per-compilation contract of [FaktGenerateTaskWiring.register]: task naming, idempotent
+ * Pins the per-compilation contract of [FaktGenerateTaskWiring]: task naming, idempotent
  * registration, configuration bootstrap, test-source-set wiring (JVM and KMP variants), and the KMP
  * cross-target `dependsOn` chain.
  *
- * Each test drives `register` directly with a **real** [KotlinCompilation] obtained from
- * `ProjectBuilder` + the Kotlin Gradle Plugin — the minimal fakes in `fakes/` throw on members
- * `register` dereferences (`allKotlinSourceSets`, `compileDependencyFiles`). KGP does not invoke
- * `applyToCompilation` under `ProjectBuilder`, so calling `register` directly is the unit seam; the
- * flag-driven end-to-end path is covered by [FaktGradleSubpluginFlagResolutionTest] and the CI
- * sample matrix.
+ * Each test drives `registerProducer`/`registerConsumer` directly with a **real**
+ * [KotlinCompilation] obtained from `ProjectBuilder` + the Kotlin Gradle Plugin — the minimal fakes
+ * in `fakes/` throw on members the wiring dereferences (`allKotlinSourceSets`,
+ * `compileDependencyFiles`). KGP does not invoke `applyToCompilation` under `ProjectBuilder`, so
+ * calling the wiring directly is the unit seam; the flag-driven end-to-end path is covered by
+ * [FaktGradleSubpluginFlagResolutionTest] and the CI sample matrix.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FaktGenerateTaskWiringTest {
@@ -47,12 +47,17 @@ class FaktGenerateTaskWiringTest {
     private fun Project.faktExtension(): FaktPluginExtension =
         extensions.getByType(FaktPluginExtension::class.java)
 
+    /**
+     * commonMain is a producer; a drivable platform main (jvmMain) is a source-partitioned
+     * consumer.
+     */
     private fun Project.registerWiring(targetName: String, compilationName: String) {
-        FaktGenerateTaskWiring.register(
-            this,
-            kmpCompilation(targetName, compilationName),
-            faktExtension(),
-        )
+        val compilation = kmpCompilation(targetName, compilationName)
+        if (compilation.defaultSourceSet.name == "commonMain") {
+            FaktGenerateTaskWiring.registerProducer(this, compilation, faktExtension())
+        } else {
+            FaktGenerateTaskWiring.registerConsumer(this, compilation, faktExtension())
+        }
     }
 
     @Test
@@ -61,7 +66,7 @@ class FaktGenerateTaskWiringTest {
     ) {
         val project = evaluatedJvmProject(tempDir)
 
-        FaktGenerateTaskWiring.register(
+        FaktGenerateTaskWiring.registerProducer(
             project,
             project.jvmCompilation("main"),
             project.faktExtension(),
@@ -94,10 +99,10 @@ class FaktGenerateTaskWiringTest {
         val project = evaluatedJvmProject(tempDir)
         val compilation = project.jvmCompilation("main")
         val extension = project.faktExtension()
-        FaktGenerateTaskWiring.register(project, compilation, extension)
+        FaktGenerateTaskWiring.registerProducer(project, compilation, extension)
 
         // Must be a silent no-op: without the existence guard Gradle throws on duplicate names.
-        FaktGenerateTaskWiring.register(project, compilation, extension)
+        FaktGenerateTaskWiring.registerProducer(project, compilation, extension)
 
         assertNotNull(project.tasks.findByName("faktGenerateJvmMain"))
     }
@@ -108,7 +113,7 @@ class FaktGenerateTaskWiringTest {
     ) {
         val project = evaluatedJvmProject(tempDir)
 
-        FaktGenerateTaskWiring.register(
+        FaktGenerateTaskWiring.registerProducer(
             project,
             project.jvmCompilation("main"),
             project.faktExtension(),
@@ -137,7 +142,7 @@ class FaktGenerateTaskWiringTest {
         )
 
         // Second creation site (registration-time) must be safe after the afterEvaluate one.
-        FaktGenerateTaskWiring.register(
+        FaktGenerateTaskWiring.registerProducer(
             project,
             project.jvmCompilation("main"),
             project.faktExtension(),
@@ -162,7 +167,7 @@ class FaktGenerateTaskWiringTest {
         generatedDir.mkdirs()
         val marker = File(generatedDir, "Marker.kt").apply { writeText("// marker\n") }
 
-        FaktGenerateTaskWiring.register(
+        FaktGenerateTaskWiring.registerProducer(
             project,
             project.jvmCompilation("main"),
             project.faktExtension(),
@@ -191,6 +196,59 @@ class FaktGenerateTaskWiringTest {
         )
     }
 
+    /** Plants a marker `.kt` in a source set so a task's resolved `sources.files` is observable. */
+    private fun Project.plantMarker(sourceSet: String, name: String): File =
+        File(projectDir, "src/$sourceSet/kotlin")
+            .apply { mkdirs() }
+            .resolve("$name.kt")
+            .apply { writeText("// marker\n") }
+
+    @Test
+    fun `GIVEN drivable platform main WHEN registerConsumer THEN sources are partitioned to its own source set only`() {
+        val project = evaluatedKmpProject()
+        val jvmMarker = project.plantMarker("jvmMain", "JvmMarker")
+        val commonMarker = project.plantMarker("commonMain", "CommonMarker")
+
+        FaktGenerateTaskWiring.registerConsumer(
+            project,
+            project.kmpCompilation("jvm", "main"),
+            project.faktExtension(),
+        )
+
+        val sources =
+            (project.tasks.getByName("faktGenerateJvmMain") as FaktGenerateTask).sources.files
+        assertTrue(
+            sources.contains(jvmMarker),
+            "A consumer must analyse its own source set; $sources",
+        )
+        assertTrue(
+            !sources.contains(commonMarker),
+            "A consumer must NOT analyse commonMain — that would re-emit common fakes as duplicates; " +
+                "sources: $sources",
+        )
+    }
+
+    @Test
+    fun `GIVEN commonMain producer WHEN registerProducer THEN sources include ancestor commonMain`() {
+        val project = evaluatedKmpProject()
+        val commonMarker = project.plantMarker("commonMain", "CommonMarker")
+
+        FaktGenerateTaskWiring.registerProducer(
+            project,
+            project.kmpCompilation("metadata", "commonMain"),
+            project.faktExtension(),
+        )
+
+        val sources =
+            (project.tasks.getByName("faktGenerateMetadataCommonMain") as FaktGenerateTask)
+                .sources
+                .files
+        assertTrue(
+            sources.contains(commonMarker),
+            "The common producer analyses commonMain (and ancestors); sources: $sources",
+        )
+    }
+
     @Test
     fun `GIVEN KMP jvm main compilation WHEN register after commonMain THEN platform task dependsOn metadata counterpart`() {
         val project = evaluatedKmpProject()
@@ -205,6 +263,27 @@ class FaktGenerateTaskWiringTest {
             platformTask.dependsOn.contains(commonTask),
             "Platform faktGenerate tasks must depend on the commonMain counterpart so common " +
                 "@Fake declarations are validated once; dependsOn: ${platformTask.dependsOn}",
+        )
+    }
+
+    @Test
+    fun `GIVEN non-drivable platform main WHEN wireLegacyHybridOrdering THEN main compile dependsOn common producer`() {
+        val project = evaluatedKmpProject()
+        project.registerWiring("metadata", "commonMain")
+        val commonTask = project.tasks.getByName("faktGenerateMetadataCommonMain")
+
+        FaktGenerateTaskWiring.wireLegacyHybridOrdering(
+            project,
+            project.kmpCompilation("linuxX64", "main"),
+        )
+
+        // configureEach is lazy — realizing the compile task applies the dependsOn wiring.
+        val compileTask = project.tasks.getByName("compileKotlinLinuxX64")
+        assertTrue(
+            compileTask.dependsOn.contains(commonTask),
+            "A non-drivable platform's main compile must run after the common producer so its " +
+                "in-process plugin dedup-skips already-generated common fakes; dependsOn: " +
+                "${compileTask.dependsOn}",
         )
     }
 

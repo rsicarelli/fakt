@@ -197,7 +197,14 @@ constructor(objects: ObjectFactory, private val project: Project) {
      *
      * When enabled, the in-process compiler-plugin registration is disabled and a
      * `FaktGenerateTask` is registered per compilation, with its output wired into the matching
-     * test source set. KMP projects currently stay on the in-process path regardless of the flag.
+     * test source set.
+     *
+     * **KMP support matrix (under the flag):**
+     * - `commonMain` `@Fake` — generated and cache-correct (common producer task).
+     * - JVM / Android platform `@Fake` — generated and cache-correct (per-platform consumer task).
+     * - JS / Wasm platform `@Fake` — generated (via the in-process plugin); not cache-correct yet.
+     * - Native platform `@Fake` — generated (via the in-process plugin); not cache-correct
+     *   (`K2NativeCompiler` is not on the embeddable classpath, so it cannot be driven in a task).
      *
      * **Default:** `false` (the existing in-process compiler-plugin path runs unchanged).
      *
@@ -216,7 +223,8 @@ constructor(objects: ObjectFactory, private val project: Project) {
      * gradle build -Pfakt.useExperimentalGenerateTask=true
      * ```
      *
-     * Setting the value in the extension wins over the property if both are present.
+     * The Gradle property wins over the extension when both are set, so
+     * `-Pfakt.useExperimentalGenerateTask=false` always lets you opt out.
      *
      * Experimental while the task-based path stabilizes. The cache-correct path is intended to
      * become the default, with this property remaining as an explicit opt-out until the legacy
