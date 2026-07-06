@@ -40,10 +40,12 @@ internal object FaktGenerateTaskWiring {
 
     /**
      * Registers a consumer `FaktGenerateTask` for a drivable platform main (`jvmMain` /
-     * `androidMain`). It analyses ONLY the compilation's own source set
-     * ([KotlinCompilation.defaultSourceSet]); `commonMain` reaches it as a compiled dependency on
-     * the classpath, so the FIR checker sees only this platform's `@Fake` and never re-emits common
-     * fakes — no dependence on file-existence dedup, fully cache-correct.
+     * `androidMain`). It emits fakes ONLY for the compilation's own source set
+     * ([KotlinCompilation.defaultSourceSet]); ancestor sources (commonMain and intermediates) ride
+     * along as `analysisOnlySources` so the frontend can pair `actual` declarations with their
+     * `expect`s and resolve common types in platform `@Fake` signatures — their own fakes stay
+     * owned by the common producer (`SourceSetContext.emitSourceSets` restricts emission), so
+     * nothing is emitted twice and the task stays fully cache-correct.
      */
     fun registerConsumer(
         project: Project,
@@ -99,6 +101,11 @@ internal object FaktGenerateTaskWiring {
         val taskProvider =
             project.tasks.register(taskName, FaktGenerateTask::class.java) { task ->
                 task.sources.from(sourceSets.map { sourceSet -> sourceSet.kotlin })
+                if (partitionToOwnSourceSet) {
+                    val ancestors =
+                        kotlinCompilation.allKotlinSourceSets - kotlinCompilation.defaultSourceSet
+                    task.analysisOnlySources.from(ancestors.map { sourceSet -> sourceSet.kotlin })
+                }
                 // Common producers drive KotlinMetadataCompiler, which reads the compilation's own
                 // metadata-klib dependencies — routed through the @Classpath commonKlibClasspath
                 // input (content-hashed; @CompileClasspath can fingerprint klibs as empty). Every

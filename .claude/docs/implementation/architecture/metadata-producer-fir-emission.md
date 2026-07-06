@@ -1,6 +1,8 @@
 # Metadata-Driver Producer + FIR-Phase Emission (Issue #79)
 
-**Status:** Approved design — implementation in progress on `feat/79-metadata-producer`
+**Status:** Implemented on `feat/79-metadata-producer` — emitPhase contract, FirTypeRenderer +
+parity gate, FIR emitter, metadata driver, FIR-unified worker paths, and the no-JVM-target routing
+(§8 is the live table) all landed; P8 (flip default) / P9 (remove legacy) remain deferred
 **Last Updated:** July 2026
 **Research basis:** [issue-79-cache-correct-kmp-research.md](../research/issue-79-cache-correct-kmp-research.md)
 (9-part investigation, verified against Kotlin `build-2.3.21-release-298` and KSP 2.3.0-290 primary source)
@@ -94,6 +96,13 @@ AFTER (single-JVM producer / KMP JVM-Android consumer):
   worker ──▶ K2JVMCompiler (unchanged driver)
       FIR checkers ──▶ FirFakeEmitter (emitPhase=FIR) ──▶ .kt
       IR phase runs but UnifiedFaktIrGenerationExtension early-returns (emitPhase == FIR)
+      KMP consumers additionally feed ancestor sources (commonMain + intermediates) as
+      -Xcommon-sources under -Xmulti-platform: platform `actual`s must pair with their `expect`s
+      (the frontend rejects the `actual` keyword outright otherwise, and ACTUAL_WITHOUT_EXPECT is
+      an ERROR even under -Xmulti-platform), and platform @Fake signatures may reference common
+      types. Those ancestor declarations are ANALYSIS-ONLY: `SourceSetContext.emitSourceSets`
+      (execution-time field, same pattern as emitPhase) restricts the FIR emitter to the
+      consumer's own source set, so the common producer stays the sole owner of common fakes.
 
 LEGACY (default, in-process — byte-for-byte untouched):
   compileKotlin* ──▶ FIR checkers ──▶ IR extension ──▶ .kt   (emitPhase defaults to IR)
@@ -272,7 +281,7 @@ branch is **deleted** (the producer no longer needs a JVM classpath):
 | Single-platform non-JVM | LEGACY | in-process, IR |
 | KMP `commonMain` (any target set, **incl. no JVM/Android target**) | REGISTER_PRODUCER | **KotlinMetadataCompiler**, FIR-emit |
 | KMP other `platformType == common` metadata compilations | SUPPRESS | — |
-| KMP JVM/Android platform `main` | REGISTER_CONSUMER | K2JVM, FIR-emit |
+| KMP JVM/Android platform `main` | REGISTER_CONSUMER | K2JVM, FIR-emit; ancestors ride as `-Xcommon-sources` analysis-only (`emitSourceSets` restricts emission to the platform source set) |
 | KMP Native/JS/Wasm platform `main` | LEGACY_HYBRID | in-process, IR (ordered after producer) |
 
 Platform-declared `@Fake` in `nativeMain`/`jsMain`/`wasmJsMain`/`iosMain` stays on LEGACY_HYBRID —

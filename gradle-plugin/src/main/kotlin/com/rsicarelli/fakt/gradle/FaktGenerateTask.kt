@@ -74,6 +74,18 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
     @get:CompileClasspath public abstract val compileClasspath: ConfigurableFileCollection
 
     /**
+     * Ancestor sources (commonMain and intermediate source sets) fed to a source-partitioned
+     * consumer for **analysis only**: they let the K2JVM frontend pair `actual` declarations with
+     * their `expect`s (via `-Xcommon-sources`) and resolve common types referenced from platform
+     * `@Fake` signatures. Their own `@Fake` declarations never emit here — the common producer owns
+     * those (`SourceSetContext.emitSourceSets` restricts the FIR emitter). Empty for producers.
+     */
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:IgnoreEmptyDirectories
+    public abstract val analysisOnlySources: ConfigurableFileCollection
+
+    /**
      * Metadata-klib dependencies for common (`commonMain`) producers — the compilation's own
      * `compileDependencyFiles` (stdlib and library klibs the `KotlinMetadataCompiler` driver
      * reads).
@@ -170,6 +182,7 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
             }
         queue.submit(FaktCodegenWorkAction::class.java) { params ->
             params.sources.from(sources)
+            params.analysisOnlySources.from(analysisOnlySources)
             params.compileClasspath.from(compileClasspath)
             params.commonKlibClasspath.from(commonKlibClasspath)
             params.faktCompilerClasspath.from(faktCompilerClasspath)

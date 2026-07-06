@@ -43,6 +43,12 @@ import kotlinx.serialization.Serializable
  * @property metadataOutputPath Path to write FIR cache (producer mode: metadata compilation only)
  * @property metadataCachePath Path to read FIR cache (consumer mode: platform compilations)
  * @property emitPhase Compilation phase that writes generated fake sources (see [EmitPhase])
+ * @property emitSourceSets Source sets whose `@Fake` declarations this compilation may emit. Empty
+ *   (the default, omitted from serialized JSON) means "emit everything analyzed" — the legacy path
+ *   and producer invocations. The cache-correct worker sets it at execution time for
+ *   source-partitioned consumers that additionally feed ancestor sources (via `-Xcommon-sources`)
+ *   for expect/actual and common-type resolution: those ancestor declarations are analysis-only,
+ *   and emitting them would duplicate the common producer's output.
  * @see SourceSetInfo
  */
 @Serializable
@@ -58,6 +64,7 @@ data class SourceSetContext(
     val metadataOutputPath: String? = null,
     val metadataCachePath: String? = null,
     val emitPhase: EmitPhase = EmitPhase.IR,
+    val emitSourceSets: List<String> = emptyList(),
 ) {
     init {
         require(compilationName.isNotBlank()) { "compilationName cannot be blank" }

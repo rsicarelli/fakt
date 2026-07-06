@@ -23,6 +23,7 @@ import org.gradle.workers.WorkParameters
  */
 internal interface FaktCodegenWorkParameters : WorkParameters {
     val sources: ConfigurableFileCollection
+    val analysisOnlySources: ConfigurableFileCollection
     val compileClasspath: ConfigurableFileCollection
     val commonKlibClasspath: ConfigurableFileCollection
     val faktCompilerClasspath: ConfigurableFileCollection
@@ -76,7 +77,8 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
                 it.deleteRecursively()
                 it.mkdirs()
             }
-        val sourceSetContext = populateSourceSetContext(params)
+        val analysisOnlyFiles = collectKotlinSources(params.analysisOnlySources.files)
+        val sourceSetContext = populateSourceSetContext(params, analysisOnlyFiles.isNotEmpty())
         val pluginJars = resolvePluginJars(params)
         val commonAnalysis =
             sourceSetContext.platformType.equals(COMMON_PLATFORM, ignoreCase = true)
@@ -84,7 +86,8 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         invokeK2(
             K2Invocation(
                 driver = if (commonAnalysis) CompilerDriver.METADATA else CompilerDriver.JVM,
-                sourceFiles = collectKotlinSources(params.sources.files),
+                sourceFiles = collectKotlinSources(params.sources.files) + analysisOnlyFiles,
+                analysisOnlySourceFiles = analysisOnlyFiles,
                 compileClasspath =
                     params.compileClasspath.files.toList() +
                         params.commonKlibClasspath.files.toList(),
@@ -109,8 +112,16 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
      * single generation path (the plugin's IR extension early-returns), byte-parity-locked by
      * `FirIrEmissionParityTest`. Set at execution time (not in the stored `@Input` JSON) like the
      * other mutated fields — the legacy in-process path never sets it and keeps emitting at IR.
+     *
+     * When ancestor sources ride along for analysis only ([hasAnalysisOnlySources] — the
+     * source-partitioned consumer with expect/actual or common-type references), emission is
+     * restricted to the compilation's own source set: the common producer owns the ancestors'
+     * fakes.
      */
-    private fun populateSourceSetContext(params: FaktCodegenWorkParameters): SourceSetContext {
+    private fun populateSourceSetContext(
+        params: FaktCodegenWorkParameters,
+        hasAnalysisOnlySources: Boolean,
+    ): SourceSetContext {
         val storedContext =
             Json.decodeFromString(SourceSetContext.serializer(), params.sourceSetContextJson.get())
         val outputDirectory = params.generatedKotlinDir.asFile.get().absolutePath
@@ -123,6 +134,9 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
             metadataCachePath =
                 if (isConsumerMode) params.commonFirMetadata.asFile.get().absolutePath else null,
             emitPhase = EmitPhase.FIR,
+            emitSourceSets =
+                if (hasAnalysisOnlySources) listOf(storedContext.defaultSourceSet.name)
+                else emptyList(),
         )
     }
 
@@ -163,6 +177,7 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
     private data class K2Invocation(
         val driver: CompilerDriver,
         val sourceFiles: List<File>,
+        val analysisOnlySourceFiles: List<File>,
         val compileClasspath: List<File>,
         val pluginJars: List<File>,
         val outputDir: File,
@@ -225,6 +240,27 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         bridge.setOnArgs(args, "setNoReflect", Boolean::class.javaPrimitiveType!!, true)
         // Leave the JDK on the compilation classpath — production sources reference
         // `java.io.Serializable`, `java.util.*`, etc. K2 needs JDK rt to resolve them.
+
+        // A source-partitioned consumer rides ancestor sources along for analysis: marking them
+        // `-Xcommon-sources` splits the module into common + platform fragments so `actual`
+        // declarations pair with their `expect`s (otherwise the frontend rejects the `actual`
+        // keyword outright, and ACTUAL_WITHOUT_EXPECT is an error even under `-Xmulti-platform`).
+        // `-Xexpect-actual-classes` mutes the expect/actual-classes Beta warning — nothing else.
+        if (call.analysisOnlySourceFiles.isNotEmpty()) {
+            bridge.setOnArgs(args, "setMultiPlatform", Boolean::class.javaPrimitiveType!!, true)
+            bridge.setOnArgs(
+                args,
+                "setExpectActualClasses",
+                Boolean::class.javaPrimitiveType!!,
+                true,
+            )
+            bridge.setOnArgs(
+                args,
+                "setCommonSources",
+                Array<String>::class.java,
+                call.analysisOnlySourceFiles.map { it.absolutePath }.toTypedArray(),
+            )
+        }
     }
 
     private fun populateMetadataOutputArgs(

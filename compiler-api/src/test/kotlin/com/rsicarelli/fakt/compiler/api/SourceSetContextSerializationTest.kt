@@ -236,6 +236,64 @@ class SourceSetContextSerializationTest {
         }
 
     @Test
+    fun `GIVEN default emitSourceSets WHEN encoding with defaults omitted THEN field is absent from JSON`() =
+        runTest {
+            // GIVEN: the worker and wiring encode with plain Json (encodeDefaults = false)
+            val context =
+                SourceSetContext(
+                    compilationName = "main",
+                    targetName = "jvm",
+                    platformType = "jvm",
+                    isTest = false,
+                    defaultSourceSet = SourceSetInfo(name = "jvmMain", parents = emptyList()),
+                    allSourceSets = listOf(SourceSetInfo(name = "jvmMain", parents = emptyList())),
+                    outputDirectory = "/build/generated/fakt/main/jvm/kotlin",
+                    commonTestOutputDirectory = "/build/generated/fakt/commonTest/kotlin",
+                )
+
+            // WHEN
+            val jsonString = Json.encodeToString(context)
+
+            // THEN: legacy @Input payloads stay byte-identical after the field was added
+            assertTrue(
+                "emitSourceSets" !in jsonString,
+                "Default emitSourceSets must be omitted to keep legacy payloads byte-identical. " +
+                    "Got: $jsonString",
+            )
+        }
+
+    @Test
+    fun `GIVEN emitSourceSets restriction WHEN roundtripping THEN restriction is preserved`() =
+        runTest {
+            // GIVEN: a consumer invocation restricted to its own source set
+            val original =
+                SourceSetContext(
+                    compilationName = "main",
+                    targetName = "jvm",
+                    platformType = "jvm",
+                    isTest = false,
+                    defaultSourceSet =
+                        SourceSetInfo(name = "jvmMain", parents = listOf("commonMain")),
+                    allSourceSets =
+                        listOf(
+                            SourceSetInfo(name = "jvmMain", parents = listOf("commonMain")),
+                            SourceSetInfo(name = "commonMain", parents = emptyList()),
+                        ),
+                    outputDirectory = "/build/generated/fakt/jvm/main/kotlin",
+                    commonTestOutputDirectory = "/build/generated/fakt/commonTest/kotlin",
+                    emitPhase = EmitPhase.FIR,
+                    emitSourceSets = listOf("jvmMain"),
+                )
+
+            // WHEN
+            val decoded = Json.decodeFromString<SourceSetContext>(Json.encodeToString(original))
+
+            // THEN
+            assertEquals(listOf("jvmMain"), decoded.emitSourceSets)
+            assertEquals(original, decoded)
+        }
+
+    @Test
     fun `GIVEN FIR emitPhase WHEN roundtripping THEN emitPhase is preserved`() = runTest {
         // GIVEN
         val original =

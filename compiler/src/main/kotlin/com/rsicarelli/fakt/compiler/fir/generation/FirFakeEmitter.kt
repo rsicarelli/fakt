@@ -37,6 +37,7 @@ internal class FirFakeEmitter(private val sharedContext: FaktSharedContext) {
     /** Renders and writes the fake for a validated interface. */
     fun emit(metadata: ValidatedFakeInterface) {
         val generator = codeGenerator ?: return missingContext(metadata.simpleName)
+        if (!shouldEmit(metadata.sourceSourceSet, metadata.simpleName)) return
         if (!claimOutput(metadata.packageName, metadata.simpleName, metadata.qualifiedSourceName)) {
             return
         }
@@ -52,6 +53,7 @@ internal class FirFakeEmitter(private val sharedContext: FaktSharedContext) {
     /** Renders and writes the fake for a validated abstract/open class. */
     fun emit(metadata: ValidatedFakeClass) {
         val generator = codeGenerator ?: return missingContext(metadata.simpleName)
+        if (!shouldEmit(metadata.sourceSourceSet, metadata.simpleName)) return
         if (!claimOutput(metadata.packageName, metadata.simpleName, metadata.qualifiedSourceName)) {
             return
         }
@@ -62,6 +64,23 @@ internal class FirFakeEmitter(private val sharedContext: FaktSharedContext) {
                 enableMutableFakesDefault = sharedContext.options.enableMutableFakesDefault,
             )
         generator.generateWorkingClassFake(decl, metadata.sourceSourceSet)
+    }
+
+    /**
+     * A consumer invocation feeds ancestor sources (commonMain and intermediates) for expect/actual
+     * and common-type resolution only — the common producer already owns their fakes. When
+     * [com.rsicarelli.fakt.compiler.core.config.FaktOptions.emitSourceSets] restricts emission,
+     * skip declarations from other source sets. A `null` source set (non-standard layout) fails
+     * open and emits, preserving pre-restriction behavior.
+     */
+    private fun shouldEmit(sourceSourceSet: String?, simpleName: String): Boolean {
+        val allowed = sharedContext.options.emitSourceSets
+        if (allowed.isEmpty() || sourceSourceSet == null || sourceSourceSet in allowed) return true
+        logger.debug(
+            "Skipping FIR emission for $simpleName: source set '$sourceSourceSet' is " +
+                "analysis-only in this invocation (emitting: $allowed)"
+        )
+        return false
     }
 
     private fun claimOutput(

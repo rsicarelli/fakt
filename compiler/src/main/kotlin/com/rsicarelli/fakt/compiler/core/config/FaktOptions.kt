@@ -54,6 +54,14 @@ data class FaktOptions(
     val emitPhase: EmitPhase
         get() = sourceSetContext?.emitPhase ?: EmitPhase.IR
 
+    /**
+     * Source sets whose `@Fake` declarations may emit fakes; empty means no restriction. Set only
+     * by the cache-correct worker for source-partitioned consumers whose ancestor sources are fed
+     * for analysis only (see [com.rsicarelli.fakt.compiler.api.SourceSetContext.emitSourceSets]).
+     */
+    val emitSourceSets: List<String>
+        get() = sourceSetContext?.emitSourceSets ?: emptyList()
+
     companion object {
         fun load(configuration: CompilerConfiguration): FaktOptions {
             // Load configuration from the command line processor
