@@ -210,9 +210,40 @@ Verified against Kotlin `build-2.3.21-release-298`:
     driver.
 - "No source files" is a hard error on this driver; the task's `@SkipWhenEmpty` on `sources` already
   prevents empty invocations (NO-SOURCE).
-- **Spike findings (§10 of the plan; to be recorded here after Step 1):** builtins resolution without a
-  stdlib jar; `@Fake` resolution strategy for TestKit fixtures (in-fixture annotation declaration vs the
-  `:annotations` metadata klib); confirmation of the arg set above.
+
+### Spike findings (Step 1, both bets PASSED — verified 2026-07-06 on 2.3.20 embeddable)
+
+Reflective harness: `KotlinMetadataCompiler.exec(PrintStream, vararg String)` over a commonMain fixture
+containing an **unpaired `expect class` + `expect fun`** and a `@Fake interface` (property, nullable
+generic return, suspend fun, expect-typed return), with the real `:compiler` shadowJar attached and
+producer-mode `SourceSetContext`.
+
+- **Bet (a) — driver:** exit `OK`; the unpaired expects produced **zero diagnostics** (no
+  `NO_ACTUAL_FOR_EXPECT`, no error of any kind); Fakt's FIR checkers ran (`firCacheMode: PRODUCER`
+  banner, `fir-metadata.json` written containing the interface); the metadata klib landed in scratch.
+- **Bet (b) — FIR emission:** with a throwaway checker hook + crude `ConeType.toString()` sanitizer, a
+  complete `FakeSessionServiceImpl.kt` (factory + config DSL + impl) was emitted from the FIR phase under
+  the metadata driver — suspend lambda type, `List<String>?`, and the **expect type** `PlatformClock` all
+  rendered and compilable in shape. The only defects were sanitizer artifacts (a `Simple(name=…)` leak in
+  a default-value error message), i.e. precisely the gap the real `FirTypeRenderer` + parity gate close.
+- **a1 (builtins/stdlib):** builtins do **not** resolve with an empty classpath — `kotlin.Any`,
+  `kotlin.annotation.*` fail with "cannot access built-in declaration". The stdlib **metadata klib** must
+  be on `-classpath`. The published `kotlin-stdlib-2.3.20-all.jar` is a *composite* archive (per-source-set
+  klibs under `commonMain/…`), not readable directly; KGP's granular-metadata transform unpacks it, and
+  `compileDependencyFiles` delivers the unpacked per-source-set klib dirs — feeding those (PR-4 wiring) is
+  correct by construction. The unpacked `commonMain` klib dir on `-classpath` resolved everything.
+  JVM `.class` jars are useless to this driver (confirms the two-driver split and the TestKit fixture
+  strategy: in-fixture `@Fake` declaration + one E2E against the real `:annotations` metadata klib).
+- **a3 (`-Xmulti-platform`):** omitting it still exits `OK` in 2.3.x (configurator force-enables MPP for
+  the metadata driver) — kept defensively. Omitting `-Xexpect-actual-classes` exits `OK` with only the
+  Beta warning — confirms it is warning-muting only.
+- **a4 (`-d`):** omitting destination → `error: specify destination via -d`, `COMPILATION_ERROR`.
+- **Bonus observation:** the checker-driven `fir-metadata.json` write happens even when the compilation
+  later fails (it fired under the missing-stdlib COMPILATION_ERROR run). Task success still gates on exit
+  `OK`, so no contract change — but worth knowing when debugging partial outputs.
+- Environment note: the string-args `exec` overload needs `kotlin-reflect` on the worker JVM classpath
+  (CLI argument parsing); the worker's Gradle-resolved `faktWorker` configuration already carries the
+  embeddable's transitive deps, and the production path populates args objects directly, so no change.
 
 ## 7. Cache-key correctness
 
