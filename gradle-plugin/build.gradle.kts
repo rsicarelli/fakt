@@ -20,6 +20,17 @@ val faktWorker: Configuration by
         description = "Runtime classpath for the Fakt code-generation worker"
     }
 
+// The stdlib's composite metadata archive (per-source-set klibs under commonMain/ etc.). TestKit
+// producer suites unpack its commonMain klib to feed KotlinMetadataCompiler a real common
+// classpath — the metadata driver cannot read JVM jars.
+val stdlibMetadataForTests: Configuration by
+    configurations.creating {
+        isCanBeResolved = true
+        isCanBeConsumed = false
+        isTransitive = false
+        description = "kotlin-stdlib 'all' metadata archive for producer TestKit suites"
+    }
+
 dependencies {
     // Compiler API — exposed as `api` so consumers can use LogLevel, etc.
     api(projects.compilerApi)
@@ -60,6 +71,10 @@ dependencies {
     // compile classpath. The test piggybacks on its own JVM classpath when constructing the
     // worker classpath, so this dep must be testImplementation here too.
     testImplementation(projects.annotations)
+
+    stdlibMetadataForTests(
+        "org.jetbrains.kotlin:kotlin-stdlib:${libs.versions.kotlin.asProvider().get()}:all@jar"
+    )
 }
 
 gradlePlugin {
@@ -87,5 +102,23 @@ tasks {
         // the 1g/30s defaults that worked when this module had only ProjectBuilder tests.
         jvmArgs("-Xmx2g")
         systemProperty("junit.jupiter.execution.timeout.default", "5m")
+        // Resolved lazily at execution time (jvmArgumentProviders, not systemProperty) so the
+        // configuration isn't resolved during configuration; a dedicated provider class keeps the
+        // configuration cache free of script-object references.
+        jvmArgumentProviders.add(
+            objects.newInstance(StdlibMetadataArgProvider::class.java).apply {
+                jar.from(stdlibMetadataForTests)
+            }
+        )
     }
+}
+
+/** Passes the resolved stdlib `-all` metadata archive path to producer TestKit suites. */
+abstract class StdlibMetadataArgProvider : CommandLineArgumentProvider {
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val jar: ConfigurableFileCollection
+
+    override fun asArguments(): List<String> =
+        listOf("-Dfakt.test.stdlibMetadataJar=${jar.singleFile.absolutePath}")
 }

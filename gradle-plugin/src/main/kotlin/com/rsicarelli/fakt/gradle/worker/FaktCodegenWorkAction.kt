@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.gradle.worker
 
+import com.rsicarelli.fakt.compiler.api.EmitPhase
 import com.rsicarelli.fakt.compiler.api.LogLevel
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import java.io.File
@@ -22,7 +23,9 @@ import org.gradle.workers.WorkParameters
  */
 internal interface FaktCodegenWorkParameters : WorkParameters {
     val sources: ConfigurableFileCollection
+    val analysisOnlySources: ConfigurableFileCollection
     val compileClasspath: ConfigurableFileCollection
+    val commonKlibClasspath: ConfigurableFileCollection
     val faktCompilerClasspath: ConfigurableFileCollection
     val sourceSetContextJson: Property<String>
     val faktVersion: Property<String>
@@ -42,11 +45,18 @@ private const val EXIT_CODE_OK = "OK"
 private const val COMMON_PLATFORM = "common"
 
 /**
- * Worker entry point: invokes `K2JVMCompiler` with the Fakt `:compiler` shadowJar attached as a
- * `-Xplugin`. The plugin's existing `FaktCompilerPluginRegistrar` handles all FIR + IR work and
- * writes generated `.kt` files into [FaktCodegenWorkParameters.generatedKotlinDir] via the
- * `outputDir` plugin option — same code path KGP triggers today, just hosted in a `@CacheableTask`
- * Worker rather than as a side effect of `compileKotlin*`.
+ * Worker entry point: drives a compiler front door from `kotlin-compiler-embeddable` with the Fakt
+ * `:compiler` shadowJar attached as a `-Xplugin`, writing generated `.kt` files into
+ * [FaktCodegenWorkParameters.generatedKotlinDir].
+ *
+ * Two drivers (see [CompilerDriver]):
+ * - **`KotlinMetadataCompiler`** for common (`commonMain`) producers — frontend-only, so unpaired
+ *   `expect` declarations cannot fail the run, and generation happens at the FIR phase
+ *   ([EmitPhase.FIR], the pipeline has no IR phase). Dependencies come from
+ *   [FaktCodegenWorkParameters.commonKlibClasspath] (metadata klibs).
+ * - **`K2JVMCompiler`** for everything else (JVM/Android classpaths). Generation still happens at
+ *   the FIR phase — one emitter for every worker path — and the plugin's IR extension early-returns
+ *   ([EmitPhase.FIR] parity with IR emission is locked by `FirIrEmissionParityTest`).
  *
  * Producer mode (no `commonFirMetadata` input) additionally instructs the plugin to write a
  * serialized `FirMetadataCache` to `firMetadataFile` so platform compilations downstream can skip
@@ -60,21 +70,32 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
 
     override fun execute() {
         val params = parameters
-        val outputDir = params.generatedKotlinDir.asFile.get().also { it.mkdirs() }
-        val sourceSetContext = populateSourceSetContext(params)
+        // Clear stale outputs from previous runs: the dir is task-owned, and a deleted @Fake
+        // source must not leave its generated fake behind.
+        val outputDir =
+            params.generatedKotlinDir.asFile.get().also {
+                it.deleteRecursively()
+                it.mkdirs()
+            }
+        val analysisOnlyFiles = collectKotlinSources(params.analysisOnlySources.files)
+        val sourceSetContext = populateSourceSetContext(params, analysisOnlyFiles.isNotEmpty())
         val pluginJars = resolvePluginJars(params)
+        val commonAnalysis =
+            sourceSetContext.platformType.equals(COMMON_PLATFORM, ignoreCase = true)
 
         invokeK2(
             K2Invocation(
-                sourceFiles = collectKotlinSources(params.sources.files),
-                compileClasspath = params.compileClasspath.files.toList(),
+                driver = if (commonAnalysis) CompilerDriver.METADATA else CompilerDriver.JVM,
+                sourceFiles = collectKotlinSources(params.sources.files) + analysisOnlyFiles,
+                analysisOnlySourceFiles = analysisOnlyFiles,
+                compileClasspath =
+                    params.compileClasspath.files.toList() +
+                        params.commonKlibClasspath.files.toList(),
                 pluginJars = pluginJars,
                 outputDir = outputDir,
-                bytecodeDir = params.scratchDir.asFile.get().resolve("bytecode"),
+                scratchOutputDir = params.scratchDir.asFile.get(),
                 sourceSetContextBase64 = encodeContext(sourceSetContext),
                 logLevel = params.logLevel.getOrElse(LogLevel.QUIET),
-                commonAnalysis =
-                    sourceSetContext.platformType.equals(COMMON_PLATFORM, ignoreCase = true),
             )
         )
     }
@@ -85,8 +106,22 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
      * [FaktCodegenWorkParameters.sourceSetContextJson] `@Input` therefore never carries
      * machine-specific paths in the cache key, which is what makes cross-directory build-cache hits
      * work (relocation canary).
+     *
+     * Every worker invocation additionally flips [SourceSetContext.emitPhase] to [EmitPhase.FIR]:
+     * the metadata pipeline has no IR phase at all, and on the K2JVM driver the FIR emitter is the
+     * single generation path (the plugin's IR extension early-returns), byte-parity-locked by
+     * `FirIrEmissionParityTest`. Set at execution time (not in the stored `@Input` JSON) like the
+     * other mutated fields — the legacy in-process path never sets it and keeps emitting at IR.
+     *
+     * When ancestor sources ride along for analysis only ([hasAnalysisOnlySources] — the
+     * source-partitioned consumer with expect/actual or common-type references), emission is
+     * restricted to the compilation's own source set: the common producer owns the ancestors'
+     * fakes.
      */
-    private fun populateSourceSetContext(params: FaktCodegenWorkParameters): SourceSetContext {
+    private fun populateSourceSetContext(
+        params: FaktCodegenWorkParameters,
+        hasAnalysisOnlySources: Boolean,
+    ): SourceSetContext {
         val storedContext =
             Json.decodeFromString(SourceSetContext.serializer(), params.sourceSetContextJson.get())
         val outputDirectory = params.generatedKotlinDir.asFile.get().absolutePath
@@ -98,6 +133,10 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
                 if (!isConsumerMode) params.firMetadataFile.orNull?.asFile?.absolutePath else null,
             metadataCachePath =
                 if (isConsumerMode) params.commonFirMetadata.asFile.get().absolutePath else null,
+            emitPhase = EmitPhase.FIR,
+            emitSourceSets =
+                if (hasAnalysisOnlySources) listOf(storedContext.defaultSourceSet.name)
+                else emptyList(),
         )
     }
 
@@ -134,22 +173,28 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
                 Json.encodeToString(SourceSetContext.serializer(), context).toByteArray()
             )
 
-    /** Aggregates the K2 invocation parameters so [invokeK2] keeps a single-screen body. */
+    /** Aggregates the compiler invocation parameters so [invokeK2] keeps a single-screen body. */
     private data class K2Invocation(
+        val driver: CompilerDriver,
         val sourceFiles: List<File>,
+        val analysisOnlySourceFiles: List<File>,
         val compileClasspath: List<File>,
         val pluginJars: List<File>,
         val outputDir: File,
-        val bytecodeDir: File,
+        val scratchOutputDir: File,
         val sourceSetContextBase64: String,
         val logLevel: LogLevel,
-        val commonAnalysis: Boolean,
     )
 
     private fun invokeK2(call: K2Invocation) {
-        val bridge = K2CompilerBridge(javaClass.classLoader)
+        val bridge = K2CompilerBridge(javaClass.classLoader, call.driver)
         val args = bridge.newArgs()
-        populateK2Args(bridge, args, call)
+        populateSourceArgs(bridge, args, call)
+        when (call.driver) {
+            CompilerDriver.JVM -> populateJvmOutputArgs(bridge, args, call)
+            CompilerDriver.METADATA -> populateMetadataOutputArgs(bridge, args, call)
+        }
+        populatePluginArgs(bridge, args, call)
 
         val collector = bridge.newPrintingMessageCollector(System.err)
         val exitCode =
@@ -158,14 +203,8 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
                 .invoke(bridge.newCompiler(), collector, bridge.servicesEmpty(), args)
         val exitCodeName = (exitCode as Enum<*>).name
         check(exitCodeName == EXIT_CODE_OK) {
-            "Fakt analysis failed (K2JVMCompiler exit=$exitCodeName). See messages above."
+            "Fakt analysis failed (${call.driver} exit=$exitCodeName). See messages above."
         }
-    }
-
-    private fun populateK2Args(bridge: K2CompilerBridge, args: Any, call: K2Invocation) {
-        populateSourceArgs(bridge, args, call)
-        populateOutputArgs(bridge, args, call)
-        populatePluginArgs(bridge, args, call)
     }
 
     private fun populateSourceArgs(bridge: K2CompilerBridge, args: Any, call: K2Invocation) {
@@ -182,41 +221,28 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
             call.compileClasspath.joinToString(File.pathSeparator) { it.absolutePath },
         )
         bridge.setOnArgs(args, "setModuleName", String::class.java, MODULE_NAME)
-        if (call.commonAnalysis) {
-            val commonFiles =
-                call.sourceFiles
-                    .map { it.absolutePath }
-                    .filter { "/commonMain/" in it || "/commonTest/" in it }
-            if (commonFiles.isNotEmpty()) {
-                bridge.setOnArgs(
-                    args,
-                    "setCommonSources",
-                    Array<String>::class.java,
-                    commonFiles.toTypedArray(),
-                )
-            }
-        }
     }
 
-    private fun populateOutputArgs(bridge: K2CompilerBridge, args: Any, call: K2Invocation) {
-        // K2 still needs a destination for `.class` output we never read. Route it to the task's
-        // `@LocalState scratchDir` so it never enters the build cache.
+    private fun populateJvmOutputArgs(bridge: K2CompilerBridge, args: Any, call: K2Invocation) {
+        // K2JVM still needs a destination for `.class` output we never read. Route it to the
+        // task's `@LocalState scratchDir` so it never enters the build cache.
         bridge.setOnArgs(
             args,
             "setDestination",
             String::class.java,
-            call.bytecodeDir.also { it.mkdirs() }.absolutePath,
+            call.scratchOutputDir.resolve("bytecode").also { it.mkdirs() }.absolutePath,
         )
         bridge.setOnArgs(args, "setNoStdlib", Boolean::class.javaPrimitiveType!!, true)
         bridge.setOnArgs(args, "setNoReflect", Boolean::class.javaPrimitiveType!!, true)
         // Leave the JDK on the compilation classpath — production sources reference
         // `java.io.Serializable`, `java.util.*`, etc. K2 needs JDK rt to resolve them.
-        if (call.commonAnalysis) {
-            // Drive K2JVMCompiler over `commonMain` sources to obtain the symbols + IR file-write
-            // the Fakt plugin needs (the metadata pipeline has no IR phase, so generation can only
-            // run under a platform driver). `-Xmulti-platform` lets the frontend resolve common
-            // declarations; `-Xexpect-actual-classes` keeps unresolved `expect`s from being fatal,
-            // since this compilation has no platform `actual`s to pair them with.
+
+        // A source-partitioned consumer rides ancestor sources along for analysis: marking them
+        // `-Xcommon-sources` splits the module into common + platform fragments so `actual`
+        // declarations pair with their `expect`s (otherwise the frontend rejects the `actual`
+        // keyword outright, and ACTUAL_WITHOUT_EXPECT is an error even under `-Xmulti-platform`).
+        // `-Xexpect-actual-classes` mutes the expect/actual-classes Beta warning — nothing else.
+        if (call.analysisOnlySourceFiles.isNotEmpty()) {
             bridge.setOnArgs(args, "setMultiPlatform", Boolean::class.javaPrimitiveType!!, true)
             bridge.setOnArgs(
                 args,
@@ -224,7 +250,37 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
                 Boolean::class.javaPrimitiveType!!,
                 true,
             )
+            bridge.setOnArgs(
+                args,
+                "setCommonSources",
+                Array<String>::class.java,
+                call.analysisOnlySourceFiles.map { it.absolutePath }.toTypedArray(),
+            )
         }
+    }
+
+    private fun populateMetadataOutputArgs(
+        bridge: K2CompilerBridge,
+        args: Any,
+        call: K2Invocation,
+    ) {
+        // The metadata driver requires -d ("specify destination via -d") for the metadata klib we
+        // never read. Route it to the task's `@LocalState scratchDir` so it never enters the
+        // build cache. Note: K2MetadataCompilerArguments has no noStdlib/noReflect (JVM-only) —
+        // the stdlib arrives as a metadata klib on the classpath.
+        bridge.setOnArgs(
+            args,
+            "setDestination",
+            String::class.java,
+            call.scratchOutputDir.resolve("metadata-klib").also { it.mkdirs() }.absolutePath,
+        )
+        // Redundant on 2.3.x (the metadata configurator force-enables MultiPlatformProjects) but
+        // kept defensively for user-overridden `faktWorker` compiler versions.
+        bridge.setOnArgs(args, "setMultiPlatform", Boolean::class.javaPrimitiveType!!, true)
+        // Mutes the "expect/actual classes are in Beta" warning — nothing else. Unpaired expects
+        // are safe here regardless: this pipeline has no IR actualizer, the sole origin of
+        // NO_ACTUAL_FOR_EXPECT.
+        bridge.setOnArgs(args, "setExpectActualClasses", Boolean::class.javaPrimitiveType!!, true)
     }
 
     private fun populatePluginArgs(bridge: K2CompilerBridge, args: Any, call: K2Invocation) {

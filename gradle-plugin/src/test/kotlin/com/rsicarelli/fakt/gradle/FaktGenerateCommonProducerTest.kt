@@ -6,6 +6,8 @@ import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.api.SourceSetInfo
 import com.rsicarelli.fakt.compiler.fir.cache.MetadataCacheSerializer
 import java.io.File
+import java.nio.file.Files
+import java.util.zip.ZipFile
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -20,10 +22,17 @@ import org.junit.jupiter.api.io.TempDir
 
 /**
  * Gradle TestKit suite for the KMP common-producer path of [FaktGenerateTask]. Tests register the
- * task with `platformType = "common"` so the worker drives `K2JVMCompiler` over `commonMain`
- * sources in multiplatform mode, writing platform-agnostic fakes into the task's
- * `@OutputDirectory`. This is how Fakt generates `commonMain` fakes cache-correctly: every target's
- * test compilation later consumes that one declared directory as ordinary source.
+ * task with `platformType = "common"` so the worker drives **`KotlinMetadataCompiler`** over
+ * `commonMain` sources — a frontend-only pipeline with no IR actualizer, which is why unpaired
+ * `expect` declarations can no longer fail the producer (the issue #79 blocker). Fakes are written
+ * by the plugin's FIR-phase emitter (`EmitPhase.FIR`) into the task's `@OutputDirectory`; every
+ * target's test compilation later consumes that one declared directory as ordinary source.
+ *
+ * The metadata driver reads **metadata klibs**, not JVM jars: the harness unpacks the stdlib's
+ * `commonMain` klib from the `-all` archive (resolved by the build, path passed via the
+ * `fakt.test.stdlibMetadataJar` system property) and feeds it through `commonKlibClasspath`. The
+ * `@Fake` annotation is declared in-fixture for the same reason; the real `:annotations` metadata
+ * klib is exercised end-to-end by the sample-based CI cache-correctness contract.
  *
  * Worker classpath is built from the test JVM's own classpath with KGP and kctfork filtered out,
  * for the same dangling-compiler-reference reasons documented in [FaktGenerateTaskTest].
@@ -81,49 +90,44 @@ class FaktGenerateCommonProducerTest {
     }
 
     @Test
-    fun `GIVEN commonMain with an expect declaration and jvmMain actuals WHEN running THEN task succeeds and the common fake is generated`(
+    fun `GIVEN fake interface referencing an expect type in signatures WHEN running THEN the fake renders the expect type`(
         @TempDir projectDir: File
     ) {
-        setupCommonProject(
-            projectDir,
-            commonSource = EXPECT_PLUS_FIXTURE,
-            jvmActualSource = JVM_ACTUALS,
-        )
+        setupCommonProject(projectDir, commonSource = EXPECT_TYPE_IN_SIGNATURE_FIXTURE)
 
         val result = runTask(projectDir, "faktGenerate")
 
         assertEquals(
             TaskOutcome.SUCCESS,
             result.task(":faktGenerate")?.outcome,
-            "Driving K2JVM over commonMain+jvmMain with actuals present must succeed; output:\n${result.output}",
+            "Expect types used in @Fake signatures must render like any other type; output:\n${result.output}",
         )
+        val fake = generatedFakes(projectDir).single { it.name.contains("SessionService") }
         assertTrue(
-            generatedFakes(projectDir).any { it.name.contains("SessionService") },
-            "Expected FakeSessionService*.kt; output:\n${result.output}",
+            "PlatformClock" in fake.readText(),
+            "Generated fake must reference the expect type:\n${fake.readText()}",
         )
     }
 
     @Test
-    fun `GIVEN commonMain with an expect declaration but no actual WHEN running THEN task fails with a clear missing-actual error`(
+    fun `GIVEN commonMain with an expect declaration but no actual WHEN running THEN task succeeds and the fake is generated`(
         @TempDir projectDir: File
     ) {
         setupCommonProject(projectDir, commonSource = EXPECT_PLUS_FIXTURE)
 
-        val result =
-            GradleRunner.create()
-                .withProjectDir(projectDir)
-                .forwardOutput()
-                .withArguments("faktGenerate", "--stacktrace")
-                .buildAndFail()
+        val result = runTask(projectDir, "faktGenerate")
 
-        // Driving a JVM platform compile over common-only sources cannot satisfy `expect`
-        // declarations that have no `actual`. This is an inherent boundary, locked here so a future
-        // change that silently swallows it is caught. The robust path (commonMain + platform
-        // actuals)
-        // is covered by the test above.
+        // THE issue #79 blocker, locked in the fixed direction: NO_ACTUAL_FOR_EXPECT is an IR
+        // actualizer diagnostic, and KotlinMetadataCompiler's frontend-only pipeline has no
+        // actualizer — unpaired expects are structurally incapable of failing the producer.
+        assertEquals(
+            TaskOutcome.SUCCESS,
+            result.task(":faktGenerate")?.outcome,
+            "Unpaired expect in commonMain must not fail the metadata-driven producer; output:\n${result.output}",
+        )
         assertTrue(
-            "no actual declaration" in result.output || "NO_ACTUAL_FOR_EXPECT" in result.output,
-            "Expected a missing-actual error; output:\n${result.output}",
+            generatedFakes(projectDir).any { it.name.contains("SessionService") },
+            "Expected FakeSessionService*.kt despite the unpaired expect; output:\n${result.output}",
         )
     }
 
@@ -241,6 +245,58 @@ class FaktGenerateCommonProducerTest {
         assertEquals(emptyList(), generated, "Expected no generated files")
     }
 
+    @Test
+    fun `GIVEN generated fake from a renamed interface WHEN rerunning THEN the stale fake is removed`(
+        @TempDir projectDir: File
+    ) {
+        setupCommonProject(projectDir, commonSource = SINGLE_INTERFACE_FIXTURE)
+        val first = runTask(projectDir, "faktGenerate")
+        assertEquals(TaskOutcome.SUCCESS, first.task(":faktGenerate")?.outcome, first.output)
+        assertTrue(generatedFakes(projectDir).any { "SessionService" in it.name })
+
+        // Rename the interface in place — the old fake must not survive the rerun
+        projectDir
+            .resolve("src/commonMain/kotlin/fixture/Fixture.kt")
+            .writeText(SINGLE_INTERFACE_FIXTURE.replace("SessionService", "RenamedService"))
+
+        val second = runTask(projectDir, "faktGenerate")
+        assertEquals(TaskOutcome.SUCCESS, second.task(":faktGenerate")?.outcome, second.output)
+        val names = generatedFakes(projectDir).map { it.name }
+        assertTrue("FakeRenamedServiceImpl.kt" in names, "Renamed fake missing; got $names")
+        assertTrue(
+            names.none { "SessionService" in it },
+            "Stale fake for the old interface name survived: $names",
+        )
+    }
+
+    @Test
+    fun `GIVEN changed klib classpath content WHEN rerunning THEN producer re-executes instead of UP-TO-DATE`(
+        @TempDir projectDir: File,
+        @TempDir extraKlibDir: File,
+    ) {
+        // A non-.class resource is invisible to @CompileClasspath normalization but must be
+        // content-hashed by the @Classpath commonKlibClasspath input — this locks the annotation
+        // choice that closes the klib missed-invalidation hole.
+        val marker = extraKlibDir.resolve("marker.bin").apply { writeBytes(byteArrayOf(1, 2, 3)) }
+        setupCommonProject(
+            projectDir,
+            commonSource = SINGLE_INTERFACE_FIXTURE,
+            extraKlibClasspathDir = extraKlibDir,
+        )
+
+        val first = runTask(projectDir, "faktGenerate")
+        assertEquals(TaskOutcome.SUCCESS, first.task(":faktGenerate")?.outcome, first.output)
+
+        marker.writeBytes(byteArrayOf(4, 5, 6))
+
+        val second = runTask(projectDir, "faktGenerate")
+        assertEquals(
+            TaskOutcome.SUCCESS,
+            second.task(":faktGenerate")?.outcome,
+            "Changed klib-classpath content must re-execute the producer (missed-invalidation hole); got:\n${second.output}",
+        )
+    }
+
     private fun runTask(projectDir: File, vararg arguments: String): BuildResult =
         GradleRunner.create()
             .withProjectDir(projectDir)
@@ -264,8 +320,8 @@ class FaktGenerateCommonProducerTest {
     private fun setupCommonProject(
         projectDir: File,
         commonSource: String,
-        jvmActualSource: String? = null,
         firMetadataFile: File? = null,
+        extraKlibClasspathDir: File? = null,
     ) {
         projectDir
             .resolve("settings.gradle.kts")
@@ -275,13 +331,16 @@ class FaktGenerateCommonProducerTest {
             .writeText("org.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=1024m\n")
         projectDir.resolve("src/commonMain/kotlin/fixture").mkdirs()
         projectDir.resolve("src/commonMain/kotlin/fixture/Fixture.kt").writeText(commonSource)
-        if (jvmActualSource != null) {
-            projectDir.resolve("src/jvmMain/kotlin/fixture").mkdirs()
-            projectDir.resolve("src/jvmMain/kotlin/fixture/Actuals.kt").writeText(jvmActualSource)
-        }
+        // The metadata driver cannot read the JVM :annotations jar; declare the annotation
+        // in-fixture (the FIR checker matches by ClassId). The real metadata klib is covered by
+        // the sample-based CI contract.
+        projectDir.resolve("src/commonMain/kotlin/fakt").mkdirs()
+        projectDir
+            .resolve("src/commonMain/kotlin/fakt/FakeAnnotation.kt")
+            .writeText(IN_FIXTURE_FAKE_ANNOTATION)
         projectDir
             .resolve("build.gradle.kts")
-            .writeText(buildScriptForTask(projectDir, jvmActualSource != null, firMetadataFile))
+            .writeText(buildScriptForTask(projectDir, firMetadataFile, extraKlibClasspathDir))
     }
 
     private fun configureLocalBuildCache(projectDir: File, buildCacheDir: File) {
@@ -303,18 +362,12 @@ class FaktGenerateCommonProducerTest {
 
     private fun buildScriptForTask(
         projectDir: File,
-        includeJvmMain: Boolean,
         firMetadataFile: File?,
+        extraKlibClasspathDir: File?,
     ): String {
         val outputDir = projectDir.resolve("build/generated/fakt/metadata/commonMain/kotlin")
         val sourceSetContextJson =
             json.encodeToString(SourceSetContext.serializer(), COMMON_CONTEXT)
-        val sourcesLiteral =
-            if (includeJvmMain) {
-                """sources.from(file("src/commonMain/kotlin"), file("src/jvmMain/kotlin"))"""
-            } else {
-                """sources.from(file("src/commonMain/kotlin"))"""
-            }
         val cp = workerClasspath()
         val classpathLiteral =
             cp.joinToString(",\n        ") { jar ->
@@ -330,6 +383,11 @@ class FaktGenerateCommonProducerTest {
                         "Fakt :compiler shadowJar not found on test classpath. Ensure :compiler:shadowJar ran before tests."
                     )
                 }
+        val klibEntries =
+            listOfNotNull(stdlibCommonKlibDir, extraKlibClasspathDir).joinToString(",\n        ") {
+                dir ->
+                """file("${dir.absolutePath.replace('\\', '/')}")"""
+            }
         return """
             buildscript {
                 dependencies {
@@ -343,9 +401,9 @@ class FaktGenerateCommonProducerTest {
             import com.rsicarelli.fakt.compiler.api.LogLevel
 
             tasks.register<FaktGenerateTask>("faktGenerate") {
-                $sourcesLiteral
-                compileClasspath.from(
-                    $classpathLiteral
+                sources.from(file("src/commonMain/kotlin"))
+                commonKlibClasspath.from(
+                    $klibEntries
                 )
                 faktWorkerClasspath.from(
                     $classpathLiteral
@@ -378,6 +436,49 @@ class FaktGenerateCommonProducerTest {
     private val json = Json { prettyPrint = false }
 
     companion object {
+        /**
+         * The stdlib `commonMain` metadata klib, unpacked once per suite from the `-all` archive
+         * the build resolves (see `stdlibMetadataForTests` in `gradle-plugin/build.gradle.kts`).
+         * Read-only fixture data shared across tests.
+         */
+        private val stdlibCommonKlibDir: File by lazy {
+            val jarPath =
+                requireNotNull(System.getProperty("fakt.test.stdlibMetadataJar")) {
+                    "fakt.test.stdlibMetadataJar system property not set — see the test task " +
+                        "configuration in gradle-plugin/build.gradle.kts"
+                }
+            val targetRoot = Files.createTempDirectory("fakt-stdlib-metadata").toFile()
+            ZipFile(jarPath).use { zip ->
+                zip.entries()
+                    .asSequence()
+                    .filter { it.name.startsWith("commonMain/") }
+                    .forEach { entry ->
+                        val target = targetRoot.resolve(entry.name)
+                        if (entry.isDirectory) {
+                            target.mkdirs()
+                        } else {
+                            target.parentFile.mkdirs()
+                            zip.getInputStream(entry).use { input ->
+                                target.outputStream().use { output -> input.copyTo(output) }
+                            }
+                        }
+                    }
+            }
+            targetRoot.resolve("commonMain").also {
+                require(it.isDirectory) { "stdlib commonMain klib missing in $jarPath" }
+            }
+        }
+
+        private val IN_FIXTURE_FAKE_ANNOTATION =
+            """
+            package com.rsicarelli.fakt
+
+            @Target(AnnotationTarget.CLASS)
+            @Retention(AnnotationRetention.SOURCE)
+            annotation class Fake
+            """
+                .trimIndent()
+
         private val COMMON_CONTEXT =
             SourceSetContext(
                 compilationName = "commonMain",
@@ -426,15 +527,22 @@ class FaktGenerateCommonProducerTest {
             """
                 .trimIndent()
 
-        private val JVM_ACTUALS =
+        private val EXPECT_TYPE_IN_SIGNATURE_FIXTURE =
             """
             package fixture
 
-            actual class PlatformClock {
-                actual fun now(): Long = 0L
+            import com.rsicarelli.fakt.Fake
+
+            expect class PlatformClock {
+                fun now(): Long
             }
 
-            actual fun platformName(): String = "jvm"
+            @Fake
+            interface SessionService {
+                fun clock(): PlatformClock
+                suspend fun login(user: String): String
+                val isOnline: Boolean
+            }
             """
                 .trimIndent()
 

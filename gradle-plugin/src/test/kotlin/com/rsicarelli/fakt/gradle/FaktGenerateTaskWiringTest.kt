@@ -215,16 +215,27 @@ class FaktGenerateTaskWiringTest {
             project.faktExtension(),
         )
 
-        val sources =
-            (project.tasks.getByName("faktGenerateJvmMain") as FaktGenerateTask).sources.files
+        val task = project.tasks.getByName("faktGenerateJvmMain") as FaktGenerateTask
+        val sources = task.sources.files
         assertTrue(
             sources.contains(jvmMarker),
             "A consumer must analyse its own source set; $sources",
         )
         assertTrue(
             !sources.contains(commonMarker),
-            "A consumer must NOT analyse commonMain — that would re-emit common fakes as duplicates; " +
+            "commonMain must not ride in `sources` — its fakes belong to the common producer; " +
                 "sources: $sources",
+        )
+        val analysisOnly = task.analysisOnlySources.files
+        assertTrue(
+            analysisOnly.contains(commonMarker),
+            "Ancestor sources must be fed as analysis-only so platform actuals pair with their " +
+                "expects; analysisOnlySources: $analysisOnly",
+        )
+        assertTrue(
+            !analysisOnly.contains(jvmMarker),
+            "The consumer's own sources must not be duplicated into analysisOnlySources; " +
+                "analysisOnlySources: $analysisOnly",
         )
     }
 

@@ -40,10 +40,12 @@ internal object FaktGenerateTaskWiring {
 
     /**
      * Registers a consumer `FaktGenerateTask` for a drivable platform main (`jvmMain` /
-     * `androidMain`). It analyses ONLY the compilation's own source set
-     * ([KotlinCompilation.defaultSourceSet]); `commonMain` reaches it as a compiled dependency on
-     * the classpath, so the FIR checker sees only this platform's `@Fake` and never re-emits common
-     * fakes — no dependence on file-existence dedup, fully cache-correct.
+     * `androidMain`). It emits fakes ONLY for the compilation's own source set
+     * ([KotlinCompilation.defaultSourceSet]); ancestor sources (commonMain and intermediates) ride
+     * along as `analysisOnlySources` so the frontend can pair `actual` declarations with their
+     * `expect`s and resolve common types in platform `@Fake` signatures — their own fakes stay
+     * owned by the common producer (`SourceSetContext.emitSourceSets` restricts emission), so
+     * nothing is emitted twice and the task stays fully cache-correct.
      */
     fun registerConsumer(
         project: Project,
@@ -99,7 +101,21 @@ internal object FaktGenerateTaskWiring {
         val taskProvider =
             project.tasks.register(taskName, FaktGenerateTask::class.java) { task ->
                 task.sources.from(sourceSets.map { sourceSet -> sourceSet.kotlin })
-                task.compileClasspath.from(commonProducerClasspath(project, kotlinCompilation))
+                if (partitionToOwnSourceSet) {
+                    val ancestors =
+                        kotlinCompilation.allKotlinSourceSets - kotlinCompilation.defaultSourceSet
+                    task.analysisOnlySources.from(ancestors.map { sourceSet -> sourceSet.kotlin })
+                }
+                // Common producers drive KotlinMetadataCompiler, which reads the compilation's own
+                // metadata-klib dependencies — routed through the @Classpath commonKlibClasspath
+                // input (content-hashed; @CompileClasspath can fingerprint klibs as empty). Every
+                // other compilation feeds its JVM dependencies to the K2JVM driver unchanged.
+                if (isMetadataLikeCompilation(kotlinCompilation)) {
+                    task.commonKlibClasspath.from(kotlinCompilation.compileDependencyFiles)
+                    task.firMetadataFile.set(firMetadataFile)
+                } else {
+                    task.compileClasspath.from(kotlinCompilation.compileDependencyFiles)
+                }
                 task.faktWorkerClasspath.from(workerClasspath)
                 task.faktCompilerClasspath.from(compilerClasspath)
                 task.sourceSetContextJson.set(placeholderJson)
@@ -108,9 +124,6 @@ internal object FaktGenerateTaskWiring {
                 task.imports.set(emptyList())
                 task.generatedKotlinDir.set(outputDir)
                 task.scratchDir.set(scratchDir)
-                if (isMetadataLikeCompilation(kotlinCompilation)) {
-                    task.firMetadataFile.set(firMetadataFile)
-                }
             }
 
         wireTestSrcDir(project, kotlinCompilation, taskProvider)
@@ -182,35 +195,6 @@ internal object FaktGenerateTaskWiring {
                     ?: project.tasks.findByName("faktGenerateCommonMain")
             if (commonTask != null) task.dependsOn(commonTask)
         }
-    }
-
-    /**
-     * Compile classpath for the worker. For a KMP `commonMain` producer the worker drives
-     * `K2JVMCompiler`, which needs a JVM-resolvable classpath — the JVM (or Android) target's
-     * `main` compile dependencies, which carry the JVM stdlib plus the JVM variant of every project
-     * and external dependency. `commonMain`'s own `compileDependencyFiles` are common `.klib`s that
-     * the JVM compiler can't read, so they are not used here. Every other compilation uses its own
-     * dependencies unchanged.
-     */
-    private fun commonProducerClasspath(
-        project: Project,
-        kotlinCompilation: KotlinCompilation<*>,
-    ): Any {
-        if (kotlinCompilation.defaultSourceSet.name == "commonMain") {
-            val jvmMain =
-                project.extensions
-                    .findByType(KotlinMultiplatformExtension::class.java)
-                    ?.targets
-                    ?.firstOrNull { target ->
-                        target.platformType.name.lowercase().let {
-                            it == "jvm" || it == "androidjvm"
-                        }
-                    }
-                    ?.compilations
-                    ?.findByName("main")
-            if (jvmMain != null) return jvmMain.compileDependencyFiles
-        }
-        return kotlinCompilation.compileDependencyFiles
     }
 
     /** Locate the [FaktGradleSubplugin] instance applied to [project] to call its helpers. */

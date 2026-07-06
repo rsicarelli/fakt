@@ -167,9 +167,37 @@ class FaktGradleSubpluginFlagResolutionTest {
     }
 
     @Test
-    fun `GIVEN flag true AND KMP without a drivable target WHEN applyToCompilation THEN returns legacy options`() {
+    fun `GIVEN flag true AND KMP without a drivable target WHEN applyToCompilation on commonMain THEN registers the metadata producer`() {
         val project = createKmpProject()
         project.getKotlinExtension().linuxX64()
+        project.getKotlinExtension().mingwX64()
+        project.faktExtension().useExperimentalGenerateTask.set(true)
+        project.evaluate()
+
+        val options =
+            project
+                .faktSubplugin()
+                .applyToCompilation(project.kmpCompilation("metadata", "commonMain"))
+                .get()
+
+        assertEquals(
+            "false",
+            options.single { it.key == "enabled" }.value,
+            "KotlinMetadataCompiler needs no JVM classpath — commonMain is a producer even " +
+                "without a JVM/Android target; keys: ${options.map { it.key }}",
+        )
+        assertTrue(
+            project.tasks.names.contains("faktGenerateMetadataCommonMain"),
+            "No-JVM-target KMP must still register the cache-correct common producer task; " +
+                "tasks: ${project.tasks.names.filter { it.startsWith("fakt") }}",
+        )
+    }
+
+    @Test
+    fun `GIVEN flag true AND KMP without a drivable target WHEN applyToCompilation on native main THEN stays legacy hybrid`() {
+        val project = createKmpProject()
+        project.getKotlinExtension().linuxX64()
+        project.getKotlinExtension().mingwX64()
         project.faktExtension().useExperimentalGenerateTask.set(true)
         project.evaluate()
 
@@ -181,10 +209,13 @@ class FaktGradleSubpluginFlagResolutionTest {
 
         assertTrue(
             options.any { it.key == "sourceSetContext" },
-            "Without a JVM/Android target the common producer can't run (no JVM classpath), so the " +
-                "project stays on the in-process path; keys: ${options.map { it.key }}",
+            "A native main keeps the in-process plugin (legacy hybrid) so its platform fakes are " +
+                "still generated; keys: ${options.map { it.key }}",
         )
-        assertTrue(project.tasks.names.none { it.startsWith("faktGenerate") })
+        assertTrue(
+            project.tasks.names.none { it == "faktGenerateLinuxX64Main" },
+            "Native mains can't be driven by the worker — no FaktGenerateTask for them.",
+        )
     }
 
     @Test

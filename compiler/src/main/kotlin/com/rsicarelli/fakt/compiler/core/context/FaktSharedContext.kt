@@ -7,6 +7,7 @@ import com.rsicarelli.fakt.compiler.core.optimization.CompilerOptimizations
 import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.fir.cache.MetadataCacheManager
 import com.rsicarelli.fakt.compiler.fir.metadata.FirMetadataStorage
+import java.util.Collections
 
 /**
  * Shared context passed between FIR and IR compilation phases.
@@ -18,6 +19,9 @@ import com.rsicarelli.fakt.compiler.fir.metadata.FirMetadataStorage
  * @property logger Logger instance for level-aware logging across compilation phases
  * @property optimizations Compiler optimizations instance for caching and incremental compilation
  * @property cacheManager Manager for cross-compilation FIR cache (KMP optimization)
+ * @property emittedOutputs Thread-safe seen-set of `"$packageName:Fake${simpleName}Impl"` keys
+ *   claimed by [com.rsicarelli.fakt.compiler.fir.generation.FirFakeEmitter] this compilation — the
+ *   FIR-phase analogue of the IR path's `reportAndDropOutputCollisions`.
  */
 data class FaktSharedContext(
     val fakeAnnotations: List<String>,
@@ -26,6 +30,8 @@ data class FaktSharedContext(
     val logger: FaktLogger,
     val optimizations: CompilerOptimizations,
     val cacheManager: MetadataCacheManager,
+    val emittedOutputs: MutableSet<String> =
+        Collections.newSetFromMap(java.util.concurrent.ConcurrentHashMap()),
 ) {
     /**
      * Check if specific annotation FQN is configured for fake generation.

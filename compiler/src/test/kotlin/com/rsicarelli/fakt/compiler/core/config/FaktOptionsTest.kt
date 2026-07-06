@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.core.config
 
+import com.rsicarelli.fakt.compiler.api.EmitPhase
 import com.rsicarelli.fakt.compiler.api.LogLevel
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.api.SourceSetInfo
@@ -292,5 +293,70 @@ class FaktOptionsTest {
                 options.enableCallHistoryDefault,
                 "Default configuration should have enableCallHistoryDefault=true",
             )
+        }
+
+    @Test
+    fun `GIVEN configuration without sourceSetContext WHEN reading emitPhase THEN defaults to IR`() =
+        runTest {
+            // GIVEN: legacy invocation with no context at all
+            val configuration = CompilerConfiguration()
+
+            // WHEN
+            val options = FaktOptions.load(configuration)
+
+            // THEN
+            assertEquals(EmitPhase.IR, options.emitPhase)
+        }
+
+    @Test
+    fun `GIVEN sourceSetContext with default emitPhase WHEN reading emitPhase THEN returns IR`() =
+        runTest {
+            // GIVEN: a context that never had emitPhase set (legacy shape)
+            val context =
+                SourceSetContext(
+                    compilationName = "main",
+                    targetName = "jvm",
+                    platformType = "jvm",
+                    isTest = false,
+                    defaultSourceSet = SourceSetInfo("main", emptyList()),
+                    allSourceSets = listOf(SourceSetInfo("main", emptyList())),
+                    outputDirectory = "/project/build/generated/fakt/main/kotlin",
+                    commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
+                )
+            val configuration = CompilerConfiguration()
+            configuration.put(FaktCommandLineProcessor.SOURCE_SET_CONTEXT_KEY, context)
+
+            // WHEN
+            val options = FaktOptions.load(configuration)
+
+            // THEN
+            assertEquals(EmitPhase.IR, options.emitPhase)
+        }
+
+    @Test
+    fun `GIVEN sourceSetContext with FIR emitPhase WHEN reading emitPhase THEN returns FIR`() =
+        runTest {
+            // GIVEN: the cache-correct worker's execution-time context
+            val context =
+                SourceSetContext(
+                    compilationName = "commonMain",
+                    targetName = "metadata",
+                    platformType = "common",
+                    isTest = false,
+                    defaultSourceSet = SourceSetInfo("commonMain", emptyList()),
+                    allSourceSets = listOf(SourceSetInfo("commonMain", emptyList())),
+                    outputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
+                    commonTestOutputDirectory = "/project/build/generated/fakt/commonTest/kotlin",
+                    metadataOutputPath = "/project/build/metadata/fir-metadata.json",
+                    emitPhase = EmitPhase.FIR,
+                )
+            val configuration = CompilerConfiguration()
+            configuration.put(FaktCommandLineProcessor.SOURCE_SET_CONTEXT_KEY, context)
+
+            // WHEN
+            val options = FaktOptions.load(configuration)
+
+            // THEN
+            assertEquals(EmitPhase.FIR, options.emitPhase)
         }
 }

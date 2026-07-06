@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.core.config
 
+import com.rsicarelli.fakt.compiler.api.EmitPhase
 import com.rsicarelli.fakt.compiler.api.LogLevel
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import org.jetbrains.kotlin.config.CompilerConfiguration
@@ -45,6 +46,21 @@ data class FaktOptions(
     /** True if operating in consumer mode (platform compilation reads cache). */
     val isConsumerMode: Boolean
         get() = metadataCachePath != null
+
+    /**
+     * Compilation phase that writes generated fake sources. Defaults to [EmitPhase.IR]; only the
+     * cache-correct worker sets [EmitPhase.FIR] (see [EmitPhase] for the contract).
+     */
+    val emitPhase: EmitPhase
+        get() = sourceSetContext?.emitPhase ?: EmitPhase.IR
+
+    /**
+     * Source sets whose `@Fake` declarations may emit fakes; empty means no restriction. Set only
+     * by the cache-correct worker for source-partitioned consumers whose ancestor sources are fed
+     * for analysis only (see [com.rsicarelli.fakt.compiler.api.SourceSetContext.emitSourceSets]).
+     */
+    val emitSourceSets: List<String>
+        get() = sourceSetContext?.emitSourceSets ?: emptyList()
 
     companion object {
         fun load(configuration: CompilerConfiguration): FaktOptions {
