@@ -30,6 +30,8 @@ internal interface FaktCodegenWorkParameters : WorkParameters {
     val sourceSetContextJson: Property<String>
     val faktVersion: Property<String>
     val logLevel: Property<LogLevel>
+    val enableCallHistory: Property<Boolean>
+    val enableMutableFakes: Property<Boolean>
     val imports: ListProperty<String>
     val commonFirMetadata: RegularFileProperty
     val generatedKotlinDir: DirectoryProperty
@@ -96,6 +98,8 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
                 scratchOutputDir = params.scratchDir.asFile.get(),
                 sourceSetContextBase64 = encodeContext(sourceSetContext),
                 logLevel = params.logLevel.getOrElse(LogLevel.QUIET),
+                enableCallHistory = params.enableCallHistory.getOrElse(true),
+                enableMutableFakes = params.enableMutableFakes.getOrElse(false),
             )
         )
     }
@@ -184,6 +188,8 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         val scratchOutputDir: File,
         val sourceSetContextBase64: String,
         val logLevel: LogLevel,
+        val enableCallHistory: Boolean,
+        val enableMutableFakes: Boolean,
     )
 
     private fun invokeK2(call: K2Invocation) {
@@ -291,12 +297,18 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
             call.pluginJars.map { it.absolutePath }.toTypedArray(),
         )
         val pluginOptions =
-            arrayOf(
-                "${FaktPluginOptions.ENABLED}=true",
-                "${FaktPluginOptions.LOG_LEVEL}=${call.logLevel.name}",
-                "${FaktPluginOptions.OUTPUT_DIR}=${call.outputDir.absolutePath}",
-                "${FaktPluginOptions.SOURCE_SET_CONTEXT}=${call.sourceSetContextBase64}",
+            FaktPluginOptions.payload(
+                logLevel = call.logLevel.name,
+                outputDir = call.outputDir.absolutePath,
+                sourceSetContextBase64 = call.sourceSetContextBase64,
+                enableCallHistory = call.enableCallHistory,
+                enableMutableFakes = call.enableMutableFakes,
             )
-        bridge.setOnArgs(args, "setPluginOptions", Array<String>::class.java, pluginOptions)
+        bridge.setOnArgs(
+            args,
+            "setPluginOptions",
+            Array<String>::class.java,
+            pluginOptions.toTypedArray(),
+        )
     }
 }

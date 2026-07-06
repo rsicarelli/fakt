@@ -41,6 +41,8 @@ public abstract class com/rsicarelli/fakt/gradle/FaktGenerateTask : org/gradle/a
 	public abstract fun getCommonFirMetadata ()Lorg/gradle/api/file/RegularFileProperty;
 	public abstract fun getCommonKlibClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
 	public abstract fun getCompileClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public abstract fun getEnableCallHistory ()Lorg/gradle/api/provider/Property;
+	public abstract fun getEnableMutableFakes ()Lorg/gradle/api/provider/Property;
 	public abstract fun getFaktCompilerClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
 	public abstract fun getFaktVersion ()Lorg/gradle/api/provider/Property;
 	public abstract fun getFaktWorkerClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;

@@ -295,10 +295,12 @@ CI presence checks continue to lock it.
   mode is ever wired, `MetadataCacheManager.tryLoadCache` returns `true` for **every** declaration once
   loaded, and the checker's early return would skip analysis (and FIR emission) of the platform's own
   source declarations. Do not wire consumer mode without fixing the short-circuit to be per-ClassId.
-- **Worker options gap (pre-existing):** the worker forwards only 4 plugin options; `enableCallHistory`/
-  `enableMutableFakes` extension settings are not among them. The FIR emitter resolves modes exactly as
-  the IR path does, so FIR/IR parity holds — the worker-vs-legacy defaults gap is a separate issue to
-  file, not fixed here.
+- **Worker options gap (fixed, issue #112):** the worker now forwards 6 plugin options — the original
+  `enabled`/`logLevel`/`outputDir`/`sourceSetContext` plus the `enableCallHistory`/`enableMutableFakes`
+  extension defaults. `FaktGenerateTask` carries the latter two as `@Input`s so they participate in the
+  cache key, and `FaktGenerateTaskWiring.register` sources them from the `fakt { }` extension. The FIR
+  emitter already resolved modes exactly as the IR path does, so FIR/IR parity was never the gap — it was
+  purely the worker-vs-legacy option payload, now closed.
 - **Out of scope:** flipping `useExperimentalGenerateTask` default (P8); removing the legacy path (P9);
   cache-correct platform-declared fakes for Native/JS/Wasm; `actual typealias` and `@Fake`-on-expect
   scenarios (checker rejects `FAKE_CANNOT_BE_EXPECT` by design).

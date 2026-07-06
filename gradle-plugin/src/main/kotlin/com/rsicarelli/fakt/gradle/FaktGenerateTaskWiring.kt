@@ -121,6 +121,8 @@ internal object FaktGenerateTaskWiring {
                 task.sourceSetContextJson.set(placeholderJson)
                 task.faktVersion.set(FaktGradleSubplugin.PLUGIN_VERSION)
                 task.logLevel.set(extension.logLevel)
+                task.enableCallHistory.set(extension.enableCallHistory)
+                task.enableMutableFakes.set(extension.enableMutableFakes)
                 task.imports.set(emptyList())
                 task.generatedKotlinDir.set(outputDir)
                 task.scratchDir.set(scratchDir)

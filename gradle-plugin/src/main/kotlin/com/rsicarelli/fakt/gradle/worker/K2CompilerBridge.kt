@@ -54,6 +54,30 @@ internal object FaktPluginOptions {
     const val LOG_LEVEL = "${PREFIX}logLevel"
     const val OUTPUT_DIR = "${PREFIX}outputDir"
     const val SOURCE_SET_CONTEXT = "${PREFIX}sourceSetContext"
+    const val ENABLE_CALL_HISTORY = "${PREFIX}enableCallHistory"
+    const val ENABLE_MUTABLE_FAKES = "${PREFIX}enableMutableFakes"
+
+    /**
+     * Builds the `-P` plugin-option payload forwarded to Fakt's `:compiler` plugin. Kept as a pure
+     * function (no reflection, no compiler types) so the worker-vs-legacy option parity — including
+     * the [ENABLE_CALL_HISTORY] / [ENABLE_MUTABLE_FAKES] extension defaults dropped before
+     * issue #112 — is unit-testable without spinning up the forked worker.
+     */
+    fun payload(
+        logLevel: String,
+        outputDir: String,
+        sourceSetContextBase64: String,
+        enableCallHistory: Boolean,
+        enableMutableFakes: Boolean,
+    ): List<String> =
+        listOf(
+            "$ENABLED=true",
+            "$LOG_LEVEL=$logLevel",
+            "$OUTPUT_DIR=$outputDir",
+            "$SOURCE_SET_CONTEXT=$sourceSetContextBase64",
+            "$ENABLE_CALL_HISTORY=$enableCallHistory",
+            "$ENABLE_MUTABLE_FAKES=$enableMutableFakes",
+        )
 }
 
 /**
