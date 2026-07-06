@@ -297,14 +297,18 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
             call.pluginJars.map { it.absolutePath }.toTypedArray(),
         )
         val pluginOptions =
-            arrayOf(
-                "${FaktPluginOptions.ENABLED}=true",
-                "${FaktPluginOptions.LOG_LEVEL}=${call.logLevel.name}",
-                "${FaktPluginOptions.OUTPUT_DIR}=${call.outputDir.absolutePath}",
-                "${FaktPluginOptions.SOURCE_SET_CONTEXT}=${call.sourceSetContextBase64}",
-                "${FaktPluginOptions.ENABLE_CALL_HISTORY}=${call.enableCallHistory}",
-                "${FaktPluginOptions.ENABLE_MUTABLE_FAKES}=${call.enableMutableFakes}",
+            FaktPluginOptions.payload(
+                logLevel = call.logLevel.name,
+                outputDir = call.outputDir.absolutePath,
+                sourceSetContextBase64 = call.sourceSetContextBase64,
+                enableCallHistory = call.enableCallHistory,
+                enableMutableFakes = call.enableMutableFakes,
             )
-        bridge.setOnArgs(args, "setPluginOptions", Array<String>::class.java, pluginOptions)
+        bridge.setOnArgs(
+            args,
+            "setPluginOptions",
+            Array<String>::class.java,
+            pluginOptions.toTypedArray(),
+        )
     }
 }

@@ -300,11 +300,58 @@ class FaktGenerateTaskTest {
         )
     }
 
+    @Test
+    fun `GIVEN enableMutableFakes=true WHEN running faktGenerate THEN generated fake is mutable`(
+        @TempDir projectDir: File
+    ) {
+        setupProject(
+            projectDir,
+            fixtureSource = SINGLE_INTERFACE_FIXTURE,
+            enableMutableFakes = true,
+        )
+
+        val result = runTask(projectDir, "faktGenerate")
+
+        assertEquals(TaskOutcome.SUCCESS, result.task(":faktGenerate")?.outcome, result.output)
+        val content =
+            projectDir
+                .resolve("build/generated/fakt")
+                .walkTopDown()
+                .single { it.isFile && it.name == "FakeUserServiceImpl.kt" }
+                .readText()
+        assertTrue(
+            "fun modify(" in content && "@Volatile" in content,
+            "enableMutableFakes=true must make the worker path emit a mutable fake (modify + @Volatile); got:\n$content",
+        )
+    }
+
+    @Test
+    fun `GIVEN enableMutableFakes default WHEN running faktGenerate THEN generated fake is immutable`(
+        @TempDir projectDir: File
+    ) {
+        setupProject(projectDir, fixtureSource = SINGLE_INTERFACE_FIXTURE)
+
+        val result = runTask(projectDir, "faktGenerate")
+
+        assertEquals(TaskOutcome.SUCCESS, result.task(":faktGenerate")?.outcome, result.output)
+        val content =
+            projectDir
+                .resolve("build/generated/fakt")
+                .walkTopDown()
+                .single { it.isFile && it.name == "FakeUserServiceImpl.kt" }
+                .readText()
+        assertFalse(
+            "fun modify(" in content,
+            "mutable fakes are off by default; the worker path must emit an immutable fake; got:\n$content",
+        )
+    }
+
     private fun setupProject(
         projectDir: File,
         fixtureSource: String,
         firMetadataFile: File? = null,
         enableCallHistory: Boolean? = null,
+        enableMutableFakes: Boolean? = null,
     ) {
         projectDir
             .resolve("settings.gradle.kts")
@@ -319,7 +366,14 @@ class FaktGenerateTaskTest {
         projectDir.resolve("src/main/kotlin/fixture/Fixture.kt").writeText(fixtureSource)
         projectDir
             .resolve("build.gradle.kts")
-            .writeText(buildScriptForTask(projectDir, firMetadataFile, enableCallHistory))
+            .writeText(
+                buildScriptForTask(
+                    projectDir,
+                    firMetadataFile,
+                    enableCallHistory,
+                    enableMutableFakes,
+                )
+            )
     }
 
     private fun configureLocalBuildCache(projectDir: File, buildCacheDir: File) {
@@ -343,6 +397,7 @@ class FaktGenerateTaskTest {
         projectDir: File,
         firMetadataFile: File? = null,
         enableCallHistory: Boolean? = null,
+        enableMutableFakes: Boolean? = null,
     ): String {
         val outputDir = projectDir.resolve("build/generated/fakt/jvm/jvmTest/kotlin")
         // The stored context carries placeholder paths only — the worker overwrites
@@ -396,6 +451,7 @@ class FaktGenerateTaskTest {
                 scratchDir.set(layout.buildDirectory.dir("faktCaches/jvm/jvmTest"))
                 ${firMetadataFile?.let { "firMetadataFile.set(file(\"${it.absolutePath.replace('\\', '/')}\"))" } ?: ""}
                 ${enableCallHistory?.let { "enableCallHistory.set($it)" } ?: ""}
+                ${enableMutableFakes?.let { "enableMutableFakes.set($it)" } ?: ""}
             }
 
             tasks.register("clean") { doLast { delete(layout.buildDirectory) } }
