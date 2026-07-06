@@ -38,6 +38,7 @@ public abstract class com/rsicarelli/fakt/gradle/FaktGenerateTask : org/gradle/a
 	public fun <init> (Lorg/gradle/workers/WorkerExecutor;)V
 	public final fun generate ()V
 	public abstract fun getCommonFirMetadata ()Lorg/gradle/api/file/RegularFileProperty;
+	public abstract fun getCommonKlibClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
 	public abstract fun getCompileClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
 	public abstract fun getFaktCompilerClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
 	public abstract fun getFaktVersion ()Lorg/gradle/api/provider/Property;

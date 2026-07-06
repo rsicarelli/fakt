@@ -74,6 +74,18 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
     @get:CompileClasspath public abstract val compileClasspath: ConfigurableFileCollection
 
     /**
+     * Metadata-klib dependencies for common (`commonMain`) producers — the compilation's own
+     * `compileDependencyFiles` (stdlib and library klibs the `KotlinMetadataCompiler` driver
+     * reads).
+     *
+     * Deliberately `@Classpath`, not `@CompileClasspath`: the compile-classpath normalizer
+     * fingerprints `.class` entries and can treat a klib archive (which has none) as effectively
+     * empty, so klib content changes would never invalidate the producer. `@Classpath` hashes the
+     * actual content, closing that missed-invalidation hole. Empty for non-common compilations.
+     */
+    @get:Classpath public abstract val commonKlibClasspath: ConfigurableFileCollection
+
+    /**
      * Classpath for the Fakt worker — `kotlin-compiler-embeddable` (the `K2JVMCompiler` driver).
      * Held isolated from the Gradle daemon to avoid clashes with KGP's bundled compiler.
      */
@@ -159,6 +171,7 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
         queue.submit(FaktCodegenWorkAction::class.java) { params ->
             params.sources.from(sources)
             params.compileClasspath.from(compileClasspath)
+            params.commonKlibClasspath.from(commonKlibClasspath)
             params.faktCompilerClasspath.from(faktCompilerClasspath)
             params.sourceSetContextJson.set(sourceSetContextJson)
             params.faktVersion.set(faktVersion)
