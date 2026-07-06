@@ -151,6 +151,44 @@ data class ValidatedFakeClass(
     val visibility: FirVisibility = FirVisibility.PUBLIC,
     val callHistoryMode: FirCallHistoryMode = FirCallHistoryMode.DEFAULT,
     val mutabilityMode: FirMutabilityMode = FirMutabilityMode.DEFAULT,
+    val constructorParameters: List<FirConstructorParamInfo> = emptyList(),
+)
+
+/**
+ * Pre-rendered type side-channel captured at FIR analysis time.
+ *
+ * The live `ConeKotlinType` (and the session needed to expand typealiases) exists only while the
+ * FIR checker runs, so the checker renders each member type eagerly and stores the result here.
+ * Mirrors the IR path's `RenderedType` + semantic flags; consumed by the FIR-phase emitter. Not
+ * serialized into `fir-metadata.json` — cache-loaded declarations never emit.
+ *
+ * @property shortName Rendered Kotlin type string (e.g. `"List<User>?"`, `"suspend (Int) -> Unit"`)
+ * @property fqns Fully-qualified names the rendered string references (import candidates)
+ * @property isTypeParameter True when the type is a type-parameter placeholder (T, K, V …)
+ * @property requiresCollectionErasure True when the type is a stdlib collection whose arguments
+ *   must be erased to `Any` under the NoGenerics pattern
+ */
+data class FirRenderedType(
+    val shortName: String,
+    val fqns: Set<String> = emptySet(),
+    val isTypeParameter: Boolean = false,
+    val requiresCollectionErasure: Boolean = false,
+)
+
+/**
+ * Primary-constructor parameter of a `@Fake` abstract/open class, captured at FIR analysis time.
+ *
+ * Needed by the FIR-phase emitter to forward `super(...)` arguments — previously read off the
+ * `IrConstructor` during IR generation.
+ *
+ * @property name Parameter name
+ * @property rendered Pre-rendered parameter type side-channel
+ * @property hasDefault True if the parameter declares a default value
+ */
+data class FirConstructorParamInfo(
+    val name: String,
+    val rendered: FirRenderedType,
+    val hasDefault: Boolean,
 )
 
 /**
@@ -185,6 +223,7 @@ data class FirPropertyInfo(
     val type: String, // String representation - will be resolved to IR types later
     val isMutable: Boolean,
     val isNullable: Boolean,
+    val rendered: FirRenderedType? = null,
 )
 
 /**
@@ -206,6 +245,9 @@ data class FirFunctionInfo(
     val isInline: Boolean,
     val typeParameters: List<FirTypeParameterInfo>,
     val typeParameterBounds: Map<String, String>, // e.g., "R" → "TValue"
+    val renderedReturnType: FirRenderedType? = null,
+    val isOperator: Boolean = false,
+    val extensionReceiverRendered: FirRenderedType? = null,
 )
 
 /**
@@ -226,6 +268,7 @@ data class FirParameterInfo(
     val hasDefaultValue: Boolean,
     val defaultValueCode: String?,
     val isVararg: Boolean,
+    val rendered: FirRenderedType? = null,
 )
 
 /**

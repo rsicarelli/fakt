@@ -6,6 +6,7 @@ import com.rsicarelli.fakt.compiler.core.context.FaktSharedContext
 import com.rsicarelli.fakt.compiler.core.telemetry.measureTimeNanos
 import com.rsicarelli.fakt.compiler.fir.extraction.AnnotationExtractor
 import com.rsicarelli.fakt.compiler.fir.metadata.FirCallHistoryMode
+import com.rsicarelli.fakt.compiler.fir.metadata.FirConstructorParamInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirFunctionInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirMutabilityMode
 import com.rsicarelli.fakt.compiler.fir.metadata.FirParameterInfo
@@ -15,6 +16,7 @@ import com.rsicarelli.fakt.compiler.fir.metadata.FirTypeParameterInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeClass
 import com.rsicarelli.fakt.compiler.fir.rendering.renderDefaultValue
+import com.rsicarelli.fakt.compiler.fir.types.FirTypeRenderer
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
@@ -30,11 +32,13 @@ import org.jetbrains.kotlin.fir.declarations.processAllDeclarations
 import org.jetbrains.kotlin.fir.declarations.toAnnotationClassIdSafe
 import org.jetbrains.kotlin.fir.declarations.utils.classId
 import org.jetbrains.kotlin.fir.declarations.utils.isInline
+import org.jetbrains.kotlin.fir.declarations.utils.isOperator
 import org.jetbrains.kotlin.fir.declarations.utils.isSuspend
 import org.jetbrains.kotlin.fir.declarations.utils.modality
 import org.jetbrains.kotlin.fir.expressions.FirPropertyAccessExpression
 import org.jetbrains.kotlin.fir.references.toResolvedEnumEntrySymbol
 import org.jetbrains.kotlin.fir.resolve.providers.firProvider
+import org.jetbrains.kotlin.fir.symbols.impl.FirConstructorSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirFunctionSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirPropertySymbol
 import org.jetbrains.kotlin.fir.types.coneType
@@ -223,8 +227,11 @@ internal class FakeClassChecker(private val sharedContext: FaktSharedContext) :
         val typeParameters = extractTypeParameters(declaration)
 
         // Extract abstract and open members separately
-        val (abstractProps, openProps) = extractProperties(declaration)
-        val (abstractMethods, openMethods) = extractMethods(declaration)
+        val (abstractProps, openProps) = extractProperties(declaration, session)
+        val (abstractMethods, openMethods) = extractMethods(declaration, session)
+
+        // Extract primary-constructor parameters for super(...) forwarding at FIR emission
+        val constructorParameters = extractConstructorParameters(declaration, session)
 
         // Extract source location for KMP source set detection
         val sourceLocation = extractSourceLocation(declaration, session)
@@ -259,7 +266,34 @@ internal class FakeClassChecker(private val sharedContext: FaktSharedContext) :
             visibility = visibility,
             callHistoryMode = callHistoryMode,
             mutabilityMode = mutabilityMode,
+            constructorParameters = constructorParameters,
         )
+    }
+
+    /** Extract primary-constructor parameters (name, rendered type, default presence). */
+    @OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class)
+    private fun extractConstructorParameters(
+        declaration: FirClass,
+        session: FirSession,
+    ): List<FirConstructorParamInfo> {
+        var primaryParams: List<FirValueParameter> = emptyList()
+        declaration.processAllDeclarations(session = declaration.moduleData.session) { symbol ->
+            if (symbol is FirConstructorSymbol && symbol.isPrimary && primaryParams.isEmpty()) {
+                primaryParams = symbol.fir.valueParameters
+            }
+        }
+        return primaryParams.map { param ->
+            FirConstructorParamInfo(
+                name = param.name.asString(),
+                rendered =
+                    FirTypeRenderer.buildRendered(
+                        param.returnTypeRef.coneType,
+                        session,
+                        preserveTypeParameters = true,
+                    ),
+                hasDefault = param.defaultValue != null,
+            )
+        }
     }
 
     /**
@@ -416,7 +450,8 @@ internal class FakeClassChecker(private val sharedContext: FaktSharedContext) :
      */
     @OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class)
     private fun extractProperties(
-        declaration: FirClass
+        declaration: FirClass,
+        session: FirSession,
     ): Pair<List<FirPropertyInfo>, List<FirPropertyInfo>> {
         val abstractProperties = mutableListOf<FirPropertyInfo>()
         val openProperties = mutableListOf<FirPropertyInfo>()
@@ -435,6 +470,12 @@ internal class FakeClassChecker(private val sharedContext: FaktSharedContext) :
                         type = type,
                         isMutable = isMutable,
                         isNullable = isNullable,
+                        rendered =
+                            FirTypeRenderer.buildRendered(
+                                property.returnTypeRef.coneType,
+                                session,
+                                preserveTypeParameters = true,
+                            ),
                     )
 
                 // Distinguish abstract vs open using modality
@@ -461,7 +502,8 @@ internal class FakeClassChecker(private val sharedContext: FaktSharedContext) :
      */
     @OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class)
     private fun extractMethods(
-        declaration: FirClass
+        declaration: FirClass,
+        session: FirSession,
     ): Pair<List<FirFunctionInfo>, List<FirFunctionInfo>> {
         val abstractMethods = mutableListOf<FirFunctionInfo>()
         val openMethods = mutableListOf<FirFunctionInfo>()
@@ -469,7 +511,7 @@ internal class FakeClassChecker(private val sharedContext: FaktSharedContext) :
         declaration.processAllDeclarations(session = declaration.moduleData.session) { symbol ->
             if (symbol is FirFunctionSymbol<*>) {
                 val function = symbol.fir
-                val functionInfo = extractFunctionInfo(function, symbol.name)
+                val functionInfo = extractFunctionInfo(function, symbol.name, session)
 
                 when (function.modality) {
                     Modality.ABSTRACT -> abstractMethods.add(functionInfo)
@@ -487,8 +529,9 @@ internal class FakeClassChecker(private val sharedContext: FaktSharedContext) :
     private fun extractFunctionInfo(
         function: FirFunction,
         functionName: org.jetbrains.kotlin.name.Name,
+        session: FirSession,
     ): FirFunctionInfo {
-        val parameters = function.valueParameters.map(::extractParameterInfo)
+        val parameters = function.valueParameters.map { extractParameterInfo(it, session) }
         val typeParameters =
             function.typeParameters.map { typeParamRef ->
                 val typeParam = typeParamRef.symbol.fir
@@ -505,16 +548,40 @@ internal class FakeClassChecker(private val sharedContext: FaktSharedContext) :
             typeParameters = typeParameters,
             typeParameterBounds =
                 typeParameters.associate { it.name to it.bounds.firstOrNull().orEmpty() },
+            renderedReturnType =
+                FirTypeRenderer.buildRendered(
+                    function.returnTypeRef.coneType,
+                    session,
+                    preserveTypeParameters = true,
+                ),
+            isOperator = function.isOperator,
+            extensionReceiverRendered =
+                function.receiverParameter?.typeRef?.coneType?.let { receiverType ->
+                    FirTypeRenderer.buildRendered(
+                        receiverType,
+                        session,
+                        preserveTypeParameters = true,
+                    )
+                },
         )
     }
 
     /** Extract parameter metadata from FIR value parameter. */
-    private fun extractParameterInfo(param: FirValueParameter): FirParameterInfo =
+    private fun extractParameterInfo(
+        param: FirValueParameter,
+        session: FirSession,
+    ): FirParameterInfo =
         FirParameterInfo(
             name = param.name.asString(),
             type = param.returnTypeRef.coneType.toString(),
             hasDefaultValue = param.defaultValue != null,
             defaultValueCode = param.defaultValue?.let(::renderDefaultValue),
             isVararg = param.isVararg,
+            rendered =
+                FirTypeRenderer.buildRendered(
+                    param.returnTypeRef.coneType,
+                    session,
+                    preserveTypeParameters = true,
+                ),
         )
 }

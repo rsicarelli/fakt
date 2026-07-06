@@ -1327,29 +1327,51 @@ public final class com/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode 
 	public static fun values ()[Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;
 }
 
+public final class com/rsicarelli/fakt/compiler/fir/metadata/FirConstructorParamInfo {
+	public fun <init> (Ljava/lang/String;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;Z)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;
+	public final fun component3 ()Z
+	public final fun copy (Ljava/lang/String;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;Z)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirConstructorParamInfo;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirConstructorParamInfo;Ljava/lang/String;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;ZILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirConstructorParamInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHasDefault ()Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun getRendered ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class com/rsicarelli/fakt/compiler/fir/metadata/FirFakeMetadataKt {
 	public static final fun toModifier (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;)Ljava/lang/String;
 }
 
 public final class com/rsicarelli/fakt/compiler/fir/metadata/FirFunctionInfo {
-	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;ZZLjava/util/List;Ljava/util/Map;)V
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;ZZLjava/util/List;Ljava/util/Map;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;ZLcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;ZZLjava/util/List;Ljava/util/Map;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;ZLcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
+	public final fun component10 ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;
 	public final fun component2 ()Ljava/util/List;
 	public final fun component3 ()Ljava/lang/String;
 	public final fun component4 ()Z
 	public final fun component5 ()Z
 	public final fun component6 ()Ljava/util/List;
 	public final fun component7 ()Ljava/util/Map;
-	public final fun copy (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;ZZLjava/util/List;Ljava/util/Map;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirFunctionInfo;
-	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirFunctionInfo;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;ZZLjava/util/List;Ljava/util/Map;ILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirFunctionInfo;
+	public final fun component8 ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;
+	public final fun component9 ()Z
+	public final fun copy (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;ZZLjava/util/List;Ljava/util/Map;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;ZLcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirFunctionInfo;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirFunctionInfo;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;ZZLjava/util/List;Ljava/util/Map;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;ZLcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;ILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirFunctionInfo;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getExtensionReceiverRendered ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;
 	public final fun getName ()Ljava/lang/String;
 	public final fun getParameters ()Ljava/util/List;
+	public final fun getRenderedReturnType ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;
 	public final fun getReturnType ()Ljava/lang/String;
 	public final fun getTypeParameterBounds ()Ljava/util/Map;
 	public final fun getTypeParameters ()Ljava/util/List;
 	public fun hashCode ()I
 	public final fun isInline ()Z
+	public final fun isOperator ()Z
 	public final fun isSuspend ()Z
 	public fun toString ()Ljava/lang/String;
 }
@@ -1382,18 +1404,21 @@ public final class com/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode :
 }
 
 public final class com/rsicarelli/fakt/compiler/fir/metadata/FirParameterInfo {
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZLjava/lang/String;Z)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZLjava/lang/String;ZLcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ZLjava/lang/String;ZLcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/lang/String;
 	public final fun component3 ()Z
 	public final fun component4 ()Ljava/lang/String;
 	public final fun component5 ()Z
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;ZLjava/lang/String;Z)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirParameterInfo;
-	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirParameterInfo;Ljava/lang/String;Ljava/lang/String;ZLjava/lang/String;ZILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirParameterInfo;
+	public final fun component6 ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;ZLjava/lang/String;ZLcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirParameterInfo;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirParameterInfo;Ljava/lang/String;Ljava/lang/String;ZLjava/lang/String;ZLcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;ILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirParameterInfo;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getDefaultValueCode ()Ljava/lang/String;
 	public final fun getHasDefaultValue ()Z
 	public final fun getName ()Ljava/lang/String;
+	public final fun getRendered ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;
 	public final fun getType ()Ljava/lang/String;
 	public fun hashCode ()I
 	public final fun isVararg ()Z
@@ -1401,19 +1426,40 @@ public final class com/rsicarelli/fakt/compiler/fir/metadata/FirParameterInfo {
 }
 
 public final class com/rsicarelli/fakt/compiler/fir/metadata/FirPropertyInfo {
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZZ)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZZLcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ZZLcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/lang/String;
 	public final fun component3 ()Z
 	public final fun component4 ()Z
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;ZZ)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirPropertyInfo;
-	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirPropertyInfo;Ljava/lang/String;Ljava/lang/String;ZZILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirPropertyInfo;
+	public final fun component5 ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;ZZLcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirPropertyInfo;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirPropertyInfo;Ljava/lang/String;Ljava/lang/String;ZZLcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;ILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirPropertyInfo;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getName ()Ljava/lang/String;
+	public final fun getRendered ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;
 	public final fun getType ()Ljava/lang/String;
 	public fun hashCode ()I
 	public final fun isMutable ()Z
 	public final fun isNullable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType {
+	public fun <init> (Ljava/lang/String;Ljava/util/Set;ZZ)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Set;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/Set;
+	public final fun component3 ()Z
+	public final fun component4 ()Z
+	public final fun copy (Ljava/lang/String;Ljava/util/Set;ZZ)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;Ljava/lang/String;Ljava/util/Set;ZZILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/FirRenderedType;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFqns ()Ljava/util/Set;
+	public final fun getRequiresCollectionErasure ()Z
+	public final fun getShortName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isTypeParameter ()Z
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -1472,8 +1518,8 @@ public final class com/rsicarelli/fakt/compiler/fir/metadata/FirVisibility$Compa
 }
 
 public final class com/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeClass {
-	public fun <init> (Lorg/jetbrains/kotlin/name/ClassId;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;JZLjava/lang/String;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;)V
-	public synthetic fun <init> (Lorg/jetbrains/kotlin/name/ClassId;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;JZLjava/lang/String;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/jetbrains/kotlin/name/ClassId;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;JZLjava/lang/String;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;Ljava/util/List;)V
+	public synthetic fun <init> (Lorg/jetbrains/kotlin/name/ClassId;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;JZLjava/lang/String;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Lorg/jetbrains/kotlin/name/ClassId;
 	public final fun component10 ()Ljava/util/List;
 	public final fun component11 ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;
@@ -1483,6 +1529,7 @@ public final class com/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeClass 
 	public final fun component15 ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;
 	public final fun component16 ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;
 	public final fun component17 ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;
+	public final fun component18 ()Ljava/util/List;
 	public final fun component2 ()Ljava/lang/String;
 	public final fun component3 ()Ljava/lang/String;
 	public final fun component4 ()Ljava/lang/String;
@@ -1491,14 +1538,15 @@ public final class com/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeClass 
 	public final fun component7 ()Ljava/util/List;
 	public final fun component8 ()Ljava/util/List;
 	public final fun component9 ()Ljava/util/List;
-	public final fun copy (Lorg/jetbrains/kotlin/name/ClassId;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;JZLjava/lang/String;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;)Lcom/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeClass;
-	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeClass;Lorg/jetbrains/kotlin/name/ClassId;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;JZLjava/lang/String;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;ILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeClass;
+	public final fun copy (Lorg/jetbrains/kotlin/name/ClassId;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;JZLjava/lang/String;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;Ljava/util/List;)Lcom/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeClass;
+	public static synthetic fun copy$default (Lcom/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeClass;Lorg/jetbrains/kotlin/name/ClassId;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirSourceLocation;JZLjava/lang/String;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;Ljava/util/List;ILjava/lang/Object;)Lcom/rsicarelli/fakt/compiler/fir/metadata/ValidatedFakeClass;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAbstractMethods ()Ljava/util/List;
 	public final fun getAbstractProperties ()Ljava/util/List;
 	public final fun getAnnotations ()Ljava/util/List;
 	public final fun getCallHistoryMode ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;
 	public final fun getClassId ()Lorg/jetbrains/kotlin/name/ClassId;
+	public final fun getConstructorParameters ()Ljava/util/List;
 	public final fun getMutabilityMode ()Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;
 	public final fun getOpenMethods ()Ljava/util/List;
 	public final fun getOpenProperties ()Ljava/util/List;

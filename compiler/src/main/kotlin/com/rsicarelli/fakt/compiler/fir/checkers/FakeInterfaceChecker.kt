@@ -15,6 +15,7 @@ import com.rsicarelli.fakt.compiler.fir.metadata.FirTypeParameterInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeInterface
 import com.rsicarelli.fakt.compiler.fir.rendering.renderDefaultValue
+import com.rsicarelli.fakt.compiler.fir.types.FirTypeRenderer
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
@@ -28,6 +29,7 @@ import org.jetbrains.kotlin.fir.declarations.processAllDeclarations
 import org.jetbrains.kotlin.fir.declarations.toAnnotationClassIdSafe
 import org.jetbrains.kotlin.fir.declarations.utils.classId
 import org.jetbrains.kotlin.fir.declarations.utils.isInline
+import org.jetbrains.kotlin.fir.declarations.utils.isOperator
 import org.jetbrains.kotlin.fir.declarations.utils.isSuspend
 import org.jetbrains.kotlin.fir.declarations.utils.modality
 import org.jetbrains.kotlin.fir.expressions.FirPropertyAccessExpression
@@ -164,8 +166,8 @@ internal class FakeInterfaceChecker(private val sharedContext: FaktSharedContext
         val packageName = classId.packageFqName.asString()
         val qualifiedSourceName = classId.relativeClassName.asString()
         val typeParameters = extractTypeParameters(declaration)
-        val properties = extractProperties(declaration)
-        val functions = extractFunctions(declaration)
+        val properties = extractProperties(declaration, session)
+        val functions = extractFunctions(declaration, session)
         val sourceLocation = extractSourceLocation(declaration, session)
         val (inheritedProperties, inheritedFunctions) =
             extractInheritedMembers(declaration = declaration, session = session)
@@ -341,7 +343,10 @@ internal class FakeInterfaceChecker(private val sharedContext: FaktSharedContext
      * @return List of property metadata
      */
     @OptIn(SymbolInternals::class)
-    private fun extractProperties(declaration: FirClass): List<FirPropertyInfo> {
+    private fun extractProperties(
+        declaration: FirClass,
+        session: FirSession,
+    ): List<FirPropertyInfo> {
         val properties = mutableListOf<FirPropertyInfo>()
 
         // Use processAllDeclarations to iterate through class members
@@ -366,6 +371,12 @@ internal class FakeInterfaceChecker(private val sharedContext: FaktSharedContext
                         type = type,
                         isMutable = isMutable,
                         isNullable = isNullable,
+                        rendered =
+                            FirTypeRenderer.buildRendered(
+                                property.returnTypeRef.coneType,
+                                session,
+                                preserveTypeParameters = true,
+                            ),
                     )
                 )
             }
@@ -391,7 +402,10 @@ internal class FakeInterfaceChecker(private val sharedContext: FaktSharedContext
      * @return List of function metadata
      */
     @OptIn(SymbolInternals::class)
-    private fun extractFunctions(declaration: FirClass): List<FirFunctionInfo> {
+    private fun extractFunctions(
+        declaration: FirClass,
+        session: FirSession,
+    ): List<FirFunctionInfo> {
         val functions = mutableListOf<FirFunctionInfo>()
 
         // Use processAllDeclarations to iterate through class members
@@ -411,6 +425,12 @@ internal class FakeInterfaceChecker(private val sharedContext: FaktSharedContext
                             hasDefaultValue = param.defaultValue != null,
                             defaultValueCode = param.defaultValue?.let(::renderDefaultValue),
                             isVararg = param.isVararg,
+                            rendered =
+                                FirTypeRenderer.buildRendered(
+                                    param.returnTypeRef.coneType,
+                                    session,
+                                    preserveTypeParameters = true,
+                                ),
                         )
                     }
 
@@ -450,6 +470,21 @@ internal class FakeInterfaceChecker(private val sharedContext: FaktSharedContext
                         isInline = isInline,
                         typeParameters = typeParameters,
                         typeParameterBounds = typeParameterBounds,
+                        renderedReturnType =
+                            FirTypeRenderer.buildRendered(
+                                function.returnTypeRef.coneType,
+                                session,
+                                preserveTypeParameters = true,
+                            ),
+                        isOperator = function.isOperator,
+                        extensionReceiverRendered =
+                            function.receiverParameter?.typeRef?.coneType?.let { receiverType ->
+                                FirTypeRenderer.buildRendered(
+                                    receiverType,
+                                    session,
+                                    preserveTypeParameters = true,
+                                )
+                            },
                     )
                 )
             }
@@ -597,8 +632,8 @@ internal class FakeInterfaceChecker(private val sharedContext: FaktSharedContext
         visitedInterfaces.add(classId)
 
         // Extract members from this interface
-        propertiesAccumulator.addAll(extractProperties(firClass))
-        functionsAccumulator.addAll(extractFunctions(firClass))
+        propertiesAccumulator.addAll(extractProperties(firClass, session))
+        functionsAccumulator.addAll(extractFunctions(firClass, session))
 
         // Recursively process super-interfaces of this interface
         firClass.superTypeRefs.forEach { superTypeRef ->
