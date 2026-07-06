@@ -392,7 +392,10 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
 
     /** How [applyToCompilation] should treat a compilation under the cache-correct flag. */
     private enum class CacheCorrectDecision {
-        /** Drive `K2JVMCompiler` over `commonMain` (+ ancestors) from a `FaktGenerateTask`. */
+        /**
+         * Drive a producer compilation from a `FaktGenerateTask`: `KotlinMetadataCompiler` over KMP
+         * `commonMain` (+ ancestors), or `K2JVMCompiler` over a single-platform JVM `main`.
+         */
         REGISTER_PRODUCER,
         /**
          * Drive `K2JVMCompiler` over a drivable platform main's own sources from a
@@ -412,19 +415,20 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
     }
 
     /**
-     * The cache-correct worker drives `K2JVMCompiler` reflectively. A single-platform JVM project
-     * owns its `main` compilation outright (producer). A KMP project with a drivable target drives
-     * the JVM compiler once over `commonMain` to produce platform-agnostic common fakes (producer),
-     * which every target's test compilation reuses; a drivable platform main (`jvmMain` /
-     * `androidMain`) gets its own source-partitioned consumer task. The metadata `common`
-     * compilations have no IR phase and are suppressed.
+     * The cache-correct worker drives a compiler front door reflectively. A single-platform JVM
+     * project owns its `main` compilation outright (producer, `K2JVMCompiler`). A KMP project —
+     * with or without a JVM/Android target, since `KotlinMetadataCompiler` needs only the
+     * compilation's own metadata-klib dependencies — drives the metadata compiler once over
+     * `commonMain` to produce platform-agnostic common fakes (producer), which every target's test
+     * compilation reuses; a drivable platform main (`jvmMain` / `androidMain`) gets its own
+     * source-partitioned consumer task. The remaining `common`-platform metadata compilations are
+     * suppressed.
      *
      * A non-drivable platform main (`iosMain` / `nativeMain` / `jsMain` / `wasmJsMain`) cannot be
      * driven in-process (`K2NativeCompiler` is not on the embeddable classpath), so it stays on the
      * in-process plugin ([CacheCorrectDecision.LEGACY_HYBRID]): its platform-specific fakes are
      * generated (not cache-correct), while the common producer still owns the cache-correct common
-     * fakes. Without a JVM/Android target the producer can't run (no JVM classpath), so the whole
-     * project stays on legacy.
+     * fakes.
      */
     private fun cacheCorrectDecision(
         kotlinCompilation: KotlinCompilation<*>
@@ -443,8 +447,6 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             kmp == null ->
                 if (isDrivablePlatform(platformType)) CacheCorrectDecision.REGISTER_PRODUCER
                 else CacheCorrectDecision.LEGACY
-            kmp.targets.none { isDrivablePlatform(it.platformType.name) } ->
-                CacheCorrectDecision.LEGACY
             kotlinCompilation.name == COMMON_MAIN_COMPILATION ->
                 CacheCorrectDecision.REGISTER_PRODUCER
             platformType.equals("common", ignoreCase = true) -> CacheCorrectDecision.SUPPRESS

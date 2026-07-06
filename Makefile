@@ -52,6 +52,11 @@ test-kmp-multi-target:
 	@echo "🎯 Testing kmp-multi-target sample (hierarchy validation)..."
 	cd samples/kmp-multi-target && ./gradlew allTests
 
+# KMP sample without any JVM/Android target (metadata-driver producer)
+test-kmp-no-jvm:
+	@echo "🧭 Testing kmp-no-jvm sample (no drivable target)..."
+	cd samples/kmp-no-jvm && ./gradlew allTests
+
 # Fake publishing sample (two-project workflow)
 test-fake-publishing:
 	@echo "📤 Testing fake-publishing sample (two-step workflow)..."
@@ -136,6 +141,7 @@ help:
 	@echo "  test-sample     - Test kmp-single-module sample (composite build)"
 	@echo "  test-kmp-multi-module - Test kmp-multi-module sample (composite build)"
 	@echo "  test-kmp-multi-target - Test kmp-multi-target sample (hierarchy validation)"
+	@echo "  test-kmp-no-jvm - Test kmp-no-jvm sample (no JVM/Android target)"
 	@echo "  test-fake-publishing - Test fake-publishing sample (two-step workflow)"
 	@echo "  test-compat-all     - Test all compat samples (Kotlin 2.2.0-2.3.20)"
 	@echo "  test-compat-VERSION - Test specific compat sample (e.g., test-compat-2.2.0)"
