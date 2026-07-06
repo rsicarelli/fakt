@@ -54,6 +54,8 @@ internal object FaktPluginOptions {
     const val LOG_LEVEL = "${PREFIX}logLevel"
     const val OUTPUT_DIR = "${PREFIX}outputDir"
     const val SOURCE_SET_CONTEXT = "${PREFIX}sourceSetContext"
+    const val ENABLE_CALL_HISTORY = "${PREFIX}enableCallHistory"
+    const val ENABLE_MUTABLE_FAKES = "${PREFIX}enableMutableFakes"
 }
 
 /**

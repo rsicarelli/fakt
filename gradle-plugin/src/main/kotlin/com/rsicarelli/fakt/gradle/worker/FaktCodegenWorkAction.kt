@@ -30,6 +30,8 @@ internal interface FaktCodegenWorkParameters : WorkParameters {
     val sourceSetContextJson: Property<String>
     val faktVersion: Property<String>
     val logLevel: Property<LogLevel>
+    val enableCallHistory: Property<Boolean>
+    val enableMutableFakes: Property<Boolean>
     val imports: ListProperty<String>
     val commonFirMetadata: RegularFileProperty
     val generatedKotlinDir: DirectoryProperty
@@ -96,6 +98,8 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
                 scratchOutputDir = params.scratchDir.asFile.get(),
                 sourceSetContextBase64 = encodeContext(sourceSetContext),
                 logLevel = params.logLevel.getOrElse(LogLevel.QUIET),
+                enableCallHistory = params.enableCallHistory.getOrElse(true),
+                enableMutableFakes = params.enableMutableFakes.getOrElse(false),
             )
         )
     }
@@ -184,6 +188,8 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         val scratchOutputDir: File,
         val sourceSetContextBase64: String,
         val logLevel: LogLevel,
+        val enableCallHistory: Boolean,
+        val enableMutableFakes: Boolean,
     )
 
     private fun invokeK2(call: K2Invocation) {
@@ -296,6 +302,8 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
                 "${FaktPluginOptions.LOG_LEVEL}=${call.logLevel.name}",
                 "${FaktPluginOptions.OUTPUT_DIR}=${call.outputDir.absolutePath}",
                 "${FaktPluginOptions.SOURCE_SET_CONTEXT}=${call.sourceSetContextBase64}",
+                "${FaktPluginOptions.ENABLE_CALL_HISTORY}=${call.enableCallHistory}",
+                "${FaktPluginOptions.ENABLE_MUTABLE_FAKES}=${call.enableMutableFakes}",
             )
         bridge.setOnArgs(args, "setPluginOptions", Array<String>::class.java, pluginOptions)
     }

@@ -127,6 +127,22 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
 
     @get:Input public abstract val logLevel: Property<LogLevel>
 
+    /**
+     * Extension-level default for call-history generation (`fakt { enableCallHistory }`). Forwarded
+     * to the compiler plugin so the worker path produces the same fakes as the legacy in-process
+     * path. `@Input` so a change to the default invalidates cached outputs; `@Optional` because the
+     * compiler falls back to its own default (`true`) when the option is absent.
+     */
+    @get:Input @get:Optional public abstract val enableCallHistory: Property<Boolean>
+
+    /**
+     * Extension-level default for mutable-fake generation (`fakt { enableMutableFakes }`). Forwarded
+     * to the compiler plugin so the worker path produces the same fakes as the legacy in-process
+     * path. `@Input` so a change to the default invalidates cached outputs; `@Optional` because the
+     * compiler falls back to its own default (`false`) when the option is absent.
+     */
+    @get:Input @get:Optional public abstract val enableMutableFakes: Property<Boolean>
+
     /** Imports forced into every generated file (e.g. user-extension imports). */
     @get:Input public abstract val imports: ListProperty<String>
 
@@ -189,6 +205,8 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
             params.sourceSetContextJson.set(sourceSetContextJson)
             params.faktVersion.set(faktVersion)
             params.logLevel.set(logLevel)
+            params.enableCallHistory.set(enableCallHistory)
+            params.enableMutableFakes.set(enableMutableFakes)
             params.imports.set(imports)
             params.commonFirMetadata.set(commonFirMetadata)
             params.generatedKotlinDir.set(generatedKotlinDir)
