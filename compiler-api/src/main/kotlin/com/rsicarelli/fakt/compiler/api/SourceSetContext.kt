@@ -42,6 +42,7 @@ import kotlinx.serialization.Serializable
  * @property commonTestOutputDirectory Absolute path for cached (common) interfaces
  * @property metadataOutputPath Path to write FIR cache (producer mode: metadata compilation only)
  * @property metadataCachePath Path to read FIR cache (consumer mode: platform compilations)
+ * @property emitPhase Compilation phase that writes generated fake sources (see [EmitPhase])
  * @see SourceSetInfo
  */
 @Serializable
@@ -56,6 +57,7 @@ data class SourceSetContext(
     val commonTestOutputDirectory: String,
     val metadataOutputPath: String? = null,
     val metadataCachePath: String? = null,
+    val emitPhase: EmitPhase = EmitPhase.IR,
 ) {
     init {
         require(compilationName.isNotBlank()) { "compilationName cannot be blank" }
@@ -70,6 +72,31 @@ data class SourceSetContext(
             "allSourceSets must contain defaultSourceSet"
         }
     }
+}
+
+/**
+ * Compilation phase that writes generated fake sources to disk.
+ *
+ * Selected explicitly rather than inferred from producer/consumer cache paths, because the legacy
+ * in-process path also sets
+ * [SourceSetContext.metadataOutputPath]/[SourceSetContext.metadataCachePath] (via its attachment to
+ * the real KGP metadata compilation) and must keep emitting from the IR phase.
+ * - [IR] — the default: `UnifiedFaktIrGenerationExtension` writes fakes during fir2ir. Used by the
+ *   legacy in-process path and, until the FIR emitter ships, by the cache-correct worker too.
+ * - [FIR] — the FIR checkers write fakes right after metadata extraction. Required for the
+ *   `KotlinMetadataCompiler`-driven commonMain producer (the metadata pipeline has no IR phase) and
+ *   set only by the cache-correct worker at execution time.
+ *
+ * The default is deliberately omitted from serialized JSON (all writers use `encodeDefaults=false`
+ * Json instances) so legacy `@Input` payloads stay byte-identical.
+ */
+@Serializable
+enum class EmitPhase {
+    /** Generated fakes are written by the FIR checkers (metadata-driver producer path). */
+    FIR,
+
+    /** Generated fakes are written by the IR generation extension (default, legacy behavior). */
+    IR,
 }
 
 /**
