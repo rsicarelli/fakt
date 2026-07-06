@@ -59,6 +59,46 @@ class FaktGenerateTaskTest {
     }
 
     @Test
+    fun `GIVEN interface with operator extension and default WHEN running faktGenerate THEN the JVM path renders all three`(
+        @TempDir projectDir: File
+    ) {
+        setupProject(projectDir, fixtureSource = RICH_MEMBER_FIXTURE)
+
+        val result = runTask(projectDir, "faktGenerate")
+
+        // Content locks for the FIR-emitted JVM worker path (byte parity with IR emission is
+        // guaranteed by FirIrEmissionParityTest; these assertions catch a worker-level regression
+        // in the side-channels feeding the emitter).
+        assertEquals(TaskOutcome.SUCCESS, result.task(":faktGenerate")?.outcome, result.output)
+        val content =
+            projectDir
+                .resolve("build/generated/fakt")
+                .walkTopDown()
+                .single { it.isFile && it.name == "FakeRichServiceImpl.kt" }
+                .readText()
+        assertTrue(
+            "operator override fun get" in content,
+            "operator modifier missing from the generated override:\n$content",
+        )
+        assertTrue(
+            "String.shout()" in content,
+            "extension receiver missing from the generated override:\n$content",
+        )
+        assertTrue(
+            "{ p_receiver -> \"\" }" in content,
+            "extension-aware default behavior missing:\n$content",
+        )
+        assertTrue(
+            "getBehavior: ((Int) -> String) = { p0 -> \"\" }" in content,
+            "resolver-derived default behavior missing for the operator method:\n$content",
+        )
+        assertTrue(
+            "retryBehavior: ((Int) -> Int) = { it }" in content,
+            "identity default behavior missing for the defaulted-param method:\n$content",
+        )
+    }
+
+    @Test
     fun `GIVEN synthetic project with no fake declarations WHEN running faktGenerate THEN task succeeds with empty output`(
         @TempDir projectDir: File
     ) {
@@ -361,6 +401,21 @@ class FaktGenerateTaskTest {
             interface UserService {
                 fun greet(name: String): String
                 val isActive: Boolean
+            }
+            """
+                .trimIndent()
+
+        private val RICH_MEMBER_FIXTURE =
+            """
+            package fixture
+
+            import com.rsicarelli.fakt.Fake
+
+            @Fake
+            interface RichService {
+                operator fun get(index: Int): String
+                fun String.shout(): String
+                fun retry(attempts: Int = 3): Int
             }
             """
                 .trimIndent()

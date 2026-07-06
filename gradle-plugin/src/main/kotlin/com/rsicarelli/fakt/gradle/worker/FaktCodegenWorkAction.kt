@@ -53,8 +53,9 @@ private const val COMMON_PLATFORM = "common"
  *   `expect` declarations cannot fail the run, and generation happens at the FIR phase
  *   ([EmitPhase.FIR], the pipeline has no IR phase). Dependencies come from
  *   [FaktCodegenWorkParameters.commonKlibClasspath] (metadata klibs).
- * - **`K2JVMCompiler`** for everything else (JVM/Android classpaths) — unchanged behavior, the
- *   plugin's IR extension writes the fakes.
+ * - **`K2JVMCompiler`** for everything else (JVM/Android classpaths). Generation still happens at
+ *   the FIR phase — one emitter for every worker path — and the plugin's IR extension early-returns
+ *   ([EmitPhase.FIR] parity with IR emission is locked by `FirIrEmissionParityTest`).
  *
  * Producer mode (no `commonFirMetadata` input) additionally instructs the plugin to write a
  * serialized `FirMetadataCache` to `firMetadataFile` so platform compilations downstream can skip
@@ -103,16 +104,17 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
      * machine-specific paths in the cache key, which is what makes cross-directory build-cache hits
      * work (relocation canary).
      *
-     * Common producers additionally flip [SourceSetContext.emitPhase] to [EmitPhase.FIR]: the
-     * metadata pipeline has no IR phase, so the plugin's FIR checkers must write the fakes. Set at
-     * execution time (not in the stored `@Input` JSON) like the other mutated fields.
+     * Every worker invocation additionally flips [SourceSetContext.emitPhase] to [EmitPhase.FIR]:
+     * the metadata pipeline has no IR phase at all, and on the K2JVM driver the FIR emitter is the
+     * single generation path (the plugin's IR extension early-returns), byte-parity-locked by
+     * `FirIrEmissionParityTest`. Set at execution time (not in the stored `@Input` JSON) like the
+     * other mutated fields — the legacy in-process path never sets it and keeps emitting at IR.
      */
     private fun populateSourceSetContext(params: FaktCodegenWorkParameters): SourceSetContext {
         val storedContext =
             Json.decodeFromString(SourceSetContext.serializer(), params.sourceSetContextJson.get())
         val outputDirectory = params.generatedKotlinDir.asFile.get().absolutePath
         val isConsumerMode = params.commonFirMetadata.isPresent
-        val commonAnalysis = storedContext.platformType.equals(COMMON_PLATFORM, ignoreCase = true)
         return storedContext.copy(
             outputDirectory = outputDirectory,
             commonTestOutputDirectory = outputDirectory,
@@ -120,7 +122,7 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
                 if (!isConsumerMode) params.firMetadataFile.orNull?.asFile?.absolutePath else null,
             metadataCachePath =
                 if (isConsumerMode) params.commonFirMetadata.asFile.get().absolutePath else null,
-            emitPhase = if (commonAnalysis) EmitPhase.FIR else storedContext.emitPhase,
+            emitPhase = EmitPhase.FIR,
         )
     }
 
