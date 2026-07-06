@@ -37,33 +37,33 @@ internal class FirFakeEmitter(private val sharedContext: FaktSharedContext) {
     /** Renders and writes the fake for a validated interface. */
     fun emit(metadata: ValidatedFakeInterface) {
         val generator = codeGenerator ?: return missingContext(metadata.simpleName)
-        if (!shouldEmit(metadata.sourceSourceSet, metadata.simpleName)) return
-        if (!claimOutput(metadata.packageName, metadata.simpleName, metadata.qualifiedSourceName)) {
-            return
+        val allowed =
+            shouldEmit(metadata.sourceSourceSet, metadata.simpleName) &&
+                claimOutput(metadata.packageName, metadata.simpleName, metadata.qualifiedSourceName)
+        if (allowed) {
+            val decl =
+                metadata.toFakeInterface(
+                    enableCallHistoryDefault = sharedContext.options.enableCallHistoryDefault,
+                    enableMutableFakesDefault = sharedContext.options.enableMutableFakesDefault,
+                )
+            generator.generateWorkingFakeImplementation(decl, metadata.sourceSourceSet)
         }
-
-        val decl =
-            metadata.toFakeInterface(
-                enableCallHistoryDefault = sharedContext.options.enableCallHistoryDefault,
-                enableMutableFakesDefault = sharedContext.options.enableMutableFakesDefault,
-            )
-        generator.generateWorkingFakeImplementation(decl, metadata.sourceSourceSet)
     }
 
     /** Renders and writes the fake for a validated abstract/open class. */
     fun emit(metadata: ValidatedFakeClass) {
         val generator = codeGenerator ?: return missingContext(metadata.simpleName)
-        if (!shouldEmit(metadata.sourceSourceSet, metadata.simpleName)) return
-        if (!claimOutput(metadata.packageName, metadata.simpleName, metadata.qualifiedSourceName)) {
-            return
+        val allowed =
+            shouldEmit(metadata.sourceSourceSet, metadata.simpleName) &&
+                claimOutput(metadata.packageName, metadata.simpleName, metadata.qualifiedSourceName)
+        if (allowed) {
+            val decl =
+                metadata.toFakeClass(
+                    enableCallHistoryDefault = sharedContext.options.enableCallHistoryDefault,
+                    enableMutableFakesDefault = sharedContext.options.enableMutableFakesDefault,
+                )
+            generator.generateWorkingClassFake(decl, metadata.sourceSourceSet)
         }
-
-        val decl =
-            metadata.toFakeClass(
-                enableCallHistoryDefault = sharedContext.options.enableCallHistoryDefault,
-                enableMutableFakesDefault = sharedContext.options.enableMutableFakesDefault,
-            )
-        generator.generateWorkingClassFake(decl, metadata.sourceSourceSet)
     }
 
     /**

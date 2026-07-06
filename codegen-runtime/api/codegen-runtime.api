@@ -1343,6 +1343,8 @@ public final class com/rsicarelli/fakt/compiler/fir/metadata/FirConstructorParam
 }
 
 public final class com/rsicarelli/fakt/compiler/fir/metadata/FirFakeMetadataKt {
+	public static final fun resolveCallHistory (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirCallHistoryMode;Z)Z
+	public static final fun resolveMutability (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirMutabilityMode;Z)Z
 	public static final fun toModifier (Lcom/rsicarelli/fakt/compiler/fir/metadata/FirVisibility;)Ljava/lang/String;
 }
 

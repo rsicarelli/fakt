@@ -4,11 +4,13 @@
   <CurrentIssues>
     <ID>CyclomaticComplexMethod:FakeClassChecker.kt$FakeClassChecker$override fun check(declaration: FirClass)</ID>
     <ID>CyclomaticComplexMethod:FirExpressionRenderer.kt$private fun renderLiteral(literal: FirLiteralExpression): String?</ID>
+    <ID>CyclomaticComplexMethod:FirTypeRenderer.kt$FirTypeRenderer$private fun renderGenericType( coneType: ConeClassLikeType, session: FirSession, preserveTypeParameters: Boolean, ): String</ID>
     <ID>CyclomaticComplexMethod:FunctionTypeHandler.kt$FunctionTypeHandler$fun renderFunctionType( irType: IrType, preserveTypeParameters: Boolean, typeRenderer: (IrType, Boolean) -&gt; String, ): String</ID>
     <ID>CyclomaticComplexMethod:GenericTypeHandler.kt$GenericTypeHandler$fun renderGenericType( irType: IrSimpleType, preserveTypeParameters: Boolean, typeRenderer: (IrType, Boolean) -&gt; String, ): String</ID>
     <ID>CyclomaticComplexMethod:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension$private fun processClassesFromMetadata( classMetadata: List&lt;IrClassGenerationMetadata&gt;, firMetricsMap: Map&lt;String, FirMetrics&gt;, collectDetailedMetrics: Boolean, ): ProcessingResult</ID>
     <ID>CyclomaticComplexMethod:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension$private fun processInterfacesFromMetadata( interfaceMetadata: List&lt;IrGenerationMetadata&gt;, firMetricsMap: Map&lt;String, FirMetrics&gt;, collectDetailedMetrics: Boolean, ): ProcessingResult</ID>
     <ID>LongMethod:FakeClassChecker.kt$FakeClassChecker$override fun check(declaration: FirClass)</ID>
+    <ID>LongMethod:FakeInterfaceChecker.kt$FakeInterfaceChecker$@OptIn(SymbolInternals::class) private fun extractFunctions( declaration: FirClass, session: FirSession, ): List&lt;FirFunctionInfo&gt;</ID>
     <ID>LongMethod:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension$private fun generateFromFirMetadata(moduleFragment: IrModuleFragment)</ID>
     <ID>LongMethod:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension$private fun processClassesFromMetadata( classMetadata: List&lt;IrClassGenerationMetadata&gt;, firMetricsMap: Map&lt;String, FirMetrics&gt;, collectDetailedMetrics: Boolean, ): ProcessingResult</ID>
     <ID>LongMethod:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension$private fun processInterfacesFromMetadata( interfaceMetadata: List&lt;IrGenerationMetadata&gt;, firMetricsMap: Map&lt;String, FirMetrics&gt;, collectDetailedMetrics: Boolean, ): ProcessingResult</ID>
@@ -20,7 +22,6 @@
     <ID>NestedBlockDepth:FakeInterfaceChecker.kt$FakeInterfaceChecker$@OptIn(SymbolInternals::class) private fun collectInheritedMembers( firClass: FirClass, session: FirSession, visitedInterfaces: MutableSet&lt;ClassId&gt;, propertiesAccumulator: MutableList&lt;FirPropertyInfo&gt;, functionsAccumulator: MutableList&lt;FirFunctionInfo&gt;, )</ID>
     <ID>NestedBlockDepth:FakeInterfaceChecker.kt$FakeInterfaceChecker$@OptIn(SymbolInternals::class) private fun extractInheritedMembers( declaration: FirClass, session: FirSession, ): Pair&lt;List&lt;FirPropertyInfo&gt;, List&lt;FirFunctionInfo&gt;&gt;</ID>
     <ID>NestedBlockDepth:FunctionTypeHandler.kt$FunctionTypeHandler$fun renderFunctionType( irType: IrType, preserveTypeParameters: Boolean, typeRenderer: (IrType, Boolean) -&gt; String, ): String</ID>
-    <ID>NestedBlockDepth:ImportResolver.kt$ImportResolver$private fun collectImportsFromType( irType: IrType, currentPackage: String, imports: MutableSet&lt;String&gt;, )</ID>
     <ID>ReturnCount:FakeClassChecker.kt$FakeClassChecker$override fun check(declaration: FirClass)</ID>
     <ID>ReturnCount:FakeInterfaceChecker.kt$FakeInterfaceChecker$override fun check(declaration: FirClass)</ID>
     <ID>TooGenericExceptionCaught:CodeGenerator.kt$CodeGenerator$e: Exception</ID>
@@ -30,7 +31,7 @@
     <ID>TooManyFunctions:AnnotationExtractor.kt$AnnotationExtractor</ID>
     <ID>TooManyFunctions:FakeClassChecker.kt$FakeClassChecker : FirClassChecker</ID>
     <ID>TooManyFunctions:FakeInterfaceChecker.kt$FakeInterfaceChecker : FirClassChecker</ID>
-    <ID>TooManyFunctions:IrToFakeDeclarationTranslator.kt$com.rsicarelli.fakt.compiler.ir.analysis.IrToFakeDeclarationTranslator.kt</ID>
+    <ID>TooManyFunctions:FirTypeRenderer.kt$FirTypeRenderer</ID>
     <ID>TooManyFunctions:UnifiedFaktIrGenerationExtension.kt$UnifiedFaktIrGenerationExtension : IrGenerationExtension</ID>
   </CurrentIssues>
 </SmellBaseline>

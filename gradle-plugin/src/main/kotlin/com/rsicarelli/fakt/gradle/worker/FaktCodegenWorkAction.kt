@@ -189,7 +189,12 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
     private fun invokeK2(call: K2Invocation) {
         val bridge = K2CompilerBridge(javaClass.classLoader, call.driver)
         val args = bridge.newArgs()
-        populateCompilerArgs(bridge, args, call)
+        populateSourceArgs(bridge, args, call)
+        when (call.driver) {
+            CompilerDriver.JVM -> populateJvmOutputArgs(bridge, args, call)
+            CompilerDriver.METADATA -> populateMetadataOutputArgs(bridge, args, call)
+        }
+        populatePluginArgs(bridge, args, call)
 
         val collector = bridge.newPrintingMessageCollector(System.err)
         val exitCode =
@@ -200,15 +205,6 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         check(exitCodeName == EXIT_CODE_OK) {
             "Fakt analysis failed (${call.driver} exit=$exitCodeName). See messages above."
         }
-    }
-
-    private fun populateCompilerArgs(bridge: K2CompilerBridge, args: Any, call: K2Invocation) {
-        populateSourceArgs(bridge, args, call)
-        when (call.driver) {
-            CompilerDriver.JVM -> populateJvmOutputArgs(bridge, args, call)
-            CompilerDriver.METADATA -> populateMetadataOutputArgs(bridge, args, call)
-        }
-        populatePluginArgs(bridge, args, call)
     }
 
     private fun populateSourceArgs(bridge: K2CompilerBridge, args: Any, call: K2Invocation) {
