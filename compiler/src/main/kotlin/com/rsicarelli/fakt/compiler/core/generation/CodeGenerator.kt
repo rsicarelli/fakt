@@ -1,6 +1,6 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
-package com.rsicarelli.fakt.compiler.ir.generation
+package com.rsicarelli.fakt.compiler.core.generation
 
 import com.rsicarelli.fakt.codegen.FaktCodegen
 import com.rsicarelli.fakt.codegen.RenderedFakeFile

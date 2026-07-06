@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.ir.generation
 
+import com.rsicarelli.fakt.compiler.api.EmitPhase
 import com.rsicarelli.fakt.compiler.api.LogLevel
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.api.TimeFormatter
 import com.rsicarelli.fakt.compiler.core.context.FaktSharedContext
 import com.rsicarelli.fakt.compiler.core.context.ImportResolver
+import com.rsicarelli.fakt.compiler.core.generation.CodeGenerator
 import com.rsicarelli.fakt.compiler.core.optimization.buildSignature
 import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.core.telemetry.UnifiedFakeMetrics
@@ -163,6 +165,15 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
         // KMP optimization: Write cache in producer mode (metadata compilation)
         // This allows platform compilations to skip FIR analysis
         writeCacheIfProducer()
+
+        // FIR-phase emission (EmitPhase.FIR) already wrote every fake from FakeInterfaceChecker /
+        // FakeClassChecker as each declaration was analyzed (see FirFakeEmitter). Skip IR
+        // generation entirely here to avoid emitting the same fakes twice; the K2JVM driver still
+        // runs this IR extension, but only the FIR-hosted path is authoritative in that mode.
+        if (sharedContext.options.emitPhase == EmitPhase.FIR) {
+            logger.debug("EmitPhase.FIR active - skipping IR-phase fake generation")
+            return
+        }
 
         // Load validated interfaces from FIR phase
         val validatedInterfaces = sharedContext.metadataStorage.getAllInterfaces()

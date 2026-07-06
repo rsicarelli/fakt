@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.fir.checkers
 
+import com.rsicarelli.fakt.compiler.api.EmitPhase
 import com.rsicarelli.fakt.compiler.core.context.FaktSharedContext
 import com.rsicarelli.fakt.compiler.core.telemetry.measureTimeNanos
 import com.rsicarelli.fakt.compiler.fir.extraction.AnnotationExtractor
+import com.rsicarelli.fakt.compiler.fir.generation.FirFakeEmitter
 import com.rsicarelli.fakt.compiler.fir.metadata.FirCallHistoryMode
 import com.rsicarelli.fakt.compiler.fir.metadata.FirConstructorParamInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirFunctionInfo
@@ -64,6 +66,7 @@ internal class FakeClassChecker(private val sharedContext: FaktSharedContext) :
     FirClassChecker(MppCheckerKind.Common) {
     // Extract logger from shared context for performance tracking and debugging
     private val logger = sharedContext.logger
+    private val firFakeEmitter = FirFakeEmitter(sharedContext)
 
     companion object {
         // @Fake annotation ClassId
@@ -166,6 +169,13 @@ internal class FakeClassChecker(private val sharedContext: FaktSharedContext) :
         // Note: Don't log here - writeCache logs the summary on the final write
         if (sharedContext.cacheManager.isProducerMode) {
             sharedContext.cacheManager.writeCache(sharedContext.metadataStorage)
+        }
+
+        // FIR-phase emission (EmitPhase.FIR): the metadata driver has no IR phase, so the
+        // cache-correct worker emits the fake here instead of waiting for
+        // UnifiedFaktIrGenerationExtension. No-op for the default IR emit phase.
+        if (sharedContext.options.emitPhase == EmitPhase.FIR) {
+            firFakeEmitter.emit(metadataWithTiming)
         }
     }
 

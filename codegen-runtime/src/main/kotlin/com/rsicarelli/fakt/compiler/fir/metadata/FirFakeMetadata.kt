@@ -155,6 +155,28 @@ data class ValidatedFakeClass(
 )
 
 /**
+ * Resolves the `@Fake` annotation's call-history mode against the plugin-level default. ENABLED and
+ * DISABLED override [pluginDefault]; DEFAULT follows it.
+ */
+fun FirCallHistoryMode.resolveCallHistory(pluginDefault: Boolean): Boolean =
+    when (this) {
+        FirCallHistoryMode.ENABLED -> true
+        FirCallHistoryMode.DISABLED -> false
+        FirCallHistoryMode.DEFAULT -> pluginDefault
+    }
+
+/**
+ * Resolves the `@Fake` annotation's mutability mode against the plugin-level default. MUTABLE and
+ * IMMUTABLE override [pluginDefault]; DEFAULT follows it.
+ */
+fun FirMutabilityMode.resolveMutability(pluginDefault: Boolean): Boolean =
+    when (this) {
+        FirMutabilityMode.MUTABLE -> true
+        FirMutabilityMode.IMMUTABLE -> false
+        FirMutabilityMode.DEFAULT -> pluginDefault
+    }
+
+/**
  * Pre-rendered type side-channel captured at FIR analysis time.
  *
  * The live `ConeKotlinType` (and the session needed to expand typealiases) exists only while the

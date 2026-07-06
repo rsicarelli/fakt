@@ -3,13 +3,13 @@
 package com.rsicarelli.fakt.compiler.ir.transform
 
 import com.rsicarelli.fakt.compiler.core.types.TypeResolution
-import com.rsicarelli.fakt.compiler.fir.metadata.FirAnnotationArgument
 import com.rsicarelli.fakt.compiler.fir.metadata.FirAnnotationInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirFunctionInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.FirPropertyInfo
-import com.rsicarelli.fakt.compiler.fir.metadata.FirTypeParameterInfo
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeClass
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeInterface
+import com.rsicarelli.fakt.compiler.fir.rendering.formatTypeParameter
+import com.rsicarelli.fakt.compiler.fir.rendering.toDeclarationAnnotation
 import com.rsicarelli.fakt.compiler.ir.analysis.GenericPatternAnalyzer
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrFunction
@@ -381,83 +381,6 @@ internal class FirToIrTransformer(private val typeResolution: TypeResolution? = 
         )
     }
 
-    /**
-     * Format type parameter with bounds for code generation.
-     *
-     * Converts FIR type parameter metadata to Kotlin source syntax:
-     * - `T` with no bounds → `"T"`
-     * - `K` with bounds `["Comparable<K>"]` → `"K : Comparable<K>"`
-     * - `V` with bounds `["Comparable<V>", "Serializable"]` → `"V : Comparable<V>, Serializable"`
-     *
-     * **Bound Sanitization**: FIR's ConeType.toString() produces invalid Kotlin syntax (e.g.,
-     * `"kotlin/Any?"`). This method sanitizes bounds:
-     * 1. Replace forward slashes with dots: `kotlin/Any?` → `kotlin.Any?`
-     * 2. Remove kotlin stdlib prefixes: `kotlin.Any?` → `Any?`
-     *
-     * **Performance**:
-     * - O(b) where b = number of bounds (typically 0-2)
-     * - String sanitization: O(k) where k = bound string length (~10-50 chars)
-     * - Typical cost: < 10μs per type parameter
-     *
-     * @param firTypeParam FIR type parameter with bounds from FIR phase
-     * @return Formatted type parameter string ready for code generation
-     * @see sanitizeTypeBound for bound string sanitization logic
-     */
-    private fun formatTypeParameter(firTypeParam: FirTypeParameterInfo): String {
-        if (firTypeParam.bounds.isEmpty()) {
-            return firTypeParam.name
-        }
-        // Sanitize bounds: kotlin/Foo -> kotlin.Foo -> Foo (for kotlin.* types)
-        val sanitizedBounds = firTypeParam.bounds.map { bound -> sanitizeTypeBound(bound) }
-        return "${firTypeParam.name} : ${sanitizedBounds.joinToString(", ")}"
-    }
-
-    /**
-     * Sanitize type bound string from FIR phase to valid Kotlin syntax.
-     *
-     * **Problem**: FIR's ConeType.toString() produces paths with forward slashes (e.g.,
-     * `"kotlin/Any?"`, `"kotlin/Comparable<T>"`) which is invalid Kotlin syntax.
-     *
-     * **Solution**:
-     * 1. Replace forward slashes with dots: `kotlin/Any?` → `kotlin.Any?`
-     * 2. Remove kotlin stdlib prefixes for cleaner code:
-     *     - `kotlin.Any?` → `Any?`
-     *     - `kotlin.collections.List<T>` → `List<T>`
-     * 3. Preserve other package prefixes: `com/example/Foo` → `com.example.Foo`
-     *
-     * **Examples**:
-     * - `"kotlin/Any?"` → `"Any?"`
-     * - `"kotlin/Comparable<T>"` → `"Comparable<T>"`
-     * - `"kotlin/collections/List<T>"` → `"List<T>"`
-     * - `"com/example/CustomType"` → `"com.example.CustomType"`
-     *
-     * **Why Remove kotlin.* Prefix**: Kotlin stdlib types are imported by default and don't need
-     * qualification. This produces cleaner generated code matching typical Kotlin style.
-     *
-     * **Performance**:
-     * - String replacement: O(n) where n = bound string length (~10-50 chars)
-     * - Prefix removal: O(1) string operations
-     * - Typical cost: < 5μs per bound
-     *
-     * @param bound Raw bound string from FIR (may contain slashes)
-     * @return Sanitized bound string with proper Kotlin syntax
-     */
-    private fun sanitizeTypeBound(bound: String): String {
-        // Step 1: Replace forward slashes with dots for package notation
-        val dotted = bound.replace('/', '.')
-
-        // Step 2: Remove kotlin. prefix for stdlib types (cleaner generated code)
-        // Match kotlin.Foo or kotlin.collections.Foo but preserve the rest
-        return when {
-            // kotlin.collections.Foo -> Foo
-            dotted.startsWith("kotlin.collections.") -> dotted.removePrefix("kotlin.collections.")
-            // kotlin.Foo -> Foo
-            dotted.startsWith("kotlin.") -> dotted.removePrefix("kotlin.")
-            // Other packages remain unchanged
-            else -> dotted
-        }
-    }
-
     // ========================================================================
     // Annotation Transformation
     // ========================================================================
@@ -465,146 +388,19 @@ internal class FirToIrTransformer(private val typeResolution: TypeResolution? = 
     /**
      * Transform FIR annotations to IR-ready annotation metadata.
      *
-     * Converts FirAnnotationInfo (with structured argument data) to IrAnnotationMetadata (with
-     * pre-rendered argument strings ready for code generation).
-     *
-     * **Examples**:
-     * - `@OptIn(ExperimentalApi::class)` → IrAnnotationMetadata( simpleName = "OptIn",
-     *   fullyQualifiedName = "kotlin.OptIn", renderedArguments = ["ExperimentalApi::class"] )
-     *
-     * @param annotations FIR annotations from validated metadata
-     * @return List of IR-ready annotation metadata
+     * Argument rendering is delegated to the shared FIR annotation renderer
+     * ([toDeclarationAnnotation]) so the FIR- and IR-phase emitters cannot drift.
      */
     private fun transformAnnotations(
         annotations: List<FirAnnotationInfo>
     ): List<IrAnnotationMetadata> =
         annotations.map { annotation ->
-            val classIdParts = annotation.annotationClassId.split("/")
-            val simpleName = classIdParts.last().substringAfterLast('.')
-            val fullyQualifiedName = annotation.annotationClassId.replace('/', '.')
-
+            val rendered = annotation.toDeclarationAnnotation()
             IrAnnotationMetadata(
-                simpleName = simpleName,
-                fullyQualifiedName = fullyQualifiedName,
-                renderedArguments = renderAnnotationArguments(annotation.arguments),
-                isOptInMarker = annotation.isOptInMarker,
+                simpleName = rendered.simpleName,
+                fullyQualifiedName = rendered.fullyQualifiedName,
+                renderedArguments = rendered.renderedArguments,
+                isOptInMarker = rendered.isOptInMarker,
             )
         }
-
-    /**
-     * Render annotation arguments to Kotlin source code strings.
-     *
-     * Converts each named argument to a rendered string:
-     * - Positional args (single unnamed): just the value
-     * - Named args: "name = value"
-     * - Vararg arrays: expanded to separate elements (no brackets)
-     *
-     * **Rendering Rules**:
-     * - Strings: "\"value\"" (with escaping)
-     * - Numbers: "42", "3.14"
-     * - Booleans: "true", "false"
-     * - Chars: "'x'"
-     * - Class references: "Foo::class"
-     * - Enums: "EnumClass.ENTRY"
-     * - Named arrays: "[elem1, elem2]" (bracket syntax)
-     * - Vararg arrays: elem1, elem2 (expanded as separate arguments)
-     * - Nested annotations: "@Nested(...)"
-     *
-     * @param arguments Map of argument names to their values
-     * @return List of rendered argument strings
-     */
-    private fun renderAnnotationArguments(
-        arguments: Map<String, FirAnnotationArgument>
-    ): List<String> =
-        arguments.flatMap { (name, value) ->
-            // Check if this is a vararg-like array that should be expanded
-            // Vararg arrays contain only class references or only string literals
-            // Used for annotations like @OptIn, @Suppress, @Tags
-            val isVarargLikeArray =
-                value is FirAnnotationArgument.ArrayValue &&
-                    value.elements.isNotEmpty() &&
-                    (value.elements.all { it is FirAnnotationArgument.ClassReference } ||
-                        value.elements.all { it is FirAnnotationArgument.StringLiteral })
-
-            when {
-                // Vararg array: expand elements directly as separate arguments
-                isVarargLikeArray -> {
-                    val arrayValue = value as FirAnnotationArgument.ArrayValue
-                    arrayValue.elements.map { renderArgumentValue(it) }
-                }
-                // Single argument named "value": skip the name
-                arguments.size == 1 && name == "value" -> {
-                    listOf(renderArgumentValue(value))
-                }
-                // Single class reference (common vararg pattern): skip the name
-                arguments.size == 1 && value is FirAnnotationArgument.ClassReference -> {
-                    listOf(renderArgumentValue(value))
-                }
-                // Named argument: include the name
-                else -> {
-                    listOf("$name = ${renderArgumentValue(value)}")
-                }
-            }
-        }
-
-    /** Render a single annotation argument value to Kotlin source code. */
-    private fun renderArgumentValue(value: FirAnnotationArgument): String =
-        when (value) {
-            is FirAnnotationArgument.ClassReference -> {
-                val simpleName = value.classId.substringAfterLast('/').substringAfterLast('.')
-                "$simpleName::class"
-            }
-
-            is FirAnnotationArgument.StringLiteral -> {
-                "\"${escapeString(value.value)}\""
-            }
-
-            is FirAnnotationArgument.NumberLiteral -> value.value
-
-            is FirAnnotationArgument.BooleanLiteral -> value.value.toString()
-
-            is FirAnnotationArgument.CharLiteral -> "'${value.value}'"
-
-            is FirAnnotationArgument.EnumValue -> {
-                // For nested enums like LogLevel.Level, we need the full path after the package
-                // enumClassId: "com/rsicarelli/.../LogLevel.Level" -> use "LogLevel.Level"
-                val enumClassPath = value.enumClassId.substringAfterLast('/')
-                "$enumClassPath.${value.entryName}"
-            }
-
-            is FirAnnotationArgument.ArrayValue -> {
-                // Note: Vararg-like arrays are handled by renderAnnotationArguments()
-                // and expanded into separate arguments. This branch handles:
-                // 1. Empty arrays: emptyArray()
-                // 2. Named array parameters: [elem1, elem2] (bracket syntax)
-                if (value.elements.isEmpty()) {
-                    "emptyArray()"
-                } else {
-                    val elementsStr = value.elements.joinToString(", ") { renderArgumentValue(it) }
-                    "[$elementsStr]"
-                }
-            }
-
-            is FirAnnotationArgument.NestedAnnotation -> {
-                val nested = value.annotation
-                val simpleName =
-                    nested.annotationClassId.substringAfterLast('/').substringAfterLast('.')
-                val argsStr =
-                    if (nested.arguments.isEmpty()) {
-                        ""
-                    } else {
-                        "(${renderAnnotationArguments(nested.arguments).joinToString(", ")})"
-                    }
-                "@$simpleName$argsStr"
-            }
-        }
-
-    /** Escape special characters in string literals for code generation. */
-    private fun escapeString(value: String): String =
-        value
-            .replace("\\", "\\\\")
-            .replace("\"", "\\\"")
-            .replace("\n", "\\n")
-            .replace("\t", "\\t")
-            .replace("\r", "\\r")
 }

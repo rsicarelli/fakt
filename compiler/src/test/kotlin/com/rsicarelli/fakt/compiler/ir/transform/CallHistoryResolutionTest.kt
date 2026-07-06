@@ -3,7 +3,7 @@
 package com.rsicarelli.fakt.compiler.ir.transform
 
 import com.rsicarelli.fakt.compiler.fir.metadata.FirCallHistoryMode
-import com.rsicarelli.fakt.compiler.ir.analysis.resolveCallHistory
+import com.rsicarelli.fakt.compiler.fir.metadata.resolveCallHistory
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
