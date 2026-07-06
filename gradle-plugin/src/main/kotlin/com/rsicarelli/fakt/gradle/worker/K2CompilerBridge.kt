@@ -60,8 +60,8 @@ internal object FaktPluginOptions {
     /**
      * Builds the `-P` plugin-option payload forwarded to Fakt's `:compiler` plugin. Kept as a pure
      * function (no reflection, no compiler types) so the worker-vs-legacy option parity — including
-     * the [ENABLE_CALL_HISTORY] / [ENABLE_MUTABLE_FAKES] extension defaults dropped before issue
-     * #112 — is unit-testable without spinning up the forked worker.
+     * the [ENABLE_CALL_HISTORY] / [ENABLE_MUTABLE_FAKES] extension defaults dropped before
+     * issue #112 — is unit-testable without spinning up the forked worker.
      */
     fun payload(
         logLevel: String,

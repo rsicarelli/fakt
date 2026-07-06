@@ -10,11 +10,11 @@ import org.junit.jupiter.api.TestInstance
 /**
  * Pure unit coverage for the worker's `-P` plugin-option payload ([FaktPluginOptions.payload]).
  *
- * Guards the issue #112 fix: the cache-correct worker path must forward the
- * `enableCallHistory` / `enableMutableFakes` extension defaults alongside the original four options,
- * so it can't silently fall back to the compiler's own defaults the way it did before. This runs
- * without the forked worker or `kotlin-compiler-embeddable`, so a regression in the forwarded keys
- * or values fails fast instead of only surfacing in the slower TestKit suite.
+ * Guards the issue #112 fix: the cache-correct worker path must forward the `enableCallHistory` /
+ * `enableMutableFakes` extension defaults alongside the original four options, so it can't silently
+ * fall back to the compiler's own defaults the way it did before. This runs without the forked
+ * worker or `kotlin-compiler-embeddable`, so a regression in the forwarded keys or values fails
+ * fast instead of only surfacing in the slower TestKit suite.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FaktPluginOptionsTest {

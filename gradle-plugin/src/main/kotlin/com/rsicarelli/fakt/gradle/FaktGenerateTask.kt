@@ -136,10 +136,10 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
     @get:Input @get:Optional public abstract val enableCallHistory: Property<Boolean>
 
     /**
-     * Extension-level default for mutable-fake generation (`fakt { enableMutableFakes }`). Forwarded
-     * to the compiler plugin so the worker path produces the same fakes as the legacy in-process
-     * path. `@Input` so a change to the default invalidates cached outputs; `@Optional` because the
-     * compiler falls back to its own default (`false`) when the option is absent.
+     * Extension-level default for mutable-fake generation (`fakt { enableMutableFakes }`).
+     * Forwarded to the compiler plugin so the worker path produces the same fakes as the legacy
+     * in-process path. `@Input` so a change to the default invalidates cached outputs; `@Optional`
+     * because the compiler falls back to its own default (`false`) when the option is absent.
      */
     @get:Input @get:Optional public abstract val enableMutableFakes: Property<Boolean>
 
