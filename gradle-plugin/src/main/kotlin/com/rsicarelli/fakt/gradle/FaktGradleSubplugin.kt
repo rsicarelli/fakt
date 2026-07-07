@@ -218,7 +218,10 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
      *
      * If the option is enabled but the plugin is missing, emits a warning and returns `false`.
      */
-    private fun resolveTestFixturesMode(project: Project, extension: FaktPluginExtension): Boolean {
+    internal fun resolveTestFixturesMode(
+        project: Project,
+        extension: FaktPluginExtension,
+    ): Boolean {
         if (!extension.useGradleTestFixtures.get()) return false
 
         val hasTestFixturesPlugin = project.plugins.hasPlugin("java-test-fixtures")
