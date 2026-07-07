@@ -1,0 +1,1635 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Compile-time type-safe test fakes for Kotlin Multiplatform">
+      
+      
+        <meta name="author" content="Rodrigo Sicarelli">
+      
+      
+        <link rel="canonical" href="https://rsicarelli.github.io/fakt/1.0.0-beta08/user-guide/testing-patterns.html">
+      
+      
+        <link rel="prev" href="immutable-vs-mutable.html">
+      
+      
+        <link rel="next" href="migration-from-mocks.html">
+      
+      
+      <link rel="icon" href="../assets/logo.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.16">
+    
+    
+      
+        <title>Testing Patterns - Fakt</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.7e37652d.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/fakt-brand.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#testing-patterns" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../index.html" title="Fakt" class="md-header__button md-logo" aria-label="Fakt" data-md-component="logo">
+      
+  <img src="../assets/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Fakt
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Testing Patterns
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/rsicarelli/fakt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Fakt
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="Fakt" class="md-nav__button md-logo" aria-label="Fakt" data-md-component="logo">
+      
+  <img src="../assets/logo.png" alt="logo">
+
+    </a>
+    Fakt
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/rsicarelli/fakt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Fakt
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../why-fakt.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Why Fakt?
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Get Started
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Get Started
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../get-started/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Installation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../get-started/features.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Features
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="plugin-configuration.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Plugin Configuration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    User Guide
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            User Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Usage
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="multi-module.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Multi-Module
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="test-fixtures.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Test Fixtures (JVM)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="immutable-vs-mutable.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Immutable vs Mutable
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Testing Patterns
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="testing-patterns.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Testing Patterns
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#isolated-fakes-per-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      Isolated Fakes Per Test
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configure-only-what-you-need" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configure Only What You Need
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verify-behavior-not-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verify Behavior, Not Implementation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-edge-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      Test Edge Cases
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verification Patterns
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Verification Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-call-history-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basic Call History Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scoped-verification-dsl" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scoped Verification DSL
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#call-order-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Call Order Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verifying-no-calls" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verifying No Calls
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mid-test-reconfiguration-mutable-fakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mid-Test Reconfiguration (Mutable Fakes)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mid-Test Reconfiguration (Mutable Fakes)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#simulating-failure-after-success" class="md-nav__link">
+    <span class="md-ellipsis">
+      Simulating Failure After Success
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#property-state-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Property State Changes
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mutable-fakes-with-call-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mutable Fakes with Call History
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#anti-patterns-to-avoid" class="md-nav__link">
+    <span class="md-ellipsis">
+      Anti-Patterns to Avoid
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Anti-Patterns to Avoid">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#shared-fakes-across-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      ❌ Shared Fakes Across Tests
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#over-configuring-fakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      ❌ Over-Configuring Fakes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      Next Steps
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="migration-from-mocks.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Migration from Mocks
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="performance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Performance & Optimization
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="generated-code-reference.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Generated Code Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="platform-support.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Platform Support
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="known-issues.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Known Issues
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Samples
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compatibility.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Kotlin Compatibility
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Help
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            Help
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/faq.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FAQ
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help/troubleshooting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#isolated-fakes-per-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      Isolated Fakes Per Test
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configure-only-what-you-need" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configure Only What You Need
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verify-behavior-not-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verify Behavior, Not Implementation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-edge-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      Test Edge Cases
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verification Patterns
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Verification Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-call-history-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basic Call History Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scoped-verification-dsl" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scoped Verification DSL
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#call-order-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Call Order Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verifying-no-calls" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verifying No Calls
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mid-test-reconfiguration-mutable-fakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mid-Test Reconfiguration (Mutable Fakes)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mid-Test Reconfiguration (Mutable Fakes)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#simulating-failure-after-success" class="md-nav__link">
+    <span class="md-ellipsis">
+      Simulating Failure After Success
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#property-state-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Property State Changes
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mutable-fakes-with-call-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mutable Fakes with Call History
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#anti-patterns-to-avoid" class="md-nav__link">
+    <span class="md-ellipsis">
+      Anti-Patterns to Avoid
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Anti-Patterns to Avoid">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#shared-fakes-across-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      ❌ Shared Fakes Across Tests
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#over-configuring-fakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      ❌ Over-Configuring Fakes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      Next Steps
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="testing-patterns">Testing Patterns<a class="headerlink" href="#testing-patterns" title="Permanent link">&para;</a></h1>
+<p>Best practices for using Fakt-generated fakes in your test suites.</p>
+<hr />
+<h2 id="isolated-fakes-per-test">Isolated Fakes Per Test<a class="headerlink" href="#isolated-fakes-per-test" title="Permanent link">&para;</a></h2>
+<p>Create fresh fakes for each test to avoid shared state:</p>
+<p><code>``kotlin
+class UserServiceTest {
+    @Test
+    fun</code>test case 1`() {<br />
+        val fake = fakeRepository {  // Fresh fake<br />
+            getUser { id -&gt; User(id, &ldquo;Alice&rdquo;) }<br />
+        }<br />
+        // Test with Alice<br />
+    }</p>
+<div class="codehilite"><pre><span></span><code>@Test
+fun `test case 2`() {
+    val fake = fakeRepository {  // Fresh fake
+        getUser { id -&gt; User(id, &quot;Bob&quot;) }
+    }
+    // Test with Bob
+}
+</code></pre></div>
+
+<p>}<br />
+```</p>
+<p><strong>Why this matters:</strong><br />
+- Prevents test pollution (one test affecting another)<br />
+- Makes tests order-independent<br />
+- Easier to understand test setup</p>
+<hr />
+<h2 id="configure-only-what-you-need">Configure Only What You Need<a class="headerlink" href="#configure-only-what-you-need" title="Permanent link">&para;</a></h2>
+<p>Don&rsquo;t configure methods you don&rsquo;t use in the test:</p>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN repository WHEN getting user THEN returns user`() {<br />
+    val fake = fakeRepository {<br />
+        getUser { id -&gt; User(id, &ldquo;Alice&rdquo;) }<br />
+        // Don&rsquo;t configure saveUser, deleteUser, etc. if not used<br />
+    }</p>
+<div class="codehilite"><pre><span></span><code>val user = fake.getUser(&quot;123&quot;)
+assertEquals(&quot;Alice&quot;, user.name)
+</code></pre></div>
+
+<p>}<br />
+```</p>
+<p><strong>Benefits:</strong><br />
+- Tests are easier to read (only relevant setup visible)<br />
+- Reduces noise in test code<br />
+- Smart defaults handle unconfigured methods</p>
+<hr />
+<h2 id="verify-behavior-not-implementation">Verify Behavior, Not Implementation<a class="headerlink" href="#verify-behavior-not-implementation" title="Permanent link">&para;</a></h2>
+<p>Use call history to verify interactions:</p>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN service WHEN processing user THEN calls repository once`() {<br />
+    val fakeRepo = fakeRepository()<br />
+    val service = UserService(fakeRepo)</p>
+<div class="codehilite"><pre><span></span><code>service.processUser(&quot;123&quot;)
+
+assertEquals(1, fakeRepo.getUserCalls.value.size)
+assertEquals(1, fakeRepo.saveUserCalls.value.size)
+</code></pre></div>
+
+<p>}<br />
+```</p>
+<p><strong>State-based verification example:</strong></p>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN repository WHEN saving users THEN all users are saved`() {<br />
+    val savedUsers = mutableListOf<User>()<br />
+    val fake = fakeRepository {<br />
+        saveUser { user -&gt;<br />
+            savedUsers.add(user)<br />
+            Result.success(Unit)<br />
+        }<br />
+    }</p>
+<div class="codehilite"><pre><span></span><code>val service = UserService(fake)
+service.batchSave(listOf(alice, bob))
+
+// Verify OUTCOME (state), not method calls
+assertEquals(2, savedUsers.size)
+assertTrue(savedUsers.contains(alice))
+assertTrue(savedUsers.contains(bob))
+</code></pre></div>
+
+<p>}<br />
+```</p>
+<hr />
+<h2 id="test-edge-cases">Test Edge Cases<a class="headerlink" href="#test-edge-cases" title="Permanent link">&para;</a></h2>
+<p>Configure fakes to test error handling:</p>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN repository failure WHEN saving user THEN handles error`() = runTest {<br />
+    val fake = fakeRepository {<br />
+        saveUser { user -&gt;<br />
+            Result.failure(NetworkException())<br />
+        }<br />
+    }<br />
+    val service = UserService(fake)</p>
+<div class="codehilite"><pre><span></span><code>val result = service.createUser(&quot;Alice&quot;)
+
+assertTrue(result.isFailure)
+</code></pre></div>
+
+<p>}<br />
+```</p>
+<hr />
+<h2 id="verification-patterns">Verification Patterns<a class="headerlink" href="#verification-patterns" title="Permanent link">&para;</a></h2>
+<p>Use the verification DSL to assert on call history:</p>
+<h3 id="basic-call-history-verification">Basic Call History Verification<a class="headerlink" href="#basic-call-history-verification" title="Permanent link">&para;</a></h3>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN repository WHEN saving users THEN tracks calls`() {<br />
+    val fake = fakeRepository {<br />
+        saveUser { user -&gt; Result.success(Unit) }<br />
+    }</p>
+<div class="codehilite"><pre><span></span><code>fake.saveUser(alice)
+fake.saveUser(bob)
+
+assertEquals(2, fake.saveUserCalls.value.size)
+</code></pre></div>
+
+<p>}<br />
+```</p>
+<h3 id="scoped-verification-dsl">Scoped Verification DSL<a class="headerlink" href="#scoped-verification-dsl" title="Permanent link">&para;</a></h3>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN repository WHEN saving users THEN verifies arguments`() {<br />
+    val fake = fakeRepository {<br />
+        saveUser { user -&gt; Result.success(Unit) }<br />
+    }</p>
+<div class="codehilite"><pre><span></span><code>fake.saveUser(alice)
+fake.saveUser(bob)
+
+fake.verifySaveUser {
+    assertTrue(wasCalledTimes(2))
+    assertTrue(wasCalledWith(alice))
+    assertTrue(wasCalledWith(bob))
+    assertEquals(&quot;Alice&quot;, first.user.name)
+}
+</code></pre></div>
+
+<p>}<br />
+```</p>
+<h3 id="call-order-verification">Call Order Verification<a class="headerlink" href="#call-order-verification" title="Permanent link">&para;</a></h3>
+<p>For single-parameter methods, verify call order:</p>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN analytics WHEN tracking events THEN verifies order`() {<br />
+    val fake = fakeAnalytics()</p>
+<div class="codehilite"><pre><span></span><code>fake.track(&quot;page_view&quot;)
+fake.track(&quot;button_click&quot;)
+fake.track(&quot;purchase&quot;)
+
+fake.verifyTrack {
+    assertTrue(wasCalledInOrder(&quot;page_view&quot;, &quot;button_click&quot;, &quot;purchase&quot;))
+    assertTrue(neverCalledWith(&quot;error&quot;))
+}
+</code></pre></div>
+
+<p>}<br />
+```</p>
+<h3 id="verifying-no-calls">Verifying No Calls<a class="headerlink" href="#verifying-no-calls" title="Permanent link">&para;</a></h3>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN cached data WHEN loading THEN does not call API`() {<br />
+    val fake = fakeApiClient()<br />
+    val service = CachedService(fake, preloadedCache)</p>
+<div class="codehilite"><pre><span></span><code>service.getData(&quot;key&quot;)
+
+fake.verifyFetchData {
+    assertTrue(wasNeverCalled())
+}
+// Or simply:
+assertEquals(0, fake.fetchDataCalls.value.size)
+</code></pre></div>
+
+<p>}<br />
+```</p>
+<hr />
+<h2 id="mid-test-reconfiguration-mutable-fakes">Mid-Test Reconfiguration (Mutable Fakes)<a class="headerlink" href="#mid-test-reconfiguration-mutable-fakes" title="Permanent link">&para;</a></h2>
+<p>For integration tests where a fake needs to simulate state changes during a single test, use <a href="immutable-vs-mutable.html">mutable fakes</a>:</p>
+<h3 id="simulating-failure-after-success">Simulating Failure After Success<a class="headerlink" href="#simulating-failure-after-success" title="Permanent link">&para;</a></h3>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN repository succeeds WHEN database goes down THEN service handles failure`() {<br />
+    val fake = fakeMutableRepository {<br />
+        delete { true }<br />
+    }</p>
+<div class="codehilite"><pre><span></span><code>// Phase 1: Operations succeed
+assertTrue(fake.delete(&quot;item-1&quot;))
+
+// Phase 2: Simulate database failure
+fake.modify {
+    delete { throw IllegalStateException(&quot;Database unavailable&quot;) }
+}
+
+assertFailsWith&lt;IllegalStateException&gt; {
+    fake.delete(&quot;item-2&quot;)
+}
+</code></pre></div>
+
+<p>}<br />
+```</p>
+<h3 id="property-state-changes">Property State Changes<a class="headerlink" href="#property-state-changes" title="Permanent link">&para;</a></h3>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN service initializing WHEN ready THEN status updates`() {<br />
+    val fake = fakeMutableRepository {<br />
+        status { &ldquo;initializing&rdquo; }<br />
+    }<br />
+    assertEquals(&ldquo;initializing&rdquo;, fake.status)</p>
+<div class="codehilite"><pre><span></span><code>fake.modify {
+    status { &quot;ready&quot; }
+}
+assertEquals(&quot;ready&quot;, fake.status)
+</code></pre></div>
+
+<p>}<br />
+```</p>
+<h3 id="mutable-fakes-with-call-history">Mutable Fakes with Call History<a class="headerlink" href="#mutable-fakes-with-call-history" title="Permanent link">&para;</a></h3>
+<p>Call history accumulates across reconfigurations — it is never reset:</p>
+<p><code>``kotlin
+@Test
+fun</code>GIVEN mutable tracked fake WHEN reconfigured THEN call history persists`() {<br />
+    val fake = fakeMutableTrackedRepository {<br />
+        find { listOf(User(&ldquo;1&rdquo;, &ldquo;Test&rdquo;)) }<br />
+    }</p>
+<div class="codehilite"><pre><span></span><code>fake.find(&quot;query1&quot;)
+fake.find(&quot;query2&quot;)
+assertEquals(2, fake.findCalls.value.size)
+
+fake.modify {
+    find { emptyList() }
+}
+
+assertEquals(emptyList(), fake.find(&quot;query3&quot;))
+assertEquals(3, fake.findCalls.value.size)  // Accumulated
+</code></pre></div>
+
+<p>}<br />
+```</p>
+<div class="admonition warning">
+<p class="admonition-title">Prefer Immutable Fakes for Unit Tests</p>
+<p>Mutable fakes are designed for integration tests where the same injected instance must simulate different states. For unit tests, create separate immutable fake instances per scenario — this is safer and easier to reason about.</p>
+</div>
+<hr />
+<h2 id="anti-patterns-to-avoid">Anti-Patterns to Avoid<a class="headerlink" href="#anti-patterns-to-avoid" title="Permanent link">&para;</a></h2>
+<h3 id="shared-fakes-across-tests">❌ Shared Fakes Across Tests<a class="headerlink" href="#shared-fakes-across-tests" title="Permanent link">&para;</a></h3>
+<p>```kotlin<br />
+// ❌ BAD: Shared fake<br />
+class UserServiceTest {<br />
+    private val sharedFake = fakeRepository()  // State leaks between tests</p>
+<div class="codehilite"><pre><span></span><code>@Test
+fun test1() { /* uses sharedFake */ }
+
+@Test
+fun test2() { /* uses same sharedFake - FLAKY! */ }
+</code></pre></div>
+
+<p>}<br />
+```</p>
+<p>```kotlin<br />
+// ✅ GOOD: Fresh fake per test<br />
+class UserServiceTest {<br />
+    @Test<br />
+    fun test1() {<br />
+        val fake = fakeRepository()  // Isolated<br />
+    }</p>
+<div class="codehilite"><pre><span></span><code>@Test
+fun test2() {
+    val fake = fakeRepository()  // Independent
+}
+</code></pre></div>
+
+<p>}<br />
+```</p>
+<h3 id="over-configuring-fakes">❌ Over-Configuring Fakes<a class="headerlink" href="#over-configuring-fakes" title="Permanent link">&para;</a></h3>
+<p><code>``kotlin
+// ❌ BAD: Configuring unused methods
+@Test
+fun</code>test getUser only`() {<br />
+    val fake = fakeRepository {<br />
+        getUser { id -&gt; User(id, &ldquo;Alice&rdquo;) }<br />
+        saveUser { /* not used in this test <em>/ }<br />
+        deleteUser { /</em> not used in this test <em>/ }<br />
+        listUsers { /</em> not used in this test */ }<br />
+    }</p>
+<div class="codehilite"><pre><span></span><code>val user = fake.getUser(&quot;123&quot;)  // Only this is tested
+</code></pre></div>
+
+<p>}<br />
+```</p>
+<p><code>``kotlin
+// ✅ GOOD: Configure only what's needed
+@Test
+fun</code>test getUser only`() {<br />
+    val fake = fakeRepository {<br />
+        getUser { id -&gt; User(id, &ldquo;Alice&rdquo;) }<br />
+        // Smart defaults handle the rest<br />
+    }</p>
+<div class="codehilite"><pre><span></span><code>val user = fake.getUser(&quot;123&quot;)
+</code></pre></div>
+
+<p>}<br />
+```</p>
+<hr />
+<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong><a href="migration-from-mocks.html">Migration Guide</a></strong> - From MockK/Mockito to Fakt</li>
+<li><strong><a href="performance.html">Performance</a></strong> - Build time impact and optimization</li>
+<li><strong><a href="usage.html">Usage Guide</a></strong> - Core patterns and examples</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2025 Rodrigo Sicarelli
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy", "content.code.select", "search.suggest", "search.highlight", "content.tabs.link"], "search": "../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.50899def.min.js"></script>
+      
+    
+  </body>
+</html>
