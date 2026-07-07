@@ -52,6 +52,7 @@ internal object FullPluginCompilationHarness {
         emitPhase: EmitPhase,
         outputDir: File,
         enableCallHistory: Boolean = true,
+        commonTestOutputDir: File = outputDir,
     ): Outcome {
         val context =
             SourceSetContext(
@@ -62,7 +63,7 @@ internal object FullPluginCompilationHarness {
                 defaultSourceSet = SourceSetInfo(name = "main", parents = emptyList()),
                 allSourceSets = listOf(SourceSetInfo(name = "main", parents = emptyList())),
                 outputDirectory = outputDir.absolutePath,
-                commonTestOutputDirectory = outputDir.absolutePath,
+                commonTestOutputDirectory = commonTestOutputDir.absolutePath,
                 emitPhase = emitPhase,
             )
         val contextBase64 =
