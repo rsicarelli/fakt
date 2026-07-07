@@ -567,6 +567,23 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
             val fakeClassName = "Fake${interfaceName}Impl"
             val outputFile = packageDir.resolve("$fakeClassName.kt")
 
+            // #79 blocker 2: flipping the flag on over a warm legacy build leaves stale
+            // per-platform copies of common fakes on disk. This runs from the legacy
+            // in-process platform main compile (after the producer, before the platform
+            // test compile) and removes any stale copy of a fake the producer now owns in
+            // commonTest, so the platform test compile does not see it twice. No-op for the
+            // producer itself and for platform-specific fakes (absent from commonTest).
+            val prunedStale =
+                StaleFakeCleaner.pruneStaleCommonDuplicate(
+                    platformTestDir = java.io.File(sourceSetContext.outputDirectory),
+                    commonTestDir = java.io.File(sourceSetContext.commonTestOutputDirectory),
+                    packagePath = packagePath,
+                    fakeFileName = "$fakeClassName.kt",
+                )
+            if (prunedStale != null) {
+                logger.info("Fakt: removed stale legacy fake copy $prunedStale")
+            }
+
             // KMP deduplication: If sourceSourceSet is unknown, also check commonTest
             // This handles platform compilations that see commonMain interfaces via KLIB
             // where the source file path is not available
@@ -707,6 +724,23 @@ class UnifiedFaktIrGenerationExtension(private val sharedContext: FaktSharedCont
             val packageDir = java.io.File(actualOutputDir).resolve(packagePath)
             val fakeClassName = "Fake${className}Impl"
             val outputFile = packageDir.resolve("$fakeClassName.kt")
+
+            // #79 blocker 2: flipping the flag on over a warm legacy build leaves stale
+            // per-platform copies of common fakes on disk. This runs from the legacy
+            // in-process platform main compile (after the producer, before the platform
+            // test compile) and removes any stale copy of a fake the producer now owns in
+            // commonTest, so the platform test compile does not see it twice. No-op for the
+            // producer itself and for platform-specific fakes (absent from commonTest).
+            val prunedStale =
+                StaleFakeCleaner.pruneStaleCommonDuplicate(
+                    platformTestDir = java.io.File(sourceSetContext.outputDirectory),
+                    commonTestDir = java.io.File(sourceSetContext.commonTestOutputDirectory),
+                    packagePath = packagePath,
+                    fakeFileName = "$fakeClassName.kt",
+                )
+            if (prunedStale != null) {
+                logger.info("Fakt: removed stale legacy fake copy $prunedStale")
+            }
 
             // KMP deduplication: If sourceSourceSet is unknown, also check commonTest
             // This handles platform compilations that see commonMain classes via KLIB
