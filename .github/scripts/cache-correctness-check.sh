@@ -7,7 +7,8 @@
 # test compilation with empty/missing fakes. The `FaktGenerateTask` producer makes those files real,
 # cacheable task outputs. This script proves it stays that way:
 #
-#   1. warm the build cache for the producer tasks,
+#   1. warm the build cache by force-executing the producer tasks (`--rerun-tasks`), so they run and
+#      store their outputs even if a prior local build left them UP-TO-DATE,
 #   2. `clean` (which deletes the generated fakes), then
 #   3. rebuild the producer tasks from cache and assert every producer is restored FROM-CACHE
 #      (never re-executed — a re-execution means an unstable, non-relocatable cache key) and that the
@@ -43,11 +44,30 @@ count_fakes() {
   find "$PROJECT_PATH" -path '*build/generated*' -name 'Fake*.kt' 2>/dev/null | wc -l | tr -d ' '
 }
 
-echo "::group::Warm cache — ${PROJECT_PATH}: ${PRODUCER_TASKS[*]}"
-"${GRADLE[@]}" "${PRODUCER_TASKS[@]}"
+# Force execution so the producers actually run and populate the build cache. Without --rerun-tasks a
+# prior local build can leave them UP-TO-DATE (samples that set org.gradle.caching=false never seed
+# the cache): the warm run would then store nothing, and the rebuild below would cache-miss and be
+# misreported as an unstable cache key. See issue #79 P8 gap 4.
+WARM_GRADLE=("${GRADLE[@]}" --rerun-tasks)
+
+echo "::group::Warm cache (force-execute to seed) — ${PROJECT_PATH}: ${PRODUCER_TASKS[*]}"
+warm_log="$(mktemp)"
+"${WARM_GRADLE[@]}" "${PRODUCER_TASKS[@]}" | tee "$warm_log"
 echo "::endgroup::"
+
+# The warm run must actually EXECUTE the producers (only an executed @CacheableTask is stored). If it
+# did not, the cache was never seeded, so the FROM-CACHE assertion below cannot be evaluated — report
+# that as a harness/setup problem, distinct from an unstable cache key.
+warm_total=$(grep -cE '^> Task .*faktGenerate' "$warm_log" || true)
+warm_cached=$(grep -cE '^> Task .*faktGenerate.* (UP-TO-DATE|FROM-CACHE)' "$warm_log" || true)
+warm_executed=$((warm_total - warm_cached))
+if [ "$warm_executed" -le 0 ]; then
+  echo "::error::Warm-up did not execute any faktGenerate producer (all UP-TO-DATE/FROM-CACHE despite --rerun-tasks) — the build cache was not seeded, so the FROM-CACHE contract cannot be evaluated. This is a harness/setup problem, not a cache-key regression."
+  exit 1
+fi
+
 warm_count=$(count_fakes)
-echo "Warm-up generated ${warm_count} fake file(s)."
+echo "Warm-up executed ${warm_executed} producer(s), generated ${warm_count} fake file(s)."
 if [ "$warm_count" -eq 0 ]; then
   echo "::error::No fakes were generated during warm-up — the producer task generated nothing."
   exit 1
