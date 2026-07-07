@@ -69,7 +69,8 @@ internal object FaktGenerateTaskWiring {
 
         // applyToCompilation fires before afterEvaluate, so the configurations may not exist yet
         // by the time we land here. Idempotent helper makes the call safe to repeat.
-        getSubpluginInstance(project).ensureFaktConfigurations(project)
+        val subplugin = getSubpluginInstance(project)
+        subplugin.ensureFaktConfigurations(project)
 
         // A KMP `commonMain` producer writes to the canonical `commonTest` directory so the
         // in-process plugin riding a non-drivable platform compilation (Native/JS/Wasm) finds the
@@ -128,7 +129,10 @@ internal object FaktGenerateTaskWiring {
                 task.scratchDir.set(scratchDir)
             }
 
-        wireTestSrcDir(project, kotlinCompilation, taskProvider)
+        // Resolved once: honours `useGradleTestFixtures` AND the `java-test-fixtures` plugin being
+        // applied (warns and falls back to `test` otherwise), matching the legacy path's semantics.
+        val useTestFixtures = subplugin.resolveTestFixturesMode(project, extension)
+        wireTestSrcDir(project, kotlinCompilation, taskProvider, useTestFixtures)
         wireKmpDependsOnCommonMain(project, kotlinCompilation, taskProvider)
     }
 
@@ -163,6 +167,7 @@ internal object FaktGenerateTaskWiring {
         project: Project,
         kotlinCompilation: KotlinCompilation<*>,
         taskProvider: TaskProvider<FaktGenerateTask>,
+        useTestFixtures: Boolean,
     ) {
         val testSourceSetName = mapMainToTest(kotlinCompilation.defaultSourceSet.name)
         val kmp = project.extensions.findByType(KotlinMultiplatformExtension::class.java)
@@ -170,8 +175,12 @@ internal object FaktGenerateTaskWiring {
         if (kmp != null) {
             kmp.sourceSets.findByName(testSourceSetName)?.kotlin?.srcDir(generatedDirProvider)
         } else {
+            // A non-KMP target may register several producers (one per Android variant). Each feeds
+            // only the compile tasks belonging to its own variant, and — under test-fixtures mode —
+            // only the `testFixtures` compilation. See [shouldWireGeneratedDir].
+            val compilationName = kotlinCompilation.name
             project.tasks.withType(AbstractKotlinCompile::class.java).configureEach { compileTask ->
-                if (compileTask.name.lowercase().contains("test")) {
+                if (shouldWireGeneratedDir(compileTask.name, compilationName, useTestFixtures)) {
                     compileTask.source(generatedDirProvider)
                 }
             }
@@ -208,6 +217,11 @@ internal object FaktGenerateTaskWiring {
             kotlinCompilation.target.platformType.name.equals("common", ignoreCase = true)
 
     private fun encodePlaceholderContext(kotlinCompilation: KotlinCompilation<*>): String {
+        // `useTestFixtures` is intentionally left at its default here. In `buildContext` it only
+        // affects `outputDirectory`, which the `.copy` below replaces with a placeholder and the
+        // worker later overwrites with the task's real `generatedKotlinDir`. It changes nothing
+        // else in the context, so test-fixtures routing is decided purely by which compile task
+        // sources the generated dir (see `wireTestSrcDir`), never by this serialized JSON.
         val context =
             SourceSetDiscovery.buildContext(
                     kotlinCompilation,
@@ -227,6 +241,41 @@ internal object FaktGenerateTaskWiring {
 
 private fun taskNameFor(targetName: String, compilationName: String): String =
     "faktGenerate" + capitalizeAscii(targetName) + capitalizeAscii(compilationName)
+
+/**
+ * Decides whether a non-KMP producer's generated-fakes directory should be sourced by a given
+ * Kotlin compile task.
+ *
+ * A single Android target registers one producer per build variant (`debug`, `release`, …), each
+ * writing the same fakes to its own directory. Feeding every producer into every `*Test` compile
+ * task duplicates those top-level declarations and breaks overload resolution, so the match is
+ * scoped to the producer's own variant. Test-fixtures mode narrows further: fakes belong to the
+ * `testFixtures` compilation only (the `test` compilation reuses them through its implicit
+ * `testFixtures` dependency).
+ *
+ * @param compileTaskName candidate `AbstractKotlinCompile` task name.
+ * @param producingCompilationName compilation that registered the producer (`main`, `debug`, …).
+ * @param useTestFixtures whether `useGradleTestFixtures` resolved to active.
+ */
+internal fun shouldWireGeneratedDir(
+    compileTaskName: String,
+    producingCompilationName: String,
+    useTestFixtures: Boolean,
+): Boolean {
+    val name = compileTaskName.lowercase()
+    val isTestFixtures = name.contains("testfixtures")
+    // `main` (single-platform JVM) has no variant, so it feeds every test compile as before;
+    // an Android variant (`debug`/`release`/…) feeds only the compile tasks carrying its name
+    // (`compileDebugUnitTestKotlin`, `compileDebugAndroidTestKotlin`, …).
+    val variantMatches =
+        producingCompilationName.equals("main", ignoreCase = true) ||
+            name.contains(producingCompilationName.lowercase())
+    return if (useTestFixtures) {
+        isTestFixtures && variantMatches
+    } else {
+        name.contains("test") && !isTestFixtures && variantMatches
+    }
+}
 
 private fun mapMainToTest(sourceSetName: String): String =
     when {
