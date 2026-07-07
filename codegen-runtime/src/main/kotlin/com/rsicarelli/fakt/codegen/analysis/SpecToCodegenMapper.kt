@@ -68,7 +68,7 @@ internal fun DeclarationAnnotation.toAnnotationSpec(): AnnotationSpec =
         isOptInMarker = isOptInMarker,
     )
 
-/** @return Pair of (methods, properties) ready for `generateCompleteFake()`. */
+/** Maps interface members onto the renderer specs consumed by `generateCompleteFake()`. */
 internal fun FakeDeclaration.Interface.toCodegenSpecs():
     Pair<List<RenderableMethodSpec>, List<RenderablePropertySpec>> {
     val methodSpecs = functions.map { it.toRenderableMethodSpec() }

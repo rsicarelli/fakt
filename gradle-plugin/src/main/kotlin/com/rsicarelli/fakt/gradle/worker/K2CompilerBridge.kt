@@ -14,6 +14,9 @@ internal object K2Fqns {
     const val K2_JVM_COMPILER = "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler"
     const val K2_JVM_COMPILER_ARGUMENTS =
         "org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments"
+    const val KOTLIN_METADATA_COMPILER = "org.jetbrains.kotlin.cli.metadata.KotlinMetadataCompiler"
+    const val K2_METADATA_COMPILER_ARGUMENTS =
+        "org.jetbrains.kotlin.cli.common.arguments.K2MetadataCompilerArguments"
     const val COMMON_COMPILER_ARGUMENTS =
         "org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments"
     const val MESSAGE_COLLECTOR = "org.jetbrains.kotlin.cli.common.messages.MessageCollector"
@@ -21,6 +24,23 @@ internal object K2Fqns {
         "org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector"
     const val MESSAGE_RENDERER = "org.jetbrains.kotlin.cli.common.messages.MessageRenderer"
     const val SERVICES = "org.jetbrains.kotlin.config.Services"
+}
+
+/**
+ * The two compiler front doors the worker can drive, both shipped in `kotlin-compiler-embeddable`
+ * and invoked through the identical `CLICompiler.exec(MessageCollector, Services,
+ * CommonCompilerArguments)` surface.
+ * - [JVM] — platform driver for JVM/Android classpaths (`.class`/jar dependencies). Runs the full
+ *   FIR → fir2ir → backend pipeline.
+ * - [METADATA] — the common (frontend-only) driver used for `commonMain` producers: FIR resolve +
+ *   checkers → metadata-klib serialization. **No fir2ir and no IR actualizer**, which is what makes
+ *   unpaired `expect` declarations structurally incapable of failing the run
+ *   (`NO_ACTUAL_FOR_EXPECT` is an actualizer diagnostic). Dependencies must be **metadata klibs**;
+ *   JVM jars on its classpath are ignored.
+ */
+internal enum class CompilerDriver(val compilerFqn: String, val argumentsFqn: String) {
+    JVM(K2Fqns.K2_JVM_COMPILER, K2Fqns.K2_JVM_COMPILER_ARGUMENTS),
+    METADATA(K2Fqns.KOTLIN_METADATA_COMPILER, K2Fqns.K2_METADATA_COMPILER_ARGUMENTS),
 }
 
 /**
@@ -34,6 +54,30 @@ internal object FaktPluginOptions {
     const val LOG_LEVEL = "${PREFIX}logLevel"
     const val OUTPUT_DIR = "${PREFIX}outputDir"
     const val SOURCE_SET_CONTEXT = "${PREFIX}sourceSetContext"
+    const val ENABLE_CALL_HISTORY = "${PREFIX}enableCallHistory"
+    const val ENABLE_MUTABLE_FAKES = "${PREFIX}enableMutableFakes"
+
+    /**
+     * Builds the `-P` plugin-option payload forwarded to Fakt's `:compiler` plugin. Kept as a pure
+     * function (no reflection, no compiler types) so the worker-vs-legacy option parity — including
+     * the [ENABLE_CALL_HISTORY] / [ENABLE_MUTABLE_FAKES] extension defaults dropped before
+     * issue #112 — is unit-testable without spinning up the forked worker.
+     */
+    fun payload(
+        logLevel: String,
+        outputDir: String,
+        sourceSetContextBase64: String,
+        enableCallHistory: Boolean,
+        enableMutableFakes: Boolean,
+    ): List<String> =
+        listOf(
+            "$ENABLED=true",
+            "$LOG_LEVEL=$logLevel",
+            "$OUTPUT_DIR=$outputDir",
+            "$SOURCE_SET_CONTEXT=$sourceSetContextBase64",
+            "$ENABLE_CALL_HISTORY=$enableCallHistory",
+            "$ENABLE_MUTABLE_FAKES=$enableMutableFakes",
+        )
 }
 
 /**
@@ -43,9 +87,12 @@ internal object FaktPluginOptions {
  * surrounding [FaktCodegenWorkAction] class file references no embeddable symbols — Gradle's class
  * inspector walks worker-action signatures during decoration and would choke otherwise.
  */
-internal class K2CompilerBridge(private val cl: ClassLoader) {
-    private val compilerClass by lazy { load(K2Fqns.K2_JVM_COMPILER) }
-    private val argumentsClass by lazy { load(K2Fqns.K2_JVM_COMPILER_ARGUMENTS) }
+internal class K2CompilerBridge(
+    private val cl: ClassLoader,
+    private val driver: CompilerDriver = CompilerDriver.JVM,
+) {
+    private val compilerClass by lazy { load(driver.compilerFqn) }
+    private val argumentsClass by lazy { load(driver.argumentsFqn) }
     private val commonArgumentsClass by lazy { load(K2Fqns.COMMON_COMPILER_ARGUMENTS) }
     private val messageCollectorClass by lazy { load(K2Fqns.MESSAGE_COLLECTOR) }
     private val printingMessageCollectorClass by lazy { load(K2Fqns.PRINTING_MESSAGE_COLLECTOR) }

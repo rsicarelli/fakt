@@ -13,8 +13,7 @@ import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
 
 /**
  * Registers a `FaktGenerateTask` for a single Kotlin compilation and wires its `@OutputDirectory`
- * into the matching test source set. Extracted from [FaktGradleSubplugin] so the entry-point class
- * stays under detekt's per-class function-count threshold.
+ * into the matching test source set.
  *
  * Cross-classloader contract: every method here is plain Gradle API + the Fakt
  * [com.rsicarelli.fakt.compiler.api.SourceSetContext] data class. Nothing in
@@ -29,13 +28,36 @@ internal object FaktGenerateTaskWiring {
     private const val BUILD_DIR_PLACEHOLDER: String = "<task-output>"
 
     /**
-     * Registers a `FaktGenerateTask` for [kotlinCompilation], wires its output into the matching
-     * test source set, and sets up the KMP cross-target `dependsOn` chain.
+     * Registers a producer `FaktGenerateTask`: it analyses the whole compilation
+     * ([KotlinCompilation.allKotlinSourceSets], so a KMP `commonMain` producer also sees its
+     * ancestors) and, for `commonMain`, owns the common fakes the rest of the build reuses.
      */
-    fun register(
+    fun registerProducer(
         project: Project,
         kotlinCompilation: KotlinCompilation<*>,
         extension: FaktPluginExtension,
+    ) = register(project, kotlinCompilation, extension, partitionToOwnSourceSet = false)
+
+    /**
+     * Registers a consumer `FaktGenerateTask` for a drivable platform main (`jvmMain` /
+     * `androidMain`). It emits fakes ONLY for the compilation's own source set
+     * ([KotlinCompilation.defaultSourceSet]); ancestor sources (commonMain and intermediates) ride
+     * along as `analysisOnlySources` so the frontend can pair `actual` declarations with their
+     * `expect`s and resolve common types in platform `@Fake` signatures — their own fakes stay
+     * owned by the common producer (`SourceSetContext.emitSourceSets` restricts emission), so
+     * nothing is emitted twice and the task stays fully cache-correct.
+     */
+    fun registerConsumer(
+        project: Project,
+        kotlinCompilation: KotlinCompilation<*>,
+        extension: FaktPluginExtension,
+    ) = register(project, kotlinCompilation, extension, partitionToOwnSourceSet = true)
+
+    private fun register(
+        project: Project,
+        kotlinCompilation: KotlinCompilation<*>,
+        extension: FaktPluginExtension,
+        partitionToOwnSourceSet: Boolean,
     ) {
         val targetName =
             kotlinCompilation.target.targetName.ifBlank {
@@ -47,10 +69,22 @@ internal object FaktGenerateTaskWiring {
 
         // applyToCompilation fires before afterEvaluate, so the configurations may not exist yet
         // by the time we land here. Idempotent helper makes the call safe to repeat.
-        getSubpluginInstance(project).ensureFaktConfigurations(project)
+        val subplugin = getSubpluginInstance(project)
+        subplugin.ensureFaktConfigurations(project)
 
-        val outputDir =
-            project.layout.buildDirectory.dir("generated/fakt/$targetName/$compilationName/kotlin")
+        // A KMP `commonMain` producer writes to the canonical `commonTest` directory so the
+        // in-process plugin riding a non-drivable platform compilation (Native/JS/Wasm) finds the
+        // common fakes there and dedup-skips them, generating only its own platform-specific fakes
+        // —
+        // no `Redeclaration` in shared test sets. Every other compilation keeps a per-compilation
+        // directory.
+        val generatedKotlinPath =
+            if (kotlinCompilation.defaultSourceSet.name == "commonMain") {
+                "generated/fakt/commonTest/kotlin"
+            } else {
+                "generated/fakt/$targetName/$compilationName/kotlin"
+            }
+        val outputDir = project.layout.buildDirectory.dir(generatedKotlinPath)
         val scratchDir =
             project.layout.buildDirectory.dir("faktCaches/$targetName/$compilationName")
         val firMetadataFile =
@@ -61,28 +95,67 @@ internal object FaktGenerateTaskWiring {
         val workerClasspath = project.configurations.named(FaktGradleSubplugin.WORKER_CONFIGURATION)
         val compilerClasspath =
             project.configurations.named(FaktGradleSubplugin.COMPILER_CLASSPATH_CONFIGURATION)
+        val sourceSets =
+            if (partitionToOwnSourceSet) listOf(kotlinCompilation.defaultSourceSet)
+            else kotlinCompilation.allKotlinSourceSets.toList()
 
         val taskProvider =
             project.tasks.register(taskName, FaktGenerateTask::class.java) { task ->
-                task.sources.from(
-                    kotlinCompilation.allKotlinSourceSets.map { sourceSet -> sourceSet.kotlin }
-                )
-                task.compileClasspath.from(kotlinCompilation.compileDependencyFiles)
+                task.sources.from(sourceSets.map { sourceSet -> sourceSet.kotlin })
+                if (partitionToOwnSourceSet) {
+                    val ancestors =
+                        kotlinCompilation.allKotlinSourceSets - kotlinCompilation.defaultSourceSet
+                    task.analysisOnlySources.from(ancestors.map { sourceSet -> sourceSet.kotlin })
+                }
+                // Common producers drive KotlinMetadataCompiler, which reads the compilation's own
+                // metadata-klib dependencies — routed through the @Classpath commonKlibClasspath
+                // input (content-hashed; @CompileClasspath can fingerprint klibs as empty). Every
+                // other compilation feeds its JVM dependencies to the K2JVM driver unchanged.
+                if (isMetadataLikeCompilation(kotlinCompilation)) {
+                    task.commonKlibClasspath.from(kotlinCompilation.compileDependencyFiles)
+                    task.firMetadataFile.set(firMetadataFile)
+                } else {
+                    task.compileClasspath.from(kotlinCompilation.compileDependencyFiles)
+                }
                 task.faktWorkerClasspath.from(workerClasspath)
                 task.faktCompilerClasspath.from(compilerClasspath)
                 task.sourceSetContextJson.set(placeholderJson)
                 task.faktVersion.set(FaktGradleSubplugin.PLUGIN_VERSION)
                 task.logLevel.set(extension.logLevel)
+                task.enableCallHistory.set(extension.enableCallHistory)
+                task.enableMutableFakes.set(extension.enableMutableFakes)
                 task.imports.set(emptyList())
                 task.generatedKotlinDir.set(outputDir)
                 task.scratchDir.set(scratchDir)
-                if (isMetadataLikeCompilation(kotlinCompilation)) {
-                    task.firMetadataFile.set(firMetadataFile)
-                }
             }
 
-        wireTestSrcDir(project, kotlinCompilation, taskProvider)
+        // Resolved once: honours `useGradleTestFixtures` AND the `java-test-fixtures` plugin being
+        // applied (warns and falls back to `test` otherwise), matching the legacy path's semantics.
+        val useTestFixtures = subplugin.resolveTestFixturesMode(project, extension)
+        wireTestSrcDir(project, kotlinCompilation, taskProvider, useTestFixtures)
         wireKmpDependsOnCommonMain(project, kotlinCompilation, taskProvider)
+    }
+
+    /**
+     * Sequences a non-drivable platform compilation (Native/JS/Wasm) after the common producer so
+     * the producer's common fakes exist on disk before the in-process plugin's file-existence dedup
+     * runs on the platform main compile — otherwise it would regenerate them and collide. The test
+     * compile already waits for the producer transitively through the `commonTest` srcDir's
+     * `builtBy`, so only the main compile is wired here. Safe under Gradle 9 Project Isolation (no
+     * `afterEvaluate`, no task-graph reads); the producer lookup runs lazily inside
+     * `configureEach`.
+     */
+    fun wireLegacyHybridOrdering(project: Project, kotlinCompilation: KotlinCompilation<*>) {
+        if (project.extensions.findByType(KotlinMultiplatformExtension::class.java) == null) return
+        val mainCompileTask = kotlinCompilation.compileKotlinTaskName
+        project.tasks
+            .matching { it.name == mainCompileTask }
+            .configureEach { compileTask ->
+                val commonTask =
+                    project.tasks.findByName("faktGenerateMetadataCommonMain")
+                        ?: project.tasks.findByName("faktGenerateCommonMain")
+                if (commonTask != null) compileTask.dependsOn(commonTask)
+            }
     }
 
     /**
@@ -94,6 +167,7 @@ internal object FaktGenerateTaskWiring {
         project: Project,
         kotlinCompilation: KotlinCompilation<*>,
         taskProvider: TaskProvider<FaktGenerateTask>,
+        useTestFixtures: Boolean,
     ) {
         val testSourceSetName = mapMainToTest(kotlinCompilation.defaultSourceSet.name)
         val kmp = project.extensions.findByType(KotlinMultiplatformExtension::class.java)
@@ -101,8 +175,12 @@ internal object FaktGenerateTaskWiring {
         if (kmp != null) {
             kmp.sourceSets.findByName(testSourceSetName)?.kotlin?.srcDir(generatedDirProvider)
         } else {
+            // A non-KMP target may register several producers (one per Android variant). Each feeds
+            // only the compile tasks belonging to its own variant, and — under test-fixtures mode —
+            // only the `testFixtures` compilation. See [shouldWireGeneratedDir].
+            val compilationName = kotlinCompilation.name
             project.tasks.withType(AbstractKotlinCompile::class.java).configureEach { compileTask ->
-                if (compileTask.name.lowercase().contains("test")) {
+                if (shouldWireGeneratedDir(compileTask.name, compilationName, useTestFixtures)) {
                     compileTask.source(generatedDirProvider)
                 }
             }
@@ -139,6 +217,11 @@ internal object FaktGenerateTaskWiring {
             kotlinCompilation.target.platformType.name.equals("common", ignoreCase = true)
 
     private fun encodePlaceholderContext(kotlinCompilation: KotlinCompilation<*>): String {
+        // `useTestFixtures` is intentionally left at its default here. In `buildContext` it only
+        // affects `outputDirectory`, which the `.copy` below replaces with a placeholder and the
+        // worker later overwrites with the task's real `generatedKotlinDir`. It changes nothing
+        // else in the context, so test-fixtures routing is decided purely by which compile task
+        // sources the generated dir (see `wireTestSrcDir`), never by this serialized JSON.
         val context =
             SourceSetDiscovery.buildContext(
                     kotlinCompilation,
@@ -154,18 +237,53 @@ internal object FaktGenerateTaskWiring {
         val json = Json { prettyPrint = false }
         return json.encodeToString(SourceSetContext.serializer(), context)
     }
-
-    private fun taskNameFor(targetName: String, compilationName: String): String =
-        "faktGenerate" + capitalizeAscii(targetName) + capitalizeAscii(compilationName)
-
-    private fun mapMainToTest(sourceSetName: String): String =
-        when {
-            sourceSetName.equals("main", ignoreCase = true) -> "test"
-            sourceSetName.endsWith("Main", ignoreCase = true) ->
-                sourceSetName.removeSuffix("Main") + "Test"
-            else -> sourceSetName + "Test"
-        }
-
-    private fun capitalizeAscii(s: String): String =
-        if (s.isEmpty()) s else s.substring(0, 1).uppercase(Locale.ROOT) + s.substring(1)
 }
+
+private fun taskNameFor(targetName: String, compilationName: String): String =
+    "faktGenerate" + capitalizeAscii(targetName) + capitalizeAscii(compilationName)
+
+/**
+ * Decides whether a non-KMP producer's generated-fakes directory should be sourced by a given
+ * Kotlin compile task.
+ *
+ * A single Android target registers one producer per build variant (`debug`, `release`, …), each
+ * writing the same fakes to its own directory. Feeding every producer into every `*Test` compile
+ * task duplicates those top-level declarations and breaks overload resolution, so the match is
+ * scoped to the producer's own variant. Test-fixtures mode narrows further: fakes belong to the
+ * `testFixtures` compilation only (the `test` compilation reuses them through its implicit
+ * `testFixtures` dependency).
+ *
+ * @param compileTaskName candidate `AbstractKotlinCompile` task name.
+ * @param producingCompilationName compilation that registered the producer (`main`, `debug`, …).
+ * @param useTestFixtures whether `useGradleTestFixtures` resolved to active.
+ */
+internal fun shouldWireGeneratedDir(
+    compileTaskName: String,
+    producingCompilationName: String,
+    useTestFixtures: Boolean,
+): Boolean {
+    val name = compileTaskName.lowercase()
+    val isTestFixtures = name.contains("testfixtures")
+    // `main` (single-platform JVM) has no variant, so it feeds every test compile as before;
+    // an Android variant (`debug`/`release`/…) feeds only the compile tasks carrying its name
+    // (`compileDebugUnitTestKotlin`, `compileDebugAndroidTestKotlin`, …).
+    val variantMatches =
+        producingCompilationName.equals("main", ignoreCase = true) ||
+            name.contains(producingCompilationName.lowercase())
+    return if (useTestFixtures) {
+        isTestFixtures && variantMatches
+    } else {
+        name.contains("test") && !isTestFixtures && variantMatches
+    }
+}
+
+private fun mapMainToTest(sourceSetName: String): String =
+    when {
+        sourceSetName.equals("main", ignoreCase = true) -> "test"
+        sourceSetName.endsWith("Main", ignoreCase = true) ->
+            sourceSetName.removeSuffix("Main") + "Test"
+        else -> sourceSetName + "Test"
+    }
+
+private fun capitalizeAscii(s: String): String =
+    if (s.isEmpty()) s else s.substring(0, 1).uppercase(Locale.ROOT) + s.substring(1)

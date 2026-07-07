@@ -195,6 +195,19 @@ constructor(objects: ObjectFactory, private val project: Project) {
      * `compileKotlin*`, the generated `.kt` files come back too because they're declared task
      * outputs rather than side-effect writes.
      *
+     * When enabled, the in-process compiler-plugin registration is disabled and a
+     * `FaktGenerateTask` is registered per compilation, with its output wired into the matching
+     * test source set.
+     *
+     * **KMP support matrix (under the flag):**
+     * - `commonMain` `@Fake` — generated and cache-correct (common producer task driving
+     *   `KotlinMetadataCompiler`; no JVM/Android target required — KMP projects targeting only
+     *   Native/JS/Wasm are covered too).
+     * - JVM / Android platform `@Fake` — generated and cache-correct (per-platform consumer task).
+     * - JS / Wasm platform `@Fake` — generated (via the in-process plugin); not cache-correct yet.
+     * - Native platform `@Fake` — generated (via the in-process plugin); not cache-correct
+     *   (`K2NativeCompiler` is not on the embeddable classpath, so it cannot be driven in a task).
+     *
      * **Default:** `false` (the existing in-process compiler-plugin path runs unchanged).
      *
      * **Usage (build script):**
@@ -212,11 +225,12 @@ constructor(objects: ObjectFactory, private val project: Project) {
      * gradle build -Pfakt.useExperimentalGenerateTask=true
      * ```
      *
-     * Setting the value in the extension wins over the property if both are present.
+     * The Gradle property wins over the extension when both are set, so
+     * `-Pfakt.useExperimentalGenerateTask=false` always lets you opt out.
      *
-     * Marked experimental during the rollout (PRs #97 → #100). The default flips in PR 5; this
-     * property becomes the explicit opt-out for one minor before the legacy in-process path is
-     * removed.
+     * Experimental while the task-based path stabilizes. The cache-correct path is intended to
+     * become the default, with this property remaining as an explicit opt-out until the legacy
+     * in-process path is removed.
      */
     public val useExperimentalGenerateTask: Property<Boolean> =
         objects.property(Boolean::class.java).convention(false)

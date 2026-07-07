@@ -28,50 +28,78 @@ import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
 
+/** Heap ceiling for the forked codegen worker JVM. Generous enough for K2 over a large module. */
+private const val WORKER_MAX_HEAP: String = "1g"
+
+/** Metaspace ceiling for the forked worker JVM — `kotlin-compiler-embeddable` is class-heavy. */
+private const val WORKER_METASPACE_ARG: String = "-XX:MaxMetaspaceSize=512m"
+
 /**
  * Generates Fakt's `Fake<X>Impl.kt` files into a declared `@OutputDirectory` from outside
  * `compileKotlin*`. Solves issue #79: when Gradle's build cache restores `compileKotlin*`, the
  * generated `.kt` files come back too because they're now real task outputs rather than side-effect
  * writes.
  *
- * The task hosts `kotlin-compiler-embeddable` in an isolated [WorkerExecutor.classLoaderIsolation]
- * worker so the daemon doesn't carry the compiler classpath and so static state inside the FIR
- * pipeline can't leak across invocations. The reference architecture is KSP2's `KspAATask`
- * (research artifact 1, §"KSP2 / `KspAATask`").
+ * The task hosts `kotlin-compiler-embeddable` in an isolated [WorkerExecutor.processIsolation]
+ * worker so the daemon doesn't carry the compiler classpath, so static state inside the FIR
+ * pipeline can't leak across invocations, and so the compiler's metaspace footprint stays in a
+ * forked JVM that many concurrent producer tasks don't share. The reference architecture is KSP2's
+ * `KspAATask`.
  *
- * Caching contract:
- * - Sources: [sources] is `@PathSensitive(RELATIVE)` — Kotlin file paths encode package, so
- *   relative is required for cross-machine cache hits (research artifact 2, §2).
- * - Classpaths use `@Classpath` / `@CompileClasspath` so ABI changes invalidate but trivial
- *   manifest edits don't.
- * - Outputs are split: [generatedKotlinDir] holds the `.kt` files (downstream `compileKotlin*`
- *   consumes via `kotlin.srcDir(taskProvider)` from PR 3 onward); [firMetadataFile] is the
- *   producer-mode KMP metadata cache, declared as a single `@OutputFile` rather than a directory so
- *   it can't overlap with platform-task outputs (research artifact 2, §6).
- * - [scratchDir] is `@LocalState` so a build-cache restore wipes it instead of replaying stale
- *   contents (KSP issue #2042 lesson).
- *
- * Wiring this task into `compileKotlin*` is deliberately deferred to PR 3; this PR just defines the
- * task and exercises it through Gradle TestKit.
+ * Caching semantics (path sensitivity, classpath normalization, output split, local state) are
+ * documented on each annotated property. For KMP, the task runs in producer mode (writes
+ * [firMetadataFile]) or consumer mode (reads [commonFirMetadata]) — see those properties.
  */
 @CacheableTask
 public abstract class FaktGenerateTask @Inject constructor(private val workers: WorkerExecutor) :
     DefaultTask() {
 
-    /** Kotlin source files (or directories) that may carry `@Fake`-annotated declarations. */
+    /**
+     * Kotlin source files (or directories) that may carry `@Fake`-annotated declarations.
+     *
+     * `@PathSensitive(RELATIVE)` because Kotlin file paths encode the package; relative sensitivity
+     * keeps cache keys stable across machines and checkout locations.
+     */
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:SkipWhenEmpty
     @get:IgnoreEmptyDirectories
     public abstract val sources: ConfigurableFileCollection
 
-    /** Compile classpath the FIR + IR pipeline analyses against. */
+    /**
+     * Compile classpath the FIR + IR pipeline analyses against. `@CompileClasspath` normalization
+     * means ABI changes in dependencies invalidate cached fakes while implementation-only changes
+     * don't.
+     */
     @get:CompileClasspath public abstract val compileClasspath: ConfigurableFileCollection
 
     /**
+     * Ancestor sources (commonMain and intermediate source sets) fed to a source-partitioned
+     * consumer for **analysis only**: they let the K2JVM frontend pair `actual` declarations with
+     * their `expect`s (via `-Xcommon-sources`) and resolve common types referenced from platform
+     * `@Fake` signatures. Their own `@Fake` declarations never emit here — the common producer owns
+     * those (`SourceSetContext.emitSourceSets` restricts the FIR emitter). Empty for producers.
+     */
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:IgnoreEmptyDirectories
+    public abstract val analysisOnlySources: ConfigurableFileCollection
+
+    /**
+     * Metadata-klib dependencies for common (`commonMain`) producers — the compilation's own
+     * `compileDependencyFiles` (stdlib and library klibs the `KotlinMetadataCompiler` driver
+     * reads).
+     *
+     * Deliberately `@Classpath`, not `@CompileClasspath`: the compile-classpath normalizer
+     * fingerprints `.class` entries and can treat a klib archive (which has none) as effectively
+     * empty, so klib content changes would never invalidate the producer. `@Classpath` hashes the
+     * actual content, closing that missed-invalidation hole. Empty for non-common compilations.
+     */
+    @get:Classpath public abstract val commonKlibClasspath: ConfigurableFileCollection
+
+    /**
      * Classpath for the Fakt worker — `kotlin-compiler-embeddable` (the `K2JVMCompiler` driver).
-     * Held isolated from the Gradle daemon to avoid clashes with KGP's bundled compiler (research
-     * artifact 1, R2).
+     * Held isolated from the Gradle daemon to avoid clashes with KGP's bundled compiler.
      */
     @get:Classpath public abstract val faktWorkerClasspath: ConfigurableFileCollection
 
@@ -97,15 +125,31 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
      */
     @get:Input public abstract val faktVersion: Property<String>
 
-    /** Worker log verbosity. */
     @get:Input public abstract val logLevel: Property<LogLevel>
+
+    /**
+     * Extension-level default for call-history generation (`fakt { enableCallHistory }`). Forwarded
+     * to the compiler plugin so the worker path produces the same fakes as the legacy in-process
+     * path. `@Input` so a change to the default invalidates cached outputs; `@Optional` because the
+     * compiler falls back to its own default (`true`) when the option is absent.
+     */
+    @get:Input @get:Optional public abstract val enableCallHistory: Property<Boolean>
+
+    /**
+     * Extension-level default for mutable-fake generation (`fakt { enableMutableFakes }`).
+     * Forwarded to the compiler plugin so the worker path produces the same fakes as the legacy
+     * in-process path. `@Input` so a change to the default invalidates cached outputs; `@Optional`
+     * because the compiler falls back to its own default (`false`) when the option is absent.
+     */
+    @get:Input @get:Optional public abstract val enableMutableFakes: Property<Boolean>
 
     /** Imports forced into every generated file (e.g. user-extension imports). */
     @get:Input public abstract val imports: ListProperty<String>
 
     /**
-     * KMP consumer-mode input: serialized `FirMetadataCache` produced by an upstream `commonMain`
-     * task. Wired in PR 3 once per-target tasks are registered.
+     * KMP consumer-mode input: serialized `FirMetadataCache` produced by the metadata compilation's
+     * [firMetadataFile]. Its presence is what switches the worker to consumer mode — common `@Fake`
+     * declarations are read from the cache instead of being re-validated.
      *
      * `PathSensitivity.NONE` because only the file's contents matter — its absolute path on the
      * producer host is irrelevant for cache equality.
@@ -118,31 +162,51 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
     /**
      * Generated `Fake<X>Impl.kt` files. Convention is
      * `build/generated/fakt/<target>/<sourceSet>/kotlin` — disjoint from `compileKotlin*`'s outputs
-     * to avoid Gradle's overlapping-outputs rule (research artifact 2, §6).
+     * to avoid Gradle's overlapping-outputs rule.
      */
     @get:OutputDirectory public abstract val generatedKotlinDir: DirectoryProperty
 
     /**
      * KMP producer-mode output: serialized `FirMetadataCache` written when this task represents the
-     * metadata compilation. A single file (not a directory) so consumer tasks can read it via
-     * `@InputFile` without overlapping outputs.
+     * metadata (`commonMain`) compilation — [FaktGenerateTaskWiring] sets it for metadata-like
+     * compilations only. Platform tasks consume it through [commonFirMetadata]. A single file (not
+     * a directory) so consumers can declare it `@InputFile` without overlapping outputs.
      */
     @get:OutputFile @get:Optional public abstract val firMetadataFile: RegularFileProperty
 
-    /** Internal scratch state — cleared on cache restore (KSP #2042 lesson). */
+    /** Internal scratch state — cleared on cache restore instead of being replayed. */
     @get:LocalState public abstract val scratchDir: DirectoryProperty
 
     @TaskAction
     public fun generate() {
+        // Process isolation forks a pooled worker JVM that hosts `kotlin-compiler-embeddable` in
+        // its
+        // own metaspace, instead of loading the compiler into the Gradle daemon. On a multi-module
+        // KMP build many producer tasks run concurrently; under classloader isolation their
+        // parallel
+        // K2 invocations share the daemon's metaspace and exhaust it (`OutOfMemoryError:
+        // Metaspace`).
+        // The fork is reused across tasks with identical options, so the JVM-startup cost is paid
+        // once per pooled worker, not per task.
         val queue =
-            workers.classLoaderIsolation { spec -> spec.classpath.from(faktWorkerClasspath) }
+            workers.processIsolation { spec ->
+                spec.classpath.from(faktWorkerClasspath)
+                spec.forkOptions { options ->
+                    options.maxHeapSize = WORKER_MAX_HEAP
+                    options.jvmArgs(WORKER_METASPACE_ARG)
+                }
+            }
         queue.submit(FaktCodegenWorkAction::class.java) { params ->
             params.sources.from(sources)
+            params.analysisOnlySources.from(analysisOnlySources)
             params.compileClasspath.from(compileClasspath)
+            params.commonKlibClasspath.from(commonKlibClasspath)
             params.faktCompilerClasspath.from(faktCompilerClasspath)
             params.sourceSetContextJson.set(sourceSetContextJson)
             params.faktVersion.set(faktVersion)
             params.logLevel.set(logLevel)
+            params.enableCallHistory.set(enableCallHistory)
+            params.enableMutableFakes.set(enableMutableFakes)
             params.imports.set(imports)
             params.commonFirMetadata.set(commonFirMetadata)
             params.generatedKotlinDir.set(generatedKotlinDir)

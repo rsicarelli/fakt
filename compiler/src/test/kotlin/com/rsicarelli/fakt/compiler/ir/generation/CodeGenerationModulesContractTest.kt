@@ -6,6 +6,7 @@ import com.rsicarelli.fakt.codegen.generator.ConfigurationDslGenerator
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.api.SourceSetInfo
 import com.rsicarelli.fakt.compiler.core.context.ImportResolver
+import com.rsicarelli.fakt.compiler.core.generation.CodeGenerator
 import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
 import com.rsicarelli.fakt.compiler.core.types.TypeResolution
 import com.rsicarelli.fakt.compiler.core.types.createTypeResolution

@@ -10,8 +10,8 @@ import com.rsicarelli.fakt.codegen.analysis.ParameterSpec
 import com.rsicarelli.fakt.codegen.analysis.PropertySpec
 import com.rsicarelli.fakt.codegen.analysis.PureGenericPattern
 import com.rsicarelli.fakt.compiler.core.types.TypeResolution
-import com.rsicarelli.fakt.compiler.fir.metadata.FirCallHistoryMode
-import com.rsicarelli.fakt.compiler.fir.metadata.FirMutabilityMode
+import com.rsicarelli.fakt.compiler.fir.metadata.resolveCallHistory
+import com.rsicarelli.fakt.compiler.fir.metadata.resolveMutability
 import com.rsicarelli.fakt.compiler.ir.transform.IrAnnotationMetadata
 import com.rsicarelli.fakt.compiler.ir.transform.IrClassGenerationMetadata
 import com.rsicarelli.fakt.compiler.ir.transform.IrFunctionMetadata
@@ -172,28 +172,6 @@ private fun GenericPattern.toPureGenericPattern(): PureGenericPattern =
                 typeParameterNames = classTypeParameters.map { it.name.asString() },
                 methodNames = genericMethods.map { it.name },
             )
-    }
-
-/**
- * Resolves the `@Fake` annotation's call-history mode against the plugin-level default. ENABLED and
- * DISABLED override [pluginDefault]; DEFAULT follows it.
- */
-internal fun FirCallHistoryMode.resolveCallHistory(pluginDefault: Boolean): Boolean =
-    when (this) {
-        FirCallHistoryMode.ENABLED -> true
-        FirCallHistoryMode.DISABLED -> false
-        FirCallHistoryMode.DEFAULT -> pluginDefault
-    }
-
-/**
- * Resolves the `@Fake` annotation's mutability mode against the plugin-level default. MUTABLE and
- * IMMUTABLE override [pluginDefault]; DEFAULT follows it.
- */
-internal fun FirMutabilityMode.resolveMutability(pluginDefault: Boolean): Boolean =
-    when (this) {
-        FirMutabilityMode.MUTABLE -> true
-        FirMutabilityMode.IMMUTABLE -> false
-        FirMutabilityMode.DEFAULT -> pluginDefault
     }
 
 private fun collectFqns(

@@ -96,11 +96,7 @@ internal class IrTypeSemantics(private val typeRenderer: TypeRenderer) {
         return result
     }
 
-    /**
-     * Fills [into] with FQNs for [irType] and all nested type arguments.
-     *
-     * Split from [collectFqns] to honour detekt's [ReturnCount] threshold.
-     */
+    /** Fills [into] with FQNs for [irType] and all nested type arguments. */
     @OptIn(UnsafeDuringIrConstructionAPI::class)
     private fun collectFqnsInto(
         irType: IrType,

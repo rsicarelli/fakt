@@ -1,13 +1,23 @@
 # Fakt Compiler Plugin Architecture
 
 **Status**: Production Implementation
-**Last Updated**: March 2026
+**Last Updated**: July 2026
 
 ---
 
 ## Overview
 
 Fakt is a Kotlin compiler plugin that generates type-safe test fakes from `@Fake` annotated interfaces and classes. It follows a **two-phase FIR → IR compilation approach** with **string-based code generation using type-safe DSL builders**.
+
+The plugin has **two emission paths**, selected by `SourceSetContext.emitPhase`:
+
+- **IR emission (legacy default)** — the in-process plugin runs inside `compileKotlin*`; the FIR
+  phase validates and the IR phase generates.
+- **FIR emission (`fakt.useExperimentalGenerateTask=true`)** — a cacheable `FaktGenerateTask`
+  hosts the compiler in a Gradle Worker and the FIR checkers themselves emit the fakes
+  (byte-identical to IR emission, locked by `FirIrEmissionParityTest`). See
+  [metadata-producer-fir-emission.md](metadata-producer-fir-emission.md). Flipping the default
+  (backlog P8) and removing the legacy path (P9) are deferred follow-ups.
 
 ### Design Principles
 
@@ -61,25 +71,40 @@ FakeClassChecker.kt                # Class validation
 FirMetadataStorage.kt              # Thread-safe metadata storage
 ```
 
-### Phase 2: IR Phase
+### Phase 2: IR Phase (legacy emission path)
 
 **Location**: `compiler/src/main/kotlin/com/rsicarelli/fakt/compiler/ir/generation/`
 
 **Responsibilities**:
 - Read validated metadata from FIR phase
-- Transform FIR metadata to IR types
-- Generate Kotlin source code using type-safe DSL
+- Transform FIR metadata to IR types (rendered type strings)
+- Generate Kotlin source code using the type-safe DSL in `codegen-runtime`
 - Write `.kt` files to `build/generated/fakt/{sourceSet}/kotlin/`
+- Early-return when `emitPhase == FIR` (the FIR emitter already wrote the files)
 
 **Key Components**:
 ```kotlin
 UnifiedFaktIrGenerationExtension.kt  # Main IR generation entry point
-FirToIrTransformer.kt                # FIR → IR metadata transformation
-CodeGenerator.kt                     # Orchestrates code generation
-ImplementationGenerator.kt           # Generates fake implementations
-FactoryGenerator.kt                  # Generates factory functions
-ConfigurationDslGenerator.kt         # Generates configuration DSL
+ir/transform/FirToIrTransformer.kt   # FIR → IR metadata transformation
+ir/analysis/IrToFakeDeclarationTranslator.kt  # IR model → pure FakeDeclaration
+core/generation/CodeGenerator.kt     # Phase-neutral render-and-write orchestrator
 ```
+
+### FIR emission (worker path)
+
+**Location**: `compiler/src/main/kotlin/com/rsicarelli/fakt/compiler/fir/generation/`
+
+When `emitPhase == FIR`, the checkers emit right after validation — no IR involvement:
+
+```kotlin
+fir/types/FirTypeRenderer.kt              # ConeKotlinType → RenderedType (byte parity with the IR renderer)
+fir/rendering/                            # Annotation/expression/type-parameter renderers (shared by both phases)
+fir/generation/FirToFakeDeclarationTranslator.kt  # FIR model → pure FakeDeclaration
+fir/generation/FirFakeEmitter.kt          # Collision policy + delegate to CodeGenerator
+```
+
+This is what makes the `KotlinMetadataCompiler` driver possible: the metadata pipeline has no IR
+phase at all.
 
 ---
 
@@ -98,7 +123,12 @@ Fakt generates Kotlin source code using a **type-safe DSL builder pattern**, NOT
 
 ### Code Generation Modules
 
-**Location**: `compiler/src/main/kotlin/com/rsicarelli/fakt/codegen/`
+**Location**: `codegen-runtime/src/main/kotlin/com/rsicarelli/fakt/codegen/` — a separate,
+compiler-independent module. The `codegen` renderer packages have **zero `org.jetbrains.kotlin`
+imports**: they consume the pure string-based `FakeDeclaration` contract, which is what allows the
+same renderer to serve both the FIR and IR emission phases. (`codegen-runtime` also hosts the
+shared FIR metadata models and the `fir-metadata.json` serializer under
+`com/rsicarelli/fakt/compiler/fir/`.)
 
 ```
 codegen/
@@ -333,6 +363,35 @@ String-based code generation with a type-safe DSL was chosen over pure IR node m
 
 ---
 
+## Cache-Correct Generation: `FaktGenerateTask` (issue #79)
+
+**Guard**: `fakt.useExperimentalGenerateTask` (default `false`).
+
+The legacy in-process path writes generated `.kt` files as a *side effect* of `compileKotlin*`, so
+a warm Gradle build cache restores the compilation without them. The cache-correct path makes the
+files real task outputs:
+
+- **`FaktGenerateTask`** (`gradle-plugin`) — a `@CacheableTask` per producer/consumer compilation;
+  its `@OutputDirectory` holds the generated fakes, wired into the matching test source set.
+- **Worker** (`FaktCodegenWorkAction` + `K2CompilerBridge`) — hosts `kotlin-compiler-embeddable`
+  isolated from the Gradle daemon and drives one of **two compiler front doors**:
+  - **`KotlinMetadataCompiler`** for KMP `commonMain` producers. Frontend-only (no fir2ir, no IR
+    actualizer), so unpaired `expect` declarations cannot fail the run; dependencies come from the
+    compilation's own metadata klibs via the `@Classpath commonKlibClasspath` input. Works with or
+    without a JVM/Android target.
+  - **`K2JVMCompiler`** for single-platform JVM producers and KMP JVM/Android consumers
+    (JVM classpaths).
+- **Every worker path emits at FIR** (`emitPhase = FIR`); the legacy in-process path never sets it
+  and keeps emitting at IR.
+- **Routing** (`FaktGradleSubplugin.cacheCorrectDecision`): commonMain → producer; JVM/Android
+  platform mains → consumers; Native/JS/Wasm platform mains → LEGACY_HYBRID (in-process plugin,
+  ordered after the producer); other metadata compilations → suppressed.
+
+Full design, driver invocation reference, parity contract, and hazards:
+[metadata-producer-fir-emission.md](metadata-producer-fir-emission.md).
+
+---
+
 ## Optimization Features
 
 ### Incremental Compilation Support
@@ -391,58 +450,54 @@ class FakeDataServiceImpl(
 ```
 fakt/
 ├── compiler/
-│   └── src/main/kotlin/com/rsicarelli/fakt/
-│       ├── compiler/
-│       │   ├── FaktCompilerPluginRegistrar.kt       # Entry point
-│       │   ├── fir/
-│       │   │   ├── FaktFirExtensionRegistrar.kt
-│       │   │   ├── checkers/
-│       │   │   │   ├── FakeInterfaceChecker.kt
-│       │   │   │   └── FakeClassChecker.kt
-│       │   │   └── metadata/
-│       │   │       └── FirMetadataStorage.kt
-│       │   ├── ir/
-│       │   │   ├── generation/
-│       │   │   │   ├── UnifiedFaktIrGenerationExtension.kt
-│       │   │   │   ├── CodeGenerator.kt
-│       │   │   │   ├── ImplementationGenerator.kt
-│       │   │   │   ├── FactoryGenerator.kt
-│       │   │   │   └── ConfigurationDslGenerator.kt
-│       │   │   └── transform/
-│       │   │       └── FirToIrTransformer.kt
-│       │   └── core/
-│       │       ├── config/
-│       │       │   └── FaktOptions.kt
-│       │       ├── context/
-│       │       │   ├── FaktSharedContext.kt
-│       │       │   ├── ImportResolver.kt
-│       │       │   └── SourceSetResolver.kt
-│       │       ├── types/
-│       │       │   ├── TypeResolution.kt
-│       │       │   ├── GenericTypeHandler.kt
-│       │       │   └── DefaultValueProvider.kt
-│       │       ├── telemetry/
-│       │       │   ├── FaktLogger.kt
-│       │       │   └── FaktTelemetry.kt
-│       │       └── optimization/
-│       │           └── CompilerOptimizations.kt
-│       └── codegen/
-│           ├── builder/              # Type-safe DSL builders
-│           ├── model/                # Immutable code models
-│           ├── renderer/             # String rendering
-│           ├── extensions/           # High-level generators
-│           └── strategy/             # Default value strategies
+│   └── src/main/kotlin/com/rsicarelli/fakt/compiler/
+│       ├── FaktCompilerPluginRegistrar.kt       # Entry point
+│       ├── fir/
+│       │   ├── FaktFirExtensionRegistrar.kt
+│       │   ├── checkers/
+│       │   │   ├── FakeInterfaceChecker.kt      # + FIR-emit hook (emitPhase == FIR)
+│       │   │   └── FakeClassChecker.kt
+│       │   ├── generation/
+│       │   │   ├── FirFakeEmitter.kt
+│       │   │   └── FirToFakeDeclarationTranslator.kt
+│       │   ├── types/
+│       │   │   └── FirTypeRenderer.kt           # ConeKotlinType renderer (IR parity)
+│       │   ├── rendering/                       # Shared FIR renderers (both phases)
+│       │   └── cache/                           # fir-metadata.json producer/consumer
+│       ├── ir/
+│       │   ├── generation/
+│       │   │   └── UnifiedFaktIrGenerationExtension.kt
+│       │   ├── analysis/
+│       │   │   └── IrToFakeDeclarationTranslator.kt
+│       │   └── transform/
+│       │       └── FirToIrTransformer.kt
+│       └── core/
+│           ├── config/FaktOptions.kt
+│           ├── context/                         # FaktSharedContext, ImportResolver, ...
+│           ├── generation/CodeGenerator.kt      # Phase-neutral render-and-write
+│           ├── types/                           # IrType renderer stack
+│           ├── telemetry/
+│           └── optimization/
 │
-├── annotations/                          # @Fake annotation (multiplatform)
-├── gradle-plugin/                    # Gradle integration
-└── samples/                          # Example projects
+├── codegen-runtime/
+│   └── src/main/kotlin/com/rsicarelli/fakt/
+│       ├── codegen/                  # Pure renderer (zero compiler imports)
+│       │   ├── analysis/             # FakeDeclaration contract + spec mapping
+│       │   ├── builder/  model/  renderer/  extensions/  strategy/
+│       └── compiler/fir/             # Shared FIR metadata models + serializer
+│
+├── compiler-api/                     # SourceSetContext, EmitPhase, LogLevel (API-dumped)
+├── annotations/                      # @Fake annotation (multiplatform)
+├── gradle-plugin/                    # FaktGradleSubplugin, FaktGenerateTask, worker
+└── samples/                          # Example projects (incl. kmp-multi-target, kmp-no-jvm)
 ```
 
 ---
 
 ## Related Documentation
 
-- [KMP Optimization Strategy](.claude/docs/implementation/architecture/kmp-optimization-strategy.md)
+- [Metadata-Driver Producer + FIR Emission](metadata-producer-fir-emission.md) — the cache-correct KMP design (issue #79)
+- [KMP Optimization Strategy](kmp-optimization-strategy.md) — superseded, kept as a pointer
 - [Testing Guidelines](.claude/docs/development/validation/testing-guidelines.md)
 - [Kotlin API Reference](.claude/docs/development/kotlin-api-reference.md)
 - [Kotlin IR API](.claude/docs/development/kotlin-compiler-ir-api.md)
@@ -454,8 +509,10 @@ fakt/
 
 Fakt implements a **two-phase FIR → IR compilation pipeline** with **type-safe DSL-based code generation**:
 
-✅ **FIR Phase** - Validates `@Fake` annotations, stores metadata
-✅ **IR Phase** - Transforms metadata, generates code
+✅ **FIR Phase** - Validates `@Fake` annotations, stores metadata; emits directly when `emitPhase == FIR`
+✅ **IR Phase** - Transforms metadata, generates code (legacy default path)
+✅ **One emitter, two drivers** - `codegen-runtime` renders for both phases; `KotlinMetadataCompiler` (common producers) and `K2JVMCompiler` (JVM paths) drive the worker
+✅ **Cache-correct** - `FaktGenerateTask` makes generated fakes real, relocatable task outputs (behind the flag; P8/P9 deferred)
 ✅ **Type-Safe DSL** - Builders create immutable models
 ✅ **String Rendering** - Models render to `.kt` files
 ✅ **Transparent** - Generated code is readable and debuggable

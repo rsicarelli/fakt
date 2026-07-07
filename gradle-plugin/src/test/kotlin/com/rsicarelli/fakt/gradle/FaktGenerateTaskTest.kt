@@ -8,6 +8,7 @@ import com.rsicarelli.fakt.compiler.fir.cache.MetadataCacheSerializer
 import java.io.File
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
@@ -55,6 +56,46 @@ class FaktGenerateTaskTest {
         assertTrue(
             generated.isNotEmpty(),
             "Expected a generated Fake*.kt under build/generated/fakt; output:\n${result.output}",
+        )
+    }
+
+    @Test
+    fun `GIVEN interface with operator extension and default WHEN running faktGenerate THEN the JVM path renders all three`(
+        @TempDir projectDir: File
+    ) {
+        setupProject(projectDir, fixtureSource = RICH_MEMBER_FIXTURE)
+
+        val result = runTask(projectDir, "faktGenerate")
+
+        // Content locks for the FIR-emitted JVM worker path (byte parity with IR emission is
+        // guaranteed by FirIrEmissionParityTest; these assertions catch a worker-level regression
+        // in the side-channels feeding the emitter).
+        assertEquals(TaskOutcome.SUCCESS, result.task(":faktGenerate")?.outcome, result.output)
+        val content =
+            projectDir
+                .resolve("build/generated/fakt")
+                .walkTopDown()
+                .single { it.isFile && it.name == "FakeRichServiceImpl.kt" }
+                .readText()
+        assertTrue(
+            "operator override fun get" in content,
+            "operator modifier missing from the generated override:\n$content",
+        )
+        assertTrue(
+            "String.shout()" in content,
+            "extension receiver missing from the generated override:\n$content",
+        )
+        assertTrue(
+            "{ p_receiver -> \"\" }" in content,
+            "extension-aware default behavior missing:\n$content",
+        )
+        assertTrue(
+            "getBehavior: ((Int) -> String) = { p0 -> \"\" }" in content,
+            "resolver-derived default behavior missing for the operator method:\n$content",
+        )
+        assertTrue(
+            "retryBehavior: ((Int) -> Int) = { it }" in content,
+            "identity default behavior missing for the defaulted-param method:\n$content",
         )
     }
 
@@ -213,10 +254,104 @@ class FaktGenerateTaskTest {
             .withArguments(*arguments, "--stacktrace")
             .build()
 
+    @Test
+    fun `GIVEN enableCallHistory=false WHEN running faktGenerate THEN generated fake omits call-history members`(
+        @TempDir projectDir: File
+    ) {
+        setupProject(
+            projectDir,
+            fixtureSource = SINGLE_INTERFACE_FIXTURE,
+            enableCallHistory = false,
+        )
+
+        val result = runTask(projectDir, "faktGenerate")
+
+        assertEquals(TaskOutcome.SUCCESS, result.task(":faktGenerate")?.outcome, result.output)
+        val content =
+            projectDir
+                .resolve("build/generated/fakt")
+                .walkTopDown()
+                .single { it.isFile && it.name == "FakeUserServiceImpl.kt" }
+                .readText()
+        assertFalse(
+            "greetCalls" in content,
+            "enableCallHistory=false must drop call-history members from the worker path; got:\n$content",
+        )
+    }
+
+    @Test
+    fun `GIVEN enableCallHistory default WHEN running faktGenerate THEN generated fake keeps call-history members`(
+        @TempDir projectDir: File
+    ) {
+        setupProject(projectDir, fixtureSource = SINGLE_INTERFACE_FIXTURE)
+
+        val result = runTask(projectDir, "faktGenerate")
+
+        assertEquals(TaskOutcome.SUCCESS, result.task(":faktGenerate")?.outcome, result.output)
+        val content =
+            projectDir
+                .resolve("build/generated/fakt")
+                .walkTopDown()
+                .single { it.isFile && it.name == "FakeUserServiceImpl.kt" }
+                .readText()
+        assertTrue(
+            "greetCalls" in content,
+            "call history is on by default; the worker path must still emit call-history members; got:\n$content",
+        )
+    }
+
+    @Test
+    fun `GIVEN enableMutableFakes=true WHEN running faktGenerate THEN generated fake is mutable`(
+        @TempDir projectDir: File
+    ) {
+        setupProject(
+            projectDir,
+            fixtureSource = SINGLE_INTERFACE_FIXTURE,
+            enableMutableFakes = true,
+        )
+
+        val result = runTask(projectDir, "faktGenerate")
+
+        assertEquals(TaskOutcome.SUCCESS, result.task(":faktGenerate")?.outcome, result.output)
+        val content =
+            projectDir
+                .resolve("build/generated/fakt")
+                .walkTopDown()
+                .single { it.isFile && it.name == "FakeUserServiceImpl.kt" }
+                .readText()
+        assertTrue(
+            "fun modify(" in content && "@Volatile" in content,
+            "enableMutableFakes=true must make the worker path emit a mutable fake (modify + @Volatile); got:\n$content",
+        )
+    }
+
+    @Test
+    fun `GIVEN enableMutableFakes default WHEN running faktGenerate THEN generated fake is immutable`(
+        @TempDir projectDir: File
+    ) {
+        setupProject(projectDir, fixtureSource = SINGLE_INTERFACE_FIXTURE)
+
+        val result = runTask(projectDir, "faktGenerate")
+
+        assertEquals(TaskOutcome.SUCCESS, result.task(":faktGenerate")?.outcome, result.output)
+        val content =
+            projectDir
+                .resolve("build/generated/fakt")
+                .walkTopDown()
+                .single { it.isFile && it.name == "FakeUserServiceImpl.kt" }
+                .readText()
+        assertFalse(
+            "fun modify(" in content,
+            "mutable fakes are off by default; the worker path must emit an immutable fake; got:\n$content",
+        )
+    }
+
     private fun setupProject(
         projectDir: File,
         fixtureSource: String,
         firMetadataFile: File? = null,
+        enableCallHistory: Boolean? = null,
+        enableMutableFakes: Boolean? = null,
     ) {
         projectDir
             .resolve("settings.gradle.kts")
@@ -231,7 +366,14 @@ class FaktGenerateTaskTest {
         projectDir.resolve("src/main/kotlin/fixture/Fixture.kt").writeText(fixtureSource)
         projectDir
             .resolve("build.gradle.kts")
-            .writeText(buildScriptForTask(projectDir, firMetadataFile))
+            .writeText(
+                buildScriptForTask(
+                    projectDir,
+                    firMetadataFile,
+                    enableCallHistory,
+                    enableMutableFakes,
+                )
+            )
     }
 
     private fun configureLocalBuildCache(projectDir: File, buildCacheDir: File) {
@@ -251,7 +393,12 @@ class FaktGenerateTaskTest {
             )
     }
 
-    private fun buildScriptForTask(projectDir: File, firMetadataFile: File? = null): String {
+    private fun buildScriptForTask(
+        projectDir: File,
+        firMetadataFile: File? = null,
+        enableCallHistory: Boolean? = null,
+        enableMutableFakes: Boolean? = null,
+    ): String {
         val outputDir = projectDir.resolve("build/generated/fakt/jvm/jvmTest/kotlin")
         // The stored context carries placeholder paths only — the worker overwrites
         // outputDirectory / commonTestOutputDirectory / metadataOutputPath / metadataCachePath at
@@ -303,6 +450,8 @@ class FaktGenerateTaskTest {
                 generatedKotlinDir.set(file("${outputDir.absolutePath.replace('\\', '/')}"))
                 scratchDir.set(layout.buildDirectory.dir("faktCaches/jvm/jvmTest"))
                 ${firMetadataFile?.let { "firMetadataFile.set(file(\"${it.absolutePath.replace('\\', '/')}\"))" } ?: ""}
+                ${enableCallHistory?.let { "enableCallHistory.set($it)" } ?: ""}
+                ${enableMutableFakes?.let { "enableMutableFakes.set($it)" } ?: ""}
             }
 
             tasks.register("clean") { doLast { delete(layout.buildDirectory) } }
@@ -361,6 +510,21 @@ class FaktGenerateTaskTest {
             interface UserService {
                 fun greet(name: String): String
                 val isActive: Boolean
+            }
+            """
+                .trimIndent()
+
+        private val RICH_MEMBER_FIXTURE =
+            """
+            package fixture
+
+            import com.rsicarelli.fakt.Fake
+
+            @Fake
+            interface RichService {
+                operator fun get(index: Int): String
+                fun String.shout(): String
+                fun retry(attempts: Int = 3): Int
             }
             """
                 .trimIndent()

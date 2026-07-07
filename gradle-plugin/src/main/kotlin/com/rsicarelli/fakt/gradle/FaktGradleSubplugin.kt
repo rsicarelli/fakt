@@ -14,6 +14,18 @@ import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 
 /**
+ * Platforms the cache-correct worker can drive in-process. `K2JVMCompiler` ships in
+ * `kotlin-compiler-embeddable`; `K2NativeCompiler` does not, so only JVM and Android JVM targets
+ * are drivable today.
+ */
+private fun isDrivablePlatform(platformTypeName: String): Boolean =
+    when (platformTypeName.lowercase()) {
+        "jvm",
+        "androidjvm" -> true
+        else -> false
+    }
+
+/**
  * Gradle plugin for Fakt compiler plugin integration.
  *
  * This is the main entry point that bridges Gradle build system with the Fakt compiler plugin. It
@@ -77,7 +89,7 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         public const val PLUGIN_ID: String = "com.rsicarelli.fakt"
         public const val PLUGIN_ARTIFACT_NAME: String = "compiler"
         public const val PLUGIN_GROUP_ID: String = "com.rsicarelli.fakt"
-        public const val PLUGIN_VERSION: String = "1.0.0-beta08"
+        public const val PLUGIN_VERSION: String = "1.0.0-beta09"
 
         /**
          * `kotlin-compiler-embeddable` version pulled into the worker's isolated classpath. Pinned
@@ -91,6 +103,9 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         internal const val COMPILER_CLASSPATH_CONFIGURATION: String = "faktCompiler"
         internal const val GRADLE_PROPERTY_FLAG: String = "fakt.useExperimentalGenerateTask"
 
+        /** KGP metadata compilation whose default source set is `commonMain`. */
+        private const val COMMON_MAIN_COMPILATION: String = "commonMain"
+
         /**
          * Sentinel substituted into [SourceSetContext.outputDirectory] /
          * [SourceSetContext.commonTestOutputDirectory] when the JSON is stored as a task `@Input` —
@@ -100,6 +115,13 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         private const val OUTPUT_PLACEHOLDER: String = "fakt://generated"
     }
 
+    /**
+     * Creates the `fakt { }` extension and, after evaluation, routes the project: collector mode
+     * registers [FakeCollectorTask]s for [FaktPluginExtension.collectFrom]; generator mode either
+     * wires legacy source sets ([SourceSetConfigurator]) or, with the experimental flag on,
+     * prepares the worker configurations — per-compilation [FaktGenerateTask] registration happens
+     * later in [applyToCompilation].
+     */
     @OptIn(ExperimentalFaktMultiModule::class)
     override fun apply(target: Project) {
         // Create the fakt extension for configuration
@@ -122,22 +144,18 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 // GENERATOR MODE: Generate fakes from @Fake annotations
                 target.logger.info("Fakt: Generator mode enabled - generating fakes")
 
-                val isKmp =
-                    target.extensions.findByType(
-                        org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension::class.java
-                    ) != null
                 val useTestFixtures = resolveTestFixturesMode(target, extension)
-                if (resolveExperimentalGenerateTaskFlag(target, extension) && !isKmp) {
+                if (resolveExperimentalGenerateTaskFlag(target, extension)) {
                     target.logger.info(
                         "Fakt: useExperimentalGenerateTask=true — registering FaktGenerateTask " +
                             "per compilation; the in-process compiler-plugin path stays disabled."
                     )
                     ensureFaktConfigurations(target)
+                    // Non-drivable KMP platform mains (Native/JS/Wasm) keep generating their own
+                    // fakes via the in-process plugin; wire the platform *Test source sets so those
+                    // generated fakes compile (the producer/consumer tasks wire their own dirs).
+                    SourceSetConfigurator(target, useTestFixtures).configureKmpTestSourceSetDirs()
                 } else {
-                    // Legacy in-process path. Also taken when the flag is on but the project is
-                    // KMP — the cache-correct worker only drives K2JVMCompiler today, so a
-                    // metadata/native producer is a deferred follow-up. Until then, KMP falls
-                    // through to the legacy wiring unchanged.
                     val configurator = SourceSetConfigurator(target, useTestFixtures)
                     configurator.configureSourceSets()
                 }
@@ -148,20 +166,19 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
     }
 
     /**
-     * Reads the experimental flag from (in priority order) the `fakt { }` extension and the Gradle
-     * property `fakt.useExperimentalGenerateTask`. Property gives end-users an opt-in switch
-     * without having to touch the build script — useful for trying the cache-correct path on a
-     * single CI run.
+     * Resolves the experimental flag, with the Gradle property `fakt.useExperimentalGenerateTask`
+     * taking precedence over the `fakt { }` extension. When the property is set to a strict boolean
+     * it wins outright — so `-Pfakt.useExperimentalGenerateTask=false` can turn the path off even
+     * when the build script sets the extension to `true`. Otherwise the extension convention
+     * decides.
      */
     private fun resolveExperimentalGenerateTaskFlag(
         project: Project,
         extension: FaktPluginExtension,
     ): Boolean {
-        if (extension.useExperimentalGenerateTask.get()) return true
-        return project.providers
-            .gradleProperty(GRADLE_PROPERTY_FLAG)
-            .orNull
-            ?.toBooleanStrictOrNull() ?: false
+        val property =
+            project.providers.gradleProperty(GRADLE_PROPERTY_FLAG).orNull?.toBooleanStrictOrNull()
+        return property ?: extension.useExperimentalGenerateTask.get()
     }
 
     /**
@@ -201,7 +218,10 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
      *
      * If the option is enabled but the plugin is missing, emits a warning and returns `false`.
      */
-    private fun resolveTestFixturesMode(project: Project, extension: FaktPluginExtension): Boolean {
+    internal fun resolveTestFixturesMode(
+        project: Project,
+        extension: FaktPluginExtension,
+    ): Boolean {
         if (!extension.useGradleTestFixtures.get()) return false
 
         val hasTestFixturesPlugin = project.plugins.hasPlugin("java-test-fixtures")
@@ -336,43 +356,106 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             "Fakt: Applying compiler plugin to compilation ${kotlinCompilation.name}"
         )
 
-        if (
-            resolveExperimentalGenerateTaskFlag(project, extension) &&
-                isCacheCorrectPathSupported(kotlinCompilation)
-        ) {
-            // Side-effect: register FaktGenerateTask + wire its @OutputDirectory into the
-            // matching test source set. Returns `enabled=false` so the in-process compiler
-            // plugin (still loaded by KGP into compileKotlin*) skips registration — generation
-            // happens in our task instead. Empty list isn't enough: FaktCompilerPluginRegistrar
-            // defaults `enabled` to true and would explode when sourceSetContext is missing.
-            FaktGenerateTaskWiring.register(project, kotlinCompilation, extension)
-            return project.provider { listOf(SubpluginOption(key = "enabled", value = "false")) }
+        val decision =
+            if (resolveExperimentalGenerateTaskFlag(project, extension)) {
+                cacheCorrectDecision(kotlinCompilation)
+            } else {
+                CacheCorrectDecision.LEGACY
+            }
+
+        // REGISTER_PRODUCER / REGISTER_CONSUMER drive generation from a FaktGenerateTask and
+        // disable the in-process plugin. SUPPRESS (the legacy metadata `main` and shared-source-set
+        // metadata compilations, which have no IR phase) also disables it. LEGACY_HYBRID keeps the
+        // in-process plugin ON for a non-drivable platform main so it generates that platform's own
+        // fakes the legacy way, but orders it after the common producer so it dedup-skips common
+        // fakes instead of regenerating them. The first three return `enabled=false`; an empty list
+        // isn't enough because FaktCompilerPluginRegistrar defaults `enabled` to true and would
+        // explode when the sourceSetContext option is missing.
+        when (decision) {
+            CacheCorrectDecision.REGISTER_PRODUCER ->
+                FaktGenerateTaskWiring.registerProducer(project, kotlinCompilation, extension)
+            CacheCorrectDecision.REGISTER_CONSUMER ->
+                FaktGenerateTaskWiring.registerConsumer(project, kotlinCompilation, extension)
+            CacheCorrectDecision.LEGACY_HYBRID ->
+                FaktGenerateTaskWiring.wireLegacyHybridOrdering(project, kotlinCompilation)
+            CacheCorrectDecision.SUPPRESS,
+            CacheCorrectDecision.LEGACY -> Unit
         }
 
-        return project.provider { legacyInProcessOptions(project, kotlinCompilation, extension) }
+        return when (decision) {
+            CacheCorrectDecision.REGISTER_PRODUCER,
+            CacheCorrectDecision.REGISTER_CONSUMER,
+            CacheCorrectDecision.SUPPRESS ->
+                project.provider { listOf(SubpluginOption(key = "enabled", value = "false")) }
+            CacheCorrectDecision.LEGACY_HYBRID,
+            CacheCorrectDecision.LEGACY ->
+                project.provider { legacyInProcessOptions(project, kotlinCompilation, extension) }
+        }
+    }
+
+    /** How [applyToCompilation] should treat a compilation under the cache-correct flag. */
+    private enum class CacheCorrectDecision {
+        /**
+         * Drive a producer compilation from a `FaktGenerateTask`: `KotlinMetadataCompiler` over KMP
+         * `commonMain` (+ ancestors), or `K2JVMCompiler` over a single-platform JVM `main`.
+         */
+        REGISTER_PRODUCER,
+        /**
+         * Drive `K2JVMCompiler` over a drivable platform main's own sources from a
+         * `FaktGenerateTask` (source-partitioned consumer); `commonMain` arrives as a classpath
+         * dependency.
+         */
+        REGISTER_CONSUMER,
+        /**
+         * Keep the in-process plugin ON for a non-drivable platform main (Native/JS/Wasm) so it
+         * generates that platform's fakes the legacy way, ordered after the common producer.
+         */
+        LEGACY_HYBRID,
+        /** Suppress the in-process plugin; another task already owns this compilation's fakes. */
+        SUPPRESS,
+        /** Cache-correct path can't own this compilation; use the in-process plugin. */
+        LEGACY,
     }
 
     /**
-     * The cache-correct worker drives `K2JVMCompiler` reflectively, so it can only analyse JVM
-     * bytecode-producing compilations. Two further constraints narrow the scope:
-     * 1. **Platform.** KMP metadata, Native, JS and Wasm compilations need their own K2 drivers
-     *    (`K2MetadataCompiler` et al.) plus matching common/native stdlib classpaths — deferred
-     *    follow-up.
-     * 2. **KMP source-set inheritance.** Even on a JVM target inside a KMP project, the `jvmMain`
-     *    compilation's analysis source set is `jvmMain + commonMain` (KGP attaches parent source
-     *    sets). The task would generate fakes for `commonMain` `@Fake` interfaces too, conflicting
-     *    with the legacy in-process path that handles `compileKotlinMetadata`. Disabling the legacy
-     *    path entirely under the flag isn't safe yet (no `K2MetadataCompiler` producer) — so for
-     *    now KMP projects stay on legacy across the board.
+     * The cache-correct worker drives a compiler front door reflectively. A single-platform JVM
+     * project owns its `main` compilation outright (producer, `K2JVMCompiler`). A KMP project —
+     * with or without a JVM/Android target, since `KotlinMetadataCompiler` needs only the
+     * compilation's own metadata-klib dependencies — drives the metadata compiler once over
+     * `commonMain` to produce platform-agnostic common fakes (producer), which every target's test
+     * compilation reuses; a drivable platform main (`jvmMain` / `androidMain`) gets its own
+     * source-partitioned consumer task. The remaining `common`-platform metadata compilations are
+     * suppressed.
      *
-     * Pure JVM Gradle projects (no `KotlinMultiplatformExtension`) take the cache-correct path.
+     * A non-drivable platform main (`iosMain` / `nativeMain` / `jsMain` / `wasmJsMain`) cannot be
+     * driven in-process (`K2NativeCompiler` is not on the embeddable classpath), so it stays on the
+     * in-process plugin ([CacheCorrectDecision.LEGACY_HYBRID]): its platform-specific fakes are
+     * generated (not cache-correct), while the common producer still owns the cache-correct common
+     * fakes.
      */
-    private fun isCacheCorrectPathSupported(kotlinCompilation: KotlinCompilation<*>): Boolean {
-        val platform = kotlinCompilation.target.platformType.name.lowercase()
-        if (platform != "jvm" && platform != "androidjvm") return false
-        return kotlinCompilation.project.extensions.findByType(
-            org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension::class.java
-        ) == null
+    private fun cacheCorrectDecision(
+        kotlinCompilation: KotlinCompilation<*>
+    ): CacheCorrectDecision {
+        val kmp =
+            kotlinCompilation.project.extensions.findByType(
+                org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension::class.java
+            )
+        val platformType = kotlinCompilation.target.platformType.name
+
+        // `commonMain` is checked before the `common` platform-type guard because the metadata
+        // target exposes both the per-source-set `commonMain` compilation (the producer) and a
+        // legacy `main` compilation plus shared-source-set metadata compilations (all platformType
+        // `common`, no IR phase) — those must be suppressed, not turned into a second producer.
+        return when {
+            kmp == null ->
+                if (isDrivablePlatform(platformType)) CacheCorrectDecision.REGISTER_PRODUCER
+                else CacheCorrectDecision.LEGACY
+            kotlinCompilation.name == COMMON_MAIN_COMPILATION ->
+                CacheCorrectDecision.REGISTER_PRODUCER
+            platformType.equals("common", ignoreCase = true) -> CacheCorrectDecision.SUPPRESS
+            isDrivablePlatform(platformType) -> CacheCorrectDecision.REGISTER_CONSUMER
+            else -> CacheCorrectDecision.LEGACY_HYBRID
+        }
     }
 
     /** Original in-process subplugin option payload, untouched. */
