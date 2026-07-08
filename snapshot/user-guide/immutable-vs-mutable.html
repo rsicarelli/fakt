@@ -1191,188 +1191,176 @@
 <hr />
 <h2 id="immutable-fakes-default">Immutable Fakes (Default)<a class="headerlink" href="#immutable-fakes-default" title="Permanent link">&para;</a></h2>
 <p>By default, Fakt generates <strong>immutable fakes</strong> where all behavior is set at construction time via the factory function and cannot change afterwards:</p>
-<p><code>kotlin
-@Fake
-interface UserRepository {
-    fun findById(id: String): User?
-    suspend fun save(user: User): User
-}</code></p>
-<p>```kotlin<br />
-// Behavior is fixed at construction<br />
-val fake = fakeUserRepository {<br />
-    findById { id -&gt; User(id, &ldquo;Alice&rdquo;) }<br />
-}</p>
-<p>// To test different behavior, create a new fake<br />
-val fakeNotFound = fakeUserRepository {<br />
-    findById { null }<br />
-}<br />
-```</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nd">@Fake</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">UserRepository</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">findById</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">):</span><span class="w"> </span><span class="n">User?</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="kd">suspend</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="n">user</span><span class="p">:</span><span class="w"> </span><span class="n">User</span><span class="p">):</span><span class="w"> </span><span class="n">User</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">}</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1">// Behavior is fixed at construction</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="n">findById</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="p">}</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1">// To test different behavior, create a new fake</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="kd">val</span><span class="w"> </span><span class="nv">fakeNotFound</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="n">findById</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="p">}</span>
+</code></pre></div>
 <h3 id="why-immutable-by-default">Why Immutable by Default?<a class="headerlink" href="#why-immutable-by-default" title="Permanent link">&para;</a></h3>
 <p>Immutable fakes provide several guarantees that make tests safer and easier to reason about:</p>
 <p><strong>Thread Safety</strong></p>
 <p>Immutable fakes are inherently thread-safe. Since behavior properties are <code>private val</code>, they cannot be modified after construction. Multiple coroutines or threads can safely call the same fake concurrently with no risk of data races on the behavior configuration:</p>
-<p><code>``kotlin
-@Test
-fun</code>GIVEN immutable fake WHEN called from 100 coroutines THEN all calls are safe`() = runTest {<br />
-    val fake = fakeUserRepository {<br />
-        findById { id -&gt; User(id, &ldquo;Alice&rdquo;) }<br />
-    }</p>
-<div class="codehilite"><pre><span></span><code>// Safe: behavior is immutable, no data races possible
-List(100) { i -&gt;
-    async { fake.findById(&quot;$i&quot;) }
-}.awaitAll()
-
-assertEquals(100, fake.findByIdCalls.value.size)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nd">@Test</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN immutable fake WHEN called from 100 coroutines THEN all calls are safe`</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runTest</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">        </span><span class="n">findById</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="c1">// Safe: behavior is immutable, no data races possible</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span><span class="n">List</span><span class="p">(</span><span class="m">100</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">-&gt;</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">        </span><span class="n">async</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">findById</span><span class="p">(</span><span class="s">&quot;</span><span class="si">$</span><span class="n">i</span><span class="s">&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">    </span><span class="p">}.</span><span class="na">awaitAll</span><span class="p">()</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">100</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">findByIdCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="p">}</span>
 </code></pre></div>
-
-<p>}<br />
-```</p>
 <p><strong>Predictability</strong></p>
 <p>Each fake instance has exactly one behavior for its entire lifetime. When reading a test, you can trace any fake&rsquo;s behavior back to its construction site without scanning for later mutations:</p>
-<p><code>``kotlin
-@Test
-fun</code>GIVEN user found WHEN loading profile THEN displays name`() {<br />
-    // Everything about this fake is visible right here<br />
-    val fake = fakeUserRepository {<br />
-        findById { id -&gt; User(id, &ldquo;Alice&rdquo;) }<br />
-    }</p>
-<div class="codehilite"><pre><span></span><code>val result = profileLoader.load(fake, &quot;123&quot;)
-
-assertEquals(&quot;Alice&quot;, result.name)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nd">@Test</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN user found WHEN loading profile THEN displays name`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="c1">// Everything about this fake is visible right here</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">        </span><span class="n">findById</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">profileLoader</span><span class="p">.</span><span class="na">load</span><span class="p">(</span><span class="n">fake</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;123&quot;</span><span class="p">)</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="na">name</span><span class="p">)</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="p">}</span>
 </code></pre></div>
-
-<p>}<br />
-```</p>
 <p><strong>No Test Pollution</strong></p>
 <p>Immutable fakes cannot accumulate state changes across test phases. Each scenario uses its own fake instance, preventing one test&rsquo;s configuration from leaking into another:</p>
-<p><code>``kotlin
-@Test
-fun</code>GIVEN user exists WHEN deleting THEN succeeds`() {<br />
-    val fake = fakeUserRepository { findById { User(&ldquo;1&rdquo;, &ldquo;Alice&rdquo;) } }<br />
-    assertTrue(userService.delete(fake, &ldquo;1&rdquo;))<br />
-}</p>
-<p>@Test<br />
-fun <code>GIVEN user missing WHEN deleting THEN fails gracefully</code>() {<br />
-    val fake = fakeUserRepository { findById { null } }  // Fresh instance<br />
-    assertFalse(userService.delete(fake, &ldquo;1&rdquo;))<br />
-}<br />
-```</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nd">@Test</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN user exists WHEN deleting THEN succeeds`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">findById</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">userService</span><span class="p">.</span><span class="na">delete</span><span class="p">(</span><span class="n">fake</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1&quot;</span><span class="p">))</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="p">}</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="nd">@Test</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN user missing WHEN deleting THEN fails gracefully`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">findById</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span><span class="w">  </span><span class="c1">// Fresh instance</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">    </span><span class="n">assertFalse</span><span class="p">(</span><span class="n">userService</span><span class="p">.</span><span class="na">delete</span><span class="p">(</span><span class="n">fake</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1&quot;</span><span class="p">))</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="p">}</span>
+</code></pre></div>
 <p><strong>Debuggability</strong></p>
 <p>When a test fails, the fake&rsquo;s behavior is fully determined by its construction. There is no need to trace through mid-test mutations to understand what went wrong.</p>
 <hr />
 <h2 id="mutable-fakes-opt-in">Mutable Fakes (Opt-In)<a class="headerlink" href="#mutable-fakes-opt-in" title="Permanent link">&para;</a></h2>
 <p>For scenarios where behavior needs to change during a single test, Fakt supports <strong>mutable fakes</strong> as an opt-in feature:</p>
-<p>```kotlin<br />
-import com.rsicarelli.fakt.MutabilityMode</p>
-<p>@Fake(mutability = MutabilityMode.MUTABLE)<br />
-interface UserRepository {<br />
-    fun findById(id: String): User?<br />
-    suspend fun save(user: User): User<br />
-    val status: String<br />
-}<br />
-```</p>
-<p>Mutable fakes include a <code>modify {}</code> method that allows selective reconfiguration:</p>
-<p><code>``kotlin
-@Test
-fun</code>GIVEN repository WHEN database fails mid-operation THEN service recovers`() {<br />
-    val fake = fakeUserRepository {<br />
-        findById { id -&gt; User(id, &ldquo;Alice&rdquo;) }<br />
-        save { user -&gt; user }<br />
-        status { &ldquo;connected&rdquo; }<br />
-    }</p>
-<div class="codehilite"><pre><span></span><code>// Phase 1: Normal operation
-val user = fake.findById(&quot;1&quot;)
-assertEquals(&quot;Alice&quot;, user?.name)
-
-// Phase 2: Simulate database failure
-fake.modify {
-    findById { null }
-    status { &quot;disconnected&quot; }
-}
-
-// Phase 3: Verify degraded behavior
-assertNull(fake.findById(&quot;1&quot;))
-assertEquals(&quot;disconnected&quot;, fake.status)
-// save was NOT reconfigured — it still works as before
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">import</span><span class="w"> </span><span class="nn">com.rsicarelli.fakt.MutabilityMode</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nd">@Fake</span><span class="p">(</span><span class="n">mutability</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MutabilityMode</span><span class="p">.</span><span class="na">MUTABLE</span><span class="p">)</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">UserRepository</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">findById</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">):</span><span class="w"> </span><span class="n">User?</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">    </span><span class="kd">suspend</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="n">user</span><span class="p">:</span><span class="w"> </span><span class="n">User</span><span class="p">):</span><span class="w"> </span><span class="n">User</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">status</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="p">}</span>
 </code></pre></div>
-
-<p>}<br />
-```</p>
+<p>Mutable fakes include a <code>modify {}</code> method that allows selective reconfiguration:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nd">@Test</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN repository WHEN database fails mid-operation THEN service recovers`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">        </span><span class="n">findById</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">        </span><span class="n">save</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">        </span><span class="n">status</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s">&quot;connected&quot;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">    </span><span class="c1">// Phase 1: Normal operation</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">findById</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">)</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="o">?.</span><span class="na">name</span><span class="p">)</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">    </span><span class="c1">// Phase 2: Simulate database failure</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">modify</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">        </span><span class="n">findById</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="w">        </span><span class="n">status</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s">&quot;disconnected&quot;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="w">    </span><span class="c1">// Phase 3: Verify degraded behavior</span>
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="w">    </span><span class="n">assertNull</span><span class="p">(</span><span class="n">fake</span><span class="p">.</span><span class="na">findById</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">))</span>
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;disconnected&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">status</span><span class="p">)</span>
+<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a><span class="w">    </span><span class="c1">// save was NOT reconfigured — it still works as before</span>
+<a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a><span class="p">}</span>
+</code></pre></div>
 <h3 id="when-mutable-fakes-make-sense">When Mutable Fakes Make Sense<a class="headerlink" href="#when-mutable-fakes-make-sense" title="Permanent link">&para;</a></h3>
 <p>Mutable fakes are designed for <strong>integration tests</strong> where the same injected fake instance must simulate different states during a single test:</p>
 <p><strong>Failure simulation</strong> — Test how your system handles a dependency that starts working and then fails:</p>
-<p><code>``kotlin
-@Test
-fun</code>GIVEN cache working WHEN cache becomes unavailable THEN falls back to database`() {<br />
-    val fakeCache = fakeCacheService {<br />
-        get { key -&gt; &ldquo;cached_value&rdquo; }<br />
-    }<br />
-    val service = DataService(fakeCache, realDatabase)</p>
-<div class="codehilite"><pre><span></span><code>// Cache works initially
-assertEquals(&quot;cached_value&quot;, service.fetch(&quot;key&quot;))
-
-// Cache goes down
-fakeCache.modify {
-    get { throw ConnectionException(&quot;Cache unavailable&quot;) }
-}
-
-// Service falls back to database
-val result = service.fetch(&quot;key&quot;)
-assertEquals(&quot;db_value&quot;, result)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nd">@Test</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN cache working WHEN cache becomes unavailable THEN falls back to database`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fakeCache</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeCacheService</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">        </span><span class="k">get</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="s">&quot;cached_value&quot;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">service</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataService</span><span class="p">(</span><span class="n">fakeCache</span><span class="p">,</span><span class="w"> </span><span class="n">realDatabase</span><span class="p">)</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">    </span><span class="c1">// Cache works initially</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;cached_value&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">service</span><span class="p">.</span><span class="na">fetch</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">))</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">    </span><span class="c1">// Cache goes down</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">    </span><span class="n">fakeCache</span><span class="p">.</span><span class="na">modify</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">        </span><span class="k">get</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">throw</span><span class="w"> </span><span class="n">ConnectionException</span><span class="p">(</span><span class="s">&quot;Cache unavailable&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>
+<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="w">    </span><span class="c1">// Service falls back to database</span>
+<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">service</span><span class="p">.</span><span class="na">fetch</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">)</span>
+<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;db_value&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">)</span>
+<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="p">}</span>
 </code></pre></div>
-
-<p>}<br />
-```</p>
 <p><strong>State machine transitions</strong> — Test components that depend on state changes from a single dependency:</p>
-<p><code>``kotlin
-@Test
-fun</code>GIVEN auth service WHEN token expires THEN refreshes automatically`() {<br />
-    val fakeAuth = fakeAuthService {<br />
-        isAuthenticated { true }<br />
-        getToken { &ldquo;valid-token-123&rdquo; }<br />
-    }</p>
-<div class="codehilite"><pre><span></span><code>val client = ApiClient(fakeAuth)
-assertTrue(client.makeRequest(&quot;/api/data&quot;).isSuccess)
-
-// Token expires
-fakeAuth.modify {
-    isAuthenticated { false }
-    getToken { throw TokenExpiredException() }
-}
-
-// Client should trigger refresh flow
-val result = client.makeRequest(&quot;/api/data&quot;)
-assertTrue(result.isRefreshTriggered)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nd">@Test</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN auth service WHEN token expires THEN refreshes automatically`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fakeAuth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeAuthService</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">        </span><span class="n">isAuthenticated</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">        </span><span class="n">getToken</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s">&quot;valid-token-123&quot;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ApiClient</span><span class="p">(</span><span class="n">fakeAuth</span><span class="p">)</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">    </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">client</span><span class="p">.</span><span class="na">makeRequest</span><span class="p">(</span><span class="s">&quot;/api/data&quot;</span><span class="p">).</span><span class="na">isSuccess</span><span class="p">)</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="w">    </span><span class="c1">// Token expires</span>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="w">    </span><span class="n">fakeAuth</span><span class="p">.</span><span class="na">modify</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="w">        </span><span class="n">isAuthenticated</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">false</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="w">        </span><span class="n">getToken</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">throw</span><span class="w"> </span><span class="n">TokenExpiredException</span><span class="p">()</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>
+<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="w">    </span><span class="c1">// Client should trigger refresh flow</span>
+<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span><span class="p">.</span><span class="na">makeRequest</span><span class="p">(</span><span class="s">&quot;/api/data&quot;</span><span class="p">)</span>
+<a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a><span class="w">    </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="na">isRefreshTriggered</span><span class="p">)</span>
+<a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a><span class="p">}</span>
 </code></pre></div>
-
-<p>}<br />
-```</p>
 <p><strong>Feature flag toggling</strong> — Test runtime behavior changes:</p>
-<p><code>``kotlin
-@Test
-fun</code>GIVEN feature disabled WHEN feature enabled mid-session THEN new UI renders`() {<br />
-    val fakeFlags = fakeFeatureFlagService {<br />
-        isEnabled { false }<br />
-    }<br />
-    val viewModel = SettingsViewModel(fakeFlags)</p>
-<div class="codehilite"><pre><span></span><code>assertFalse(viewModel.showNewFeature.value)
-
-fakeFlags.modify {
-    isEnabled { true }
-}
-
-assertTrue(viewModel.showNewFeature.value)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nd">@Test</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN feature disabled WHEN feature enabled mid-session THEN new UI renders`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fakeFlags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeFeatureFlagService</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">        </span><span class="n">isEnabled</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">false</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">viewModel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SettingsViewModel</span><span class="p">(</span><span class="n">fakeFlags</span><span class="p">)</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">    </span><span class="n">assertFalse</span><span class="p">(</span><span class="n">viewModel</span><span class="p">.</span><span class="na">showNewFeature</span><span class="p">.</span><span class="na">value</span><span class="p">)</span>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="w">    </span><span class="n">fakeFlags</span><span class="p">.</span><span class="na">modify</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="w">        </span><span class="n">isEnabled</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>
+<a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="w">    </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">viewModel</span><span class="p">.</span><span class="na">showNewFeature</span><span class="p">.</span><span class="na">value</span><span class="p">)</span>
+<a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a><span class="p">}</span>
 </code></pre></div>
-
-<p>}<br />
-```</p>
 <h3 id="selective-reconfiguration">Selective Reconfiguration<a class="headerlink" href="#selective-reconfiguration" title="Permanent link">&para;</a></h3>
 <p>The <code>modify {}</code> method only updates the behaviors you explicitly set. All other behaviors remain unchanged:</p>
-<p><code>kotlin
-fake.modify {
-    findById { null }  // Only this changes
-    // save, status — remain as previously configured
-}</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">fake</span><span class="p">.</span><span class="na">modify</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span><span class="n">findById</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">}</span><span class="w">  </span><span class="c1">// Only this changes</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span><span class="c1">// save, status — remain as previously configured</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="p">}</span>
+</code></pre></div>
 <p>This means you can reconfigure one method without worrying about accidentally resetting others.</p>
 <hr />
 <h2 id="concurrency-considerations">Concurrency Considerations<a class="headerlink" href="#concurrency-considerations" title="Permanent link">&para;</a></h2>
@@ -1391,15 +1379,15 @@ fake.modify {
 <li><strong>Do not call <code>modify {}</code> while other coroutines are actively calling the fake</strong></li>
 <li>Use <code>modify {}</code> in sequential test phases, not during concurrent execution</li>
 </ul>
-<p>```kotlin<br />
-// SAFE: Sequential phases<br />
-fake.findById(&ldquo;1&rdquo;)           // Phase 1<br />
-fake.modify { &hellip; }        // Reconfigure between phases<br />
-fake.findById(&ldquo;2&rdquo;)           // Phase 2</p>
-<p>// UNSAFE: Concurrent mutation<br />
-launch { fake.modify { findById { null } } }  // Don&rsquo;t do this<br />
-launch { fake.findById(&ldquo;1&rdquo;) }                      // while this runs<br />
-```</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1">// SAFE: Sequential phases</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">fake</span><span class="p">.</span><span class="na">findById</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">)</span><span class="w">           </span><span class="c1">// Phase 1</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">fake</span><span class="p">.</span><span class="na">modify</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span><span class="w">        </span><span class="c1">// Reconfigure between phases</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="n">fake</span><span class="p">.</span><span class="na">findById</span><span class="p">(</span><span class="s">&quot;2&quot;</span><span class="p">)</span><span class="w">           </span><span class="c1">// Phase 2</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="c1">// UNSAFE: Concurrent mutation</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="n">launch</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">modify</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">findById</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span><span class="w">  </span><span class="c1">// Don&#39;t do this</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="n">launch</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">findById</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w">                      </span><span class="c1">// while this runs</span>
+</code></pre></div>
 <div class="admonition tip">
 <p class="admonition-title">Rule of thumb</p>
 <p>If your test uses concurrent coroutines to call a fake, use an <strong>immutable</strong> fake. Reserve mutable fakes for sequential, phase-based integration tests.</p>
@@ -1459,51 +1447,50 @@ launch { fake.findById(&ldquo;1&rdquo;) }                      // while this run
 <li>Call history <strong>accumulates across reconfigurations</strong> — it is never reset by <code>modify {}</code></li>
 <li>This means you can verify the total number of calls across all phases of a test</li>
 </ul>
-<p><code>``kotlin
-@Test
-fun</code>GIVEN mutable tracked fake WHEN reconfigured THEN call history persists`() {<br />
-    val fake = fakeMutableTrackedRepository {<br />
-        find { listOf(User(&ldquo;1&rdquo;, &ldquo;Test&rdquo;)) }<br />
-    }</p>
-<div class="codehilite"><pre><span></span><code>// Phase 1: Two calls
-fake.find(&quot;query1&quot;)
-fake.find(&quot;query2&quot;)
-assertEquals(2, fake.findCalls.value.size)
-
-// Reconfigure
-fake.modify {
-    find { emptyList() }
-}
-
-// Phase 2: One more call with new behavior
-assertEquals(emptyList(), fake.find(&quot;query3&quot;))
-
-// Call history accumulated: 2 + 1 = 3
-assertEquals(3, fake.findCalls.value.size)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nd">@Test</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN mutable tracked fake WHEN reconfigured THEN call history persists`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeMutableTrackedRepository</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">        </span><span class="n">find</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">listOf</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Test&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="w">    </span><span class="c1">// Phase 1: Two calls</span>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">find</span><span class="p">(</span><span class="s">&quot;query1&quot;</span><span class="p">)</span>
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">find</span><span class="p">(</span><span class="s">&quot;query2&quot;</span><span class="p">)</span>
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">findCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>
+<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a><span class="w">    </span><span class="c1">// Reconfigure</span>
+<a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a><span class="w">    </span><span class="n">fake</span><span class="p">.</span><span class="na">modify</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a><span class="w">        </span><span class="n">find</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">emptyList</span><span class="p">()</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a>
+<a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a><span class="w">    </span><span class="c1">// Phase 2: One more call with new behavior</span>
+<a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="n">emptyList</span><span class="p">(),</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">find</span><span class="p">(</span><span class="s">&quot;query3&quot;</span><span class="p">))</span>
+<a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a>
+<a id="__codelineno-12-20" name="__codelineno-12-20" href="#__codelineno-12-20"></a><span class="w">    </span><span class="c1">// Call history accumulated: 2 + 1 = 3</span>
+<a id="__codelineno-12-21" name="__codelineno-12-21" href="#__codelineno-12-21"></a><span class="w">    </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">3</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">findCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
+<a id="__codelineno-12-22" name="__codelineno-12-22" href="#__codelineno-12-22"></a><span class="p">}</span>
 </code></pre></div>
-
-<p>}<br />
-```</p>
 <hr />
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
 <p>Mutable fakes can be enabled at two levels:</p>
 <p><strong>Project-wide default</strong> in <code>build.gradle.kts</code>:</p>
-<p><code>kotlin
-fakt {
-    enableMutableFakes.set(true)  // All fakes mutable by default
-}</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">    </span><span class="n">enableMutableFakes</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span><span class="w">  </span><span class="c1">// All fakes mutable by default</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="p">}</span>
+</code></pre></div>
 <p><strong>Per-interface override</strong> via annotation:</p>
-<p>```kotlin<br />
-// Always mutable, regardless of plugin default<br />
-@Fake(mutability = MutabilityMode.MUTABLE)<br />
-interface UserRepository { &hellip; }</p>
-<p>// Always immutable, regardless of plugin default<br />
-@Fake(mutability = MutabilityMode.IMMUTABLE)<br />
-interface Logger { &hellip; }</p>
-<p>// Follow plugin default<br />
-@Fake  // or @Fake(mutability = MutabilityMode.DEFAULT)<br />
-interface UserService { &hellip; }<br />
-```</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1">// Always mutable, regardless of plugin default</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="nd">@Fake</span><span class="p">(</span><span class="n">mutability</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MutabilityMode</span><span class="p">.</span><span class="na">MUTABLE</span><span class="p">)</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">UserRepository</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="c1">// Always immutable, regardless of plugin default</span>
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="nd">@Fake</span><span class="p">(</span><span class="n">mutability</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MutabilityMode</span><span class="p">.</span><span class="na">IMMUTABLE</span><span class="p">)</span>
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">Logger</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="c1">// Follow plugin default</span>
+<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="nd">@Fake</span><span class="w">  </span><span class="c1">// or @Fake(mutability = MutabilityMode.DEFAULT)</span>
+<a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">UserService</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
 <p><strong>Resolution order:</strong> Annotation setting takes precedence over plugin default.</p>
 <p>See <a href="plugin-configuration.html#mutable-fakes-configuration">Plugin Configuration</a> for complete configuration reference.</p>
 <hr />

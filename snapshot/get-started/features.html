@@ -1088,12 +1088,11 @@
 <td><strong>Interfaces</strong></td>
 <td>
 
-```kotlin
-@Fake
-interface UserRepository {
-    suspend fun getUser(id: String): User
-}
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nd">@Fake</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">UserRepository</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">suspend</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">getUser</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">):</span><span class="w"> </span><span class="n">User</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">}</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1101,12 +1100,11 @@ interface UserRepository {
 <td><strong>Abstract Classes</strong></td>
 <td>
 
-```kotlin
-@Fake
-abstract class BaseService {
-    abstract fun start(): Boolean
-}
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nd">@Fake</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">abstract</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">BaseService</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="kd">abstract</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">start</span><span class="p">():</span><span class="w"> </span><span class="kt">Boolean</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="p">}</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1114,12 +1112,11 @@ abstract class BaseService {
 <td><strong>Open Classes</strong></td>
 <td>
 
-```kotlin
-@Fake
-open class NetworkClient {
-    open suspend fun fetch(url: String): Result<String>
-}
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nd">@Fake</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kd">open</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">NetworkClient</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="kd">open</span><span class="w"> </span><span class="kd">suspend</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span><span class="n">url</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">):</span><span class="w"> </span><span class="n">Result</span><span class="o">&lt;</span><span class="kt">String</span><span class="o">&gt;</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="p">}</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1151,11 +1148,10 @@ open class NetworkClient {
 <td><strong>Class-Level Generics</strong></td>
 <td>
 
-```kotlin
-val fake = fakeRepository<User> {
-    save { item -> Result.success(Unit) }
-}
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeRepository</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="n">save</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Result</span><span class="p">.</span><span class="na">success</span><span class="p">(</span><span class="kt">Unit</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="p">}</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1163,9 +1159,8 @@ val fake = fakeRepository<User> {
 <td><strong>Method-Level Generics</strong></td>
 <td>
 
-```kotlin
-fun <T, R> transform(input: T, mapper: (T) -> R): R
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">fun</span><span class="w"> </span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="n">R</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="n">input</span><span class="p">:</span><span class="w"> </span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="n">mapper</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">T</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">R</span><span class="p">):</span><span class="w"> </span><span class="n">R</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1173,11 +1168,10 @@ fun <T, R> transform(input: T, mapper: (T) -> R): R
 <td><strong>Generic Constraints</strong></td>
 <td>
 
-```kotlin
-interface ComparableRepository<T : Comparable<T>> {
-    fun findMax(items: List<T>): T?
-}
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">ComparableRepository</span><span class="o">&lt;</span><span class="n">T</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">Comparable</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">findMax</span><span class="p">(</span><span class="n">items</span><span class="p">:</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">):</span><span class="w"> </span><span class="n">T?</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="p">}</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1185,10 +1179,9 @@ interface ComparableRepository<T : Comparable<T>> {
 <td><strong>Variance</strong></td>
 <td>
 
-```kotlin
-interface Producer<out T>
-interface Consumer<in T>
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">Producer</span><span class="o">&lt;</span><span class="k">out</span><span class="w"> </span><span class="n">T</span><span class="o">&gt;</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">Consumer</span><span class="o">&lt;</span><span class="k">in</span><span class="w"> </span><span class="n">T</span><span class="o">&gt;</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1196,9 +1189,8 @@ interface Consumer<in T>
 <td><strong>Nullable Types</strong></td>
 <td>
 
-```kotlin
-fun findUser(id: String): User? // Default: null
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">findUser</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">):</span><span class="w"> </span><span class="n">User? </span><span class="c1">// Default: null</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1206,9 +1198,8 @@ fun findUser(id: String): User? // Default: null
 <td><strong>Result Types</strong></td>
 <td>
 
-```kotlin
-fun save(): Result<Unit> // Default: Result.failure(...)
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">save</span><span class="p">():</span><span class="w"> </span><span class="n">Result</span><span class="o">&lt;</span><span class="kt">Unit</span><span class="o">&gt;</span><span class="w"> </span><span class="c1">// Default: Result.failure(...)</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1216,9 +1207,8 @@ fun save(): Result<Unit> // Default: Result.failure(...)
 <td><strong>Collections</strong></td>
 <td>
 
-```kotlin
-fun getAll(): List<User> // Default: emptyList()
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">getAll</span><span class="p">():</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span><span class="w"> </span><span class="c1">// Default: emptyList()</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1232,9 +1222,8 @@ fun getAll(): List<User> // Default: emptyList()
 <td><strong>Suspend Functions</strong></td>
 <td>
 
-```kotlin
-suspend fun fetch(): User // Works in runTest { }
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kd">suspend</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">fetch</span><span class="p">():</span><span class="w"> </span><span class="n">User</span><span class="w"> </span><span class="c1">// Works in runTest { }</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1242,9 +1231,8 @@ suspend fun fetch(): User // Works in runTest { }
 <td><strong>Properties (val)</strong></td>
 <td>
 
-```kotlin
-val apiUrl: String // fake.apiUrl + fake.apiUrlCalls.value.size
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kd">val</span><span class="w"> </span><span class="nv">apiUrl</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="w"> </span><span class="c1">// fake.apiUrl + fake.apiUrlCalls.value.size</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1252,9 +1240,8 @@ val apiUrl: String // fake.apiUrl + fake.apiUrlCalls.value.size
 <td><strong>Properties (var)</strong></td>
 <td>
 
-```kotlin
-var theme: String // getThemeCalls.value.size + setThemeCalls.value.size
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kd">var</span><span class="w"> </span><span class="nv">theme</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="w"> </span><span class="c1">// getThemeCalls.value.size + setThemeCalls.value.size</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1262,9 +1249,8 @@ var theme: String // getThemeCalls.value.size + setThemeCalls.value.size
 <td><strong>Inheritance</strong></td>
 <td>
 
-```kotlin
-interface UserRepo : BaseRepo { ... } // Inherits parent methods
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">UserRepo</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">BaseRepo</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="c1">// Inherits parent methods</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1272,9 +1258,8 @@ interface UserRepo : BaseRepo { ... } // Inherits parent methods
 <td><strong>Default Parameters</strong></td>
 <td>
 
-```kotlin
-fun log(msg: String, level: LogLevel = INFO)
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">log</span><span class="p">(</span><span class="n">msg</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span><span class="w"> </span><span class="n">level</span><span class="p">:</span><span class="w"> </span><span class="n">LogLevel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INFO</span><span class="p">)</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1288,9 +1273,8 @@ fun log(msg: String, level: LogLevel = INFO)
 <td><strong>Call Counts</strong></td>
 <td>
 
-```kotlin
-fake.trackCalls.value.size // Thread-safe call count
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">fake</span><span class="p">.</span><span class="na">trackCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="w"> </span><span class="c1">// Thread-safe call count</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1298,12 +1282,11 @@ fake.trackCalls.value.size // Thread-safe call count
 <td><strong>Verification DSL</strong></td>
 <td>
 
-```kotlin
-fake.verifyTrack {
-    assertTrue(wasCalledTimes(2))
-    assertTrue(wasCalledWith("page_view"))
-}
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="n">fake</span><span class="p">.</span><span class="na">verifyTrack</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">    </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">wasCalledTimes</span><span class="p">(</span><span class="m">2</span><span class="p">))</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">    </span><span class="n">assertTrue</span><span class="p">(</span><span class="n">wasCalledWith</span><span class="p">(</span><span class="s">&quot;page_view&quot;</span><span class="p">))</span>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="p">}</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1311,10 +1294,9 @@ fake.verifyTrack {
 <td><strong>Call History</strong></td>
 <td>
 
-```kotlin
-assertEquals("page_view", fake.trackCallHistory.first.event)
-assertEquals(2, fake.trackCallHistory.all.size)
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;page_view&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">trackCallHistory</span><span class="p">.</span><span class="na">first</span><span class="p">.</span><span class="na">event</span><span class="p">)</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">assertEquals</span><span class="p">(</span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="n">fake</span><span class="p">.</span><span class="na">trackCallHistory</span><span class="p">.</span><span class="na">all</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1322,10 +1304,9 @@ assertEquals(2, fake.trackCallHistory.all.size)
 <td><strong>Property Tracking</strong></td>
 <td>
 
-```kotlin
-fake.getThemeCalls.value.size
-fake.setThemeCalls.value.size
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">fake</span><span class="p">.</span><span class="na">getThemeCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="n">fake</span><span class="p">.</span><span class="na">setThemeCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1341,10 +1322,9 @@ Call history is backed by thread-safe internal state.
 <td><strong>Configurable</strong></td>
 <td>
 
-```kotlin
-@Fake(callHistory = CallHistoryMode.DISABLED)
-interface Logger { ... }  // Lightweight, no tracking
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nd">@Fake</span><span class="p">(</span><span class="n">callHistory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CallHistoryMode</span><span class="p">.</span><span class="na">DISABLED</span><span class="p">)</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">Logger</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span><span class="w">  </span><span class="c1">// Lightweight, no tracking</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1358,10 +1338,9 @@ interface Logger { ... }  // Lightweight, no tracking
 <td><strong>Immutable (Default)</strong></td>
 <td>
 
-```kotlin
-@Fake  // Immutable by default
-interface UserService { ... }
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nd">@Fake</span><span class="w">  </span><span class="c1">// Immutable by default</span>
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">UserService</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1369,13 +1348,12 @@ interface UserService { ... }
 <td><strong>Mutable (Opt-In)</strong></td>
 <td>
 
-```kotlin
-@Fake(mutability = MutabilityMode.MUTABLE)
-interface UserRepository { ... }
-
-val fake = fakeUserRepository { findById { User("1", "Alice") } }
-fake.modify { findById { null } }  // Reconfigure mid-test
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="nd">@Fake</span><span class="p">(</span><span class="n">mutability</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MutabilityMode</span><span class="p">.</span><span class="na">MUTABLE</span><span class="p">)</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">UserRepository</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>
+<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="kd">val</span><span class="w"> </span><span class="nv">fake</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">findById</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="n">fake</span><span class="p">.</span><span class="na">modify</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">findById</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span><span class="w">  </span><span class="c1">// Reconfigure mid-test</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1383,10 +1361,9 @@ fake.modify { findById { null } }  // Reconfigure mid-test
 <td><strong>Explicit Immutable</strong></td>
 <td>
 
-```kotlin
-@Fake(mutability = MutabilityMode.IMMUTABLE)
-interface Logger { ... }  // Always immutable, overrides plugin default
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="nd">@Fake</span><span class="p">(</span><span class="n">mutability</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MutabilityMode</span><span class="p">.</span><span class="na">IMMUTABLE</span><span class="p">)</span>
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">Logger</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span><span class="w">  </span><span class="c1">// Always immutable, overrides plugin default</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1394,14 +1371,13 @@ interface Logger { ... }  // Always immutable, overrides plugin default
 <td><strong>Configurable</strong></td>
 <td>
 
-```kotlin
-fakt {
-    enableMutableFakes.set(true)  // All fakes mutable by default
-}
-
-@Fake(mutability = MutabilityMode.IMMUTABLE)
-interface Logger { ... }  // Override: always immutable
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="w">    </span><span class="n">enableMutableFakes</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span><span class="w">  </span><span class="c1">// All fakes mutable by default</span>
+<a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="p">}</span>
+<a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a>
+<a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="nd">@Fake</span><span class="p">(</span><span class="n">mutability</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MutabilityMode</span><span class="p">.</span><span class="na">IMMUTABLE</span><span class="p">)</span>
+<a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">Logger</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span><span class="w">  </span><span class="c1">// Override: always immutable</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1415,9 +1391,8 @@ interface Logger { ... }  // Override: always immutable
 <td><strong>Factory Functions</strong></td>
 <td>
 
-```kotlin
-fakeUserRepository { getUser { id -> User(id, "Alice") } }
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="n">fakeUserRepository</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">getUser</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1452,18 +1427,17 @@ Compiler catches type errors at build time.
 <td><strong>Test Fixtures (JVM)</strong></td>
 <td>
 
-```kotlin
-plugins {
-    `java-test-fixtures`
-}
-
-fakt {
-    useGradleTestFixtures.set(true)
-}
-
-// Consumer:
-testImplementation(testFixtures(projects.core))
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="n">plugins</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="w">    </span><span class="n">`java-test-fixtures`</span>
+<a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="p">}</span>
+<a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a>
+<a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a><span class="w">    </span><span class="n">useGradleTestFixtures</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
+<a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="p">}</span>
+<a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a>
+<a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a><span class="c1">// Consumer:</span>
+<a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a><span class="n">testImplementation</span><span class="p">(</span><span class="n">testFixtures</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">))</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1471,12 +1445,11 @@ testImplementation(testFixtures(projects.core))
 <td><strong>Collector Module</strong><br>(Experimental)</td>
 <td>
 
-```kotlin
-fakt {
-    @OptIn(ExperimentalFaktMultiModule::class)
-    collectFakesFrom(projects.core.analytics)
-}
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
+<a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
+<a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="p">}</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1484,13 +1457,12 @@ fakt {
 <td><strong>Consumer Module</strong></td>
 <td>
 
-```kotlin
-dependencies {
-    commonTest {
-        implementation(projects.core.analyticsFakes)
-    }
-}
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="n">dependencies</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="w">    </span><span class="n">commonTest</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="w">        </span><span class="n">implementation</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analyticsFakes</span><span class="p">)</span>
+<a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="p">}</span>
+</code></pre></div>
 
 </td>
 </tr>

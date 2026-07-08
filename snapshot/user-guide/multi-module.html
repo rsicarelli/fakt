@@ -1544,84 +1544,89 @@
 <hr />
 <h2 id="architecture-producer-collector-consumer">Architecture: Producer → Collector → Consumer<a class="headerlink" href="#architecture-producer-collector-consumer" title="Permanent link">&para;</a></h2>
 <p>Fakt&rsquo;s multi-module pattern uses three distinct roles:</p>
-<p>```<br />
-┌─────────────────────────────────────────────────────────────────┐<br />
-│  PRODUCER MODULE (:core:analytics)                              │<br />
-│  ════════════════════════════════════════════════════════       │<br />
-│  • Contains @Fake annotated interfaces                          │<br />
-│  • Fakt generates fakes at compile-time                         │<br />
-│  • Output: build/generated/fakt/commonTest/kotlin/              │<br />
-└─────────────────────────────────────────────────────────────────┘<br />
-                              ↓<br />
-┌─────────────────────────────────────────────────────────────────┐<br />
-│  COLLECTOR MODULE (:core:analytics-fakes) †                     │<br />
-│  ════════════════════════════════════════════════════════       │<br />
-│  • Collects generated fakes from producer                       │<br />
-│  • FakeCollectorTask copies fakes with platform detection       │<br />
-│  • Output: build/generated/collected-fakes/{platform}/kotlin/   │<br />
-│  • Published as standard Gradle dependency                      │<br />
-└─────────────────────────────────────────────────────────────────┘<br />
-                              ↓<br />
-┌─────────────────────────────────────────────────────────────────┐<br />
-│  CONSUMER MODULES (:app, :features:login, etc.)                 │<br />
-│  ════════════════════════════════════════════════════════       │<br />
-│  • Depend on collector module in tests                          │<br />
-│  • Use fakes via generated factory functions                    │<br />
-│  • No direct dependency on producer&rsquo;s test code                 │<br />
-└─────────────────────────────────────────────────────────────────┘</p>
-<p>† Naming is flexible - can be :analytics-fakes, :analytics-test,<br />
-  :analytics-test-fixtures, or any name you choose<br />
-```</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>┌─────────────────────────────────────────────────────────────────┐
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>│  PRODUCER MODULE (:core:analytics)                              │
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│  ════════════════════════════════════════════════════════       │
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│  • Contains @Fake annotated interfaces                          │
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│  • Fakt generates fakes at compile-time                         │
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│  • Output: build/generated/fakt/commonTest/kotlin/              │
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>└─────────────────────────────────────────────────────────────────┘
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>                              ↓
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>┌─────────────────────────────────────────────────────────────────┐
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│  COLLECTOR MODULE (:core:analytics-fakes) †                     │
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│  ════════════════════════════════════════════════════════       │
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>│  • Collects generated fakes from producer                       │
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>│  • FakeCollectorTask copies fakes with platform detection       │
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>│  • Output: build/generated/collected-fakes/{platform}/kotlin/   │
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>│  • Published as standard Gradle dependency                      │
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>└─────────────────────────────────────────────────────────────────┘
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>                              ↓
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>┌─────────────────────────────────────────────────────────────────┐
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>│  CONSUMER MODULES (:app, :features:login, etc.)                 │
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>│  ════════════════════════════════════════════════════════       │
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>│  • Depend on collector module in tests                          │
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>│  • Use fakes via generated factory functions                    │
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>│  • No direct dependency on producer&#39;s test code                 │
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>└─────────────────────────────────────────────────────────────────┘
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>† Naming is flexible - can be :analytics-fakes, :analytics-test,
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>  :analytics-test-fixtures, or any name you choose
+</code></pre></div>
 <h3 id="quick-setup-example">Quick Setup Example<a class="headerlink" href="#quick-setup-example" title="Permanent link">&para;</a></h3>
-<p>```kotlin<br />
-// ┌─────────────────────────────────────────────────────────────────┐<br />
-// │  PRODUCER: core/analytics/build.gradle.kts                      │<br />
-// └─────────────────────────────────────────────────────────────────┘<br />
-plugins {<br />
-    kotlin(&ldquo;multiplatform&rdquo;)<br />
-    alias(libs.plugins.fakt)<br />
-}</p>
-<p>kotlin {<br />
-    jvm()<br />
-    sourceSets.commonMain.dependencies {<br />
-        implementation(libs.fakt.annotations)<br />
-    }<br />
-}</p>
-<p>// ┌─────────────────────────────────────────────────────────────────┐<br />
-// │  COLLECTOR: core/analytics-fakes/build.gradle.kts               │<br />
-// └─────────────────────────────────────────────────────────────────┘<br />
-plugins {<br />
-    kotlin(&ldquo;multiplatform&rdquo;)<br />
-    alias(libs.plugins.fakt)<br />
-}</p>
-<p>kotlin {<br />
-    jvm()<br />
-    sourceSets.commonMain.dependencies {<br />
-        api(projects.core.analytics)<br />
-    }<br />
-}</p>
-<p>fakt {<br />
-    @OptIn(ExperimentalFaktMultiModule::class)<br />
-    collectFakesFrom(projects.core.analytics)<br />
-}</p>
-<p>// ┌─────────────────────────────────────────────────────────────────┐<br />
-// │  CONSUMER: app/build.gradle.kts                                 │<br />
-// └─────────────────────────────────────────────────────────────────┘<br />
-plugins {<br />
-    kotlin(&ldquo;multiplatform&rdquo;)<br />
-}</p>
-<p>kotlin {<br />
-    jvm()<br />
-    sourceSets {<br />
-        commonMain.dependencies {<br />
-            implementation(projects.core.analytics)<br />
-        }<br />
-        commonTest.dependencies {<br />
-            implementation(projects.core.analyticsFakes)<br />
-        }<br />
-    }<br />
-}<br />
-```</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1">// ┌─────────────────────────────────────────────────────────────────┐</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="c1">// │  PRODUCER: core/analytics/build.gradle.kts                      │</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1">// └─────────────────────────────────────────────────────────────────┘</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">plugins</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="n">kotlin</span><span class="p">(</span><span class="s">&quot;multiplatform&quot;</span><span class="p">)</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="n">alias</span><span class="p">(</span><span class="n">libs</span><span class="p">.</span><span class="na">plugins</span><span class="p">.</span><span class="na">fakt</span><span class="p">)</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="p">}</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">kotlin</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">    </span><span class="n">jvm</span><span class="p">()</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">    </span><span class="n">sourceSets</span><span class="p">.</span><span class="na">commonMain</span><span class="p">.</span><span class="na">dependencies</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">        </span><span class="n">implementation</span><span class="p">(</span><span class="n">libs</span><span class="p">.</span><span class="na">fakt</span><span class="p">.</span><span class="na">annotations</span><span class="p">)</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="p">}</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="c1">// ┌─────────────────────────────────────────────────────────────────┐</span>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="c1">// │  COLLECTOR: core/analytics-fakes/build.gradle.kts               │</span>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="c1">// └─────────────────────────────────────────────────────────────────┘</span>
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="n">plugins</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">    </span><span class="n">kotlin</span><span class="p">(</span><span class="s">&quot;multiplatform&quot;</span><span class="p">)</span>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">    </span><span class="n">alias</span><span class="p">(</span><span class="n">libs</span><span class="p">.</span><span class="na">plugins</span><span class="p">.</span><span class="na">fakt</span><span class="p">)</span>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="p">}</span>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="n">kotlin</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="w">    </span><span class="n">jvm</span><span class="p">()</span>
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="w">    </span><span class="n">sourceSets</span><span class="p">.</span><span class="na">commonMain</span><span class="p">.</span><span class="na">dependencies</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="w">        </span><span class="n">api</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="p">}</span>
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="p">}</span>
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="c1">// ┌─────────────────────────────────────────────────────────────────┐</span>
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="c1">// │  CONSUMER: app/build.gradle.kts                                 │</span>
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="c1">// └─────────────────────────────────────────────────────────────────┘</span>
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="n">plugins</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="w">    </span><span class="n">kotlin</span><span class="p">(</span><span class="s">&quot;multiplatform&quot;</span><span class="p">)</span>
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="p">}</span>
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="n">kotlin</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="w">    </span><span class="n">jvm</span><span class="p">()</span>
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="w">    </span><span class="n">sourceSets</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="w">        </span><span class="n">commonMain</span><span class="p">.</span><span class="na">dependencies</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="w">            </span><span class="n">implementation</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a><span class="w">        </span><span class="p">}</span>
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="w">        </span><span class="n">commonTest</span><span class="p">.</span><span class="na">dependencies</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="w">            </span><span class="n">implementation</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analyticsFakes</span><span class="p">)</span>
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a><span class="w">        </span><span class="p">}</span>
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="p">}</span>
+</code></pre></div>
 <hr />
 <h2 id="when-to-use-multi-module">When to Use Multi-Module?<a class="headerlink" href="#when-to-use-multi-module" title="Permanent link">&para;</a></h2>
 <h3 id="use-multi-module-when">✅ Use Multi-Module When<a class="headerlink" href="#use-multi-module-when" title="Permanent link">&para;</a></h3>
@@ -1652,71 +1657,71 @@ plugins {<br />
 <div class="admonition tip">
 <p class="admonition-title">Type-Safe Project Accessors</p>
 <p>If you don&rsquo;t have type-safe accessors enabled, add to <code>settings.gradle.kts</code>:<br />
-<code>kotlin
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")</code><br />
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">enableFeaturePreview</span><span class="p">(</span><span class="s">&quot;TYPESAFE_PROJECT_ACCESSORS&quot;</span><span class="p">)</span>
+</code></pre></div><br />
 Then sync Gradle to generate <code>projects.*</code> accessors.</p>
 </div>
 <hr />
 <h3 id="tutorial-overview">Tutorial Overview<a class="headerlink" href="#tutorial-overview" title="Permanent link">&para;</a></h3>
 <p>We&rsquo;ll create a simple multi-module setup:</p>
-<p><code>my-project/
-├── core/analytics/           # Producer (defines @Fake interfaces)
-├── core/analytics-fakes/     # Collector (collects generated fakes)
-└── app/                      # Consumer (uses fakes in tests)</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>my-project/
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>├── core/analytics/           # Producer (defines @Fake interfaces)
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>├── core/analytics-fakes/     # Collector (collects generated fakes)
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>└── app/                      # Consumer (uses fakes in tests)
+</code></pre></div>
 <p><strong>Time</strong>: ~15 minutes</p>
 <hr />
 <h3 id="step-1-create-producer-module">Step 1: Create Producer Module<a class="headerlink" href="#step-1-create-producer-module" title="Permanent link">&para;</a></h3>
 <p>The producer module contains <code>@Fake</code> annotated interfaces.</p>
-<p>```kotlin<br />
-// core/analytics/build.gradle.kts<br />
-plugins {<br />
-    kotlin(&ldquo;multiplatform&rdquo;)<br />
-    alias(libs.plugins.fakt)<br />
-}</p>
-<p>kotlin {<br />
-    jvm()<br />
-    iosArm64()</p>
-<div class="codehilite"><pre><span></span><code>sourceSets.commonMain.dependencies {
-    implementation(libs.fakt.annotations)
-}
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1">// core/analytics/build.gradle.kts</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">plugins</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="n">kotlin</span><span class="p">(</span><span class="s">&quot;multiplatform&quot;</span><span class="p">)</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="n">alias</span><span class="p">(</span><span class="n">libs</span><span class="p">.</span><span class="na">plugins</span><span class="p">.</span><span class="na">fakt</span><span class="p">)</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="p">}</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">kotlin</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="n">jvm</span><span class="p">()</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="n">iosArm64</span><span class="p">()</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">    </span><span class="n">sourceSets</span><span class="p">.</span><span class="na">commonMain</span><span class="p">.</span><span class="na">dependencies</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">        </span><span class="n">implementation</span><span class="p">(</span><span class="n">libs</span><span class="p">.</span><span class="na">fakt</span><span class="p">.</span><span class="na">annotations</span><span class="p">)</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="p">}</span>
 </code></pre></div>
-
-<p>}<br />
-```</p>
 <p>Define <code>@Fake</code> interface:</p>
-<p><code>kotlin
-// core/analytics/src/commonMain/kotlin/Analytics.kt
-@Fake
-interface Analytics {
-    fun track(event: String)
-    suspend fun identify(userId: String)
-}</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1">// core/analytics/src/commonMain/kotlin/Analytics.kt</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nd">@Fake</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">Analytics</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">track</span><span class="p">(</span><span class="n">event</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">)</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="kd">suspend</span><span class="w"> </span><span class="kd">fun</span><span class="w"> </span><span class="nf">identify</span><span class="p">(</span><span class="n">userId</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">)</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="p">}</span>
+</code></pre></div>
 <p>Build the module: <code>./gradlew :core:analytics:build</code></p>
 <p>Verify fakes generated in <code>build/generated/fakt/commonTest/kotlin/</code></p>
 <hr />
 <h3 id="step-2-create-collector-module">Step 2: Create Collector Module<a class="headerlink" href="#step-2-create-collector-module" title="Permanent link">&para;</a></h3>
 <p>The collector module collects generated fakes and makes them available to other modules. Name it anything (<code>:core:analytics-fakes</code>, <code>:analytics-test</code>, etc.).</p>
-<p>```kotlin<br />
-// core/analytics-fakes/build.gradle.kts<br />
-plugins {<br />
-    kotlin(&ldquo;multiplatform&rdquo;)<br />
-    alias(libs.plugins.fakt)<br />
-}</p>
-<p>kotlin {<br />
-    jvm()  // MUST match producer&rsquo;s targets<br />
-    iosArm64()</p>
-<div class="codehilite"><pre><span></span><code>sourceSets.commonMain.dependencies {
-    api(projects.core.analytics)  // CRITICAL: Use api() to expose types
-    implementation(libs.coroutines)  // Add dependencies used by fakes
-}
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1">// core/analytics-fakes/build.gradle.kts</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">plugins</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="n">kotlin</span><span class="p">(</span><span class="s">&quot;multiplatform&quot;</span><span class="p">)</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="n">alias</span><span class="p">(</span><span class="n">libs</span><span class="p">.</span><span class="na">plugins</span><span class="p">.</span><span class="na">fakt</span><span class="p">)</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="p">}</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="n">kotlin</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">    </span><span class="n">jvm</span><span class="p">()</span><span class="w">  </span><span class="c1">// MUST match producer&#39;s targets</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">    </span><span class="n">iosArm64</span><span class="p">()</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">    </span><span class="n">sourceSets</span><span class="p">.</span><span class="na">commonMain</span><span class="p">.</span><span class="na">dependencies</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">        </span><span class="n">api</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span><span class="w">  </span><span class="c1">// CRITICAL: Use api() to expose types</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">        </span><span class="n">implementation</span><span class="p">(</span><span class="n">libs</span><span class="p">.</span><span class="na">coroutines</span><span class="p">)</span><span class="w">  </span><span class="c1">// Add dependencies used by fakes</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="p">}</span>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="p">}</span>
 </code></pre></div>
-
-<p>}</p>
-<p>fakt {<br />
-    @OptIn(ExperimentalFaktMultiModule::class)<br />
-    collectFakesFrom(projects.core.analytics)<br />
-}<br />
-```</p>
 <p><strong>Key points</strong>: Use <code>api()</code> for producer dependency, match all producer targets, declare transitive dependencies.</p>
 <p>Build and verify: <code>./gradlew :core:analytics-fakes:build</code></p>
 <p>Verify fakes collected in <code>build/generated/collected-fakes/commonMain/kotlin/</code></p>
@@ -1735,112 +1740,114 @@ plugins {<br />
 <hr />
 <h3 id="step-3-register-modules-in-settingsgradlekts">Step 3: Register Modules in settings.gradle.kts<a class="headerlink" href="#step-3-register-modules-in-settingsgradlekts" title="Permanent link">&para;</a></h3>
 <p>Add both modules to your project:</p>
-<p>```kotlin<br />
-// settings.gradle.kts<br />
-enableFeaturePreview(&ldquo;TYPESAFE_PROJECT_ACCESSORS&rdquo;)</p>
-<p>rootProject.name = &ldquo;my-project&rdquo;</p>
-<p>include(&ldquo;:core:analytics&rdquo;)<br />
-include(&ldquo;:core:analytics-fakes&rdquo;)<br />
-include(&ldquo;:app&rdquo;)<br />
-```</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1">// settings.gradle.kts</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">enableFeaturePreview</span><span class="p">(</span><span class="s">&quot;TYPESAFE_PROJECT_ACCESSORS&quot;</span><span class="p">)</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">rootProject</span><span class="p">.</span><span class="na">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;my-project&quot;</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="n">include</span><span class="p">(</span><span class="s">&quot;:core:analytics&quot;</span><span class="p">)</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="n">include</span><span class="p">(</span><span class="s">&quot;:core:analytics-fakes&quot;</span><span class="p">)</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="n">include</span><span class="p">(</span><span class="s">&quot;:app&quot;</span><span class="p">)</span>
+</code></pre></div>
 <p><strong>Sync Gradle</strong> to generate type-safe accessors (<code>projects.core.analytics</code>, etc.).</p>
 <hr />
 <h3 id="step-4-use-fakes-in-consumer-module">Step 4: Use Fakes in Consumer Module<a class="headerlink" href="#step-4-use-fakes-in-consumer-module" title="Permanent link">&para;</a></h3>
 <p>Now use the collected fakes in your app or feature modules.</p>
 <h4 id="configure-appbuildgradlekts">Configure app/build.gradle.kts<a class="headerlink" href="#configure-appbuildgradlekts" title="Permanent link">&para;</a></h4>
-<p>```kotlin<br />
-// app/build.gradle.kts<br />
-plugins {<br />
-    kotlin(&ldquo;multiplatform&rdquo;)<br />
-}</p>
-<p>kotlin {<br />
-    jvm()<br />
-    iosArm64()<br />
-    iosX64()<br />
-    iosSimulatorArm64()</p>
-<div class="codehilite"><pre><span></span><code>sourceSets {
-    commonMain {
-        dependencies {
-            // Main code depends on original interfaces
-            implementation(projects.core.analytics)
-        }
-    }
-
-    commonTest {
-        dependencies {
-            implementation(kotlin(&quot;test&quot;))
-
-            // Tests depend on collector module
-            implementation(projects.core.analyticsFakes)
-        }
-    }
-}
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1">// app/build.gradle.kts</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">plugins</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span><span class="n">kotlin</span><span class="p">(</span><span class="s">&quot;multiplatform&quot;</span><span class="p">)</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="p">}</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="n">kotlin</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">    </span><span class="n">jvm</span><span class="p">()</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">    </span><span class="n">iosArm64</span><span class="p">()</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">    </span><span class="n">iosX64</span><span class="p">()</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="w">    </span><span class="n">iosSimulatorArm64</span><span class="p">()</span>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="w">    </span><span class="n">sourceSets</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="w">        </span><span class="n">commonMain</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="w">            </span><span class="n">dependencies</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="w">                </span><span class="c1">// Main code depends on original interfaces</span>
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="w">                </span><span class="n">implementation</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
+<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="w">            </span><span class="p">}</span>
+<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a><span class="w">        </span><span class="p">}</span>
+<a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a>
+<a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a><span class="w">        </span><span class="n">commonTest</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a><span class="w">            </span><span class="n">dependencies</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a><span class="w">                </span><span class="n">implementation</span><span class="p">(</span><span class="n">kotlin</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">))</span>
+<a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a>
+<a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a><span class="w">                </span><span class="c1">// Tests depend on collector module</span>
+<a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a><span class="w">                </span><span class="n">implementation</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analyticsFakes</span><span class="p">)</span>
+<a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a><span class="w">            </span><span class="p">}</span>
+<a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a><span class="w">        </span><span class="p">}</span>
+<a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-8-29" name="__codelineno-8-29" href="#__codelineno-8-29"></a><span class="p">}</span>
 </code></pre></div>
-
-<p>}<br />
-```</p>
 <h4 id="write-a-test">Write a Test<a class="headerlink" href="#write-a-test" title="Permanent link">&para;</a></h4>
-<p>```kotlin<br />
-// app/src/commonTest/kotlin/com/example/app/AppTest.kt<br />
-package com.example.app</p>
-<p>import com.example.core.analytics.Analytics<br />
-import kotlinx.coroutines.test.runTest<br />
-import kotlin.test.Test<br />
-import kotlin.test.assertEquals</p>
-<p>class AppTest {<br />
-    @Test<br />
-    fun <code>GIVEN analytics fake WHEN tracking event THEN should capture call</code>() {<br />
-        val events = mutableListOf<String>()</p>
-<div class="codehilite"><pre><span></span><code>    val analytics: Analytics = fakeAnalytics {
-        track { event -&gt; events.add(event) }
-        identify { userId -&gt; println(&quot;User: $userId&quot;) }
-    }
-
-    analytics.track(&quot;user_login&quot;)
-    analytics.track(&quot;user_signup&quot;)
-
-    assertEquals(listOf(&quot;user_login&quot;, &quot;user_signup&quot;), events)
-    assertEquals(2, analytics.trackCalls.value.size)
-}
-
-@Test
-fun `GIVEN analytics fake WHEN identify THEN should call suspend function`() = runTest {
-    val analytics = fakeAnalytics {
-        identify { userId -&gt; println(&quot;User: $userId&quot;) }
-    }
-
-    analytics.identify(&quot;user-123&quot;)
-
-    assertEquals(1, analytics.identifyCalls.value.size)
-}
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1">// app/src/commonTest/kotlin/com/example/app/AppTest.kt</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="k">package</span><span class="w"> </span><span class="nn">com.example.app</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="k">import</span><span class="w"> </span><span class="nn">com.example.core.analytics.Analytics</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="k">import</span><span class="w"> </span><span class="nn">kotlinx.coroutines.test.runTest</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="k">import</span><span class="w"> </span><span class="nn">kotlin.test.Test</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="k">import</span><span class="w"> </span><span class="nn">kotlin.test.assertEquals</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="kd">class</span><span class="w"> </span><span class="nc">AppTest</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="w">    </span><span class="nd">@Test</span>
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN analytics fake WHEN tracking event THEN should capture call`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="w">        </span><span class="kd">val</span><span class="w"> </span><span class="nv">events</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mutableListOf</span><span class="o">&lt;</span><span class="kt">String</span><span class="o">&gt;</span><span class="p">()</span>
+<a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>
+<a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="w">        </span><span class="kd">val</span><span class="w"> </span><span class="nv">analytics</span><span class="p">:</span><span class="w"> </span><span class="n">Analytics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeAnalytics</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a><span class="w">            </span><span class="n">track</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">event</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">events</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="n">event</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="w">            </span><span class="n">identify</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">userId</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">println</span><span class="p">(</span><span class="s">&quot;User: </span><span class="si">$</span><span class="n">userId</span><span class="s">&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a><span class="w">        </span><span class="p">}</span>
+<a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a>
+<a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a><span class="w">        </span><span class="n">analytics</span><span class="p">.</span><span class="na">track</span><span class="p">(</span><span class="s">&quot;user_login&quot;</span><span class="p">)</span>
+<a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a><span class="w">        </span><span class="n">analytics</span><span class="p">.</span><span class="na">track</span><span class="p">(</span><span class="s">&quot;user_signup&quot;</span><span class="p">)</span>
+<a id="__codelineno-9-21" name="__codelineno-9-21" href="#__codelineno-9-21"></a>
+<a id="__codelineno-9-22" name="__codelineno-9-22" href="#__codelineno-9-22"></a><span class="w">        </span><span class="n">assertEquals</span><span class="p">(</span><span class="n">listOf</span><span class="p">(</span><span class="s">&quot;user_login&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;user_signup&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">events</span><span class="p">)</span>
+<a id="__codelineno-9-23" name="__codelineno-9-23" href="#__codelineno-9-23"></a><span class="w">        </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="n">analytics</span><span class="p">.</span><span class="na">trackCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
+<a id="__codelineno-9-24" name="__codelineno-9-24" href="#__codelineno-9-24"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-9-25" name="__codelineno-9-25" href="#__codelineno-9-25"></a>
+<a id="__codelineno-9-26" name="__codelineno-9-26" href="#__codelineno-9-26"></a><span class="w">    </span><span class="nd">@Test</span>
+<a id="__codelineno-9-27" name="__codelineno-9-27" href="#__codelineno-9-27"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">`GIVEN analytics fake WHEN identify THEN should call suspend function`</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runTest</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-28" name="__codelineno-9-28" href="#__codelineno-9-28"></a><span class="w">        </span><span class="kd">val</span><span class="w"> </span><span class="nv">analytics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeAnalytics</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-29" name="__codelineno-9-29" href="#__codelineno-9-29"></a><span class="w">            </span><span class="n">identify</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">userId</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">println</span><span class="p">(</span><span class="s">&quot;User: </span><span class="si">$</span><span class="n">userId</span><span class="s">&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-9-30" name="__codelineno-9-30" href="#__codelineno-9-30"></a><span class="w">        </span><span class="p">}</span>
+<a id="__codelineno-9-31" name="__codelineno-9-31" href="#__codelineno-9-31"></a>
+<a id="__codelineno-9-32" name="__codelineno-9-32" href="#__codelineno-9-32"></a><span class="w">        </span><span class="n">analytics</span><span class="p">.</span><span class="na">identify</span><span class="p">(</span><span class="s">&quot;user-123&quot;</span><span class="p">)</span>
+<a id="__codelineno-9-33" name="__codelineno-9-33" href="#__codelineno-9-33"></a>
+<a id="__codelineno-9-34" name="__codelineno-9-34" href="#__codelineno-9-34"></a><span class="w">        </span><span class="n">assertEquals</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">analytics</span><span class="p">.</span><span class="na">identifyCalls</span><span class="p">.</span><span class="na">value</span><span class="p">.</span><span class="na">size</span><span class="p">)</span>
+<a id="__codelineno-9-35" name="__codelineno-9-35" href="#__codelineno-9-35"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-9-36" name="__codelineno-9-36" href="#__codelineno-9-36"></a><span class="p">}</span>
 </code></pre></div>
-
-<p>}<br />
-```</p>
 <h4 id="run-tests">Run Tests<a class="headerlink" href="#run-tests" title="Permanent link">&para;</a></h4>
-<p><code>bash
-./gradlew :app:test</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>./gradlew<span class="w"> </span>:app:test
+</code></pre></div>
 <p><strong>Expected</strong>: All tests pass ✅</p>
 <hr />
 <h3 id="step-5-verify-the-setup">Step 5: Verify the Setup<a class="headerlink" href="#step-5-verify-the-setup" title="Permanent link">&para;</a></h3>
 <h4 id="build-entire-project">Build Entire Project<a class="headerlink" href="#build-entire-project" title="Permanent link">&para;</a></h4>
-<p><code>bash
-./gradlew build</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>./gradlew<span class="w"> </span>build
+</code></pre></div>
 <h4 id="check-generated-code-locations">Check Generated Code Locations<a class="headerlink" href="#check-generated-code-locations" title="Permanent link">&para;</a></h4>
 <p><strong>Producer</strong> (<code>:core:analytics</code>):<br />
-<code>core/analytics/build/generated/fakt/
-├── commonTest/kotlin/com/example/core/analytics/
-│   ├── FakeAnalyticsImpl.kt
-│   ├── fakeAnalytics.kt
-│   └── FakeAnalyticsConfig.kt</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>core/analytics/build/generated/fakt/
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>├── commonTest/kotlin/com/example/core/analytics/
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>│   ├── FakeAnalyticsImpl.kt
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>│   ├── fakeAnalytics.kt
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>│   └── FakeAnalyticsConfig.kt
+</code></pre></div></p>
 <p><strong>Collector</strong> (<code>:core:analytics-fakes</code>):<br />
-<code>core/analytics-fakes/build/generated/collected-fakes/
-├── commonMain/kotlin/com/example/core/analytics/
-│   ├── FakeAnalyticsImpl.kt
-│   ├── fakeAnalytics.kt
-│   └── FakeAnalyticsConfig.kt
-├── jvmMain/kotlin/  (if JVM-specific fakes exist)
-└── iosMain/kotlin/  (if iOS-specific fakes exist)</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>core/analytics-fakes/build/generated/collected-fakes/
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>├── commonMain/kotlin/com/example/core/analytics/
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>│   ├── FakeAnalyticsImpl.kt
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>│   ├── fakeAnalytics.kt
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>│   └── FakeAnalyticsConfig.kt
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>├── jvmMain/kotlin/  (if JVM-specific fakes exist)
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>└── iosMain/kotlin/  (if iOS-specific fakes exist)
+</code></pre></div></p>
 <p><strong>Consumer</strong> (<code>:app</code>):<br />
 - No generated code (uses compiled fakes from collector dependency)</p>
 <h4 id="verify-ide-autocomplete">Verify IDE Autocomplete<a class="headerlink" href="#verify-ide-autocomplete" title="Permanent link">&para;</a></h4>
@@ -1854,50 +1861,48 @@ fun `GIVEN analytics fake WHEN identify THEN should call suspend function`() = r
 <p>For projects with multiple core modules:</p>
 <p><strong>1. Create additional producers</strong> (logger, auth, etc.) with <code>@Fake</code> interfaces</p>
 <p><strong>2. Create corresponding collectors</strong>:<br />
-<code>kotlin
-// core/logger-fakes/build.gradle.kts
-fakt {
-    @OptIn(ExperimentalFaktMultiModule::class)
-    collectFakesFrom(projects.core.logger)
-}</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1">// core/logger-fakes/build.gradle.kts</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">logger</span><span class="p">)</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="p">}</span>
+</code></pre></div></p>
 <p><strong>3. Add all collectors as test dependencies</strong>:<br />
-<code>kotlin
-// app/build.gradle.kts
-commonTest.dependencies {
-    implementation(projects.core.analyticsFakes)
-    implementation(projects.core.loggerFakes)
-    implementation(projects.core.authFakes)
-}</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1">// app/build.gradle.kts</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="n">commonTest</span><span class="p">.</span><span class="na">dependencies</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analyticsFakes</span><span class="p">)</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">loggerFakes</span><span class="p">)</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">authFakes</span><span class="p">)</span>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="p">}</span>
+</code></pre></div></p>
 <p><strong>4. Compose multiple fakes in tests</strong>:<br />
-<code>``kotlin
-@Test
-fun</code>test using multiple fakes`() = runTest {<br />
-    val analytics = fakeAnalytics { track { event -&gt; /* &hellip; <em>/ } }<br />
-    val logger = fakeLogger { info { msg -&gt; /</em> &hellip; */ } }<br />
-    val auth = fakeAuthProvider { login { Result.success(User(&ldquo;123&rdquo;)) } }</p>
-<div class="codehilite"><pre><span></span><code>// Test your use case with composed fakes
-</code></pre></div>
-
-<p>}<br />
-```</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nd">@Test</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">`test using multiple fakes`</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runTest</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">analytics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeAnalytics</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">track</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">event</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="cm">/* ... */</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">logger</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeLogger</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">info</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="cm">/* ... */</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">auth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fakeAuthProvider</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">login</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Result</span><span class="p">.</span><span class="na">success</span><span class="p">(</span><span class="n">User</span><span class="p">(</span><span class="s">&quot;123&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>
+<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="w">    </span><span class="c1">// Test your use case with composed fakes</span>
+<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="p">}</span>
+</code></pre></div></p>
 <hr />
 <h3 id="configuration-patterns">Configuration Patterns<a class="headerlink" href="#configuration-patterns" title="Permanent link">&para;</a></h3>
 <h4 id="pattern-1-type-safe-project-accessors-recommended">Pattern 1: Type-Safe Project Accessors (Recommended)<a class="headerlink" href="#pattern-1-type-safe-project-accessors-recommended" title="Permanent link">&para;</a></h4>
-<p><code>kotlin
-fakt {
-    @OptIn(com.rsicarelli.fakt.compiler.api.ExperimentalFaktMultiModule::class)
-    collectFakesFrom(projects.core.analytics)
-}</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">com</span><span class="p">.</span><span class="na">rsicarelli</span><span class="p">.</span><span class="na">fakt</span><span class="p">.</span><span class="na">compiler</span><span class="p">.</span><span class="na">api</span><span class="p">.</span><span class="na">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="p">}</span>
+</code></pre></div>
 <p><strong>Benefits</strong>:<br />
 - IDE autocomplete<br />
 - Compile-time safety<br />
 - Refactoring support</p>
 <h4 id="pattern-2-string-based-paths">Pattern 2: String-Based Paths<a class="headerlink" href="#pattern-2-string-based-paths" title="Permanent link">&para;</a></h4>
-<p><code>kotlin
-fakt {
-    @OptIn(com.rsicarelli.fakt.compiler.api.ExperimentalFaktMultiModule::class)
-    collectFakesFrom(project(":core:analytics"))
-}</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">com</span><span class="p">.</span><span class="na">rsicarelli</span><span class="p">.</span><span class="na">fakt</span><span class="p">.</span><span class="na">compiler</span><span class="p">.</span><span class="na">api</span><span class="p">.</span><span class="na">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">project</span><span class="p">(</span><span class="s">&quot;:core:analytics&quot;</span><span class="p">))</span>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="p">}</span>
+</code></pre></div>
 <p><strong>Use When</strong>:<br />
 - Type-safe accessors not available<br />
 - Dynamic module names<br />
@@ -1913,10 +1918,10 @@ fakt {
 - Copies fakes to collector&rsquo;s source sets (<code>build/generated/collected-fakes/commonMain/</code>)<br />
 - Registers as source roots for compilation</p>
 <p><strong>3. Consumer uses fakes</strong> as standard dependencies:<br />
-<code>kotlin
-dependencies {
-    commonTestImplementation(projects.core.analyticsFakes)
-}</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">dependencies</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="w">    </span><span class="n">commonTestImplementation</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analyticsFakes</span><span class="p">)</span>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="p">}</span>
+</code></pre></div></p>
 <p>The collector exposes both original interfaces (via <code>api()</code>) and compiled fakes.</p>
 <hr />
 <h3 id="real-world-patterns">Real-World Patterns<a class="headerlink" href="#real-world-patterns" title="Permanent link">&para;</a></h3>

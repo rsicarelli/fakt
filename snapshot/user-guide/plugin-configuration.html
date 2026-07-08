@@ -1191,34 +1191,34 @@
 <hr />
 <h2 id="complete-configuration-reference">Complete Configuration Reference<a class="headerlink" href="#complete-configuration-reference" title="Permanent link">&para;</a></h2>
 <p>All available configuration options in your module&rsquo;s <code>build.gradle.kts</code>:</p>
-<p>```kotlin<br />
-// build.gradle.kts<br />
-import com.rsicarelli.fakt.compiler.api.LogLevel</p>
-<p>plugins {<br />
-    alias(libs.plugins.fakt)<br />
-}</p>
-<p>fakt {<br />
-    // Enable or disable the plugin (default: true)<br />
-    enabled.set(true)</p>
-<div class="codehilite"><pre><span></span><code>// Control logging verbosity (default: INFO)
-logLevel.set(LogLevel.INFO)  // Options: QUIET, INFO, DEBUG
-
-// Control call history generation (default: true)
-enableCallHistory.set(true)  // Set to false for lightweight fakes
-
-// Control mutable fake generation (default: false)
-enableMutableFakes.set(false)  // Set to true for mutable fakes by default
-
-// Generate fakes to testFixtures source set (default: false, JVM only)
-useGradleTestFixtures.set(false)  // Requires `java-test-fixtures` plugin
-
-// Multi-module: Collect fakes from another module (default: not set)
-@OptIn(com.rsicarelli.fakt.compiler.api.ExperimentalFaktMultiModule::class)
-collectFakesFrom(projects.core.analytics)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">// build.gradle.kts</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">import</span><span class="w"> </span><span class="nn">com.rsicarelli.fakt.compiler.api.LogLevel</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">plugins</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="n">alias</span><span class="p">(</span><span class="n">libs</span><span class="p">.</span><span class="na">plugins</span><span class="p">.</span><span class="na">fakt</span><span class="p">)</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">}</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="c1">// Enable or disable the plugin (default: true)</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">    </span><span class="n">enabled</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">    </span><span class="c1">// Control logging verbosity (default: INFO)</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">    </span><span class="n">logLevel</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">LogLevel</span><span class="p">.</span><span class="na">INFO</span><span class="p">)</span><span class="w">  </span><span class="c1">// Options: QUIET, INFO, DEBUG</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">    </span><span class="c1">// Control call history generation (default: true)</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">    </span><span class="n">enableCallHistory</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span><span class="w">  </span><span class="c1">// Set to false for lightweight fakes</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">    </span><span class="c1">// Control mutable fake generation (default: false)</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">    </span><span class="n">enableMutableFakes</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span><span class="w">  </span><span class="c1">// Set to true for mutable fakes by default</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">    </span><span class="c1">// Generate fakes to testFixtures source set (default: false, JVM only)</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">    </span><span class="n">useGradleTestFixtures</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span><span class="w">  </span><span class="c1">// Requires `java-test-fixtures` plugin</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="w">    </span><span class="c1">// Multi-module: Collect fakes from another module (default: not set)</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">com</span><span class="p">.</span><span class="na">rsicarelli</span><span class="p">.</span><span class="na">fakt</span><span class="p">.</span><span class="na">compiler</span><span class="p">.</span><span class="na">api</span><span class="p">.</span><span class="na">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="p">}</span>
 </code></pre></div>
-
-<p>}<br />
-```</p>
 <hr />
 <h2 id="configuration-properties">Configuration Properties<a class="headerlink" href="#configuration-properties" title="Permanent link">&para;</a></h2>
 <table>
@@ -1228,11 +1228,10 @@ collectFakesFrom(projects.core.analytics)
 <td><code>true</code></td>
 <td>
 
-```kotlin
-fakt {
-    enabled.set(false)
-}
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="n">enabled</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="p">}</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1241,11 +1240,10 @@ fakt {
 <td><code>INFO</code></td>
 <td>
 
-```kotlin
-fakt {
-    logLevel.set(LogLevel.DEBUG)
-}
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="n">logLevel</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">LogLevel</span><span class="p">.</span><span class="na">DEBUG</span><span class="p">)</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="p">}</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1254,11 +1252,10 @@ fakt {
 <td><code>true</code></td>
 <td>
 
-```kotlin
-fakt {
-    enableCallHistory.set(false)
-}
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="n">enableCallHistory</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="p">}</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1267,11 +1264,10 @@ fakt {
 <td><code>false</code></td>
 <td>
 
-```kotlin
-fakt {
-    enableMutableFakes.set(true)
-}
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="n">enableMutableFakes</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="p">}</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1280,11 +1276,10 @@ fakt {
 <td><code>false</code></td>
 <td>
 
-```kotlin
-fakt {
-    useGradleTestFixtures.set(true)
-}
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="n">useGradleTestFixtures</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="p">}</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1293,12 +1288,11 @@ fakt {
 <td>Not set</td>
 <td>
 
-```kotlin
-fakt {
-    @OptIn(ExperimentalFaktMultiModule::class)
-    collectFakesFrom(projects.core.analytics)
-}
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="p">}</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1317,20 +1311,18 @@ Concise summary with key metrics. Use for local development and monitoring cache
 </td>
 <td>
 
-```kotlin
-fakt {
-    logLevel.set(LogLevel.INFO)
-}
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="n">logLevel</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">LogLevel</span><span class="p">.</span><span class="na">INFO</span><span class="p">)</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="p">}</span>
+</code></pre></div>
 
 <strong>Output:</strong>
 
-```
-Fakt: 101 fakes generated in 35ms (50 cached)
-  Interfaces: 101 | Classes: 0
-  FIR: 6ms | IR: 29ms
-  Cache: 50/101 (49%)
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Fakt: 101 fakes generated in 35ms (50 cached)
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>  Interfaces: 101 | Classes: 0
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>  FIR: 6ms | IR: 29ms
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>  Cache: 50/101 (49%)
+</code></pre></div>
 
 </td>
 </tr>
@@ -1343,27 +1335,25 @@ Detailed FIR + IR phase timing. Use for troubleshooting, performance analysis, a
 </td>
 <td>
 
-```kotlin
-fakt {
-    logLevel.set(LogLevel.DEBUG)
-}
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span><span class="n">logLevel</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">LogLevel</span><span class="p">.</span><span class="na">DEBUG</span><span class="p">)</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="p">}</span>
+</code></pre></div>
 
 <strong>Output:</strong>
 
-```
-Registering FIR extension
-Registering IR extension with FIR metadata access
-Built IR class map with 149 classes
-FIR→IR Transformation (interfaces: 101/101, took 1ms)
-FIR + IR trace
-├─ Total FIR time: 6ms
-├─ Total IR time: 58ms
-│  ├─ FIR analysis: 1 type parameters, 6 members (55µs)
-│  └─ IR generation: FakeDataCacheImpl 83 LOC (766µs)
-│  ├─ FIR analysis: 2 type parameters, 1 members (23µs)
-│  └─ IR generation: FakeMapTransformerImpl 23 LOC (335µs)
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Registering FIR extension
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>Registering IR extension with FIR metadata access
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>Built IR class map with 149 classes
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>FIR→IR Transformation (interfaces: 101/101, took 1ms)
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>FIR + IR trace
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>├─ Total FIR time: 6ms
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>├─ Total IR time: 58ms
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>│  ├─ FIR analysis: 1 type parameters, 6 members (55µs)
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>│  └─ IR generation: FakeDataCacheImpl 83 LOC (766µs)
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>│  ├─ FIR analysis: 2 type parameters, 1 members (23µs)
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>│  └─ IR generation: FakeMapTransformerImpl 23 LOC (335µs)
+</code></pre></div>
 
 </td>
 </tr>
@@ -1376,11 +1366,10 @@ No output except errors. Use for CI/CD pipelines and production builds.
 </td>
 <td>
 
-```kotlin
-fakt {
-    logLevel.set(LogLevel.QUIET)
-}
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">    </span><span class="n">logLevel</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">LogLevel</span><span class="p">.</span><span class="na">QUIET</span><span class="p">)</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="p">}</span>
+</code></pre></div>
 
 <strong>Output:</strong> None (silent)
 
@@ -1406,11 +1395,10 @@ Full call history with:
 </td>
 <td>
 
-```kotlin
-fakt {
-    enableCallHistory.set(true)
-}
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">    </span><span class="n">enableCallHistory</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="p">}</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1423,11 +1411,10 @@ Lightweight fakes with only behavior configuration. No call history overhead.
 </td>
 <td>
 
-```kotlin
-fakt {
-    enableCallHistory.set(false)
-}
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">    </span><span class="n">enableCallHistory</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="p">}</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1435,18 +1422,20 @@ fakt {
 
 <h3 id="per-interface-override">Per-Interface Override<a class="headerlink" href="#per-interface-override" title="Permanent link">&para;</a></h3>
 <p>Individual interfaces can override the project default:</p>
-<p>```kotlin<br />
-import com.rsicarelli.fakt.CallHistoryMode</p>
-<p>// Always generate call history (even if plugin default is false)<br />
-@Fake(callHistory = CallHistoryMode.ENABLED)<br />
-interface PaymentService { &hellip; }</p>
-<p>// Never generate call history (even if plugin default is true)<br />
-@Fake(callHistory = CallHistoryMode.DISABLED)<br />
-interface Logger { &hellip; }</p>
-<p>// Follow plugin default<br />
-@Fake  // or @Fake(callHistory = CallHistoryMode.DEFAULT)<br />
-interface UserService { &hellip; }<br />
-```</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">import</span><span class="w"> </span><span class="nn">com.rsicarelli.fakt.CallHistoryMode</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="c1">// Always generate call history (even if plugin default is false)</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="nd">@Fake</span><span class="p">(</span><span class="n">callHistory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CallHistoryMode</span><span class="p">.</span><span class="na">ENABLED</span><span class="p">)</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">PaymentService</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="c1">// Never generate call history (even if plugin default is true)</span>
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="nd">@Fake</span><span class="p">(</span><span class="n">callHistory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CallHistoryMode</span><span class="p">.</span><span class="na">DISABLED</span><span class="p">)</span>
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">Logger</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>
+<a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="c1">// Follow plugin default</span>
+<a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a><span class="nd">@Fake</span><span class="w">  </span><span class="c1">// or @Fake(callHistory = CallHistoryMode.DEFAULT)</span>
+<a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">UserService</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
 <p><strong>Resolution order:</strong> Annotation setting takes precedence over plugin default.</p>
 <hr />
 <h2 id="mutable-fakes-configuration">Mutable Fakes Configuration<a class="headerlink" href="#mutable-fakes-configuration" title="Permanent link">&para;</a></h2>
@@ -1466,11 +1455,10 @@ Immutable fakes with:
 </td>
 <td>
 
-```kotlin
-fakt {
-    enableMutableFakes.set(false)
-}
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">    </span><span class="n">enableMutableFakes</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="p">}</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1487,11 +1475,10 @@ Mutable fakes with:
 </td>
 <td>
 
-```kotlin
-fakt {
-    enableMutableFakes.set(true)
-}
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">    </span><span class="n">enableMutableFakes</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="p">}</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1499,18 +1486,20 @@ fakt {
 
 <h3 id="per-interface-override_1">Per-Interface Override<a class="headerlink" href="#per-interface-override_1" title="Permanent link">&para;</a></h3>
 <p>Individual interfaces can override the project default:</p>
-<p>```kotlin<br />
-import com.rsicarelli.fakt.MutabilityMode</p>
-<p>// Always generate mutable fake (even if plugin default is false)<br />
-@Fake(mutability = MutabilityMode.MUTABLE)<br />
-interface UserRepository { &hellip; }</p>
-<p>// Always generate immutable fake (even if plugin default is true)<br />
-@Fake(mutability = MutabilityMode.IMMUTABLE)<br />
-interface Logger { &hellip; }</p>
-<p>// Follow plugin default<br />
-@Fake  // or @Fake(mutability = MutabilityMode.DEFAULT)<br />
-interface UserService { &hellip; }<br />
-```</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="k">import</span><span class="w"> </span><span class="nn">com.rsicarelli.fakt.MutabilityMode</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="c1">// Always generate mutable fake (even if plugin default is false)</span>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="nd">@Fake</span><span class="p">(</span><span class="n">mutability</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MutabilityMode</span><span class="p">.</span><span class="na">MUTABLE</span><span class="p">)</span>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">UserRepository</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="c1">// Always generate immutable fake (even if plugin default is true)</span>
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="nd">@Fake</span><span class="p">(</span><span class="n">mutability</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MutabilityMode</span><span class="p">.</span><span class="na">IMMUTABLE</span><span class="p">)</span>
+<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">Logger</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a>
+<a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a><span class="c1">// Follow plugin default</span>
+<a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a><span class="nd">@Fake</span><span class="w">  </span><span class="c1">// or @Fake(mutability = MutabilityMode.DEFAULT)</span>
+<a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">UserService</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
 <p><strong>Resolution order:</strong> Annotation setting takes precedence over plugin default.</p>
 <hr />
 <h2 id="multi-module-configuration">Multi-Module Configuration<a class="headerlink" href="#multi-module-configuration" title="Permanent link">&para;</a></h2>
@@ -1520,12 +1509,11 @@ interface UserService { &hellip; }<br />
 <td><strong>Type-safe accessor</strong></td>
 <td>
 
-```kotlin
-fakt {
-    @OptIn(ExperimentalFaktMultiModule::class)
-    collectFakesFrom(projects.core.analytics)
-}
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">core</span><span class="p">.</span><span class="na">analytics</span><span class="p">)</span>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="p">}</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1533,12 +1521,11 @@ fakt {
 <td><strong>String-based path</strong></td>
 <td>
 
-```kotlin
-fakt {
-    @OptIn(ExperimentalFaktMultiModule::class)
-    collectFakesFrom(project(":core:analytics"))
-}
-```
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="w">    </span><span class="nd">@OptIn</span><span class="p">(</span><span class="n">ExperimentalFaktMultiModule</span><span class="o">::</span><span class="n">class</span><span class="p">)</span>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="w">    </span><span class="n">collectFakesFrom</span><span class="p">(</span><span class="n">project</span><span class="p">(</span><span class="s">&quot;:core:analytics&quot;</span><span class="p">))</span>
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="p">}</span>
+</code></pre></div>
 
 </td>
 </tr>
@@ -1553,12 +1540,12 @@ cache-correct path instead runs generation in a dedicated, cacheable Gradle task
 come back with it.</p>
 <p>Opt in via the extension or a Gradle property (the property wins, so you can always opt out with<br />
 <code>-Pfakt.useExperimentalGenerateTask=false</code>):</p>
-<p><code>kotlin
-fakt {
-    useExperimentalGenerateTask.set(true)
-}</code></p>
-<p><code>bash
-gradle build -Pfakt.useExperimentalGenerateTask=true</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="w">    </span><span class="n">useExperimentalGenerateTask</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="p">}</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>gradle<span class="w"> </span>build<span class="w"> </span>-Pfakt.useExperimentalGenerateTask<span class="o">=</span><span class="nb">true</span>
+</code></pre></div>
 <p><strong>Support matrix (under the flag):</strong></p>
 <table>
 <thead>

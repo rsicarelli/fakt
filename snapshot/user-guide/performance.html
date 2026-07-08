@@ -1090,36 +1090,40 @@
 <h2 id="build-time-impact">Build Time Impact<a class="headerlink" href="#build-time-impact" title="Permanent link">&para;</a></h2>
 <p>Fakt uses intelligent caching across KMP targets:</p>
 <p><strong>First target compilation:</strong></p>
-<p><code>DISCOVERY: 1ms (100 interfaces, 21 classes)
-GENERATION: 39ms (121 new fakes, avg 333µs/fake)
-TOTAL: 40ms</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>DISCOVERY: 1ms (100 interfaces, 21 classes)
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>GENERATION: 39ms (121 new fakes, avg 333µs/fake)
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>TOTAL: 40ms
+</code></pre></div>
 <p><strong>Subsequent targets (cached):</strong></p>
-<p><code>compileKotlinJvm:     1ms (121 from cache)
-compileKotlinAndroid: 1ms (121 from cache)
-compileKotlinIosX64:  1ms (121 from cache)</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>compileKotlinJvm:     1ms (121 from cache)
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>compileKotlinAndroid: 1ms (121 from cache)
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>compileKotlinIosX64:  1ms (121 from cache)
+</code></pre></div>
 <hr />
 <h2 id="telemetry-configuration">Telemetry Configuration<a class="headerlink" href="#telemetry-configuration" title="Permanent link">&para;</a></h2>
 <p>Four log levels for debugging and performance analysis:</p>
-<p>```kotlin<br />
-import com.rsicarelli.fakt.compiler.api.LogLevel</p>
-<p>fakt {<br />
-    logLevel.set(LogLevel.INFO)   // Default: concise summary<br />
-    // LogLevel.QUIET  - Zero output (CI/CD)<br />
-    // LogLevel.DEBUG  - Detailed breakdown with FIR + IR details<br />
-}<br />
-```</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">import</span><span class="w"> </span><span class="nn">com.rsicarelli.fakt.compiler.api.LogLevel</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="n">logLevel</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">LogLevel</span><span class="p">.</span><span class="na">INFO</span><span class="p">)</span><span class="w">   </span><span class="c1">// Default: concise summary</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="c1">// LogLevel.QUIET  - Zero output (CI/CD)</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="c1">// LogLevel.DEBUG  - Detailed breakdown with FIR + IR details</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">}</span>
+</code></pre></div>
 <h3 id="log-level-outputs">Log Level Outputs<a class="headerlink" href="#log-level-outputs" title="Permanent link">&para;</a></h3>
 <p><strong>INFO (default):</strong></p>
-<p><code>✅ 10 fakes generated in 1.2s (6 cached)
-   Discovery: 120ms | Analysis: 340ms | Generation: 580ms
-   Cache hit rate: 40% (6/15)</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>✅ 10 fakes generated in 1.2s (6 cached)
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>   Discovery: 120ms | Analysis: 340ms | Generation: 580ms
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>   Cache hit rate: 40% (6/15)
+</code></pre></div>
 <p><strong>DEBUG:</strong></p>
-<p><code>[DISCOVERY] 120ms - 15 interfaces, 3 classes
-[FILTERING] 85ms - Cache hits: 6/15 (40%)
-[ANALYSIS] 340ms
-  ├─ UserRepository (18ms)
-  ├─ Analytics (42ms)
-  ├─ FIR + IR node inspection, type resolution</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>[DISCOVERY] 120ms - 15 interfaces, 3 classes
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>[FILTERING] 85ms - Cache hits: 6/15 (40%)
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>[ANALYSIS] 340ms
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>  ├─ UserRepository (18ms)
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>  ├─ Analytics (42ms)
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>  ├─ FIR + IR node inspection, type resolution
+</code></pre></div>
 <p>Includes full FIR + IR details, type resolution, etc. (~5-10ms overhead)</p>
 <hr />
 <h2 id="cache-strategy">Cache Strategy<a class="headerlink" href="#cache-strategy" title="Permanent link">&para;</a></h2>
@@ -1132,15 +1136,15 @@ import com.rsicarelli.fakt.compiler.api.LogLevel</p>
 <hr />
 <h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
 <h3 id="use-quiet-in-cicd">✅ Use QUIET in CI/CD<a class="headerlink" href="#use-quiet-in-cicd" title="Permanent link">&para;</a></h3>
-<p><code>kotlin
-fakt {
-    logLevel.set(LogLevel.QUIET)  // Zero overhead
-}</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="n">logLevel</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">LogLevel</span><span class="p">.</span><span class="na">QUIET</span><span class="p">)</span><span class="w">  </span><span class="c1">// Zero overhead</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="p">}</span>
+</code></pre></div>
 <h3 id="use-debug-for-troubleshooting">✅ Use DEBUG for Troubleshooting<a class="headerlink" href="#use-debug-for-troubleshooting" title="Permanent link">&para;</a></h3>
-<p><code>kotlin
-fakt {
-    logLevel.set(LogLevel.DEBUG)  // ~5-10ms overhead
-}</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="n">logLevel</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">LogLevel</span><span class="p">.</span><span class="na">DEBUG</span><span class="p">)</span><span class="w">  </span><span class="c1">// ~5-10ms overhead</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="p">}</span>
+</code></pre></div>
 <hr />
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>

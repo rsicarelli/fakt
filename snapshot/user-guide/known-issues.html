@@ -1044,13 +1044,13 @@
 <p>Data classes have compiler-generated implementations and can&rsquo;t be faked.</p>
 <p><strong>Workaround</strong>: Use builders or <code>copy()</code> for test data.</p>
 <p><strong>Works as parameter/return types:</strong></p>
-<p>```kotlin<br />
-data class User(val id: String, val name: String)</p>
-<p>@Fake  // ✅ This works<br />
-interface UserRepository {<br />
-    fun getUser(id: String): User  // ✅ Data class as return type<br />
-}<br />
-```</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">data</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">User</span><span class="p">(</span><span class="kd">val</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="nv">name</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">)</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nd">@Fake</span><span class="w">  </span><span class="c1">// ✅ This works</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="kd">interface</span><span class="w"> </span><span class="nc">UserRepository</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">getUser</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="kt">String</span><span class="p">):</span><span class="w"> </span><span class="n">User</span><span class="w">  </span><span class="c1">// ✅ Data class as return type</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">}</span>
+</code></pre></div>
 <hr />
 <h3 id="sealed-classes-as-fake-targets">❌ Sealed Classes as @Fake Targets<a class="headerlink" href="#sealed-classes-as-fake-targets" title="Permanent link">&para;</a></h3>
 <p>Sealed hierarchies can&rsquo;t be faked directly.</p>
