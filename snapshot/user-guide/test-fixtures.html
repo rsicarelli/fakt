@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#test-fixtures-jvm" class="md-skip">
+        <a href="#test-fixtures-jvm-android" class="md-skip">
           Skip to content
         </a>
       
@@ -602,6 +602,39 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#android-agp-modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      Android (AGP) modules
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Android (AGP) modules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#producer-comandroidlibrary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Producer (com.android.library)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#consumer-must-be-an-android-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      Consumer (must be an Android module)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#how-it-works" class="md-nav__link">
     <span class="md-ellipsis">
       How It Works
@@ -1018,6 +1051,39 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#android-agp-modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      Android (AGP) modules
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Android (AGP) modules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#producer-comandroidlibrary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Producer (com.android.library)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#consumer-must-be-an-android-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      Consumer (must be an Android module)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#how-it-works" class="md-nav__link">
     <span class="md-ellipsis">
       How It Works
@@ -1072,11 +1138,15 @@
   
 
 
-<h1 id="test-fixtures-jvm">Test Fixtures (JVM)<a class="headerlink" href="#test-fixtures-jvm" title="Permanent link">&para;</a></h1>
-<p>Share generated fakes across JVM modules using Gradle&rsquo;s built-in <a href="https://docs.gradle.org/current/userguide/java_testing.html#sec:java_test_fixtures">test fixtures</a> plugin — no collector module needed.</p>
+<h1 id="test-fixtures-jvm-android">Test Fixtures (JVM &amp; Android)<a class="headerlink" href="#test-fixtures-jvm-android" title="Permanent link">&para;</a></h1>
+<p>Share generated fakes across modules using Gradle test fixtures — no collector module needed. Two flavors are supported:</p>
+<ul>
+<li><strong>JVM</strong> — the Gradle <a href="https://docs.gradle.org/current/userguide/java_testing.html#sec:java_test_fixtures"><code>java-test-fixtures</code></a> plugin.</li>
+<li><strong>Android</strong> — AGP&rsquo;s native <code>android { testFixtures { enable = true } }</code> (the <code>java-test-fixtures</code> plugin cannot be applied to an Android module — it breaks Gradle sync).</li>
+</ul>
 <div class="admonition note">
-<p class="admonition-title">JVM Only</p>
-<p>This feature requires the <code>java-test-fixtures</code> Gradle plugin, which is only available for JVM and Android projects. For KMP multi-module projects, use the <a href="multi-module.html">Collector Module</a> approach instead.</p>
+<p class="admonition-title">Single-platform only</p>
+<p>Test fixtures apply to single-platform JVM and Android library modules. For KMP multi-module projects, use the <a href="multi-module.html">Collector Module</a> approach instead. (A KMP <code>androidTarget()</code>&rsquo;s fixtures are a different mechanism and are out of scope here — this covers <code>com.android.library</code> modules.)</p>
 </div>
 <hr />
 <h2 id="test-fixtures-vs-collector-module">Test Fixtures vs Collector Module<a class="headerlink" href="#test-fixtures-vs-collector-module" title="Permanent link">&para;</a></h2>
@@ -1091,7 +1161,7 @@
 <tbody>
 <tr>
 <td><strong>Platform</strong></td>
-<td>JVM / Android only</td>
+<td>JVM + Android (single-platform)</td>
 <td>KMP + JVM + Android</td>
 </tr>
 <tr>
@@ -1177,30 +1247,95 @@
 <a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="p">}</span>
 </code></pre></div>
 <hr />
+<h2 id="android-agp-modules">Android (AGP) modules<a class="headerlink" href="#android-agp-modules" title="Permanent link">&para;</a></h2>
+<p>Android library modules can&rsquo;t apply <code>java-test-fixtures</code> (it breaks Gradle sync with<br />
+<code>Neither the source set nor the artifact property was populated by the Android Gradle plugin</code>).<br />
+Use AGP&rsquo;s own test fixtures instead — Fakt detects the Android plugin and routes generated fakes<br />
+into the AGP <code>testFixtures</code> source set.</p>
+<h3 id="producer-comandroidlibrary">Producer (<code>com.android.library</code>)<a class="headerlink" href="#producer-comandroidlibrary" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1">// producer/build.gradle.kts</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">plugins</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="n">id</span><span class="p">(</span><span class="s">&quot;com.android.library&quot;</span><span class="p">)</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="n">id</span><span class="p">(</span><span class="s">&quot;org.jetbrains.kotlin.android&quot;</span><span class="p">)</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="n">alias</span><span class="p">(</span><span class="n">libs</span><span class="p">.</span><span class="na">plugins</span><span class="p">.</span><span class="na">fakt</span><span class="p">)</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="p">}</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="n">android</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">    </span><span class="n">testFixtures</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">        </span><span class="n">enable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="p">}</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">    </span><span class="n">useGradleTestFixtures</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span><span class="w"> </span><span class="c1">// works for both JVM and Android</span>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="p">}</span>
+</code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">AGP 8.x needs an experimental flag</p>
+<p>Kotlin compilation of the Android <code>testFixtures</code> source set requires this in<br />
+<code>gradle.properties</code> on <strong>AGP 8.x</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="na">android.experimental.enableTestFixturesKotlinSupport</span><span class="o">=</span><span class="s">true</span>
+</code></pre></div>
+<p>Without it, AGP leaves <code>testFixtures</code> Java-only, no <code>compileDebugTestFixturesKotlin</code> task is<br />
+created, and the generated Kotlin fakes are silently dropped. On <strong>AGP 9.0+</strong> this is the<br />
+default and the property is unnecessary. The minimum supported floor is <strong>AGP 8.11</strong> — AGP ≤ 8.7<br />
+calls a Kotlin Gradle Plugin API (<code>KotlinJvmOptions.getUseK2()</code>) that Kotlin 2.3.20, Fakt&rsquo;s<br />
+compiler version, removed, so it cannot compile Android test-fixtures Kotlin.</p>
+</div>
+<h3 id="consumer-must-be-an-android-module">Consumer (must be an Android module)<a class="headerlink" href="#consumer-must-be-an-android-module" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1">// consumer/build.gradle.kts</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">plugins</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span><span class="n">id</span><span class="p">(</span><span class="s">&quot;com.android.library&quot;</span><span class="p">)</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span><span class="n">id</span><span class="p">(</span><span class="s">&quot;org.jetbrains.kotlin.android&quot;</span><span class="p">)</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="p">}</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="n">dependencies</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">producer</span><span class="p">)</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">    </span><span class="n">testImplementation</span><span class="p">(</span><span class="n">testFixtures</span><span class="p">(</span><span class="n">projects</span><span class="p">.</span><span class="na">producer</span><span class="p">))</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="p">}</span>
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Consumer must be Android</p>
+<p>A plain JVM module cannot resolve an Android <code>testFixtures</code> variant. Consume Android test<br />
+fixtures from another Android module.</p>
+</div>
+<hr />
 <h2 id="how-it-works">How It Works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
 <ol>
-<li>Fakt detects <code>java-test-fixtures</code> plugin and <code>useGradleTestFixtures.set(true)</code></li>
+<li>Fakt detects <code>useGradleTestFixtures.set(true)</code> <strong>and</strong> a testFixtures source — either the<br />
+<code>java-test-fixtures</code> plugin (JVM) or <code>com.android.library</code> / <code>com.android.application</code> (Android)</li>
 <li>Generated fakes go to <code>build/generated/fakt/testFixtures/kotlin/</code> instead of <code>test/</code></li>
-<li>The <code>testFixtures</code> source set is configured to include the generated directory</li>
+<li>The <code>testFixtures</code> source set is wired to include the generated directory: the JVM Java source<br />
+   set for <code>java-test-fixtures</code>, and every per-variant <code>compile*TestFixturesKotlin</code> task for Android</li>
 <li>The module&rsquo;s own tests can use the fakes (Gradle makes testFixtures visible to test automatically)</li>
-<li>Other modules import fakes via <code>testFixtures(project(":core"))</code> — standard Gradle mechanism</li>
+<li>Other modules import fakes via <code>testFixtures(project(":producer"))</code> — standard Gradle mechanism</li>
 </ol>
 <hr />
 <h2 id="validation">Validation<a class="headerlink" href="#validation" title="Permanent link">&para;</a></h2>
-<p>If <code>useGradleTestFixtures</code> is enabled but the <code>java-test-fixtures</code> plugin is not applied, Fakt emits a warning and falls back to the default <code>test</code> source set:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Fakt: useGradleTestFixtures is enabled but the &#39;java-test-fixtures&#39; plugin
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>is not applied. Add `java-test-fixtures` to your plugins block:
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>  plugins {
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>      `java-test-fixtures`
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>  }
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>Falling back to default &#39;test&#39; source set.
+<p>If <code>useGradleTestFixtures</code> is enabled but no testFixtures source is available (neither the<br />
+<code>java-test-fixtures</code> plugin nor an Android plugin), Fakt emits a warning and falls back to the<br />
+default <code>test</code> source set:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>Fakt: useGradleTestFixtures is enabled but no testFixtures source is available. Apply ONE of:
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>  • JVM: add the `java-test-fixtures` plugin
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>      plugins { `java-test-fixtures` }
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>  • Android: enable AGP test fixtures
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>      android { testFixtures { enable = true } }
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>Falling back to default &#39;test&#39; source set.
 </code></pre></div>
+<p>On Android, if the experimental Kotlin-test-fixtures property is missing, Fakt additionally warns<br />
+that the generated Kotlin fakes won&rsquo;t be compiled into the testFixtures artifact (see the AGP 8.x<br />
+note above).</p>
 <hr />
 <h2 id="sample-project">Sample Project<a class="headerlink" href="#sample-project" title="Permanent link">&para;</a></h2>
-<p>See <a href="https://github.com/rsicarelli/fakt/tree/main/samples/jvm-test-fixtures"><code>samples/jvm-test-fixtures/</code></a> for a working multi-module example with:</p>
+<p>See <a href="https://github.com/rsicarelli/fakt/tree/main/samples/jvm-test-fixtures"><code>samples/jvm-test-fixtures/</code></a> for a working JVM multi-module example with:</p>
 <ul>
 <li><code>core/</code> — Producer with interface, abstract class, and open class</li>
 <li><code>app/</code> — Consumer using fakes from core&rsquo;s testFixtures</li>
+</ul>
+<p>See <a href="https://github.com/rsicarelli/fakt/tree/main/samples/android-test-fixtures"><code>samples/android-test-fixtures/</code></a> for the Android (AGP) equivalent:</p>
+<ul>
+<li><code>producer/</code> — <code>com.android.library</code> with <code>testFixtures { enable = true }</code> and <code>@Fake</code> interfaces</li>
+<li><code>consumer/</code> — Android library consuming the fakes via <code>testImplementation(testFixtures(...))</code></li>
 </ul>
 <hr />
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
