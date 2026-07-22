@@ -18,6 +18,11 @@ import org.gradle.kotlin.dsl.configure
  * - Android configuration (compileSdk 35, minSdk 24)
  * - Java 11 source/target compatibility
  * - Common test dependencies (JUnit 5, parallel execution)
+ *
+ * The Android `namespace` is derived from the module name so multi-module Android samples get a
+ * unique R-class package per module (two modules sharing a namespace collide on `R`). The single
+ * `android-single-module` sample keeps its historical namespace, since camel-casing its name yields
+ * exactly `androidSingleModule`.
  */
 class FaktSampleAndroidPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -28,7 +33,7 @@ class FaktSampleAndroidPlugin : Plugin<Project> {
 
             // Configure Android Library extension
             extensions.configure<LibraryExtension> {
-                namespace = "com.rsicarelli.fakt.samples.androidSingleModule"
+                namespace = "com.rsicarelli.fakt.samples.${moduleNamespaceSuffix(target.name)}"
                 compileSdk = 35 // Latest stable
 
                 defaultConfig {
@@ -50,3 +55,9 @@ class FaktSampleAndroidPlugin : Plugin<Project> {
         }
     }
 }
+
+/** Converts a kebab-case module name to a camelCase namespace suffix (`a-b-c` -> `aBC`). */
+private fun moduleNamespaceSuffix(moduleName: String): String =
+    moduleName.split('-', '_').filter { it.isNotEmpty() }.mapIndexed { index, part ->
+        if (index == 0) part else part.replaceFirstChar { it.uppercaseChar() }
+    }.joinToString("")

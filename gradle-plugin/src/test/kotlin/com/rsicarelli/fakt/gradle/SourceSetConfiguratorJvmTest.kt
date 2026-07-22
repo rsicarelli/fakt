@@ -103,6 +103,29 @@ class SourceSetConfiguratorJvmTest {
     }
 
     @Test
+    fun `GIVEN useTestFixtures true AND java-test-fixtures applied WHEN configureSourceSets THEN compileTestFixturesKotlin sources include generated dir`(
+        @TempDir tempDir: File
+    ) {
+        val project = createKotlinJvmProject(tempDir)
+        project.pluginManager.apply("java-test-fixtures")
+        val marker = plantMarker(project, "generated/fakt/testFixtures/kotlin")
+
+        SourceSetConfigurator(project, useTestFixtures = true).configureSourceSets()
+
+        // The Kotlin-compile-task route (Route 2) is the ONLY one that reaches AGP's
+        // compile*TestFixturesKotlin tasks, which have no JavaPluginExtension backing. Proving it
+        // on
+        // the JVM `compileTestFixturesKotlin` task exercises the same mechanism without the Android
+        // SDK (ProjectBuilder cannot apply com.android.library).
+        val fixturesTask = kotlinCompileTask(project, "compileTestFixturesKotlin")
+        assertTrue(
+            fixturesTask.sources.files.contains(marker),
+            "compileTestFixturesKotlin must source build/generated/fakt/testFixtures/kotlin; " +
+                "sources: ${fixturesTask.sources.files}",
+        )
+    }
+
+    @Test
     fun `GIVEN useTestFixtures true AND java-test-fixtures NOT applied WHEN configureSourceSets THEN completes without error`(
         @TempDir tempDir: File
     ) {

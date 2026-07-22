@@ -57,6 +57,10 @@ gradlePlugin {
             id = "fakt-sample-android"
             implementationClass = "FaktSampleAndroidPlugin"
         }
+        register("fakt-sample-android-fixtures") {
+            id = "fakt-sample-android-fixtures"
+            implementationClass = "FaktSampleAndroidFixturesPlugin"
+        }
         register("fakt-publishing") {
             id = "fakt-publishing"
             implementationClass = "FaktPublishingPlugin"

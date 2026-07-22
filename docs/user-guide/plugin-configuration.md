@@ -29,8 +29,10 @@ fakt {
     // Control mutable fake generation (default: false)
     enableMutableFakes.set(false)  // Set to true for mutable fakes by default
 
-    // Generate fakes to testFixtures source set (default: false, JVM only)
-    useGradleTestFixtures.set(false)  // Requires `java-test-fixtures` plugin
+    // Generate fakes to testFixtures source set (default: false)
+    // JVM: requires `java-test-fixtures` plugin. Android: requires
+    // `android { testFixtures { enable = true } }` (see the Test Fixtures guide).
+    useGradleTestFixtures.set(false)
 
     // Multi-module: Collect fakes from another module (default: not set)
     @OptIn(com.rsicarelli.fakt.compiler.api.ExperimentalFaktMultiModule::class)
