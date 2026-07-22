@@ -145,25 +145,47 @@ internal class SourceSetConfigurator(
     }
 
     /**
-     * Configure testFixtures source set to include generated fakes.
+     * Configure the `testFixtures` source set to include generated fakes.
      *
      * When `useGradleTestFixtures` is enabled, generated fakes go to
-     * `build/generated/fakt/testFixtures/kotlin/` and are added to the `testFixtures` Java source
-     * set. This makes fakes available to:
+     * `build/generated/fakt/testFixtures/kotlin/`. This makes them available to:
      * - The module's own tests (automatically via Gradle)
      * - Other modules via `testFixtures(project(":this-module"))` dependency
+     *
+     * Two wiring routes, applied together so both JVM and Android modules are covered:
+     * 1. **JVM (`java-test-fixtures`):** add the dir to the `testFixtures` Java source set. KGP
+     *    compiles the Kotlin files it finds there and the Java plugin publishes them into the
+     *    testFixtures artifact. No-ops on Android (no `JavaPluginExtension`).
+     * 2. **Android (and JVM):** source the dir into every `compile*TestFixturesKotlin` task.
+     *    Android has no `JavaPluginExtension`, so this Kotlin-compile-task route is the only one
+     *    that reaches AGP's per-variant `compileDebugTestFixturesKotlin` /
+     *    `compileReleaseTestFixturesKotlin`. Selection reuses [shouldWireGeneratedDir] (producing
+     *    token `"main"` matches every variant), keeping the scoping identical to the experimental
+     *    generate-task path. `configureEach` is lazy so AGP's later-registered per-variant tasks
+     *    are still covered.
      */
     private fun configureTestFixturesSourceSet() {
         val generatedDir =
             File(project.layout.buildDirectory.get().asFile, "generated/fakt/testFixtures/kotlin")
 
-        // Add generated directory to the testFixtures Java source set
+        // Route 1 — JVM java-test-fixtures Java source set (no-op on Android).
         project.extensions
             .findByType(org.gradle.api.plugins.JavaPluginExtension::class.java)
             ?.sourceSets
             ?.findByName("testFixtures")
             ?.java
             ?.srcDir(generatedDir)
+
+        // Route 2 — Kotlin testFixtures compile tasks (Android variants + JVM).
+        project.tasks.withType(AbstractKotlinCompile::class.java).configureEach { task ->
+            if (shouldWireGeneratedDir(task.name, "main", useTestFixtures = true)) {
+                task.source(generatedDir)
+                project.logger.info(
+                    "Fakt: Configured testFixtures compile task '${task.name}' " +
+                        "to include generated sources at $generatedDir"
+                )
+            }
+        }
 
         project.logger.info(
             "Fakt: Configured testFixtures source set to include generated sources at $generatedDir"

@@ -234,6 +234,27 @@ class FaktGradleSubpluginFlagResolutionTest {
         )
     }
 
+    @Test
+    fun `GIVEN testFixtures compilation WHEN isApplicable THEN returns false`(
+        @TempDir tempDir: File
+    ) {
+        val project = createJvmProject(tempDir)
+        project.pluginManager.apply("java-test-fixtures")
+        project.evaluate()
+        val subplugin = project.faktSubplugin()
+
+        // The testFixtures compilation is NOT flagged `isTestCompilation`, so without the explicit
+        // name exclusion `isApplicable` would return true and the plugin would run generation over
+        // the fixtures sources (self-referential wiring). AGP's
+        // debugTestFixtures/releaseTestFixtures
+        // behave the same; the JVM `testFixtures` compilation is the SDK-free proxy for that case.
+        assertFalse(
+            subplugin.isApplicable(project.jvmCompilation("testFixtures")),
+            "The testFixtures compilation consumes generated fakes — it must be excluded from " +
+                "generation even though it is not a test compilation.",
+        )
+    }
+
     // -- TestKit: gradleProperty branches ---------------------------------------------------------
 
     @Test

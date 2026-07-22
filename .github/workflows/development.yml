@@ -152,6 +152,9 @@ jobs:
           - sample: android-single-module
             path: samples/android-single-module
             tasks: build
+          - sample: android-test-fixtures
+            path: samples/android-test-fixtures
+            tasks: build
           - sample: jvm-test-fixtures
             path: samples/jvm-test-fixtures
             tasks: build

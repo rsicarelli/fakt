@@ -117,4 +117,39 @@ class FaktWireTestSrcDirTest {
                 "into both `test` and `testFixtures` outputs (gap 3).",
         )
     }
+
+    @Test
+    fun `GIVEN android main producer with fixtures on WHEN matching the debug test-fixtures compile THEN it is wired`() {
+        assertTrue(
+            shouldWireGeneratedDir(
+                "compileDebugTestFixturesKotlin",
+                "main",
+                useTestFixtures = true,
+            ),
+            "The legacy path drives Android fixtures with a `main` producing token, so every " +
+                "AGP variant's testFixtures compile (compileDebugTestFixturesKotlin) sources fakes.",
+        )
+    }
+
+    @Test
+    fun `GIVEN android main producer with fixtures on WHEN matching the release test-fixtures compile THEN it is wired`() {
+        assertTrue(
+            shouldWireGeneratedDir(
+                "compileReleaseTestFixturesKotlin",
+                "main",
+                useTestFixtures = true,
+            ),
+            "Both AGP variants publish testFixtures; the release variant's compile must source " +
+                "the same generated fakes.",
+        )
+    }
+
+    @Test
+    fun `GIVEN android main producer with fixtures on WHEN matching the debug unit-test compile THEN it is not wired`() {
+        assertFalse(
+            shouldWireGeneratedDir("compileDebugUnitTestKotlin", "main", useTestFixtures = true),
+            "With fixtures enabled the Android unit-test compile consumes fakes via the " +
+                "testFixtures dependency — it must not source the generated dir directly.",
+        )
+    }
 }
