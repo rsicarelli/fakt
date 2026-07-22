@@ -212,6 +212,9 @@ See [`samples/android-test-fixtures/`](https://github.com/rsicarelli/fakt/tree/m
 - `producer/` — `com.android.library` with `testFixtures { enable = true }` and `@Fake` interfaces
 - `consumer/` — Android library consuming the fakes via `testImplementation(testFixtures(...))`
 
+AGP-version backwards compatibility (AGP 8.11 / 8.12 / 9.0) is validated by
+[`samples/compat-agp/`](https://github.com/rsicarelli/fakt/tree/main/samples/compat-agp) in CI.
+
 ---
 
 ## Next Steps
