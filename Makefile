@@ -1,7 +1,7 @@
 # Fakt Development Commands
 # Run from fakt/ directory (or from project root)
 
-.PHONY: build test compile clean format shadowJar test-sample test-fake-publishing validate quick-test full-rebuild test-compat-all test-compat-agp-all
+.PHONY: build test compile clean format shadowJar test-sample test-fake-publishing validate quick-test full-rebuild test-compat-all test-compat-agp-all benchmark
 
 # Core build commands
 build:
@@ -96,6 +96,19 @@ test-compat-agp-all: publish-local
 test-compat-agp-%: publish-local
 	cd samples/compat-agp/agp-$* && ./gradlew testDebugUnitTest --no-daemon
 
+# Runtime benchmark — measures test EXECUTION time of Fakt vs mock libraries and prints a comparison
+# table. Runs every competitor in its own isolated module across FORKS fresh JVMs. --continue keeps
+# one technology's failure from hiding the others. The authoritative run is CI (benchmark.yml).
+FORKS ?= 3
+benchmark: publish-local
+	@echo "📊 Runtime benchmark ($(FORKS) forks): Fakt vs MockK / Mockito / Mokkery / hand-written..."
+	@for i in $$(seq 1 $(FORKS)); do \
+		echo "→ fork $$i/$(FORKS)"; \
+		( cd samples/runtime-benchmark && ./gradlew benchmark --continue -Pfakt.benchmark.fork=$$i ) || true; \
+	done
+	@echo "📋 Aggregating results into a comparison table..."
+	kotlin .github/scripts/benchmark-summary.main.kts "samples/runtime-benchmark" "Runtime Benchmark"
+
 # Comprehensive validation workflow (runs all checks like CI)
 validate:
 	@echo "🔍 Running comprehensive validation..."
@@ -164,6 +177,7 @@ help:
 	@echo "  test-compat-VERSION - Test specific compat sample (e.g., test-compat-2.2.0)"
 	@echo "  test-compat-agp-all - Test all AGP compat samples (AGP 8.11, 8.12, 9.0)"
 	@echo "  test-compat-agp-VERSION - Test specific AGP compat sample (e.g., test-compat-agp-8.11)"
+	@echo "  benchmark       - 📊 Runtime benchmark: Fakt vs mock libraries (comparison table)"
 	@echo ""
 	@echo "  validate        - ⭐ Run all validations (format, lint, tests, samples)"
 	@echo "  quick-test      - Quick development cycle (auto-rebuilds plugin!)"

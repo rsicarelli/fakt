@@ -1,0 +1,106 @@
+# Copyright (C) 2025 Rodrigo Sicarelli
+# SPDX-License-Identifier: Apache-2.0
+
+# Runtime benchmark: measures test EXECUTION time of Fakt vs mock libraries and publishes a
+# comparison table to the job summary. Heavy and not a merge gate, so it runs on demand (and
+# optionally weekly), never on every PR. Every competitor runs on the SAME runner (identical CPU) —
+# the cornerstone of a fair, unbiased comparison.
+name: Runtime Benchmark
+
+on:
+  workflow_dispatch:
+    inputs:
+      forks:
+        description: Fresh-JVM forks (whole suite re-run in a new JVM this many times)
+        required: false
+        default: "5"
+      warmup:
+        description: Warmup iterations per scenario per fork
+        required: false
+        default: "4"
+      iterations:
+        description: Measured iterations per scenario per fork
+        required: false
+        default: "12"
+      invocations:
+        description: Stubbed invocations per measured iteration
+        required: false
+        default: "1000"
+      churn:
+        description: Fresh fakes/mocks created per instantiation-churn iteration
+        required: false
+        default: "100"
+      featureInputs:
+        description: "@ParameterizedTest cases per feature test"
+        required: false
+        default: "200"
+  # Uncomment to also run weekly (Mondays 06:00 UTC):
+  # schedule:
+  #   - cron: "0 6 * * 1"
+
+concurrency:
+  group: benchmark-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    name: Runtime Benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      # The :fakt module is the only one that needs the published plugin. Publishing to Maven Local
+      # in the same job (no artifact dance) keeps the whole benchmark on one runner.
+      - name: Publish Fakt plugin to Maven Local
+        env:
+          ORG_GRADLE_PROJECT_SKIP_SIGNING: "true"
+        run: ./gradlew publishToMavenLocal
+
+      # Re-run the whole suite in F fresh JVM forks (each `./gradlew` = a new test JVM) so the summary
+      # can pool samples across forks — the "run N times" rigor. --continue + continue-on-error keep
+      # one technology failing on a bleeding-edge Kotlin from hiding the others or the summary step.
+      - name: Run benchmark (F forks, one runner)
+        working-directory: samples/runtime-benchmark
+        continue-on-error: true
+        run: |
+          FORKS="${{ inputs.forks || '5' }}"
+          for i in $(seq 1 "$FORKS"); do
+            echo "::group::Fork $i / $FORKS"
+            ./gradlew benchmark --continue --no-daemon \
+              -Pfakt.benchmark.fork="$i" \
+              -Pfakt.benchmark.warmup="${{ inputs.warmup || '4' }}" \
+              -Pfakt.benchmark.iterations="${{ inputs.iterations || '12' }}" \
+              -Pfakt.benchmark.invocations="${{ inputs.invocations || '1000' }}" \
+              -Pfakt.benchmark.churn="${{ inputs.churn || '100' }}" \
+              -Pfakt.benchmark.featureInputs="${{ inputs.featureInputs || '200' }}"
+            echo "::endgroup::"
+          done
+
+      - name: Upload raw benchmark JSON (transparency)
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: benchmark-results-json
+          path: samples/runtime-benchmark/*/build/benchmark-results/*.json
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Upload feature-test XML
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: benchmark-results-xml
+          path: samples/runtime-benchmark/*/build/test-results/test/TEST-*FeatureTest.xml
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Write comparison table to job summary
+        if: always()
+        run: kotlin .github/scripts/benchmark-summary.main.kts "samples/runtime-benchmark" "Runtime Benchmark"

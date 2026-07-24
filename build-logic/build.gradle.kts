@@ -53,6 +53,10 @@ gradlePlugin {
             id = "fakt-sample-jvm"
             implementationClass = "FaktSampleJvmPlugin"
         }
+        register("fakt-benchmark-jvm") {
+            id = "fakt-benchmark-jvm"
+            implementationClass = "FaktBenchmarkJvmPlugin"
+        }
         register("fakt-sample-android") {
             id = "fakt-sample-android"
             implementationClass = "FaktSampleAndroidPlugin"

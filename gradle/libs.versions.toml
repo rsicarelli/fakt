@@ -30,6 +30,16 @@ mavenPublish = "0.35.0"
 shadow = "9.3.2"
 spotless = "8.2.1"
 turbine = "1.2.1"
+# Runtime benchmark — competing mock/fake technologies (samples/runtime-benchmark only)
+# Pinned to the latest release of each (checked against Maven Central) for a credible comparison.
+mockk = "1.14.11"
+mockito = "5.23.0"
+mockito-kotlin = "6.3.0"
+# Mokkery 3.4.x requires Kotlin 2.4.0; 3.3.0 is the latest that supports this project's Kotlin 2.3.20.
+mokkery = "3.3.0"
+mockative = "3.3.2"
+# KSP2 uses standalone versioning (decoupled from Kotlin); this is what mockative-plugin 3.3.2 wants.
+ksp = "2.3.7"
 
 [libraries]
 coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
@@ -56,6 +66,13 @@ kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotl
 kotlin-testJunit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5", version.ref = "kotlin" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit5" }
+junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit5" }
+
+# Runtime benchmark — competing mock/fake technologies (samples/runtime-benchmark only)
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockito-kotlin" }
+mockative = { module = "io.mockative:mockative", version.ref = "mockative" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -65,3 +82,7 @@ mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublis
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 # Fakt Plugin
 fakt = { id = "com.rsicarelli.fakt", version.ref = "fakt" }
+# Runtime benchmark — competing mock/fake technologies (samples/runtime-benchmark only)
+mokkery = { id = "dev.mokkery", version.ref = "mokkery" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+mockative = { id = "io.mockative", version.ref = "mockative" }
