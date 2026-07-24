@@ -66,6 +66,13 @@ secrets.properties
 package-lock.json
 yarn.lock
 
+# ...but DO version-control the committed Kotlin/JS + Wasm lock files under
+# kotlin-js-store/. Committing them makes kotlin*RestoreYarnLock RUN (instead of
+# SKIP), which deterministically materializes build/**/yarn.lock BEFORE
+# kotlin*StoreYarnLock snapshots it. Without this, Store races NpmInstall and
+# fails under Gradle 9.5+ (missing-input validation is now a hard error).
+!**/kotlin-js-store/**/yarn.lock
+
 # ================================
 # Temporary Files
 # ================================
