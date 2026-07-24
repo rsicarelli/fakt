@@ -1,7 +1,7 @@
 # Fakt Development Commands
 # Run from fakt/ directory (or from project root)
 
-.PHONY: build test compile clean format shadowJar test-sample test-fake-publishing validate quick-test full-rebuild test-compat-all
+.PHONY: build test compile clean format shadowJar test-sample test-fake-publishing validate quick-test full-rebuild test-compat-all test-compat-agp-all
 
 # Core build commands
 build:
@@ -79,6 +79,23 @@ test-compat-all: publish-local
 test-compat-%: publish-local
 	./gradlew -p samples/compat/kotlin-$* jvmTest --no-daemon
 
+# AGP compat sample testing (multi-version Android Gradle Plugin verification).
+# Each agp-* sample ships its own Gradle wrapper (AGP 8.11 needs Gradle 8.13, which the repo-root
+# Gradle 9 wrapper cannot provide), so these `cd` into the sample and use its own wrapper — not
+# `./gradlew -p` from the root.
+test-compat-agp-all: publish-local
+	@echo "Testing all AGP compat samples..."
+	@for dir in samples/compat-agp/agp-*/; do \
+		version=$$(basename "$$dir" | sed 's/agp-//'); \
+		echo "Testing AGP $$version..."; \
+		(cd "$$dir" && ./gradlew testDebugUnitTest --no-daemon) || exit 1; \
+		echo "AGP $$version: PASS"; \
+	done
+	@echo "All AGP compat samples passed!"
+
+test-compat-agp-%: publish-local
+	cd samples/compat-agp/agp-$* && ./gradlew testDebugUnitTest --no-daemon
+
 # Comprehensive validation workflow (runs all checks like CI)
 validate:
 	@echo "🔍 Running comprehensive validation..."
@@ -145,6 +162,8 @@ help:
 	@echo "  test-fake-publishing - Test fake-publishing sample (two-step workflow)"
 	@echo "  test-compat-all     - Test all compat samples (Kotlin 2.2.0-2.3.20)"
 	@echo "  test-compat-VERSION - Test specific compat sample (e.g., test-compat-2.2.0)"
+	@echo "  test-compat-agp-all - Test all AGP compat samples (AGP 8.11, 8.12, 9.0)"
+	@echo "  test-compat-agp-VERSION - Test specific AGP compat sample (e.g., test-compat-agp-8.11)"
 	@echo ""
 	@echo "  validate        - ⭐ Run all validations (format, lint, tests, samples)"
 	@echo "  quick-test      - Quick development cycle (auto-rebuilds plugin!)"

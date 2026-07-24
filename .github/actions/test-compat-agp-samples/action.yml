@@ -1,0 +1,22 @@
+name: Test AGP Compat Sample
+description: >-
+  Build and unit-test a single AGP-compat sample to verify Android test-fixtures support on a
+  pinned Android Gradle Plugin version. Each sample ships its own Gradle wrapper (AGP 8.7 needs
+  Gradle 8.9, which the repo-root Gradle 9 wrapper cannot provide), so the sample is built with its
+  OWN wrapper via `working-directory`, not `./gradlew -p` from the root.
+
+inputs:
+  agp-version:
+    description: AGP version directory suffix (e.g. 8.7, 8.12, 9.0)
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Restore Plugin Bundle
+      uses: ./.github/actions/restore-plugin-bundle
+
+    - name: Test AGP compat sample (AGP ${{ inputs.agp-version }})
+      shell: bash
+      working-directory: samples/compat-agp/agp-${{ inputs.agp-version }}
+      run: ./gradlew testDebugUnitTest --no-daemon

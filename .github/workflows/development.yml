@@ -286,6 +286,30 @@ jobs:
         with:
           kotlin-version: ${{ matrix.kotlin-version }}
 
+  test-compat-agp:
+    name: Compat / AGP ${{ matrix.agp-version }}
+    needs: [check-code-changes, publish-plugin-bundle]
+    if: ${{ needs.check-code-changes.outputs.has-changes == 'true' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        agp-version:
+          - "8.11" # floor: Android test fixtures on AGP 8.x (Gradle 8.13, behind the experimental flag)
+          - "8.12" # current: matches the repo's pinned AGP (Gradle 9.0)
+          - "9.0" # forward: AGP 9.0, testFixtures Kotlin support without the experimental flag (Gradle 9.1)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Test AGP Compat Sample
+        uses: ./.github/actions/test-compat-agp-samples
+        with:
+          agp-version: ${{ matrix.agp-version }}
+
   ci-summary:
     name: CI Summary
     if: always()
@@ -301,6 +325,7 @@ jobs:
       - test-samples
       - test-cache-correctness
       - test-compat
+      - test-compat-agp
     steps:
       - name: Checkout
         uses: actions/checkout@v6
