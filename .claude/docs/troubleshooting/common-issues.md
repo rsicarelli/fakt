@@ -309,6 +309,34 @@ interface SharedService { ... } // Duplicate
 
 **Root Cause**: Cross-module fake coordination not implemented
 
+## 🧱 **Build / Gradle Issues**
+
+### **Issue: `kotlinWasmStoreYarnLock` (or `kotlinStoreYarnLock`) FAILED — "input file was expected but doesn't exist"**
+```
+> Task :kotlinWasmStoreYarnLock FAILED
+  property 'inputFile' specifies file '.../build/wasm/yarn.lock'
+  which doesn't exist. Reason: An input file was expected to be present but it doesn't exist.
+```
+
+**Solution:**
+1. Un-ignore the store locks — the bare `yarn.lock` rule in `.gitignore` is too broad; keep it (it covers `build/**` locks) but add a negation so the committed store lock is tracked:
+```gitignore
+yarn.lock
+!**/kotlin-js-store/**/yarn.lock
+```
+2. Generate the committed locks per KMP sample (needs node/npm + network):
+```bash
+./gradlew -p samples/<sample> kotlinUpgradeYarnLock kotlinWasmUpgradeYarnLock
+# produces kotlin-js-store/yarn.lock and kotlin-js-store/wasm/yarn.lock
+```
+3. Commit `kotlin-js-store/**/yarn.lock`. Do this for every KMP sample, not just the one that failed.
+
+**Verify:** `:kotlinWasmRestoreYarnLock` now RUNS (not SKIPPED) and `:kotlinWasmStoreYarnLock` is UP-TO-DATE.
+
+**Root Cause**: With no committed `kotlin-js-store/**/yarn.lock`, `RestoreYarnLock` is SKIPPED, so the only producer of `build/**/yarn.lock` is `NpmInstall` — and `StoreYarnLock` races it. Large module graphs (e.g. `kmp-multi-module`, ~25 modules) lose the race; small samples win, so it looks intermittent. Gradle **9.5.1** escalated the "input file absent" validation from a deprecation *warning* (9.0.0) to a *hard failure*, which is why the wrapper bump surfaced it. Committing the store lock (the KGP-recommended practice) makes the build deterministic. Do **not** modify `gradle-wrapper` files to work around this.
+
+**Fallbacks** (only if the committed-lock route is insufficient — report tradeoffs, don't silently switch): `YarnRootExtension` settings (`yarnLockMismatchReport` / `yarnLockAutoReplace` / `reportNewYarnLock`), or disabling the `*StoreYarnLock` / `*UpgradeYarnLock` tasks in `build-logic/src/main/kotlin/FaktSampleKmpPlugin.kt` (least clean — masks rather than fixes).
+
 ## 🚀 **Quick Diagnostic Commands**
 
 ### **Check System Health**
