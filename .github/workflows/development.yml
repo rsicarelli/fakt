@@ -274,6 +274,7 @@ jobs:
           - "2.3.0"
           - "2.3.10"
           - "2.3.20"
+          - "2.4.10"
     steps:
       - name: Checkout
         uses: actions/checkout@v6

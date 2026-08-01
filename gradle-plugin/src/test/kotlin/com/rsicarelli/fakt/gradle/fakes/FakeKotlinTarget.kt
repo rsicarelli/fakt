@@ -22,10 +22,6 @@ internal class FakeKotlinTarget(
     override val publishable
         get() = error("Not used")
 
-    @Suppress("OVERRIDE_DEPRECATION")
-    override val sourceSets
-        get() = error("Not used")
-
     override val artifactsTaskName
         get() = error("Not used")
 

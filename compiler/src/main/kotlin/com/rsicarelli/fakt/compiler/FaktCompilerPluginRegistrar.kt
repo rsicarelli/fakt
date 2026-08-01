@@ -102,7 +102,10 @@ class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
      */
     private fun ExtensionStorage.registerFirExtension(sharedContext: FaktSharedContext) {
         sharedContext.logger.debug("Registering FIR extension")
-        FirExtensionRegistrarAdapter.registerExtension(FaktFirExtensionRegistrar(sharedContext))
+        registerExtensionCompat(
+            FirExtensionRegistrarAdapter,
+            FaktFirExtensionRegistrar(sharedContext),
+        )
     }
 
     /**
@@ -114,7 +117,30 @@ class FaktCompilerPluginRegistrar : CompilerPluginRegistrar() {
      */
     private fun ExtensionStorage.registerIrExtension(sharedContext: FaktSharedContext) {
         sharedContext.logger.debug("Registering IR extension")
-        IrGenerationExtension.registerExtension(UnifiedFaktIrGenerationExtension(sharedContext))
+        registerExtensionCompat(
+            IrGenerationExtension,
+            UnifiedFaktIrGenerationExtension(sharedContext),
+        )
+    }
+
+    /**
+     * Registers a compiler extension against the running compiler via reflection so a single plugin
+     * JAR stays binary-compatible across every supported Kotlin version.
+     *
+     * Kotlin 2.4.0 widened the receiver of `ExtensionStorage.registerExtension` from
+     * `ProjectExtensionDescriptor<T>` to its new `ExtensionPointDescriptor<T>` superclass. A direct
+     * call compiled against 2.4.0 bakes `ExtensionPointDescriptor` into the call site, which older
+     * compilers (2.2.0–2.3.20) cannot link — the class does not exist there, yielding a
+     * `NoClassDefFoundError` at plugin registration. Resolving the method by name at runtime binds
+     * to whichever `registerExtension` overload the host compiler actually provides.
+     *
+     * @param descriptor the extension-point descriptor companion (e.g.
+     *   [FirExtensionRegistrarAdapter])
+     * @param extension the extension instance to register
+     */
+    private fun ExtensionStorage.registerExtensionCompat(descriptor: Any, extension: Any) {
+        val method = javaClass.methods.first { it.name == "registerExtension" }
+        method.invoke(this, descriptor, extension)
     }
 
     /**

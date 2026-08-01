@@ -141,7 +141,7 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
          * `faktWorker` configuration in their project if they need a different compiler version
          * (e.g. for a Kotlin EAP).
          */
-        public const val FAKT_KOTLIN_VERSION: String = "2.3.20"
+        public const val FAKT_KOTLIN_VERSION: String = "2.4.10"
 
         internal const val WORKER_CONFIGURATION: String = "faktWorker"
         internal const val COMPILER_CLASSPATH_CONFIGURATION: String = "faktCompiler"

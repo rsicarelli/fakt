@@ -23,7 +23,7 @@ Install the Fakt plugin, annotate an interface with `@Fake`, and start using typ
 ```toml
 [versions]
 fakt = "x.y.z"
-kotlin = "2.3.20"
+kotlin = "2.4.10"
 
 [plugins]
 fakt = { id = "com.rsicarelli.fakt", version.ref = "fakt" }

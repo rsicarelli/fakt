@@ -289,14 +289,6 @@ private class FakeKotlinCompilation(
         get() = error("Not used")
 
     @Suppress("OVERRIDE_DEPRECATION")
-    override val compileKotlinTask
-        get() = error("Not used")
-
-    @Suppress("OVERRIDE_DEPRECATION")
-    override val compileKotlinTaskProvider
-        get() = error("Not used")
-
-    @Suppress("OVERRIDE_DEPRECATION")
     override val kotlinOptions
         get() = error("Not used")
 
