@@ -1,5 +1,7 @@
 // Copyright (C) 2025 Rodrigo Sicarelli
 // SPDX-License-Identifier: Apache-2.0
+@file:OptIn(org.jetbrains.kotlin.config.CompilerConfiguration.Internals::class)
+
 package com.rsicarelli.fakt.compiler.core.config
 
 import kotlin.test.assertEquals

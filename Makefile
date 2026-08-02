@@ -173,7 +173,7 @@ help:
 	@echo "  test-kmp-multi-target - Test kmp-multi-target sample (hierarchy validation)"
 	@echo "  test-kmp-no-jvm - Test kmp-no-jvm sample (no JVM/Android target)"
 	@echo "  test-fake-publishing - Test fake-publishing sample (two-step workflow)"
-	@echo "  test-compat-all     - Test all compat samples (Kotlin 2.2.0-2.3.20)"
+	@echo "  test-compat-all     - Test all compat samples (Kotlin 2.2.0-2.4.10)"
 	@echo "  test-compat-VERSION - Test specific compat sample (e.g., test-compat-2.2.0)"
 	@echo "  test-compat-agp-all - Test all AGP compat samples (AGP 8.11, 8.12, 9.0)"
 	@echo "  test-compat-agp-VERSION - Test specific AGP compat sample (e.g., test-compat-agp-8.11)"

@@ -8,8 +8,8 @@ Fakt is tested against multiple Kotlin versions on every change. This page is th
 
 | Kotlin Version | Status | CI |
 |---------------|--------|-----|
-| 2.4.x | ⚠️ Not tested | — |
-| **2.3.20** | ⭐ **Latest tested** | ✅ |
+| **2.4.10** | ⭐ **Latest tested** | ✅ |
+| 2.3.20 | ✅ Supported | ✅ |
 | 2.3.10 | ✅ Supported | ✅ |
 | 2.3.0 | ✅ Supported | ✅ |
 | 2.2.21 | ✅ Supported | ✅ |

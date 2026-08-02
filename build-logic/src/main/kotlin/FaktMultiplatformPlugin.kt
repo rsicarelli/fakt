@@ -20,6 +20,15 @@ import org.gradle.api.Project
  */
 class FaktMultiplatformPlugin : Plugin<Project> {
     override fun apply(target: Project) {
+        // Retro-compatibility (see docs/compatibility.md): the published `annotations` artifact is
+        // consumed by projects on Kotlin 2.2.0 through 2.4.10. Building it with the latest toolchain
+        // otherwise pins a transitive kotlin-stdlib of the build version into the published POM,
+        // which wins version resolution and forces that stdlib onto older consumers — a Kotlin 2.2.x
+        // compiler cannot read a 2.4.10 stdlib's metadata. Stop the Kotlin Gradle Plugin from
+        // exporting a stdlib dependency; every Kotlin consumer already supplies its own stdlib at its
+        // own compiler version. Must be set before the plugin is applied, as KGP reads it eagerly.
+        target.extensions.extraProperties.set("kotlin.stdlib.default.dependency", "false")
+
         // Apply Kotlin Multiplatform plugin
         target.pluginManager.apply("org.jetbrains.kotlin.multiplatform")
 

@@ -52,7 +52,7 @@ val fake = fakeUserRepository {
 **1. Add plugin and dependency** (`build.gradle.kts`):
 ```kotlin
 plugins {
-    kotlin("multiplatform") version "2.3.20" // JVM or Android also works
+    kotlin("multiplatform") version "2.4.10" // JVM or Android also works
     id("com.rsicarelli.fakt") version "x.y.z"
 }
 

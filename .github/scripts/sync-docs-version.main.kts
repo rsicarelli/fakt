@@ -84,11 +84,11 @@ fun syncDocumentationVersions(projectDir: File, newVersion: String) {
     val versions = if (versionCatalogFile.exists()) {
         val content = versionCatalogFile.readText()
         mapOf(
-            "kotlin" to (Regex("""kotlin\s*=\s*"([^"]+)"""").find(content)?.groupValues?.get(1) ?: "2.3.20"),
+            "kotlin" to (Regex("""kotlin\s*=\s*"([^"]+)"""").find(content)?.groupValues?.get(1) ?: "2.4.10"),
             "coroutines" to (Regex("""coroutines\s*=\s*"([^"]+)"""").find(content)?.groupValues?.get(1) ?: "1.10.2")
         )
     } else {
-        mapOf("kotlin" to "2.3.20", "coroutines" to "1.10.2")
+        mapOf("kotlin" to "2.4.10", "coroutines" to "1.10.2")
     }
 
     // Patterns to replace (use version catalog versions for consistency)

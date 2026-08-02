@@ -6,7 +6,7 @@ Platform and version requirements.
 
 ## Kotlin Version Support
 
-Fakt supports Kotlin **2.2.0 through 2.3.20**, verified by CI on every change.
+Fakt supports Kotlin **2.2.0 through 2.4.10**, verified by CI on every change.
 
 See the [Kotlin Compatibility Matrix](../compatibility.md) for the full list of tested versions and our backward compatibility philosophy.
 
