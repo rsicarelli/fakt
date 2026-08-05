@@ -160,6 +160,73 @@ class FakeGeneratorTest {
     }
 
     @Test
+    fun `GIVEN generateCompleteFake WHEN method returns Flow THEN imports emptyFlow`() {
+        // GIVEN
+        val methods =
+            listOf(
+                MethodSpec(name = "observeUsers", params = emptyList(), returnType = "Flow<User>")
+            )
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "UserService",
+                methods = methods,
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN
+        assertContains(result, "import kotlinx.coroutines.flow.emptyFlow")
+    }
+
+    @Test
+    fun `GIVEN generateCompleteFake WHEN Flow property THEN imports emptyFlow`() {
+        // GIVEN
+        val properties = listOf(PropertySpec(name = "users", type = "Flow<User>"))
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "UserStore",
+                properties = properties,
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN
+        assertContains(result, "import kotlinx.coroutines.flow.emptyFlow")
+    }
+
+    @Test
+    fun `GIVEN generateCompleteFake WHEN no Flow member THEN omits emptyFlow import`() {
+        // GIVEN
+        val methods =
+            listOf(MethodSpec(name = "getCount", params = emptyList(), returnType = "Int"))
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "Counter",
+                methods = methods,
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN - no Flow member means the emptyFlow import must not be emitted
+        assertFalse(
+            result.contains("import kotlinx.coroutines.flow.emptyFlow"),
+            "Should not import emptyFlow when no member returns Flow",
+        )
+    }
+
+    @Test
     fun `GIVEN generateCompleteFake WHEN simple property THEN generates immutable constructor param`() {
         // GIVEN
         val properties = listOf(PropertySpec(name = "count", type = "Int", isStateFlow = false))
