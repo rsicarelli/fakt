@@ -311,6 +311,29 @@ jobs:
         with:
           agp-version: ${{ matrix.agp-version }}
 
+  test-kmp-android-lint:
+    name: Compat / KMP+Android lint (Gradle 9.6.1)
+    needs: [check-code-changes, publish-plugin-bundle]
+    if: ${{ needs.check-code-changes.outputs.has-changes == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Restore Plugin Bundle
+        uses: ./.github/actions/restore-plugin-bundle
+
+      # End-to-end smoke test for #129: runs AGP lint on a KMP+Android module pinned to its OWN
+      # Gradle 9.6.1 wrapper (the root wrapper is older), exercising lintAnalyzeAndroidHostTest over
+      # the commonTest generated source dir. Proves the fix builds and lints cleanly under 9.6.1.
+      # The deterministic regression guard is the SimplifiedSourceSetConfigurationTest unit test.
+      - name: Run AGP lint under Gradle 9.6.1
+        working-directory: samples/kmp-android-lint
+        run: ./gradlew lint --no-daemon
+
   ci-summary:
     name: CI Summary
     if: always()
@@ -327,6 +350,7 @@ jobs:
       - test-cache-correctness
       - test-compat
       - test-compat-agp
+      - test-kmp-android-lint
     steps:
       - name: Checkout
         uses: actions/checkout@v6
