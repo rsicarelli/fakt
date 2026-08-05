@@ -12,6 +12,7 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(libs.fakt.annotations)
+                implementation(libs.coroutines)
             }
         }
         commonTest {

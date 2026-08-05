@@ -255,6 +255,20 @@ private fun generateCompleteFakeInternal(config: FakeGenerationConfig): CodeFile
             import("kotlinx.coroutines.flow.MutableStateFlow")
         }
 
+        // Flow<T> members default to emptyFlow(), a top-level function that needs an explicit
+        // import. Resolve each member type the same way the generator does, so nested cases (e.g.
+        // Result<Flow<T>>) are covered and StateFlow/SharedFlow (which don't emit emptyFlow) are
+        // not falsely matched.
+        val usesEmptyFlow = { type: String ->
+            resolver.resolve(parseType(type)).render().contains("emptyFlow(")
+        }
+        if (
+            methods.any { usesEmptyFlow(it.returnType) } ||
+                properties.any { usesEmptyFlow(it.type) }
+        ) {
+            import("kotlinx.coroutines.flow.emptyFlow")
+        }
+
         // Add call tracking imports (only needed when call history is enabled)
         if (generateCallHistory) {
             import("kotlinx.coroutines.flow.StateFlow")

@@ -4,6 +4,7 @@
 package com.rsicarelli.fakt.samples.kmpmultimodule.core.network
 
 import com.rsicarelli.fakt.Fake
+import kotlinx.coroutines.flow.Flow
 
 /**
  * HTTP client interface for making network requests.
@@ -212,6 +213,14 @@ interface WebSocketConnection {
      * In a real implementation, this would likely return a Flow<String>.
      */
     suspend fun receive(): String?
+
+    /**
+     * Stream of incoming messages as a [Flow].
+     *
+     * The generated fake defaults this to `emptyFlow()`, which exercises the
+     * `kotlinx.coroutines.flow.emptyFlow` import in the generated file.
+     */
+    fun messages(): Flow<String>
 
     /**
      * Close this connection.

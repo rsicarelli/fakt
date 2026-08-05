@@ -3,6 +3,8 @@
 
 package com.rsicarelli.fakt.samples.kmpmultimodule.core.network
 
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -306,6 +308,35 @@ class WebSocketConnectionTest {
 
             // Then
             assertEquals("Server message", message)
+        }
+
+    @Test
+    fun `GIVEN WebSocketConnection fake WHEN messages not configured THEN should default to empty flow`() =
+        runTest {
+            // Given
+            val connection = fakeWebSocketConnection()
+
+            // When
+            val received = connection.messages().toList()
+
+            // Then
+            assertTrue(received.isEmpty())
+        }
+
+    @Test
+    fun `GIVEN WebSocketConnection fake WHEN messages configured THEN should emit configured values`() =
+        runTest {
+            // Given
+            val connection =
+                fakeWebSocketConnection {
+                    messages { flowOf("first", "second") }
+                }
+
+            // When
+            val received = connection.messages().toList()
+
+            // Then
+            assertEquals(listOf("first", "second"), received)
         }
 
     @Test
