@@ -95,6 +95,50 @@ class SimplifiedSourceSetConfigurationTest {
     }
 
     @Test
+    fun `GIVEN common producer task exists WHEN configuring KMP test source set dirs THEN commonTest generated dir is built by the producer`() {
+        // Given
+        val project = createKmpProject()
+        val kotlin = project.getKotlinExtension()
+        kotlin.jvm()
+        project.evaluate()
+        // Stand in for the real KGP-driven FaktGenerateTask, which ProjectBuilder cannot register.
+        project.tasks.register("faktGenerateMetadataCommonMain")
+
+        // When
+        SourceSetConfigurator(project).configureKmpTestSourceSetDirs()
+
+        // Then - the generated commonTest srcDir declares its producing task as a build dependency
+        // so AGP lintAnalyze*/lintReport* pass Gradle 9.6+ implicit-dependency validation (#129).
+        val commonTest = kotlin.sourceSets.getByName("commonTest")
+        val deps = commonTest.kotlin.buildDependencies.getDependencies(null).map { it.name }
+        assertTrue(
+            deps.contains("faktGenerateMetadataCommonMain"),
+            "commonTest generated dir must declare its producing FaktGenerateTask as builtBy; deps: $deps",
+        )
+    }
+
+    @Test
+    fun `GIVEN no producer task WHEN configuring KMP test source set dirs THEN commonTest generated dir has no Fakt build dependency`() {
+        // Given - legacy mode: no FaktGenerateTask exists (generation is in-process at compile
+        // time)
+        val project = createKmpProject()
+        val kotlin = project.getKotlinExtension()
+        kotlin.jvm()
+        project.evaluate()
+
+        // When
+        SourceSetConfigurator(project).configureKmpTestSourceSetDirs()
+
+        // Then - the dir stays a plain-File registration (nothing to wire builtBy to)
+        val commonTest = kotlin.sourceSets.getByName("commonTest")
+        val deps = commonTest.kotlin.buildDependencies.getDependencies(null).map { it.name }
+        assertTrue(
+            deps.none { it.startsWith("faktGenerate") },
+            "Without a producer task the generated dir stays plain-File (no builtBy); deps: $deps",
+        )
+    }
+
+    @Test
     fun `GIVEN jvmTest source set WHEN configured THEN should include build generated fakt jvmFakes kotlin`() {
         // Given
         val project = createKmpProject()

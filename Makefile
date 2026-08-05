@@ -1,7 +1,7 @@
 # Fakt Development Commands
 # Run from fakt/ directory (or from project root)
 
-.PHONY: build test compile clean format shadowJar test-sample test-fake-publishing validate quick-test full-rebuild test-compat-all test-compat-agp-all benchmark
+.PHONY: build test compile clean format shadowJar test-sample test-fake-publishing validate quick-test full-rebuild test-compat-all test-compat-agp-all test-kmp-android-lint benchmark
 
 # Core build commands
 build:
@@ -96,6 +96,13 @@ test-compat-agp-all: publish-local
 test-compat-agp-%: publish-local
 	cd samples/compat-agp/agp-$* && ./gradlew testDebugUnitTest --no-daemon
 
+# KMP + Android sample pinned to its own Gradle 9.6.1 wrapper. Runs AGP lint, which walks the
+# commonTest generated source dir and fails Gradle 9.6+ implicit-dependency validation unless the
+# generated dir declares its producing FaktGenerateTask as builtBy (regression guard for #129).
+test-kmp-android-lint: publish-local
+	@echo "🤖 Testing kmp-android-lint sample (Gradle 9.6.1, AGP lint)..."
+	cd samples/kmp-android-lint && ./gradlew lint --no-daemon
+
 # Runtime benchmark — measures test EXECUTION time of Fakt vs mock libraries and prints a comparison
 # table. Runs every competitor in its own isolated module across FORKS fresh JVMs. --continue keeps
 # one technology's failure from hiding the others. The authoritative run is CI (benchmark.yml).
@@ -177,6 +184,7 @@ help:
 	@echo "  test-compat-VERSION - Test specific compat sample (e.g., test-compat-2.2.0)"
 	@echo "  test-compat-agp-all - Test all AGP compat samples (AGP 8.11, 8.12, 9.0)"
 	@echo "  test-compat-agp-VERSION - Test specific AGP compat sample (e.g., test-compat-agp-8.11)"
+	@echo "  test-kmp-android-lint - Test KMP+Android sample AGP lint on Gradle 9.6.1 (#129 guard)"
 	@echo "  benchmark       - 📊 Runtime benchmark: Fakt vs mock libraries (comparison table)"
 	@echo ""
 	@echo "  validate        - ⭐ Run all validations (format, lint, tests, samples)"

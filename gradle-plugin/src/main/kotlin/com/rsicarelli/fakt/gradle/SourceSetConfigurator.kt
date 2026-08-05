@@ -109,11 +109,44 @@ internal class SourceSetConfigurator(
         kotlin.sourceSets.configureEach { sourceSet ->
             if (sourceSet.name.endsWith("Test")) {
                 val generatedDir = File(buildDir, "generated/fakt/${sourceSet.name}/kotlin")
-                sourceSet.kotlin.srcDir(generatedDir)
+                // When a FaktGenerateTask declares this dir as an @OutputDirectory (experimental
+                // path, commonTest only), register it through a builder-carrying FileCollection so
+                // Gradle infers the dependency. Otherwise (legacy in-process path, empty native/js
+                // dirs) there is no producer to wire, so keep the plain-File registration. Without
+                // the builder, AGP lintAnalyze*/lintReport* trip Gradle 9.6+ implicit-dependency
+                // validation (#129). Resolve inside the action so producers registered by
+                // applyToCompilation (which runs before this afterEvaluate) are visible.
+                val producer = producerTaskNameFor(sourceSet.name)
+                if (producer != null) {
+                    sourceSet.kotlin.srcDir(
+                        project.files(generatedDir).builtBy(project.tasks.named(producer))
+                    )
+                } else {
+                    sourceSet.kotlin.srcDir(generatedDir)
+                }
                 project.logger.info("Fakt: Added generated dir to ${sourceSet.name}: $generatedDir")
             }
         }
     }
+
+    /**
+     * Name of the [FaktGenerateTask] whose `@OutputDirectory` equals this test source set's
+     * canonical generated dir, or `null` when none owns it.
+     *
+     * Only `commonTest` collides: the common producer writes the canonical
+     * `generated/fakt/commonTest/kotlin` (see `FaktGenerateTaskWiring.register`), while every other
+     * producer writes a per-compilation `generated/fakt/<target>/<compilation>/kotlin` path. In
+     * legacy mode no `FaktGenerateTask` exists at all, so the lookup returns `null` and the dir
+     * stays a plain-File registration (nothing to declare a dependency on).
+     */
+    private fun producerTaskNameFor(testSourceSetName: String): String? =
+        if (testSourceSetName == "commonTest") {
+            listOf("faktGenerateMetadataCommonMain", "faktGenerateCommonMain").firstOrNull {
+                project.tasks.names.contains(it)
+            }
+        } else {
+            null
+        }
 
     /**
      * Configure JVM-only projects and Android projects.
