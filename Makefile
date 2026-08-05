@@ -96,9 +96,9 @@ test-compat-agp-all: publish-local
 test-compat-agp-%: publish-local
 	cd samples/compat-agp/agp-$* && ./gradlew testDebugUnitTest --no-daemon
 
-# KMP + Android sample pinned to its own Gradle 9.6.1 wrapper. Runs AGP lint, which walks the
-# commonTest generated source dir and fails Gradle 9.6+ implicit-dependency validation unless the
-# generated dir declares its producing FaktGenerateTask as builtBy (regression guard for #129).
+# KMP + Android sample pinned to its own Gradle 9.6.1 wrapper. Runs AGP lint over the commonTest
+# generated source dir as an end-to-end smoke test for #129 (the deterministic guard is the
+# SimplifiedSourceSetConfigurationTest unit test).
 test-kmp-android-lint: publish-local
 	@echo "🤖 Testing kmp-android-lint sample (Gradle 9.6.1, AGP lint)..."
 	cd samples/kmp-android-lint && ./gradlew lint --no-daemon

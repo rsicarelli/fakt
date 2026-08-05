@@ -9,10 +9,13 @@ plugins {
 
 kotlin {
     // Modern KMP + Android integration (com.android.kotlin.multiplatform.library). Host unit tests
-    // are enabled so the `androidHostTest` source set — and its `lintAnalyzeAndroidHostTest` task —
-    // exist. That is the exact task from issue #129: it walks the `commonTest` generated source dir,
-    // which must declare `faktGenerateMetadataCommonMain` as its builder or Gradle 9.6+ fails the
-    // implicit-dependency check.
+    // are enabled so the `androidHostTest` source set — and its `lintAnalyzeAndroidHostTest` task
+    // (the one named in issue #129) — exist. This sample is an end-to-end SMOKE TEST: it proves the
+    // fix builds and lints cleanly on Gradle 9.6.1 with an experimental-path FaktGenerateTask. The
+    // deterministic regression guard for #129 is the unit test in
+    // SimplifiedSourceSetConfigurationTest (a builder-less commonTest srcDir has no build
+    // dependency on its producer); reproducing the hard lint failure requires the reporter's
+    // multi-module wiring, which this single module does not fully recreate.
     androidLibrary {
         namespace = "com.rsicarelli.fakt.kmpandroidlint"
         compileSdk = 35

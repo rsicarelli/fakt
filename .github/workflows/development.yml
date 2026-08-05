@@ -326,10 +326,10 @@ jobs:
       - name: Restore Plugin Bundle
         uses: ./.github/actions/restore-plugin-bundle
 
-      # Runs AGP lint on a KMP+Android module pinned to its OWN Gradle 9.6.1 wrapper (the root
-      # wrapper is older). lintAnalyzeAndroidHostTest walks the commonTest generated source dir and
-      # fails Gradle 9.6+ implicit-dependency validation unless that dir declares its producing
-      # FaktGenerateTask as builtBy (regression guard for #129).
+      # End-to-end smoke test for #129: runs AGP lint on a KMP+Android module pinned to its OWN
+      # Gradle 9.6.1 wrapper (the root wrapper is older), exercising lintAnalyzeAndroidHostTest over
+      # the commonTest generated source dir. Proves the fix builds and lints cleanly under 9.6.1.
+      # The deterministic regression guard is the SimplifiedSourceSetConfigurationTest unit test.
       - name: Run AGP lint under Gradle 9.6.1
         working-directory: samples/kmp-android-lint
         run: ./gradlew lint --no-daemon

@@ -6,8 +6,10 @@ import com.rsicarelli.fakt.Fake
 
 /**
  * A `@Fake` interface declared in `commonMain`. Fakt generates its fake into the `commonTest`
- * generated source dir; the common `commonTest` is visible to the Android `androidHostTest` source
- * set, so AGP `lintAnalyzeAndroidHostTest` walks it. This is the exact shape from issue #129.
+ * generated source dir, which the Android `androidHostTest` source set sees and AGP
+ * `lintAnalyzeAndroidHostTest` walks — the shape from issue #129. This sample exercises that
+ * pipeline end to end under Gradle 9.6.1 (a smoke test); the regression itself is guarded by the
+ * `SimplifiedSourceSetConfigurationTest` unit test.
  */
 @Fake
 interface UserRepository {
