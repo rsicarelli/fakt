@@ -85,6 +85,7 @@ nav:
   - 'Why Fakt?': why-fakt.md
   - 'Get Started':
       - 'Installation': get-started/index.md
+      - 'Snapshot Builds': get-started/snapshots.md
       - 'Features': get-started/features.md
       - 'Plugin Configuration': user-guide/plugin-configuration.md
   - 'User Guide':
