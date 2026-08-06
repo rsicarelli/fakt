@@ -237,6 +237,32 @@ fun updateLibsVersionsToml(newVersion: String) {
     }
 }
 
+/**
+ * Updates the pinned SNAPSHOT version in the docs and the snapshot proof sample so they always point
+ * at the current `<version>-SNAPSHOT`. Scoped to a curated file list on purpose: a repo-wide
+ * replace would also clobber the generic `1.0.0-SNAPSHOT` placeholders used as examples elsewhere
+ * (README, KDoc, workflow descriptions).
+ */
+fun updateSnapshotReferences(newSnapshotVersion: String) {
+    val snapshotPattern = Regex("""\d+\.\d+\.\d+(?:-(?:alpha|beta)\d*)?-SNAPSHOT""")
+    listOf(
+        "docs/get-started/snapshots.md",
+        "samples/snapshot-smoke/build.gradle.kts",
+    ).forEach { path ->
+        val file = File(path)
+        if (!file.exists()) {
+            println("Warning: $path not found, skipping snapshot version update")
+            return@forEach
+        }
+        val content = file.readText()
+        val updated = snapshotPattern.replace(content, newSnapshotVersion)
+        if (content != updated) {
+            file.writeText(updated)
+            println("Updated snapshot version in $path to $newSnapshotVersion")
+        }
+    }
+}
+
 fun addSnapshotSuffix(version: SemanticVersion): String {
     val versionString = version.toString()
     return if (versionString.endsWith("-SNAPSHOT")) {
@@ -275,6 +301,9 @@ fun main(args: Array<String>) {
         // Update fakt version in libs.versions.toml
         updateLibsVersionsToml(snapshotVersion)
 
+        // Update the pinned SNAPSHOT version in docs + snapshot proof sample
+        updateSnapshotReferences(snapshotVersion)
+
         // Output for GitHub Actions (if needed)
         println("VERSION_SNAPSHOT=$snapshotVersion")
         println("Current version converted to SNAPSHOT: $snapshotVersion")
@@ -307,6 +336,10 @@ fun main(args: Array<String>) {
 
     // Update fakt version in libs.versions.toml
     updateLibsVersionsToml(newVersion.toString())
+
+    // Update the pinned SNAPSHOT version in docs + snapshot proof sample to the new version's
+    // snapshot (the docs reference `<version>-SNAPSHOT`, published on the next merge to main).
+    updateSnapshotReferences("$newVersion-SNAPSHOT")
 
     // Output for GitHub Actions
     println("VERSION_CURRENT=$currentVersion")
