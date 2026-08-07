@@ -33,7 +33,7 @@ fun syncVersionCatalog(projectDir: File, newVersion: String) {
     if (!versionCatalogFile.exists()) return
 
     var content = versionCatalogFile.readText()
-    val pattern = Regex("""(fakt\s*=\s*)"[^"]*"""")
+    val pattern = Regex("""(fakt\s*=\s*)"[^"\n]*"""")
 
     if (pattern.containsMatchIn(content)) {
         content = content.replace(pattern, """$1"$newVersion"""")
@@ -47,7 +47,7 @@ fun syncFaktGradlePlugin(projectDir: File, newVersion: String) {
     if (!pluginFile.exists()) return
 
     var content = pluginFile.readText()
-    val pattern = Regex("""(public const val PLUGIN_VERSION: String = )"[^"]*"""")
+    val pattern = Regex("""(public const val PLUGIN_VERSION: String = )"[^"\n]*"""")
 
     if (pattern.containsMatchIn(content)) {
         content = content.replace(pattern, """$1"$newVersion"""")
@@ -64,19 +64,34 @@ fun syncDocumentationVersions(projectDir: File, newVersion: String) {
     syncVersionCatalog(projectDir, newVersion)
     syncFaktGradlePlugin(projectDir, newVersion)
 
+    // Files owned by bump-version.main.kts (updateSnapshotReferences): they intentionally pin the
+    // current <version>-SNAPSHOT, so this release-version sync must NOT touch them (it would strip
+    // the -SNAPSHOT suffix and, for the sample, its hardcoded `id(...) version "..."` line trips the
+    // catch-all regex below). See the release-script wiring.
+    val snapshotOwned = setOf(
+        "docs/get-started/snapshots.md",
+        "samples/snapshot-smoke/build.gradle.kts",
+    )
+    fun File.isSnapshotOwned(): Boolean {
+        val rel = relativeTo(projectDir).path.replace(File.separatorChar, '/')
+        return rel in snapshotOwned || rel.startsWith("samples/snapshot-smoke/")
+    }
+
     // Files to update
     val filesToUpdate = mutableListOf<File>()
 
     // Documentation files
     projectDir.walkTopDown().filter { file ->
         file.isFile && file.name.endsWith(".md") &&
-        !file.path.contains("/build/") && !file.path.contains("/.")
+        !file.path.contains("/build/") && !file.path.contains("/.") &&
+        !file.isSnapshotOwned()
     }.forEach { filesToUpdate.add(it) }
 
     // Sample build files that still use hardcoded versions
     projectDir.walkTopDown().filter { file ->
         file.isFile && file.name == "build.gradle.kts" &&
-        file.path.contains("/samples/")
+        file.path.contains("/samples/") &&
+        !file.isSnapshotOwned()
     }.forEach { filesToUpdate.add(it) }
 
     // Get current versions from version catalog for consistent documentation
@@ -94,15 +109,15 @@ fun syncDocumentationVersions(projectDir: File, newVersion: String) {
     // Patterns to replace (use version catalog versions for consistency)
     val replacementPatterns = listOf(
         // Plugin version declarations
-        Regex("""(id\("com\.rsicarelli\.fakt"\)\s+version\s+)"[^"]*"(\s*)""") to """$1"$newVersion"$2""",
+        Regex("""(id\("com\.rsicarelli\.fakt"\)\s+version\s+)"[^"\n]*"(\s*)""") to """$1"$newVersion"$2""",
 
         // Version catalog entries in docs
-        Regex("""(fakt\s*=\s*)"[^"]*"(\s*)""") to """$1"$newVersion"$2""",
-        Regex("""(kotlin\s*=\s*)"[^"]*"(\s*)""") to """$1"${versions["kotlin"]}"$2""",
-        Regex("""(coroutines\s*=\s*)"[^"]*"(\s*)""") to """$1"${versions["coroutines"]}"$2""",
+        Regex("""(fakt\s*=\s*)"[^"\n]*"(\s*)""") to """$1"$newVersion"$2""",
+        Regex("""(kotlin\s*=\s*)"[^"\n]*"(\s*)""") to """$1"${versions["kotlin"]}"$2""",
+        Regex("""(coroutines\s*=\s*)"[^"\n]*"(\s*)""") to """$1"${versions["coroutines"]}"$2""",
 
         // Maven coordinates (supports alpha/beta/stable formats)
-        Regex("""(com\.rsicarelli\.fakt:[\w-]+:)"[^"]*"""") to """$1"$newVersion"""",
+        Regex("""(com\.rsicarelli\.fakt:[\w-]+:)"[^"\n]*"""") to """$1"$newVersion"""",
         Regex("""(com\.rsicarelli\.fakt:[\w-]+:)[^"\s)]+(?=\s|\)|$)""") to """$1$newVersion""",
 
         // Documentation examples (supports alpha/beta/stable + optional)
@@ -110,10 +125,10 @@ fun syncDocumentationVersions(projectDir: File, newVersion: String) {
         Regex("""(Using Fakt\s+)[^\s+]+(\+?\s*)""") to """$1$newVersion+$2""",
 
         // Multiplatform version examples
-        Regex("""(kotlin\("multiplatform"\)\s+version\s+)"[^"]*"(\s*)""") to """$1"${versions["kotlin"]}"$2""",
+        Regex("""(kotlin\("multiplatform"\)\s+version\s+)"[^"\n]*"(\s*)""") to """$1"${versions["kotlin"]}"$2""",
 
         // Alpha/Beta/Stable specific patterns (more specific to avoid @OptIn collisions)
-        Regex("""(fakt.*version.*)"[^"]*"(\s*)""") to """$1"$newVersion"$2""",
+        Regex("""(fakt.*version.*)"[^"\n]*"(\s*)""") to """$1"$newVersion"$2""",
     )
 
     filesToUpdate.forEach { file ->
