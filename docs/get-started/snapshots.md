@@ -8,7 +8,7 @@ fixes before they land in a tagged release.
     versions). Browse or verify them in the snapshots repository directly:
     [maven-metadata.xml](https://central.sonatype.com/repository/maven-snapshots/com/rsicarelli/fakt/com.rsicarelli.fakt.gradle.plugin/maven-metadata.xml).
 
-The current snapshot version is **`1.0.0-beta11-SNAPSHOT`**.
+The current snapshot version is **`1.0.0-beta12-SNAPSHOT`**.
 
 ---
 
@@ -47,12 +47,12 @@ dependencyResolutionManagement {
 // build.gradle.kts
 plugins {
     kotlin("jvm") version "2.4.10" // or kotlin("multiplatform")
-    id("com.rsicarelli.fakt") version "1.0.0-beta11-SNAPSHOT"
+    id("com.rsicarelli.fakt") version "1.0.0-beta12-SNAPSHOT"
 }
 
 dependencies {
     // The @Fake annotation.
-    implementation("com.rsicarelli.fakt:annotations:1.0.0-beta11-SNAPSHOT")
+    implementation("com.rsicarelli.fakt:annotations:1.0.0-beta12-SNAPSHOT")
 
     // Generated fakes track call history via kotlinx-coroutines StateFlow, so it must be on the
     // classpath that compiles them (your test source set).

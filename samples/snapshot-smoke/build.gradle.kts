@@ -4,12 +4,7 @@
 plugins {
     kotlin("jvm") version "2.4.10"
     // Apply the Fakt plugin straight from the published SNAPSHOT.
-    id("com.rsicarelli.fakt") version "1.0.0-beta11-SNAPSHOT"
-}
-
-dependencies {
-    // The @Fake annotation, at the same SNAPSHOT version.
-    implementation("com.rsicarelli.fakt:annotations:1.0.0-beta11-SNAPSHOT")
+    id("com.rsicarelli.fakt") version "1.0.0-beta11"1.0.0-beta11"com.rsicarelli.fakt:annotations:1.0.0-beta12-SNAPSHOT")
 
     // Generated fakes track call history via kotlinx-coroutines StateFlow, so it must be on the
     // classpath that compiles them (the test source set).
