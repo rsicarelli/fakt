@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.conventions
 
+import com.vanniktech.maven.publish.DeploymentValidation
 import org.gradle.api.Project
 
 /**
@@ -64,7 +65,14 @@ private fun Project.configureMavenCentralPublishing() {
     extensions
         .findByType(com.vanniktech.maven.publish.MavenPublishBaseExtension::class.java)
         ?.apply {
-            publishToMavenCentral(automaticRelease = isReleaseMode)
+            // Pin PUBLISHED explicitly: since the plugin's 0.36 release the default is
+            // VALIDATED, which returns once the Portal validates the deployment rather than
+            // once it is actually published. The release workflow tags the repo and cuts the
+            // GitHub Release right after this task, so it must wait for the real thing.
+            publishToMavenCentral(
+                automaticRelease = isReleaseMode,
+                validateDeployment = DeploymentValidation.PUBLISHED,
+            )
 
             // Signing logic:
             // - If IS_CI is absent (false) → skip signing (local development)
