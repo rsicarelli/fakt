@@ -160,10 +160,16 @@ class FaktGenerateTaskWiringTest {
     }
 
     @Test
-    fun `GIVEN no producer registered WHEN a lint task exists THEN it gains no Fakt dependency`(
+    fun `GIVEN the legacy in-process path WHEN a lint task exists THEN it gains no Fakt dependency`(
         @TempDir tempDir: File
     ) {
-        val project = evaluatedJvmProject(tempDir)
+        // Opting out explicitly is what makes this the legacy path: the cache-correct path is the
+        // default, so an unconfigured project registers a producer during evaluation.
+        val project =
+            createJvmProject(tempDir).also {
+                it.faktExtension().useExperimentalGenerateTask.set(false)
+                it.evaluate()
+            }
 
         project.tasks.register("lintAnalyzeAndroidHostTest")
 
