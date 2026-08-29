@@ -26,7 +26,7 @@ import org.junit.jupiter.api.io.TempDir
  * Two harnesses:
  * - `ProjectBuilder` drives the public [FaktGradleSubplugin.applyToCompilation] /
  *   [FaktGradleSubplugin.isApplicable] seams directly with real compilations — covers the
- *   extension-set branch, the both-unset default, the KMP veto, and test-compilation skipping.
+ *   extension-set branch, the opted-out branch, the KMP veto, and test-compilation skipping.
  * - Gradle TestKit covers the `gradleProperty` branches: `ProjectBuilder` cannot inject Gradle
  *   properties (they come from start parameters), so a synthetic build passing `-P` flags is the
  *   only faithful seam. The TestKit builds only run `tasks --all` — configuration-time probing,
@@ -66,10 +66,11 @@ class FaktGradleSubpluginFlagResolutionTest {
     }
 
     @Test
-    fun `GIVEN flag unset WHEN applyToCompilation on JVM THEN returns legacy options`(
+    fun `GIVEN flag false via extension WHEN applyToCompilation on JVM THEN returns legacy options`(
         @TempDir tempDir: File
     ) {
         val project = createJvmProject(tempDir)
+        project.faktExtension().useExperimentalGenerateTask.set(false)
         project.evaluate()
 
         val options =
@@ -86,7 +87,7 @@ class FaktGradleSubpluginFlagResolutionTest {
                 "outputDir",
             ),
             keys,
-            "Extension unset + property unset must resolve to false and keep the legacy payload.",
+            "An explicit extension false must keep the legacy in-process payload.",
         )
         assertEquals("true", options.first { it.key == "enabled" }.value)
     }
@@ -138,6 +139,30 @@ class FaktGradleSubpluginFlagResolutionTest {
         assertTrue(
             project.tasks.names.contains("faktGenerateJvmMain"),
             "The drivable platform main must register a source-partitioned consumer task.",
+        )
+    }
+
+    @Test
+    fun `GIVEN single-target KMP WHEN applyToCompilation on the platform main THEN stays legacy and registers no task`() {
+        val project = createKmpProject()
+        project.getKotlinExtension().jvm()
+        project.evaluate()
+
+        val options =
+            project.faktSubplugin().applyToCompilation(project.kmpCompilation("jvm", "main")).get()
+
+        // A single-target KMP project never gets the per-source-set `commonMain` compilation, so
+        // no common producer can exist. Routing the lone platform main to a source-partitioned
+        // consumer would drop every `@Fake` declared in commonMain, so the whole project stays on
+        // the in-process plugin: correct, just not cache-correct.
+        assertTrue(
+            options.size > 1,
+            "Single-target KMP must keep the full legacy payload; keys: ${options.map { it.key }}",
+        )
+        assertEquals("true", options.first { it.key == "enabled" }.value)
+        assertFalse(
+            project.tasks.names.any { it.startsWith("faktGenerate") },
+            "No FaktGenerateTask may be registered for a single-target KMP project.",
         )
     }
 
@@ -272,30 +297,63 @@ class FaktGradleSubpluginFlagResolutionTest {
     }
 
     @Test
-    fun `GIVEN gradle property yes WHEN building THEN treated as false and no faktGenerate task`(
+    fun `GIVEN no property and no extension WHEN building THEN faktGenerateJvmMain registered`(
+        @TempDir projectDir: File
+    ) {
+        setupKotlinJvmFaktProject(projectDir)
+
+        val result = listTasks(projectDir)
+
+        assertTrue(
+            result.output.contains("faktGenerateJvmMain"),
+            "The cache-correct path is the default — an unconfigured project must get the task.",
+        )
+    }
+
+    @Test
+    fun `GIVEN extension false and no property WHEN building THEN no faktGenerate task`(
+        @TempDir projectDir: File
+    ) {
+        setupKotlinJvmFaktProject(
+            projectDir,
+            extensionBlock =
+                "extensions.getByType(com.rsicarelli.fakt.gradle.FaktPluginExtension::class.java)" +
+                    ".useExperimentalGenerateTask.set(false)",
+        )
+
+        val result = listTasks(projectDir)
+
+        assertFalse(
+            result.output.contains("faktGenerate"),
+            "The extension must remain a working opt-out back to the legacy in-process path.",
+        )
+    }
+
+    @Test
+    fun `GIVEN gradle property yes WHEN building THEN falls back to the extension default and task registered`(
         @TempDir projectDir: File
     ) {
         setupKotlinJvmFaktProject(projectDir)
 
         val result = listTasks(projectDir, "-Pfakt.useExperimentalGenerateTask=yes")
 
-        assertFalse(
-            result.output.contains("faktGenerate"),
-            "Only strict 'true'/'false' parse — 'yes' must fall back to false.",
+        assertTrue(
+            result.output.contains("faktGenerateJvmMain"),
+            "Only strict 'true'/'false' parse — 'yes' must fall through to the extension default.",
         )
     }
 
     @Test
-    fun `GIVEN gradle property empty string WHEN building THEN treated as false and no faktGenerate task`(
+    fun `GIVEN gradle property empty string WHEN building THEN falls back to the extension default and task registered`(
         @TempDir projectDir: File
     ) {
         setupKotlinJvmFaktProject(projectDir)
 
         val result = listTasks(projectDir, "-Pfakt.useExperimentalGenerateTask=")
 
-        assertFalse(
-            result.output.contains("faktGenerate"),
-            "Empty property value must fall back to false, not crash or enable the path.",
+        assertTrue(
+            result.output.contains("faktGenerateJvmMain"),
+            "Empty property value must fall through to the extension default, not crash.",
         )
     }
 

@@ -20,8 +20,8 @@
 #
 # Non-drivable platform mains (Native/JS/Wasm) generate their platform-specific fakes via the
 # in-process plugin, which is not cacheable by construction. Those fakes must still never be dropped,
-# so when FAKT_PRESENCE_TASKS is set this script additionally runs those compile tasks (with the
-# flag) and asserts every fake named in FAKT_PRESENCE_FAKES physically exists — present, not cached.
+# so when FAKT_PRESENCE_TASKS is set this script additionally runs those compile tasks and asserts
+# every fake named in FAKT_PRESENCE_FAKES physically exists — present, not cached.
 #
 # Usage: cache-correctness-check.sh <project-path> [producer-task...]
 #        (producer task defaults to `faktGenerateMetadataCommonMain`)
@@ -37,8 +37,9 @@ if [ "${#PRODUCER_TASKS[@]}" -eq 0 ]; then
   PRODUCER_TASKS=("faktGenerateMetadataCommonMain")
 fi
 
-FLAG="-Pfakt.useExperimentalGenerateTask=true"
-GRADLE=(./gradlew -p "$PROJECT_PATH" "$FLAG" --build-cache --no-configuration-cache --console=plain)
+# No -Pfakt.useExperimentalGenerateTask here on purpose: the cache-correct path is Fakt's default,
+# so this contract must hold for the configuration users actually get.
+GRADLE=(./gradlew -p "$PROJECT_PATH" --build-cache --no-configuration-cache --console=plain)
 
 count_fakes() {
   find "$PROJECT_PATH" -path '*build/generated*' -name 'Fake*.kt' 2>/dev/null | wc -l | tr -d ' '

@@ -26,6 +26,29 @@ private fun isDrivablePlatform(platformTypeName: String): Boolean =
     }
 
 /**
+ * Whether this KMP project gets a per-source-set `commonMain` metadata compilation — the one the
+ * cache-correct path drives as the common producer. True exactly when the project declares more
+ * than one real (non-`metadata`) target.
+ *
+ * A **single-target** KMP project gets no such compilation: KGP exposes only the legacy metadata
+ * `main` compilation, which carries `commonMain` as its default source set but resolves an empty
+ * compile classpath, so `KotlinMetadataCompiler` cannot be driven over it. Nothing else can own
+ * that project's common fakes either — the single platform main is a source-partitioned consumer
+ * that emits only its own source set — so without this check every `@Fake` declared in `commonMain`
+ * would be silently dropped. Such projects stay on the in-process plugin (the LEGACY routing
+ * decision): correct, just not cache-correct.
+ *
+ * Counting targets rather than looking the compilation up is deliberate. KGP creates the metadata
+ * target's per-source-set compilations *after* it has resolved subplugins for every platform main,
+ * so `commonMain` is still absent while `jvmMain` is being decided and the lookup would report
+ * single-target for every project. The target set, by contrast, is complete before the routing
+ * decision runs — KGP resolves subplugins once the `kotlin { }` block has run.
+ */
+private fun hasCommonMainProducer(
+    kmp: org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+): Boolean = kmp.targets.count { !it.platformType.name.equals("common", ignoreCase = true) } > 1
+
+/**
  * Pure decision for whether Fakt should route generated fakes into a `testFixtures` source set.
  *
  * Test-fixtures mode requires the opt-in flag AND a build that actually has a `testFixtures`
@@ -169,9 +192,9 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
     /**
      * Creates the `fakt { }` extension and, after evaluation, routes the project: collector mode
      * registers [FakeCollectorTask]s for [FaktPluginExtension.collectFrom]; generator mode either
-     * wires legacy source sets ([SourceSetConfigurator]) or, with the experimental flag on,
-     * prepares the worker configurations — per-compilation [FaktGenerateTask] registration happens
-     * later in [applyToCompilation].
+     * prepares the worker configurations for the default cache-correct path or, when it is opted
+     * out of, wires the legacy source sets ([SourceSetConfigurator]) — per-compilation
+     * [FaktGenerateTask] registration happens later in [applyToCompilation].
      */
     @OptIn(ExperimentalFaktMultiModule::class)
     override fun apply(target: Project) {
@@ -198,8 +221,10 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 val useTestFixtures = resolveTestFixturesMode(target, extension)
                 if (resolveExperimentalGenerateTaskFlag(target, extension)) {
                     target.logger.info(
-                        "Fakt: useExperimentalGenerateTask=true — registering FaktGenerateTask " +
-                            "per compilation; the in-process compiler-plugin path stays disabled."
+                        "Fakt: cache-correct generation enabled (the default) — registering " +
+                            "FaktGenerateTask per compilation; the in-process compiler-plugin " +
+                            "path stays disabled. Opt out with " +
+                            "-Pfakt.useExperimentalGenerateTask=false."
                     )
                     ensureFaktConfigurations(target)
                     // Non-drivable KMP platform mains (Native/JS/Wasm) keep generating their own
@@ -217,11 +242,13 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
     }
 
     /**
-     * Resolves the experimental flag, with the Gradle property `fakt.useExperimentalGenerateTask`
-     * taking precedence over the `fakt { }` extension. When the property is set to a strict boolean
-     * it wins outright — so `-Pfakt.useExperimentalGenerateTask=false` can turn the path off even
-     * when the build script sets the extension to `true`. Otherwise the extension convention
-     * decides.
+     * Resolves the cache-correct generate-task flag, with the Gradle property
+     * `fakt.useExperimentalGenerateTask` taking precedence over the `fakt { }` extension. When the
+     * property is set to a strict boolean it wins outright — so
+     * `-Pfakt.useExperimentalGenerateTask=false` can turn the path off even when the build script
+     * sets the extension to `true`. Otherwise the extension convention decides, and that convention
+     * is `true`: the cache-correct path is the default and the legacy in-process path is the
+     * opt-out.
      */
     private fun resolveExperimentalGenerateTaskFlag(
         project: Project,
@@ -518,6 +545,9 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
      * in-process plugin ([CacheCorrectDecision.LEGACY_HYBRID]): its platform-specific fakes are
      * generated (not cache-correct), while the common producer still owns the cache-correct common
      * fakes.
+     *
+     * A single-target KMP project has no per-source-set `commonMain` compilation at all (see
+     * [hasCommonMainProducer]); every one of its compilations stays on the in-process plugin.
      */
     private fun cacheCorrectDecision(
         kotlinCompilation: KotlinCompilation<*>
@@ -536,6 +566,7 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             kmp == null ->
                 if (isDrivablePlatform(platformType)) CacheCorrectDecision.REGISTER_PRODUCER
                 else CacheCorrectDecision.LEGACY
+            !hasCommonMainProducer(kmp) -> CacheCorrectDecision.LEGACY
             kotlinCompilation.name == COMMON_MAIN_COMPILATION ->
                 CacheCorrectDecision.REGISTER_PRODUCER
             platformType.equals("common", ignoreCase = true) -> CacheCorrectDecision.SUPPRESS

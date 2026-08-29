@@ -21,9 +21,9 @@ in no released `FaktPluginExtension`, and the design it described was replaced b
 | Build-cache correctness of generated fakes | Generated `.kt` files are declared task outputs of `FaktGenerateTask` | [metadata-producer-fir-emission.md](metadata-producer-fir-emission.md) §7 |
 | Overall plugin architecture | Two emit phases (FIR for the worker paths, IR for the legacy in-process path), two drivers | [ARCHITECTURE.md](ARCHITECTURE.md) |
 
-Everything above ships behind `fakt.useExperimentalGenerateTask` (default `false`). Flipping the
-default (backlog P8) and removing the legacy in-process path (P9) are tracked as follow-ups to the
-issue #79 branch.
+Everything above is selected by `fakt.useExperimentalGenerateTask`, which now defaults to `true`
+(backlog P8, landed). Removing the legacy in-process path (P9) is still tracked as a follow-up to
+the issue #79 branch; until then, `false` opts back into it.
 
 ## Still-valid background from the original document
 

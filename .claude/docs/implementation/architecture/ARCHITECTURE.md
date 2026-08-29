@@ -11,13 +11,13 @@ Fakt is a Kotlin compiler plugin that generates type-safe test fakes from `@Fake
 
 The plugin has **two emission paths**, selected by `SourceSetContext.emitPhase`:
 
-- **IR emission (legacy default)** — the in-process plugin runs inside `compileKotlin*`; the FIR
-  phase validates and the IR phase generates.
-- **FIR emission (`fakt.useExperimentalGenerateTask=true`)** — a cacheable `FaktGenerateTask`
-  hosts the compiler in a Gradle Worker and the FIR checkers themselves emit the fakes
-  (byte-identical to IR emission, locked by `FirIrEmissionParityTest`). See
-  [metadata-producer-fir-emission.md](metadata-producer-fir-emission.md). Flipping the default
-  (backlog P8) and removing the legacy path (P9) are deferred follow-ups.
+- **FIR emission (default)** — a cacheable `FaktGenerateTask` hosts the compiler in a Gradle
+  Worker and the FIR checkers themselves emit the fakes (byte-identical to IR emission, locked by
+  `FirIrEmissionParityTest`). See
+  [metadata-producer-fir-emission.md](metadata-producer-fir-emission.md).
+- **IR emission (legacy, `fakt.useExperimentalGenerateTask=false`)** — the in-process plugin runs
+  inside `compileKotlin*`; the FIR phase validates and the IR phase generates. Kept as an opt-out
+  until it is removed (backlog P9).
 
 ### Design Principles
 
@@ -365,7 +365,7 @@ String-based code generation with a type-safe DSL was chosen over pure IR node m
 
 ## Cache-Correct Generation: `FaktGenerateTask` (issue #79)
 
-**Guard**: `fakt.useExperimentalGenerateTask` (default `false`).
+**Guard**: `fakt.useExperimentalGenerateTask` (default `true`; `false` opts back into the legacy in-process path).
 
 The legacy in-process path writes generated `.kt` files as a *side effect* of `compileKotlin*`, so
 a warm Gradle build cache restores the compilation without them. The cache-correct path makes the
@@ -385,7 +385,9 @@ files real task outputs:
   and keeps emitting at IR.
 - **Routing** (`FaktGradleSubplugin.cacheCorrectDecision`): commonMain → producer; JVM/Android
   platform mains → consumers; Native/JS/Wasm platform mains → LEGACY_HYBRID (in-process plugin,
-  ordered after the producer); other metadata compilations → suppressed.
+  ordered after the producer); other metadata compilations → suppressed. Single-target KMP projects
+  (one non-`metadata` target) have no `commonMain` compilation to produce from, so every compilation
+  there routes to LEGACY.
 
 Full design, driver invocation reference, parity contract, and hazards:
 [metadata-producer-fir-emission.md](metadata-producer-fir-emission.md).
@@ -510,9 +512,9 @@ fakt/
 Fakt implements a **two-phase FIR → IR compilation pipeline** with **type-safe DSL-based code generation**:
 
 ✅ **FIR Phase** - Validates `@Fake` annotations, stores metadata; emits directly when `emitPhase == FIR`
-✅ **IR Phase** - Transforms metadata, generates code (legacy default path)
+✅ **IR Phase** - Transforms metadata, generates code (legacy opt-out path)
 ✅ **One emitter, two drivers** - `codegen-runtime` renders for both phases; `KotlinMetadataCompiler` (common producers) and `K2JVMCompiler` (JVM paths) drive the worker
-✅ **Cache-correct** - `FaktGenerateTask` makes generated fakes real, relocatable task outputs (behind the flag; P8/P9 deferred)
+✅ **Cache-correct** - `FaktGenerateTask` makes generated fakes real, relocatable task outputs (the default since P8; P9 — removing the legacy path — deferred)
 ✅ **Type-Safe DSL** - Builders create immutable models
 ✅ **String Rendering** - Models render to `.kt` files
 ✅ **Transparent** - Generated code is readable and debuggable

@@ -190,16 +190,17 @@ constructor(objects: ObjectFactory, private val project: Project) {
         objects.property(Boolean::class.java).convention(false)
 
     /**
-     * Opt in to the cache-correct `FaktGenerateTask` codepath that hosts Fakt's compiler in a
-     * Gradle Worker outside `compileKotlin*`. Fixes issue #79 — when Gradle's build cache restores
+     * Controls the cache-correct `FaktGenerateTask` codepath that hosts Fakt's compiler in a Gradle
+     * Worker outside `compileKotlin*`. Fixes issue #79 — when Gradle's build cache restores
      * `compileKotlin*`, the generated `.kt` files come back too because they're declared task
      * outputs rather than side-effect writes.
      *
-     * When enabled, the in-process compiler-plugin registration is disabled and a
+     * When enabled (the default), the in-process compiler-plugin registration is disabled and a
      * `FaktGenerateTask` is registered per compilation, with its output wired into the matching
-     * test source set.
+     * test source set. When set to `false`, generation falls back to the legacy in-process path
+     * that writes the fakes as a side effect of `compileKotlin*`.
      *
-     * **KMP support matrix (under the flag):**
+     * **KMP support matrix:**
      * - `commonMain` `@Fake` — generated and cache-correct (common producer task driving
      *   `KotlinMetadataCompiler`; no JVM/Android target required — KMP projects targeting only
      *   Native/JS/Wasm are covered too).
@@ -208,32 +209,31 @@ constructor(objects: ObjectFactory, private val project: Project) {
      * - Native platform `@Fake` — generated (via the in-process plugin); not cache-correct
      *   (`K2NativeCompiler` is not on the embeddable classpath, so it cannot be driven in a task).
      *
-     * **Default:** `false` (the existing in-process compiler-plugin path runs unchanged).
+     * **Default:** `true` (the cache-correct `FaktGenerateTask` path).
      *
-     * **Usage (build script):**
+     * **Opting out (build script):**
      *
      * ```kotlin
      * fakt {
-     *     useExperimentalGenerateTask.set(true)
+     *     useExperimentalGenerateTask.set(false)
      * }
      * ```
      *
-     * **Usage (Gradle property — flips the default for any project that hasn't set it
+     * **Opting out (Gradle property — flips the default for any project that hasn't set it
      * explicitly):**
      *
      * ```
-     * gradle build -Pfakt.useExperimentalGenerateTask=true
+     * gradle build -Pfakt.useExperimentalGenerateTask=false
      * ```
      *
      * The Gradle property wins over the extension when both are set, so
      * `-Pfakt.useExperimentalGenerateTask=false` always lets you opt out.
      *
-     * Experimental while the task-based path stabilizes. The cache-correct path is intended to
-     * become the default, with this property remaining as an explicit opt-out until the legacy
-     * in-process path is removed.
+     * The legacy in-process path remains reachable through this property until it is removed; the
+     * property name is kept for compatibility with build scripts that already set it.
      */
     public val useExperimentalGenerateTask: Property<Boolean> =
-        objects.property(Boolean::class.java).convention(false)
+        objects.property(Boolean::class.java).convention(true)
 
     /**
      * Source project to collect generated fakes from (collector mode).
