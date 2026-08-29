@@ -328,11 +328,19 @@ jobs:
 
       # End-to-end smoke test for #129: runs AGP lint on a KMP+Android module pinned to its OWN
       # Gradle 9.6.1 wrapper (the root wrapper is older), exercising lintAnalyzeAndroidHostTest over
-      # the commonTest generated source dir. Proves the fix builds and lints cleanly under 9.6.1.
-      # The deterministic regression guard is the SimplifiedSourceSetConfigurationTest unit test.
+      # the commonTest generated source dir.
       - name: Run AGP lint under Gradle 9.6.1
         working-directory: samples/kmp-android-lint
         run: ./gradlew lint --no-daemon
+
+      # `lint` alone used to leave faktGenerateMetadataCommonMain out of the task graph, so the step
+      # above linted a directory nothing had produced and could not catch the implicit-dependency
+      # failure at all. `build` pulls the generator in through the compile tasks, which is the graph
+      # that reproduces it. Keep both: the first pins the lint-only graph, this one the full graph.
+      # The deterministic regression guard is FaktGenerateTaskWiringTest's lint-ordering tests.
+      - name: Run AGP lint with the generator in the task graph
+        working-directory: samples/kmp-android-lint
+        run: ./gradlew clean build lint --no-daemon
 
   ci-summary:
     name: CI Summary

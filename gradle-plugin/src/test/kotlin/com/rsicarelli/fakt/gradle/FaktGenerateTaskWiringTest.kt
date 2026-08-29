@@ -47,6 +47,12 @@ class FaktGenerateTaskWiringTest {
     private fun Project.faktExtension(): FaktPluginExtension =
         extensions.getByType(FaktPluginExtension::class.java)
 
+    /** Names of every task the project's lint tasks depend on. */
+    private fun Project.lintTaskDependencyNames(): List<String> =
+        tasks.getByName("lintAnalyzeAndroidHostTest").taskDependencies.getDependencies(null).map {
+            it.name
+        }
+
     /**
      * commonMain is a producer; a drivable platform main (jvmMain) is a source-partitioned
      * consumer.
@@ -105,6 +111,69 @@ class FaktGenerateTaskWiringTest {
         FaktGenerateTaskWiring.registerProducer(project, compilation, extension)
 
         assertNotNull(project.tasks.findByName("faktGenerateJvmMain"))
+    }
+
+    @Test
+    fun `GIVEN lint task registered BEFORE the producer WHEN register THEN lint depends on the generator`(
+        @TempDir tempDir: File
+    ) {
+        val project = evaluatedJvmProject(tempDir)
+        // Stands in for AGP's lintAnalyze*/lintReport*, which ProjectBuilder cannot create without
+        // the Android Gradle plugin on the test classpath. Only the name matters to the wiring.
+        project.tasks.register("lintAnalyzeAndroidHostTest")
+
+        FaktGenerateTaskWiring.registerProducer(
+            project,
+            project.jvmCompilation("main"),
+            project.faktExtension(),
+        )
+
+        assertTrue(
+            project.lintTaskDependencyNames().contains("faktGenerateJvmMain"),
+            "AGP lint reads the generated dir through the Android variant model, which carries no " +
+                "task dependency; without an explicit one Gradle fails lintAnalyze* with " +
+                "'uses this output ... without declaring an explicit or implicit dependency'. " +
+                "deps: ${project.lintTaskDependencyNames()}",
+        )
+    }
+
+    @Test
+    fun `GIVEN lint task registered AFTER the producer WHEN register THEN lint still depends on the generator`(
+        @TempDir tempDir: File
+    ) {
+        val project = evaluatedJvmProject(tempDir)
+
+        FaktGenerateTaskWiring.registerProducer(
+            project,
+            project.jvmCompilation("main"),
+            project.faktExtension(),
+        )
+        // AGP creates its lint tasks on its own schedule, so the wiring must not depend on the
+        // producer being registered first — `matching {}.configureEach {}` is live for both orders.
+        project.tasks.register("lintAnalyzeAndroidHostTest")
+
+        assertTrue(
+            project.lintTaskDependencyNames().contains("faktGenerateJvmMain"),
+            "The lint dependency must not depend on task-registration order; " +
+                "deps: ${project.lintTaskDependencyNames()}",
+        )
+    }
+
+    @Test
+    fun `GIVEN no producer registered WHEN a lint task exists THEN it gains no Fakt dependency`(
+        @TempDir tempDir: File
+    ) {
+        val project = evaluatedJvmProject(tempDir)
+
+        project.tasks.register("lintAnalyzeAndroidHostTest")
+
+        // Legacy in-process path: fakes are a side effect of compileKotlin* with no declared
+        // output, so there is nothing for Gradle to validate and nothing to wait for.
+        assertTrue(
+            project.lintTaskDependencyNames().none { it.startsWith("faktGenerate") },
+            "Without a FaktGenerateTask, lint must stay free of Fakt dependencies; " +
+                "deps: ${project.lintTaskDependencyNames()}",
+        )
     }
 
     @Test

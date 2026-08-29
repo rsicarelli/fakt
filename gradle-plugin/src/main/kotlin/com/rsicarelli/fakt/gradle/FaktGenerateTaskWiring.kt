@@ -69,8 +69,7 @@ internal object FaktGenerateTaskWiring {
 
         // applyToCompilation fires before afterEvaluate, so the configurations may not exist yet
         // by the time we land here. Idempotent helper makes the call safe to repeat.
-        val subplugin = getSubpluginInstance(project)
-        subplugin.ensureFaktConfigurations(project)
+        getSubpluginInstance(project).ensureFaktConfigurations(project)
 
         // A KMP `commonMain` producer writes to the canonical `commonTest` directory so the
         // in-process plugin riding a non-drivable platform compilation (Native/JS/Wasm) finds the
@@ -129,11 +128,26 @@ internal object FaktGenerateTaskWiring {
                 task.scratchDir.set(scratchDir)
             }
 
+        wireGeneratedDirConsumers(project, kotlinCompilation, extension, taskProvider)
+    }
+
+    /**
+     * Points everything that reads the task's `@OutputDirectory` at the task that fills it: the
+     * matching test source set, the KMP cross-target `dependsOn` chain, and AGP's lint tasks.
+     */
+    private fun wireGeneratedDirConsumers(
+        project: Project,
+        kotlinCompilation: KotlinCompilation<*>,
+        extension: FaktPluginExtension,
+        taskProvider: TaskProvider<FaktGenerateTask>,
+    ) {
         // Resolved once: honours `useGradleTestFixtures` AND the `java-test-fixtures` plugin being
         // applied (warns and falls back to `test` otherwise), matching the legacy path's semantics.
-        val useTestFixtures = subplugin.resolveTestFixturesMode(project, extension)
+        val useTestFixtures =
+            getSubpluginInstance(project).resolveTestFixturesMode(project, extension)
         wireTestSrcDir(project, kotlinCompilation, taskProvider, useTestFixtures)
         wireKmpDependsOnCommonMain(project, kotlinCompilation, taskProvider)
+        wireAndroidLintOrdering(project, taskProvider)
     }
 
     /**
@@ -237,6 +251,39 @@ internal object FaktGenerateTaskWiring {
         val json = Json { prettyPrint = false }
         return json.encodeToString(SourceSetContext.serializer(), context)
     }
+}
+
+/**
+ * Makes AGP's lint tasks depend on the generator that produces the sources they analyse.
+ *
+ * The generated directory reaches a Kotlin compilation through a `builtBy`-carrying
+ * `FileCollection`, which is enough for `compileKotlin*`. AGP's lint tasks read the same directory
+ * through the Android variant's own source model, which does **not** carry that task dependency, so
+ * `lintAnalyze*` sees an input inside `FaktGenerateTask`'s `@OutputDirectory` with no path to it
+ * and Gradle fails the build:
+ * ```
+ * Task ':lintAnalyzeAndroidHostTest' uses this output of task
+ * ':faktGenerateMetadataCommonMain' without declaring an explicit or implicit dependency.
+ * ```
+ *
+ * The failure only surfaces when the generator is actually in the task graph — `lint` alone leaves
+ * it out (and then lints a directory nothing produced), while `build lint` pulls it in via the
+ * compile tasks. Declaring the dependency here fixes both: lint now waits for the fakes, so it also
+ * stops analysing a phantom directory.
+ *
+ * Only the cache-correct path needs this. The legacy in-process path writes the fakes as a side
+ * effect of `compileKotlin*` with no declared output, so Gradle has nothing to validate.
+ *
+ * Safe under Gradle 9 Project Isolation: no `afterEvaluate` and no task-graph reads — the match is
+ * lazy and `configureEach` only runs for lint tasks that are actually realized.
+ */
+private fun wireAndroidLintOrdering(
+    project: Project,
+    taskProvider: TaskProvider<FaktGenerateTask>,
+) {
+    project.tasks
+        .matching { it.name.startsWith("lint") }
+        .configureEach { lintTask -> lintTask.dependsOn(taskProvider) }
 }
 
 private fun taskNameFor(targetName: String, compilationName: String): String =
