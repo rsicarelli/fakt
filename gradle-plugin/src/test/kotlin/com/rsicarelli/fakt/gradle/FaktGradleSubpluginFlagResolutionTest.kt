@@ -167,6 +167,64 @@ class FaktGradleSubpluginFlagResolutionTest {
     }
 
     @Test
+    fun `GIVEN multi-target KMP WHEN applyToCompilation on the legacy metadata main THEN suppressed and registers no task`() {
+        val project = createKmpProject()
+        project.getKotlinExtension().jvm()
+        project.getKotlinExtension().linuxX64()
+        project.faktExtension().useExperimentalGenerateTask.set(true)
+        project.evaluate()
+
+        val options =
+            project
+                .faktSubplugin()
+                .applyToCompilation(project.kmpCompilation("metadata", "main"))
+                .get()
+
+        // The metadata target exposes the per-source-set `commonMain` compilation (the producer)
+        // AND this legacy `main` compilation, both platformType `common`. Turning the second into a
+        // producer would emit the common fakes twice into the same directory, so it is suppressed —
+        // the in-process plugin is off, but no task owns it either.
+        assertEquals(
+            1,
+            options.size,
+            "A suppressed compilation gets enabled=false only; keys: ${options.map { it.key }}",
+        )
+        assertEquals("false", options.single { it.key == "enabled" }.value)
+        assertFalse(
+            project.tasks.names.contains("faktGenerateMetadataMain"),
+            "The legacy metadata main compilation must not register a producer of its own; " +
+                "fakt tasks: ${project.tasks.names.filter { it.startsWith("faktGenerate") }}",
+        )
+    }
+
+    @Test
+    fun `GIVEN single-target KMP WHEN applyToCompilation on the legacy metadata main THEN stays legacy and registers no task`() {
+        val project = createKmpProject()
+        project.getKotlinExtension().jvm()
+        project.evaluate()
+
+        val options =
+            project
+                .faktSubplugin()
+                .applyToCompilation(project.kmpCompilation("metadata", "main"))
+                .get()
+
+        // In a single-target project this compilation is the only one carrying `commonMain` as its
+        // default source set, which makes it a tempting producer — but KGP resolves an EMPTY
+        // compile classpath for it, so KotlinMetadataCompiler cannot be driven over it (it fails
+        // with "unresolved reference 'Fake'"). The whole project stays on the in-process plugin.
+        assertTrue(
+            options.size > 1,
+            "Single-target KMP keeps the full legacy payload; keys: ${options.map { it.key }}",
+        )
+        assertEquals("true", options.first { it.key == "enabled" }.value)
+        assertFalse(
+            project.tasks.names.any { it.startsWith("faktGenerate") },
+            "No FaktGenerateTask may be registered anywhere in a single-target KMP project.",
+        )
+    }
+
+    @Test
     fun `GIVEN flag true AND non-drivable KMP platform main WHEN applyToCompilation THEN returns legacy options and registers no task`() {
         val project = createKmpProject()
         project.getKotlinExtension().jvm()
