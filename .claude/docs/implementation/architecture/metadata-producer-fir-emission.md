@@ -281,6 +281,7 @@ branch is **deleted** (the producer no longer needs a JVM classpath):
 | Single-platform JVM `main` | REGISTER_PRODUCER | K2JVM, FIR-emit |
 | Single-platform non-JVM | LEGACY | in-process, IR |
 | Any compilation of a **single-target KMP** project | LEGACY | in-process, IR |
+| Any compilation of an **Android module without KGP** (AGP built-in Kotlin) | LEGACY | in-process, IR |
 | KMP `commonMain` (any target set, **incl. no JVM/Android target**) | REGISTER_PRODUCER | **KotlinMetadataCompiler**, FIR-emit |
 | KMP other `platformType == common` metadata compilations | SUPPRESS | — |
 | KMP JVM/Android platform `main` | REGISTER_CONSUMER | K2JVM, FIR-emit; ancestors ride as `-Xcommon-sources` analysis-only (`emitSourceSets` restricts emission to the platform source set) |
@@ -301,6 +302,17 @@ non-`common` targets, **not** by looking the compilation up: KGP creates the met
 per-source-set compilations *after* resolving subplugins for every platform main, so the lookup
 reports "absent" for multi-target projects too. Locked by `samples/compat/*` (all single-target KMP)
 and a routing test in `FaktGradleSubpluginFlagResolutionTest`.
+
+**Android on AGP's built-in Kotlin** (AGP 9+, which rejects `org.jetbrains.kotlin.android`) is the
+second such shape. There the `KotlinCompilation`s handed to `applyToCompilation` carry
+`KotlinSourceSet`s whose `kotlin.srcDirs` are **empty** — AGP keeps sources in its own variant model
+— so a producer resolves zero sources, runs NO-SOURCE and silently emits nothing. Measured on
+`samples/compat-agp/agp-9.0`: `srcDirs=[]` on every compilation even at `projectsEvaluated`, while
+the AGP 8.x + KGP cells report real directories. Detected by plugin id (`com.android.*` applied and
+`org.jetbrains.kotlin.android` not), never by probing `srcDirs`, which is unreadable this early for
+every project. The gate sits on both the `apply` branch (the legacy path needs
+`SourceSetConfigurator.configureSourceSets()` to wire its output) and `cacheCorrectDecision`. Locked
+by the `compat-agp/agp-9.0` CI cell and `FaktKotlinSourceSetModelTest`.
 
 ## 9. Known hazards & out-of-scope
 

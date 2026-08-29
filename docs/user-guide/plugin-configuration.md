@@ -414,12 +414,19 @@ Every `@Fake` is always generated — none are dropped. JS/Wasm are not cache-co
 cannot be (its compiler is not embeddable, so it can't run in a Gradle task); those platform fakes
 are produced by the in-process plugin instead.
 
-!!! note "Single-target multiplatform projects"
-    A multiplatform project that declares exactly one target (`kotlin { jvm() }` and nothing else)
-    keeps the in-process path. Kotlin does not give such a project a `commonMain` compilation to
-    generate from, so there is nothing to make cache-correct. Fakes are still generated for every
-    `@Fake`; they just aren't declared task outputs. Adding a second target moves the project onto
-    the cache-correct path automatically.
+!!! note "Project shapes that keep the in-process path"
+    Two shapes fall back to generating inside `compileKotlin*`. Fakes are still generated for every
+    `@Fake` in both — they just aren't declared task outputs, so a warm build cache can restore a
+    compilation without them.
+
+    - **Single-target multiplatform projects** (`kotlin { jvm() }` and nothing else). Kotlin does
+      not give such a project a `commonMain` compilation to generate from, so there is nothing to
+      make cache-correct. Adding a second target moves the project onto the cache-correct path
+      automatically.
+    - **Android modules on AGP's built-in Kotlin support** (AGP 9+, where `org.jetbrains.kotlin.android`
+      is no longer applied). AGP keeps Kotlin sources in its own variant model rather than the
+      source sets Fakt reads. Android modules that apply the Kotlin Android plugin — every AGP 8.x
+      build — stay on the cache-correct path.
 
 **Default:** `true`.
 

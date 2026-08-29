@@ -386,8 +386,9 @@ files real task outputs:
 - **Routing** (`FaktGradleSubplugin.cacheCorrectDecision`): commonMain → producer; JVM/Android
   platform mains → consumers; Native/JS/Wasm platform mains → LEGACY_HYBRID (in-process plugin,
   ordered after the producer); other metadata compilations → suppressed. Single-target KMP projects
-  (one non-`metadata` target) have no `commonMain` compilation to produce from, so every compilation
-  there routes to LEGACY.
+  (one non-`metadata` target) have no `commonMain` compilation to produce from, and Android modules
+  on AGP's built-in Kotlin (no `org.jetbrains.kotlin.android`) expose no readable Kotlin source
+  sets, so every compilation of either routes to LEGACY.
 
 Full design, driver invocation reference, parity contract, and hazards:
 [metadata-producer-fir-emission.md](metadata-producer-fir-emission.md).
