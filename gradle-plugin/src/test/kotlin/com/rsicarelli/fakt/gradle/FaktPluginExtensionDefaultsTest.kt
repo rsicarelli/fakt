@@ -12,9 +12,10 @@ import org.junit.jupiter.api.TestInstance
 /**
  * Pins the [FaktPluginExtension] property defaults that no other suite covers.
  *
- * `enabled` and `enableCallHistory` defaults live in [FaktGradleSubpluginTest];
- * `useExperimentalGenerateTask` default lives in [FaktExperimentalGenerateTaskWiringTest]. This
- * suite covers the remaining conventions so a default flip can never land silently.
+ * `enabled` and `enableCallHistory` defaults live in [FaktGradleSubpluginTest]; the
+ * `useExperimentalGenerateTask` default (`true` — the cache-correct path) lives in
+ * [FaktExperimentalGenerateTaskWiringTest]. This suite covers the remaining conventions so a
+ * default flip can never land silently.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FaktPluginExtensionDefaultsTest {

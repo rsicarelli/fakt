@@ -24,6 +24,12 @@ compileKotlinAndroid: 1ms (121 from cache)
 compileKotlinIosX64:  1ms (121 from cache)
 ```
 
+## Gradle Build Cache
+
+Generation runs in dedicated `faktGenerate*` tasks whose generated `.kt` files are declared task
+outputs, so a warm Gradle build cache restores the fakes along with the compilation that uses them.
+See [Cache-Correct Generation](plugin-configuration.md#cache-correct-generation).
+
 ---
 
 ## Telemetry Configuration

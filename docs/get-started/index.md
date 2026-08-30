@@ -136,9 +136,9 @@ Run Gradle build to generate the fake:
 Fakt generates `FakeAnalyticsImpl` in `build/generated/fakt/commonTest/kotlin/com/example/`.
 
 !!! tip "Compilation Trigger"
-    Fakt hooks into Kotlin compilation tasks. Running any compile task
-    (`:compileKotlin`, `:build`, or IDE build/compile/assemble) triggers
-    Fakt generation automatically.
+    Fakt registers `faktGenerate*` tasks that run ahead of the Kotlin compilation
+    tasks that consume their output. Running any compile task (`:compileKotlin`,
+    `:build`, or IDE build/compile/assemble) triggers Fakt generation automatically.
 
 ---
 

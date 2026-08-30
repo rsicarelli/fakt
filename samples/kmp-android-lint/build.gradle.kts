@@ -39,7 +39,7 @@ kotlin {
 }
 
 fakt {
-    // The experimental generate-task path (also set in gradle.properties) registers
-    // `faktGenerateMetadataCommonMain`, reproducing the reporter's configuration.
+    // The generate-task path (Fakt's default) registers `faktGenerateMetadataCommonMain`,
+    // reproducing the reporter's configuration.
     logLevel.set(com.rsicarelli.fakt.compiler.api.LogLevel.INFO)
 }

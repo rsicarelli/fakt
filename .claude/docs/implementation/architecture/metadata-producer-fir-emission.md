@@ -1,14 +1,15 @@
 # Metadata-Driver Producer + FIR-Phase Emission (Issue #79)
 
-**Status:** Implemented on `feat/79-metadata-producer` — emitPhase contract, FirTypeRenderer +
-parity gate, FIR emitter, metadata driver, FIR-unified worker paths, and the no-JVM-target routing
-(§8 is the live table) all landed; P8 (flip default) / P9 (remove legacy) remain deferred
+**Status:** Implemented — emitPhase contract, FirTypeRenderer + parity gate, FIR emitter, metadata
+driver, FIR-unified worker paths, and the no-JVM-target routing (§8 is the live table) all landed.
+**P8 (flip default) has landed**: `fakt.useExperimentalGenerateTask` now defaults to `true`. P9
+(remove the legacy in-process path) remains deferred
 **Last Updated:** July 2026
 **Research basis:** [issue-79-cache-correct-kmp-research.md](../research/issue-79-cache-correct-kmp-research.md)
 (9-part investigation, verified against Kotlin `build-2.3.21-release-298` and KSP 2.3.0-290 primary source)
-**Guard:** everything in this design ships behind `fakt.useExperimentalGenerateTask` (default `false`,
-`FaktPluginExtension.kt`). Flipping the default (backlog P8) and removing the legacy path (P9) are
-explicitly **out of scope** for this branch.
+**Guard:** everything in this design is selected by `fakt.useExperimentalGenerateTask` (default
+`true`, `FaktPluginExtension.kt`). Setting it to `false` opts back into the legacy in-process path,
+which stays reachable until it is removed (backlog P9).
 
 ---
 
@@ -279,6 +280,8 @@ branch is **deleted** (the producer no longer needs a JVM classpath):
 |---|---|---|
 | Single-platform JVM `main` | REGISTER_PRODUCER | K2JVM, FIR-emit |
 | Single-platform non-JVM | LEGACY | in-process, IR |
+| Any compilation of a **single-target KMP** project | LEGACY | in-process, IR |
+| Any compilation of an **Android module without KGP** (AGP built-in Kotlin) | LEGACY | in-process, IR |
 | KMP `commonMain` (any target set, **incl. no JVM/Android target**) | REGISTER_PRODUCER | **KotlinMetadataCompiler**, FIR-emit |
 | KMP other `platformType == common` metadata compilations | SUPPRESS | — |
 | KMP JVM/Android platform `main` | REGISTER_CONSUMER | K2JVM, FIR-emit; ancestors ride as `-Xcommon-sources` analysis-only (`emitSourceSets` restricts emission to the platform source set) |
@@ -287,6 +290,29 @@ branch is **deleted** (the producer no longer needs a JVM classpath):
 Platform-declared `@Fake` in `nativeMain`/`jsMain`/`wasmJsMain`/`iosMain` stays on LEGACY_HYBRID —
 unchanged, correct, but not cache-correct (no Native/JS driver in the embeddable). Out of scope here;
 CI presence checks continue to lock it.
+
+**Single-target KMP** (exactly one non-`metadata` target, e.g. `kotlin { jvm() }`) is a shape the
+cache-correct path cannot serve: KGP never creates the per-source-set `commonMain` compilation for
+it, exposing only the legacy metadata `main` compilation — which carries `commonMain` as its default
+source set but resolves an **empty** compile classpath, so `KotlinMetadataCompiler` cannot be driven
+over it. The lone platform main is a source-partitioned consumer that emits only its own source set,
+so nothing would own the project's common fakes and every commonMain `@Fake` would be dropped. Those
+projects therefore route entirely to LEGACY — correct, just not cache-correct. Detected by counting
+non-`common` targets, **not** by looking the compilation up: KGP creates the metadata target's
+per-source-set compilations *after* resolving subplugins for every platform main, so the lookup
+reports "absent" for multi-target projects too. Locked by `samples/compat/*` (all single-target KMP)
+and a routing test in `FaktGradleSubpluginFlagResolutionTest`.
+
+**Android on AGP's built-in Kotlin** (AGP 9+, which rejects `org.jetbrains.kotlin.android`) is the
+second such shape. There the `KotlinCompilation`s handed to `applyToCompilation` carry
+`KotlinSourceSet`s whose `kotlin.srcDirs` are **empty** — AGP keeps sources in its own variant model
+— so a producer resolves zero sources, runs NO-SOURCE and silently emits nothing. Measured on
+`samples/compat-agp/agp-9.0`: `srcDirs=[]` on every compilation even at `projectsEvaluated`, while
+the AGP 8.x + KGP cells report real directories. Detected by plugin id (`com.android.*` applied and
+`org.jetbrains.kotlin.android` not), never by probing `srcDirs`, which is unreadable this early for
+every project. The gate sits on both the `apply` branch (the legacy path needs
+`SourceSetConfigurator.configureSourceSets()` to wire its output) and `cacheCorrectDecision`. Locked
+by the `compat-agp/agp-9.0` CI cell and `FaktKotlinSourceSetModelTest`.
 
 ## 9. Known hazards & out-of-scope
 
@@ -301,9 +327,10 @@ CI presence checks continue to lock it.
   cache key, and `FaktGenerateTaskWiring.register` sources them from the `fakt { }` extension. The FIR
   emitter already resolved modes exactly as the IR path does, so FIR/IR parity was never the gap — it was
   purely the worker-vs-legacy option payload, now closed.
-- **Out of scope:** flipping `useExperimentalGenerateTask` default (P8); removing the legacy path (P9);
-  cache-correct platform-declared fakes for Native/JS/Wasm; `actual typealias` and `@Fake`-on-expect
-  scenarios (checker rejects `FAKE_CANNOT_BE_EXPECT` by design).
+- **Out of scope:** removing the legacy path (P9); cache-correct platform-declared fakes for
+  Native/JS/Wasm; `actual typealias` and `@Fake`-on-expect scenarios (checker rejects
+  `FAKE_CANNOT_BE_EXPECT` by design). Flipping the `useExperimentalGenerateTask` default (P8) has
+  since landed — the default is `true`.
 
 ## 10. Verification map
 

@@ -395,27 +395,13 @@ For complete multi-module documentation, see **[Multi-Module Guide](multi-module
 
 ---
 
-## Cache-Correct Generation (Experimental)
+## Cache-Correct Generation
 
-By default Fakt generates fakes inside `compileKotlin*` as a side effect. The experimental
-cache-correct path instead runs generation in a dedicated, cacheable Gradle task so the generated
-`.kt` files are declared task outputs — when Gradle's build cache restores a compilation, the fakes
-come back with it.
+Fakt generates fakes in dedicated, cacheable `faktGenerate*` Gradle tasks. The generated `.kt` files
+are declared task outputs, so when Gradle's build cache restores a compilation the fakes come back
+with it — no empty or missing fakes on a cache hit.
 
-Opt in via the extension or a Gradle property (the property wins, so you can always opt out with
-`-Pfakt.useExperimentalGenerateTask=false`):
-
-```kotlin
-fakt {
-    useExperimentalGenerateTask.set(true)
-}
-```
-
-```bash
-gradle build -Pfakt.useExperimentalGenerateTask=true
-```
-
-**Support matrix (under the flag):**
+**Support matrix:**
 
 | `@Fake` declared in        | Generated | Cache-correct |
 |----------------------------|-----------|---------------|
@@ -428,7 +414,43 @@ Every `@Fake` is always generated — none are dropped. JS/Wasm are not cache-co
 cannot be (its compiler is not embeddable, so it can't run in a Gradle task); those platform fakes
 are produced by the in-process plugin instead.
 
-**Default:** `false` (the in-process path runs unchanged).
+!!! note "Project shapes that keep the in-process path"
+    Two shapes fall back to generating inside `compileKotlin*`. Fakes are still generated for every
+    `@Fake` in both — they just aren't declared task outputs, so a warm build cache can restore a
+    compilation without them.
+
+    - **Single-target multiplatform projects** (`kotlin { jvm() }` and nothing else). Kotlin does
+      not give such a project a `commonMain` compilation to generate from, so there is nothing to
+      make cache-correct. Adding a second target moves the project onto the cache-correct path
+      automatically.
+    - **Android modules on AGP's built-in Kotlin support** (AGP 9+, where `org.jetbrains.kotlin.android`
+      is no longer applied). AGP keeps Kotlin sources in its own variant model rather than the
+      source sets Fakt reads. Android modules that apply the Kotlin Android plugin — every AGP 8.x
+      build — stay on the cache-correct path.
+
+**Default:** `true`.
+
+### Opting out
+
+The previous behaviour — generation running inside `compileKotlin*` as a side effect — is still
+available. Turn it off via the extension or a Gradle property (the property wins over the extension,
+so a command-line opt-out always applies):
+
+```kotlin
+fakt {
+    useExperimentalGenerateTask.set(false)
+}
+```
+
+```bash
+gradle build -Pfakt.useExperimentalGenerateTask=false
+```
+
+!!! warning "Temporary escape hatch"
+    On the in-process path the generated fakes are not declared task outputs, so a warm build cache
+    can restore a compilation without them. The path is kept only as an escape hatch and will be
+    removed in a future release — please [open an issue](https://github.com/rsicarelli/fakt/issues)
+    if you need it.
 
 ---
 

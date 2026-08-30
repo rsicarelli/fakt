@@ -1,6 +1,10 @@
 # Issue #79 — Deep Research Plan: cracking cache-correct KMP fakes (the expect/actual blocker)
 
-**Status:** research phase (pre-implementation). Internal control doc.
+**Status:** historical — research phase (pre-implementation). Internal control doc, kept for the
+reasoning trail. The blocker described below was solved by the metadata-driver producer
+([metadata-producer-fir-emission.md](../architecture/metadata-producer-fir-emission.md)), and P8 has
+since landed: `fakt.useExperimentalGenerateTask` defaults to `true`. Statements here about what
+"cannot" be done yet describe the state at research time, not today's.
 **Target Kotlin:** 2.3.20 (worker pins `FAKT_KOTLIN_VERSION = "2.3.20"`).
 **Owner artifact for status:** GitHub issue #79.
 
