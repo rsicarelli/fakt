@@ -27,7 +27,7 @@ ktfmt = "0.61"
 licenseReport = "3.1.1"
 mavenPublish = "0.37.0"
 shadow = "9.3.2"
-spotless = "8.2.1"
+spotless = "8.10.1"
 turbine = "1.2.1"
 # Runtime benchmark — competing mock/fake technologies (samples/runtime-benchmark only)
 # Pinned to the latest release of each (checked against Maven Central) for a credible comparison.
