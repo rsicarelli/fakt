@@ -776,6 +776,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#gradle-build-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gradle Build Cache
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#telemetry-configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1166,6 +1177,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#gradle-build-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gradle Build Cache
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#telemetry-configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1289,6 +1311,10 @@
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>compileKotlinAndroid: 1ms (121 from cache)
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>compileKotlinIosX64:  1ms (121 from cache)
 </code></pre></div>
+<h2 id="gradle-build-cache">Gradle Build Cache<a class="headerlink" href="#gradle-build-cache" title="Permanent link">&para;</a></h2>
+<p>Generation runs in dedicated <code>faktGenerate*</code> tasks whose generated <code>.kt</code> files are declared task<br />
+outputs, so a warm Gradle build cache restores the fakes along with the compilation that uses them.<br />
+See <a href="plugin-configuration.html#cache-correct-generation">Cache-Correct Generation</a>.</p>
 <hr />
 <h2 id="telemetry-configuration">Telemetry Configuration<a class="headerlink" href="#telemetry-configuration" title="Permanent link">&para;</a></h2>
 <p>Four log levels for debugging and performance analysis:</p>

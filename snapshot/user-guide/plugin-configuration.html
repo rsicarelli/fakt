@@ -615,13 +615,30 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#cache-correct-generation-experimental" class="md-nav__link">
+  <a href="#cache-correct-generation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cache-Correct Generation (Experimental)
+        Cache-Correct Generation
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Cache-Correct Generation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#opting-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Opting out
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1316,13 +1333,30 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#cache-correct-generation-experimental" class="md-nav__link">
+  <a href="#cache-correct-generation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cache-Correct Generation (Experimental)
+        Cache-Correct Generation
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Cache-Correct Generation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#opting-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Opting out
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1745,20 +1779,11 @@ Mutable fakes with:
 
 <p>For complete multi-module documentation, see <strong><a href="multi-module.html">Multi-Module Guide</a></strong>.</p>
 <hr />
-<h2 id="cache-correct-generation-experimental">Cache-Correct Generation (Experimental)<a class="headerlink" href="#cache-correct-generation-experimental" title="Permanent link">&para;</a></h2>
-<p>By default Fakt generates fakes inside <code>compileKotlin*</code> as a side effect. The experimental<br />
-cache-correct path instead runs generation in a dedicated, cacheable Gradle task so the generated<br />
-<code>.kt</code> files are declared task outputs — when Gradle&rsquo;s build cache restores a compilation, the fakes<br />
-come back with it.</p>
-<p>Opt in via the extension or a Gradle property (the property wins, so you can always opt out with<br />
-<code>-Pfakt.useExperimentalGenerateTask=false</code>):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="w">    </span><span class="n">useExperimentalGenerateTask</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
-<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="p">}</span>
-</code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>gradle<span class="w"> </span>build<span class="w"> </span>-Pfakt.useExperimentalGenerateTask<span class="o">=</span><span class="nb">true</span>
-</code></pre></div>
-<p><strong>Support matrix (under the flag):</strong></p>
+<h2 id="cache-correct-generation">Cache-Correct Generation<a class="headerlink" href="#cache-correct-generation" title="Permanent link">&para;</a></h2>
+<p>Fakt generates fakes in dedicated, cacheable <code>faktGenerate*</code> Gradle tasks. The generated <code>.kt</code> files<br />
+are declared task outputs, so when Gradle&rsquo;s build cache restores a compilation the fakes come back<br />
+with it — no empty or missing fakes on a cache hit.</p>
+<p><strong>Support matrix:</strong></p>
 <table>
 <thead>
 <tr>
@@ -1793,7 +1818,40 @@ come back with it.</p>
 <p>Every <code>@Fake</code> is always generated — none are dropped. JS/Wasm are not cache-correct yet, and Native<br />
 cannot be (its compiler is not embeddable, so it can&rsquo;t run in a Gradle task); those platform fakes<br />
 are produced by the in-process plugin instead.</p>
-<p><strong>Default:</strong> <code>false</code> (the in-process path runs unchanged).</p>
+<div class="admonition note">
+<p class="admonition-title">Project shapes that keep the in-process path</p>
+<p>Two shapes fall back to generating inside <code>compileKotlin*</code>. Fakes are still generated for every<br />
+<code>@Fake</code> in both — they just aren&rsquo;t declared task outputs, so a warm build cache can restore a<br />
+compilation without them.</p>
+<ul>
+<li><strong>Single-target multiplatform projects</strong> (<code>kotlin { jvm() }</code> and nothing else). Kotlin does<br />
+  not give such a project a <code>commonMain</code> compilation to generate from, so there is nothing to<br />
+  make cache-correct. Adding a second target moves the project onto the cache-correct path<br />
+  automatically.</li>
+<li><strong>Android modules on AGP&rsquo;s built-in Kotlin support</strong> (AGP 9+, where <code>org.jetbrains.kotlin.android</code><br />
+  is no longer applied). AGP keeps Kotlin sources in its own variant model rather than the<br />
+  source sets Fakt reads. Android modules that apply the Kotlin Android plugin — every AGP 8.x<br />
+  build — stay on the cache-correct path.</li>
+</ul>
+</div>
+<p><strong>Default:</strong> <code>true</code>.</p>
+<h3 id="opting-out">Opting out<a class="headerlink" href="#opting-out" title="Permanent link">&para;</a></h3>
+<p>The previous behaviour — generation running inside <code>compileKotlin*</code> as a side effect — is still<br />
+available. Turn it off via the extension or a Gradle property (the property wins over the extension,<br />
+so a command-line opt-out always applies):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="w">    </span><span class="n">useExperimentalGenerateTask</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="p">}</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>gradle<span class="w"> </span>build<span class="w"> </span>-Pfakt.useExperimentalGenerateTask<span class="o">=</span><span class="nb">false</span>
+</code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">Temporary escape hatch</p>
+<p>On the in-process path the generated fakes are not declared task outputs, so a warm build cache<br />
+can restore a compilation without them. The path is kept only as an escape hatch and will be<br />
+removed in a future release — please <a href="https://github.com/rsicarelli/fakt/issues">open an issue</a><br />
+if you need it.</p>
+</div>
 <hr />
 <h2 id="ide-integration">IDE Integration<a class="headerlink" href="#ide-integration" title="Permanent link">&para;</a></h2>
 <h3 id="intellij-idea-android-studio">IntelliJ IDEA / Android Studio<a class="headerlink" href="#intellij-idea-android-studio" title="Permanent link">&para;</a></h3>
