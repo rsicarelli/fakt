@@ -22,7 +22,6 @@ plugins {
 
 // Read versions from gradle/libs.versions.toml (single source of truth)
 val ktfmtVersion = libs.version("ktfmt")
-val gjfVersion = libs.version("google-java-format")
 
 configure<SpotlessExtension> {
     format("misc") {
@@ -30,16 +29,6 @@ configure<SpotlessExtension> {
         trimTrailingWhitespace()
         leadingTabsToSpaces(2)
         endWithNewline()
-    }
-
-    java {
-        target("src/**/*.java")
-        googleJavaFormat(gjfVersion).reorderImports(true).reflowLongStrings(true)
-        trimTrailingWhitespace()
-        endWithNewline()
-        targetExclude("**/spotless.java")
-        targetExclude("**/src/test/data/**")
-        targetExclude("**/*Generated.java")
     }
 
     kotlin {
