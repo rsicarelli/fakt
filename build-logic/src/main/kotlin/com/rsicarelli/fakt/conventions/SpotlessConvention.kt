@@ -11,12 +11,12 @@ import org.gradle.kotlin.dsl.configure
  * Spotless formatting convention.
  *
  * Provides two functions:
- * - applySpotlessPredeclare: Configures formatters (ktfmt, googleJavaFormat)
+ * - applySpotlessPredeclare: Configures formatters (ktfmt)
  * - applySpotlessToAllProjects: Applies formatting to all projects
  */
 
 /**
- * Configure Spotless predeclare with ktfmt and Google Java Format.
+ * Configure Spotless predeclare with ktfmt.
  *
  * Configuration Cache Friendly:
  * - Uses version catalog (single source of truth)
@@ -25,7 +25,6 @@ import org.gradle.kotlin.dsl.configure
 fun Project.applySpotlessPredeclare() {
     // Read versions from gradle/libs.versions.toml (single source of truth)
     val ktfmtVersion = libs.version("ktfmt")
-    val gjfVersion = libs.version("google-java-format")
 
     configure<SpotlessExtension> {
         predeclareDeps()
@@ -37,9 +36,6 @@ fun Project.applySpotlessPredeclare() {
         }
         kotlinGradle {
             ktfmt(ktfmtVersion).kotlinlangStyle().configure { it.setRemoveUnusedImports(true) }
-        }
-        java {
-            googleJavaFormat(gjfVersion).reorderImports(true).reflowLongStrings(true)
         }
     }
 }
