@@ -109,18 +109,10 @@ internal fun shouldEnableTestFixtures(
 ): Boolean = useGradleTestFixtures && (hasJavaTestFixtures || hasAndroidLibrary)
 
 /**
- * Whether a routing decision leaves fake generation running *inside* `compileKotlin*` as an
- * undeclared side effect, which is what makes that task's build-cache entry incomplete
- * (issue #142).
+ * Whether a routing decision leaves generation inside `compileKotlin*`, where the fakes are an
+ * undeclared side effect and the task's cache entry is therefore incomplete (issue #142).
  *
- * Every decision that generates in-process must have its compile task taken out of the build cache;
- * every decision that does not must keep caching, because the cache-correct path declares the
- * generated directory as a real `@OutputDirectory` and loses nothing on a cache hit. Extracted as a
- * pure function so the mapping is unit-testable without a Gradle project (mirrors
- * [shouldWireGeneratedDir] and [shouldEnableTestFixtures]).
- *
- * `SUPPRESS` generates nothing at all — another task owns that compilation's fakes — so it caches
- * like any untouched compilation.
+ * Pure so the mapping is unit-testable without a Gradle project (mirrors [shouldWireGeneratedDir]).
  */
 internal fun generatesFakesInProcess(decision: FaktGradleSubplugin.CacheCorrectDecision): Boolean =
     when (decision) {
@@ -155,22 +147,13 @@ private fun warnIfMissingAndroidTestFixturesKotlinFlag(project: Project) {
     }
 }
 
-/**
- * Marks a project whose "not cache-correct" warning has already been emitted. The routing decision
- * is taken per compilation, but the answer is a property of the module, so the warning is
- * de-duplicated rather than repeated once per target.
- */
+/** De-duplicates [warnNotCacheCorrect]: the decision is per compilation, the answer per module. */
 private const val NOT_CACHE_CORRECT_WARNED: String = "fakt.notCacheCorrectWarned"
 
 /**
- * Warns, once per project, that this module's fakes are not build-cache-correct — and says which of
- * the four shapes put it there, because three of them are not something the user chose.
- *
- * Without this the fallback is silent: a single-target KMP project or an AGP 9 module simply
- * generates fakes the old way, and the first sign of trouble is an unresolved reference after a
- * `clean` on a warm cache (issue #142). Generation itself is still correct on this path, and
- * `FaktGradleSubplugin.refuseBuildCache` keeps it correct under `--build-cache`; the warning is
- * what lets someone connect "my fakes vanished" to "this module is on the in-process path".
+ * Warns once per project that this module's fakes are not build-cache-correct, naming the reason.
+ * Three of the four shapes that land here are not an opt-in, and the fallback used to be silent —
+ * the first sign of trouble was an unresolved reference after a `clean` (issue #142).
  *
  * Top-level (not a member) so [FaktGradleSubplugin] stays under detekt's function-count threshold.
  */
@@ -188,35 +171,14 @@ private fun warnNotCacheCorrect(project: Project, reason: String) {
 }
 
 /**
- * Takes the compilation's own `compileKotlin*` task out of the Gradle build cache, because the
- * in-process plugin rides that task and writes `Fake*Impl.kt` as a side effect no task declares.
+ * Takes the compilation's own `compileKotlin*` out of the build cache: the in-process plugin writes
+ * `Fake*Impl.kt` as a side effect no task declares, so after a `clean` a cache hit on unchanged
+ * inputs skips generation and downstream compilation fails on missing fakes (issue #142).
  *
- * Issue #142. After `clean`, the task's inputs are unchanged, so Gradle restores it FROM-CACHE and
- * never runs the compiler — nothing writes the fakes. The build then proceeds with an empty
- * generated directory:
- * ```
- * > Task :core:compileKotlin FROM-CACHE
- * > Task :core:compileTestFixturesKotlin NO-SOURCE
- * > Task :app:compileTestKotlin FAILED
- * e: UserServiceTest.kt:5:54 Unresolved reference 'fakeCacheManager'.
- * ```
- *
- * The cache entry is simply incomplete — the fakes were never part of it — so the honest fix is to
- * stop storing and loading one. `cacheIf` leaves up-to-date checks alone, so an unchanged build
- * still skips the task; only a `clean` (which deletes the fakes anyway) re-runs it.
- *
- * Nothing downstream needs the same treatment: the `test` / `testFixtures` compilations read the
- * generated files as *source*, so they are already in those tasks' input fingerprints and cache
- * correctly once the fakes are reliably on disk.
- *
- * This costs build-cache hits only where they were never safe to begin with. Every compilation that
- * lands here already has an absolute `outputDir` baked into its compiler options (see
- * `legacyInProcessOptions`), so its cache key was never relocatable. The cache-correct path — the
- * default, and where [FaktGenerateTask] declares the generated directory as a real
- * `@OutputDirectory` — is untouched.
- *
- * Mirrors [FakeCollectorTask]'s own `outputs.cacheIf` guard, which refuses caching for the same
- * reason on the same path.
+ * `cacheIf` leaves up-to-date checks alone, so only a `clean` — which deletes the fakes anyway —
+ * re-runs the task. Nothing downstream needs the same treatment: `test` / `testFixtures`
+ * compilations read the generated files as *source* and cache on their own fingerprints. Mirrors
+ * [FakeCollectorTask]'s own `outputs.cacheIf` guard on the same path.
  *
  * Top-level (not a member) so [FaktGradleSubplugin] stays under detekt's function-count threshold.
  */
@@ -225,9 +187,8 @@ private fun refuseBuildCache(
     kotlinCompilation: KotlinCompilation<*>,
     extension: FaktPluginExtension,
 ) {
-    // Captured as a Provider rather than a resolved Boolean: `applyToCompilation` can run before
-    // the build script's `fakt { }` block is evaluated, and a Provider also keeps the spec
-    // configuration-cache safe (the extension itself is not serializable).
+    // A Provider, not a resolved Boolean: `applyToCompilation` can run before the `fakt { }` block
+    // is evaluated, and the extension itself is not configuration-cache serializable.
     val faktEnabled: Provider<Boolean> = extension.enabled
     val compileTaskName = kotlinCompilation.compileKotlinTaskName
     project.tasks
@@ -653,9 +614,8 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             CacheCorrectDecision.LEGACY -> Unit
         }
 
-        // Issue #142: a compilation that generates fakes in-process writes them as a side effect no
-        // task declares, so its compile task must not be stored in or restored from the build
-        // cache.
+        // Issue #142: in-process generation is an undeclared side effect of the compile task, so
+        // that task must not be stored in or restored from the build cache.
         if (generatesFakesInProcess(decision)) {
             refuseBuildCache(project, kotlinCompilation, extension)
         }

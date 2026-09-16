@@ -9,18 +9,13 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
 /**
- * Pins which routing decisions leave fake generation inside `compileKotlin*`, and therefore which
- * compile tasks must opt out of the Gradle build cache.
+ * Pins which routing decisions leave generation inside `compileKotlin*`, and therefore which
+ * compile tasks must opt out of the build cache.
  *
- * Regression cover for issue #142: with a warm cache, `clean <consumerTask>` restored the producing
- * `compileKotlin*` FROM-CACHE, skipping the in-process generation that rides it. No `.kt` files
- * were written, the consuming compilation saw an empty source dir, and the build failed with
- * unresolved references to the fakes. Reproduced on three shapes — the
- * `useExperimentalGenerateTask=false` opt-out, an AGP 9 built-in-Kotlin module, and a single-target
- * multiplatform project — the last two on their default configuration, with no opt-out anywhere.
- *
- * The mapping below is the whole fix: get it wrong in the `true` direction and a compile task loses
- * cache hits for nothing; wrong in the `false` direction and #142 comes back.
+ * Regression cover for issue #142, reproduced on three shapes: the `useExperimentalGenerateTask`
+ * opt-out, an AGP 9 built-in-Kotlin module, and a single-target multiplatform project — the last
+ * two on their defaults. Get the mapping wrong towards `true` and a compile task loses cache hits
+ * for nothing; wrong towards `false` and #142 comes back.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FaktInProcessCachingTest {
