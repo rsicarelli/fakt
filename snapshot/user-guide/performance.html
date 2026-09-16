@@ -1315,6 +1315,12 @@
 <p>Generation runs in dedicated <code>faktGenerate*</code> tasks whose generated <code>.kt</code> files are declared task<br />
 outputs, so a warm Gradle build cache restores the fakes along with the compilation that uses them.<br />
 See <a href="plugin-configuration.html#cache-correct-generation">Cache-Correct Generation</a>.</p>
+<p>A few project shapes still generate inside <code>compileKotlin*</code> — single-target multiplatform projects,<br />
+Android modules on AGP&rsquo;s built-in Kotlin support, Native/JS/Wasm platform mains, and builds that set<br />
+<code>fakt.useExperimentalGenerateTask=false</code>. There the fakes are not declared outputs, so Fakt takes<br />
+that module&rsquo;s <code>compileKotlin*</code> tasks out of the build cache rather than let a cache hit skip<br />
+generation and leave the fakes missing. Those tasks recompile on a clean build; everything<br />
+downstream still caches normally. Fakt logs a warning naming which shape applies.</p>
 <hr />
 <h2 id="telemetry-configuration">Telemetry Configuration<a class="headerlink" href="#telemetry-configuration" title="Permanent link">&para;</a></h2>
 <p>Four log levels for debugging and performance analysis:</p>

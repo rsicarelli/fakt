@@ -637,6 +637,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#why-the-in-process-path-opts-out-of-the-build-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why the in-process path opts out of the build cache
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1355,6 +1366,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#why-the-in-process-path-opts-out-of-the-build-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why the in-process path opts out of the build cache
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1821,8 +1843,9 @@ are produced by the in-process plugin instead.</p>
 <div class="admonition note">
 <p class="admonition-title">Project shapes that keep the in-process path</p>
 <p>Two shapes fall back to generating inside <code>compileKotlin*</code>. Fakes are still generated for every<br />
-<code>@Fake</code> in both — they just aren&rsquo;t declared task outputs, so a warm build cache can restore a<br />
-compilation without them.</p>
+<code>@Fake</code> in both — they just aren&rsquo;t declared task outputs, so those modules&rsquo; <code>compileKotlin*</code><br />
+tasks opt out of the Gradle build cache (see below). Fakt logs a warning naming the reason<br />
+whenever a module lands here.</p>
 <ul>
 <li><strong>Single-target multiplatform projects</strong> (<code>kotlin { jvm() }</code> and nothing else). Kotlin does<br />
   not give such a project a <code>commonMain</code> compilation to generate from, so there is nothing to<br />
@@ -1847,11 +1870,27 @@ so a command-line opt-out always applies):</p>
 </code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">Temporary escape hatch</p>
-<p>On the in-process path the generated fakes are not declared task outputs, so a warm build cache<br />
-can restore a compilation without them. The path is kept only as an escape hatch and will be<br />
-removed in a future release — please <a href="https://github.com/rsicarelli/fakt/issues">open an issue</a><br />
-if you need it.</p>
+<p>The path is kept only as an escape hatch and will be removed in a future release — please<br />
+<a href="https://github.com/rsicarelli/fakt/issues">open an issue</a> if you need it.</p>
 </div>
+<h3 id="why-the-in-process-path-opts-out-of-the-build-cache">Why the in-process path opts out of the build cache<a class="headerlink" href="#why-the-in-process-path-opts-out-of-the-build-cache" title="Permanent link">&para;</a></h3>
+<p>On the in-process path the fakes are written as a side effect of <code>compileKotlin*</code>, and no task<br />
+declares them. That makes the task&rsquo;s build-cache entry incomplete: after a <code>clean</code>, Gradle sees<br />
+unchanged inputs, restores the compilation from the cache, and never runs the compiler — so the<br />
+<code>.kt</code> files are never written. The build then continues with an empty generated directory:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>&gt; Task :core:compileKotlin FROM-CACHE
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>&gt; Task :core:compileTestFixturesKotlin NO-SOURCE
+<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>&gt; Task :app:compileTestKotlin FAILED
+<a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a>e: UserServiceTest.kt:5:54 Unresolved reference &#39;fakeCacheManager&#39;.
+</code></pre></div>
+<p>So Fakt takes those <code>compileKotlin*</code> tasks out of the build cache<br />
+(<a href="https://github.com/rsicarelli/fakt/issues/142">issue #142</a>). Only that one task per module is<br />
+affected — the <code>test</code> and <code>testFixtures</code> compilations read the generated files as <em>source</em>, so they<br />
+are already part of those tasks&rsquo; input fingerprints and keep caching normally. Up-to-date checks are<br />
+untouched too: an unchanged build still skips the task, and only a <code>clean</code> (which deletes the fakes<br />
+anyway) re-runs it.</p>
+<p>Nothing changes on the cache-correct path, where <code>faktGenerate*</code> declares the generated directory as<br />
+a real task output and the cache restores the fakes along with it.</p>
 <hr />
 <h2 id="ide-integration">IDE Integration<a class="headerlink" href="#ide-integration" title="Permanent link">&para;</a></h2>
 <h3 id="intellij-idea-android-studio">IntelliJ IDEA / Android Studio<a class="headerlink" href="#intellij-idea-android-studio" title="Permanent link">&para;</a></h3>
