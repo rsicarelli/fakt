@@ -258,6 +258,45 @@ jobs:
           FAKT_PRESENCE_FAKES: ${{ matrix.presence-fakes }}
         run: ./.github/scripts/cache-correctness-check.sh ${{ matrix.path }} ${{ matrix.producers }}
 
+  test-clean-rebuild-cache:
+    name: Clean+Cache Contract / ${{ matrix.sample }}
+    needs: [check-code-changes, publish-plugin-bundle]
+    if: ${{ needs.check-code-changes.outputs.has-changes == 'true' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The cache-correct default: FaktGenerateTask declares the generated .kt as outputs, so a
+          # warm cache restores them with the compilation.
+          - sample: jvm-test-fixtures
+            path: samples/jvm-test-fixtures
+            tasks: ":app:test"
+          # The in-process opt-out, which is where #142 was reported. Generation rides
+          # compileKotlin*, so that task must stay out of the build cache or the fakes never land.
+          - sample: jvm-test-fixtures-in-process
+            path: samples/jvm-test-fixtures
+            tasks: ":app:test"
+            gradle: "./gradlew -p samples/jvm-test-fixtures -Pfakt.useExperimentalGenerateTask=false"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Restore Plugin Bundle
+        uses: ./.github/actions/restore-plugin-bundle
+
+      # Issue #142: `clean <consumerTask>` against a warm build cache must still leave the generated
+      # fakes on disk. Where #79's contract targets the faktGenerate* producers directly, this one
+      # drives a downstream consumer task and never names a producer — whatever the build does to
+      # satisfy it, the fakes have to be there when the consuming compilation runs.
+      - name: Verify fakes survive clean on a warm cache (#142)
+        env:
+          FAKT_GRADLE: ${{ matrix.gradle }}
+        run: ./.github/scripts/clean-rebuild-cache-check.sh ${{ matrix.path }} ${{ matrix.tasks }}
+
   test-compat:
     name: Compat / Kotlin ${{ matrix.kotlin-version }}
     needs: [check-code-changes, publish-plugin-bundle]
@@ -356,6 +395,7 @@ jobs:
       - publish-plugin-bundle
       - test-samples
       - test-cache-correctness
+      - test-clean-rebuild-cache
       - test-compat
       - test-compat-agp
       - test-kmp-android-lint

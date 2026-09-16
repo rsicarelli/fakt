@@ -416,8 +416,9 @@ are produced by the in-process plugin instead.
 
 !!! note "Project shapes that keep the in-process path"
     Two shapes fall back to generating inside `compileKotlin*`. Fakes are still generated for every
-    `@Fake` in both — they just aren't declared task outputs, so a warm build cache can restore a
-    compilation without them.
+    `@Fake` in both — they just aren't declared task outputs, so those modules' `compileKotlin*`
+    tasks opt out of the Gradle build cache (see below). Fakt logs a warning naming the reason
+    whenever a module lands here.
 
     - **Single-target multiplatform projects** (`kotlin { jvm() }` and nothing else). Kotlin does
       not give such a project a `commonMain` compilation to generate from, so there is nothing to
@@ -447,10 +448,32 @@ gradle build -Pfakt.useExperimentalGenerateTask=false
 ```
 
 !!! warning "Temporary escape hatch"
-    On the in-process path the generated fakes are not declared task outputs, so a warm build cache
-    can restore a compilation without them. The path is kept only as an escape hatch and will be
-    removed in a future release — please [open an issue](https://github.com/rsicarelli/fakt/issues)
-    if you need it.
+    The path is kept only as an escape hatch and will be removed in a future release — please
+    [open an issue](https://github.com/rsicarelli/fakt/issues) if you need it.
+
+### Why the in-process path opts out of the build cache
+
+On the in-process path the fakes are written as a side effect of `compileKotlin*`, and no task
+declares them. That makes the task's build-cache entry incomplete: after a `clean`, Gradle sees
+unchanged inputs, restores the compilation from the cache, and never runs the compiler — so the
+`.kt` files are never written. The build then continues with an empty generated directory:
+
+```text
+> Task :core:compileKotlin FROM-CACHE
+> Task :core:compileTestFixturesKotlin NO-SOURCE
+> Task :app:compileTestKotlin FAILED
+e: UserServiceTest.kt:5:54 Unresolved reference 'fakeCacheManager'.
+```
+
+So Fakt takes those `compileKotlin*` tasks out of the build cache
+([issue #142](https://github.com/rsicarelli/fakt/issues/142)). Only that one task per module is
+affected — the `test` and `testFixtures` compilations read the generated files as *source*, so they
+are already part of those tasks' input fingerprints and keep caching normally. Up-to-date checks are
+untouched too: an unchanged build still skips the task, and only a `clean` (which deletes the fakes
+anyway) re-runs it.
+
+Nothing changes on the cache-correct path, where `faktGenerate*` declares the generated directory as
+a real task output and the cache restores the fakes along with it.
 
 ---
 

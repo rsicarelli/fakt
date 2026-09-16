@@ -390,6 +390,17 @@ files real task outputs:
   on AGP's built-in Kotlin (no `org.jetbrains.kotlin.android`) expose no readable Kotlin source
   sets, so every compilation of either routes to LEGACY.
 
+- **The in-process path refuses the build cache** (issue #142). Every compilation routed to LEGACY
+  or LEGACY_HYBRID gets `outputs.cacheIf { false }` on its own `compileKotlin*` task
+  (`FaktGradleSubplugin.refuseBuildCache`, gated by the pure `generatesFakesInProcess(decision)`
+  predicate). A cache hit on such a task skips generation entirely — `compileKotlin FROM-CACHE` →
+  `compileTestFixturesKotlin NO-SOURCE` → unresolved references downstream — because the fakes were
+  never part of the cache entry. Only the main compile is affected; the `test`/`testFixtures`
+  compilations read the generated files as source and keep caching on their own fingerprints.
+  `FaktGradleSubplugin.warnNotCacheCorrect` logs once per project which of the four shapes applies,
+  since three of them are not an opt-in. Contract:
+  `.github/scripts/clean-rebuild-cache-check.sh`.
+
 Full design, driver invocation reference, parity contract, and hazards:
 [metadata-producer-fir-emission.md](metadata-producer-fir-emission.md).
 
