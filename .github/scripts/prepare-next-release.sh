@@ -26,12 +26,12 @@ echo "  ✓ Documentation synced to $PUBLISHED_VERSION"
 
 # Step 2: Clean kotlin-js-store
 echo ""
-echo "🧹 Step 2/5: Cleaning kotlin-js-store..."
-if [ -d "kotlin-js-store" ]; then
-  rm -rf kotlin-js-store
-  echo "  ✓ Removed kotlin-js-store/"
+echo "🧹 Step 2/5: Cleaning vendor/kotlin-js-store..."
+if [ -d "vendor/kotlin-js-store" ]; then
+  rm -rf vendor/kotlin-js-store
+  echo "  ✓ Removed vendor/kotlin-js-store/"
 else
-  echo "  ℹ No kotlin-js-store directory found (skipping)"
+  echo "  ℹ No vendor/kotlin-js-store directory found (skipping)"
 fi
 
 # Step 3: Regenerate lock files
@@ -59,7 +59,7 @@ git add \
   README.md \
   gradle-plugin/README.md \
   gradle-plugin/src/main/kotlin/com/rsicarelli/fakt/gradle/FaktGradleSubplugin.kt \
-  kotlin-js-store 2>/dev/null || true
+  vendor/kotlin-js-store 2>/dev/null || true
 
 # Check if there are changes to commit
 if git diff --cached --quiet; then

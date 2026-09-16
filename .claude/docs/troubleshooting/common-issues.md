@@ -327,15 +327,27 @@ yarn.lock
 2. Generate the committed locks per KMP sample (needs node/npm + network):
 ```bash
 ./gradlew -p samples/<sample> kotlinUpgradeYarnLock kotlinWasmUpgradeYarnLock
-# produces kotlin-js-store/yarn.lock and kotlin-js-store/wasm/yarn.lock
+# produces vendor/kotlin-js-store/yarn.lock and vendor/kotlin-js-store/wasm/yarn.lock
+# (relocated from the KGP default kotlin-js-store/ by FaktSampleKmpPlugin - see below)
 ```
-3. Commit `kotlin-js-store/**/yarn.lock`. Do this for every KMP sample, not just the one that failed.
+3. Commit `vendor/kotlin-js-store/**/yarn.lock`. Do this for every KMP sample, not just the one that failed.
 
 **Verify:** `:kotlinWasmRestoreYarnLock` now RUNS (not SKIPPED) and `:kotlinWasmStoreYarnLock` is UP-TO-DATE.
 
 **Root Cause**: With no committed `kotlin-js-store/**/yarn.lock`, `RestoreYarnLock` is SKIPPED, so the only producer of `build/**/yarn.lock` is `NpmInstall` — and `StoreYarnLock` races it. Large module graphs (e.g. `kmp-multi-module`, ~25 modules) lose the race; small samples win, so it looks intermittent. Gradle **9.5.1** escalated the "input file absent" validation from a deprecation *warning* (9.0.0) to a *hard failure*, which is why the wrapper bump surfaced it. Committing the store lock (the KGP-recommended practice) makes the build deterministic. Do **not** modify `gradle-wrapper` files to work around this.
 
 **Fallbacks** (only if the committed-lock route is insufficient — report tradeoffs, don't silently switch): `YarnRootExtension` settings (`yarnLockMismatchReport` / `yarnLockAutoReplace` / `reportNewYarnLock`), or disabling the `*StoreYarnLock` / `*UpgradeYarnLock` tasks in `build-logic/src/main/kotlin/FaktSampleKmpPlugin.kt` (least clean — masks rather than fixes).
+
+### **Issue: Dependabot "npm_and_yarn" Security Update jobs fail with `.../kotlin-js-store/package.json not found`**
+```
+Error during file fetching; aborting: /samples/kmp-multi-target/kotlin-js-store/package.json not found
+```
+
+**Root Cause**: GitHub's Dependency Graph indexes the committed `kotlin-js-store/yarn.lock` / `package-lock.json` files as `npm_and_yarn` manifests. There's no sibling `package.json` next to them — it's KGP build output, correctly gitignored, not a real npm project — so any Dependabot Security Update job triggered by a matching advisory fails deterministically, forever. `.gitattributes` (`linguist-generated`) and `.github/dependabot.yml` `ignore` rules do **not** stop this (verified: neither is documented to affect the dependency graph's manifest scanning or security-update path scoping).
+
+**Solution**: relocate the lock file directories to `vendor/kotlin-js-store/` (done — see `FaktRootPlugin.kt` and `FaktSampleKmpPlugin.kt`). GitHub's dependency graph parser skips manifests under directories matching vendor-style naming (`vendor/`, `third-party/`, `external/` — see [Troubleshooting the dependency graph](https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/troubleshooting-the-dependency-graph)), so these lockfiles stop being indexed and no more Security Update jobs are spawned against them. This is configured via the Kotlin Gradle Plugin's documented `lockFileDirectory` property on `YarnRootExtension`/`WasmYarnRootExtension` (yarn-based sample builds) and `NpmExtension`/`WasmNpmExtension` (npm-based root build).
+
+**Verify**: after merging to the default branch, check the repo's Insights → Dependency graph page — the `vendor/kotlin-js-store/**` manifests should no longer be listed, and no new `npm_and_yarn` jobs should appear for future advisories.
 
 ## 🚀 **Quick Diagnostic Commands**
 

@@ -9,6 +9,10 @@ import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.the
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnPlugin
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
+import org.jetbrains.kotlin.gradle.targets.wasm.yarn.WasmYarnPlugin
+import org.jetbrains.kotlin.gradle.targets.wasm.yarn.WasmYarnRootExtension
 
 /**
  * Convention plugin for Fakt KMP sample modules.
@@ -31,6 +35,21 @@ class FaktSampleKmpPlugin : Plugin<Project> {
 
             // Apply test conventions (JUnit Platform, etc.)
             applyTestConventions()
+
+            // Relocate the committed yarn.lock files to vendor/kotlin-js-store. GitHub's
+            // Dependency Graph indexes kotlin-js-store/yarn.lock as an npm_and_yarn manifest, but
+            // there's no sibling package.json for Dependabot to resolve (it's build output,
+            // correctly gitignored) - so every matching security advisory spawns a Dependabot
+            // Security Update job that fails deterministically. GitHub's dependency graph parser
+            // skips manifests under vendor-style directory names, so move the lock files there.
+            rootProject.plugins.withType(YarnPlugin::class.java) {
+                rootProject.the<YarnRootExtension>().lockFileDirectory =
+                    rootProject.rootDir.resolve("vendor/kotlin-js-store")
+            }
+            rootProject.plugins.withType(WasmYarnPlugin::class.java) {
+                rootProject.the<WasmYarnRootExtension>().lockFileDirectory =
+                    rootProject.rootDir.resolve("vendor/kotlin-js-store/wasm")
+            }
 
             // Configure Kotlin Multiplatform using Kotlin DSL extension accessor
             the<KotlinMultiplatformExtension>().apply {
