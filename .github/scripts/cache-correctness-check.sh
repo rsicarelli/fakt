@@ -46,9 +46,8 @@ count_fakes() {
 }
 
 # Force execution so the producers actually run and populate the build cache. Without --rerun-tasks a
-# prior local build can leave them UP-TO-DATE (samples that set org.gradle.caching=false never seed
-# the cache): the warm run would then store nothing, and the rebuild below would cache-miss and be
-# misreported as an unstable cache key. See issue #79 P8 gap 4.
+# prior local build can leave them UP-TO-DATE: the warm run would then store nothing, and the rebuild
+# below would cache-miss and be misreported as an unstable cache key. See issue #79 P8 gap 4.
 WARM_GRADLE=("${GRADLE[@]}" --rerun-tasks)
 
 echo "::group::Warm cache (force-execute to seed) — ${PROJECT_PATH}: ${PRODUCER_TASKS[*]}"

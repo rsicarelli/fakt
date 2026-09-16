@@ -109,6 +109,21 @@ internal fun shouldEnableTestFixtures(
 ): Boolean = useGradleTestFixtures && (hasJavaTestFixtures || hasAndroidLibrary)
 
 /**
+ * Whether a routing decision leaves generation inside `compileKotlin*`, where the fakes are an
+ * undeclared side effect and the task's cache entry is therefore incomplete (issue #142).
+ *
+ * Pure so the mapping is unit-testable without a Gradle project (mirrors [shouldWireGeneratedDir]).
+ */
+internal fun generatesFakesInProcess(decision: FaktGradleSubplugin.CacheCorrectDecision): Boolean =
+    when (decision) {
+        FaktGradleSubplugin.CacheCorrectDecision.LEGACY,
+        FaktGradleSubplugin.CacheCorrectDecision.LEGACY_HYBRID -> true
+        FaktGradleSubplugin.CacheCorrectDecision.REGISTER_PRODUCER,
+        FaktGradleSubplugin.CacheCorrectDecision.REGISTER_CONSUMER,
+        FaktGradleSubplugin.CacheCorrectDecision.SUPPRESS -> false
+    }
+
+/**
  * Warns when an Android module routes fakes into `testFixtures` without the experimental Gradle
  * property that turns on Kotlin compilation for the Android `testFixtures` source set. Without it
  * AGP 8.x leaves that source set Java-only, no `*TestFixturesKotlin` task materializes, and the
@@ -130,6 +145,62 @@ private fun warnIfMissingAndroidTestFixturesKotlinFlag(project: Project) {
                 "it the generated Kotlin fakes are not compiled into the testFixtures artifact."
         )
     }
+}
+
+/** De-duplicates [warnNotCacheCorrect]: the decision is per compilation, the answer per module. */
+private const val NOT_CACHE_CORRECT_WARNED: String = "fakt.notCacheCorrectWarned"
+
+/**
+ * Warns once per project that this module's fakes are not build-cache-correct, naming the reason.
+ * Three of the four shapes that land here are not an opt-in, and the fallback used to be silent —
+ * the first sign of trouble was an unresolved reference after a `clean` (issue #142).
+ *
+ * Top-level (not a member) so [FaktGradleSubplugin] stays under detekt's function-count threshold.
+ */
+private fun warnNotCacheCorrect(project: Project, reason: String) {
+    if (!project.extensions.extraProperties.has(NOT_CACHE_CORRECT_WARNED)) {
+        project.extensions.extraProperties.set(NOT_CACHE_CORRECT_WARNED, true)
+        project.logger.warn(
+            "Fakt: '${project.path}' generates fakes with the in-process compiler plugin " +
+                "($reason), so they are not declared task outputs and this module's " +
+                "compileKotlin* tasks opt out of the Gradle build cache. Generation is still " +
+                "correct; only cache reuse is lost. See " +
+                "https://rsicarelli.github.io/fakt/user-guide/plugin-configuration/#cache-correct-generation"
+        )
+    }
+}
+
+/**
+ * Takes the compilation's own `compileKotlin*` out of the build cache: the in-process plugin writes
+ * `Fake*Impl.kt` as a side effect no task declares, so after a `clean` a cache hit on unchanged
+ * inputs skips generation and downstream compilation fails on missing fakes (issue #142).
+ *
+ * `cacheIf` leaves up-to-date checks alone, so only a `clean` — which deletes the fakes anyway —
+ * re-runs the task. Nothing downstream needs the same treatment: `test` / `testFixtures`
+ * compilations read the generated files as *source* and cache on their own fingerprints. Mirrors
+ * [FakeCollectorTask]'s own `outputs.cacheIf` guard on the same path.
+ *
+ * Top-level (not a member) so [FaktGradleSubplugin] stays under detekt's function-count threshold.
+ */
+private fun refuseBuildCache(
+    project: Project,
+    kotlinCompilation: KotlinCompilation<*>,
+    extension: FaktPluginExtension,
+) {
+    // A Provider, not a resolved Boolean: `applyToCompilation` can run before the `fakt { }` block
+    // is evaluated, and the extension itself is not configuration-cache serializable.
+    val faktEnabled: Provider<Boolean> = extension.enabled
+    val compileTaskName = kotlinCompilation.compileKotlinTaskName
+    project.tasks
+        .matching { it.name == compileTaskName }
+        .configureEach { task ->
+            task.outputs.cacheIf(
+                "Fakt generates fakes in-process during this task; they are not declared outputs"
+            ) {
+                // Fakt switched off writes nothing, so the task caches normally.
+                !faktEnabled.get()
+            }
+        }
 }
 
 /**
@@ -520,6 +591,7 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             if (resolveExperimentalGenerateTaskFlag(project, extension)) {
                 cacheCorrectDecision(kotlinCompilation)
             } else {
+                warnNotCacheCorrect(project, "$GRADLE_PROPERTY_FLAG is set to false")
                 CacheCorrectDecision.LEGACY
             }
 
@@ -542,6 +614,12 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             CacheCorrectDecision.LEGACY -> Unit
         }
 
+        // Issue #142: in-process generation is an undeclared side effect of the compile task, so
+        // that task must not be stored in or restored from the build cache.
+        if (generatesFakesInProcess(decision)) {
+            refuseBuildCache(project, kotlinCompilation, extension)
+        }
+
         return when (decision) {
             CacheCorrectDecision.REGISTER_PRODUCER,
             CacheCorrectDecision.REGISTER_CONSUMER,
@@ -554,7 +632,7 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
     }
 
     /** How [applyToCompilation] should treat a compilation under the cache-correct flag. */
-    private enum class CacheCorrectDecision {
+    internal enum class CacheCorrectDecision {
         /**
          * Drive a producer compilation from a `FaktGenerateTask`: `KotlinMetadataCompiler` over KMP
          * `commonMain` (+ ancestors), or `K2JVMCompiler` over a single-platform JVM `main`.
@@ -611,12 +689,34 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         // target exposes both the per-source-set `commonMain` compilation (the producer) and a
         // legacy `main` compilation plus shared-source-set metadata compilations (all platformType
         // `common`, no IR phase) — those must be suppressed, not turned into a second producer.
+        val project = kotlinCompilation.project
         return when {
-            !hasKotlinSourceSetModel(kotlinCompilation.project) -> CacheCorrectDecision.LEGACY
+            !hasKotlinSourceSetModel(project) -> {
+                warnNotCacheCorrect(
+                    project,
+                    "this Android module uses AGP's built-in Kotlin support, which keeps sources " +
+                        "in the variant model rather than Kotlin source sets",
+                )
+                CacheCorrectDecision.LEGACY
+            }
             kmp == null ->
                 if (isDrivablePlatform(platformType)) CacheCorrectDecision.REGISTER_PRODUCER
-                else CacheCorrectDecision.LEGACY
-            !hasCommonMainProducer(kmp) -> CacheCorrectDecision.LEGACY
+                else {
+                    warnNotCacheCorrect(
+                        project,
+                        "the '$platformType' platform cannot be driven from a Gradle task",
+                    )
+                    CacheCorrectDecision.LEGACY
+                }
+            !hasCommonMainProducer(kmp) -> {
+                warnNotCacheCorrect(
+                    project,
+                    "a single-target multiplatform project has no commonMain compilation to " +
+                        "generate from; declaring a second target moves it onto the cache-correct " +
+                        "path",
+                )
+                CacheCorrectDecision.LEGACY
+            }
             kotlinCompilation.name == COMMON_MAIN_COMPILATION ->
                 CacheCorrectDecision.REGISTER_PRODUCER
             platformType.equals("common", ignoreCase = true) -> CacheCorrectDecision.SUPPRESS

@@ -1,7 +1,7 @@
 # Fakt Development Commands
 # Run from fakt/ directory (or from project root)
 
-.PHONY: build test compile clean format shadowJar test-sample test-fake-publishing validate quick-test full-rebuild test-compat-all test-compat-agp-all test-kmp-android-lint benchmark
+.PHONY: build test compile clean format shadowJar test-sample test-fake-publishing validate quick-test full-rebuild test-compat-all test-compat-agp-all test-kmp-android-lint test-clean-rebuild-cache benchmark
 
 # Core build commands
 build:
@@ -96,6 +96,15 @@ test-compat-agp-all: publish-local
 test-compat-agp-%: publish-local
 	cd samples/compat-agp/agp-$* && ./gradlew testDebugUnitTest --no-daemon
 
+# Issue #142 contract: `clean <consumerTask>` against a warm build cache must still leave the
+# generated fakes on disk. Runs the cache-correct default and the in-process opt-out back to back,
+# because the bug only ever showed up on the second one.
+test-clean-rebuild-cache: publish-local
+	@echo "💾 Verifying fakes survive clean on a warm build cache (#142)..."
+	./.github/scripts/clean-rebuild-cache-check.sh samples/jvm-test-fixtures :app:test
+	FAKT_GRADLE="./gradlew -p samples/jvm-test-fixtures -Pfakt.useExperimentalGenerateTask=false" \
+		./.github/scripts/clean-rebuild-cache-check.sh samples/jvm-test-fixtures :app:test
+
 # KMP + Android sample pinned to its own Gradle 9.6.1 wrapper. Runs AGP lint over the commonTest
 # generated source dir as an end-to-end smoke test for #129 (the deterministic guard is the
 # SimplifiedSourceSetConfigurationTest unit test).
@@ -185,6 +194,7 @@ help:
 	@echo "  test-compat-agp-all - Test all AGP compat samples (AGP 8.11, 8.12, 9.0)"
 	@echo "  test-compat-agp-VERSION - Test specific AGP compat sample (e.g., test-compat-agp-8.11)"
 	@echo "  test-kmp-android-lint - Test KMP+Android sample AGP lint on Gradle 9.6.1 (#129 guard)"
+	@echo "  test-clean-rebuild-cache - Verify fakes survive clean on a warm build cache (#142)"
 	@echo "  benchmark       - 📊 Runtime benchmark: Fakt vs mock libraries (comparison table)"
 	@echo ""
 	@echo "  validate        - ⭐ Run all validations (format, lint, tests, samples)"
