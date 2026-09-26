@@ -18,6 +18,21 @@ internal fun isDrivablePlatform(platformTypeName: String): Boolean =
     }
 
 /**
+ * Platforms whose lone target in a single-target KMP project can own both the common and the
+ * platform fakes from one `FaktGenerateTask` (issue #153). They are drivable AND expose a single
+ * main compilation. `androidJvm` is drivable but its variant compilations (`debug`, `release`, …)
+ * would each claim the same `commonTest` output, so a single-target Android project stays on the
+ * in-process plugin; Native is not drivable yet (issue #152).
+ */
+internal fun isSingleTargetDrivablePlatform(platformTypeName: String): Boolean =
+    when (platformTypeName.lowercase()) {
+        "jvm",
+        "js",
+        "wasm" -> true
+        else -> false
+    }
+
+/**
  * How one Kotlin compilation generates its fakes: the [decision], plus — whenever the decision is
  * [FaktGradleSubplugin.CacheCorrectDecision.LEGACY] — the user-facing reason the module is not
  * cache-correct ([notCacheCorrectReason], surfaced once per module by [warnNotCacheCorrect]).
@@ -39,15 +54,17 @@ internal data class CompilationRoute(
  *
  * @param hasKotlinSourceSetModel see `hasKotlinSourceSetModel` (FaktGradleSubplugin.kt).
  * @param isMultiplatform whether the Kotlin Multiplatform plugin is applied.
- * @param hasCommonMainProducer see `hasCommonMainProducer` (FaktGradleSubplugin.kt); ignored for
- *   non-KMP projects.
+ * @param singleTargetPlatformTypeName the lone real target's `KotlinPlatformType` name when the KMP
+ *   project declares exactly one target (no per-source-set `commonMain` compilation exists, see
+ *   `singleTargetPlatformTypeName` in FaktGradleSubplugin.kt); `null` for multi-target and non-KMP
+ *   projects.
  * @param compilationName the compilation's name (`main`, `commonMain`, `debug`, …).
  * @param platformTypeName the compilation target's `KotlinPlatformType` name.
  */
 internal fun routeCompilation(
     hasKotlinSourceSetModel: Boolean,
     isMultiplatform: Boolean,
-    hasCommonMainProducer: Boolean,
+    singleTargetPlatformTypeName: String?,
     compilationName: String,
     platformTypeName: String,
 ): CompilationRoute =
@@ -63,11 +80,8 @@ internal fun routeCompilation(
             } else {
                 legacyRoute("the '$platformTypeName' platform cannot be driven from a Gradle task")
             }
-        !hasCommonMainProducer ->
-            legacyRoute(
-                "a single-target multiplatform project has no commonMain compilation to " +
-                    "generate from; declaring a second target moves it onto the cache-correct path"
-            )
+        singleTargetPlatformTypeName != null ->
+            routeSingleTarget(singleTargetPlatformTypeName, platformTypeName)
         compilationName == FaktGradleSubplugin.COMMON_MAIN_COMPILATION ->
             CompilationRoute(FaktGradleSubplugin.CacheCorrectDecision.REGISTER_PRODUCER)
         platformTypeName.equals("common", ignoreCase = true) ->
@@ -75,6 +89,28 @@ internal fun routeCompilation(
         isDrivablePlatform(platformTypeName) ->
             CompilationRoute(FaktGradleSubplugin.CacheCorrectDecision.REGISTER_CONSUMER)
         else -> CompilationRoute(FaktGradleSubplugin.CacheCorrectDecision.LEGACY_HYBRID)
+    }
+
+/**
+ * A single-target KMP project has no per-source-set `commonMain` compilation, only KGP's legacy
+ * metadata `main` (platformType `common`, empty compile classpath). When the lone target can own
+ * everything, its main compilation becomes the single producer and the metadata compilation is
+ * suppressed; otherwise every compilation stays on the in-process plugin.
+ */
+private fun routeSingleTarget(
+    singleTargetPlatformTypeName: String,
+    platformTypeName: String,
+): CompilationRoute =
+    when {
+        !isSingleTargetDrivablePlatform(singleTargetPlatformTypeName) ->
+            legacyRoute(
+                "a single-target multiplatform project on '$singleTargetPlatformTypeName' cannot " +
+                    "generate its fakes from a Gradle task yet; declaring a second target moves " +
+                    "it onto the cache-correct path"
+            )
+        platformTypeName.equals("common", ignoreCase = true) ->
+            CompilationRoute(FaktGradleSubplugin.CacheCorrectDecision.SUPPRESS)
+        else -> CompilationRoute(FaktGradleSubplugin.CacheCorrectDecision.REGISTER_SINGLE_TARGET)
     }
 
 private fun legacyRoute(reason: String): CompilationRoute =

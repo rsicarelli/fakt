@@ -1,7 +1,7 @@
 # Fakt Development Commands
 # Run from fakt/ directory (or from project root)
 
-.PHONY: build test compile clean format shadowJar test-sample test-fake-publishing validate quick-test full-rebuild test-compat-all test-compat-agp-all test-kmp-android-lint test-clean-rebuild-cache benchmark
+.PHONY: build test compile clean format shadowJar test-sample test-fake-publishing validate quick-test full-rebuild test-compat-all test-compat-agp-all test-kmp-single-target test-kmp-android-lint test-clean-rebuild-cache benchmark
 
 # Core build commands
 build:
@@ -56,6 +56,11 @@ test-kmp-multi-target:
 test-kmp-no-jvm:
 	@echo "🧭 Testing kmp-no-jvm sample (no drivable target)..."
 	cd samples/kmp-no-jvm && ./gradlew allTests
+
+# KMP sample with exactly one target (the lone platform task owns common + platform fakes)
+test-kmp-single-target:
+	@echo "🎯 Testing kmp-single-target sample (single-target KMP)..."
+	cd samples/kmp-single-target && ./gradlew allTests
 
 # Fake publishing sample (two-project workflow)
 test-fake-publishing:
@@ -188,6 +193,7 @@ help:
 	@echo "  test-kmp-multi-module - Test kmp-multi-module sample (composite build)"
 	@echo "  test-kmp-multi-target - Test kmp-multi-target sample (hierarchy validation)"
 	@echo "  test-kmp-no-jvm - Test kmp-no-jvm sample (no JVM/Android target)"
+	@echo "  test-kmp-single-target - Test kmp-single-target sample (exactly one target)"
 	@echo "  test-fake-publishing - Test fake-publishing sample (two-step workflow)"
 	@echo "  test-compat-all     - Test all compat samples (Kotlin 2.2.0-2.4.10)"
 	@echo "  test-compat-VERSION - Test specific compat sample (e.g., test-compat-2.2.0)"

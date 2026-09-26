@@ -170,6 +170,10 @@ jobs:
             path: samples/kmp-no-jvm
             tasks: allTests --continue
             check: true
+          - sample: kmp-single-target
+            path: samples/kmp-single-target
+            tasks: allTests --continue
+            check: true
           - sample: kmp-multi-module
             path: samples/kmp-multi-module
             tasks: allTests --continue
@@ -238,6 +242,12 @@ jobs:
             path: samples/kmp-no-jvm
             producers: faktGenerateMetadataCommonMain faktGenerateJsMain
             cached-fakes: FakeJsOnlyStorageImpl
+          # Exactly one target (#153): no commonMain compilation exists, so the lone jvmMain task
+          # owns both halves — common fakes into commonTest, the JVM fake into jvmTest.
+          - sample: kmp-single-target
+            path: samples/kmp-single-target
+            producers: faktGenerateJvmMain
+            cached-fakes: FakeSessionRepositoryImpl FakeAnalyticsTrackerImpl FakeSessionFileStoreImpl
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -274,6 +284,11 @@ jobs:
           - sample: jvm-test-fixtures
             path: samples/jvm-test-fixtures
             tasks: ":app:test"
+          # Single-target KMP was one of the shapes #142 was reproduced on; since #153 its fakes are
+          # declared task outputs, so `clean jvmTest` on a warm cache must still find them.
+          - sample: kmp-single-target
+            path: samples/kmp-single-target
+            tasks: jvmTest
           # The in-process opt-out, which is where #142 was reported. Generation rides
           # compileKotlin*, so that task must stay out of the build cache or the fakes never land.
           - sample: jvm-test-fixtures-in-process

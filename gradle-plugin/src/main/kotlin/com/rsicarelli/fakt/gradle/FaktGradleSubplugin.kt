@@ -14,17 +14,16 @@ import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 
 /**
- * Whether this KMP project gets a per-source-set `commonMain` metadata compilation — the one the
- * cache-correct path drives as the common producer. True exactly when the project declares more
- * than one real (non-`metadata`) target.
+ * The lone real (non-`metadata`) target's `KotlinPlatformType` name when this KMP project declares
+ * exactly one target, `null` otherwise.
  *
- * A **single-target** KMP project gets no such compilation: KGP exposes only the legacy metadata
- * `main` compilation, which carries `commonMain` as its default source set but resolves an empty
- * compile classpath, so `KotlinMetadataCompiler` cannot be driven over it. Nothing else can own
- * that project's common fakes either — the single platform main is a source-partitioned consumer
- * that emits only its own source set — so without this check every `@Fake` declared in `commonMain`
- * would be silently dropped. Such projects stay on the in-process plugin (the LEGACY routing
- * decision): correct, just not cache-correct.
+ * Only a project with more than one real target gets a per-source-set `commonMain` metadata
+ * compilation — the one the cache-correct path drives as the common producer. A **single-target**
+ * project gets only KGP's legacy metadata `main` compilation, which carries `commonMain` as its
+ * default source set but resolves an empty compile classpath, so `KotlinMetadataCompiler` cannot be
+ * driven over it. Its lone platform main therefore owns the common fakes too (see
+ * `routeCompilation`); treating it as a source-partitioned consumer instead would silently drop
+ * every `@Fake` declared in `commonMain`.
  *
  * Counting targets rather than looking the compilation up is deliberate. KGP creates the metadata
  * target's per-source-set compilations *after* it has resolved subplugins for every platform main,
@@ -32,9 +31,14 @@ import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
  * single-target for every project. The target set, by contrast, is complete before the routing
  * decision runs — KGP resolves subplugins once the `kotlin { }` block has run.
  */
-private fun hasCommonMainProducer(
+private fun singleTargetPlatformTypeName(
     kmp: org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
-): Boolean = kmp.targets.count { !it.platformType.name.equals("common", ignoreCase = true) } > 1
+): String? =
+    kmp.targets
+        .filter { !it.platformType.name.equals("common", ignoreCase = true) }
+        .singleOrNull()
+        ?.platformType
+        ?.name
 
 /**
  * Whether this project exposes a Kotlin source-set model the cache-correct producer can read.
@@ -49,9 +53,10 @@ private fun hasCommonMainProducer(
  * cache-correct.
  *
  * Keyed off the applied plugin ids rather than probing `srcDirs`, for the same reason
- * [hasCommonMainProducer] counts targets: source sets are not reliably populated at the point the
- * routing decision runs, so an emptiness probe would send healthy KGP projects down the legacy path
- * too. Plugin ids are settled in the `plugins { }` block, long before subplugin resolution.
+ * [singleTargetPlatformTypeName] counts targets: source sets are not reliably populated at the
+ * point the routing decision runs, so an emptiness probe would send healthy KGP projects down the
+ * legacy path too. Plugin ids are settled in the `plugins { }` block, long before subplugin
+ * resolution.
  */
 private fun hasKotlinSourceSetModel(project: Project): Boolean =
     hasReadableKotlinSourceSets(
@@ -108,6 +113,7 @@ internal fun generatesFakesInProcess(decision: FaktGradleSubplugin.CacheCorrectD
         FaktGradleSubplugin.CacheCorrectDecision.LEGACY_HYBRID -> true
         FaktGradleSubplugin.CacheCorrectDecision.REGISTER_PRODUCER,
         FaktGradleSubplugin.CacheCorrectDecision.REGISTER_CONSUMER,
+        FaktGradleSubplugin.CacheCorrectDecision.REGISTER_SINGLE_TARGET,
         FaktGradleSubplugin.CacheCorrectDecision.SUPPRESS -> false
     }
 
@@ -583,12 +589,13 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 CacheCorrectDecision.LEGACY
             }
 
-        // REGISTER_PRODUCER / REGISTER_CONSUMER drive generation from a FaktGenerateTask and
+        // REGISTER_PRODUCER / REGISTER_CONSUMER / REGISTER_SINGLE_TARGET drive generation from a
+        // FaktGenerateTask and
         // disable the in-process plugin. SUPPRESS (the legacy metadata `main` and shared-source-set
         // metadata compilations, which have no IR phase) also disables it. LEGACY_HYBRID keeps the
         // in-process plugin ON for a non-drivable platform main so it generates that platform's own
         // fakes the legacy way, but orders it after the common producer so it dedup-skips common
-        // fakes instead of regenerating them. The first three return `enabled=false`; an empty list
+        // fakes instead of regenerating them. The first four return `enabled=false`; an empty list
         // isn't enough because FaktCompilerPluginRegistrar defaults `enabled` to true and would
         // explode when the sourceSetContext option is missing.
         when (decision) {
@@ -596,6 +603,8 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 FaktGenerateTaskWiring.registerProducer(project, kotlinCompilation, extension)
             CacheCorrectDecision.REGISTER_CONSUMER ->
                 FaktGenerateTaskWiring.registerConsumer(project, kotlinCompilation, extension)
+            CacheCorrectDecision.REGISTER_SINGLE_TARGET ->
+                FaktGenerateTaskWiring.registerSingleTarget(project, kotlinCompilation, extension)
             CacheCorrectDecision.LEGACY_HYBRID ->
                 FaktGenerateTaskWiring.wireLegacyHybridOrdering(project, kotlinCompilation)
             CacheCorrectDecision.SUPPRESS,
@@ -611,6 +620,7 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         return when (decision) {
             CacheCorrectDecision.REGISTER_PRODUCER,
             CacheCorrectDecision.REGISTER_CONSUMER,
+            CacheCorrectDecision.REGISTER_SINGLE_TARGET,
             CacheCorrectDecision.SUPPRESS ->
                 project.provider { listOf(SubpluginOption(key = "enabled", value = "false")) }
             CacheCorrectDecision.LEGACY_HYBRID,
@@ -632,6 +642,12 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
          * consumer); ancestor sources ride along for analysis only.
          */
         REGISTER_CONSUMER,
+        /**
+         * Drive the lone platform main of a single-target KMP project (JVM, JS or Wasm) from one
+         * `FaktGenerateTask` that owns both halves: its own source set's fakes go to the platform
+         * test source set and the common fragment's fakes to `commonTest` (issue #153).
+         */
+        REGISTER_SINGLE_TARGET,
         /**
          * Keep the in-process plugin ON for a non-drivable platform main (Native) so it generates
          * that platform's fakes the legacy way, ordered after the common producer.
@@ -660,9 +676,11 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
      * fakes.
      *
      * A single-target KMP project has no per-source-set `commonMain` compilation at all (see
-     * [hasCommonMainProducer]), and an Android project on AGP's built-in Kotlin exposes no readable
-     * Kotlin source sets (see [hasKotlinSourceSetModel]); every compilation of either stays on the
-     * in-process plugin.
+     * [singleTargetPlatformTypeName]): a JVM/JS/Wasm lone target owns both the common and the
+     * platform fakes from one task ([CacheCorrectDecision.REGISTER_SINGLE_TARGET]), while an
+     * Android or Native lone target stays on the in-process plugin. An Android project on AGP's
+     * built-in Kotlin exposes no readable Kotlin source sets (see [hasKotlinSourceSetModel]); every
+     * compilation of it stays on the in-process plugin.
      */
     private fun cacheCorrectDecision(
         kotlinCompilation: KotlinCompilation<*>
@@ -676,7 +694,7 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             routeCompilation(
                 hasKotlinSourceSetModel = hasKotlinSourceSetModel(project),
                 isMultiplatform = kmp != null,
-                hasCommonMainProducer = kmp != null && hasCommonMainProducer(kmp),
+                singleTargetPlatformTypeName = kmp?.let(::singleTargetPlatformTypeName),
                 compilationName = kotlinCompilation.name,
                 platformTypeName = kotlinCompilation.target.platformType.name,
             )

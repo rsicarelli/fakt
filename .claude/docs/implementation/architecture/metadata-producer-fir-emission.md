@@ -281,7 +281,9 @@ branch is **deleted** (the producer no longer needs a JVM classpath):
 | Single-platform JVM `main` | REGISTER_PRODUCER | K2JVM, FIR-emit |
 | Single-platform JS/Wasm `main` | REGISTER_PRODUCER | K2JS, FIR-emit |
 | Single-platform non-drivable (Native) | LEGACY | in-process, IR |
-| Any compilation of a **single-target KMP** project | LEGACY | in-process, IR |
+| **Single-target KMP** (JVM/JS/Wasm lone target) platform `main` (#153) | REGISTER_SINGLE_TARGET | one task: own source set as `sources`, ancestors as emitted `commonSources` (`-Xcommon-sources`); `commonOutputDirectory` routes common fakes to the canonical `commonTest` dir, platform fakes to the task dir |
+| **Single-target KMP** (JVM/JS/Wasm) legacy metadata `main` | SUPPRESS | — |
+| Any compilation of a **single-target Android/Native KMP** project | LEGACY | in-process, IR |
 | Any compilation of an **Android module without KGP** (AGP built-in Kotlin) | LEGACY | in-process, IR |
 | KMP `commonMain` (any target set, **incl. no JVM/Android target**) | REGISTER_PRODUCER | **KotlinMetadataCompiler**, FIR-emit |
 | KMP other `platformType == common` metadata compilations | SUPPRESS | — |
@@ -294,17 +296,24 @@ correct, but not cache-correct (no Native driver in the embeddable; tracked in #
 checks continue to lock it. `jsMain`/`wasmJsMain` moved to K2JS-driven consumers in #151; the routing
 table is pinned by `FaktCompilationRoutingTest` (pure `routeCompilation`).
 
-**Single-target KMP** (exactly one non-`metadata` target, e.g. `kotlin { jvm() }`) is a shape the
-cache-correct path cannot serve: KGP never creates the per-source-set `commonMain` compilation for
-it, exposing only the legacy metadata `main` compilation — which carries `commonMain` as its default
-source set but resolves an **empty** compile classpath, so `KotlinMetadataCompiler` cannot be driven
-over it. The lone platform main is a source-partitioned consumer that emits only its own source set,
-so nothing would own the project's common fakes and every commonMain `@Fake` would be dropped. Those
-projects therefore route entirely to LEGACY — correct, just not cache-correct. Detected by counting
-non-`common` targets, **not** by looking the compilation up: KGP creates the metadata target's
-per-source-set compilations *after* resolving subplugins for every platform main, so the lookup
-reports "absent" for multi-target projects too. Locked by `samples/compat/*` (all single-target KMP)
-and a routing test in `FaktGradleSubpluginFlagResolutionTest`.
+**Single-target KMP** (exactly one non-`metadata` target, e.g. `kotlin { jvm() }`): KGP never
+creates the per-source-set `commonMain` compilation for it, exposing only the legacy metadata `main`
+compilation — which carries `commonMain` as its default source set but resolves an **empty** compile
+classpath, so `KotlinMetadataCompiler` cannot be driven over it. Since #153 the lone platform main
+owns both halves in **one** task (`REGISTER_SINGLE_TARGET`): its own source set goes in `sources`,
+the ancestors in `commonSources` (emitted, and marked `-Xcommon-sources` so `actual`s pair with
+their `expect`s), and the worker sets `SourceSetContext.commonOutputDirectory` so `CodeGenerator`
+writes the default source set's fakes to `generatedKotlinDir` (→ platform test source set) and every
+other source set's fakes to `commonGeneratedKotlinDir` — the canonical
+`generated/fakt/commonTest/kotlin` (→ `commonTest`), which the worker resets, clearing copies a
+pre-#153 in-process build left there. `commonSources` is `@SkipWhenEmpty` alongside `sources`, so
+an all-commonMain project with an empty `jvmMain` still runs. The metadata `main` is suppressed. An
+Android lone target stays LEGACY (its `debug`/`release` compilations would each claim the same
+`commonTest` output), as does Native (#152). Detected by counting non-`common` targets, **not** by
+looking the compilation up: KGP creates the metadata target's per-source-set compilations *after*
+resolving subplugins for every platform main, so the lookup reports "absent" for multi-target
+projects too. Locked by `samples/kmp-single-target`, `samples/compat/*` (all single-target KMP),
+`FaktGenerateSingleTargetTest` and the routing tests.
 
 **Android on AGP's built-in Kotlin** (AGP 9+, which rejects `org.jetbrains.kotlin.android`) is the
 second such shape. There the `KotlinCompilation`s handed to `applyToCompilation` carry

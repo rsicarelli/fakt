@@ -144,13 +144,19 @@ internal class SourceSetConfigurator(
     }
 
     /**
-     * Whether a consumer [FaktGenerateTask] already feeds [testSourceSetName] — `jsTest` is owned
-     * when `faktGenerateJsMain` (target `js`, compilation `main`) is registered. Must be queried
-     * lazily (from a provider): the consumer task may be registered after the source set is
-     * configured.
+     * Whether a [FaktGenerateTask] already feeds [testSourceSetName]: `jsTest` is owned when the
+     * consumer `faktGenerateJsMain` (target `js`, compilation `main`) is registered, and
+     * `commonTest` when a single-target task owns the canonical directory
+     * ([SINGLE_TARGET_PRODUCER_PROPERTY]). Must be queried lazily (from a provider): the task may
+     * be registered after the source set is configured.
      */
-    private fun isOwnedByConsumerTask(testSourceSetName: String): Boolean =
-        consumerTaskNameFor(testSourceSetName)?.let(project.tasks.names::contains) ?: false
+    private fun isOwnedByConsumerTask(testSourceSetName: String): Boolean {
+        val ownedBySingleTarget =
+            testSourceSetName == "commonTest" &&
+                project.extensions.extraProperties.has(SINGLE_TARGET_PRODUCER_PROPERTY)
+        return ownedBySingleTarget ||
+            consumerTaskNameFor(testSourceSetName)?.let(project.tasks.names::contains) ?: false
+    }
 
     /**
      * Name of the [FaktGenerateTask] whose `@OutputDirectory` equals this test source set's
