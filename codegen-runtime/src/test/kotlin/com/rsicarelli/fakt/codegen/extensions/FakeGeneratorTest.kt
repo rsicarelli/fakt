@@ -19,6 +19,37 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FakeGeneratorTest {
     @Test
+    fun `GIVEN method with bounded type param used as type argument WHEN generateCompleteFake THEN star-projects erased types`() {
+        // GIVEN - fun <T : Enum<T>> abTestAsEnum(abTest: ABTest<T>): T (#145)
+        val methods =
+            listOf(
+                MethodSpec(
+                    name = "abTestAsEnum",
+                    params = listOf(Triple("abTest", "ABTest<T>", false)),
+                    returnType = "T",
+                    typeParameters = listOf("T : Enum<T>"),
+                )
+            )
+
+        // WHEN
+        val file =
+            generateCompleteFake(
+                packageName = "com.example",
+                interfaceName = "ExperimentsRepo",
+                methods = methods,
+            )
+        val builder = CodeBuilder()
+        file.renderTo(builder)
+        val result = builder.build()
+
+        // THEN
+        assertContains(result, "private val abTestAsEnumBehavior: (ABTest<*>) -> Any?")
+        assertContains(result, "return abTestAsEnumBehavior(abTest as ABTest<*>) as T")
+        assertContains(result, "ExperimentsRepoAbTestAsEnumCall(abTest as ABTest<*>)")
+        assertFalse(result.contains("ABTest<Any?>"), "Bounded type args must not erase to Any?")
+    }
+
+    @Test
     fun `GIVEN generateCompleteFake WHEN simple method THEN generates immutable implementation`() {
         // GIVEN
         val methods =

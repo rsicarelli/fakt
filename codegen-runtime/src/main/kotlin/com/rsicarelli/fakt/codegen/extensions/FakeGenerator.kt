@@ -98,7 +98,7 @@ data class FakeGenerationConfig(
 private fun String.eraseMethodTypeParameters(typeParameters: List<String>): String {
     if (typeParameters.isEmpty()) return this
     val typeParamNames = typeParameters.map { it.substringBefore(" :").trim() }.toSet()
-    return eraseTypeParamsSimple(this, typeParamNames)
+    return eraseTypeParamsSimple(this, typeParamNames, boundedTypeParamNames(typeParameters))
 }
 
 /**

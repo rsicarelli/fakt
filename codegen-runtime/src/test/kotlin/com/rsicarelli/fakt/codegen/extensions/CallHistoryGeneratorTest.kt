@@ -489,6 +489,69 @@ class CallHistoryGeneratorTest {
     }
 
     @Test
+    fun `GIVEN method with bounded type param as type argument WHEN addCallHistoryComponents THEN star-projects it`() {
+        // GIVEN - fun <T : Enum<T>> abTestAsEnum(abTest: ABTest<T>): T (#145)
+        val methods =
+            listOf(
+                MethodSpec(
+                    name = "abTestAsEnum",
+                    params = listOf(Triple("abTest", "ABTest<T>", false)),
+                    returnType = "T",
+                    typeParameters = listOf("T : Enum<T>"),
+                )
+            )
+
+        // WHEN
+        val result =
+            codeFile("") {
+                    addCallHistoryComponents(
+                        "FakeExperimentsRepoImpl",
+                        "ExperimentsRepo",
+                        methods,
+                        FirVisibility.PUBLIC,
+                    )
+                }
+                .renderToString()
+
+        // THEN
+        assertTrue(
+            result.contains("data class ExperimentsRepoAbTestAsEnumCall(val abTest: ABTest<*>)")
+        )
+        assertTrue(result.contains("fun wasCalledWith(abTest: ABTest<*>): Boolean"))
+        assertFalse(result.contains("ABTest<Any?>"))
+    }
+
+    @Test
+    fun `GIVEN class-level bounded type param as type argument WHEN addCallHistoryComponents THEN star-projects it`() {
+        // GIVEN - interface Repo<T : Any> { fun save(box: NonNullBox<T>) }
+        val methods =
+            listOf(
+                MethodSpec(
+                    name = "save",
+                    params = listOf(Triple("box", "NonNullBox<T>", false)),
+                    returnType = "Unit",
+                )
+            )
+
+        // WHEN
+        val result =
+            codeFile("") {
+                    addCallHistoryComponents(
+                        "FakeRepoImpl",
+                        "Repo",
+                        methods,
+                        FirVisibility.PUBLIC,
+                        classTypeParameters = listOf("T : Any"),
+                    )
+                }
+                .renderToString()
+
+        // THEN
+        assertTrue(result.contains("data class RepoSaveCall(val box: NonNullBox<*>)"))
+        assertFalse(result.contains("NonNullBox<Any?>"))
+    }
+
+    @Test
     fun `GIVEN method with multiple generic params WHEN callDataClass DSL THEN erases all type params`() {
         // GIVEN
         val interfaceName = "MapService"

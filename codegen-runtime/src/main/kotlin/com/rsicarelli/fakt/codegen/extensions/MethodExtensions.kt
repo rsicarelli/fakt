@@ -14,16 +14,18 @@ import com.rsicarelli.fakt.codegen.builder.ClassBuilder
  * @param interfaceName Name of the interface for collision-safe data class naming
  * @param methodName Name of the method
  * @param params List of (name, type, isVararg) triples for parameters
- * @param classTypeParams Set of class-level type parameter names that need erasure casts
- * @param methodTypeParams Set of method-level type parameter names that need erasure casts
+ * @param allTypeParams Set of class-level and method-level type parameter names that need erasure
+ *   casts
+ * @param boundedTypeParams Type parameter names with an upper bound (star-projected when used as
+ *   type arguments)
  * @return Update statement string for call history recording
  */
 private fun buildHistoryUpdateStatement(
     interfaceName: String,
     methodName: String,
     params: List<Triple<String, String, Boolean>>,
-    classTypeParams: Set<String> = emptySet(),
-    methodTypeParams: Set<String> = emptySet(),
+    allTypeParams: Set<String> = emptySet(),
+    boundedTypeParams: Set<String> = emptySet(),
 ): String {
     val regularParams = params.filterNot { it.third } // Exclude varargs
 
@@ -31,8 +33,6 @@ private fun buildHistoryUpdateStatement(
     if (regularParams.isEmpty()) {
         return "${methodName}Calls.update { it + Unit }"
     }
-
-    val allTypeParams = classTypeParams + methodTypeParams
 
     // Interface-prefixed data class for collision safety
     val dataClassName = "${interfaceName}${methodName.replaceFirstChar { it.uppercase() }}Call"
@@ -42,7 +42,7 @@ private fun buildHistoryUpdateStatement(
         regularParams.joinToString(", ") { (name, type, _) ->
             // Check if the parameter type contains any type parameter
             if (typeContainsAnyParam(type, allTypeParams)) {
-                val erasedType = eraseTypeParamsToAny(type, allTypeParams)
+                val erasedType = eraseTypeParamsToAny(type, allTypeParams, boundedTypeParams)
                 "$name as $erasedType"
             } else {
                 name
@@ -79,6 +79,8 @@ fun ClassBuilder.overrideMethod(
 ) {
     val classTypeParamNames = config.classTypeParameters.map(::extractTypeParamName).toSet()
     val methodTypeParamNames = config.typeParameters.map(::extractTypeParamName).toSet()
+    val boundedTypeParamNames =
+        boundedTypeParamNames(config.classTypeParameters + config.typeParameters)
 
     // Only method-level type params require unchecked casts — their types are erased to Any? in
     // the behavior constructor param. Class-level type params are preserved in the constructor,
@@ -118,8 +120,8 @@ fun ClassBuilder.overrideMethod(
                     config.interfaceName,
                     name,
                     params,
-                    classTypeParamNames,
-                    methodTypeParamNames,
+                    classTypeParamNames + methodTypeParamNames,
+                    boundedTypeParamNames,
                 )
             } else {
                 null
@@ -130,6 +132,7 @@ fun ClassBuilder.overrideMethod(
                 config.extensionReceiverType,
                 needsCast,
                 methodTypeParamNames,
+                boundedTypeParamNames,
             )
         val returnCast = if (needsCast && returnType != "Unit") " as $returnType" else ""
         val superCallParams = buildSuperCallParams(params)
@@ -175,12 +178,15 @@ private fun buildBehaviorInvocationParams(
     extensionReceiverType: String?,
     needsCast: Boolean,
     methodTypeParamNames: Set<String>,
+    boundedTypeParamNames: Set<String>,
 ): String {
     val regularParamNames =
         if (needsCast) {
             params.joinToString(", ") { (paramName, paramType, _) ->
                 if (typeContainsAnyParam(paramType, methodTypeParamNames)) {
-                    "$paramName as ${eraseTypeParamsToAny(paramType, methodTypeParamNames)}"
+                    val erasedType =
+                        eraseTypeParamsToAny(paramType, methodTypeParamNames, boundedTypeParamNames)
+                    "$paramName as $erasedType"
                 } else {
                     paramName
                 }
@@ -353,8 +359,9 @@ fun ClassBuilder.configureMethod(
     val erasedFunctionType =
         if (needsCast) {
             val typeParamNames = typeParameters.map { it.split(" : ", limit = 2)[0].trim() }.toSet()
-            val erasedParams = paramTypes.map { eraseTypeParamsSimple(it, typeParamNames) }
-            val erasedReturn = eraseTypeParamsSimple(returnType, typeParamNames)
+            val bounded = boundedTypeParamNames(typeParameters)
+            val erasedParams = paramTypes.map { eraseTypeParamsSimple(it, typeParamNames, bounded) }
+            val erasedReturn = eraseTypeParamsSimple(returnType, typeParamNames, bounded)
             buildString {
                 if (isSuspend) append("suspend ")
                 append("(")

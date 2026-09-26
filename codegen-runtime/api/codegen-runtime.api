@@ -638,6 +638,7 @@ public final class com/rsicarelli/fakt/codegen/extensions/PropertySpec {
 
 public final class com/rsicarelli/fakt/codegen/extensions/TypeParamRegexKt {
 	public static final fun eraseTypeParamsToAny (Ljava/lang/String;Ljava/util/Set;)Ljava/lang/String;
+	public static final fun eraseTypeParamsToAny (Ljava/lang/String;Ljava/util/Set;Ljava/util/Set;)Ljava/lang/String;
 	public static final fun typeContainsAnyParam (Ljava/lang/String;Ljava/util/Set;)Z
 }
 
