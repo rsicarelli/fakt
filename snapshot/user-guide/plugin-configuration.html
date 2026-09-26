@@ -1828,18 +1828,19 @@ with it — no empty or missing fakes on a cache hit.</p>
 <tr>
 <td>JS / Wasm platform main</td>
 <td>✅</td>
-<td>Not yet</td>
+<td>✅</td>
 </tr>
 <tr>
 <td>Native platform main</td>
 <td>✅</td>
-<td>No (permanent)</td>
+<td>Not yet</td>
 </tr>
 </tbody>
 </table>
-<p>Every <code>@Fake</code> is always generated — none are dropped. JS/Wasm are not cache-correct yet, and Native<br />
-cannot be (its compiler is not embeddable, so it can&rsquo;t run in a Gradle task); those platform fakes<br />
-are produced by the in-process plugin instead.</p>
+<p>Every <code>@Fake</code> is always generated — none are dropped. Native platform fakes are not cache-correct<br />
+yet: the Kotlin/Native compiler is not part of the embeddable compiler Fakt runs in its Gradle task,<br />
+so those fakes are still produced by the in-process plugin<br />
+(<a href="https://github.com/rsicarelli/fakt/issues/152">#152</a>).</p>
 <div class="admonition note">
 <p class="admonition-title">Project shapes that keep the in-process path</p>
 <p>Two shapes fall back to generating inside <code>compileKotlin*</code>. Fakes are still generated for every<br />
