@@ -208,18 +208,15 @@ class SimplifiedSourceSetConfigurationTest {
         val jsTest = kotlin.sourceSets.getByName("jsTest")
         val iosTest = kotlin.sourceSets.getByName("iosArm64Test")
 
-        // Then - All should have their respective generated directories
+        // Then - commonTest and the Native test set keep the canonical dir; jvmTest and jsTest are
+        // fed by their consumer FaktGenerateTask's output instead (issue #151)
         assertTrue(
             commonTest.kotlin.srcDirs.any {
                 it.path.contains("build/generated/fakt/commonTest/kotlin")
             }
         )
-        assertTrue(
-            jvmTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/jvmTest/kotlin") }
-        )
-        assertTrue(
-            jsTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/jsTest/kotlin") }
-        )
+        assertConsumerOwned(jvmTest, targetName = "jvm")
+        assertConsumerOwned(jsTest, targetName = "js")
         assertTrue(
             iosTest.kotlin.srcDirs.any {
                 it.path.contains("build/generated/fakt/iosArm64Test/kotlin")
@@ -286,12 +283,14 @@ class SimplifiedSourceSetConfigurationTest {
         // WHEN
         project.evaluate()
 
-        // THEN - Each platform test should have its own generated dir (not commonTest)
+        // THEN - Each Native platform test set has its own in-process generated dir (not
+        // commonTest); jvmTest and jsTest are fed by their consumer FaktGenerateTask (issue #151).
         // PASS 2 was removed: KMP dependency propagation handles KLIB visibility
-        val platformTestSourceSets =
-            listOf("jvmTest", "jsTest", "iosX64Test", "iosArm64Test", "iosSimulatorArm64Test")
+        val nativeTestSourceSets = listOf("iosX64Test", "iosArm64Test", "iosSimulatorArm64Test")
+        assertConsumerOwned(kotlin.sourceSets.getByName("jvmTest"), targetName = "jvm")
+        assertConsumerOwned(kotlin.sourceSets.getByName("jsTest"), targetName = "js")
 
-        platformTestSourceSets.forEach { sourceSetName ->
+        nativeTestSourceSets.forEach { sourceSetName ->
             val sourceSet = kotlin.sourceSets.getByName(sourceSetName)
             assertTrue(
                 sourceSet.kotlin.srcDirs.any {
@@ -300,5 +299,25 @@ class SimplifiedSourceSetConfigurationTest {
                 "$sourceSetName should have its own generated directory",
             )
         }
+    }
+
+    /**
+     * A test source set whose platform main is driven by a consumer `FaktGenerateTask` reads the
+     * task's `generated/fakt/<target>/main/kotlin` output and must NOT also carry the canonical
+     * in-process dir, where a stale copy from an earlier build would compile as a `Redeclaration`.
+     */
+    private fun assertConsumerOwned(
+        sourceSet: org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet,
+        targetName: String,
+    ) {
+        val srcDirs = sourceSet.kotlin.srcDirs
+        assertTrue(
+            srcDirs.any { it.path.contains("build/generated/fakt/$targetName/main/kotlin") },
+            "${sourceSet.name} must read its consumer task output; srcDirs=$srcDirs",
+        )
+        assertTrue(
+            srcDirs.none { it.path.contains("build/generated/fakt/${sourceSet.name}/kotlin") },
+            "${sourceSet.name} must not carry the in-process dir; srcDirs=$srcDirs",
+        )
     }
 }

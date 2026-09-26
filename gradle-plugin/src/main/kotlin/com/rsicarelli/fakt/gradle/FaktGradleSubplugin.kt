@@ -14,18 +14,6 @@ import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 
 /**
- * Platforms the cache-correct worker can drive in-process. `K2JVMCompiler` ships in
- * `kotlin-compiler-embeddable`; `K2NativeCompiler` does not, so only JVM and Android JVM targets
- * are drivable today.
- */
-private fun isDrivablePlatform(platformTypeName: String): Boolean =
-    when (platformTypeName.lowercase()) {
-        "jvm",
-        "androidjvm" -> true
-        else -> false
-    }
-
-/**
  * Whether this KMP project gets a per-source-set `commonMain` metadata compilation — the one the
  * cache-correct path drives as the common producer. True exactly when the project declares more
  * than one real (non-`metadata`) target.
@@ -289,7 +277,7 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             "android.experimental.enableTestFixturesKotlinSupport"
 
         /** KGP metadata compilation whose default source set is `commonMain`. */
-        private const val COMMON_MAIN_COMPILATION: String = "commonMain"
+        internal const val COMMON_MAIN_COMPILATION: String = "commonMain"
 
         /**
          * Sentinel substituted into [SourceSetContext.outputDirectory] /
@@ -345,7 +333,7 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                             "-Pfakt.useExperimentalGenerateTask=false."
                     )
                     ensureFaktConfigurations(target)
-                    // Non-drivable KMP platform mains (Native/JS/Wasm) keep generating their own
+                    // Non-drivable KMP platform mains (Native) keep generating their own
                     // fakes via the in-process plugin; wire the platform *Test source sets so those
                     // generated fakes compile (the producer/consumer tasks wire their own dirs).
                     SourceSetConfigurator(target, useTestFixtures).configureKmpTestSourceSetDirs()
@@ -639,14 +627,14 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
          */
         REGISTER_PRODUCER,
         /**
-         * Drive `K2JVMCompiler` over a drivable platform main's own sources from a
-         * `FaktGenerateTask` (source-partitioned consumer); `commonMain` arrives as a classpath
-         * dependency.
+         * Drive a platform compiler (`K2JVMCompiler` for JVM/Android, `K2JSCompiler` for JS/Wasm)
+         * over a drivable platform main's own sources from a `FaktGenerateTask` (source-partitioned
+         * consumer); ancestor sources ride along for analysis only.
          */
         REGISTER_CONSUMER,
         /**
-         * Keep the in-process plugin ON for a non-drivable platform main (Native/JS/Wasm) so it
-         * generates that platform's fakes the legacy way, ordered after the common producer.
+         * Keep the in-process plugin ON for a non-drivable platform main (Native) so it generates
+         * that platform's fakes the legacy way, ordered after the common producer.
          */
         LEGACY_HYBRID,
         /** Suppress the in-process plugin; another task already owns this compilation's fakes. */
@@ -661,13 +649,13 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
      * with or without a JVM/Android target, since `KotlinMetadataCompiler` needs only the
      * compilation's own metadata-klib dependencies — drives the metadata compiler once over
      * `commonMain` to produce platform-agnostic common fakes (producer), which every target's test
-     * compilation reuses; a drivable platform main (`jvmMain` / `androidMain`) gets its own
-     * source-partitioned consumer task. The remaining `common`-platform metadata compilations are
-     * suppressed.
+     * compilation reuses; a drivable platform main (`jvmMain` / `androidMain` / `jsMain` /
+     * `wasmJsMain`) gets its own source-partitioned consumer task. The remaining `common`-platform
+     * metadata compilations are suppressed.
      *
-     * A non-drivable platform main (`iosMain` / `nativeMain` / `jsMain` / `wasmJsMain`) cannot be
-     * driven in-process (`K2NativeCompiler` is not on the embeddable classpath), so it stays on the
-     * in-process plugin ([CacheCorrectDecision.LEGACY_HYBRID]): its platform-specific fakes are
+     * A Native platform main (`iosMain` / `nativeMain` / `linuxX64Main`) cannot be driven from a
+     * task yet (`K2NativeCompiler` is not on the embeddable classpath, issue #152), so it stays on
+     * the in-process plugin ([CacheCorrectDecision.LEGACY_HYBRID]): its platform-specific fakes are
      * generated (not cache-correct), while the common producer still owns the cache-correct common
      * fakes.
      *
@@ -679,50 +667,21 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
     private fun cacheCorrectDecision(
         kotlinCompilation: KotlinCompilation<*>
     ): CacheCorrectDecision {
+        val project = kotlinCompilation.project
         val kmp =
-            kotlinCompilation.project.extensions.findByType(
+            project.extensions.findByType(
                 org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension::class.java
             )
-        val platformType = kotlinCompilation.target.platformType.name
-
-        // `commonMain` is checked before the `common` platform-type guard because the metadata
-        // target exposes both the per-source-set `commonMain` compilation (the producer) and a
-        // legacy `main` compilation plus shared-source-set metadata compilations (all platformType
-        // `common`, no IR phase) — those must be suppressed, not turned into a second producer.
-        val project = kotlinCompilation.project
-        return when {
-            !hasKotlinSourceSetModel(project) -> {
-                warnNotCacheCorrect(
-                    project,
-                    "this Android module uses AGP's built-in Kotlin support, which keeps sources " +
-                        "in the variant model rather than Kotlin source sets",
-                )
-                CacheCorrectDecision.LEGACY
-            }
-            kmp == null ->
-                if (isDrivablePlatform(platformType)) CacheCorrectDecision.REGISTER_PRODUCER
-                else {
-                    warnNotCacheCorrect(
-                        project,
-                        "the '$platformType' platform cannot be driven from a Gradle task",
-                    )
-                    CacheCorrectDecision.LEGACY
-                }
-            !hasCommonMainProducer(kmp) -> {
-                warnNotCacheCorrect(
-                    project,
-                    "a single-target multiplatform project has no commonMain compilation to " +
-                        "generate from; declaring a second target moves it onto the cache-correct " +
-                        "path",
-                )
-                CacheCorrectDecision.LEGACY
-            }
-            kotlinCompilation.name == COMMON_MAIN_COMPILATION ->
-                CacheCorrectDecision.REGISTER_PRODUCER
-            platformType.equals("common", ignoreCase = true) -> CacheCorrectDecision.SUPPRESS
-            isDrivablePlatform(platformType) -> CacheCorrectDecision.REGISTER_CONSUMER
-            else -> CacheCorrectDecision.LEGACY_HYBRID
-        }
+        val route =
+            routeCompilation(
+                hasKotlinSourceSetModel = hasKotlinSourceSetModel(project),
+                isMultiplatform = kmp != null,
+                hasCommonMainProducer = kmp != null && hasCommonMainProducer(kmp),
+                compilationName = kotlinCompilation.name,
+                platformTypeName = kotlinCompilation.target.platformType.name,
+            )
+        route.notCacheCorrectReason?.let { reason -> warnNotCacheCorrect(project, reason) }
+        return route.decision
     }
 
     /** Original in-process subplugin option payload, untouched. */

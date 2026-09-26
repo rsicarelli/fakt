@@ -17,6 +17,9 @@ internal object K2Fqns {
     const val KOTLIN_METADATA_COMPILER = "org.jetbrains.kotlin.cli.metadata.KotlinMetadataCompiler"
     const val K2_METADATA_COMPILER_ARGUMENTS =
         "org.jetbrains.kotlin.cli.common.arguments.K2MetadataCompilerArguments"
+    const val K2_JS_COMPILER = "org.jetbrains.kotlin.cli.js.K2JSCompiler"
+    const val K2_JS_COMPILER_ARGUMENTS =
+        "org.jetbrains.kotlin.cli.common.arguments.K2JSCompilerArguments"
     const val COMMON_COMPILER_ARGUMENTS =
         "org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments"
     const val MESSAGE_COLLECTOR = "org.jetbrains.kotlin.cli.common.messages.MessageCollector"
@@ -27,8 +30,8 @@ internal object K2Fqns {
 }
 
 /**
- * The two compiler front doors the worker can drive, both shipped in `kotlin-compiler-embeddable`
- * and invoked through the identical `CLICompiler.exec(MessageCollector, Services,
+ * The compiler front doors the worker can drive, all shipped in `kotlin-compiler-embeddable` and
+ * invoked through the identical `CLICompiler.exec(MessageCollector, Services,
  * CommonCompilerArguments)` surface.
  * - [JVM] — platform driver for JVM/Android classpaths (`.class`/jar dependencies). Runs the full
  *   FIR → fir2ir → backend pipeline.
@@ -37,10 +40,30 @@ internal object K2Fqns {
  *   unpaired `expect` declarations structurally incapable of failing the run
  *   (`NO_ACTUAL_FOR_EXPECT` is an actualizer diagnostic). Dependencies must be **metadata klibs**;
  *   JVM jars on its classpath are ignored.
+ * - [JS] — platform driver for Kotlin/JS and Kotlin/Wasm (`-Xwasm`) compilations, the same
+ *   `K2JSCompiler` KGP runs for `compileKotlinJs` / `compileKotlinWasmJs`. Dependencies are the
+ *   compilation's **platform klibs** (`-libraries`); the pipeline stops at klib serialization
+ *   (`-Xir-produce-klib-dir`), so no JS/Wasm code generation happens.
  */
 internal enum class CompilerDriver(val compilerFqn: String, val argumentsFqn: String) {
     JVM(K2Fqns.K2_JVM_COMPILER, K2Fqns.K2_JVM_COMPILER_ARGUMENTS),
     METADATA(K2Fqns.KOTLIN_METADATA_COMPILER, K2Fqns.K2_METADATA_COMPILER_ARGUMENTS),
+    JS(K2Fqns.K2_JS_COMPILER, K2Fqns.K2_JS_COMPILER_ARGUMENTS);
+
+    companion object {
+        /**
+         * Driver for a [com.rsicarelli.fakt.compiler.api.SourceSetContext.platformType] (a KGP
+         * `KotlinPlatformType` name): `common` → [METADATA], `js` / `wasm` → [JS], anything else
+         * (`jvm`, `androidJvm`) → [JVM].
+         */
+        fun forPlatformType(platformType: String): CompilerDriver =
+            when (platformType.lowercase()) {
+                "common" -> METADATA
+                "js",
+                "wasm" -> JS
+                else -> JVM
+            }
+    }
 }
 
 /**

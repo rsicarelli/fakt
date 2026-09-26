@@ -31,6 +31,16 @@ val stdlibMetadataForTests: Configuration by
         description = "kotlin-stdlib 'all' metadata archive for producer TestKit suites"
     }
 
+// Kotlin/JS and Kotlin/Wasm stdlib klibs. The JS/Wasm consumer TestKit suite feeds them to the
+// K2JSCompiler driver through the klib input — that driver cannot read JVM jars either.
+val stdlibWebKlibsForTests: Configuration by
+    configurations.creating {
+        isCanBeResolved = true
+        isCanBeConsumed = false
+        isTransitive = false
+        description = "kotlin-stdlib JS and Wasm klibs for the JS/Wasm consumer TestKit suite"
+    }
+
 dependencies {
     // Compiler API — exposed as `api` so consumers can use LogLevel, etc.
     api(projects.compilerApi)
@@ -75,6 +85,12 @@ dependencies {
     stdlibMetadataForTests(
         "org.jetbrains.kotlin:kotlin-stdlib:${libs.versions.kotlin.asProvider().get()}:all@jar"
     )
+    stdlibWebKlibsForTests(
+        "org.jetbrains.kotlin:kotlin-stdlib-js:${libs.versions.kotlin.asProvider().get()}@klib"
+    )
+    stdlibWebKlibsForTests(
+        "org.jetbrains.kotlin:kotlin-stdlib-wasm-js:${libs.versions.kotlin.asProvider().get()}@klib"
+    )
 }
 
 gradlePlugin {
@@ -108,17 +124,32 @@ tasks {
         jvmArgumentProviders.add(
             objects.newInstance(StdlibMetadataArgProvider::class.java).apply {
                 jar.from(stdlibMetadataForTests)
+                webKlibs.from(stdlibWebKlibsForTests)
             }
         )
     }
 }
 
-/** Passes the resolved stdlib `-all` metadata archive path to producer TestKit suites. */
+/**
+ * Passes the resolved stdlib `-all` metadata archive path to producer TestKit suites, and the JS /
+ * Wasm stdlib klib paths to the JS/Wasm consumer suite.
+ */
 abstract class StdlibMetadataArgProvider : CommandLineArgumentProvider {
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val jar: ConfigurableFileCollection
 
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val webKlibs: ConfigurableFileCollection
+
     override fun asArguments(): List<String> =
-        listOf("-Dfakt.test.stdlibMetadataJar=${jar.singleFile.absolutePath}")
+        listOf(
+            "-Dfakt.test.stdlibMetadataJar=${jar.singleFile.absolutePath}",
+            "-Dfakt.test.stdlibJsKlib=${webKlib("kotlin-stdlib-js-")}",
+            "-Dfakt.test.stdlibWasmJsKlib=${webKlib("kotlin-stdlib-wasm-js-")}",
+        )
+
+    private fun webKlib(prefix: String): String =
+        webKlibs.files.single { it.name.startsWith(prefix) }.absolutePath
 }

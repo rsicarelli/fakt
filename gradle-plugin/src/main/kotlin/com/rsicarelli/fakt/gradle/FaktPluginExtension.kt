@@ -204,9 +204,11 @@ constructor(objects: ObjectFactory, private val project: Project) {
      * - `commonMain` `@Fake` — generated and cache-correct (common producer task driving
      *   `KotlinMetadataCompiler`; no JVM/Android target required — KMP projects targeting only
      *   Native/JS/Wasm are covered too).
-     * - JVM / Android platform `@Fake` — generated and cache-correct (per-platform consumer task).
-     * - JS / Wasm platform `@Fake` — generated (via the in-process plugin); not cache-correct yet.
-     * - Native platform `@Fake` — generated (via the in-process plugin); not cache-correct
+     * - JVM / Android platform `@Fake` — generated and cache-correct (per-platform consumer task
+     *   driving `K2JVMCompiler`).
+     * - JS / Wasm platform `@Fake` — generated and cache-correct (per-platform consumer task
+     *   driving `K2JSCompiler` over the compilation's klibs).
+     * - Native platform `@Fake` — generated (via the in-process plugin); not cache-correct yet
      *   (`K2NativeCompiler` is not on the embeddable classpath, so it cannot be driven in a task).
      *
      * **Default:** `true` (the cache-correct `FaktGenerateTask` path).

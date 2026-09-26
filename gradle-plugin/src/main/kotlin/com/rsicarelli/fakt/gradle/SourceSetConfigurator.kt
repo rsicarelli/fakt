@@ -98,6 +98,11 @@ internal class SourceSetConfigurator(
      * matching test source set, and this adds the directories where a non-drivable platform main's
      * in-process plugin (`LEGACY_HYBRID`) writes its platform-specific fakes. Empty directories are
      * harmless.
+     *
+     * A platform test source set whose main is driven by a consumer `FaktGenerateTask` (`jvmTest`,
+     * `jsTest`, `wasmJsTest`, …) is skipped: its fakes arrive through the task's own
+     * `@OutputDirectory`, and a stale in-process copy left in the canonical dir by an earlier build
+     * would otherwise be compiled next to the task output as a `Redeclaration`.
      */
     fun configureKmpTestSourceSetDirs() =
         project.extensions
@@ -122,12 +127,30 @@ internal class SourceSetConfigurator(
                         project.files(generatedDir).builtBy(project.tasks.named(producer))
                     )
                 } else {
-                    sourceSet.kotlin.srcDir(generatedDir)
+                    // Decided lazily, when the source dirs are resolved: KGP can resolve a
+                    // platform compilation's subplugins (and so register its consumer task) after
+                    // this `configureEach` already ran — Kotlin/JS does.
+                    val testSourceSetName = sourceSet.name
+                    sourceSet.kotlin.srcDir(
+                        project.provider {
+                            if (isOwnedByConsumerTask(testSourceSetName)) emptyList()
+                            else listOf(generatedDir)
+                        }
+                    )
                 }
                 project.logger.info("Fakt: Added generated dir to ${sourceSet.name}: $generatedDir")
             }
         }
     }
+
+    /**
+     * Whether a consumer [FaktGenerateTask] already feeds [testSourceSetName] — `jsTest` is owned
+     * when `faktGenerateJsMain` (target `js`, compilation `main`) is registered. Must be queried
+     * lazily (from a provider): the consumer task may be registered after the source set is
+     * configured.
+     */
+    private fun isOwnedByConsumerTask(testSourceSetName: String): Boolean =
+        consumerTaskNameFor(testSourceSetName)?.let(project.tasks.names::contains) ?: false
 
     /**
      * Name of the [FaktGenerateTask] whose `@OutputDirectory` equals this test source set's
@@ -229,5 +252,22 @@ internal class SourceSetConfigurator(
     private fun isTestTask(taskName: String): Boolean {
         val normalized = taskName.lowercase()
         return normalized.contains("test")
+    }
+}
+
+/**
+ * Consumer [FaktGenerateTask] name that would own a KMP platform test source set (`jsTest` →
+ * `faktGenerateJsMain`), or `null` for `commonTest` (owned by the common producer) and anything
+ * that isn't a `<target>Test` source set. Follows KGP's default `<target>Main` / `<target>Test`
+ * naming, which is what `FaktGenerateTaskWiring` derives task names from.
+ */
+internal fun consumerTaskNameFor(testSourceSetName: String): String? {
+    val target = testSourceSetName.removeSuffix("Test")
+    val isPlatformTestSourceSet =
+        testSourceSetName.endsWith("Test") && target.isNotEmpty() && target != "common"
+    return if (isPlatformTestSourceSet) {
+        "faktGenerate" + target.replaceFirstChar { it.uppercaseChar() } + "Main"
+    } else {
+        null
     }
 }

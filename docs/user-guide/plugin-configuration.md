@@ -407,12 +407,13 @@ with it — no empty or missing fakes on a cache hit.
 |----------------------------|-----------|---------------|
 | `commonMain`               | ✅        | ✅            |
 | JVM / Android platform main| ✅        | ✅            |
-| JS / Wasm platform main    | ✅        | Not yet       |
-| Native platform main       | ✅        | No (permanent)|
+| JS / Wasm platform main    | ✅        | ✅            |
+| Native platform main       | ✅        | Not yet       |
 
-Every `@Fake` is always generated — none are dropped. JS/Wasm are not cache-correct yet, and Native
-cannot be (its compiler is not embeddable, so it can't run in a Gradle task); those platform fakes
-are produced by the in-process plugin instead.
+Every `@Fake` is always generated — none are dropped. Native platform fakes are not cache-correct
+yet: the Kotlin/Native compiler is not part of the embeddable compiler Fakt runs in its Gradle task,
+so those fakes are still produced by the in-process plugin
+([#152](https://github.com/rsicarelli/fakt/issues/152)).
 
 !!! note "Project shapes that keep the in-process path"
     Two shapes fall back to generating inside `compileKotlin*`. Fakes are still generated for every

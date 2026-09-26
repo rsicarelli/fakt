@@ -7,11 +7,12 @@ import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnPlugin
 import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
 
 /*
- * KMP sample WITHOUT any JVM/Android target. Locks the cache-correct routing for projects whose
- * targets are all non-drivable: the commonMain producer (`faktGenerateMetadataCommonMain`) drives
- * `KotlinMetadataCompiler` — no JVM classpath required — while the platform mains (js, linuxX64)
- * stay on the in-process plugin (LEGACY_HYBRID). The unpaired `expect` in commonMain is the
- * issue #79 blocker shape: it must not fail the producer.
+ * KMP sample WITHOUT any JVM/Android target. Locks the cache-correct routing for projects with no
+ * JVM classpath at all: the commonMain producer (`faktGenerateMetadataCommonMain`) drives
+ * `KotlinMetadataCompiler`, and the `jsMain` consumer (`faktGenerateJsMain`) drives `K2JSCompiler`
+ * over JS klibs (issue #151). The linuxX64 main stays on the in-process plugin (LEGACY_HYBRID)
+ * until Native is drivable (issue #152). The unpaired `expect` in commonMain is the issue #79
+ * blocker shape: it must not fail the producer.
  */
 plugins {
     alias(libs.plugins.kotlin.multiplatform)

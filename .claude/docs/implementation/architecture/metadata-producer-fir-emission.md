@@ -279,17 +279,20 @@ branch is **deleted** (the producer no longer needs a JVM classpath):
 | Compilation | Decision | Driver / phase |
 |---|---|---|
 | Single-platform JVM `main` | REGISTER_PRODUCER | K2JVM, FIR-emit |
-| Single-platform non-JVM | LEGACY | in-process, IR |
+| Single-platform JS/Wasm `main` | REGISTER_PRODUCER | K2JS, FIR-emit |
+| Single-platform non-drivable (Native) | LEGACY | in-process, IR |
 | Any compilation of a **single-target KMP** project | LEGACY | in-process, IR |
 | Any compilation of an **Android module without KGP** (AGP built-in Kotlin) | LEGACY | in-process, IR |
 | KMP `commonMain` (any target set, **incl. no JVM/Android target**) | REGISTER_PRODUCER | **KotlinMetadataCompiler**, FIR-emit |
 | KMP other `platformType == common` metadata compilations | SUPPRESS | — |
 | KMP JVM/Android platform `main` | REGISTER_CONSUMER | K2JVM, FIR-emit; ancestors ride as `-Xcommon-sources` analysis-only (`emitSourceSets` restricts emission to the platform source set) |
-| KMP Native/JS/Wasm platform `main` | LEGACY_HYBRID | in-process, IR (ordered after producer) |
+| KMP JS/Wasm platform `main` (#151) | REGISTER_CONSUMER | K2JS (`-Xwasm -Xwasm-target=…` for Wasm) over platform klibs, klib output to `scratchDir`, FIR-emit; ancestors ride as `-Xcommon-sources` exactly like the JVM consumer |
+| KMP Native platform `main` | LEGACY_HYBRID | in-process, IR (ordered after producer) |
 
-Platform-declared `@Fake` in `nativeMain`/`jsMain`/`wasmJsMain`/`iosMain` stays on LEGACY_HYBRID —
-unchanged, correct, but not cache-correct (no Native/JS driver in the embeddable). Out of scope here;
-CI presence checks continue to lock it.
+Platform-declared `@Fake` in `nativeMain`/`iosMain`/`linuxX64Main` stays on LEGACY_HYBRID —
+correct, but not cache-correct (no Native driver in the embeddable; tracked in #152). CI presence
+checks continue to lock it. `jsMain`/`wasmJsMain` moved to K2JS-driven consumers in #151; the routing
+table is pinned by `FaktCompilationRoutingTest` (pure `routeCompilation`).
 
 **Single-target KMP** (exactly one non-`metadata` target, e.g. `kotlin { jvm() }`) is a shape the
 cache-correct path cannot serve: KGP never creates the per-source-set `commonMain` compilation for
