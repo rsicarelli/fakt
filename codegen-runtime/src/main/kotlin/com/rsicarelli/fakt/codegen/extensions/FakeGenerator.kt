@@ -24,6 +24,8 @@ import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
  *   classes
  * @property isOperator Whether method is declared with 'operator' modifier
  * @property extensionReceiverType Extension receiver type for extension functions (e.g., "Vector")
+ * @property sourceName Name of the overridden method. Differs from [name] only for overloads, whose
+ *   [name] is unique and used for all generated members.
  */
 data class MethodSpec(
     val name: String,
@@ -36,6 +38,7 @@ data class MethodSpec(
     val isOperator: Boolean = false, // true for operator functions (plus, get, etc.)
     val extensionReceiverType: String? = null, // Extension receiver type for extension functions
     val defaultBehavior: String = "", // Default behavior lambda expression (e.g., "{ null }")
+    val sourceName: String = name,
 )
 
 /**
@@ -728,6 +731,7 @@ private fun generateMethodOverride(
             returnType = method.returnType,
             config =
                 OverrideVarargConfig(
+                    sourceName = method.sourceName,
                     useSuperDelegation = isOpenMethod,
                     extensionReceiverType = method.extensionReceiverType,
                     isOperator = method.isOperator,
@@ -742,6 +746,7 @@ private fun generateMethodOverride(
             returnType = method.returnType,
             config =
                 OverrideMethodConfig(
+                    sourceName = method.sourceName,
                     isSuspend = method.isSuspend,
                     typeParameters = method.typeParameters,
                     useSuperDelegation = isOpenMethod,

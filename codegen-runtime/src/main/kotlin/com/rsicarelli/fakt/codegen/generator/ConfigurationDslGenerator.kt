@@ -231,7 +231,7 @@ public class ConfigurationDslGenerator {
     /** Builds a method signature string for error messages (matches FakeImpl format). */
     private fun buildMethodSignature(function: FunctionSpec): String {
         val params = function.parameters.joinToString { it.typeString }
-        return "${function.name}($params): ${function.returnTypeString}"
+        return "${function.sourceName}($params): ${function.returnTypeString}"
     }
 
     private fun ClassBuilder.applyVisibility(visibility: FirVisibility) {

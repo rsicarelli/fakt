@@ -42,6 +42,7 @@ internal fun FunctionSpec.toRenderableMethodSpec(): RenderableMethodSpec {
         isOperator = isOperator,
         extensionReceiverType = extensionReceiverTypeString,
         defaultBehavior = defaultBehavior,
+        sourceName = sourceName,
     )
 }
 

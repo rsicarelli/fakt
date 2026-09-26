@@ -318,11 +318,9 @@ internal class FirToIrTransformer(private val typeResolution: TypeResolution? = 
         firFunction: FirFunctionInfo,
         irClass: IrClass,
     ): IrFunctionMetadata {
-        // Lookup IrSimpleFunction by name (FIR guarantees this exists)
+        // Lookup IrSimpleFunction by name and signature (FIR guarantees this exists)
         val irFunction =
-            irClass.declarations.filterIsInstance<IrSimpleFunction>().firstOrNull {
-                it.name.asString() == firFunction.name
-            }
+            findIrFunction(firFunction, irClass)
                 ?: error(
                     "IrSimpleFunction '${firFunction.name}' not found in ${irClass.name}. " +
                         "FIR validation should have ensured this exists."
@@ -379,6 +377,46 @@ internal class FirToIrTransformer(private val typeResolution: TypeResolution? = 
             irFunction = irFunction,
             renderedReturnType = returnTypeRendered,
         )
+    }
+
+    /**
+     * Finds the [IrSimpleFunction] matching [firFunction].
+     *
+     * A name is enough unless the function is overloaded; overloads are told apart by their shape
+     * (extension receiver, parameter count and names, type-parameter count) and, when that is still
+     * ambiguous, by their rendered parameter types.
+     */
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    private fun findIrFunction(firFunction: FirFunctionInfo, irClass: IrClass): IrSimpleFunction? {
+        val sameName =
+            irClass.declarations.filterIsInstance<IrSimpleFunction>().filter {
+                it.name.asString() == firFunction.name
+            }
+        if (sameName.size <= 1) return sameName.firstOrNull()
+
+        val sameShape = sameName.filter { it.hasSameShapeAs(firFunction) }
+        return sameShape.singleOrNull()
+            ?: sameShape.firstOrNull { it.hasSameParameterTypesAs(firFunction) }
+            ?: sameShape.firstOrNull()
+            ?: sameName.first()
+    }
+
+    private fun IrSimpleFunction.hasSameShapeAs(firFunction: FirFunctionInfo): Boolean {
+        val regularParams = parameters.filter { it.kind == IrParameterKind.Regular }
+        return regularParams.map { it.name.asString() } == firFunction.parameters.map { it.name } &&
+            (extensionReceiverParameterCompat != null) ==
+                (firFunction.extensionReceiverRendered != null) &&
+            typeParameters.size == firFunction.typeParameters.size
+    }
+
+    private fun IrSimpleFunction.hasSameParameterTypesAs(firFunction: FirFunctionInfo): Boolean {
+        val resolution = typeResolution ?: return false
+        val regularParams = parameters.filter { it.kind == IrParameterKind.Regular }
+        return regularParams.zip(firFunction.parameters).all { (irParam, firParam) ->
+            val firType = firParam.rendered?.shortName ?: return@all false
+            resolution.irTypeToRendered(irParam.type, preserveTypeParameters = true).shortName ==
+                firType
+        }
     }
 
     // ========================================================================

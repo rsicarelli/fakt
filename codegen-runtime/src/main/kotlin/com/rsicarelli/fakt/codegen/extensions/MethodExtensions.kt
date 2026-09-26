@@ -57,6 +57,8 @@ private fun buildHistoryUpdateStatement(
  *
  * @property generateCallHistory When true, generates call tracking code in the method body. When
  *   false, skips call tracking for lightweight fakes. Default: true.
+ * @property sourceName Name of the overridden method when it differs from the generated member name
+ *   (overloads). Null means the member name is used.
  */
 data class OverrideMethodConfig(
     val isSuspend: Boolean = false,
@@ -68,6 +70,7 @@ data class OverrideMethodConfig(
     val classTypeParameters: List<String> = emptyList(),
     val generateCallHistory: Boolean = true,
     val behaviorPrefix: String = "",
+    val sourceName: String? = null,
 )
 
 /** Creates an override method that delegates to a behavior property. */
@@ -87,7 +90,7 @@ fun ClassBuilder.overrideMethod(
     // so no cast is needed for behavior invocation or return.
     val needsCast = config.typeParameters.isNotEmpty()
 
-    function(name) {
+    function(config.sourceName ?: name) {
         if (needsCast) annotation("Suppress", "\"UNCHECKED_CAST\"")
         if (config.isOperator) operator()
         config.extensionReceiverType?.let { receiver(it) }
@@ -141,7 +144,7 @@ fun ClassBuilder.overrideMethod(
         body =
             if (config.useSuperDelegation) {
                 val invocation = "$bp${name}Behavior?.invoke($paramNames)"
-                val superCall = "super.$name($superCallParams)"
+                val superCall = "super.${config.sourceName ?: name}($superCallParams)"
                 if (returnType == "Unit") {
                     if (callTracking != null) {
                         "$callTracking\n$invocation ?: $superCall"
@@ -224,6 +227,8 @@ private fun buildSuperCallParams(params: List<Triple<String, String, Boolean>>):
  * @property extensionReceiverType Extension receiver type for extension functions (e.g., "Vector")
  * @property isOperator Whether method is declared with 'operator' modifier
  * @property generateCallHistory When true, includes call tracking statement. Default: true.
+ * @property sourceName Name of the overridden method when it differs from the generated member name
+ *   (overloads). Null means the member name is used.
  */
 data class OverrideVarargConfig(
     val useSuperDelegation: Boolean = false,
@@ -231,6 +236,7 @@ data class OverrideVarargConfig(
     val isOperator: Boolean = false,
     val generateCallHistory: Boolean = true,
     val behaviorPrefix: String = "",
+    val sourceName: String? = null,
 )
 
 /**
@@ -255,7 +261,7 @@ fun ClassBuilder.overrideVarargMethod(
     returnType: String,
     config: OverrideVarargConfig = OverrideVarargConfig(),
 ) {
-    function(name) {
+    function(config.sourceName ?: name) {
         if (config.isOperator) operator()
         if (config.extensionReceiverType != null) receiver(config.extensionReceiverType)
         override()
@@ -286,7 +292,7 @@ fun ClassBuilder.overrideVarargMethod(
             if (config.useSuperDelegation) {
                 // Open method: nullable invoke with super delegation
                 val invocation = "$bp${name}Behavior?.invoke($paramNames)"
-                val superCall = "super.$name(*$varargName)"
+                val superCall = "super.${config.sourceName ?: name}(*$varargName)"
 
                 if (returnType == "Unit") {
                     if (callTracking != null) {
