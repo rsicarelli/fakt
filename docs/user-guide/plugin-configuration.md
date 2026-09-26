@@ -415,16 +415,22 @@ yet: the Kotlin/Native compiler is not part of the embeddable compiler Fakt runs
 so those fakes are still produced by the in-process plugin
 ([#152](https://github.com/rsicarelli/fakt/issues/152)).
 
+!!! tip "Single-target multiplatform projects"
+    A multiplatform project with exactly one target (for example `kotlin { jvm() }` and nothing
+    else) gets no `commonMain` compilation from Kotlin, so its lone platform task
+    (`faktGenerateJvmMain`) generates every fake: the ones declared in `commonMain` go to
+    `commonTest`, the ones declared in `jvmMain` go to `jvmTest`. This works for JVM, JS and Wasm
+    single targets.
+
 !!! note "Project shapes that keep the in-process path"
-    Two shapes fall back to generating inside `compileKotlin*`. Fakes are still generated for every
-    `@Fake` in both — they just aren't declared task outputs, so those modules' `compileKotlin*`
+    A few shapes fall back to generating inside `compileKotlin*`. Fakes are still generated for
+    every `@Fake` — they just aren't declared task outputs, so those modules' `compileKotlin*`
     tasks opt out of the Gradle build cache (see below). Fakt logs a warning naming the reason
     whenever a module lands here.
 
-    - **Single-target multiplatform projects** (`kotlin { jvm() }` and nothing else). Kotlin does
-      not give such a project a `commonMain` compilation to generate from, so there is nothing to
-      make cache-correct. Adding a second target moves the project onto the cache-correct path
-      automatically.
+    - **Single-target Android or Native multiplatform projects** (for example `kotlin {
+      androidTarget() }` or `kotlin { linuxX64() }` and nothing else). Adding a second target
+      moves the project onto the cache-correct path automatically.
     - **Android modules on AGP's built-in Kotlin support** (AGP 9+, where `org.jetbrains.kotlin.android`
       is no longer applied). AGP keeps Kotlin sources in its own variant model rather than the
       source sets Fakt reads. Android modules that apply the Kotlin Android plugin — every AGP 8.x

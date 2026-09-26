@@ -143,7 +143,7 @@ class FaktGradleSubpluginFlagResolutionTest {
     }
 
     @Test
-    fun `GIVEN single-target KMP WHEN applyToCompilation on the platform main THEN stays legacy and registers no task`() {
+    fun `GIVEN single-target JVM KMP WHEN applyToCompilation on the platform main THEN registers one task owning both halves`() {
         val project = createKmpProject()
         project.getKotlinExtension().jvm()
         project.evaluate()
@@ -152,17 +152,24 @@ class FaktGradleSubpluginFlagResolutionTest {
             project.faktSubplugin().applyToCompilation(project.kmpCompilation("jvm", "main")).get()
 
         // A single-target KMP project never gets the per-source-set `commonMain` compilation, so
-        // no common producer can exist. Routing the lone platform main to a source-partitioned
-        // consumer would drop every `@Fake` declared in commonMain, so the whole project stays on
-        // the in-process plugin: correct, just not cache-correct.
-        assertTrue(
-            options.size > 1,
-            "Single-target KMP must keep the full legacy payload; keys: ${options.map { it.key }}",
+        // the lone platform main owns the common fakes too (issue #153): one task, in-process off.
+        assertEquals(
+            listOf("enabled" to "false"),
+            options.map { it.key to it.value },
+            "The task owns generation, so the in-process plugin must be off.",
         )
-        assertEquals("true", options.first { it.key == "enabled" }.value)
-        assertFalse(
-            project.tasks.names.any { it.startsWith("faktGenerate") },
-            "No FaktGenerateTask may be registered for a single-target KMP project.",
+        val task = project.tasks.getByName("faktGenerateJvmMain") as FaktGenerateTask
+        assertTrue(
+            task.commonGeneratedKotlinDir.isPresent,
+            "The single-target task must declare the common output so commonMain fakes are kept.",
+        )
+        assertTrue(
+            task.commonGeneratedKotlinDir
+                .get()
+                .asFile
+                .invariantSeparatorsPath
+                .endsWith("generated/fakt/commonTest/kotlin"),
+            "Common fakes go to the canonical commonTest directory the task now owns.",
         )
     }
 
@@ -198,7 +205,7 @@ class FaktGradleSubpluginFlagResolutionTest {
     }
 
     @Test
-    fun `GIVEN single-target KMP WHEN applyToCompilation on the legacy metadata main THEN stays legacy and registers no task`() {
+    fun `GIVEN single-target JVM KMP WHEN applyToCompilation on the legacy metadata main THEN suppressed and registers no task`() {
         val project = createKmpProject()
         project.getKotlinExtension().jvm()
         project.evaluate()
@@ -209,18 +216,42 @@ class FaktGradleSubpluginFlagResolutionTest {
                 .applyToCompilation(project.kmpCompilation("metadata", "main"))
                 .get()
 
-        // In a single-target project this compilation is the only one carrying `commonMain` as its
-        // default source set, which makes it a tempting producer — but KGP resolves an EMPTY
-        // compile classpath for it, so KotlinMetadataCompiler cannot be driven over it (it fails
-        // with "unresolved reference 'Fake'"). The whole project stays on the in-process plugin.
+        // In a single-target project this compilation carries `commonMain` as its default source
+        // set, but KGP resolves an EMPTY compile classpath for it, so it cannot be driven. The
+        // platform main's single-target task owns the common fakes; this one is suppressed.
+        assertEquals(
+            listOf("enabled" to "false"),
+            options.map { it.key to it.value },
+            "The metadata main must not generate the common fakes a second time.",
+        )
+        assertFalse(
+            project.tasks.names.contains("faktGenerateMetadataMain"),
+            "The legacy metadata main compilation must not register a task of its own.",
+        )
+    }
+
+    @Test
+    fun `GIVEN single-target Native KMP WHEN applyToCompilation on the platform main THEN stays legacy and registers no task`() {
+        val project = createKmpProject()
+        project.getKotlinExtension().linuxX64()
+        project.evaluate()
+
+        val options =
+            project
+                .faktSubplugin()
+                .applyToCompilation(project.kmpCompilation("linuxX64", "main"))
+                .get()
+
+        // Native cannot be driven from a task yet (issue #152), so a Native-only project keeps the
+        // in-process plugin: correct, just not cache-correct.
         assertTrue(
             options.size > 1,
-            "Single-target KMP keeps the full legacy payload; keys: ${options.map { it.key }}",
+            "Single-target Native keeps the full legacy payload; keys: ${options.map { it.key }}",
         )
         assertEquals("true", options.first { it.key == "enabled" }.value)
         assertFalse(
             project.tasks.names.any { it.startsWith("faktGenerate") },
-            "No FaktGenerateTask may be registered anywhere in a single-target KMP project.",
+            "No FaktGenerateTask may be registered for a single-target Native project.",
         )
     }
 

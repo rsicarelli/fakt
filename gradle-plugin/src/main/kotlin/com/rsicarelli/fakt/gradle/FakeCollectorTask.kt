@@ -84,10 +84,10 @@ public abstract class FakeCollectorTask : DefaultTask() {
     public abstract val sourceGeneratedDir: DirectoryProperty
 
     /**
-     * Aggregated `generatedKotlinDir` outputs of every [FaktGenerateTask] registered on the source
-     * project. Wired through `ConfigurableFileCollection.from(Provider)` so Gradle carries the
-     * `builtBy` chain automatically — no string-matched `dependsOn(matching { name == "compile…"
-     * })`, which silently breaks the dependency chain when task names change.
+     * Aggregated generated-source outputs ([generatedKotlinRoots]) of every [FaktGenerateTask]
+     * registered on the source project. Wired through `ConfigurableFileCollection.from(Provider)`
+     * so Gradle carries the `builtBy` chain automatically — no string-matched `dependsOn(matching {
+     * name == "compile…" })`, which silently breaks the dependency chain when task names change.
      *
      * Declared `@InputFiles` rather than `@Internal` so the collector's own cache key fingerprints
      * the source `.kt` payload — the cache-correct path is end-to-end, not just at the producer.
@@ -494,10 +494,9 @@ public abstract class FakeCollectorTask : DefaultTask() {
                     // string-matched `dependsOn(matching { ... })`. Empty under the legacy
                     // in-process path.
                     it.sourceFakeRoots.from(
-                        srcProject.tasks.withType(FaktGenerateTask::class.java).map { generateTask
-                            ->
-                            generateTask.generatedKotlinDir
-                        }
+                        srcProject.tasks
+                            .withType(FaktGenerateTask::class.java)
+                            .flatMap(::generatedKotlinRoots)
                     )
 
                     // Legacy fallback: source project still on the in-process compiler-plugin path.
@@ -606,10 +605,9 @@ public abstract class FakeCollectorTask : DefaultTask() {
 
                     // Cache-correct path; see KDoc on the KMP variant for the rationale.
                     it.sourceFakeRoots.from(
-                        srcProject.tasks.withType(FaktGenerateTask::class.java).map { generateTask
-                            ->
-                            generateTask.generatedKotlinDir
-                        }
+                        srcProject.tasks
+                            .withType(FaktGenerateTask::class.java)
+                            .flatMap(::generatedKotlinRoots)
                     )
 
                     // Legacy fallback (in-process compiler plugin).
@@ -686,3 +684,11 @@ public abstract class FakeCollectorTask : DefaultTask() {
         }
     }
 }
+
+/**
+ * Every Kotlin source root a [FaktGenerateTask] fills: its `generatedKotlinDir`, plus the
+ * `commonGeneratedKotlinDir` of a single-target KMP task. The optional one is included only when
+ * set, since an absent directory property cannot be resolved as a file-collection entry.
+ */
+internal fun generatedKotlinRoots(task: FaktGenerateTask): List<Any> =
+    listOfNotNull(task.generatedKotlinDir, task.commonGeneratedKotlinDir.takeIf { it.isPresent })

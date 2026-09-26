@@ -119,11 +119,11 @@ class SimplifiedSourceSetConfigurationTest {
 
     @Test
     fun `GIVEN no producer task WHEN configuring KMP test source set dirs THEN commonTest generated dir has no Fakt build dependency`() {
-        // Given - legacy mode: no FaktGenerateTask exists (generation is in-process at compile
-        // time)
+        // Given - legacy mode: a single-target Native project registers no FaktGenerateTask
+        // (Native is not drivable yet, #152), so generation is in-process at compile time
         val project = createKmpProject()
         val kotlin = project.getKotlinExtension()
-        kotlin.jvm()
+        kotlin.linuxX64()
         project.evaluate()
 
         // When
@@ -139,7 +139,7 @@ class SimplifiedSourceSetConfigurationTest {
     }
 
     @Test
-    fun `GIVEN jvmTest source set WHEN configured THEN should include build generated fakt jvmFakes kotlin`() {
+    fun `GIVEN single-target JVM KMP WHEN configured THEN jvmTest reads the single-target task output`() {
         // Given
         val project = createKmpProject()
         val kotlin = project.getKotlinExtension()
@@ -147,16 +147,13 @@ class SimplifiedSourceSetConfigurationTest {
 
         // When
         project.evaluate()
-        val jvmTest = kotlin.sourceSets.getByName("jvmTest")
 
-        // Then - Should add generated dir to EXISTING jvmTest
-        assertTrue(
-            jvmTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/jvmTest/kotlin") }
-        )
+        // Then - issue #153: the lone jvm main owns its platform fakes from one task
+        assertConsumerOwned(kotlin.sourceSets.getByName("jvmTest"), targetName = "jvm")
     }
 
     @Test
-    fun `GIVEN jsTest source set WHEN configured THEN should include build generated fakt jsFakes kotlin`() {
+    fun `GIVEN single-target JS KMP WHEN configured THEN jsTest reads the single-target task output`() {
         // Given
         val project = createKmpProject()
         val kotlin = project.getKotlinExtension()
@@ -164,11 +161,32 @@ class SimplifiedSourceSetConfigurationTest {
 
         // When
         project.evaluate()
-        val jsTest = kotlin.sourceSets.getByName("jsTest")
 
-        // Then - Should add generated dir to EXISTING jsTest
+        // Then
+        assertConsumerOwned(kotlin.sourceSets.getByName("jsTest"), targetName = "js")
+    }
+
+    @Test
+    fun `GIVEN single-target JVM KMP WHEN configured THEN commonTest reads the canonical dir built by the single-target task`() {
+        // Given
+        val project = createKmpProject()
+        val kotlin = project.getKotlinExtension()
+        kotlin.jvm()
+
+        // When
+        project.evaluate()
+        val commonTest = kotlin.sourceSets.getByName("commonTest")
+
+        // Then - the task owns the canonical commonTest dir: registered once, with its builtBy
+        val canonical =
+            commonTest.kotlin.srcDirs.filter {
+                it.invariantSeparatorsPath.endsWith("build/generated/fakt/commonTest/kotlin")
+            }
+        assertEquals(1, canonical.size, "commonTest srcDirs=${commonTest.kotlin.srcDirs}")
+        val deps = commonTest.kotlin.buildDependencies.getDependencies(null).map { it.name }
         assertTrue(
-            jsTest.kotlin.srcDirs.any { it.path.contains("build/generated/fakt/jsTest/kotlin") }
+            deps.contains("faktGenerateJvmMain"),
+            "commonTest must depend on the task that fills it; deps: $deps",
         )
     }
 

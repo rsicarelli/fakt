@@ -263,6 +263,60 @@ class SourceSetContextSerializationTest {
         }
 
     @Test
+    fun `GIVEN default commonOutputDirectory WHEN encoding with defaults omitted THEN field is absent from JSON`() =
+        runTest {
+            // GIVEN: every context except a single-target KMP invocation leaves it null
+            val context =
+                SourceSetContext(
+                    compilationName = "main",
+                    targetName = "jvm",
+                    platformType = "jvm",
+                    isTest = false,
+                    defaultSourceSet = SourceSetInfo(name = "jvmMain", parents = emptyList()),
+                    allSourceSets = listOf(SourceSetInfo(name = "jvmMain", parents = emptyList())),
+                    outputDirectory = "/build/generated/fakt/jvm/main/kotlin",
+                    commonTestOutputDirectory = "/build/generated/fakt/commonTest/kotlin",
+                )
+
+            // WHEN
+            val jsonString = Json.encodeToString(context)
+
+            // THEN: existing @Input payloads stay byte-identical after the field was added
+            assertTrue(
+                "commonOutputDirectory" !in jsonString,
+                "Default commonOutputDirectory must be omitted to keep payloads byte-identical. " +
+                    "Got: $jsonString",
+            )
+        }
+
+    @Test
+    fun `GIVEN commonOutputDirectory WHEN roundtripping THEN it is preserved`() = runTest {
+        // GIVEN: a single-target KMP invocation that splits common and platform fakes
+        val original =
+            SourceSetContext(
+                compilationName = "main",
+                targetName = "jvm",
+                platformType = "jvm",
+                isTest = false,
+                defaultSourceSet = SourceSetInfo(name = "jvmMain", parents = listOf("commonMain")),
+                allSourceSets =
+                    listOf(
+                        SourceSetInfo(name = "jvmMain", parents = listOf("commonMain")),
+                        SourceSetInfo(name = "commonMain", parents = emptyList()),
+                    ),
+                outputDirectory = "/build/generated/fakt/jvm/main/kotlin",
+                commonTestOutputDirectory = "/build/generated/fakt/commonTest/kotlin",
+                commonOutputDirectory = "/build/generated/fakt/commonTest/kotlin",
+            )
+
+        // WHEN
+        val decoded = Json.decodeFromString<SourceSetContext>(Json.encodeToString(original))
+
+        // THEN
+        assertEquals(original, decoded)
+    }
+
+    @Test
     fun `GIVEN emitSourceSets restriction WHEN roundtripping THEN restriction is preserved`() =
         runTest {
             // GIVEN: a consumer invocation restricted to its own source set

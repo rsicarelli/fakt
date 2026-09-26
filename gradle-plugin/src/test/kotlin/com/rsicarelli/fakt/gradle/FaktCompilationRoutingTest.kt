@@ -15,12 +15,13 @@ import org.junit.jupiter.api.TestInstance
 /**
  * Pins [routeCompilation], the pure decision behind how each Kotlin compilation generates its
  * fakes, together with the helpers it and the task wiring rely on ([isDrivablePlatform],
- * [wasmCompilerTarget], [consumerTaskNameFor]).
+ * [isSingleTargetDrivablePlatform], [wasmCompilerTarget], [consumerTaskNameFor]).
  *
- * Issue #151 (gap A of #150) moved Kotlin/JS and Kotlin/Wasm platform mains off the in-process
- * plugin (`LEGACY_HYBRID`) onto a `K2JSCompiler`-driven consumer `FaktGenerateTask`; only Native
- * platform mains still ride the in-process plugin. End-to-end behaviour is locked by the
- * `kmp-multi-target` / `kmp-no-jvm` cache-correctness CI cells.
+ * Issue #151 moved Kotlin/JS and Kotlin/Wasm platform mains off the in-process plugin
+ * (`LEGACY_HYBRID`) onto a `K2JSCompiler`-driven consumer `FaktGenerateTask`. Issue #153 moved
+ * single-target JVM/JS/Wasm KMP projects onto one task that owns both the common and the platform
+ * fakes. End-to-end behaviour is locked by the `kmp-multi-target`, `kmp-no-jvm` and
+ * `kmp-single-target` cache-correctness CI cells.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FaktCompilationRoutingTest {
@@ -72,18 +73,61 @@ class FaktCompilationRoutingTest {
     }
 
     @Test
-    fun `GIVEN single-target KMP WHEN routing its js main THEN stays on the in-process plugin with a reason`() {
-        val route =
-            routeCompilation(
-                hasKotlinSourceSetModel = true,
-                isMultiplatform = true,
-                hasCommonMainProducer = false,
-                compilationName = "main",
-                platformTypeName = "js",
-            )
+    fun `GIVEN single-target JVM KMP WHEN routing the jvm main THEN registers the single-target task`() {
+        val route = routeSingleTarget(target = "jvm", compilationPlatform = "jvm")
 
-        assertEquals(CacheCorrectDecision.LEGACY, route.decision, "Single-target KMP is #153.")
+        assertEquals(CacheCorrectDecision.REGISTER_SINGLE_TARGET, route.decision)
+        assertNull(route.notCacheCorrectReason, "A task-driven project is cache-correct.")
+    }
+
+    @Test
+    fun `GIVEN single-target JS or Wasm KMP WHEN routing the platform main THEN registers the single-target task`() {
+        listOf("js", "wasm").forEach { platform ->
+            val route = routeSingleTarget(target = platform, compilationPlatform = platform)
+
+            assertEquals(CacheCorrectDecision.REGISTER_SINGLE_TARGET, route.decision, platform)
+        }
+    }
+
+    @Test
+    fun `GIVEN single-target JVM KMP WHEN routing the legacy metadata main THEN suppresses it`() {
+        val route = routeSingleTarget(target = "jvm", compilationPlatform = "common")
+
+        assertEquals(
+            CacheCorrectDecision.SUPPRESS,
+            route.decision,
+            "The platform main owns the common fakes; the metadata main (empty classpath) must " +
+                "not generate them a second time.",
+        )
+    }
+
+    @Test
+    fun `GIVEN single-target Android KMP WHEN routing any compilation THEN stays on the in-process plugin with a reason`() {
+        listOf("androidJvm", "common").forEach { compilationPlatform ->
+            val route =
+                routeSingleTarget(target = "androidJvm", compilationPlatform = compilationPlatform)
+
+            assertEquals(CacheCorrectDecision.LEGACY, route.decision, compilationPlatform)
+            assertNotNull(route.notCacheCorrectReason, "The fallback must never be silent.")
+        }
+    }
+
+    @Test
+    fun `GIVEN single-target Native KMP WHEN routing the native main THEN stays on the in-process plugin with a reason`() {
+        val route = routeSingleTarget(target = "native", compilationPlatform = "native")
+
+        assertEquals(CacheCorrectDecision.LEGACY, route.decision, "Native is #152.")
         assertNotNull(route.notCacheCorrectReason, "The fallback must never be silent.")
+    }
+
+    @Test
+    fun `GIVEN KGP platform type names WHEN checking single-target drivability THEN only JVM JS and Wasm qualify`() {
+        listOf("jvm", "js", "wasm").forEach { platform ->
+            assertTrue(isSingleTargetDrivablePlatform(platform), "$platform must qualify")
+        }
+        listOf("androidJvm", "native", "common").forEach { platform ->
+            assertFalse(isSingleTargetDrivablePlatform(platform), "$platform must not qualify")
+        }
     }
 
     @Test
@@ -92,7 +136,7 @@ class FaktCompilationRoutingTest {
             routeCompilation(
                 hasKotlinSourceSetModel = true,
                 isMultiplatform = true,
-                hasCommonMainProducer = true,
+                singleTargetPlatformTypeName = null,
                 compilationName = "main",
                 platformTypeName = "wasm",
             )
@@ -106,7 +150,7 @@ class FaktCompilationRoutingTest {
             routeCompilation(
                     hasKotlinSourceSetModel = true,
                     isMultiplatform = false,
-                    hasCommonMainProducer = false,
+                    singleTargetPlatformTypeName = null,
                     compilationName = "main",
                     platformTypeName = "js",
                 )
@@ -121,7 +165,7 @@ class FaktCompilationRoutingTest {
             routeCompilation(
                     hasKotlinSourceSetModel = false,
                     isMultiplatform = false,
-                    hasCommonMainProducer = false,
+                    singleTargetPlatformTypeName = null,
                     compilationName = "debug",
                     platformTypeName = "androidJvm",
                 )
@@ -169,9 +213,18 @@ class FaktCompilationRoutingTest {
         routeCompilation(
                 hasKotlinSourceSetModel = true,
                 isMultiplatform = true,
-                hasCommonMainProducer = true,
+                singleTargetPlatformTypeName = null,
                 compilationName = compilationName,
                 platformTypeName = platformTypeName,
             )
             .decision
+
+    private fun routeSingleTarget(target: String, compilationPlatform: String): CompilationRoute =
+        routeCompilation(
+            hasKotlinSourceSetModel = true,
+            isMultiplatform = true,
+            singleTargetPlatformTypeName = target,
+            compilationName = "main",
+            platformTypeName = compilationPlatform,
+        )
 }

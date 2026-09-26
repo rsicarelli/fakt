@@ -61,6 +61,14 @@ runs:
       shell: bash
       run: ./gradlew -p samples/kmp-no-jvm check
 
+    - name: Test kmp-single-target sample (exactly one target)
+      shell: bash
+      run: ./gradlew -p samples/kmp-single-target allTests --continue
+
+    - name: Check kmp-single-target sample (validations)
+      shell: bash
+      run: ./gradlew -p samples/kmp-single-target check
+
     - name: Test kmp-multi-module sample (all targets)
       shell: bash
       run: ./gradlew -p samples/kmp-multi-module allTests --continue

@@ -38,7 +38,7 @@ internal object FaktGenerateTaskWiring {
         project: Project,
         kotlinCompilation: KotlinCompilation<*>,
         extension: FaktPluginExtension,
-    ) = register(project, kotlinCompilation, extension, partitionToOwnSourceSet = false)
+    ) = register(project, kotlinCompilation, extension, TaskShape.PRODUCER)
 
     /**
      * Registers a consumer `FaktGenerateTask` for a drivable platform main (`jvmMain`,
@@ -53,13 +53,28 @@ internal object FaktGenerateTaskWiring {
         project: Project,
         kotlinCompilation: KotlinCompilation<*>,
         extension: FaktPluginExtension,
-    ) = register(project, kotlinCompilation, extension, partitionToOwnSourceSet = true)
+    ) = register(project, kotlinCompilation, extension, TaskShape.CONSUMER)
+
+    /**
+     * Registers the single `FaktGenerateTask` of a single-target KMP project (issue #153). With no
+     * per-source-set `commonMain` metadata compilation to act as the common producer, the lone
+     * platform main owns both halves in one compiler run: its own source set's fakes go to
+     * `generatedKotlinDir` (wired into the platform test source set, like a consumer), and the
+     * common fragment's fakes go to `commonGeneratedKotlinDir` — the canonical
+     * `generated/fakt/commonTest/kotlin` — wired into `commonTest`. Owning the canonical directory
+     * means the worker's reset also removes common fakes an earlier in-process build left there.
+     */
+    fun registerSingleTarget(
+        project: Project,
+        kotlinCompilation: KotlinCompilation<*>,
+        extension: FaktPluginExtension,
+    ) = register(project, kotlinCompilation, extension, TaskShape.SINGLE_TARGET)
 
     private fun register(
         project: Project,
         kotlinCompilation: KotlinCompilation<*>,
         extension: FaktPluginExtension,
-        partitionToOwnSourceSet: Boolean,
+        shape: TaskShape,
     ) {
         val targetName =
             kotlinCompilation.target.targetName.ifBlank {
@@ -81,7 +96,7 @@ internal object FaktGenerateTaskWiring {
         // directory.
         val generatedKotlinPath =
             if (kotlinCompilation.defaultSourceSet.name == "commonMain") {
-                "generated/fakt/commonTest/kotlin"
+                CANONICAL_COMMON_TEST_DIR
             } else {
                 "generated/fakt/$targetName/$compilationName/kotlin"
             }
@@ -96,17 +111,13 @@ internal object FaktGenerateTaskWiring {
         val workerClasspath = project.configurations.named(FaktGradleSubplugin.WORKER_CONFIGURATION)
         val compilerClasspath =
             project.configurations.named(FaktGradleSubplugin.COMPILER_CLASSPATH_CONFIGURATION)
-        val sourceSets =
-            if (partitionToOwnSourceSet) listOf(kotlinCompilation.defaultSourceSet)
-            else kotlinCompilation.allKotlinSourceSets.toList()
+        val commonOutputDir = project.layout.buildDirectory.dir(CANONICAL_COMMON_TEST_DIR)
 
         val taskProvider =
             project.tasks.register(taskName, FaktGenerateTask::class.java) { task ->
-                task.sources.from(sourceSets.map { sourceSet -> sourceSet.kotlin })
-                if (partitionToOwnSourceSet) {
-                    val ancestors =
-                        kotlinCompilation.allKotlinSourceSets - kotlinCompilation.defaultSourceSet
-                    task.analysisOnlySources.from(ancestors.map { sourceSet -> sourceSet.kotlin })
+                configureSources(task, kotlinCompilation, shape)
+                if (shape == TaskShape.SINGLE_TARGET) {
+                    task.commonGeneratedKotlinDir.set(commonOutputDir)
                 }
                 configureDependencies(task, kotlinCompilation)
                 if (isMetadataLikeCompilation(kotlinCompilation)) {
@@ -125,6 +136,9 @@ internal object FaktGenerateTaskWiring {
             }
 
         wireGeneratedDirConsumers(project, kotlinCompilation, extension, taskProvider)
+        if (shape == TaskShape.SINGLE_TARGET) {
+            wireSingleTargetCommonDir(project, taskProvider)
+        }
     }
 
     /**
@@ -222,10 +236,6 @@ internal object FaktGenerateTaskWiring {
     private fun getSubpluginInstance(project: Project): FaktGradleSubplugin =
         project.plugins.getPlugin(FaktGradleSubplugin::class.java)
 
-    private fun isMetadataLikeCompilation(kotlinCompilation: KotlinCompilation<*>): Boolean =
-        kotlinCompilation.defaultSourceSet.name == "commonMain" ||
-            kotlinCompilation.target.platformType.name.equals("common", ignoreCase = true)
-
     private fun encodePlaceholderContext(kotlinCompilation: KotlinCompilation<*>): String {
         // `useTestFixtures` is intentionally left at its default here. In `buildContext` it only
         // affects `outputDirectory`, which the `.copy` below replaces with a placeholder and the
@@ -280,6 +290,79 @@ private fun wireAndroidLintOrdering(
     project.tasks
         .matching { it.name.startsWith("lint") }
         .configureEach { lintTask -> lintTask.dependsOn(taskProvider) }
+}
+
+/** Build-dir-relative canonical `commonTest` output, shared by the common producers. */
+private const val CANONICAL_COMMON_TEST_DIR: String = "generated/fakt/commonTest/kotlin"
+
+/**
+ * Project extra property naming the single-target `FaktGenerateTask` that owns the canonical
+ * `commonTest` directory. `SourceSetConfigurator` reads it to skip its own plain registration of
+ * that directory, which would otherwise expose stale in-process copies without a task dependency.
+ */
+internal const val SINGLE_TARGET_PRODUCER_PROPERTY: String = "fakt.singleTargetProducer"
+
+/**
+ * How a `FaktGenerateTask` partitions its compilation's sources (see the `register*` functions of
+ * [FaktGenerateTaskWiring]).
+ */
+private enum class TaskShape {
+    /** Every source set analysed and emitted (KMP `commonMain`, single-platform JVM `main`). */
+    PRODUCER,
+
+    /** Own source set emitted; ancestors analysis-only (drivable KMP platform mains). */
+    CONSUMER,
+
+    /** Own source set and ancestors both emitted, each into its own output (single-target KMP). */
+    SINGLE_TARGET,
+}
+
+private fun isMetadataLikeCompilation(kotlinCompilation: KotlinCompilation<*>): Boolean =
+    kotlinCompilation.defaultSourceSet.name == "commonMain" ||
+        kotlinCompilation.target.platformType.name.equals("common", ignoreCase = true)
+
+/**
+ * Feeds the compilation's source sets to [task] according to [shape]. The ancestors of a consumer's
+ * or single-target task's default source set (commonMain and intermediates) are the common fragment
+ * (`-Xcommon-sources`): analysis-only for a consumer — the common producer owns their fakes — and
+ * emitted for a single-target task, which has no common producer.
+ */
+private fun configureSources(
+    task: FaktGenerateTask,
+    kotlinCompilation: KotlinCompilation<*>,
+    shape: TaskShape,
+) {
+    val ancestors = kotlinCompilation.allKotlinSourceSets - kotlinCompilation.defaultSourceSet
+    when (shape) {
+        TaskShape.PRODUCER ->
+            task.sources.from(kotlinCompilation.allKotlinSourceSets.map { it.kotlin })
+        TaskShape.CONSUMER -> {
+            task.sources.from(kotlinCompilation.defaultSourceSet.kotlin)
+            task.analysisOnlySources.from(ancestors.map { it.kotlin })
+        }
+        TaskShape.SINGLE_TARGET -> {
+            task.sources.from(kotlinCompilation.defaultSourceSet.kotlin)
+            task.commonSources.from(ancestors.map { it.kotlin })
+        }
+    }
+}
+
+/**
+ * Wires a single-target task's `commonGeneratedKotlinDir` into `commonTest` (lazy, so Gradle infers
+ * the task dependency) and records the task as the owner of the canonical `commonTest` directory
+ * ([SINGLE_TARGET_PRODUCER_PROPERTY]).
+ */
+private fun wireSingleTargetCommonDir(
+    project: Project,
+    taskProvider: TaskProvider<FaktGenerateTask>,
+) {
+    project.extensions.extraProperties.set(SINGLE_TARGET_PRODUCER_PROPERTY, taskProvider.name)
+    project.extensions
+        .findByType(KotlinMultiplatformExtension::class.java)
+        ?.sourceSets
+        ?.findByName("commonTest")
+        ?.kotlin
+        ?.srcDir(taskProvider.flatMap { it.commonGeneratedKotlinDir })
 }
 
 /**

@@ -72,6 +72,18 @@ A comprehensive KMP hierarchy validation sample demonstrating:
 
 **Source Set Targets**: `commonMain`, `jvmMain`, `iosMain`, `jsMain`, `wasmJsMain`, `nativeMain` → corresponding test source sets
 
+### 🎯 **kmp-single-target**
+A KMP module with exactly **one** target (`kotlin { jvm() }`) — a common shape for libraries that
+start multiplatform-ready:
+- **No `commonMain` compilation**: Kotlin gives single-target projects none, so one task
+  (`faktGenerateJvmMain`) owns every fake
+- **Split outputs**: `commonMain` fakes → `commonTest`, `jvmMain` fakes → `jvmTest`
+- **expect/actual**: `platformName()` locks that `commonMain` compiles as the common fragment
+- **Platform types**: a JVM-only `@Fake` using `java.io.File` next to common fakes in `jvmTest`
+- **Cache-correct**: build cache and configuration cache both enabled
+
+**Source Set Targets**: `commonMain` → `commonTest`, `jvmMain` → `jvmTest`
+
 ### 📤 **fake-publishing** ⭐ NEW
 A two-project sample validating Maven artifact publishing workflow:
 - **Publisher Project**: Library with @Fake interfaces published to Maven Local

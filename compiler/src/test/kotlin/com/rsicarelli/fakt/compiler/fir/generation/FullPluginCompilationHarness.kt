@@ -53,18 +53,22 @@ internal object FullPluginCompilationHarness {
         outputDir: File,
         enableCallHistory: Boolean = true,
         commonTestOutputDir: File = outputDir,
+        defaultSourceSetName: String = "main",
+        commonOutputDir: File? = null,
     ): Outcome {
+        val defaultSourceSet = SourceSetInfo(name = defaultSourceSetName, parents = emptyList())
         val context =
             SourceSetContext(
                 compilationName = "main",
                 targetName = "jvm",
                 platformType = "jvm",
                 isTest = false,
-                defaultSourceSet = SourceSetInfo(name = "main", parents = emptyList()),
-                allSourceSets = listOf(SourceSetInfo(name = "main", parents = emptyList())),
+                defaultSourceSet = defaultSourceSet,
+                allSourceSets = listOf(defaultSourceSet),
                 outputDirectory = outputDir.absolutePath,
                 commonTestOutputDirectory = commonTestOutputDir.absolutePath,
                 emitPhase = emitPhase,
+                commonOutputDirectory = commonOutputDir?.absolutePath,
             )
         val contextBase64 =
             Base64.getEncoder()

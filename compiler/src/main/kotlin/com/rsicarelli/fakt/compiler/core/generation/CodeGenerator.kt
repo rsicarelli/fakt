@@ -47,14 +47,27 @@ internal class CodeGenerator(
      * - JvmOnlyService (jvmMain) → jvmTest
      * - IosOnlyService (iosMain) → iosTest
      *
+     * When [SourceSetContext.commonOutputDirectory] is set (a single-target KMP compilation that
+     * owns both halves), routing is explicit instead: the default source set's fakes go to
+     * [SourceSetContext.outputDirectory] and every other (common-fragment) source set's fakes go to
+     * [SourceSetContext.commonOutputDirectory].
+     *
      * @param sourceSourceSet Source set name (e.g., "commonMain", "iosMain") or null
      * @return Absolute path to output directory
      */
     private fun selectOutputDirectory(sourceSourceSet: String?): String {
-        if (sourceSourceSet == null) {
-            return sourceSetContext.outputDirectory
+        val commonOutputDirectory = sourceSetContext.commonOutputDirectory
+        return when {
+            sourceSourceSet == null -> sourceSetContext.outputDirectory
+            commonOutputDirectory == null -> testCounterpartDirectory(sourceSourceSet)
+            sourceSourceSet == sourceSetContext.defaultSourceSet.name ->
+                sourceSetContext.outputDirectory
+            else -> commonOutputDirectory
         }
+    }
 
+    /** The test counterpart of [sourceSourceSet], derived from the `commonTest` output path. */
+    private fun testCounterpartDirectory(sourceSourceSet: String): String {
         val testSourceSet =
             when {
                 sourceSourceSet.equals("main", ignoreCase = true) -> "test"

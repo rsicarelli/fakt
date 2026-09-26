@@ -24,6 +24,7 @@ import org.gradle.workers.WorkParameters
 internal interface FaktCodegenWorkParameters : WorkParameters {
     val sources: ConfigurableFileCollection
     val analysisOnlySources: ConfigurableFileCollection
+    val commonSources: ConfigurableFileCollection
     val compileClasspath: ConfigurableFileCollection
     val commonKlibClasspath: ConfigurableFileCollection
     val faktCompilerClasspath: ConfigurableFileCollection
@@ -36,6 +37,7 @@ internal interface FaktCodegenWorkParameters : WorkParameters {
     val wasmTarget: Property<String>
     val commonFirMetadata: RegularFileProperty
     val generatedKotlinDir: DirectoryProperty
+    val commonGeneratedKotlinDir: DirectoryProperty
     val firMetadataFile: RegularFileProperty
     val scratchDir: DirectoryProperty
 }
@@ -76,22 +78,23 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
 
     override fun execute() {
         val params = parameters
-        // Clear stale outputs from previous runs: the dir is task-owned, and a deleted @Fake
-        // source must not leave its generated fake behind.
-        val outputDir =
-            params.generatedKotlinDir.asFile.get().also {
-                it.deleteRecursively()
-                it.mkdirs()
-            }
+        // Clear stale outputs from previous runs: the dirs are task-owned (see resetDirectory).
+        val outputDir = params.generatedKotlinDir.asFile.get().also(::resetDirectory)
+        params.commonGeneratedKotlinDir.orNull?.asFile?.let(::resetDirectory)
         val analysisOnlyFiles = collectKotlinSources(params.analysisOnlySources.files)
+        val commonFiles = collectKotlinSources(params.commonSources.files)
+        require(commonFiles.isEmpty() || params.commonGeneratedKotlinDir.isPresent) {
+            "commonSources require commonGeneratedKotlinDir: their fakes need a declared output."
+        }
         val sourceSetContext = populateSourceSetContext(params, analysisOnlyFiles.isNotEmpty())
         val pluginJars = resolvePluginJars(params)
 
         invokeK2(
             K2Invocation(
                 driver = CompilerDriver.forPlatformType(sourceSetContext.platformType),
-                sourceFiles = collectKotlinSources(params.sources.files) + analysisOnlyFiles,
-                analysisOnlySourceFiles = analysisOnlyFiles,
+                sourceFiles =
+                    collectKotlinSources(params.sources.files) + commonFiles + analysisOnlyFiles,
+                commonFragmentFiles = analysisOnlyFiles + commonFiles,
                 compileClasspath =
                     params.compileClasspath.files.toList() +
                         params.commonKlibClasspath.files.toList(),
@@ -124,6 +127,10 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
      * source-partitioned consumer with expect/actual or common-type references), emission is
      * restricted to the compilation's own source set: the common producer owns the ancestors'
      * fakes.
+     *
+     * When [FaktCodegenWorkParameters.commonGeneratedKotlinDir] is set (a single-target KMP
+     * project), it becomes [SourceSetContext.commonOutputDirectory]: the common fragment's fakes
+     * are routed there and the default source set's fakes to the main output directory.
      */
     private fun populateSourceSetContext(
         params: FaktCodegenWorkParameters,
@@ -141,6 +148,7 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
             metadataCachePath =
                 if (isConsumerMode) params.commonFirMetadata.asFile.get().absolutePath else null,
             emitPhase = EmitPhase.FIR,
+            commonOutputDirectory = params.commonGeneratedKotlinDir.orNull?.asFile?.absolutePath,
             emitSourceSets =
                 if (hasAnalysisOnlySources) listOf(storedContext.defaultSourceSet.name)
                 else emptyList(),
@@ -167,7 +175,8 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
     private data class K2Invocation(
         val driver: CompilerDriver,
         val sourceFiles: List<File>,
-        val analysisOnlySourceFiles: List<File>,
+        /** Sources compiled as the common fragment (`-Xcommon-sources`). */
+        val commonFragmentFiles: List<File>,
         val compileClasspath: List<File>,
         val pluginJars: List<File>,
         val outputDir: File,
@@ -232,7 +241,7 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         // Leave the JDK on the compilation classpath — production sources reference
         // `java.io.Serializable`, `java.util.*`, etc. K2 needs JDK rt to resolve them.
 
-        populateConsumerMultiplatformArgs(bridge, args, call.analysisOnlySourceFiles)
+        populateConsumerMultiplatformArgs(bridge, args, call.commonFragmentFiles)
     }
 
     private fun populateJsOutputArgs(bridge: K2CompilerBridge, args: Any, call: K2Invocation) {
@@ -252,7 +261,7 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
             bridge.setOnArgs(args, "setWasm", Boolean::class.javaPrimitiveType!!, true)
             bridge.setOnArgs(args, "setWasmTarget", String::class.java, call.wasmTarget)
         }
-        populateConsumerMultiplatformArgs(bridge, args, call.analysisOnlySourceFiles)
+        populateConsumerMultiplatformArgs(bridge, args, call.commonFragmentFiles)
     }
 
     private fun populateMetadataOutputArgs(
@@ -304,26 +313,26 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
 }
 
 /**
- * A source-partitioned consumer rides ancestor sources along for analysis: marking them
- * `-Xcommon-sources` splits the module into common + platform fragments so `actual` declarations
- * pair with their `expect`s (otherwise the frontend rejects the `actual` keyword outright, and
- * ACTUAL_WITHOUT_EXPECT is an error even under `-Xmulti-platform`). `-Xexpect-actual-classes` mutes
- * the expect/actual-classes Beta warning — nothing else. All three live on
- * `CommonCompilerArguments`, so every platform driver shares this.
+ * A source-partitioned consumer rides ancestor sources along for analysis (and a single-target
+ * producer emits them too): marking them `-Xcommon-sources` splits the module into common +
+ * platform fragments so `actual` declarations pair with their `expect`s (otherwise the frontend
+ * rejects the `actual` keyword outright, and ACTUAL_WITHOUT_EXPECT is an error even under
+ * `-Xmulti-platform`). `-Xexpect-actual-classes` mutes the expect/actual-classes Beta warning —
+ * nothing else. All three live on `CommonCompilerArguments`, so every platform driver shares this.
  */
 private fun populateConsumerMultiplatformArgs(
     bridge: K2CompilerBridge,
     args: Any,
-    analysisOnlySourceFiles: List<File>,
+    commonFragmentFiles: List<File>,
 ) {
-    if (analysisOnlySourceFiles.isEmpty()) return
+    if (commonFragmentFiles.isEmpty()) return
     bridge.setOnArgs(args, "setMultiPlatform", Boolean::class.javaPrimitiveType!!, true)
     bridge.setOnArgs(args, "setExpectActualClasses", Boolean::class.javaPrimitiveType!!, true)
     bridge.setOnArgs(
         args,
         "setCommonSources",
         Array<String>::class.java,
-        analysisOnlySourceFiles.map { it.absolutePath }.toTypedArray(),
+        commonFragmentFiles.map { it.absolutePath }.toTypedArray(),
     )
 }
 
@@ -344,3 +353,13 @@ private fun collectKotlinSources(
             else -> emptyList()
         }
     }
+
+/**
+ * Clears a task-owned output directory before a run: a deleted `@Fake` source must not leave its
+ * generated fake behind, and an in-process copy left in the same directory by a pre-upgrade build
+ * is removed too.
+ */
+private fun resetDirectory(dir: File) {
+    dir.deleteRecursively()
+    dir.mkdirs()
+}

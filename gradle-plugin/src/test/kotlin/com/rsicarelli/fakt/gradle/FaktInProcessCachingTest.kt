@@ -14,8 +14,9 @@ import org.junit.jupiter.api.TestInstance
  *
  * Regression cover for issue #142, reproduced on three shapes: the `useExperimentalGenerateTask`
  * opt-out, an AGP 9 built-in-Kotlin module, and a single-target multiplatform project — the last
- * two on their defaults. Get the mapping wrong towards `true` and a compile task loses cache hits
- * for nothing; wrong towards `false` and #142 comes back.
+ * two on their defaults (single-target JVM/JS/Wasm projects are task-driven since issue #153). Get
+ * the mapping wrong towards `true` and a compile task loses cache hits for nothing; wrong towards
+ * `false` and #142 comes back.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FaktInProcessCachingTest {
@@ -52,6 +53,15 @@ class FaktInProcessCachingTest {
         assertFalse(
             generatesFakesInProcess(CacheCorrectDecision.REGISTER_CONSUMER),
             "A consumer FaktGenerateTask declares its outputs the same way a producer does.",
+        )
+    }
+
+    @Test
+    fun `GIVEN the single-target decision WHEN asking whether fakes are generated in-process THEN it is false`() {
+        assertFalse(
+            generatesFakesInProcess(CacheCorrectDecision.REGISTER_SINGLE_TARGET),
+            "REGISTER_SINGLE_TARGET moves generation into a FaktGenerateTask whose outputs are " +
+                "declared, so compileKotlin* stays cacheable.",
         )
     }
 

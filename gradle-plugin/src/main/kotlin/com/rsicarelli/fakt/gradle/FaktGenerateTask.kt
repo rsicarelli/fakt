@@ -86,6 +86,23 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
     public abstract val analysisOnlySources: ConfigurableFileCollection
 
     /**
+     * Common-fragment sources (`commonMain` and intermediates) whose `@Fake` declarations this task
+     * **emits** — unlike [analysisOnlySources], which are analysed but never emitted. Set only for
+     * a single-target KMP project, where no metadata compilation exists to own the common fakes, so
+     * the lone platform compilation owns both halves. They are passed as `-Xcommon-sources` (so
+     * `actual`s in [sources] pair with their `expect`s) and their fakes are written to
+     * [commonGeneratedKotlinDir].
+     *
+     * `@SkipWhenEmpty` alongside [sources]: Gradle skips the task only when both are empty, so a
+     * single-target project with every `@Fake` in `commonMain` and an empty `jvmMain` still runs.
+     */
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:SkipWhenEmpty
+    @get:IgnoreEmptyDirectories
+    public abstract val commonSources: ConfigurableFileCollection
+
+    /**
      * Klib dependencies for klib-based compilations — the compilation's own
      * `compileDependencyFiles`: metadata klibs for common (`commonMain`) producers driven by
      * `KotlinMetadataCompiler`, and platform klibs for Kotlin/JS and Kotlin/Wasm compilations
@@ -176,6 +193,16 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
     @get:OutputDirectory public abstract val generatedKotlinDir: DirectoryProperty
 
     /**
+     * Generated fakes for [commonSources] — the common half of a single-target KMP project, wired
+     * into `commonTest`. Required whenever [commonSources] is non-empty; absent otherwise. A
+     * separate source root (rather than a subdirectory of [generatedKotlinDir]) so both outputs
+     * stay plain Kotlin source roots for the test source sets and `FakeCollectorTask`.
+     */
+    @get:OutputDirectory
+    @get:Optional
+    public abstract val commonGeneratedKotlinDir: DirectoryProperty
+
+    /**
      * KMP producer-mode output: serialized `FirMetadataCache` written when this task represents the
      * metadata (`commonMain`) compilation — [FaktGenerateTaskWiring] sets it for metadata-like
      * compilations only. Platform tasks consume it through [commonFirMetadata]. A single file (not
@@ -208,6 +235,7 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
         queue.submit(FaktCodegenWorkAction::class.java) { params ->
             params.sources.from(sources)
             params.analysisOnlySources.from(analysisOnlySources)
+            params.commonSources.from(commonSources)
             params.compileClasspath.from(compileClasspath)
             params.commonKlibClasspath.from(commonKlibClasspath)
             params.faktCompilerClasspath.from(faktCompilerClasspath)
@@ -220,6 +248,7 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
             params.wasmTarget.set(wasmTarget)
             params.commonFirMetadata.set(commonFirMetadata)
             params.generatedKotlinDir.set(generatedKotlinDir)
+            params.commonGeneratedKotlinDir.set(commonGeneratedKotlinDir)
             params.firMetadataFile.set(firMetadataFile)
             params.scratchDir.set(scratchDir)
         }

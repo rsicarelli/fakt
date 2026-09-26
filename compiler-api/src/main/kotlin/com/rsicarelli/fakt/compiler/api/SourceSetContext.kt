@@ -49,6 +49,12 @@ import kotlinx.serialization.Serializable
  *   source-partitioned consumers that additionally feed ancestor sources (via `-Xcommon-sources`)
  *   for expect/actual and common-type resolution: those ancestor declarations are analysis-only,
  *   and emitting them would duplicate the common producer's output.
+ * @property commonOutputDirectory Absolute path that receives the fakes of every source set other
+ *   than [defaultSourceSet] (the common fragment), while [defaultSourceSet]'s own fakes go to
+ *   [outputDirectory]. `null` (the default, omitted from serialized JSON) keeps the source-set-name
+ *   routing derived from [commonTestOutputDirectory]. Set by the cache-correct worker for a
+ *   single-target KMP project, where one compilation owns both the common and the platform fakes
+ *   and each half must land in its own declared task output.
  * @see SourceSetInfo
  */
 @Serializable
@@ -65,6 +71,7 @@ data class SourceSetContext(
     val metadataCachePath: String? = null,
     val emitPhase: EmitPhase = EmitPhase.IR,
     val emitSourceSets: List<String> = emptyList(),
+    val commonOutputDirectory: String? = null,
 ) {
     init {
         require(compilationName.isNotBlank()) { "compilationName cannot be blank" }
