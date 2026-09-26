@@ -1841,17 +1841,24 @@ with it — no empty or missing fakes on a cache hit.</p>
 yet: the Kotlin/Native compiler is not part of the embeddable compiler Fakt runs in its Gradle task,<br />
 so those fakes are still produced by the in-process plugin<br />
 (<a href="https://github.com/rsicarelli/fakt/issues/152">#152</a>).</p>
+<div class="admonition tip">
+<p class="admonition-title">Single-target multiplatform projects</p>
+<p>A multiplatform project with exactly one target (for example <code>kotlin { jvm() }</code> and nothing<br />
+else) gets no <code>commonMain</code> compilation from Kotlin, so its lone platform task<br />
+(<code>faktGenerateJvmMain</code>) generates every fake: the ones declared in <code>commonMain</code> go to<br />
+<code>commonTest</code>, the ones declared in <code>jvmMain</code> go to <code>jvmTest</code>. This works for JVM, JS and Wasm<br />
+single targets.</p>
+</div>
 <div class="admonition note">
 <p class="admonition-title">Project shapes that keep the in-process path</p>
-<p>Two shapes fall back to generating inside <code>compileKotlin*</code>. Fakes are still generated for every<br />
-<code>@Fake</code> in both — they just aren&rsquo;t declared task outputs, so those modules&rsquo; <code>compileKotlin*</code><br />
+<p>A few shapes fall back to generating inside <code>compileKotlin*</code>. Fakes are still generated for<br />
+every <code>@Fake</code> — they just aren&rsquo;t declared task outputs, so those modules&rsquo; <code>compileKotlin*</code><br />
 tasks opt out of the Gradle build cache (see below). Fakt logs a warning naming the reason<br />
 whenever a module lands here.</p>
 <ul>
-<li><strong>Single-target multiplatform projects</strong> (<code>kotlin { jvm() }</code> and nothing else). Kotlin does<br />
-  not give such a project a <code>commonMain</code> compilation to generate from, so there is nothing to<br />
-  make cache-correct. Adding a second target moves the project onto the cache-correct path<br />
-  automatically.</li>
+<li><strong>Single-target Android or Native multiplatform projects</strong> (for example <code>kotlin {
+  androidTarget() }</code> or <code>kotlin { linuxX64() }</code> and nothing else). Adding a second target<br />
+  moves the project onto the cache-correct path automatically.</li>
 <li><strong>Android modules on AGP&rsquo;s built-in Kotlin support</strong> (AGP 9+, where <code>org.jetbrains.kotlin.android</code><br />
   is no longer applied). AGP keeps Kotlin sources in its own variant model rather than the<br />
   source sets Fakt reads. Android modules that apply the Kotlin Android plugin — every AGP 8.x<br />
