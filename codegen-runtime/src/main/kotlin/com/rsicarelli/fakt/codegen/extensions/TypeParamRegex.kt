@@ -76,14 +76,24 @@ public fun typeContainsAnyParam(type: String, typeParams: Set<String>): Boolean 
  * - "List<T>" -> "List<Any?>"
  * - "Map<K, V>" -> "Map<Any?, Any?>"
  *
+ * Type parameters listed in [boundedTypeParams] are star-projected when they appear directly as a
+ * type argument, because `Any?` may violate the bound declared by the enclosing class:
+ * - "ABTest<T>" with `T : Enum<T>` -> "ABTest<*>" (`ABTest<Any?>` would not compile)
+ *
  * @param type The type string to transform
  * @param typeParams The set of type parameter names to erase
- * @return The type string with all type parameters replaced by Any?
+ * @param boundedTypeParams Type parameter names declared with an upper bound (see
+ *   [boundedTypeParamNames])
+ * @return The type string with all type parameters replaced by Any? (or `*` for bounded ones)
  */
-public fun eraseTypeParamsToAny(type: String, typeParams: Set<String>): String {
+public fun eraseTypeParamsToAny(
+    type: String,
+    typeParams: Set<String>,
+    boundedTypeParams: Set<String>,
+): String {
     if (typeParams.isEmpty()) return type
 
-    var result = type
+    var result = starProjectTypeArguments(type, typeParams intersect boundedTypeParams)
     for (param in typeParams) {
         result =
             result
@@ -94,19 +104,35 @@ public fun eraseTypeParamsToAny(type: String, typeParams: Set<String>): String {
 }
 
 /**
+ * Erases type parameters in a type string to Any?, treating every type parameter as unbounded.
+ *
+ * @see eraseTypeParamsToAny
+ */
+public fun eraseTypeParamsToAny(type: String, typeParams: Set<String>): String =
+    eraseTypeParamsToAny(type, typeParams, emptySet())
+
+/**
  * Erases type parameters (simple replacement without nullable handling).
  *
  * Used when we just need word boundary replacement without distinguishing between nullable and
  * non-nullable variants.
  *
+ * Bounded type parameters are star-projected in type-argument position, as in
+ * [eraseTypeParamsToAny].
+ *
  * @param type The type string to transform
  * @param typeParams The set of type parameter names to erase
- * @return The type string with all type parameters replaced by Any?
+ * @param boundedTypeParams Type parameter names declared with an upper bound
+ * @return The type string with all type parameters replaced by Any? (or `*` for bounded ones)
  */
-internal fun eraseTypeParamsSimple(type: String, typeParams: Set<String>): String {
+internal fun eraseTypeParamsSimple(
+    type: String,
+    typeParams: Set<String>,
+    boundedTypeParams: Set<String> = emptySet(),
+): String {
     if (typeParams.isEmpty()) return type
 
-    var result = type
+    var result = starProjectTypeArguments(type, typeParams intersect boundedTypeParams)
     for (param in typeParams) {
         result = result.replace(getTypeParamWordBoundaryRegex(param), "Any?")
     }

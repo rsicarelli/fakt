@@ -37,14 +37,16 @@ internal fun CodeFileBuilder.addCallHistoryComponents(
     methodsWithParams.forEach { method ->
         val typeParams =
             classTypeParamNames + method.typeParameters.map(::extractTypeParamName).toSet()
-        callDataClass(interfaceName, method.name, method.params, visibility, typeParams)
+        val params = eraseBoundedTypeArguments(method, classTypeParameters, typeParams)
+        callDataClass(interfaceName, method.name, params, visibility, typeParams)
     }
 
     // Verifier classes for all methods
     methodsWithParams.forEach { method ->
         val typeParams =
             classTypeParamNames + method.typeParameters.map(::extractTypeParamName).toSet()
-        verifierClass(interfaceName, method.name, method.params, visibility, typeParams)
+        val params = eraseBoundedTypeArguments(method, classTypeParameters, typeParams)
+        verifierClass(interfaceName, method.name, params, visibility, typeParams)
     }
     zeroParamMethods.forEach { method -> unitVerifierClass(interfaceName, method.name, visibility) }
 
@@ -105,4 +107,22 @@ public fun generateCallHistoryDeclarations(
         }
 
     return tempFile.declarations
+}
+
+/**
+ * Star-projects bounded type parameters used as type arguments in [method]'s parameter types.
+ *
+ * Remaining type parameters are erased to `Any?` downstream by [callDataClass] and [verifierClass];
+ * erasing a bounded one to `Any?` inside e.g. `ABTest<T : Enum<T>>` would not compile (#145).
+ */
+private fun eraseBoundedTypeArguments(
+    method: MethodSpec,
+    classTypeParameters: List<String>,
+    typeParams: Set<String>,
+): List<Triple<String, String, Boolean>> {
+    val bounded =
+        typeParams intersect boundedTypeParamNames(classTypeParameters + method.typeParameters)
+    return method.params.map { (name, type, isVararg) ->
+        Triple(name, starProjectTypeArguments(type, bounded), isVararg)
+    }
 }

@@ -10,6 +10,7 @@ import com.rsicarelli.fakt.codegen.analysis.PropertySpec
 import com.rsicarelli.fakt.codegen.builder.ClassBuilder
 import com.rsicarelli.fakt.codegen.builder.codeFile
 import com.rsicarelli.fakt.codegen.builder.parseType
+import com.rsicarelli.fakt.codegen.extensions.boundedTypeParamNames
 import com.rsicarelli.fakt.codegen.extensions.eraseTypeParamsToAny
 import com.rsicarelli.fakt.codegen.extensions.typeContainsAnyParam
 import com.rsicarelli.fakt.codegen.model.CodeFile
@@ -272,10 +273,11 @@ public class ConfigurationDslGenerator {
     ) {
         val baseType = buildBaseBehaviorType(function)
         val methodTypeParamNames = extractMethodTypeParamNames(function)
+        val boundedTypeParams = boundedTypeParamNames(function.typeParameters)
 
         val propertyType =
             if (methodTypeParamNames.isNotEmpty()) {
-                eraseTypeParamsToAny(baseType, methodTypeParamNames)
+                eraseTypeParamsToAny(baseType, methodTypeParamNames, boundedTypeParams)
             } else {
                 baseType
             }
@@ -283,7 +285,11 @@ public class ConfigurationDslGenerator {
         if (withDefault) {
             val effectiveReturnType =
                 if (methodTypeParamNames.isNotEmpty()) {
-                    eraseTypeParamsToAny(function.returnTypeString, methodTypeParamNames)
+                    eraseTypeParamsToAny(
+                        function.returnTypeString,
+                        methodTypeParamNames,
+                        boundedTypeParams,
+                    )
                 } else {
                     function.returnTypeString
                 }
@@ -748,7 +754,11 @@ public class ConfigurationDslGenerator {
         val methodTypeParamNames = extractMethodTypeParamNames(function)
         val effectiveReturnType =
             if (methodTypeParamNames.isNotEmpty()) {
-                eraseTypeParamsToAny(function.returnTypeString, methodTypeParamNames)
+                eraseTypeParamsToAny(
+                    function.returnTypeString,
+                    methodTypeParamNames,
+                    boundedTypeParamNames(function.typeParameters),
+                )
             } else {
                 function.returnTypeString
             }
@@ -868,7 +878,15 @@ public class ConfigurationDslGenerator {
         val needsReturnCast =
             typeContainsAnyParam(returnType, methodTypeParamNames) && returnType != "Unit"
         val erasedReturnType =
-            if (needsReturnCast) eraseTypeParamsToAny(returnType, methodTypeParamNames) else null
+            if (needsReturnCast) {
+                eraseTypeParamsToAny(
+                    returnType,
+                    methodTypeParamNames,
+                    boundedTypeParamNames(function.typeParameters),
+                )
+            } else {
+                null
+            }
 
         val paramsStr =
             if (closureParams.isEmpty()) "" else "${closureParams.joinToString(", ")} -> "
