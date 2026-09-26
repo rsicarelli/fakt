@@ -33,6 +33,7 @@ internal interface FaktCodegenWorkParameters : WorkParameters {
     val enableCallHistory: Property<Boolean>
     val enableMutableFakes: Property<Boolean>
     val imports: ListProperty<String>
+    val wasmTarget: Property<String>
     val commonFirMetadata: RegularFileProperty
     val generatedKotlinDir: DirectoryProperty
     val firMetadataFile: RegularFileProperty
@@ -44,14 +45,13 @@ private const val DEFAULT_KOTLIN_SOURCE_DEPTH = 8
 
 private const val MODULE_NAME = "fakt-analysis"
 private const val EXIT_CODE_OK = "OK"
-private const val COMMON_PLATFORM = "common"
 
 /**
  * Worker entry point: drives a compiler front door from `kotlin-compiler-embeddable` with the Fakt
  * `:compiler` shadowJar attached as a `-Xplugin`, writing generated `.kt` files into
  * [FaktCodegenWorkParameters.generatedKotlinDir].
  *
- * Two drivers (see [CompilerDriver]):
+ * Three drivers (see [CompilerDriver]):
  * - **`KotlinMetadataCompiler`** for common (`commonMain`) producers — frontend-only, so unpaired
  *   `expect` declarations cannot fail the run, and generation happens at the FIR phase
  *   ([EmitPhase.FIR], the pipeline has no IR phase). Dependencies come from
@@ -59,6 +59,10 @@ private const val COMMON_PLATFORM = "common"
  * - **`K2JVMCompiler`** for everything else (JVM/Android classpaths). Generation still happens at
  *   the FIR phase — one emitter for every worker path — and the plugin's IR extension early-returns
  *   ([EmitPhase.FIR] parity with IR emission is locked by `FirIrEmissionParityTest`).
+ * - **`K2JSCompiler`** for Kotlin/JS and Kotlin/Wasm platform compilations. Dependencies are the
+ *   compilation's platform klibs (routed through the same klib input as the metadata driver); the
+ *   run stops at klib serialization into [FaktCodegenWorkParameters.scratchDir], and generation
+ *   happens at the FIR phase exactly as on the other drivers.
  *
  * Producer mode (no `commonFirMetadata` input) additionally instructs the plugin to write a
  * serialized `FirMetadataCache` to `firMetadataFile` so platform compilations downstream can skip
@@ -82,12 +86,10 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         val analysisOnlyFiles = collectKotlinSources(params.analysisOnlySources.files)
         val sourceSetContext = populateSourceSetContext(params, analysisOnlyFiles.isNotEmpty())
         val pluginJars = resolvePluginJars(params)
-        val commonAnalysis =
-            sourceSetContext.platformType.equals(COMMON_PLATFORM, ignoreCase = true)
 
         invokeK2(
             K2Invocation(
-                driver = if (commonAnalysis) CompilerDriver.METADATA else CompilerDriver.JVM,
+                driver = CompilerDriver.forPlatformType(sourceSetContext.platformType),
                 sourceFiles = collectKotlinSources(params.sources.files) + analysisOnlyFiles,
                 analysisOnlySourceFiles = analysisOnlyFiles,
                 compileClasspath =
@@ -100,6 +102,7 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
                 logLevel = params.logLevel.getOrElse(LogLevel.QUIET),
                 enableCallHistory = params.enableCallHistory.getOrElse(true),
                 enableMutableFakes = params.enableMutableFakes.getOrElse(false),
+                wasmTarget = params.wasmTarget.orNull,
             )
         )
     }
@@ -154,23 +157,6 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
                 }
             }
 
-    private fun collectKotlinSources(
-        roots: Set<File>,
-        maxDepth: Int = DEFAULT_KOTLIN_SOURCE_DEPTH,
-    ): List<File> =
-        roots.flatMap { root ->
-            when {
-                root.isFile && root.extension == "kt" -> listOf(root)
-                root.isDirectory ->
-                    root
-                        .walkTopDown()
-                        .maxDepth(maxDepth)
-                        .filter { it.isFile && it.extension == "kt" }
-                        .toList()
-                else -> emptyList()
-            }
-        }
-
     private fun encodeContext(context: SourceSetContext): String =
         Base64.getEncoder()
             .encodeToString(
@@ -190,6 +176,7 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         val logLevel: LogLevel,
         val enableCallHistory: Boolean,
         val enableMutableFakes: Boolean,
+        val wasmTarget: String?,
     )
 
     private fun invokeK2(call: K2Invocation) {
@@ -199,6 +186,7 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         when (call.driver) {
             CompilerDriver.JVM -> populateJvmOutputArgs(bridge, args, call)
             CompilerDriver.METADATA -> populateMetadataOutputArgs(bridge, args, call)
+            CompilerDriver.JS -> populateJsOutputArgs(bridge, args, call)
         }
         populatePluginArgs(bridge, args, call)
 
@@ -220,12 +208,13 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
             List::class.java,
             call.sourceFiles.map { it.absolutePath },
         )
-        bridge.setOnArgs(
-            args,
-            "setClasspath",
-            String::class.java,
-            call.compileClasspath.joinToString(File.pathSeparator) { it.absolutePath },
-        )
+        // JVM and metadata arguments take a `-classpath`; the JS/Wasm arguments have none and read
+        // their klib dependencies from `-libraries` instead.
+        val dependencies =
+            call.compileClasspath.joinToString(File.pathSeparator) { it.absolutePath }
+        val dependencySetter =
+            if (call.driver == CompilerDriver.JS) "setLibraries" else "setClasspath"
+        bridge.setOnArgs(args, dependencySetter, String::class.java, dependencies)
         bridge.setOnArgs(args, "setModuleName", String::class.java, MODULE_NAME)
     }
 
@@ -243,26 +232,27 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         // Leave the JDK on the compilation classpath — production sources reference
         // `java.io.Serializable`, `java.util.*`, etc. K2 needs JDK rt to resolve them.
 
-        // A source-partitioned consumer rides ancestor sources along for analysis: marking them
-        // `-Xcommon-sources` splits the module into common + platform fragments so `actual`
-        // declarations pair with their `expect`s (otherwise the frontend rejects the `actual`
-        // keyword outright, and ACTUAL_WITHOUT_EXPECT is an error even under `-Xmulti-platform`).
-        // `-Xexpect-actual-classes` mutes the expect/actual-classes Beta warning — nothing else.
-        if (call.analysisOnlySourceFiles.isNotEmpty()) {
-            bridge.setOnArgs(args, "setMultiPlatform", Boolean::class.javaPrimitiveType!!, true)
-            bridge.setOnArgs(
-                args,
-                "setExpectActualClasses",
-                Boolean::class.javaPrimitiveType!!,
-                true,
-            )
-            bridge.setOnArgs(
-                args,
-                "setCommonSources",
-                Array<String>::class.java,
-                call.analysisOnlySourceFiles.map { it.absolutePath }.toTypedArray(),
-            )
+        populateConsumerMultiplatformArgs(bridge, args, call.analysisOnlySourceFiles)
+    }
+
+    private fun populateJsOutputArgs(bridge: K2CompilerBridge, args: Any, call: K2Invocation) {
+        // K2JS needs a klib destination we never read. Route it to the task's `@LocalState
+        // scratchDir` so it never enters the build cache. `-Xir-produce-klib-dir` stops the
+        // pipeline at klib serialization: no JS/Wasm code generation, no linking.
+        bridge.setOnArgs(
+            args,
+            "setOutputDir",
+            String::class.java,
+            call.scratchOutputDir.resolve("klib").also { it.mkdirs() }.absolutePath,
+        )
+        bridge.setOnArgs(args, "setIrProduceKlibDir", Boolean::class.javaPrimitiveType!!, true)
+        // Kotlin/Wasm rides the same `K2JSCompiler` front door KGP uses for `compileKotlinWasm*`;
+        // the target flavour (`wasm-js` / `wasm-wasi`) must match the stdlib klib on `-libraries`.
+        if (call.wasmTarget != null) {
+            bridge.setOnArgs(args, "setWasm", Boolean::class.javaPrimitiveType!!, true)
+            bridge.setOnArgs(args, "setWasmTarget", String::class.java, call.wasmTarget)
         }
+        populateConsumerMultiplatformArgs(bridge, args, call.analysisOnlySourceFiles)
     }
 
     private fun populateMetadataOutputArgs(
@@ -312,3 +302,45 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         )
     }
 }
+
+/**
+ * A source-partitioned consumer rides ancestor sources along for analysis: marking them
+ * `-Xcommon-sources` splits the module into common + platform fragments so `actual` declarations
+ * pair with their `expect`s (otherwise the frontend rejects the `actual` keyword outright, and
+ * ACTUAL_WITHOUT_EXPECT is an error even under `-Xmulti-platform`). `-Xexpect-actual-classes` mutes
+ * the expect/actual-classes Beta warning — nothing else. All three live on
+ * `CommonCompilerArguments`, so every platform driver shares this.
+ */
+private fun populateConsumerMultiplatformArgs(
+    bridge: K2CompilerBridge,
+    args: Any,
+    analysisOnlySourceFiles: List<File>,
+) {
+    if (analysisOnlySourceFiles.isEmpty()) return
+    bridge.setOnArgs(args, "setMultiPlatform", Boolean::class.javaPrimitiveType!!, true)
+    bridge.setOnArgs(args, "setExpectActualClasses", Boolean::class.javaPrimitiveType!!, true)
+    bridge.setOnArgs(
+        args,
+        "setCommonSources",
+        Array<String>::class.java,
+        analysisOnlySourceFiles.map { it.absolutePath }.toTypedArray(),
+    )
+}
+
+/** Kotlin source files under [roots], walking directories up to [maxDepth] levels deep. */
+private fun collectKotlinSources(
+    roots: Set<File>,
+    maxDepth: Int = DEFAULT_KOTLIN_SOURCE_DEPTH,
+): List<File> =
+    roots.flatMap { root ->
+        when {
+            root.isFile && root.extension == "kt" -> listOf(root)
+            root.isDirectory ->
+                root
+                    .walkTopDown()
+                    .maxDepth(maxDepth)
+                    .filter { it.isFile && it.extension == "kt" }
+                    .toList()
+            else -> emptyList()
+        }
+    }

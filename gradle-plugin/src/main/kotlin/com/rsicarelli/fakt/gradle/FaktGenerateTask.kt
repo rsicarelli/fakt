@@ -86,14 +86,16 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
     public abstract val analysisOnlySources: ConfigurableFileCollection
 
     /**
-     * Metadata-klib dependencies for common (`commonMain`) producers — the compilation's own
-     * `compileDependencyFiles` (stdlib and library klibs the `KotlinMetadataCompiler` driver
-     * reads).
+     * Klib dependencies for klib-based compilations — the compilation's own
+     * `compileDependencyFiles`: metadata klibs for common (`commonMain`) producers driven by
+     * `KotlinMetadataCompiler`, and platform klibs for Kotlin/JS and Kotlin/Wasm compilations
+     * driven by `K2JSCompiler`. The name predates the JS/Wasm drivers and is kept for
+     * compatibility.
      *
      * Deliberately `@Classpath`, not `@CompileClasspath`: the compile-classpath normalizer
      * fingerprints `.class` entries and can treat a klib archive (which has none) as effectively
      * empty, so klib content changes would never invalidate the producer. `@Classpath` hashes the
-     * actual content, closing that missed-invalidation hole. Empty for non-common compilations.
+     * actual content, closing that missed-invalidation hole. Empty for JVM/Android compilations.
      */
     @get:Classpath public abstract val commonKlibClasspath: ConfigurableFileCollection
 
@@ -145,6 +147,13 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
 
     /** Imports forced into every generated file (e.g. user-extension imports). */
     @get:Input public abstract val imports: ListProperty<String>
+
+    /**
+     * Kotlin/Wasm flavour (`wasm-js` or `wasm-wasi`) for a Wasm compilation — switches the
+     * `K2JSCompiler` driver into Wasm mode with the matching `-Xwasm-target`. Absent for every
+     * other compilation, Kotlin/JS included.
+     */
+    @get:Input @get:Optional public abstract val wasmTarget: Property<String>
 
     /**
      * KMP consumer-mode input: serialized `FirMetadataCache` produced by the metadata compilation's
@@ -208,6 +217,7 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
             params.enableCallHistory.set(enableCallHistory)
             params.enableMutableFakes.set(enableMutableFakes)
             params.imports.set(imports)
+            params.wasmTarget.set(wasmTarget)
             params.commonFirMetadata.set(commonFirMetadata)
             params.generatedKotlinDir.set(generatedKotlinDir)
             params.firMetadataFile.set(firMetadataFile)

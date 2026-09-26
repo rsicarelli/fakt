@@ -53,6 +53,7 @@ public abstract class com/rsicarelli/fakt/gradle/FaktGenerateTask : org/gradle/a
 	public abstract fun getScratchDir ()Lorg/gradle/api/file/DirectoryProperty;
 	public abstract fun getSourceSetContextJson ()Lorg/gradle/api/provider/Property;
 	public abstract fun getSources ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public abstract fun getWasmTarget ()Lorg/gradle/api/provider/Property;
 }
 
 public final class com/rsicarelli/fakt/gradle/FaktGradleSubplugin : org/jetbrains/kotlin/gradle/plugin/KotlinCompilerPluginSupportPlugin {

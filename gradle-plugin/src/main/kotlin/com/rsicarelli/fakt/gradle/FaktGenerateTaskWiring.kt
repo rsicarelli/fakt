@@ -9,6 +9,8 @@ import org.gradle.api.Project
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
+import org.jetbrains.kotlin.gradle.targets.js.KotlinWasmTargetType
+import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTarget
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
 
 /**
@@ -39,13 +41,13 @@ internal object FaktGenerateTaskWiring {
     ) = register(project, kotlinCompilation, extension, partitionToOwnSourceSet = false)
 
     /**
-     * Registers a consumer `FaktGenerateTask` for a drivable platform main (`jvmMain` /
-     * `androidMain`). It emits fakes ONLY for the compilation's own source set
-     * ([KotlinCompilation.defaultSourceSet]); ancestor sources (commonMain and intermediates) ride
-     * along as `analysisOnlySources` so the frontend can pair `actual` declarations with their
-     * `expect`s and resolve common types in platform `@Fake` signatures — their own fakes stay
-     * owned by the common producer (`SourceSetContext.emitSourceSets` restricts emission), so
-     * nothing is emitted twice and the task stays fully cache-correct.
+     * Registers a consumer `FaktGenerateTask` for a drivable platform main (`jvmMain`,
+     * `androidMain`, `jsMain`, `wasmJsMain`, …). It emits fakes ONLY for the compilation's own
+     * source set ([KotlinCompilation.defaultSourceSet]); ancestor sources (commonMain and
+     * intermediates) ride along as `analysisOnlySources` so the frontend can pair `actual`
+     * declarations with their `expect`s and resolve common types in platform `@Fake` signatures —
+     * their own fakes stay owned by the common producer (`SourceSetContext.emitSourceSets`
+     * restricts emission), so nothing is emitted twice and the task stays fully cache-correct.
      */
     fun registerConsumer(
         project: Project,
@@ -72,7 +74,7 @@ internal object FaktGenerateTaskWiring {
         getSubpluginInstance(project).ensureFaktConfigurations(project)
 
         // A KMP `commonMain` producer writes to the canonical `commonTest` directory so the
-        // in-process plugin riding a non-drivable platform compilation (Native/JS/Wasm) finds the
+        // in-process plugin riding a non-drivable platform compilation (Native) finds the
         // common fakes there and dedup-skips them, generating only its own platform-specific fakes
         // —
         // no `Redeclaration` in shared test sets. Every other compilation keeps a per-compilation
@@ -106,15 +108,9 @@ internal object FaktGenerateTaskWiring {
                         kotlinCompilation.allKotlinSourceSets - kotlinCompilation.defaultSourceSet
                     task.analysisOnlySources.from(ancestors.map { sourceSet -> sourceSet.kotlin })
                 }
-                // Common producers drive KotlinMetadataCompiler, which reads the compilation's own
-                // metadata-klib dependencies — routed through the @Classpath commonKlibClasspath
-                // input (content-hashed; @CompileClasspath can fingerprint klibs as empty). Every
-                // other compilation feeds its JVM dependencies to the K2JVM driver unchanged.
+                configureDependencies(task, kotlinCompilation)
                 if (isMetadataLikeCompilation(kotlinCompilation)) {
-                    task.commonKlibClasspath.from(kotlinCompilation.compileDependencyFiles)
                     task.firMetadataFile.set(firMetadataFile)
-                } else {
-                    task.compileClasspath.from(kotlinCompilation.compileDependencyFiles)
                 }
                 task.faktWorkerClasspath.from(workerClasspath)
                 task.faktCompilerClasspath.from(compilerClasspath)
@@ -151,8 +147,8 @@ internal object FaktGenerateTaskWiring {
     }
 
     /**
-     * Sequences a non-drivable platform compilation (Native/JS/Wasm) after the common producer so
-     * the producer's common fakes exist on disk before the in-process plugin's file-existence dedup
+     * Sequences a non-drivable platform compilation (Native) after the common producer so the
+     * producer's common fakes exist on disk before the in-process plugin's file-existence dedup
      * runs on the platform main compile — otherwise it would regenerate them and collide. The test
      * compile already waits for the producer transitively through the `commonTest` srcDir's
      * `builtBy`, so only the main compile is wired here. Safe under Gradle 9 Project Isolation (no
@@ -286,6 +282,29 @@ private fun wireAndroidLintOrdering(
         .configureEach { lintTask -> lintTask.dependsOn(taskProvider) }
 }
 
+/**
+ * Routes a compilation's dependencies to the input its compiler driver reads. Klib-based
+ * compilations — common producers (`KotlinMetadataCompiler`, metadata klibs) and JS/Wasm platform
+ * mains (`K2JSCompiler`, platform klibs) — go through the `@Classpath` `commonKlibClasspath`
+ * (content-hashed; `@CompileClasspath` can fingerprint klibs as empty). JVM/Android compilations
+ * feed their jar dependencies to the K2JVM driver through `compileClasspath`.
+ */
+private fun configureDependencies(task: FaktGenerateTask, kotlinCompilation: KotlinCompilation<*>) {
+    val platformType = kotlinCompilation.target.platformType.name.lowercase()
+    val isKlibBased =
+        kotlinCompilation.defaultSourceSet.name == "commonMain" ||
+            platformType in setOf("common", "js", "wasm")
+    if (isKlibBased) {
+        task.commonKlibClasspath.from(kotlinCompilation.compileDependencyFiles)
+    } else {
+        task.compileClasspath.from(kotlinCompilation.compileDependencyFiles)
+    }
+    // `-Xwasm-target` is read from KGP's own target model, so a custom target name
+    // (`wasmJs("web")`) still resolves to the right flavour. Absent for Kotlin/JS.
+    wasmCompilerTarget((kotlinCompilation.target as? KotlinJsIrTarget)?.wasmTargetType)
+        ?.let(task.wasmTarget::set)
+}
+
 private fun taskNameFor(targetName: String, compilationName: String): String =
     "faktGenerate" + capitalizeAscii(targetName) + capitalizeAscii(compilationName)
 
@@ -334,3 +353,14 @@ private fun mapMainToTest(sourceSetName: String): String =
 
 private fun capitalizeAscii(s: String): String =
     if (s.isEmpty()) s else s.substring(0, 1).uppercase(Locale.ROOT) + s.substring(1)
+
+/**
+ * Maps KGP's [KotlinWasmTargetType] to the compiler's `-Xwasm-target` value; `null` (a Kotlin/JS
+ * target) maps to `null`, leaving the `K2JSCompiler` driver in JS mode.
+ */
+internal fun wasmCompilerTarget(type: KotlinWasmTargetType?): String? =
+    when (type) {
+        KotlinWasmTargetType.JS -> "wasm-js"
+        KotlinWasmTargetType.WASI -> "wasm-wasi"
+        null -> null
+    }

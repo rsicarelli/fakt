@@ -383,9 +383,10 @@ files real task outputs:
     (JVM classpaths).
 - **Every worker path emits at FIR** (`emitPhase = FIR`); the legacy in-process path never sets it
   and keeps emitting at IR.
-- **Routing** (`FaktGradleSubplugin.cacheCorrectDecision`): commonMain → producer; JVM/Android
-  platform mains → consumers; Native/JS/Wasm platform mains → LEGACY_HYBRID (in-process plugin,
-  ordered after the producer); other metadata compilations → suppressed. Single-target KMP projects
+- **Routing** (`FaktGradleSubplugin.cacheCorrectDecision` → pure `routeCompilation`): commonMain →
+  producer; JVM/Android platform mains → K2JVM consumers; JS/Wasm platform mains → K2JS consumers
+  (#151); Native platform mains → LEGACY_HYBRID (in-process plugin, ordered after the producer,
+  #152); other metadata compilations → suppressed. Single-target KMP projects
   (one non-`metadata` target) have no `commonMain` compilation to produce from, and Android modules
   on AGP's built-in Kotlin (no `org.jetbrains.kotlin.android`) expose no readable Kotlin source
   sets, so every compilation of either routes to LEGACY.
