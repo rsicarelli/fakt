@@ -3,6 +3,7 @@
 package com.rsicarelli.fakt.codegen
 
 import com.rsicarelli.fakt.codegen.analysis.FakeDeclaration
+import com.rsicarelli.fakt.codegen.analysis.withUniqueOverloadNames
 import com.rsicarelli.fakt.codegen.generator.ConfigurationDslGenerator
 import com.rsicarelli.fakt.codegen.generator.GeneratedFakeCode
 import com.rsicarelli.fakt.codegen.generator.ImplementationGenerator
@@ -35,9 +36,9 @@ public object FaktCodegen {
         decl: FakeDeclaration,
         imports: List<String> = emptyList(),
     ): RenderedFakeFile =
-        when (decl) {
-            is FakeDeclaration.Interface -> renderInterface(decl, imports)
-            is FakeDeclaration.Class -> renderClass(decl, imports)
+        when (val unique = decl.withUniqueOverloadNames()) {
+            is FakeDeclaration.Interface -> renderInterface(unique, imports)
+            is FakeDeclaration.Class -> renderClass(unique, imports)
         }
 
     private fun renderInterface(

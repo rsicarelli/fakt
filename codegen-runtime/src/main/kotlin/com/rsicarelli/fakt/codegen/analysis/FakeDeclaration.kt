@@ -139,6 +139,9 @@ data class PropertySpec(
  * @property typeParameters Method-level type parameters with bounds (e.g. `["T", "R :
  *   Comparable<R>"]`).
  * @property typeParameterBounds Method-level type-parameter bounds map (e.g. `"R" → "TValue"`).
+ * @property sourceName Name of the function in the source declaration. Differs from [name] only for
+ *   overloads, whose [name] is made unique so every generated member (behavior, DSL function, call
+ *   history, verifier) gets a distinct identifier.
  */
 data class FunctionSpec(
     val name: String,
@@ -150,6 +153,7 @@ data class FunctionSpec(
     val isOperator: Boolean,
     val typeParameters: List<String>,
     val typeParameterBounds: Map<String, String>,
+    val sourceName: String = name,
 )
 
 /**
