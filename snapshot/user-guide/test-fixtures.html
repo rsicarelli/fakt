@@ -1038,7 +1038,7 @@
   <span class="md-ellipsis">
     
   
-    Kotlin Compatibility
+    Compatibility
   
 
     
@@ -1473,14 +1473,16 @@ into the AGP <code>testFixtures</code> source set.</p>
 <a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="p">}</span>
 </code></pre></div>
 <div class="admonition warning">
-<p class="admonition-title">AGP 8.x needs an experimental flag</p>
+<p class="admonition-title">The Kotlin Android plugin needs an experimental flag</p>
 <p>Kotlin compilation of the Android <code>testFixtures</code> source set requires this in<br />
-<code>gradle.properties</code> on <strong>AGP 8.x</strong>:</p>
+<code>gradle.properties</code> whenever <code>org.jetbrains.kotlin.android</code> compiles the module: every<br />
+<strong>AGP 8.x</strong> module, and <strong>AGP 9+</strong> with <code>android.builtInKotlin=false</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="na">android.experimental.enableTestFixturesKotlinSupport</span><span class="o">=</span><span class="s">true</span>
 </code></pre></div>
 <p>Without it, AGP leaves <code>testFixtures</code> Java-only, no <code>compileDebugTestFixturesKotlin</code> task is<br />
-created, and the generated Kotlin fakes are silently dropped. On <strong>AGP 9.0+</strong> this is the<br />
-default and the property is unnecessary. The minimum supported floor is <strong>AGP 8.11</strong> — AGP ≤ 8.7<br />
+created, and the generated Kotlin fakes are silently dropped. AGP 9&rsquo;s built-in Kotlin compiles<br />
+Kotlin test fixtures by default, so the property is unnecessary there. Fakt warns when it is<br />
+missing and needed. The minimum supported floor is <strong>AGP 8.11</strong> — AGP ≤ 8.7<br />
 calls a Kotlin Gradle Plugin API (<code>KotlinJvmOptions.getUseK2()</code>) that Kotlin 2.3.20, Fakt&rsquo;s<br />
 compiler version, removed, so it cannot compile Android test-fixtures Kotlin.</p>
 </div>

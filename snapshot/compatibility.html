@@ -29,7 +29,7 @@
     
     
       
-        <title>Kotlin Compatibility - Fakt</title>
+        <title>Compatibility - Fakt</title>
       
     
     
@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#kotlin-compatibility" class="md-skip">
+        <a href="#compatibility" class="md-skip">
           Skip to content
         </a>
       
@@ -121,7 +121,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Kotlin Compatibility
+              Compatibility
             
           </span>
         </div>
@@ -865,7 +865,7 @@
   <span class="md-ellipsis">
     
   
-    Kotlin Compatibility
+    Compatibility
   
 
     
@@ -883,7 +883,7 @@
   <span class="md-ellipsis">
     
   
-    Kotlin Compatibility
+    Compatibility
   
 
     
@@ -913,6 +913,17 @@
     <span class="md-ellipsis">
       
         Compatibility Matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#android-gradle-plugin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Android Gradle Plugin
       
     </span>
   </a>
@@ -1108,6 +1119,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#android-gradle-plugin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Android Gradle Plugin
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#our-compatibility-philosophy" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1160,8 +1182,8 @@
   
 
 
-<h1 id="kotlin-compatibility">Kotlin Compatibility<a class="headerlink" href="#kotlin-compatibility" title="Permanent link">&para;</a></h1>
-<p>Fakt is tested against multiple Kotlin versions on every change. This page is the source of truth for version support.</p>
+<h1 id="compatibility">Compatibility<a class="headerlink" href="#compatibility" title="Permanent link">&para;</a></h1>
+<p>Fakt is tested against multiple Kotlin and Android Gradle Plugin versions on every change. This page is the source of truth for version support.</p>
 <hr />
 <h2 id="compatibility-matrix">Compatibility Matrix<a class="headerlink" href="#compatibility-matrix" title="Permanent link">&para;</a></h2>
 <table>
@@ -1230,6 +1252,54 @@
 </tr>
 </tbody>
 </table>
+<hr />
+<h2 id="android-gradle-plugin">Android Gradle Plugin<a class="headerlink" href="#android-gradle-plugin" title="Permanent link">&para;</a></h2>
+<p>Android projects are tested against these Android Gradle Plugin (AGP) versions on every change:</p>
+<table>
+<thead>
+<tr>
+<th>AGP</th>
+<th>Gradle</th>
+<th>Kotlin</th>
+<th>What it covers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>9.4.1</strong></td>
+<td>9.6.1</td>
+<td>Kotlin Android plugin</td>
+<td>⭐ Newest tested, cache-correct path</td>
+</tr>
+<tr>
+<td>9.0.0</td>
+<td>9.1.0</td>
+<td>AGP built-in Kotlin</td>
+<td>Built-in Kotlin, cache-correct path</td>
+</tr>
+<tr>
+<td>8.12.3</td>
+<td>9.0.0</td>
+<td>Kotlin Android plugin</td>
+<td>Cache-correct path</td>
+</tr>
+<tr>
+<td>8.11.1</td>
+<td>8.13</td>
+<td>Kotlin Android plugin</td>
+<td>✅ Minimum supported</td>
+</tr>
+</tbody>
+</table>
+<p>The KMP Android library plugin (<code>com.android.kotlin.multiplatform.library</code>) is tested on AGP 9.0.0.<br />
+AGP 8.7 and older can&rsquo;t compile Android test-fixtures Kotlin with the Kotlin version Fakt is built<br />
+with, so they aren&rsquo;t supported.</p>
+<p>Fakt&rsquo;s Gradle plugin is compiled against the <strong>minimum</strong> AGP API, so it can only call APIs that<br />
+every supported AGP version has. The newest AGP runs the same code in CI. AGP is not bundled: your<br />
+build always uses its own AGP.</p>
+<p>Both ways of compiling Android Kotlin use the cache-correct path. On AGP 9&rsquo;s built-in Kotlin, Fakt<br />
+reads each variant&rsquo;s sources from AGP&rsquo;s variant API. Modules that apply <code>org.jetbrains.kotlin.android</code><br />
+(every AGP 8.x module, and AGP 9 with <code>android.builtInKotlin=false</code>) use Kotlin&rsquo;s own source sets.</p>
 <hr />
 <h2 id="our-compatibility-philosophy">Our Compatibility Philosophy<a class="headerlink" href="#our-compatibility-philosophy" title="Permanent link">&para;</a></h2>
 <p>Fakt maintains a range of supported Kotlin versions, verified by automated CI testing on every change. This means adopting Fakt doesn&rsquo;t force you to upgrade Kotlin — you can use whatever version fits your project within the supported range.</p>

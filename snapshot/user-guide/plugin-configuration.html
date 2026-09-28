@@ -1094,7 +1094,7 @@
   <span class="md-ellipsis">
     
   
-    Kotlin Compatibility
+    Compatibility
   
 
     
@@ -1859,10 +1859,16 @@ whenever a module lands here.</p>
 <li><strong>Single-target Android or Native multiplatform projects</strong> (for example <code>kotlin {
   androidTarget() }</code> or <code>kotlin { linuxX64() }</code> and nothing else). Adding a second target<br />
   moves the project onto the cache-correct path automatically.</li>
-<li><strong>Android modules on AGP&rsquo;s built-in Kotlin support</strong> (AGP 9+, where <code>org.jetbrains.kotlin.android</code><br />
-  is no longer applied). AGP keeps Kotlin sources in its own variant model rather than the<br />
-  source sets Fakt reads. Android modules that apply the Kotlin Android plugin — every AGP 8.x<br />
-  build — stay on the cache-correct path.</li>
+<li><strong>Multiplatform projects that declare <code>androidTarget()</code> through <code>com.android.library</code> or<br />
+<code>com.android.application</code>.</strong> Kotlin compiles those per Android variant (<code>debug</code>, <code>release</code>),<br />
+  which Fakt can&rsquo;t drive from a task yet. The KMP Android library plugin<br />
+  (<code>com.android.kotlin.multiplatform.library</code>) is on the cache-correct path.</li>
+<li><strong>Android modules on AGP&rsquo;s built-in Kotlin support whose Android Gradle Plugin isn&rsquo;t visible<br />
+  to Fakt</strong> (for example, AGP only in a subproject&rsquo;s build script while Fakt is on the root<br />
+  build classpath). AGP 9&rsquo;s built-in Kotlin keeps sources in its variant model, which Fakt<br />
+  reads through AGP&rsquo;s API. Put AGP on the same build classpath as Fakt, for example with<br />
+<code>plugins { id("com.android.library") apply false }</code> in the root build, and apply Fakt in<br />
+  the <code>plugins { }</code> block rather than after evaluation.</li>
 </ul>
 </div>
 <p><strong>Default:</strong> <code>true</code>.</p>
