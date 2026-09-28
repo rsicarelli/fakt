@@ -71,8 +71,9 @@ internal fun routeCompilation(
     when {
         !hasKotlinSourceSetModel ->
             legacyRoute(
-                "this Android module uses AGP's built-in Kotlin support, which keeps sources " +
-                    "in the variant model rather than Kotlin source sets"
+                "this Android module uses AGP's built-in Kotlin support, and the Android Gradle " +
+                    "Plugin API that exposes its sources is not visible to Fakt's classloader; " +
+                    "put AGP on the same build classpath as Fakt"
             )
         !isMultiplatform ->
             if (isDrivablePlatform(platformTypeName)) {

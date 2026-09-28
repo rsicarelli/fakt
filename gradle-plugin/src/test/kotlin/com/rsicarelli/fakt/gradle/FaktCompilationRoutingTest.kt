@@ -20,8 +20,9 @@ import org.junit.jupiter.api.TestInstance
  * Issue #151 moved Kotlin/JS and Kotlin/Wasm platform mains off the in-process plugin
  * (`LEGACY_HYBRID`) onto a `K2JSCompiler`-driven consumer `FaktGenerateTask`. Issue #153 moved
  * single-target JVM/JS/Wasm KMP projects onto one task that owns both the common and the platform
- * fakes. End-to-end behaviour is locked by the `kmp-multi-target`, `kmp-no-jvm` and
- * `kmp-single-target` cache-correctness CI cells.
+ * fakes. Issue #154 moved Android modules on AGP 9's built-in Kotlin onto the producer path.
+ * End-to-end behaviour is locked by the `kmp-multi-target`, `kmp-no-jvm` and `kmp-single-target`
+ * cache-correctness CI cells.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FaktCompilationRoutingTest {
@@ -160,10 +161,28 @@ class FaktCompilationRoutingTest {
     }
 
     @Test
-    fun `GIVEN AGP built-in Kotlin WHEN routing any compilation THEN stays on the in-process plugin`() {
+    fun `GIVEN unreadable sources WHEN routing any compilation THEN stays on the in-process plugin with a reason`() {
+        // `hasKotlinSourceSetModel = false` now only happens on AGP built-in Kotlin when AGP's
+        // variant API is not visible to Fakt; with it visible, the module routes like any other
+        // Android module (issue #154).
+        val route =
+            routeCompilation(
+                hasKotlinSourceSetModel = false,
+                isMultiplatform = false,
+                singleTargetPlatformTypeName = null,
+                compilationName = "debug",
+                platformTypeName = "androidJvm",
+            )
+
+        assertEquals(CacheCorrectDecision.LEGACY, route.decision)
+        assertNotNull(route.notCacheCorrectReason, "The fallback must never be silent.")
+    }
+
+    @Test
+    fun `GIVEN AGP built-in Kotlin with a readable variant API WHEN routing a variant THEN registers a producer`() {
         val decision =
             routeCompilation(
-                    hasKotlinSourceSetModel = false,
+                    hasKotlinSourceSetModel = true,
                     isMultiplatform = false,
                     singleTargetPlatformTypeName = null,
                     compilationName = "debug",
@@ -171,11 +190,7 @@ class FaktCompilationRoutingTest {
                 )
                 .decision
 
-        assertEquals(
-            CacheCorrectDecision.LEGACY,
-            decision,
-            "AGP 9 built-in Kotlin is gap D (#154).",
-        )
+        assertEquals(CacheCorrectDecision.REGISTER_PRODUCER, decision)
     }
 
     @Test

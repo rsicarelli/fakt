@@ -4,6 +4,7 @@
 
 package com.rsicarelli.fakt.gradle
 
+import com.rsicarelli.fakt.gradle.android.AndroidVariantSources
 import java.util.Base64
 import kotlinx.serialization.json.Json
 import org.gradle.api.Project
@@ -41,16 +42,15 @@ private fun singleTargetPlatformTypeName(
         ?.name
 
 /**
- * Whether this project exposes a Kotlin source-set model the cache-correct producer can read.
+ * Whether the cache-correct producer can read this project's sources.
  *
  * AGP 9 ships built-in Kotlin support and rejects KGP's `org.jetbrains.kotlin.android` plugin. In
  * that setup the `KotlinCompilation`s handed to [FaktGradleSubplugin.applyToCompilation] carry
  * `KotlinSourceSet`s whose `kotlin.srcDirs` stay **empty** — AGP keeps the sources in its own
- * variant model — so a `FaktGenerateTask` producer resolves zero sources, runs as NO-SOURCE and
- * silently generates nothing. Measured on `samples/compat-agp/agp-9.0`: every compilation reports
- * `srcDirs=[]` even at `projectsEvaluated`, while the AGP 8.x + KGP cells report real directories.
- * Those projects stay on the in-process plugin ([CacheCorrectDecision.LEGACY]) — correct, just not
- * cache-correct.
+ * variant model (measured on `samples/compat-agp/agp-9.0`: `srcDirs=[]` even at
+ * `projectsEvaluated`). Their producers read the sources from AGP's variant API instead
+ * ([AndroidVariantSources], issue #154). Only when that API is not visible to Fakt's classloader
+ * does the module stay on the in-process plugin ([CacheCorrectDecision.LEGACY]).
  *
  * Keyed off the applied plugin ids rather than probing `srcDirs`, for the same reason
  * [singleTargetPlatformTypeName] counts targets: source sets are not reliably populated at the
@@ -59,27 +59,25 @@ private fun singleTargetPlatformTypeName(
  * resolution.
  */
 private fun hasKotlinSourceSetModel(project: Project): Boolean =
-    hasReadableKotlinSourceSets(
-        hasAndroidPlugin =
-            project.plugins.hasPlugin("com.android.library") ||
-                project.plugins.hasPlugin("com.android.application"),
-        hasKotlinAndroidPlugin = project.plugins.hasPlugin("org.jetbrains.kotlin.android"),
+    hasReadableSources(
+        usesBuiltInKotlin = AndroidVariantSources.usesBuiltInKotlin(project),
+        canReadVariantSources = AndroidVariantSources.isAvailable(project),
     )
 
 /**
- * Pure decision behind [hasKotlinSourceSetModel]. An Android module populates the KGP source-set
- * model only when KGP's own `org.jetbrains.kotlin.android` plugin is applied; on AGP's built-in
- * Kotlin support it does not, and `srcDirs` stays empty. Non-Android projects always have one.
- * Extracted as a `Project`-free function so the truth table is unit-testable without a Gradle
- * project (mirrors [shouldEnableTestFixtures]).
+ * Pure decision behind [hasKotlinSourceSetModel]. KGP's source-set model is readable unless an
+ * Android module uses AGP's built-in Kotlin support; such a module is still readable through AGP's
+ * variant API when Fakt can see it. Extracted as a `Project`-free function so the truth table is
+ * unit-testable without a Gradle project (mirrors [shouldEnableTestFixtures]).
  *
- * @param hasAndroidPlugin whether `com.android.library` / `com.android.application` is applied.
- * @param hasKotlinAndroidPlugin whether KGP's `org.jetbrains.kotlin.android` is applied.
+ * @param usesBuiltInKotlin whether an Android plugin is applied without KGP's
+ *   `org.jetbrains.kotlin.android`.
+ * @param canReadVariantSources whether AGP's variant API is visible and hooked for this project.
  */
-internal fun hasReadableKotlinSourceSets(
-    hasAndroidPlugin: Boolean,
-    hasKotlinAndroidPlugin: Boolean,
-): Boolean = !hasAndroidPlugin || hasKotlinAndroidPlugin
+internal fun hasReadableSources(
+    usesBuiltInKotlin: Boolean,
+    canReadVariantSources: Boolean,
+): Boolean = !usesBuiltInKotlin || canReadVariantSources
 
 /**
  * Pure decision for whether Fakt should route generated fakes into a `testFixtures` source set.
@@ -335,6 +333,9 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
     override fun apply(target: Project) {
         // Create the fakt extension for configuration
         val extension = target.extensions.create("fakt", FaktPluginExtension::class.java)
+        // AGP 9 built-in Kotlin keeps sources in its variant model; `onVariants` has to be hooked
+        // before AGP finalises its variants, so this cannot wait for `afterEvaluate`.
+        AndroidVariantSources.install(target)
 
         // Determine mode after project evaluation
         target.afterEvaluate {
@@ -710,8 +711,9 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
      * [singleTargetPlatformTypeName]): a JVM/JS/Wasm lone target owns both the common and the
      * platform fakes from one task ([CacheCorrectDecision.REGISTER_SINGLE_TARGET]), while an
      * Android or Native lone target stays on the in-process plugin. An Android project on AGP's
-     * built-in Kotlin exposes no readable Kotlin source sets (see [hasKotlinSourceSetModel]); every
-     * compilation of it stays on the in-process plugin.
+     * built-in Kotlin exposes empty Kotlin source sets; its producers read AGP's variant API
+     * instead, and only when that API is not visible to Fakt does it stay on the in-process plugin
+     * (see [hasKotlinSourceSetModel]).
      */
     private fun cacheCorrectDecision(
         kotlinCompilation: KotlinCompilation<*>

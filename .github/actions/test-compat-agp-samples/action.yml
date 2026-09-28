@@ -21,11 +21,9 @@ runs:
       working-directory: samples/compat-agp/agp-${{ inputs.agp-version }}
       run: ./gradlew testDebugUnitTest --no-daemon
 
-    # Issue #142. AGP 9.0 ships built-in Kotlin support, so Fakt cannot read that module's Kotlin
-    # source sets and falls back to generating inside `compileKotlin*` — where the fakes are an
-    # undeclared side effect, and a warm cache used to restore the compilation without them. The
-    # 8.x and 9.4 cells apply KGP and take the cache-correct path instead, so running the same
-    # contract across the matrix covers both paths for free.
+    # Issue #142: fakes must survive `clean` on a warm build cache. The 8.x and 9.4 cells apply KGP;
+    # the 9.0 cell uses AGP's built-in Kotlin, whose producers read their sources from AGP's
+    # variant API (#154). All of them generate from cache-correct `faktGenerate*` tasks.
     - name: Verify fakes survive clean on a warm cache (#142)
       shell: bash
       env:

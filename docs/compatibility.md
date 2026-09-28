@@ -29,7 +29,7 @@ Android projects are tested against these Android Gradle Plugin (AGP) versions o
 | AGP | Gradle | Kotlin | What it covers |
 |-----|--------|--------|----------------|
 | **9.4.1** | 9.6.1 | Kotlin Android plugin | ⭐ Newest tested, cache-correct path |
-| 9.0.0 | 9.1.0 | AGP built-in Kotlin | Built-in Kotlin ([in-process path](user-guide/plugin-configuration.md#cache-correct-generation)) |
+| 9.0.0 | 9.1.0 | AGP built-in Kotlin | Built-in Kotlin, cache-correct path |
 | 8.12.3 | 9.0.0 | Kotlin Android plugin | Cache-correct path |
 | 8.11.1 | 8.13 | Kotlin Android plugin | ✅ Minimum supported |
 
@@ -41,11 +41,9 @@ Fakt's Gradle plugin is compiled against the **minimum** AGP API, so it can only
 every supported AGP version has. The newest AGP runs the same code in CI. AGP is not bundled: your
 build always uses its own AGP.
 
-Android modules on AGP 9's built-in Kotlin still generate fakes, but inside `compileKotlin*`,
-without the Gradle build cache
-([#154](https://github.com/rsicarelli/fakt/issues/154)). Modules that apply
-`org.jetbrains.kotlin.android` use the cache-correct path. That means every AGP 8.x module, and AGP 9
-with `android.builtInKotlin=false`.
+Both ways of compiling Android Kotlin use the cache-correct path. On AGP 9's built-in Kotlin, Fakt
+reads each variant's sources from AGP's variant API. Modules that apply `org.jetbrains.kotlin.android`
+(every AGP 8.x module, and AGP 9 with `android.builtInKotlin=false`) use Kotlin's own source sets.
 
 ---
 

@@ -431,11 +431,11 @@ so those fakes are still produced by the in-process plugin
     - **Single-target Android or Native multiplatform projects** (for example `kotlin {
       androidTarget() }` or `kotlin { linuxX64() }` and nothing else). Adding a second target
       moves the project onto the cache-correct path automatically.
-    - **Android modules on AGP's built-in Kotlin support** (AGP 9+, where `org.jetbrains.kotlin.android`
-      is no longer applied). AGP keeps Kotlin sources in its own variant model rather than the
-      source sets Fakt reads ([#154](https://github.com/rsicarelli/fakt/issues/154)). Android
-      modules that apply the Kotlin Android plugin (every AGP 8.x build, and AGP 9 with
-      `android.builtInKotlin=false`) stay on the cache-correct path.
+    - **Android modules on AGP's built-in Kotlin support whose Android Gradle Plugin isn't visible
+      to Fakt** (for example, AGP only in a subproject's build script while Fakt is on the root
+      build classpath). AGP 9's built-in Kotlin keeps sources in its variant model, which Fakt
+      reads through AGP's API. Put AGP on the same build classpath as Fakt, for example with
+      `plugins { id("com.android.library") apply false }` in the root build.
 
 **Default:** `true`.
 

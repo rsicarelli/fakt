@@ -4,6 +4,7 @@ package com.rsicarelli.fakt.gradle
 
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.gradle.android.AndroidIntegration
+import com.rsicarelli.fakt.gradle.android.AndroidVariantSources
 import java.util.Locale
 import kotlinx.serialization.json.Json
 import org.gradle.api.Project
@@ -136,6 +137,11 @@ internal object FaktGenerateTaskWiring {
                 task.scratchDir.set(scratchDir)
             }
 
+        // AGP 9 built-in Kotlin: the compilation's Kotlin source sets are empty; the variant API
+        // supplies the sources (issue #154).
+        if (shape == TaskShape.PRODUCER && AndroidVariantSources.usesBuiltInKotlin(project)) {
+            AndroidVariantSources.feed(project, compilationName, taskProvider)
+        }
         wireGeneratedDirConsumers(project, kotlinCompilation, extension, taskProvider)
         if (shape == TaskShape.SINGLE_TARGET) {
             wireSingleTargetCommonDir(project, taskProvider)
