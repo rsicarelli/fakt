@@ -66,6 +66,9 @@ dependencies {
     testImplementation(libs.kotlin.test)
     testImplementation(libs.kotlin.testJunit5)
     testImplementation(libs.junit.jupiter)
+    // LauncherSessionListener API for ProjectBuilderWarmUp (test-suite infrastructure).
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.platform.launcher)
     testImplementation(libs.kotlin.gradlePlugin)
     testImplementation(libs.kotlin.gradlePlugin.api)
     testImplementation(libs.coroutines.test)
