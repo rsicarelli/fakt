@@ -6,7 +6,6 @@ import com.rsicarelli.fakt.gradle.FaktGenerateTask
 import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
@@ -28,11 +27,14 @@ import org.junit.jupiter.api.io.TempDir
 class AndroidVariantSourcesTest {
 
     @Test
-    fun `GIVEN the variant reported before its producer WHEN the producer registers THEN it reads the variant's sources`(
+    fun `GIVEN the variant reported before its producer WHEN the producer registers THEN it reads the variant's Kotlin files`(
         @TempDir dir: File
     ) {
         // Given
         val project = ProjectBuilder.builder().withProjectDir(dir).build()
+        val service = project.kotlinFile("src/main/kotlin/app/Service.kt")
+        val legacy = project.kotlinFile("src/main/java/app/Legacy.kt")
+        project.file("src/main/java/app/Helper.java").writeText("class Helper {}")
         val registry = AndroidVariantSources.Registry()
         val task =
             project.tasks.register("faktGenerateAndroidjvmDebug", FaktGenerateTask::class.java)
@@ -42,18 +44,16 @@ class AndroidVariantSourcesTest {
         registry.onTask("debug", task)
 
         // Then
-        assertEquals(
-            project.files("src/main/kotlin", "src/main/java").files,
-            task.get().sources.files,
-        )
+        assertEquals(setOf(service, legacy), task.get().sources.files)
     }
 
     @Test
-    fun `GIVEN the producer registered before its variant WHEN the variant is reported THEN the producer reads its sources`(
+    fun `GIVEN the producer registered before its variant WHEN the variant is reported THEN the producer reads its Kotlin files`(
         @TempDir dir: File
     ) {
         // Given
         val project = ProjectBuilder.builder().withProjectDir(dir).build()
+        val service = project.kotlinFile("src/main/kotlin/app/Service.kt")
         val registry = AndroidVariantSources.Registry()
         val task =
             project.tasks.register("faktGenerateAndroidjvmDebug", FaktGenerateTask::class.java)
@@ -63,15 +63,37 @@ class AndroidVariantSourcesTest {
         registry.onVariant("debug", project.sourceDirs("src/main/kotlin"))
 
         // Then
-        assertEquals(project.files("src/main/kotlin").files, task.get().sources.files)
+        assertEquals(setOf(service), task.get().sources.files)
     }
 
     @Test
-    fun `GIVEN two variants WHEN each producer registers THEN it reads only its own variant's sources`(
+    fun `GIVEN a Kotlin file in a deep package WHEN the producer reads the variant THEN it is included`(
+        @TempDir dir: File
+    ) {
+        // Given: ten package segments, deeper than the worker walks a directory root.
+        val project = ProjectBuilder.builder().withProjectDir(dir).build()
+        val deep = project.kotlinFile("src/main/kotlin/a/b/c/d/e/f/g/h/i/j/Deep.kt")
+        val registry = AndroidVariantSources.Registry()
+        val task =
+            project.tasks.register("faktGenerateAndroidjvmDebug", FaktGenerateTask::class.java)
+        registry.onVariant("debug", project.sourceDirs("src/main/kotlin"))
+
+        // When
+        registry.onTask("debug", task)
+
+        // Then
+        assertEquals(setOf(deep), task.get().sources.files)
+    }
+
+    @Test
+    fun `GIVEN two variants WHEN each producer registers THEN it reads only its own variant's files`(
         @TempDir dir: File
     ) {
         // Given
         val project = ProjectBuilder.builder().withProjectDir(dir).build()
+        val shared = project.kotlinFile("src/main/kotlin/app/Shared.kt")
+        val debugOnly = project.kotlinFile("src/debug/kotlin/app/DebugOnly.kt")
+        val releaseOnly = project.kotlinFile("src/release/kotlin/app/ReleaseOnly.kt")
         val registry = AndroidVariantSources.Registry()
         val debug =
             project.tasks.register("faktGenerateAndroidjvmDebug", FaktGenerateTask::class.java)
@@ -85,9 +107,8 @@ class AndroidVariantSourcesTest {
         registry.onTask("release", release)
 
         // Then
-        assertTrue(project.file("src/debug/kotlin") in debug.get().sources.files)
-        assertFalse(project.file("src/release/kotlin") in debug.get().sources.files)
-        assertTrue(project.file("src/release/kotlin") in release.get().sources.files)
+        assertEquals(setOf(shared, debugOnly), debug.get().sources.files)
+        assertEquals(setOf(shared, releaseOnly), release.get().sources.files)
     }
 
     @Test
@@ -102,6 +123,12 @@ class AndroidVariantSourcesTest {
         assertFalse(AndroidVariantSources.usesBuiltInKotlin(project))
         assertFalse(AndroidVariantSources.isAvailable(project))
     }
+
+    private fun Project.kotlinFile(path: String): File =
+        file(path).apply {
+            parentFile.mkdirs()
+            writeText("package app\n")
+        }
 
     private fun Project.sourceDirs(
         vararg paths: String

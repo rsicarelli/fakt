@@ -42,15 +42,14 @@ private fun singleTargetPlatformTypeName(
         ?.name
 
 /**
- * Whether the cache-correct producer can read this project's sources.
+ * Why the cache-correct producer cannot read this project's sources, or `null` when it can.
  *
  * AGP 9 ships built-in Kotlin support and rejects KGP's `org.jetbrains.kotlin.android` plugin. In
  * that setup the `KotlinCompilation`s handed to [FaktGradleSubplugin.applyToCompilation] carry
  * `KotlinSourceSet`s whose `kotlin.srcDirs` stay **empty** — AGP keeps the sources in its own
  * variant model (measured on `samples/compat-agp/agp-9.0`: `srcDirs=[]` even at
  * `projectsEvaluated`). Their producers read the sources from AGP's variant API instead
- * ([AndroidVariantSources], issue #154). Only when that API is not visible to Fakt's classloader
- * does the module stay on the in-process plugin ([CacheCorrectDecision.LEGACY]).
+ * ([AndroidVariantSources], issue #154).
  *
  * Keyed off the applied plugin ids rather than probing `srcDirs`, for the same reason
  * [singleTargetPlatformTypeName] counts targets: source sets are not reliably populated at the
@@ -58,26 +57,48 @@ private fun singleTargetPlatformTypeName(
  * legacy path too. Plugin ids are settled in the `plugins { }` block, long before subplugin
  * resolution.
  */
-private fun hasKotlinSourceSetModel(project: Project): Boolean =
-    hasReadableSources(
-        usesBuiltInKotlin = AndroidVariantSources.usesBuiltInKotlin(project),
+private fun unreadableSourcesReason(project: Project): String? =
+    unreadableSourcesReason(
+        hasAndroidPlugin = AndroidVariantSources.hasAndroidPlugin(project),
+        hasKotlinAndroidPlugin = AndroidVariantSources.hasKotlinAndroidPlugin(project),
+        isMultiplatform = AndroidVariantSources.isMultiplatform(project),
         canReadVariantSources = AndroidVariantSources.isAvailable(project),
     )
 
 /**
- * Pure decision behind [hasKotlinSourceSetModel]. KGP's source-set model is readable unless an
- * Android module uses AGP's built-in Kotlin support; such a module is still readable through AGP's
- * variant API when Fakt can see it. Extracted as a `Project`-free function so the truth table is
- * unit-testable without a Gradle project (mirrors [shouldEnableTestFixtures]).
+ * Pure decision behind [unreadableSourcesReason], `Project`-free so the truth table is
+ * unit-testable (mirrors [shouldEnableTestFixtures]). Only variant-model Android plugins
+ * (`com.android.library`, `com.android.application`, …) without KGP's
+ * `org.jetbrains.kotlin.android` can be unreadable:
+ * - Kotlin Multiplatform with `androidTarget()`: KGP compiles one compilation per Android variant
+ *   (`debug`, `release`), whose default source sets (`androidDebug`) exclude `androidMain`, so a
+ *   per-compilation task would drop its fakes. Stays in-process until it has a per-variant design.
+ * - AGP 9 built-in Kotlin: readable through AGP's variant API, unless Fakt could not hook it.
  *
- * @param usesBuiltInKotlin whether an Android plugin is applied without KGP's
- *   `org.jetbrains.kotlin.android`.
+ * @param hasAndroidPlugin whether a variant-model Android plugin is applied.
+ * @param hasKotlinAndroidPlugin whether KGP's `org.jetbrains.kotlin.android` is applied.
+ * @param isMultiplatform whether the Kotlin Multiplatform plugin is applied.
  * @param canReadVariantSources whether AGP's variant API is visible and hooked for this project.
  */
-internal fun hasReadableSources(
-    usesBuiltInKotlin: Boolean,
+internal fun unreadableSourcesReason(
+    hasAndroidPlugin: Boolean,
+    hasKotlinAndroidPlugin: Boolean,
+    isMultiplatform: Boolean,
     canReadVariantSources: Boolean,
-): Boolean = !usesBuiltInKotlin || canReadVariantSources
+): String? =
+    when {
+        !hasAndroidPlugin || hasKotlinAndroidPlugin -> null
+        isMultiplatform ->
+            "this multiplatform project declares androidTarget() through the com.android.library " +
+                "or com.android.application plugin, whose per-variant compilations Fakt cannot " +
+                "drive from a Gradle task yet; the com.android.kotlin.multiplatform.library " +
+                "plugin is supported"
+        canReadVariantSources -> null
+        else ->
+            "this Android module uses AGP's built-in Kotlin support and Fakt could not hook AGP's " +
+                "variant API: put AGP on the same build classpath as Fakt, and apply Fakt in the " +
+                "plugins { } block rather than after evaluation"
+    }
 
 /**
  * Pure decision for whether Fakt should route generated fakes into a `testFixtures` source set.
@@ -355,13 +376,13 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 target.logger.info("Fakt: Generator mode enabled - generating fakes")
 
                 val useTestFixtures = resolveTestFixturesMode(target, extension)
-                // `hasKotlinSourceSetModel` gates the whole cache-correct branch, not just the
+                // `unreadableSourcesReason` gates the whole cache-correct branch, not just the
                 // per-compilation routing below: a project without a readable Kotlin source-set
                 // model falls back to the in-process plugin, and that path needs the legacy source
                 // set wiring to compile the fakes it writes.
                 if (
                     resolveExperimentalGenerateTaskFlag(target, extension) &&
-                        hasKotlinSourceSetModel(target)
+                        unreadableSourcesReason(target) == null
                 ) {
                     target.logger.info(
                         "Fakt: cache-correct generation enabled (the default) — registering " +
@@ -713,7 +734,7 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
      * Android or Native lone target stays on the in-process plugin. An Android project on AGP's
      * built-in Kotlin exposes empty Kotlin source sets; its producers read AGP's variant API
      * instead, and only when that API is not visible to Fakt does it stay on the in-process plugin
-     * (see [hasKotlinSourceSetModel]).
+     * (see [unreadableSourcesReason]).
      */
     private fun cacheCorrectDecision(
         kotlinCompilation: KotlinCompilation<*>
@@ -725,7 +746,7 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             )
         val route =
             routeCompilation(
-                hasKotlinSourceSetModel = hasKotlinSourceSetModel(project),
+                unreadableSourcesReason = unreadableSourcesReason(project),
                 isMultiplatform = kmp != null,
                 singleTargetPlatformTypeName = kmp?.let(::singleTargetPlatformTypeName),
                 compilationName = kotlinCompilation.name,

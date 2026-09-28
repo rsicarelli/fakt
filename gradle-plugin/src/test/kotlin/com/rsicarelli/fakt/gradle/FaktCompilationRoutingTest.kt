@@ -135,7 +135,7 @@ class FaktCompilationRoutingTest {
     fun `GIVEN multi-target KMP WHEN routing a drivable main THEN carries no not-cache-correct reason`() {
         val route =
             routeCompilation(
-                hasKotlinSourceSetModel = true,
+                unreadableSourcesReason = null,
                 isMultiplatform = true,
                 singleTargetPlatformTypeName = null,
                 compilationName = "main",
@@ -149,7 +149,7 @@ class FaktCompilationRoutingTest {
     fun `GIVEN non-KMP project WHEN routing a js main THEN registers a producer task`() {
         val decision =
             routeCompilation(
-                    hasKotlinSourceSetModel = true,
+                    unreadableSourcesReason = null,
                     isMultiplatform = false,
                     singleTargetPlatformTypeName = null,
                     compilationName = "main",
@@ -162,12 +162,13 @@ class FaktCompilationRoutingTest {
 
     @Test
     fun `GIVEN unreadable sources WHEN routing any compilation THEN stays on the in-process plugin with a reason`() {
-        // `hasKotlinSourceSetModel = false` now only happens on AGP built-in Kotlin when AGP's
+        // `unreadableSourcesReason = "sources unreadable"` now only happens on AGP built-in Kotlin
+        // when AGP's
         // variant API is not visible to Fakt; with it visible, the module routes like any other
         // Android module (issue #154).
         val route =
             routeCompilation(
-                hasKotlinSourceSetModel = false,
+                unreadableSourcesReason = "sources unreadable",
                 isMultiplatform = false,
                 singleTargetPlatformTypeName = null,
                 compilationName = "debug",
@@ -175,14 +176,14 @@ class FaktCompilationRoutingTest {
             )
 
         assertEquals(CacheCorrectDecision.LEGACY, route.decision)
-        assertNotNull(route.notCacheCorrectReason, "The fallback must never be silent.")
+        assertEquals("sources unreadable", route.notCacheCorrectReason)
     }
 
     @Test
     fun `GIVEN AGP built-in Kotlin with a readable variant API WHEN routing a variant THEN registers a producer`() {
         val decision =
             routeCompilation(
-                    hasKotlinSourceSetModel = true,
+                    unreadableSourcesReason = null,
                     isMultiplatform = false,
                     singleTargetPlatformTypeName = null,
                     compilationName = "debug",
@@ -226,7 +227,7 @@ class FaktCompilationRoutingTest {
 
     private fun routeKmp(compilationName: String, platformTypeName: String): CacheCorrectDecision =
         routeCompilation(
-                hasKotlinSourceSetModel = true,
+                unreadableSourcesReason = null,
                 isMultiplatform = true,
                 singleTargetPlatformTypeName = null,
                 compilationName = compilationName,
@@ -236,7 +237,7 @@ class FaktCompilationRoutingTest {
 
     private fun routeSingleTarget(target: String, compilationPlatform: String): CompilationRoute =
         routeCompilation(
-            hasKotlinSourceSetModel = true,
+            unreadableSourcesReason = null,
             isMultiplatform = true,
             singleTargetPlatformTypeName = target,
             compilationName = "main",
