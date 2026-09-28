@@ -9,8 +9,9 @@ Install the Fakt plugin, annotate an interface with `@Fake`, and start using typ
 | Requirement      | Version    |
 |------------------|------------|
 | **Kotlin**       | 2.2.0+ ([full matrix](../compatibility.md)) |
-| **Gradle**       | 8.0+       |
+| **Gradle**       | 8.13+      |
 | **JVM**          | 11+        |
+| **Android Gradle Plugin** | 8.11.1+ (Android projects only; [AGP matrix](../compatibility.md#android-gradle-plugin)) |
 
 ---
 

@@ -49,6 +49,10 @@ dependencies {
     compileOnly(libs.kotlin.gradlePlugin)
     compileOnly(libs.kotlin.gradlePlugin.api)
 
+    // Android Gradle Plugin API (compileOnly), pinned to the oldest supported AGP. Only touched
+    // when an Android compilation is wired — see android/AndroidIntegration.
+    compileOnly(libs.agp.api.floor)
+
     // Compile-only refs used by FaktCodegenWorkAction at the file-import level. The compiler
     // driver itself is invoked reflectively from execute() so daemon-side decoration of the action
     // class never has to resolve kotlin-compiler-embeddable types.
@@ -69,6 +73,8 @@ dependencies {
     // LauncherSessionListener API for ProjectBuilderWarmUp (test-suite infrastructure).
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.platform.launcher)
+    // AGP's API types for AndroidIntegrationTest's hand-written androidComponents fake.
+    testImplementation(libs.agp.api.floor)
     testImplementation(libs.kotlin.gradlePlugin)
     testImplementation(libs.kotlin.gradlePlugin.api)
     testImplementation(libs.coroutines.test)

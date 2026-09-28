@@ -118,28 +118,56 @@ internal fun generatesFakesInProcess(decision: FaktGradleSubplugin.CacheCorrectD
     }
 
 /**
- * Warns when an Android module routes fakes into `testFixtures` without the experimental Gradle
- * property that turns on Kotlin compilation for the Android `testFixtures` source set. Without it
- * AGP 8.x leaves that source set Java-only, no `*TestFixturesKotlin` task materializes, and the
- * generated Kotlin fakes are silently dropped. The property is unnecessary on AGP 9.0 (Kotlin test
- * fixtures are on by default), so this stays a warning, not an error. Read lazily via
- * [org.gradle.api.provider.ProviderFactory.gradleProperty] to remain configuration-cache safe.
+ * Warns once per project when an Android module routes fakes into `testFixtures` without the
+ * experimental Gradle property that turns on Kotlin compilation for the Android `testFixtures`
+ * source set. Without it AGP leaves that source set Java-only, no `*TestFixturesKotlin` task
+ * materializes, and the generated Kotlin fakes are silently dropped.
+ *
+ * The property is needed whenever KGP's `org.jetbrains.kotlin.android` compiles the module — every
+ * AGP 8.x module, and AGP 9 modules that opt out of built-in Kotlin
+ * (`android.builtInKotlin=false`). Only AGP 9's built-in Kotlin compiles Kotlin test fixtures by
+ * default, so without KGP applied this stays silent (see [shouldWarnAboutTestFixturesKotlinFlag]).
+ * Read lazily via [org.gradle.api.provider.ProviderFactory.gradleProperty] to remain
+ * configuration-cache safe.
  *
  * Top-level (not a member) so [FaktGradleSubplugin] stays under detekt's function-count threshold.
  */
 private fun warnIfMissingAndroidTestFixturesKotlinFlag(project: Project) {
+    val extras = project.extensions.extraProperties
     val property = FaktGradleSubplugin.ANDROID_TEST_FIXTURES_KOTLIN_PROPERTY
-    val flag = project.providers.gradleProperty(property).orNull
-    if (flag?.toBooleanStrictOrNull() != true) {
+    val shouldWarn =
+        shouldWarnAboutTestFixturesKotlinFlag(
+            flagValue = project.providers.gradleProperty(property).orNull,
+            hasKotlinAndroidPlugin = project.plugins.hasPlugin(KOTLIN_ANDROID_PLUGIN_ID),
+        )
+    if (shouldWarn && !extras.has(TEST_FIXTURES_FLAG_WARNED)) {
+        extras.set(TEST_FIXTURES_FLAG_WARNED, true)
         project.logger.warn(
             "Fakt: Android test fixtures need Kotlin compilation for the testFixtures source set. " +
                 "Add to gradle.properties:\n" +
                 "  $property=true\n" +
-                "(required on AGP 8.x; unnecessary on AGP 9.0+, where it is the default). Without " +
-                "it the generated Kotlin fakes are not compiled into the testFixtures artifact."
+                "(required whenever the Kotlin Android plugin compiles the module: every AGP 8.x " +
+                "module, and AGP 9+ with android.builtInKotlin=false). Without it the generated " +
+                "Kotlin fakes are not compiled into the testFixtures artifact."
         )
     }
 }
+
+/**
+ * Whether [warnIfMissingAndroidTestFixturesKotlinFlag] should warn: the flag is not `true` and
+ * KGP's Kotlin Android plugin compiles the module. AGP 9's built-in Kotlin (no KGP plugin) compiles
+ * Kotlin test fixtures without the flag.
+ */
+internal fun shouldWarnAboutTestFixturesKotlinFlag(
+    flagValue: String?,
+    hasKotlinAndroidPlugin: Boolean,
+): Boolean = hasKotlinAndroidPlugin && flagValue?.toBooleanStrictOrNull() != true
+
+/** KGP's Android plugin; absent when AGP 9's built-in Kotlin compiles the module. */
+private const val KOTLIN_ANDROID_PLUGIN_ID: String = "org.jetbrains.kotlin.android"
+
+/** De-duplicates [warnIfMissingAndroidTestFixturesKotlinFlag]: it runs once per compilation. */
+private const val TEST_FIXTURES_FLAG_WARNED: String = "fakt.testFixturesKotlinFlagWarned"
 
 /** De-duplicates [warnNotCacheCorrect]: the decision is per compilation, the answer per module. */
 private const val NOT_CACHE_CORRECT_WARNED: String = "fakt.notCacheCorrectWarned"
@@ -277,7 +305,9 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
 
         /**
          * AGP experimental Gradle property that enables Kotlin compilation for the Android
-         * `testFixtures` source set. Required on AGP 8.x; the default on AGP 9.0+.
+         * `testFixtures` source set. Required whenever KGP's Kotlin Android plugin compiles the
+         * module (AGP 8.x, or AGP 9+ with built-in Kotlin off); AGP 9's built-in Kotlin does not
+         * need it.
          */
         internal const val ANDROID_TEST_FIXTURES_KOTLIN_PROPERTY: String =
             "android.experimental.enableTestFixturesKotlinSupport"
@@ -410,7 +440,8 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
      *
      * If the option is enabled but neither is present, emits a warning and returns `false`. When
      * the Android path is taken, additionally warns if the Kotlin-test-fixtures experimental Gradle
-     * property is missing (required on AGP 8.x; unnecessary on AGP 9.0).
+     * property is missing while KGP compiles the module (see
+     * [warnIfMissingAndroidTestFixturesKotlinFlag]).
      */
     internal fun resolveTestFixturesMode(
         project: Project,

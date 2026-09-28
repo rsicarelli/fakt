@@ -18,6 +18,15 @@ compat cells, which share the repo-root wrapper).
 | `agp-8.11` | 8.11.1 | 8.13 | 35 | required (set in `gradle.properties`) |
 | `agp-8.12` | 8.12.3 | 9.0.0 | 35 | required |
 | `agp-9.0` | 9.0.0 | 9.1.0 | 35 | **not set** — validates the flag-free 9.0 default |
+| `agp-9.4` | 9.4.1 | 9.6.1 | 35 | required (built-in Kotlin off) |
+
+The cells also pin Fakt's AGP API range. Fakt's Gradle plugin compiles against the **floor**
+(`agp-api-floor` in `gradle/libs.versions.toml`, the same version as `agp-8.11`), so it cannot call
+an API that version lacks. `agp-9.4` runs that code against the **newest** AGP: it opts out of
+built-in Kotlin (`android.builtInKotlin=false`) and applies `org.jetbrains.kotlin.android`, which
+keeps it on the cache-correct `FaktGenerateTask` path. `agp-9.0` covers built-in Kotlin, which Fakt
+still generates for in-process until #154. Every cell has an `@Fake` with an `android.content.Context`
+parameter (issue #158).
 
 > The floor is AGP **8.11.1** rather than an older 8.x: AGP ≤ 8.7 calls the `KotlinJvmOptions.getUseK2()` API that Kotlin 2.3.20 (Fakt's compiler version) removed, so those versions cannot compile Android test-fixtures Kotlin at all.
 

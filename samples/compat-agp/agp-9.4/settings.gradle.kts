@@ -25,10 +25,8 @@ dependencyResolutionManagement {
 
     versionCatalogs {
         create("libs") {
-            version("kotlin", "2.3.20")
-            // The AGP floor. Fakt's Gradle plugin compiles against this same version
-            // (`agp-api-floor` in gradle/libs.versions.toml): raise both together.
-            version("agp", "8.11.1")
+            version("kotlin", "2.4.10")
+            version("agp", "9.4.1")
             version("coroutines", "1.10.2")
             version("fakt", faktVersion)
 
@@ -44,4 +42,4 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "fakt-compat-agp-8.11"
+rootProject.name = "fakt-compat-agp-9.4"

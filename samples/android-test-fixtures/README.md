@@ -27,9 +27,10 @@ producer's `testFixtures` artifact. `:consumer`'s unit tests then instantiate
 
 ## Requirements
 
-- **AGP 8.x** needs `android.experimental.enableTestFixturesKotlinSupport=true` in
-  `gradle.properties` so the `testFixtures` source set compiles Kotlin (already set here). On
-  **AGP 9.0+** this is the default and the property is unnecessary.
+- Modules compiled by the Kotlin Android plugin (every **AGP 8.x** module, and **AGP 9+** with
+  `android.builtInKotlin=false`) need `android.experimental.enableTestFixturesKotlinSupport=true`
+  in `gradle.properties` so the `testFixtures` source set compiles Kotlin (already set here). AGP
+  9's built-in Kotlin compiles Kotlin test fixtures by default.
 - The consumer must be an **Android** module: a plain JVM module cannot resolve an Android
   `testFixtures` variant.
 

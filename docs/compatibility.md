@@ -1,6 +1,6 @@
-# Kotlin Compatibility
+# Compatibility
 
-Fakt is tested against multiple Kotlin versions on every change. This page is the source of truth for version support.
+Fakt is tested against multiple Kotlin and Android Gradle Plugin versions on every change. This page is the source of truth for version support.
 
 ---
 
@@ -19,6 +19,33 @@ Fakt is tested against multiple Kotlin versions on every change. This page is th
 | 2.1.x | ⚠️ Not tested | — |
 | 2.0.x | ⚠️ Not tested | — |
 | 1.x | ❌ Not supported (K1) | — |
+
+---
+
+## Android Gradle Plugin
+
+Android projects are tested against these Android Gradle Plugin (AGP) versions on every change:
+
+| AGP | Gradle | Kotlin | What it covers |
+|-----|--------|--------|----------------|
+| **9.4.1** | 9.6.1 | Kotlin Android plugin | ⭐ Newest tested, cache-correct path |
+| 9.0.0 | 9.1.0 | AGP built-in Kotlin | Built-in Kotlin ([in-process path](user-guide/plugin-configuration.md#cache-correct-generation)) |
+| 8.12.3 | 9.0.0 | Kotlin Android plugin | Cache-correct path |
+| 8.11.1 | 8.13 | Kotlin Android plugin | ✅ Minimum supported |
+
+The KMP Android library plugin (`com.android.kotlin.multiplatform.library`) is tested on AGP 9.0.0.
+AGP 8.7 and older can't compile Android test-fixtures Kotlin with the Kotlin version Fakt is built
+with, so they aren't supported.
+
+Fakt's Gradle plugin is compiled against the **minimum** AGP API, so it can only call APIs that
+every supported AGP version has. The newest AGP runs the same code in CI. AGP is not bundled: your
+build always uses its own AGP.
+
+Android modules on AGP 9's built-in Kotlin still generate fakes, but inside `compileKotlin*`,
+without the Gradle build cache
+([#154](https://github.com/rsicarelli/fakt/issues/154)). Modules that apply
+`org.jetbrains.kotlin.android` use the cache-correct path. That means every AGP 8.x module, and AGP 9
+with `android.builtInKotlin=false`.
 
 ---
 

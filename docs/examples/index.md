@@ -36,7 +36,7 @@ Fakt includes working sample projects demonstrating different use cases.
 - Same scenarios as jvm-single-module for consistency
 - Unit tests in `src/test/kotlin`
 - Instrumented tests support in `src/androidTest/kotlin`
-- Works with Android Gradle Plugin 8.12.3+
+- Works with Android Gradle Plugin 8.11.1+ (see the [AGP matrix](../compatibility.md#android-gradle-plugin))
 
 **Best for**: Android developers wanting test fakes without KMP
 

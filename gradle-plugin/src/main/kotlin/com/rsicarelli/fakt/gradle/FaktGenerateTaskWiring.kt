@@ -3,6 +3,7 @@
 package com.rsicarelli.fakt.gradle
 
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
+import com.rsicarelli.fakt.gradle.android.AndroidIntegration
 import java.util.Locale
 import kotlinx.serialization.json.Json
 import org.gradle.api.Project
@@ -370,7 +371,8 @@ private fun wireSingleTargetCommonDir(
  * compilations — common producers (`KotlinMetadataCompiler`, metadata klibs) and JS/Wasm platform
  * mains (`K2JSCompiler`, platform klibs) — go through the `@Classpath` `commonKlibClasspath`
  * (content-hashed; `@CompileClasspath` can fingerprint klibs as empty). JVM/Android compilations
- * feed their jar dependencies to the K2JVM driver through `compileClasspath`.
+ * feed their jar dependencies to the K2JVM driver through `compileClasspath`, Android ones plus the
+ * SDK boot classpath.
  */
 private fun configureDependencies(task: FaktGenerateTask, kotlinCompilation: KotlinCompilation<*>) {
     val platformType = kotlinCompilation.target.platformType.name.lowercase()
@@ -386,6 +388,12 @@ private fun configureDependencies(task: FaktGenerateTask, kotlinCompilation: Kot
     // (`wasmJs("web")`) still resolves to the right flavour. Absent for Kotlin/JS.
     wasmCompilerTarget((kotlinCompilation.target as? KotlinJsIrTarget)?.wasmTargetType)
         ?.let(task.wasmTarget::set)
+    val target = kotlinCompilation.target
+    val needsBootClasspath =
+        AndroidIntegration.needsBootClasspath(platformType) {
+            AndroidIntegration.isKmpAndroidTarget(target)
+        }
+    if (needsBootClasspath) AndroidIntegration.addBootClasspath(task, kotlinCompilation.project)
 }
 
 private fun taskNameFor(targetName: String, compilationName: String): String =

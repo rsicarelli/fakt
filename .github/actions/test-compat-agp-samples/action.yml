@@ -7,7 +7,7 @@ description: >-
 
 inputs:
   agp-version:
-    description: AGP version directory suffix (e.g. 8.7, 8.12, 9.0)
+    description: AGP version directory suffix (e.g. 8.11, 8.12, 9.0, 9.4)
     required: true
 
 runs:
@@ -24,8 +24,8 @@ runs:
     # Issue #142. AGP 9.0 ships built-in Kotlin support, so Fakt cannot read that module's Kotlin
     # source sets and falls back to generating inside `compileKotlin*` — where the fakes are an
     # undeclared side effect, and a warm cache used to restore the compilation without them. The
-    # 8.x cells apply KGP and take the cache-correct path instead, so running the same contract
-    # across the matrix covers both paths for free.
+    # 8.x and 9.4 cells apply KGP and take the cache-correct path instead, so running the same
+    # contract across the matrix covers both paths for free.
     - name: Verify fakes survive clean on a warm cache (#142)
       shell: bash
       env:
