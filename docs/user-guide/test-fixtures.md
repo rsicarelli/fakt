@@ -132,17 +132,19 @@ fakt {
 }
 ```
 
-!!! warning "AGP 8.x needs an experimental flag"
+!!! warning "The Kotlin Android plugin needs an experimental flag"
     Kotlin compilation of the Android `testFixtures` source set requires this in
-    `gradle.properties` on **AGP 8.x**:
+    `gradle.properties` whenever `org.jetbrains.kotlin.android` compiles the module: every
+    **AGP 8.x** module, and **AGP 9+** with `android.builtInKotlin=false`:
 
     ```properties
     android.experimental.enableTestFixturesKotlinSupport=true
     ```
 
     Without it, AGP leaves `testFixtures` Java-only, no `compileDebugTestFixturesKotlin` task is
-    created, and the generated Kotlin fakes are silently dropped. On **AGP 9.0+** this is the
-    default and the property is unnecessary. The minimum supported floor is **AGP 8.11** — AGP ≤ 8.7
+    created, and the generated Kotlin fakes are silently dropped. AGP 9's built-in Kotlin compiles
+    Kotlin test fixtures by default, so the property is unnecessary there. Fakt warns when it is
+    missing and needed. The minimum supported floor is **AGP 8.11** — AGP ≤ 8.7
     calls a Kotlin Gradle Plugin API (`KotlinJvmOptions.getUseK2()`) that Kotlin 2.3.20, Fakt's
     compiler version, removed, so it cannot compile Android test-fixtures Kotlin.
 

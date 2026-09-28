@@ -13,7 +13,8 @@ import org.junit.jupiter.api.TestInstance
  * build that actually owns a `testFixtures` compilation — supplied by the `java-test-fixtures`
  * plugin (JVM) or by the Android Gradle plugin (`com.android.library` / `com.android.application`).
  * Extracting it as a `Project`-free function is what makes this table unit-testable without a
- * Gradle project.
+ * Gradle project. Also pins [shouldWarnAboutTestFixturesKotlinFlag], which decides whether an
+ * Android module is missing the flag that makes AGP compile Kotlin test fixtures.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FaktTestFixturesModeTest {
@@ -89,6 +90,43 @@ class FaktTestFixturesModeTest {
                 hasAndroidLibrary = true,
             ),
             "Either source is sufficient; having both still enables the mode.",
+        )
+    }
+
+    @Test
+    fun `GIVEN KGP compiles an Android module WHEN the Kotlin test fixtures flag is missing THEN warns`() {
+        assertTrue(
+            shouldWarnAboutTestFixturesKotlinFlag(flagValue = null, hasKotlinAndroidPlugin = true),
+            "AGP 8.x, and AGP 9 with android.builtInKotlin=false, drop Kotlin test fixtures " +
+                "without the flag.",
+        )
+    }
+
+    @Test
+    fun `GIVEN KGP compiles an Android module WHEN the flag is not strictly true THEN warns`() {
+        listOf("false", "yes", "").forEach { value ->
+            assertTrue(
+                shouldWarnAboutTestFixturesKotlinFlag(
+                    flagValue = value,
+                    hasKotlinAndroidPlugin = true,
+                ),
+                "'$value' does not enable the flag",
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN KGP compiles an Android module WHEN the flag is true THEN stays silent`() {
+        assertFalse(
+            shouldWarnAboutTestFixturesKotlinFlag(flagValue = "true", hasKotlinAndroidPlugin = true)
+        )
+    }
+
+    @Test
+    fun `GIVEN AGP 9 built-in Kotlin WHEN the flag is missing THEN stays silent`() {
+        assertFalse(
+            shouldWarnAboutTestFixturesKotlinFlag(flagValue = null, hasKotlinAndroidPlugin = false),
+            "Built-in Kotlin compiles Kotlin test fixtures by default.",
         )
     }
 }

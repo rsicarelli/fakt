@@ -197,7 +197,7 @@ help:
 	@echo "  test-fake-publishing - Test fake-publishing sample (two-step workflow)"
 	@echo "  test-compat-all     - Test all compat samples (Kotlin 2.2.0-2.4.10)"
 	@echo "  test-compat-VERSION - Test specific compat sample (e.g., test-compat-2.2.0)"
-	@echo "  test-compat-agp-all - Test all AGP compat samples (AGP 8.11, 8.12, 9.0)"
+	@echo "  test-compat-agp-all - Test all AGP compat samples (AGP 8.11, 8.12, 9.0, 9.4)"
 	@echo "  test-compat-agp-VERSION - Test specific AGP compat sample (e.g., test-compat-agp-8.11)"
 	@echo "  test-kmp-android-lint - Test KMP+Android sample AGP lint on Gradle 9.6.1 (#129 guard)"
 	@echo "  test-clean-rebuild-cache - Verify fakes survive clean on a warm build cache (#142)"

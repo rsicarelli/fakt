@@ -15,7 +15,13 @@
 [versions]
 # Fakt version (auto-synced with gradle.properties:VERSION_NAME)
 fakt = "1.0.0-beta13"
+# AGP used by build-logic itself. Not what Fakt's Gradle plugin compiles against (agp-api-floor).
 android-gradle-plugin = "8.12.3"
+# Compile-only AGP API for Fakt's Gradle plugin, pinned to the OLDEST supported AGP so the build
+# fails if Fakt calls an API that floor lacks. Keep in sync with the floor compat cell
+# (samples/compat-agp/agp-8.11/settings.gradle.kts); the newest AGP is exercised at runtime by the
+# samples/compat-agp/agp-9.4 cell.
+agp-api-floor = "8.11.1"
 binaryCompatibilityValidator = "0.18.1"
 detekt = "1.23.8"
 junit5 = "5.14.3"
@@ -50,6 +56,7 @@ fakt-annotations = { module = "com.rsicarelli.fakt:annotations", version.ref = "
 
 # Gradle Plugins (for build-logic classpath)
 android-gradlePlugin = { module = "com.android.tools.build:gradle", version.ref = "android-gradle-plugin" }
+agp-api-floor = { module = "com.android.tools.build:gradle-api", version.ref = "agp-api-floor" }
 binaryCompatibilityValidator-gradlePlugin = { module = "org.jetbrains.kotlinx.binary-compatibility-validator:org.jetbrains.kotlinx.binary-compatibility-validator.gradle.plugin", version.ref = "binaryCompatibilityValidator" }
 detekt-gradlePlugin = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detekt" }
 kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
@@ -66,6 +73,9 @@ kotlin-testJunit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5", versio
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit5" }
 junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit5" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit5" }
+# Versioned by junit-bom (Platform 1.x ships alongside Jupiter 5.x).
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 
 # Runtime benchmark — competing mock/fake technologies (samples/runtime-benchmark only)
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }

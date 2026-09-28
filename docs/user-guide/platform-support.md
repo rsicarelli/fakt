@@ -14,8 +14,18 @@ See the [Kotlin Compatibility Matrix](../compatibility.md) for the full list of 
 
 ## Gradle Version
 
-- **Minimum**: Gradle 8.0
-- **Recommended**: Gradle 8.10+
+- **Minimum**: Gradle 8.13 (the oldest version CI builds against, required by the AGP 8.11 floor)
+- **Recommended**: Gradle 9.x
+
+---
+
+## Android Gradle Plugin Version
+
+- **Minimum**: AGP 8.11.1
+- **Tested up to**: AGP 9.4.1
+
+See the [AGP matrix](../compatibility.md#android-gradle-plugin) for what each tested version
+covers.
 
 ---
 

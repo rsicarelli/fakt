@@ -3,6 +3,7 @@
 package com.rsicarelli.fakt.gradle
 
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
+import com.rsicarelli.fakt.gradle.android.AndroidIntegration
 import java.util.Locale
 import kotlinx.serialization.json.Json
 import org.gradle.api.Project
@@ -186,6 +187,11 @@ internal object FaktGenerateTaskWiring {
      * Adds the task's `generatedKotlinDir` to the matching test source set as a Kotlin srcDir. Lazy
      * via `TaskProvider` so Gradle infers `builtBy` and downstream `compileKotlin*Test` waits for
      * the generator with no explicit `dependsOn`.
+     *
+     * In KMP the common producer feeds `commonTest`; a platform compilation feeds the default
+     * source set of every test compilation KGP associates with it. Association, not `<target>Test`
+     * naming, because not every target names its tests that way: the KMP Android library target's
+     * `androidMain` is tested by `androidHostTest` / `androidDeviceTest`.
      */
     private fun wireTestSrcDir(
         project: Project,
@@ -193,11 +199,18 @@ internal object FaktGenerateTaskWiring {
         taskProvider: TaskProvider<FaktGenerateTask>,
         useTestFixtures: Boolean,
     ) {
-        val testSourceSetName = mapMainToTest(kotlinCompilation.defaultSourceSet.name)
         val kmp = project.extensions.findByType(KotlinMultiplatformExtension::class.java)
         val generatedDirProvider = taskProvider.flatMap { it.generatedKotlinDir }
         if (kmp != null) {
-            kmp.sourceSets.findByName(testSourceSetName)?.kotlin?.srcDir(generatedDirProvider)
+            if (kotlinCompilation.defaultSourceSet.name == "commonMain") {
+                kmp.sourceSets.findByName("commonTest")?.kotlin?.srcDir(generatedDirProvider)
+            } else {
+                kotlinCompilation.target.compilations.configureEach { candidate ->
+                    if (kotlinCompilation in candidate.associatedCompilations) {
+                        candidate.defaultSourceSet.kotlin.srcDir(generatedDirProvider)
+                    }
+                }
+            }
         } else {
             // A non-KMP target may register several producers (one per Android variant). Each feeds
             // only the compile tasks belonging to its own variant, and — under test-fixtures mode —
@@ -370,7 +383,8 @@ private fun wireSingleTargetCommonDir(
  * compilations — common producers (`KotlinMetadataCompiler`, metadata klibs) and JS/Wasm platform
  * mains (`K2JSCompiler`, platform klibs) — go through the `@Classpath` `commonKlibClasspath`
  * (content-hashed; `@CompileClasspath` can fingerprint klibs as empty). JVM/Android compilations
- * feed their jar dependencies to the K2JVM driver through `compileClasspath`.
+ * feed their jar dependencies to the K2JVM driver through `compileClasspath`, Android ones plus the
+ * SDK boot classpath.
  */
 private fun configureDependencies(task: FaktGenerateTask, kotlinCompilation: KotlinCompilation<*>) {
     val platformType = kotlinCompilation.target.platformType.name.lowercase()
@@ -386,6 +400,12 @@ private fun configureDependencies(task: FaktGenerateTask, kotlinCompilation: Kot
     // (`wasmJs("web")`) still resolves to the right flavour. Absent for Kotlin/JS.
     wasmCompilerTarget((kotlinCompilation.target as? KotlinJsIrTarget)?.wasmTargetType)
         ?.let(task.wasmTarget::set)
+    val target = kotlinCompilation.target
+    val needsBootClasspath =
+        AndroidIntegration.needsBootClasspath(platformType) {
+            AndroidIntegration.isKmpAndroidTarget(target)
+        }
+    if (needsBootClasspath) AndroidIntegration.addBootClasspath(task, kotlinCompilation.project)
 }
 
 private fun taskNameFor(targetName: String, compilationName: String): String =
@@ -425,14 +445,6 @@ internal fun shouldWireGeneratedDir(
         name.contains("test") && !isTestFixtures && variantMatches
     }
 }
-
-private fun mapMainToTest(sourceSetName: String): String =
-    when {
-        sourceSetName.equals("main", ignoreCase = true) -> "test"
-        sourceSetName.endsWith("Main", ignoreCase = true) ->
-            sourceSetName.removeSuffix("Main") + "Test"
-        else -> sourceSetName + "Test"
-    }
 
 private fun capitalizeAscii(s: String): String =
     if (s.isEmpty()) s else s.substring(0, 1).uppercase(Locale.ROOT) + s.substring(1)
