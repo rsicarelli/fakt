@@ -248,6 +248,12 @@ jobs:
             path: samples/kmp-single-target
             producers: faktGenerateJvmMain
             cached-fakes: FakeSessionRepositoryImpl FakeAnalyticsTrackerImpl FakeSessionFileStoreImpl
+          # AGP 9 built-in Kotlin (#154): the KGP source sets are empty, so the debug producer reads
+          # its sources from AGP's variant API. Includes an android.content.Context-typed fake (#158).
+          - sample: compat-agp-9.0
+            path: samples/compat-agp/agp-9.0
+            producers: faktGenerateAndroidjvmDebug
+            cached-fakes: FakeUserRepositoryImpl FakeAppInfoProviderImpl
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -354,7 +360,7 @@ jobs:
         agp-version:
           - "8.11" # floor: Android test fixtures on AGP 8.x (Gradle 8.13)
           - "8.12" # current: matches the repo's pinned AGP (Gradle 9.0)
-          - "9.0" # forward: AGP 9.0 built-in Kotlin, testFixtures Kotlin support without the experimental flag (Gradle 9.1)
+          - "9.0" # forward: AGP 9.0 built-in Kotlin (sources from the variant API, #154), testFixtures Kotlin without the experimental flag (Gradle 9.1)
           - "9.4" # newest: AGP 9.4 with KGP applied, so the AGP APIs Fakt calls run on the task path (Gradle 9.6.1)
     steps:
       - name: Checkout

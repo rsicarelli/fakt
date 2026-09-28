@@ -20,8 +20,9 @@ import org.junit.jupiter.api.TestInstance
  * Issue #151 moved Kotlin/JS and Kotlin/Wasm platform mains off the in-process plugin
  * (`LEGACY_HYBRID`) onto a `K2JSCompiler`-driven consumer `FaktGenerateTask`. Issue #153 moved
  * single-target JVM/JS/Wasm KMP projects onto one task that owns both the common and the platform
- * fakes. End-to-end behaviour is locked by the `kmp-multi-target`, `kmp-no-jvm` and
- * `kmp-single-target` cache-correctness CI cells.
+ * fakes. Issue #154 moved Android modules on AGP 9's built-in Kotlin onto the producer path.
+ * End-to-end behaviour is locked by the `kmp-multi-target`, `kmp-no-jvm` and `kmp-single-target`
+ * cache-correctness CI cells.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FaktCompilationRoutingTest {
@@ -134,7 +135,7 @@ class FaktCompilationRoutingTest {
     fun `GIVEN multi-target KMP WHEN routing a drivable main THEN carries no not-cache-correct reason`() {
         val route =
             routeCompilation(
-                hasKotlinSourceSetModel = true,
+                unreadableSourcesReason = null,
                 isMultiplatform = true,
                 singleTargetPlatformTypeName = null,
                 compilationName = "main",
@@ -148,7 +149,7 @@ class FaktCompilationRoutingTest {
     fun `GIVEN non-KMP project WHEN routing a js main THEN registers a producer task`() {
         val decision =
             routeCompilation(
-                    hasKotlinSourceSetModel = true,
+                    unreadableSourcesReason = null,
                     isMultiplatform = false,
                     singleTargetPlatformTypeName = null,
                     compilationName = "main",
@@ -160,10 +161,29 @@ class FaktCompilationRoutingTest {
     }
 
     @Test
-    fun `GIVEN AGP built-in Kotlin WHEN routing any compilation THEN stays on the in-process plugin`() {
+    fun `GIVEN unreadable sources WHEN routing any compilation THEN stays on the in-process plugin with a reason`() {
+        // `unreadableSourcesReason = "sources unreadable"` now only happens on AGP built-in Kotlin
+        // when AGP's
+        // variant API is not visible to Fakt; with it visible, the module routes like any other
+        // Android module (issue #154).
+        val route =
+            routeCompilation(
+                unreadableSourcesReason = "sources unreadable",
+                isMultiplatform = false,
+                singleTargetPlatformTypeName = null,
+                compilationName = "debug",
+                platformTypeName = "androidJvm",
+            )
+
+        assertEquals(CacheCorrectDecision.LEGACY, route.decision)
+        assertEquals("sources unreadable", route.notCacheCorrectReason)
+    }
+
+    @Test
+    fun `GIVEN AGP built-in Kotlin with a readable variant API WHEN routing a variant THEN registers a producer`() {
         val decision =
             routeCompilation(
-                    hasKotlinSourceSetModel = false,
+                    unreadableSourcesReason = null,
                     isMultiplatform = false,
                     singleTargetPlatformTypeName = null,
                     compilationName = "debug",
@@ -171,11 +191,7 @@ class FaktCompilationRoutingTest {
                 )
                 .decision
 
-        assertEquals(
-            CacheCorrectDecision.LEGACY,
-            decision,
-            "AGP 9 built-in Kotlin is gap D (#154).",
-        )
+        assertEquals(CacheCorrectDecision.REGISTER_PRODUCER, decision)
     }
 
     @Test
@@ -211,7 +227,7 @@ class FaktCompilationRoutingTest {
 
     private fun routeKmp(compilationName: String, platformTypeName: String): CacheCorrectDecision =
         routeCompilation(
-                hasKotlinSourceSetModel = true,
+                unreadableSourcesReason = null,
                 isMultiplatform = true,
                 singleTargetPlatformTypeName = null,
                 compilationName = compilationName,
@@ -221,7 +237,7 @@ class FaktCompilationRoutingTest {
 
     private fun routeSingleTarget(target: String, compilationPlatform: String): CompilationRoute =
         routeCompilation(
-            hasKotlinSourceSetModel = true,
+            unreadableSourcesReason = null,
             isMultiplatform = true,
             singleTargetPlatformTypeName = target,
             compilationName = "main",

@@ -52,7 +52,8 @@ internal data class CompilationRoute(
  * compilation plus shared-source-set metadata compilations (all platformType `common`, no IR phase)
  * — those must be suppressed, not turned into a second producer.
  *
- * @param hasKotlinSourceSetModel see `hasKotlinSourceSetModel` (FaktGradleSubplugin.kt).
+ * @param unreadableSourcesReason why the producer cannot read this project's sources, or `null`
+ *   when it can (see `unreadableSourcesReason` in FaktGradleSubplugin.kt).
  * @param isMultiplatform whether the Kotlin Multiplatform plugin is applied.
  * @param singleTargetPlatformTypeName the lone real target's `KotlinPlatformType` name when the KMP
  *   project declares exactly one target (no per-source-set `commonMain` compilation exists, see
@@ -62,18 +63,14 @@ internal data class CompilationRoute(
  * @param platformTypeName the compilation target's `KotlinPlatformType` name.
  */
 internal fun routeCompilation(
-    hasKotlinSourceSetModel: Boolean,
+    unreadableSourcesReason: String?,
     isMultiplatform: Boolean,
     singleTargetPlatformTypeName: String?,
     compilationName: String,
     platformTypeName: String,
 ): CompilationRoute =
     when {
-        !hasKotlinSourceSetModel ->
-            legacyRoute(
-                "this Android module uses AGP's built-in Kotlin support, which keeps sources " +
-                    "in the variant model rather than Kotlin source sets"
-            )
+        unreadableSourcesReason != null -> legacyRoute(unreadableSourcesReason)
         !isMultiplatform ->
             if (isDrivablePlatform(platformTypeName)) {
                 CompilationRoute(FaktGradleSubplugin.CacheCorrectDecision.REGISTER_PRODUCER)

@@ -8,10 +8,9 @@ import com.rsicarelli.fakt.Fake
 /**
  * An `@Fake` whose signature uses an Android framework type.
  *
- * This cell uses AGP 9's built-in Kotlin, which Fakt still generates for inside `compileKotlin*`
- * (issue #154), so it does NOT exercise the generation task's Android SDK boot classpath (issue
- * #158). That is covered by the KGP-applied cells (agp-8.11, agp-8.12, agp-9.4). Here it locks the
- * behaviour the task path must keep once #154 moves built-in Kotlin onto it.
+ * This cell uses AGP 9's built-in Kotlin. Its `faktGenerateAndroidjvmDebug` task reads this file
+ * through AGP's variant API (issue #154) and resolves `Context` against the Android SDK boot
+ * classpath (issue #158).
  */
 @Fake
 interface AppInfoProvider {

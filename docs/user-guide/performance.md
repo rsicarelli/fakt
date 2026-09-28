@@ -31,8 +31,9 @@ outputs, so a warm Gradle build cache restores the fakes along with the compilat
 See [Cache-Correct Generation](plugin-configuration.md#cache-correct-generation).
 
 A few project shapes still generate inside `compileKotlin*` — single-target Android or Native
-multiplatform projects, Android modules on AGP's built-in Kotlin support, Native platform mains, and
-builds that set `fakt.useExperimentalGenerateTask=false`. There the fakes are not declared outputs, so Fakt takes
+multiplatform projects, multiplatform `androidTarget()` on `com.android.library` or
+`com.android.application`, Native platform mains, Android modules on AGP's built-in Kotlin support
+whose Android Gradle Plugin isn't visible to Fakt, and builds that set `fakt.useExperimentalGenerateTask=false`. There the fakes are not declared outputs, so Fakt takes
 that module's `compileKotlin*` tasks out of the build cache rather than let a cache hit skip
 generation and leave the fakes missing. Those tasks recompile on a clean build; everything
 downstream still caches normally. Fakt logs a warning naming which shape applies.

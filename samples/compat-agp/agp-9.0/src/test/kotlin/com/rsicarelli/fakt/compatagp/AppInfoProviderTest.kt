@@ -6,8 +6,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * Consumes a fake generated from an interface that uses `android.content.Context`. On this
- * built-in Kotlin cell the fake is generated in-process (see [AppInfoProvider]).
+ * Consumes a fake generated from an interface that uses `android.content.Context` (issues #154,
+ * #158). Compiling this file proves the generated fake resolved the Android type.
  *
  * Uses JUnit4 (not `kotlin.test`), like [CompatTest]: AGP 9.0's built-in Kotlin doesn't wire
  * `kotlin-test` onto the unit-test classpath.
