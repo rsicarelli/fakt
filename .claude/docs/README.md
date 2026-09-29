@@ -1,7 +1,7 @@
 # Fakt - Type-Safe Fake Generation
 
 > **Status**: Production-Ready
-> **Architecture**: FIR→IR Two-Phase Compiler Plugin
+> **Architecture**: FIR emission in a cacheable `FaktGenerateTask` worker (legacy in-process IR path being removed for 1.0, see #150)
 > **Testing Standard**: [Testing Guidelines](development/validation/testing-guidelines.md)
 
 Fakt is a Kotlin compiler plugin that generates type-safe fake implementations for interfaces marked with `@Fake`.
@@ -55,6 +55,7 @@ For each `@Fake` interface, Fakt generates:
 | [Kotlin API Reference](development/kotlin-api-reference.md) | Compiler source lookup |
 | [Kotlin IR API](development/kotlin-compiler-ir-api.md) | IR API reference |
 | [Troubleshooting](troubleshooting/common-issues.md) | Common issues |
+| [v1.0 Sunset Handover](implementation/v1-sunset-handover.md) | Rationale and gotchas for removing the legacy path (tracker: #150) |
 
 ## Development
 

@@ -1,13 +1,20 @@
 # CLAUDE.md - Fakt Compiler Plugin
 
-Kotlin compiler plugin that generates type-safe test fakes at compile time using the `@Fake` annotation. Two-phase FIR -> IR compilation.
+Kotlin compiler plugin that generates type-safe test fakes at compile time using the `@Fake` annotation. By default the Gradle plugin runs the compiler in a cacheable `FaktGenerateTask` worker, and fakes are emitted at the FIR phase. The legacy in-process IR emission is being removed for 1.0 (see #150).
 
 ## Architecture
 
-Fakt uses a two-phase compilation approach:
+> **v1.0 in progress:** the legacy in-process path is being removed. Tracker: #150.
+> Handover: `.claude/docs/implementation/v1-sunset-handover.md`.
 
-1. **FIR Phase** (`FaktFirExtensionRegistrar`) - Detects `@Fake` annotations, validates interfaces
-2. **IR Phase** (`UnifiedFaktIrGenerationExtension`) - Generates implementation class + factory + config DSL
+1. **Default: FIR emission** (`FaktGenerateTask` -> Gradle Worker -> embedded K2 with Fakt as `-Xplugin`).
+   `FaktFirExtensionRegistrar` detects and validates `@Fake`; the FIR checkers emit the fakes
+   (`fir/generation/`) as declared, cache-correct task outputs.
+2. **Legacy: IR emission** (`fakt.useExperimentalGenerateTask=false`, and shapes still routed
+   `LEGACY`/`LEGACY_HYBRID`). The plugin runs inside `compileKotlin*`;
+   `UnifiedFaktIrGenerationExtension` generates. **Do not add features here.** It is deleted for 1.0.
+
+Both paths share the codegen in `codegen-runtime/` (the `FakeDeclaration` model -> generators).
 
 Output per `@Fake` interface: `FakeXxxImpl` class, `fakeXxx {}` factory function, `FakeXxxConfig` DSL.
 
@@ -73,8 +80,9 @@ Full spec: [Testing Guidelines](.claude/docs/development/validation/testing-guid
 ```bash
 # 1. Write failing test first (TDD)
 # 2. Implement in appropriate module:
-#    - InterfaceAnalyzer for analysis
-#    - generation/ for code generation
+#    - compiler/.../fir/ for analysis and emission
+#    - codegen-runtime/ for the generated code shape
+#    - gradle-plugin/ for task wiring and routing
 # 3. Rebuild and test
 make publish-local && make test-sample
 # 4. Format
@@ -92,7 +100,8 @@ Test both single-platform and KMP scenarios.
 - Use `make` commands from project root
 - Test with `publishToMavenLocal` before claiming success
 - Verify generated code compiles without errors
-- Keep FIR and IR phases separate
+- Put new generation behaviour on the FIR/worker path; don't extend `ir/`
+- Check #150 before starting v1.0 work
 - Generate code in test source sets only
 - Write GIVEN-WHEN-THEN tests for all new features
 - Format with `make format` before commits
@@ -115,15 +124,18 @@ Test both single-platform and KMP scenarios.
 ## Key Files
 
 ```
-compiler/
-├── FaktCompilerPluginRegistrar.kt          # Entry point: FIR + IR registration
-├── UnifiedFaktIrGenerationExtension.kt     # Main IR generation
-├── fir/FaktFirExtensionRegistrar.kt        # @Fake detection (FIR phase)
-├── analysis/InterfaceAnalyzer.kt           # Interface metadata extraction
-└── generation/
-    ├── ImplementationGenerator.kt          # Fake class generation
-    ├── FactoryGenerator.kt                 # Factory function generation
-    └── ConfigurationDslGenerator.kt        # DSL generation
+compiler/.../compiler/
+├── FaktCompilerPluginRegistrar.kt               # Entry point: FIR (+ legacy IR) registration
+├── fir/FaktFirExtensionRegistrar.kt             # @Fake detection/validation
+├── fir/generation/                              # FIR emission (default path)
+└── ir/generation/UnifiedFaktIrGenerationExtension.kt  # LEGACY IR emission (removed in 1.0)
+codegen-runtime/.../codegen/
+├── analysis/FakeDeclaration.kt                  # Shared model
+└── generator/                                   # ImplementationGenerator, ConfigurationDslGenerator
+gradle-plugin/.../gradle/
+├── FaktGradleSubplugin.kt                       # Routing (cacheCorrectDecision)
+├── FaktGenerateTask.kt, worker/FaktCodegenWorkAction.kt
+└── android/                                     # AGP seams
 ```
 
 ## Documentation
@@ -136,3 +148,4 @@ compiler/
 | Kotlin API Reference | `.claude/docs/development/kotlin-api-reference.md` |
 | Kotlin IR API | `.claude/docs/development/kotlin-compiler-ir-api.md` |
 | Troubleshooting | `.claude/docs/troubleshooting/common-issues.md` |
+| v1.0 sunset handover (tracker: #150) | `.claude/docs/implementation/v1-sunset-handover.md` |
