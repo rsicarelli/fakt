@@ -227,6 +227,12 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
     /** #152 spike: a shared-native metadata compilation (explicit commonized klibs). */
     @get:Input @get:Optional public abstract val sharedNative: Property<Boolean>
 
+    /**
+     * #152 spike: metadata klibs of the source sets a shared-native source set refines
+     * (`-Xrefines-paths`), so its `actual`s pair with ancestor `expect`s. Content-hashed.
+     */
+    @get:Classpath public abstract val refinesKlibs: ConfigurableFileCollection
+
     /** #152 spike (minimal #165 slice): the compilation's `-opt-in` annotations. */
     @get:Input @get:Optional public abstract val optIns: ListProperty<String>
 
@@ -288,6 +294,7 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
             params.konanHome.set(konanHome)
             params.sharedNative.set(sharedNative)
             params.optIns.set(optIns)
+            params.refinesKlibs.from(refinesKlibs)
         }
     }
 }

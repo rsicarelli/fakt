@@ -79,6 +79,76 @@ forward-declared `cnames.structs.Opaque`.
     `-Xklib-abi-version` / `apiVersion = 2.2`), and add a KMP/Native compat cell. This belongs
     with #166.
 
+## Layer 2: Gradle prototype (`-Pfakt.spike.native=true`)
+- **Routing:**
+  - Native leaf mains → `NATIVE` consumer (`CONSUMER` shape, `emitSourceSets=[leaf]`, ancestors
+    as `-Xcommon-sources`).
+  - `KotlinSharedNativeCompilation` → `NATIVE` producer (`SHARED_NATIVE` shape: own source set
+    only, `-Xcommon-sources`, `-Xrefines-paths` = the ancestors' metadata klibs,
+    `-no-default-libs -nostdlib` plus the distribution's stdlib, and the compilation's dependency
+    files, which already include the commonized klibs).
+  - Representative `-target`: the host target if the source set covers it, otherwise the first.
+    This matches KGP's choices (`nativeMain` → `linux_x64`, `appleMain`/`iosMain` → `ios_arm64`).
+- **Required extras found by the prototype:**
+  - `-Xrefines-paths`. Without it an `actual` in `nativeMain` has no `expect`, which
+    `kmp-multi-target`'s `DeviceInfo` shows. The fixture had no expect/actual and didn't catch it.
+  - `-opt-in` forwarding (a minimal #165 slice). Without it every cinterop signature fails
+    analysis ("needs opt-in"). For Native, **#165 is a hard prerequisite**, not only a
+    regression fix.
+- **Fixture:** all 6 fakes come from task outputs, byte-identical to in-process. `linuxX64Test`
+  passes; the iosArm64, iosSimulatorArm64 and macosArm64 test klibs compile.
+- **`kmp-multi-target`:** `FakeNativeOnlyServiceImpl` and `FakeIosOnlyServiceImpl` come from
+  `faktGenerateMetadata{Native,Ios}Main`. `linuxX64Test` passes 16/16. The iOS, macOS, mingw,
+  linuxArm64 and JVM test compilations succeed.
+
+## C4: PASS (both versions), with one design note
+- Discovery uses public inputs only:
+  - `kotlin.native.home`;
+  - else `konanDataDir` / `KONAN_DATA_DIR` / `~/.konan` +
+    `kotlin-native-prebuilt-<host>-<ver>`;
+  - the version is `kotlin.native.version` or `getKotlinPluginVersion()` (public KGP API).
+- Provisioning:
+  - KGP 2.4.10: the configuration-time `NativeVersionValueSource`, **and** the task
+    `:downloadKotlinNativeDistribution`.
+  - KGP 2.2.0: **no such task**; only the configuration-time ValueSource.
+  - In both, the distribution exists before any task runs. The prototype depends on
+    `downloadKotlinNativeDistribution` by name, if present, as a guard.
+- Clean `~/.konan` + `--offline`:
+  - 2.4.10: KGP unpacked the distribution from Gradle's dependency cache (`provisioned.ok`),
+    then the Fakt producers ran.
+  - 2.2.0: the same, via the ValueSource alone.
+- Caveat: `downloadKotlinNativeDistribution` also downloads the LLVM toolchain into
+  `~/.konan/dependencies`, even under `--offline`, so depending on it pulls that in. The worker
+  itself never reads it (C5).
+- Alternative for item 7, zero KGP coupling: resolve
+  `org.jetbrains.kotlin:kotlin-native-prebuilt:<ver>:<host>@tar.gz` through a Fakt
+  configuration and an artifact transform that extracts only `konan/lib`,
+  `konan/konan.properties` and `klib/`.
+- Configuration cache: run 1 stored with no problems; run 2 reused.
+
+## C6: PASS
+- In place: `cache-correctness-check.sh` on the fixture. All 5 producers (`commonMain`,
+  `linuxX64`, `nativeMain`, `appleMain`, `iosMain`) are FROM-CACHE after `clean`, and all 6 fakes
+  are restored.
+- Relocated: the fixture copied to another path **and** `-Pkotlin.native.home` pointed at a
+  different distribution directory (so the commonized klibs were regenerated elsewhere). All 5
+  producers are FROM-CACHE from the same build cache.
+- `kmp-multi-target` with the native producers in the contract: 6/6 producers FROM-CACHE and 7
+  fakes restored. That replaces `FAKT_PRESENCE_TASKS`/`FAKT_PRESENCE_FAKES`.
+
+## C8: PASS on the worst case
+Stress case: `kmp-benchmark` with its 10,000 `@Fake`s moved into `nativeMain`, a single
+shared-native producer. The first run generated 10,235 files.
+
+| worker heap | task time | worker peak RSS |
+|---|---|---|
+| 512m | 48.0 s | 842 MB |
+| 1g (current default) | 46.1 s | 1,158 MB |
+| 2g | 45.0 s | 1,260 MB |
+
+No OOM at any size, so the 1g default is enough. The heap still needs to be configurable (#164c)
+for small runners. Wall time is dominated by K2 over 10k interfaces, not by heap.
+
 ## Side findings (not Native-specific)
 - **Codegen bug:** an interface-level `@OptIn(X::class)` is copied into the fake without an
   import for `X`, so the compile fails with `Unresolved reference 'ExperimentalForeignApi'`. This

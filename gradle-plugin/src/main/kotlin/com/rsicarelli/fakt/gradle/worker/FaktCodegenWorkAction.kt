@@ -48,6 +48,8 @@ internal interface FaktCodegenWorkParameters : WorkParameters {
     val sharedNative: Property<Boolean>
     /** #152 spike (minimal #165 slice): `-opt-in` annotations of the compilation. */
     val optIns: ListProperty<String>
+    /** #152 spike: `-Xrefines-paths` klibs of a shared-native compilation. */
+    val refinesKlibs: ConfigurableFileCollection
 }
 
 /** Default `walkTopDown` cap for source discovery — covers typical Gradle source-set nesting. */
@@ -118,6 +120,7 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
                 konanHome = params.konanHome.orNull?.asFile,
                 sharedNative = params.sharedNative.getOrElse(false),
                 optIns = params.optIns.getOrElse(emptyList()),
+                refinesKlibs = params.refinesKlibs.files.filter { it.exists() },
             )
         )
     }
@@ -202,6 +205,7 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         val konanHome: File?,
         val sharedNative: Boolean,
         val optIns: List<String>,
+        val refinesKlibs: List<File>,
     )
 
     private fun invokeK2(call: K2Invocation) {
@@ -329,6 +333,14 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         )
         bridge.setOnArgs(args, "setMultiPlatform", Boolean::class.javaPrimitiveType!!, true)
         if (call.sharedNative) {
+            if (call.refinesKlibs.isNotEmpty()) {
+                bridge.setOnArgs(
+                    args,
+                    "setRefinesPaths",
+                    Array<String>::class.java,
+                    call.refinesKlibs.map { it.absolutePath }.toTypedArray(),
+                )
+            }
             bridge.setOnArgs(
                 args,
                 "setCommonSources",

@@ -75,6 +75,7 @@ internal object NativeSpike {
             task.konanTarget.set(target)
             task.sharedNative.set(shared)
             task.workerMaxHeap.set(heap)
+            if (shared) task.refinesKlibs.from(refinedMetadataKlibs(compilation))
             // Minimal #165 slice: without the opt-ins every cinterop signature fails analysis.
             task.optIns.set(
                 project.provider {
@@ -87,6 +88,18 @@ internal object NativeSpike {
             // C4: KGP provisions the distribution in this task (and in a configuration-time
             // ValueSource). Depend on it by name so a clean `~/.konan` is populated first.
             task.dependsOn(project.tasks.matching { it.name == PROVISIONING_TASK })
+        }
+    }
+
+    /**
+     * The metadata compilation outputs of every source set [compilation]'s default source set
+     * depends on (transitively), mirroring KGP's `-Xrefines-paths`. `classesDirs` carries the
+     * producing task, so Gradle orders the Fakt task after `compile<Ancestor>KotlinMetadata`.
+     */
+    private fun refinedMetadataKlibs(compilation: KotlinCompilation<*>): List<Any> {
+        val metadataCompilations = compilation.target.compilations
+        return (compilation.allKotlinSourceSets - compilation.defaultSourceSet).mapNotNull {
+            metadataCompilations.findByName(it.name)?.output?.classesDirs
         }
     }
 

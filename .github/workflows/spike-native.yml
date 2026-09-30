@@ -1,0 +1,70 @@
+# TEMPORARY (#152 Native spike, branch-only, never merged): the macOS half of exit criterion 2.
+# Links and runs iOS-simulator / macOS tests against fakes produced by the spike's K2Native
+# FaktGenerateTask path, and asserts they are byte-identical to the in-process output.
+name: Spike - Native on macOS (#152)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ccr-aa1d21c5-gqlrfs]
+    paths:
+      - 'spike/native/**'
+      - 'gradle-plugin/src/main/**'
+      - '.github/workflows/spike-native.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  native-macos:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Publish Fakt to Maven Local
+        run: ./gradlew publishToMavenLocal --no-configuration-cache
+
+      - name: Reference - in-process fakes (legacy path)
+        run: |
+          ./gradlew -p spike/native/fixture \
+            compileTestKotlinIosSimulatorArm64 compileTestKotlinMacosArm64 compileTestKotlinLinuxX64 \
+            -Pfakt.spike.native=false -Pfakt.useExperimentalGenerateTask=false \
+            --no-configuration-cache --console=plain
+          mkdir -p "$RUNNER_TEMP/ref" && cp -R spike/native/fixture/build/generated/fakt "$RUNNER_TEMP/ref/"
+          ./gradlew -p spike/native/fixture clean --no-configuration-cache
+
+      - name: Spike - K2Native task path, run iOS simulator + macOS tests
+        run: |
+          ./gradlew -p spike/native/fixture \
+            iosSimulatorArm64Test macosArm64Test compileTestKotlinLinuxX64 \
+            -Pfakt.spike.native=true --no-configuration-cache --console=plain
+
+      - name: Assert byte-identical fakes (task path vs in-process)
+        run: |
+          fail=0
+          while IFS= read -r ref; do
+            name=$(basename "$ref")
+            got=$(find spike/native/fixture/build/generated -name "$name" | head -1)
+            if [[ -z "$got" ]]; then echo "::error::$name missing on the task path"; fail=1
+            elif cmp -s "$ref" "$got"; then echo "IDENTICAL $name"
+            else echo "::error::$name differs"; diff "$ref" "$got" || true; fail=1; fi
+          done < <(find "$RUNNER_TEMP/ref" -name 'Fake*Impl.kt')
+          exit $fail
+
+      - name: kmp-multi-target on the spike path (iOS simulator + macOS tests)
+        run: |
+          ./gradlew -p samples/kmp-multi-target iosSimulatorArm64Test macosArm64Test \
+            -Pfakt.spike.native=true --no-configuration-cache --console=plain
+
+      - name: Upload generated fakes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spike-native-macos-fakes
+          path: |
+            spike/native/fixture/build/generated/fakt
+            samples/kmp-multi-target/build/generated/fakt
