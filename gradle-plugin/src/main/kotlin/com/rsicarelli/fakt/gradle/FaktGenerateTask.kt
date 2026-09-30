@@ -8,20 +8,18 @@ import javax.inject.Inject
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.CompileClasspath
+import org.gradle.api.tasks.Console
 import org.gradle.api.tasks.IgnoreEmptyDirectories
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.LocalState
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
@@ -47,8 +45,7 @@ private const val WORKER_METASPACE_ARG: String = "-XX:MaxMetaspaceSize=512m"
  * `KspAATask`.
  *
  * Caching semantics (path sensitivity, classpath normalization, output split, local state) are
- * documented on each annotated property. For KMP, the task runs in producer mode (writes
- * [firMetadataFile]) or consumer mode (reads [commonFirMetadata]) — see those properties.
+ * documented on each annotated property.
  */
 @CacheableTask
 public abstract class FaktGenerateTask @Inject constructor(private val workers: WorkerExecutor) :
@@ -144,7 +141,11 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
      */
     @get:Input public abstract val faktVersion: Property<String>
 
-    @get:Input public abstract val logLevel: Property<LogLevel>
+    /**
+     * Console verbosity only. `@Console`, not `@Input`: it changes what the worker prints, never
+     * what it generates, so changing it must not miss the build cache.
+     */
+    @get:Console public abstract val logLevel: Property<LogLevel>
 
     /**
      * Extension-level default for call-history generation (`fakt { enableCallHistory }`). Forwarded
@@ -173,19 +174,6 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
     @get:Input @get:Optional public abstract val wasmTarget: Property<String>
 
     /**
-     * KMP consumer-mode input: serialized `FirMetadataCache` produced by the metadata compilation's
-     * [firMetadataFile]. Its presence is what switches the worker to consumer mode — common `@Fake`
-     * declarations are read from the cache instead of being re-validated.
-     *
-     * `PathSensitivity.NONE` because only the file's contents matter — its absolute path on the
-     * producer host is irrelevant for cache equality.
-     */
-    @get:InputFile
-    @get:PathSensitive(PathSensitivity.NONE)
-    @get:Optional
-    public abstract val commonFirMetadata: RegularFileProperty
-
-    /**
      * Generated `Fake<X>Impl.kt` files. Convention is
      * `build/generated/fakt/<target>/<sourceSet>/kotlin` — disjoint from `compileKotlin*`'s outputs
      * to avoid Gradle's overlapping-outputs rule.
@@ -201,14 +189,6 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
     @get:OutputDirectory
     @get:Optional
     public abstract val commonGeneratedKotlinDir: DirectoryProperty
-
-    /**
-     * KMP producer-mode output: serialized `FirMetadataCache` written when this task represents the
-     * metadata (`commonMain`) compilation — [FaktGenerateTaskWiring] sets it for metadata-like
-     * compilations only. Platform tasks consume it through [commonFirMetadata]. A single file (not
-     * a directory) so consumers can declare it `@InputFile` without overlapping outputs.
-     */
-    @get:OutputFile @get:Optional public abstract val firMetadataFile: RegularFileProperty
 
     /** Internal scratch state — cleared on cache restore instead of being replayed. */
     @get:LocalState public abstract val scratchDir: DirectoryProperty
@@ -246,10 +226,8 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
             params.enableMutableFakes.set(enableMutableFakes)
             params.imports.set(imports)
             params.wasmTarget.set(wasmTarget)
-            params.commonFirMetadata.set(commonFirMetadata)
             params.generatedKotlinDir.set(generatedKotlinDir)
             params.commonGeneratedKotlinDir.set(commonGeneratedKotlinDir)
-            params.firMetadataFile.set(firMetadataFile)
             params.scratchDir.set(scratchDir)
         }
     }

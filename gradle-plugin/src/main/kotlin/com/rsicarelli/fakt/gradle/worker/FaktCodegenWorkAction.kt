@@ -10,7 +10,6 @@ import java.util.Base64
 import kotlinx.serialization.json.Json
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.workers.WorkAction
@@ -35,10 +34,8 @@ internal interface FaktCodegenWorkParameters : WorkParameters {
     val enableMutableFakes: Property<Boolean>
     val imports: ListProperty<String>
     val wasmTarget: Property<String>
-    val commonFirMetadata: RegularFileProperty
     val generatedKotlinDir: DirectoryProperty
     val commonGeneratedKotlinDir: DirectoryProperty
-    val firMetadataFile: RegularFileProperty
     val scratchDir: DirectoryProperty
 }
 
@@ -66,10 +63,8 @@ private const val EXIT_CODE_OK = "OK"
  *   run stops at klib serialization into [FaktCodegenWorkParameters.scratchDir], and generation
  *   happens at the FIR phase exactly as on the other drivers.
  *
- * Producer mode (no `commonFirMetadata` input) additionally instructs the plugin to write a
- * serialized `FirMetadataCache` to `firMetadataFile` so platform compilations downstream can skip
- * redundant FIR analysis. The plugin's `MetadataCacheManager` does the actual write — this action
- * only forwards the path.
+ * The FIR metadata cache is never enabled here: nothing on the task path reads it, and writing it
+ * after every interface is quadratic in the `@Fake` count (issue #173).
  *
  * No `kotlin-compiler-embeddable` types appear in this class's signatures; everything reflective
  * lives behind [K2CompilerBridge].
@@ -139,14 +134,11 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         val storedContext =
             Json.decodeFromString(SourceSetContext.serializer(), params.sourceSetContextJson.get())
         val outputDirectory = params.generatedKotlinDir.asFile.get().absolutePath
-        val isConsumerMode = params.commonFirMetadata.isPresent
         return storedContext.copy(
             outputDirectory = outputDirectory,
             commonTestOutputDirectory = outputDirectory,
-            metadataOutputPath =
-                if (!isConsumerMode) params.firMetadataFile.orNull?.asFile?.absolutePath else null,
-            metadataCachePath =
-                if (isConsumerMode) params.commonFirMetadata.asFile.get().absolutePath else null,
+            metadataOutputPath = null,
+            metadataCachePath = null,
             emitPhase = EmitPhase.FIR,
             commonOutputDirectory = params.commonGeneratedKotlinDir.orNull?.asFile?.absolutePath,
             emitSourceSets =

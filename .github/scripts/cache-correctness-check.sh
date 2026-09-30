@@ -18,6 +18,8 @@
 # downstream task is itself FROM-CACHE it short-circuits and never schedules its producers, which
 # would make the assertion vacuous.
 #
+# No producer may write the unread `fir-metadata.json` (issue #173).
+#
 # When FAKT_CACHED_FAKES is set, every fake named there must be among the files restored from cache —
 # a stronger check than "some fakes came back" that pins which platform producers own which fakes.
 #
@@ -54,6 +56,12 @@ count_fakes() {
 # below would cache-miss and be misreported as an unstable cache key. See issue #79 P8 gap 4.
 WARM_GRADLE=("${GRADLE[@]}" --rerun-tasks)
 
+# Start from a clean build directory so the checks below only see files this run produced: a stale
+# `fir-metadata.json` from an older Fakt build is no longer a declared output and would survive.
+echo "::group::Pre-clean — ${PROJECT_PATH}"
+"${GRADLE[@]}" clean
+echo "::endgroup::"
+
 echo "::group::Warm cache (force-execute to seed) — ${PROJECT_PATH}: ${PRODUCER_TASKS[*]}"
 warm_log="$(mktemp)"
 "${WARM_GRADLE[@]}" "${PRODUCER_TASKS[@]}" | tee "$warm_log"
@@ -74,6 +82,16 @@ warm_count=$(count_fakes)
 echo "Warm-up executed ${warm_executed} producer(s), generated ${warm_count} fake file(s)."
 if [ "$warm_count" -eq 0 ]; then
   echo "::error::No fakes were generated during warm-up — the producer task generated nothing."
+  exit 1
+fi
+
+# Nothing on the task path reads the FIR metadata cache, so no producer may write it: the per-
+# interface rewrite made the commonMain producer quadratic in the @Fake count (issue #173). Assert
+# on the file itself rather than on timing.
+metadata_files=$(find "$PROJECT_PATH" -path '*build/generated*' -name 'fir-metadata.json' 2>/dev/null)
+if [ -n "$metadata_files" ]; then
+  echo "::error::A producer wrote fir-metadata.json (unread, quadratic to maintain — issue #173):"
+  echo "$metadata_files"
   exit 1
 fi
 

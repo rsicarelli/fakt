@@ -4,12 +4,9 @@ package com.rsicarelli.fakt.gradle
 
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.api.SourceSetInfo
-import com.rsicarelli.fakt.compiler.fir.cache.MetadataCacheSerializer
 import java.io.File
-import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
 import org.gradle.testkit.runner.BuildResult
@@ -157,58 +154,26 @@ class FaktGenerateTaskTest {
     }
 
     @Test
-    fun `GIVEN producer mode WHEN faktGenerate runs THEN firMetadataFile contains validated FIR metadata`(
-        @TempDir projectDir: File
+    fun `GIVEN cache populated WHEN only logLevel changes THEN second run reports FROM-CACHE`(
+        @TempDir projectDir: File,
+        @TempDir buildCacheDir: File,
     ) {
-        val cacheFile = projectDir.resolve("fir-metadata.json")
-        setupProject(
-            projectDir,
-            fixtureSource = SINGLE_INTERFACE_FIXTURE,
-            firMetadataFile = cacheFile,
-        )
+        setupProject(projectDir, fixtureSource = SINGLE_INTERFACE_FIXTURE, logLevel = "QUIET")
+        configureLocalBuildCache(projectDir, buildCacheDir)
+        val first = runTask(projectDir, "faktGenerate", "--build-cache")
+        assertEquals(TaskOutcome.SUCCESS, first.task(":faktGenerate")?.outcome, first.output)
+        runTask(projectDir, "clean")
+        projectDir
+            .resolve("build.gradle.kts")
+            .writeText(buildScriptForTask(projectDir, logLevel = "DEBUG"))
 
-        val result = runTask(projectDir, "faktGenerate")
+        val second = runTask(projectDir, "faktGenerate", "--build-cache")
 
-        assertEquals(TaskOutcome.SUCCESS, result.task(":faktGenerate")?.outcome, result.output)
-        assertTrue(
-            cacheFile.exists(),
-            "Producer-mode firMetadataFile not written: ${cacheFile.absolutePath}",
-        )
-        val cache = MetadataCacheSerializer.deserialize(cacheFile.absolutePath)
-        assertNotNull(cache, "Cache file failed to deserialise:\n${cacheFile.readText()}")
         assertEquals(
-            1,
-            cache.interfaces.size,
-            "Producer-mode cache must include the validated @Fake interface; instead got: ${cache.interfaces.map { it.simpleName }}",
-        )
-        assertEquals("UserService", cache.interfaces.single().simpleName)
-    }
-
-    @Test
-    fun `GIVEN producer mode WHEN running twice THEN firMetadataFile is byte-identical across runs`(
-        @TempDir projectA: File,
-        @TempDir projectB: File,
-    ) {
-        val cacheA = projectA.resolve("fir-metadata.json")
-        setupProject(projectA, fixtureSource = SINGLE_INTERFACE_FIXTURE, firMetadataFile = cacheA)
-        runTask(projectA, "faktGenerate").also {
-            assertEquals(TaskOutcome.SUCCESS, it.task(":faktGenerate")?.outcome, it.output)
-        }
-
-        val cacheB = projectB.resolve("fir-metadata.json")
-        setupProject(projectB, fixtureSource = SINGLE_INTERFACE_FIXTURE, firMetadataFile = cacheB)
-        runTask(projectB, "faktGenerate").also {
-            assertEquals(TaskOutcome.SUCCESS, it.task(":faktGenerate")?.outcome, it.output)
-        }
-
-        // Source paths differ between the two temp dirs; the serializer is supposed to be
-        // byte-deterministic regardless (research artifact 2 §R5). If this assertion ever fails,
-        // it means the cache leaks build-machine state and consumer compilations across hosts will
-        // see spurious cache misses.
-        assertContentEquals(
-            cacheA.readBytes(),
-            cacheB.readBytes(),
-            "firMetadataFile contents differ across runs — non-deterministic serializer",
+            TaskOutcome.FROM_CACHE,
+            second.task(":faktGenerate")?.outcome,
+            "logLevel only changes console output, so it must not be part of the cache key:\n" +
+                second.output,
         )
     }
 
@@ -349,9 +314,9 @@ class FaktGenerateTaskTest {
     private fun setupProject(
         projectDir: File,
         fixtureSource: String,
-        firMetadataFile: File? = null,
         enableCallHistory: Boolean? = null,
         enableMutableFakes: Boolean? = null,
+        logLevel: String = "QUIET",
     ) {
         projectDir
             .resolve("settings.gradle.kts")
@@ -367,12 +332,7 @@ class FaktGenerateTaskTest {
         projectDir
             .resolve("build.gradle.kts")
             .writeText(
-                buildScriptForTask(
-                    projectDir,
-                    firMetadataFile,
-                    enableCallHistory,
-                    enableMutableFakes,
-                )
+                buildScriptForTask(projectDir, enableCallHistory, enableMutableFakes, logLevel)
             )
     }
 
@@ -395,9 +355,9 @@ class FaktGenerateTaskTest {
 
     private fun buildScriptForTask(
         projectDir: File,
-        firMetadataFile: File? = null,
         enableCallHistory: Boolean? = null,
         enableMutableFakes: Boolean? = null,
+        logLevel: String = "QUIET",
     ): String {
         val outputDir = projectDir.resolve("build/generated/fakt/jvm/jvmTest/kotlin")
         // The stored context carries placeholder paths only — the worker overwrites
@@ -445,11 +405,10 @@ class FaktGenerateTaskTest {
                 )
                 sourceSetContextJson.set(${'"'}${'"'}${'"'}${sourceSetContextJson}${'"'}${'"'}${'"'})
                 faktVersion.set("test-1.0")
-                logLevel.set(LogLevel.QUIET)
+                logLevel.set(LogLevel.$logLevel)
                 imports.set(listOf<String>())
                 generatedKotlinDir.set(file("${outputDir.absolutePath.replace('\\', '/')}"))
                 scratchDir.set(layout.buildDirectory.dir("faktCaches/jvm/jvmTest"))
-                ${firMetadataFile?.let { "firMetadataFile.set(file(\"${it.absolutePath.replace('\\', '/')}\"))" } ?: ""}
                 ${enableCallHistory?.let { "enableCallHistory.set($it)" } ?: ""}
                 ${enableMutableFakes?.let { "enableMutableFakes.set($it)" } ?: ""}
             }
