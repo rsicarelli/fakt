@@ -20,7 +20,13 @@ kotlin {
     macosArm64()
 
     sourceSets {
-        commonMain.dependencies { implementation("com.rsicarelli.fakt:annotations:$faktVersion") }
+        // -Pspike.localAnnotations=true compiles Fakt's annotation sources into the fixture: the
+        // published annotations klibs carry klib ABI 2.4.0, which Kotlin/Native < 2.4 rejects.
+        if (providers.gradleProperty("spike.localAnnotations").isPresent) {
+            commonMain { kotlin.srcDir("../../../annotations/src/commonMain/kotlin") }
+        } else {
+            commonMain.dependencies { implementation("com.rsicarelli.fakt:annotations:$faktVersion") }
+        }
         commonTest.dependencies {
             implementation(kotlin("test"))
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
