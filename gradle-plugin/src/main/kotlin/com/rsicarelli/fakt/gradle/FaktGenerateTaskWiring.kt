@@ -138,9 +138,14 @@ internal object FaktGenerateTaskWiring {
                     task.commonGeneratedKotlinDir.set(commonOutputDir)
                 }
                 configureDependencies(task, kotlinCompilation)
+                // #152 spike measurement: `-Pfakt.spike.noFirMetadata=true` drops the unread
+                // producer cache (#164a), whose writer rewrites the whole file per interface.
+                val noFirMetadata =
+                    project.providers.gradleProperty("fakt.spike.noFirMetadata").isPresent
                 if (
                     isMetadataLikeCompilation(kotlinCompilation) &&
-                        shape != TaskShape.SHARED_NATIVE
+                        shape != TaskShape.SHARED_NATIVE &&
+                        !noFirMetadata
                 ) {
                     task.firMetadataFile.set(firMetadataFile)
                 }
