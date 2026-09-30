@@ -32,7 +32,10 @@ See the **[Skills README](skills/README.md)** for what each skill does.
 | **Git & GitHub** | `commit` (`/commit`), `pr` (`/pr`), `issue-creator` |
 | **Meta** | `skill-creator` |
 
-Custom command: `/release-notes <version>` (`commands/release-notes.md`).
+Custom commands:
+- `/release-notes <version>` (`commands/release-notes.md`).
+- `/v1-next [issue#]` (`commands/v1-next.md`): bootstraps the next #150 v1.0 item. It works red
+  tests first, then the sample + CI contract, then implementation, one step at a time.
 
 ## Structure
 
@@ -40,7 +43,8 @@ Custom command: `/release-notes <version>` (`commands/release-notes.md`).
 .claude/
 ├── README.md                      # This file
 ├── commands/
-│   └── release-notes.md
+│   ├── release-notes.md
+│   └── v1-next.md
 ├── docs/
 │   ├── README.md                  # Project overview
 │   ├── development/

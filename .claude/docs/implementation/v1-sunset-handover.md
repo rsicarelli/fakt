@@ -1,7 +1,7 @@
 # v1.0 Legacy Sunset: Handover
 
 **Status:** In progress. **Live checklist, order and open decisions: GitHub issue #150** (not here).
-**Last Updated:** September 2026
+**Last Updated:** 2026-09-30 (Native spike results)
 **Delete when:** 1.0 ships (fold the surviving design notes into `architecture/ARCHITECTURE.md`).
 
 This file holds the *durable* context a fresh session needs: what the end state is, why the
@@ -96,8 +96,51 @@ A pure function assigns every **main** source set exactly one owner:
   6. The cache key is relocatable and configuration-cache-safe.
   7. It works on Kotlin 2.2.0 and 2.4.10.
   8. Heap use and run time are acceptable.
-- If criterion 2 or 4 fails, the maintainer decides between a Native-only in-process fallback and
-  declaring Native unsupported in 1.0 (#150, D1).
+- **Spike result (Sept 2026): all 8 criteria pass**, on Linux and on macOS (arm64), with Kotlin
+  2.2.0 and 2.4.10. D1 is not needed. Full report on #152. The throwaway prototype (behind
+  `-Pfakt.spike.native=true`) and the harness live on branch `ccr-aa1d21c5-gqlrfs`, in
+  `spike/native/`: `REPORT.md`, `FINDINGS.md`, `bin/`, `fixture/`.
+- **What the implementation (item 7) must do**, learned from the prototype:
+  - **Leaf native main** → `NATIVE` consumer, routed like JS/Wasm: own source set emitted,
+    ancestors passed as `-Xcommon-sources`, `-target=<konanTarget>`.
+  - **`KotlinSharedNativeCompilation`** (`nativeMain`, `appleMain`, `iosMain`, …) → `NATIVE`
+    producer that owns its source set. Today these compilations are `SUPPRESS`ed, so a
+    leaf-only driver would silently drop every shared-native fake. Arguments, mirroring KGP:
+    - `-produce library -Xmetadata-klib -no-default-libs -nostdlib`;
+    - `-library` = the distribution stdlib + the compilation's dependency files, which already
+      include the commonized klibs;
+    - `-Xcommon-sources=<own>`;
+    - **`-Xrefines-paths=<ancestor metadata klibs>`**. Without it, `actual`s in `nativeMain`
+      have no `expect`;
+    - `-target` = the host target if covered, else the first (KGP's choice).
+  - **#165 first:** without the compilation's `-opt-in` values, every cinterop signature fails
+    analysis.
+  - **Worker:**
+    - a separate fork whose classpath is the distribution's
+      `kotlin-native-compiler-embeddable.jar` (self-contained on 2.2.0 and 2.4.10; ignore 2.2.0's
+      extra `kotlin-native.jar`);
+    - `systemProperty("konan.home", …)`;
+    - `konanHome` `@Internal`; `kotlinNativeVersion` and `konanTarget` `@Input`.
+
+    1g heap handles 10,000 fakes in a single source set (about 46 s, 1.2 GB RSS).
+  - **Distribution lookup:** `kotlin.native.home`, then `konanDataDir` / `KONAN_DATA_DIR` /
+    `~/.konan` + `kotlin-native-prebuilt-<host>-<ver>`. The version comes from
+    `kotlin.native.version` or `getKotlinPluginVersion()`.
+  - **Provisioning:**
+    - KGP 2.4.10 provisions in a configuration-time `ValueSource` **and** in
+      `:downloadKotlinNativeDistribution`;
+    - KGP 2.2.0 has only the `ValueSource`.
+
+    Either way it is done before tasks run. Don't depend on the task: it also downloads the LLVM
+    toolchain, which Fakt never reads.
+  - **CI:** the `kmp-multi-target` cell moves from `FAKT_PRESENCE_*` to `producers` /
+    `cached-fakes` with `faktGenerateMetadataNativeMain` and `faktGenerateMetadataIosMain`. This
+    was proven on the branch: 6/6 FROM-CACHE.
+- **Found by the spike, tracked separately:**
+  - #171: Kotlin < 2.4 can't read the published annotation klibs (klib ABI 2.4.0).
+  - #172: `@OptIn` is copied into fakes without its import.
+  - #173: the unread producer `FirMetadataCache` is rewritten after every interface, which is
+    quadratic. It is removed by #164a.
 
 ## 4. Known gaps that are not shape-specific
 
@@ -160,6 +203,9 @@ Make equivalents: `make publish-local`, `make validate`, `make test-kmp-single-t
   - Extract functions or files instead of growing the baseline.
 - **Maven 429s** in sample runs are rate limits, not regressions. Retry, run samples one at a time,
   or use `--offline` once the caches are warm.
+- **Spotless and the configuration cache:** if `spotlessCheck` fails with "Add a step with
+  [com.facebook:ktfmt:…] into the `spotlessPredeclare` block", rerun it with
+  `--no-configuration-cache`.
 - **JS/Wasm browser tests** need npm, which the cloud sandbox blocks. CI runs them.
 - **Signed commits:** the session's stop hook flags unsigned commits. Plumbing such as `commit-tree`
   produces them; fix with `git rebase --exec "git commit --amend --no-edit --reset-author"`.
