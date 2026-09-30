@@ -5,11 +5,9 @@ package spike
 import com.rsicarelli.fakt.Fake
 import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.CPointer
-import kotlinx.cinterop.ExperimentalForeignApi
 import platform.posix.size_t
 
 /** C2: shared nativeMain over commonized posix + cinterop runtime types. */
-@OptIn(ExperimentalForeignApi::class)
 @Fake
 interface NativeMemory {
     fun alloc(size: size_t): CPointer<ByteVar>?

@@ -21,6 +21,12 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies { implementation("com.rsicarelli.fakt:annotations:$faktVersion") }
-        commonTest.dependencies { implementation(kotlin("test")) }
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+        }
+        // Module-wide opt-in: an interface-level @OptIn is copied into the fake without its
+        // import (pre-existing codegen bug, reported separately from this spike).
+        all { languageSettings.optIn("kotlinx.cinterop.ExperimentalForeignApi") }
     }
 }
