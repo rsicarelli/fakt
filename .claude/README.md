@@ -29,7 +29,7 @@ See the **[Skills README](skills/README.md)** for what each skill does.
 |----------|--------|
 | **Compiler & codegen** | `codegen`, `feature-option`, `compilation`, `kotlin-api-consultant` |
 | **Testing & samples** | `bdd-test-runner`, `sample-scaffolder` |
-| **Git & GitHub** | `commit` (`/commit`), `pr-creator`, `issue-creator` |
+| **Git & GitHub** | `commit` (`/commit`), `pr` (`/pr`), `issue-creator` |
 | **Meta** | `skill-creator` |
 
 Custom command: `/release-notes <version>` (`commands/release-notes.md`).
@@ -67,7 +67,7 @@ Custom command: `/release-notes <version>` (`commands/release-notes.md`).
     ├── feature-option/
     ├── issue-creator/
     ├── kotlin-api-consultant/
-    ├── pr-creator/
+    ├── pr/
     ├── sample-scaffolder/
     └── skill-creator/
 ```

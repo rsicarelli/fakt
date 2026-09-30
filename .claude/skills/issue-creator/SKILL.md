@@ -154,5 +154,5 @@ After creating the issue, display:
 
 ## Related Skills
 
-- `pr-creator` — analogous GitHub creation workflow
+- `pr` — analogous GitHub creation workflow
 - `compilation` — provides error context for bug reports

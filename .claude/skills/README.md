@@ -14,7 +14,7 @@
 | `feature-option` | Guides adding new @Fake annotation options (11 touchpoints) |
 | `issue-creator` | Creates GitHub issues with auto-detected project context |
 | `kotlin-api-consultant` | Keeps compiler API usage working across supported Kotlin versions |
-| `pr-creator` | Creates draft PRs from the project template |
+| `pr` | `/pr`: draft PRs from the project template with the AI attribution footer |
 | `sample-scaffolder` | Scaffolds new sample projects (JVM, KMP, Android) |
 | `skill-creator` | Meta-skill for creating new skills |
 
@@ -26,7 +26,7 @@ Claude Code auto-activates skills based on the `description` field in each skill
 "Run tests and check BDD compliance"          → bdd-test-runner
 "Compilation failed, help me debug"           → compilation
 "Commit this"                                 → commit
-"Create a PR for this branch"                 → pr-creator
+"Create a PR for this branch"                 → pr
 "Add a new option to @Fake"                   → feature-option
 "How does the codegen pipeline work?"         → codegen
 "Does this compiler API exist in Kotlin 2.2?" → kotlin-api-consultant
