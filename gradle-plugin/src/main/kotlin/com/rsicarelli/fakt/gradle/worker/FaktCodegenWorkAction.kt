@@ -40,6 +40,14 @@ internal interface FaktCodegenWorkParameters : WorkParameters {
     val commonGeneratedKotlinDir: DirectoryProperty
     val firMetadataFile: RegularFileProperty
     val scratchDir: DirectoryProperty
+    /** #152 spike: K2Native `-target` (e.g. `linux_x64`). */
+    val konanTarget: Property<String>
+    /** #152 spike: K/N distribution root, for the stdlib of shared-native compilations. */
+    val konanHome: DirectoryProperty
+    /** #152 spike: a shared-native metadata compilation (explicit commonized klibs). */
+    val sharedNative: Property<Boolean>
+    /** #152 spike (minimal #165 slice): `-opt-in` annotations of the compilation. */
+    val optIns: ListProperty<String>
 }
 
 /** Default `walkTopDown` cap for source discovery — covers typical Gradle source-set nesting. */
@@ -106,6 +114,10 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
                 enableCallHistory = params.enableCallHistory.getOrElse(true),
                 enableMutableFakes = params.enableMutableFakes.getOrElse(false),
                 wasmTarget = params.wasmTarget.orNull,
+                konanTarget = params.konanTarget.orNull,
+                konanHome = params.konanHome.orNull?.asFile,
+                sharedNative = params.sharedNative.getOrElse(false),
+                optIns = params.optIns.getOrElse(emptyList()),
             )
         )
     }
@@ -186,6 +198,10 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         val enableCallHistory: Boolean,
         val enableMutableFakes: Boolean,
         val wasmTarget: String?,
+        val konanTarget: String?,
+        val konanHome: File?,
+        val sharedNative: Boolean,
+        val optIns: List<String>,
     )
 
     private fun invokeK2(call: K2Invocation) {
@@ -196,8 +212,12 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
             CompilerDriver.JVM -> populateJvmOutputArgs(bridge, args, call)
             CompilerDriver.METADATA -> populateMetadataOutputArgs(bridge, args, call)
             CompilerDriver.JS -> populateJsOutputArgs(bridge, args, call)
+            CompilerDriver.NATIVE -> populateNativeOutputArgs(bridge, args, call)
         }
         populatePluginArgs(bridge, args, call)
+        if (call.optIns.isNotEmpty()) {
+            bridge.setOnArgs(args, "setOptIn", Array<String>::class.java, call.optIns.toTypedArray())
+        }
 
         val collector = bridge.newPrintingMessageCollector(System.err)
         val exitCode =
@@ -217,6 +237,11 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
             List::class.java,
             call.sourceFiles.map { it.absolutePath },
         )
+        if (call.driver == CompilerDriver.NATIVE) {
+            populateNativeLibraries(bridge, args, call)
+            bridge.setOnArgs(args, "setModuleName", String::class.java, MODULE_NAME)
+            return
+        }
         // JVM and metadata arguments take a `-classpath`; the JS/Wasm arguments have none and read
         // their klib dependencies from `-libraries` instead.
         val dependencies =
@@ -262,6 +287,57 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
             bridge.setOnArgs(args, "setWasmTarget", String::class.java, call.wasmTarget)
         }
         populateConsumerMultiplatformArgs(bridge, args, call.commonFragmentFiles)
+    }
+
+    /**
+     * #152 spike. K2Native takes repeated `-library` (a `String[]`). A leaf compilation keeps the
+     * distribution's default stdlib + platform klibs; a shared-native metadata compilation passes
+     * the commonized klibs explicitly (from its dependency files), so defaults are switched off and
+     * the stdlib is added from the distribution, mirroring KGP's own arguments.
+     */
+    private fun populateNativeLibraries(bridge: K2CompilerBridge, args: Any, call: K2Invocation) {
+        val libraries = call.compileClasspath.map { it.absolutePath }.toMutableList()
+        if (call.sharedNative) {
+            val stdlib = requireNotNull(call.konanHome) { "konanHome is required" }
+                .resolve("klib/common/stdlib").absolutePath
+            if (libraries.none { it.endsWith("/klib/common/stdlib") }) libraries.add(0, stdlib)
+            bridge.setOnArgs(args, "setNodefaultlibs", Boolean::class.javaPrimitiveType!!, true)
+            bridge.setOnArgs(args, "setNostdlib", Boolean::class.javaPrimitiveType!!, true)
+        }
+        bridge.setOnArgs(args, "setLibraries", Array<String>::class.java, libraries.toTypedArray())
+    }
+
+    /**
+     * #152 spike. `-produce library -Xmetadata-klib` stops K2Native after FIR + metadata
+     * serialization (no IR, no LLVM, no `~/.konan/dependencies`), into the `@LocalState` scratch.
+     */
+    private fun populateNativeOutputArgs(bridge: K2CompilerBridge, args: Any, call: K2Invocation) {
+        bridge.setOnArgs(
+            args,
+            "setOutputName",
+            String::class.java,
+            call.scratchOutputDir.resolve("native-klib").also { it.mkdirs() }
+                .resolve(MODULE_NAME).absolutePath,
+        )
+        bridge.setOnArgs(args, "setProduce", String::class.java, "library")
+        bridge.setOnArgs(args, "setMetadataKlib", Boolean::class.javaPrimitiveType!!, true)
+        bridge.setOnArgs(
+            args,
+            "setTarget",
+            String::class.java,
+            requireNotNull(call.konanTarget) { "konanTarget is required for Native" },
+        )
+        bridge.setOnArgs(args, "setMultiPlatform", Boolean::class.javaPrimitiveType!!, true)
+        if (call.sharedNative) {
+            bridge.setOnArgs(
+                args,
+                "setCommonSources",
+                Array<String>::class.java,
+                call.sourceFiles.map { it.absolutePath }.toTypedArray(),
+            )
+        } else {
+            populateConsumerMultiplatformArgs(bridge, args, call.commonFragmentFiles)
+        }
     }
 
     private fun populateMetadataOutputArgs(

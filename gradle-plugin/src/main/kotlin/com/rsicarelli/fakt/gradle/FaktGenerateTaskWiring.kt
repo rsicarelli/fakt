@@ -72,6 +72,22 @@ internal object FaktGenerateTaskWiring {
         extension: FaktPluginExtension,
     ) = register(project, kotlinCompilation, extension, TaskShape.SINGLE_TARGET)
 
+    /**
+     * #152 spike: a Native leaf main becomes a `NATIVE` consumer; a shared-native metadata
+     * compilation (`nativeMain`, `appleMain`, …) becomes a `NATIVE` producer that owns exactly its
+     * own source set (its ancestors arrive as their metadata klibs, as in KGP's own K2Native call).
+     */
+    fun registerNative(
+        project: Project,
+        kotlinCompilation: KotlinCompilation<*>,
+        extension: FaktPluginExtension,
+    ) {
+        val shape =
+            if (NativeSpike.isSharedNative(kotlinCompilation)) TaskShape.SHARED_NATIVE
+            else TaskShape.CONSUMER
+        register(project, kotlinCompilation, extension, shape)
+    }
+
     private fun register(
         project: Project,
         kotlinCompilation: KotlinCompilation<*>,
@@ -122,12 +138,21 @@ internal object FaktGenerateTaskWiring {
                     task.commonGeneratedKotlinDir.set(commonOutputDir)
                 }
                 configureDependencies(task, kotlinCompilation)
-                if (isMetadataLikeCompilation(kotlinCompilation)) {
+                if (
+                    isMetadataLikeCompilation(kotlinCompilation) &&
+                        shape != TaskShape.SHARED_NATIVE
+                ) {
                     task.firMetadataFile.set(firMetadataFile)
                 }
                 task.faktWorkerClasspath.from(workerClasspath)
                 task.faktCompilerClasspath.from(compilerClasspath)
-                task.sourceSetContextJson.set(placeholderJson)
+                task.sourceSetContextJson.set(
+                    if (isNativeShape(kotlinCompilation, shape)) {
+                        encodePlaceholderContext(kotlinCompilation, platformType = "native")
+                    } else {
+                        placeholderJson
+                    }
+                )
                 task.faktVersion.set(FaktGradleSubplugin.PLUGIN_VERSION)
                 task.logLevel.set(extension.logLevel)
                 task.enableCallHistory.set(extension.enableCallHistory)
@@ -141,6 +166,19 @@ internal object FaktGenerateTaskWiring {
         // supplies the sources (issue #154).
         if (shape == TaskShape.PRODUCER && AndroidVariantSources.usesBuiltInKotlin(project)) {
             AndroidVariantSources.feed(project, compilationName, taskProvider)
+        }
+        if (isNativeShape(kotlinCompilation, shape)) {
+            NativeSpike.configure(project, kotlinCompilation, taskProvider)
+        }
+        if (shape == TaskShape.SHARED_NATIVE) {
+            // nativeMain -> nativeTest: the metadata target has no test compilations to associate.
+            val testSourceSet = kotlinCompilation.defaultSourceSet.name.removeSuffix("Main") + "Test"
+            project.extensions
+                .findByType(KotlinMultiplatformExtension::class.java)
+                ?.sourceSets
+                ?.matching { it.name == testSourceSet }
+                ?.configureEach { it.kotlin.srcDir(taskProvider.flatMap { t -> t.generatedKotlinDir }) }
+            return
         }
         wireGeneratedDirConsumers(project, kotlinCompilation, extension, taskProvider)
         if (shape == TaskShape.SINGLE_TARGET) {
@@ -255,7 +293,14 @@ internal object FaktGenerateTaskWiring {
     private fun getSubpluginInstance(project: Project): FaktGradleSubplugin =
         project.plugins.getPlugin(FaktGradleSubplugin::class.java)
 
-    private fun encodePlaceholderContext(kotlinCompilation: KotlinCompilation<*>): String {
+    private fun isNativeShape(kotlinCompilation: KotlinCompilation<*>, shape: TaskShape): Boolean =
+        shape == TaskShape.SHARED_NATIVE ||
+            kotlinCompilation.target.platformType.name.equals("native", ignoreCase = true)
+
+    private fun encodePlaceholderContext(
+        kotlinCompilation: KotlinCompilation<*>,
+        platformType: String? = null,
+    ): String {
         // `useTestFixtures` is intentionally left at its default here. In `buildContext` it only
         // affects `outputDirectory`, which the `.copy` below replaces with a placeholder and the
         // worker later overwrites with the task's real `generatedKotlinDir`. It changes nothing
@@ -273,6 +318,7 @@ internal object FaktGenerateTaskWiring {
                     metadataOutputPath = null,
                     metadataCachePath = null,
                 )
+                .let { if (platformType != null) it.copy(platformType = platformType) else it }
         val json = Json { prettyPrint = false }
         return json.encodeToString(SourceSetContext.serializer(), context)
     }
@@ -334,6 +380,9 @@ private enum class TaskShape {
 
     /** Own source set and ancestors both emitted, each into its own output (single-target KMP). */
     SINGLE_TARGET,
+
+    /** #152 spike: a shared-native metadata compilation; own source set only, emitted. */
+    SHARED_NATIVE,
 }
 
 private fun isMetadataLikeCompilation(kotlinCompilation: KotlinCompilation<*>): Boolean =
@@ -363,6 +412,7 @@ private fun configureSources(
             task.sources.from(kotlinCompilation.defaultSourceSet.kotlin)
             task.commonSources.from(ancestors.map { it.kotlin })
         }
+        TaskShape.SHARED_NATIVE -> task.sources.from(kotlinCompilation.defaultSourceSet.kotlin)
     }
 }
 
@@ -396,7 +446,7 @@ private fun configureDependencies(task: FaktGenerateTask, kotlinCompilation: Kot
     val platformType = kotlinCompilation.target.platformType.name.lowercase()
     val isKlibBased =
         kotlinCompilation.defaultSourceSet.name == "commonMain" ||
-            platformType in setOf("common", "js", "wasm")
+            platformType in setOf("common", "js", "wasm", "native")
     if (isKlibBased) {
         task.commonKlibClasspath.from(kotlinCompilation.compileDependencyFiles)
     } else {

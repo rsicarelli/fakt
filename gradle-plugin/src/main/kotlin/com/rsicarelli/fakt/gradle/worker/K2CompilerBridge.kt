@@ -20,6 +20,10 @@ internal object K2Fqns {
     const val K2_JS_COMPILER = "org.jetbrains.kotlin.cli.js.K2JSCompiler"
     const val K2_JS_COMPILER_ARGUMENTS =
         "org.jetbrains.kotlin.cli.common.arguments.K2JSCompilerArguments"
+    // #152 spike: loaded from the K/N distribution's `kotlin-native-compiler-embeddable.jar`.
+    const val K2_NATIVE = "org.jetbrains.kotlin.cli.bc.K2Native"
+    const val K2_NATIVE_COMPILER_ARGUMENTS =
+        "org.jetbrains.kotlin.cli.common.arguments.K2NativeCompilerArguments"
     const val COMMON_COMPILER_ARGUMENTS =
         "org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments"
     const val MESSAGE_COLLECTOR = "org.jetbrains.kotlin.cli.common.messages.MessageCollector"
@@ -48,7 +52,9 @@ internal object K2Fqns {
 internal enum class CompilerDriver(val compilerFqn: String, val argumentsFqn: String) {
     JVM(K2Fqns.K2_JVM_COMPILER, K2Fqns.K2_JVM_COMPILER_ARGUMENTS),
     METADATA(K2Fqns.KOTLIN_METADATA_COMPILER, K2Fqns.K2_METADATA_COMPILER_ARGUMENTS),
-    JS(K2Fqns.K2_JS_COMPILER, K2Fqns.K2_JS_COMPILER_ARGUMENTS);
+    JS(K2Fqns.K2_JS_COMPILER, K2Fqns.K2_JS_COMPILER_ARGUMENTS),
+    // #152 spike: K2Native from the K/N distribution (worker classpath swapped in the task).
+    NATIVE(K2Fqns.K2_NATIVE, K2Fqns.K2_NATIVE_COMPILER_ARGUMENTS);
 
     companion object {
         /**
@@ -61,6 +67,7 @@ internal enum class CompilerDriver(val compilerFqn: String, val argumentsFqn: St
                 "common" -> METADATA
                 "js",
                 "wasm" -> JS
+                "native" -> NATIVE
                 else -> JVM
             }
     }

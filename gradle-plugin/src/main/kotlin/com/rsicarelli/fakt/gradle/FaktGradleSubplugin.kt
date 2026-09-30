@@ -133,6 +133,7 @@ internal fun generatesFakesInProcess(decision: FaktGradleSubplugin.CacheCorrectD
         FaktGradleSubplugin.CacheCorrectDecision.REGISTER_PRODUCER,
         FaktGradleSubplugin.CacheCorrectDecision.REGISTER_CONSUMER,
         FaktGradleSubplugin.CacheCorrectDecision.REGISTER_SINGLE_TARGET,
+        FaktGradleSubplugin.CacheCorrectDecision.REGISTER_NATIVE,
         FaktGradleSubplugin.CacheCorrectDecision.SUPPRESS -> false
     }
 
@@ -658,6 +659,8 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 FaktGenerateTaskWiring.registerConsumer(project, kotlinCompilation, extension)
             CacheCorrectDecision.REGISTER_SINGLE_TARGET ->
                 FaktGenerateTaskWiring.registerSingleTarget(project, kotlinCompilation, extension)
+            CacheCorrectDecision.REGISTER_NATIVE ->
+                FaktGenerateTaskWiring.registerNative(project, kotlinCompilation, extension)
             CacheCorrectDecision.LEGACY_HYBRID ->
                 FaktGenerateTaskWiring.wireLegacyHybridOrdering(project, kotlinCompilation)
             CacheCorrectDecision.SUPPRESS,
@@ -674,6 +677,7 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             CacheCorrectDecision.REGISTER_PRODUCER,
             CacheCorrectDecision.REGISTER_CONSUMER,
             CacheCorrectDecision.REGISTER_SINGLE_TARGET,
+            CacheCorrectDecision.REGISTER_NATIVE,
             CacheCorrectDecision.SUPPRESS ->
                 project.provider { listOf(SubpluginOption(key = "enabled", value = "false")) }
             CacheCorrectDecision.LEGACY_HYBRID,
@@ -701,6 +705,8 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
          * test source set and the common fragment's fakes to `commonTest` (issue #153).
          */
         REGISTER_SINGLE_TARGET,
+        /** #152 spike: drive K2Native (leaf consumer or shared-native producer). */
+        REGISTER_NATIVE,
         /**
          * Keep the in-process plugin ON for a non-drivable platform main (Native) so it generates
          * that platform's fakes the legacy way, ordered after the common producer.
@@ -751,6 +757,8 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 singleTargetPlatformTypeName = kmp?.let(::singleTargetPlatformTypeName),
                 compilationName = kotlinCompilation.name,
                 platformTypeName = kotlinCompilation.target.platformType.name,
+                spikeNative = NativeSpike.isEnabled(project),
+                isSharedNative = NativeSpike.isSharedNative(kotlinCompilation),
             )
         route.notCacheCorrectReason?.let { reason -> warnNotCacheCorrect(project, reason) }
         return route.decision

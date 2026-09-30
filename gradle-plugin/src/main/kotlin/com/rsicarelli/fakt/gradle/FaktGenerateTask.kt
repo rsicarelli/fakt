@@ -18,6 +18,7 @@ import org.gradle.api.tasks.IgnoreEmptyDirectories
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.LocalState
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -210,6 +211,28 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
      */
     @get:OutputFile @get:Optional public abstract val firMetadataFile: RegularFileProperty
 
+    /**
+     * #152 spike: the K/N distribution root. `@Internal` so its absolute path stays out of the
+     * cache key (C6); [kotlinNativeVersion] stands in for it. When present, the worker forks on
+     * the distribution's `kotlin-native-compiler-embeddable.jar` instead of [faktWorkerClasspath].
+     */
+    @get:Internal public abstract val konanHome: DirectoryProperty
+
+    /** #152 spike: the distribution version, the cache-key proxy for [konanHome]. */
+    @get:Input @get:Optional public abstract val kotlinNativeVersion: Property<String>
+
+    /** #152 spike: K2Native `-target`. */
+    @get:Input @get:Optional public abstract val konanTarget: Property<String>
+
+    /** #152 spike: a shared-native metadata compilation (explicit commonized klibs). */
+    @get:Input @get:Optional public abstract val sharedNative: Property<Boolean>
+
+    /** #152 spike (minimal #165 slice): the compilation's `-opt-in` annotations. */
+    @get:Input @get:Optional public abstract val optIns: ListProperty<String>
+
+    /** #152 spike: worker heap override for measurement (C8). Not a cache input. */
+    @get:Internal public abstract val workerMaxHeap: Property<String>
+
     /** Internal scratch state — cleared on cache restore instead of being replayed. */
     @get:LocalState public abstract val scratchDir: DirectoryProperty
 
@@ -226,10 +249,20 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
         // once per pooled worker, not per task.
         val queue =
             workers.processIsolation { spec ->
-                spec.classpath.from(faktWorkerClasspath)
+                val nativeHome = konanHome.orNull?.asFile
+                if (nativeHome != null) {
+                    spec.classpath.from(
+                        nativeHome.resolve("konan/lib/kotlin-native-compiler-embeddable.jar")
+                    )
+                } else {
+                    spec.classpath.from(faktWorkerClasspath)
+                }
                 spec.forkOptions { options ->
-                    options.maxHeapSize = WORKER_MAX_HEAP
+                    options.maxHeapSize = workerMaxHeap.getOrElse(WORKER_MAX_HEAP)
                     options.jvmArgs(WORKER_METASPACE_ARG)
+                    if (nativeHome != null) {
+                        options.systemProperty("konan.home", nativeHome.absolutePath)
+                    }
                 }
             }
         queue.submit(FaktCodegenWorkAction::class.java) { params ->
@@ -251,6 +284,10 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
             params.commonGeneratedKotlinDir.set(commonGeneratedKotlinDir)
             params.firMetadataFile.set(firMetadataFile)
             params.scratchDir.set(scratchDir)
+            params.konanTarget.set(konanTarget)
+            params.konanHome.set(konanHome)
+            params.sharedNative.set(sharedNative)
+            params.optIns.set(optIns)
         }
     }
 }
