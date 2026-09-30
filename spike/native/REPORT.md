@@ -63,7 +63,7 @@ The prototype found these; the fixture alone didn't.
    `org.jetbrains.kotlin:kotlin-native-prebuilt:<ver>` through a Fakt configuration plus an
    artifact transform that extracts only `konan/lib` and `klib/`.
 
-### Found along the way (not Native-specific; separate issues suggested)
+### Found along the way (not Native-specific; filed)
 - **#171: Kotlin < 2.4 cannot consume Fakt's published klibs.** `annotations-*` klibs are built with
   2.4.10 (`abi_version=2.4.0`); K/N 2.2.0 rejects them with "can consume libraries having ABI
   version <= 2.2.0". This breaks Native, and likely JS/Wasm, users on Kotlin 2.2 and 2.3 today,
