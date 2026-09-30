@@ -139,7 +139,7 @@ A pure function assigns every **main** source set exactly one owner:
 - **Found by the spike, tracked separately:**
   - #171: Kotlin < 2.4 can't read the published annotation klibs (klib ABI 2.4.0).
   - #172: `@OptIn` is copied into fakes without its import.
-  - The unread producer `FirMetadataCache` is rewritten after every interface, which is
+  - #173: the unread producer `FirMetadataCache` is rewritten after every interface, which is
     quadratic. It is removed by #164a.
 
 ## 4. Known gaps that are not shape-specific

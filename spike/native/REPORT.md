@@ -69,7 +69,7 @@ The prototype found these; the fixture alone didn't.
   version <= 2.2.0". This breaks Native, and likely JS/Wasm, users on Kotlin 2.2 and 2.3 today,
   in-process too. The `compat` CI cells are JVM-only. Fix: build `:annotations` with a lower klib
   ABI/apiVersion and add a KMP compat cell. It relates to #166.
-- **The unread producer metadata cache is quadratic.**
+- **#173: the unread producer metadata cache is quadratic.**
   - In producer mode, `FakeInterfaceChecker` rewrites the whole `FirMetadataCache` after
     **every** interface.
   - On the task path nothing reads the file (#164a's unused consumer mode), yet every KMP

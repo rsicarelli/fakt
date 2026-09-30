@@ -177,12 +177,15 @@ internal object FaktGenerateTaskWiring {
         }
         if (shape == TaskShape.SHARED_NATIVE) {
             // nativeMain -> nativeTest: the metadata target has no test compilations to associate.
-            val testSourceSet = kotlinCompilation.defaultSourceSet.name.removeSuffix("Main") + "Test"
+            val testSourceSet =
+                kotlinCompilation.defaultSourceSet.name.removeSuffix("Main") + "Test"
             project.extensions
                 .findByType(KotlinMultiplatformExtension::class.java)
                 ?.sourceSets
                 ?.matching { it.name == testSourceSet }
-                ?.configureEach { it.kotlin.srcDir(taskProvider.flatMap { t -> t.generatedKotlinDir }) }
+                ?.configureEach {
+                    it.kotlin.srcDir(taskProvider.flatMap { t -> t.generatedKotlinDir })
+                }
             return
         }
         wireGeneratedDirConsumers(project, kotlinCompilation, extension, taskProvider)

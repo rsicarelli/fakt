@@ -154,10 +154,12 @@ internal class SourceSetConfigurator(
         val ownedBySingleTarget =
             testSourceSetName == "commonTest" &&
                 project.extensions.extraProperties.has(SINGLE_TARGET_PRODUCER_PROPERTY)
-        // #152 spike: a shared-native producer (`faktGenerateMetadataNativeMain`) owns `nativeTest`.
+        // #152 spike: a shared-native producer (`faktGenerateMetadataNativeMain`) owns
+        // `nativeTest`.
         val sharedNativeProducer =
-            "faktGenerateMetadata" + testSourceSetName.removeSuffix("Test")
-                .replaceFirstChar { it.uppercaseChar() } + "Main"
+            "faktGenerateMetadata" +
+                testSourceSetName.removeSuffix("Test").replaceFirstChar { it.uppercaseChar() } +
+                "Main"
         return ownedBySingleTarget ||
             project.tasks.names.contains(sharedNativeProducer) ||
             consumerTaskNameFor(testSourceSetName)?.let(project.tasks.names::contains) ?: false

@@ -220,7 +220,12 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         }
         populatePluginArgs(bridge, args, call)
         if (call.optIns.isNotEmpty()) {
-            bridge.setOnArgs(args, "setOptIn", Array<String>::class.java, call.optIns.toTypedArray())
+            bridge.setOnArgs(
+                args,
+                "setOptIn",
+                Array<String>::class.java,
+                call.optIns.toTypedArray(),
+            )
         }
 
         val collector = bridge.newPrintingMessageCollector(System.err)
@@ -302,8 +307,10 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
     private fun populateNativeLibraries(bridge: K2CompilerBridge, args: Any, call: K2Invocation) {
         val libraries = call.compileClasspath.map { it.absolutePath }.toMutableList()
         if (call.sharedNative) {
-            val stdlib = requireNotNull(call.konanHome) { "konanHome is required" }
-                .resolve("klib/common/stdlib").absolutePath
+            val stdlib =
+                requireNotNull(call.konanHome) { "konanHome is required" }
+                    .resolve("klib/common/stdlib")
+                    .absolutePath
             if (libraries.none { it.endsWith("/klib/common/stdlib") }) libraries.add(0, stdlib)
             bridge.setOnArgs(args, "setNodefaultlibs", Boolean::class.javaPrimitiveType!!, true)
             bridge.setOnArgs(args, "setNostdlib", Boolean::class.javaPrimitiveType!!, true)
@@ -320,8 +327,11 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
             args,
             "setOutputName",
             String::class.java,
-            call.scratchOutputDir.resolve("native-klib").also { it.mkdirs() }
-                .resolve(MODULE_NAME).absolutePath,
+            call.scratchOutputDir
+                .resolve("native-klib")
+                .also { it.mkdirs() }
+                .resolve(MODULE_NAME)
+                .absolutePath,
         )
         bridge.setOnArgs(args, "setProduce", String::class.java, "library")
         bridge.setOnArgs(args, "setMetadataKlib", Boolean::class.javaPrimitiveType!!, true)

@@ -74,7 +74,9 @@ internal fun routeCompilation(
     when {
         unreadableSourcesReason != null -> legacyRoute(unreadableSourcesReason)
         // #152 spike: Native leaf mains and shared-native metadata compilations.
-        spikeNative && isMultiplatform && singleTargetPlatformTypeName == null &&
+        spikeNative &&
+            isMultiplatform &&
+            singleTargetPlatformTypeName == null &&
             (isSharedNative || platformTypeName.equals("native", ignoreCase = true)) ->
             CompilationRoute(FaktGradleSubplugin.CacheCorrectDecision.REGISTER_NATIVE)
         !isMultiplatform ->

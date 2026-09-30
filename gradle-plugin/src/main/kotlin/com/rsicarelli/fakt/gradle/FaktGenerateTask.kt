@@ -213,8 +213,8 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
 
     /**
      * #152 spike: the K/N distribution root. `@Internal` so its absolute path stays out of the
-     * cache key (C6); [kotlinNativeVersion] stands in for it. When present, the worker forks on
-     * the distribution's `kotlin-native-compiler-embeddable.jar` instead of [faktWorkerClasspath].
+     * cache key (C6); [kotlinNativeVersion] stands in for it. When present, the worker forks on the
+     * distribution's `kotlin-native-compiler-embeddable.jar` instead of [faktWorkerClasspath].
      */
     @get:Internal public abstract val konanHome: DirectoryProperty
 
