@@ -130,5 +130,5 @@ Suggested: "{shortened}"
 
 ## Related Skills
 
-- **`git-commit-guardian`** — Clean commits before PR
+- **`commit`** — Clean commits before PR
 - **`bdd-test-runner`** — Run tests before PR

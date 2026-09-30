@@ -25,7 +25,7 @@ See **[Skills README](skills/README.md)** for the complete skills system.
 | Category | Skills |
 |----------|--------|
 | **Analysis** | `kotlin-api-consultant`, `interface-analyzer`, `compilation-error-analyzer` |
-| **Core Workflows** | `bdd-test-runner`, `behavior-analyzer-tester`, `git-commit-guardian`, `pr-creator` |
+| **Core Workflows** | `bdd-test-runner`, `behavior-analyzer-tester`, `commit`, `pr-creator` |
 | **Validation** | `compilation-validator`, `compiler-architecture-validator`, `implementation-tracker` |
 | **Knowledge Base** | `fakt-docs-navigator`, `public-docs-navigator` |
 | **Development** | `skill-creator` |
@@ -55,7 +55,7 @@ See **[Skills README](skills/README.md)** for the complete skills system.
     ├── compilation-validator/
     ├── compiler-architecture-validator/
     ├── fakt-docs-navigator/
-    ├── git-commit-guardian/
+    ├── commit/
     ├── implementation-tracker/
     ├── interface-analyzer/
     ├── kotlin-api-consultant/

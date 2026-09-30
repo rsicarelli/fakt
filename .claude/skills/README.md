@@ -14,7 +14,7 @@
 | `compiler-architecture-validator` | Validates compiler plugin best practices |
 | `docs-navigator` | Navigates internal + public documentation |
 | `feature-option` | Guides adding new @Fake annotation options (11 touchpoints) |
-| `git-commit-guardian` | Enforces Conventional Commits, blocks AI attribution |
+| `commit` | `/commit`: Conventional Commits with the AI co-author trailer |
 | `interface-analyzer` | Deep structural analysis of @Fake interfaces |
 | `issue-creator` | Creates GitHub issues with auto-detected project context |
 | `kotlin-api-consultant` | Validates Kotlin compiler API usage |

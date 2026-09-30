@@ -63,10 +63,10 @@ Options:
 - Run: `make quick-test`
 
 **Phase 5: Commit**
-- Use `git-commit-guardian` skill patterns
+- Use the `commit` skill (`/commit`)
 - Format first: `make format`
 - Conventional Commits format
-- No AI attribution
+- AI co-author trailer when Claude co-wrote the change
 
 **Phase 6: PR** (if requested)
 - Use `pr-creator` skill patterns
@@ -139,5 +139,5 @@ This orchestrator coordinates:
 - **`compilation`** — Phase 4: Validate
 - **`bdd-test-runner`** — Phase 3: Test
 - **`sample-scaffolder`** — Phase 3.5: Sample (optional)
-- **`git-commit-guardian`** — Phase 5: Commit
+- **`commit`** — Phase 5: Commit
 - **`pr-creator`** — Phase 6: PR

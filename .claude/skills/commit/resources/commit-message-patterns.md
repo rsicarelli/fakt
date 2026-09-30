@@ -186,16 +186,6 @@ Variance handling needs redesign for cross-module support.
 
 ## Bad Examples (NEVER DO)
 
-### AI Attribution (ALWAYS FORBIDDEN)
-
-```
-feat(compiler): add generic support
-
-Generated with [Claude Code](https://claude.com/claude-code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>
-```
-
 ### Vague Messages
 
 ```
@@ -294,10 +284,8 @@ Before every commit:
 5. **Footer** (if present):
    - Issue references correct?
    - Breaking change documented?
-6. **CRITICAL**:
-   - NO "Generated with Claude Code"?
-   - NO "Co-Authored-By: Claude"?
-   - NO AI attribution of any kind?
+6. **Co-author trailer** (when Claude co-wrote the change):
+   - `Co-Authored-By: Claude <model name> <noreply@anthropic.com>` after a blank line?
 
 ## Character Count Guide
 

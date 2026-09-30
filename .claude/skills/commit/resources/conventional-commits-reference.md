@@ -165,11 +165,6 @@ feat(compiler): implement comprehensive generic type parameter support for all i
 # Wrong type
 feature: add thing  (use "feat")
 bugfix: fix thing   (use "fix")
-
-# AI attribution (ALWAYS FORBIDDEN)
-feat: add feature
-
-Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 ## Quick Checklist
@@ -181,5 +176,4 @@ Before committing:
 - [ ] Imperative mood used
 - [ ] Blank line before body (if body exists)
 - [ ] Body wrapped at 80 chars
-- [ ] NO AI attribution lines
-- [ ] NO "Generated with Claude Code"
+- [ ] `Co-Authored-By: Claude <model name> <noreply@anthropic.com>` trailer when Claude co-wrote the change
