@@ -5,6 +5,7 @@ package com.rsicarelli.fakt.compiler.core.generation
 import com.rsicarelli.fakt.codegen.FaktCodegen
 import com.rsicarelli.fakt.codegen.RenderedFakeFile
 import com.rsicarelli.fakt.codegen.analysis.FakeDeclaration
+import com.rsicarelli.fakt.compiler.api.EmitPhase
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.core.context.ImportResolver
 import com.rsicarelli.fakt.compiler.core.telemetry.FaktLogger
@@ -52,6 +53,11 @@ internal class CodeGenerator(
      * [SourceSetContext.outputDirectory] and every other (common-fragment) source set's fakes go to
      * [SourceSetContext.commonOutputDirectory].
      *
+     * On the FIR (task) path ([EmitPhase.FIR]) the task owns exactly one declared output, so the
+     * fake always goes to [SourceSetContext.outputDirectory] and no path is derived by string
+     * rewriting — that rewrite of `/commonTest/` corrupted checkouts whose absolute path contains
+     * the segment.
+     *
      * @param sourceSourceSet Source set name (e.g., "commonMain", "iosMain") or null
      * @return Absolute path to output directory
      */
@@ -59,6 +65,8 @@ internal class CodeGenerator(
         val commonOutputDirectory = sourceSetContext.commonOutputDirectory
         return when {
             sourceSourceSet == null -> sourceSetContext.outputDirectory
+            sourceSetContext.emitPhase == EmitPhase.FIR && commonOutputDirectory == null ->
+                sourceSetContext.outputDirectory
             commonOutputDirectory == null -> testCounterpartDirectory(sourceSourceSet)
             sourceSourceSet == sourceSetContext.defaultSourceSet.name ->
                 sourceSetContext.outputDirectory

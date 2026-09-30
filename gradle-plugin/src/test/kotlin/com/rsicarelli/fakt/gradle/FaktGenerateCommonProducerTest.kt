@@ -4,13 +4,10 @@ package com.rsicarelli.fakt.gradle
 
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.compiler.api.SourceSetInfo
-import com.rsicarelli.fakt.compiler.fir.cache.MetadataCacheSerializer
 import java.io.File
 import java.nio.file.Files
 import java.util.zip.ZipFile
-import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
 import org.gradle.testkit.runner.BuildResult
@@ -63,29 +60,19 @@ class FaktGenerateCommonProducerTest {
     }
 
     @Test
-    fun `GIVEN producer mode over commonMain WHEN running THEN firMetadataFile deserialises with the validated interface`(
+    fun `GIVEN commonMain producer WHEN running THEN no fir-metadata json is written`(
         @TempDir projectDir: File
     ) {
-        val cacheFile = projectDir.resolve("fir-metadata.json")
-        setupCommonProject(
-            projectDir,
-            commonSource = SINGLE_INTERFACE_FIXTURE,
-            firMetadataFile = cacheFile,
-        )
+        setupCommonProject(projectDir, commonSource = SINGLE_INTERFACE_FIXTURE)
 
         val result = runTask(projectDir, "faktGenerate")
 
         assertEquals(TaskOutcome.SUCCESS, result.task(":faktGenerate")?.outcome, result.output)
+        val metadataFiles =
+            projectDir.walkTopDown().filter { it.isFile && it.name == "fir-metadata.json" }.toList()
         assertTrue(
-            cacheFile.exists(),
-            "Producer firMetadataFile not written: ${cacheFile.absolutePath}",
-        )
-        val cache = MetadataCacheSerializer.deserialize(cacheFile.absolutePath)
-        assertNotNull(cache, "Cache failed to deserialise:\n${cacheFile.readText()}")
-        assertEquals(
-            "SessionService",
-            cache.interfaces.single().simpleName,
-            "Producer cache must include the validated @Fake interface; got ${cache.interfaces.map { it.simpleName }}",
+            metadataFiles.isEmpty(),
+            "Nothing reads the FIR metadata cache and writing it is quadratic (#173); found: $metadataFiles",
         )
     }
 
@@ -167,38 +154,6 @@ class FaktGenerateCommonProducerTest {
             TaskOutcome.FROM_CACHE,
             second.task(":faktGenerate")?.outcome,
             "Cross-directory cache hit failed — likely an absolute-path input slipped through (relocation canary).\nA:\n${first.output}\nB:\n${second.output}",
-        )
-    }
-
-    @Test
-    fun `GIVEN producer mode WHEN running twice in two dirs THEN firMetadataFile is byte-identical across runs`(
-        @TempDir projectA: File,
-        @TempDir projectB: File,
-    ) {
-        val cacheA = projectA.resolve("fir-metadata.json")
-        setupCommonProject(
-            projectA,
-            commonSource = SINGLE_INTERFACE_FIXTURE,
-            firMetadataFile = cacheA,
-        )
-        runTask(projectA, "faktGenerate").also {
-            assertEquals(TaskOutcome.SUCCESS, it.task(":faktGenerate")?.outcome, it.output)
-        }
-
-        val cacheB = projectB.resolve("fir-metadata.json")
-        setupCommonProject(
-            projectB,
-            commonSource = SINGLE_INTERFACE_FIXTURE,
-            firMetadataFile = cacheB,
-        )
-        runTask(projectB, "faktGenerate").also {
-            assertEquals(TaskOutcome.SUCCESS, it.task(":faktGenerate")?.outcome, it.output)
-        }
-
-        assertContentEquals(
-            cacheA.readBytes(),
-            cacheB.readBytes(),
-            "firMetadataFile contents differ across runs — non-deterministic serializer leaks build-machine state",
         )
     }
 
@@ -320,7 +275,6 @@ class FaktGenerateCommonProducerTest {
     private fun setupCommonProject(
         projectDir: File,
         commonSource: String,
-        firMetadataFile: File? = null,
         extraKlibClasspathDir: File? = null,
     ) {
         projectDir
@@ -340,7 +294,7 @@ class FaktGenerateCommonProducerTest {
             .writeText(IN_FIXTURE_FAKE_ANNOTATION)
         projectDir
             .resolve("build.gradle.kts")
-            .writeText(buildScriptForTask(projectDir, firMetadataFile, extraKlibClasspathDir))
+            .writeText(buildScriptForTask(projectDir, extraKlibClasspathDir))
     }
 
     private fun configureLocalBuildCache(projectDir: File, buildCacheDir: File) {
@@ -360,11 +314,7 @@ class FaktGenerateCommonProducerTest {
             )
     }
 
-    private fun buildScriptForTask(
-        projectDir: File,
-        firMetadataFile: File?,
-        extraKlibClasspathDir: File?,
-    ): String {
+    private fun buildScriptForTask(projectDir: File, extraKlibClasspathDir: File?): String {
         val outputDir = projectDir.resolve("build/generated/fakt/metadata/commonMain/kotlin")
         val sourceSetContextJson =
             json.encodeToString(SourceSetContext.serializer(), COMMON_CONTEXT)
@@ -417,7 +367,6 @@ class FaktGenerateCommonProducerTest {
                 imports.set(listOf<String>())
                 generatedKotlinDir.set(file("${outputDir.absolutePath.replace('\\', '/')}"))
                 scratchDir.set(layout.buildDirectory.dir("faktCaches/metadata/commonMain"))
-                ${firMetadataFile?.let { "firMetadataFile.set(file(\"${it.absolutePath.replace('\\', '/')}\"))" } ?: ""}
             }
 
             tasks.register("clean") { doLast { delete(layout.buildDirectory) } }

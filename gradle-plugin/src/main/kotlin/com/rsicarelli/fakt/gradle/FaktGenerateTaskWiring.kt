@@ -5,9 +5,11 @@ package com.rsicarelli.fakt.gradle
 import com.rsicarelli.fakt.compiler.api.SourceSetContext
 import com.rsicarelli.fakt.gradle.android.AndroidIntegration
 import com.rsicarelli.fakt.gradle.android.AndroidVariantSources
+import java.io.File
 import java.util.Locale
 import kotlinx.serialization.json.Json
 import org.gradle.api.Project
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
@@ -105,10 +107,6 @@ internal object FaktGenerateTaskWiring {
         val outputDir = project.layout.buildDirectory.dir(generatedKotlinPath)
         val scratchDir =
             project.layout.buildDirectory.dir("faktCaches/$targetName/$compilationName")
-        val firMetadataFile =
-            project.layout.buildDirectory.file(
-                "generated/fakt/$targetName/$compilationName/metadata/fir-metadata.json"
-            )
         val placeholderJson = encodePlaceholderContext(kotlinCompilation)
         val workerClasspath = project.configurations.named(FaktGradleSubplugin.WORKER_CONFIGURATION)
         val compilerClasspath =
@@ -117,14 +115,11 @@ internal object FaktGenerateTaskWiring {
 
         val taskProvider =
             project.tasks.register(taskName, FaktGenerateTask::class.java) { task ->
-                configureSources(task, kotlinCompilation, shape)
+                configureSources(task, kotlinCompilation, shape, extension.enabled)
                 if (shape == TaskShape.SINGLE_TARGET) {
                     task.commonGeneratedKotlinDir.set(commonOutputDir)
                 }
                 configureDependencies(task, kotlinCompilation)
-                if (isMetadataLikeCompilation(kotlinCompilation)) {
-                    task.firMetadataFile.set(firMetadataFile)
-                }
                 task.faktWorkerClasspath.from(workerClasspath)
                 task.faktCompilerClasspath.from(compilerClasspath)
                 task.sourceSetContextJson.set(placeholderJson)
@@ -150,7 +145,7 @@ internal object FaktGenerateTaskWiring {
 
     /**
      * Points everything that reads the task's `@OutputDirectory` at the task that fills it: the
-     * matching test source set, the KMP cross-target `dependsOn` chain, and AGP's lint tasks.
+     * matching test source set, the and AGP's lint analysis tasks.
      */
     private fun wireGeneratedDirConsumers(
         project: Project,
@@ -163,7 +158,6 @@ internal object FaktGenerateTaskWiring {
         val useTestFixtures =
             getSubpluginInstance(project).resolveTestFixturesMode(project, extension)
         wireTestSrcDir(project, kotlinCompilation, taskProvider, useTestFixtures)
-        wireKmpDependsOnCommonMain(project, kotlinCompilation, taskProvider)
         wireAndroidLintOrdering(project, taskProvider)
     }
 
@@ -230,27 +224,6 @@ internal object FaktGenerateTaskWiring {
         }
     }
 
-    /**
-     * Every platform `faktGenerate*` task depends on the commonMain counterpart so common-source
-     * `@Fake` declarations are validated once and reused. Mirrors KSP2's
-     * `kspCommonMainKotlinMetadata` pattern; safe under Gradle 9 Project Isolation (no
-     * `afterEvaluate`, no direct task-graph reads).
-     */
-    private fun wireKmpDependsOnCommonMain(
-        project: Project,
-        kotlinCompilation: KotlinCompilation<*>,
-        taskProvider: TaskProvider<FaktGenerateTask>,
-    ) {
-        if (kotlinCompilation.defaultSourceSet.name == "commonMain") return
-        if (project.extensions.findByType(KotlinMultiplatformExtension::class.java) == null) return
-        taskProvider.configure { task ->
-            val commonTask =
-                project.tasks.findByName("faktGenerateMetadataCommonMain")
-                    ?: project.tasks.findByName("faktGenerateCommonMain")
-            if (commonTask != null) task.dependsOn(commonTask)
-        }
-    }
-
     /** Locate the [FaktGradleSubplugin] instance applied to [project] to call its helpers. */
     private fun getSubpluginInstance(project: Project): FaktGradleSubplugin =
         project.plugins.getPlugin(FaktGradleSubplugin::class.java)
@@ -307,9 +280,18 @@ private fun wireAndroidLintOrdering(
     taskProvider: TaskProvider<FaktGenerateTask>,
 ) {
     project.tasks
-        .matching { it.name.startsWith("lint") }
+        .matching { isAgpLintAnalysisTask(it.name) }
         .configureEach { lintTask -> lintTask.dependsOn(taskProvider) }
 }
+
+/**
+ * Whether [taskName] is one of AGP's lint *analysis* tasks (`lintAnalyze<Variant>`,
+ * `lintVitalAnalyze<Variant>`, `lintAnalyzeAndroidHostTest`, …) — the tasks that read the generated
+ * directory through the Android variant model. A bare `startsWith("lint")` also caught unrelated
+ * tasks such as kotlinter's `lintKotlin`, which never touch the fakes.
+ */
+internal fun isAgpLintAnalysisTask(taskName: String): Boolean =
+    taskName.startsWith("lintAnalyze") || taskName.startsWith("lintVitalAnalyze")
 
 /** Build-dir-relative canonical `commonTest` output, shared by the common producers. */
 private const val CANONICAL_COMMON_TEST_DIR: String = "generated/fakt/commonTest/kotlin"
@@ -336,10 +318,6 @@ private enum class TaskShape {
     SINGLE_TARGET,
 }
 
-private fun isMetadataLikeCompilation(kotlinCompilation: KotlinCompilation<*>): Boolean =
-    kotlinCompilation.defaultSourceSet.name == "commonMain" ||
-        kotlinCompilation.target.platformType.name.equals("common", ignoreCase = true)
-
 /**
  * Feeds the compilation's source sets to [task] according to [shape]. The ancestors of a consumer's
  * or single-target task's default source set (commonMain and intermediates) are the common fragment
@@ -350,20 +328,31 @@ private fun configureSources(
     task: FaktGenerateTask,
     kotlinCompilation: KotlinCompilation<*>,
     shape: TaskShape,
+    enabled: Provider<Boolean>,
 ) {
     val ancestors = kotlinCompilation.allKotlinSourceSets - kotlinCompilation.defaultSourceSet
+    val own = kotlinCompilation.defaultSourceSet.kotlin
     when (shape) {
         TaskShape.PRODUCER ->
-            task.sources.from(kotlinCompilation.allKotlinSourceSets.map { it.kotlin })
+            task.sources.from(enabled.gate(kotlinCompilation.allKotlinSourceSets.map { it.kotlin }))
         TaskShape.CONSUMER -> {
-            task.sources.from(kotlinCompilation.defaultSourceSet.kotlin)
-            task.analysisOnlySources.from(ancestors.map { it.kotlin })
+            task.sources.from(enabled.gate(own))
+            task.analysisOnlySources.from(enabled.gate(ancestors.map { it.kotlin }))
         }
         TaskShape.SINGLE_TARGET -> {
-            task.sources.from(kotlinCompilation.defaultSourceSet.kotlin)
-            task.commonSources.from(ancestors.map { it.kotlin })
+            task.sources.from(enabled.gate(own))
+            task.commonSources.from(enabled.gate(ancestors.map { it.kotlin }))
         }
     }
+}
+
+/**
+ * Yields [files] while Fakt is enabled and nothing otherwise. Feeding the task no sources makes
+ * `@SkipWhenEmpty` report `NO-SOURCE`, and Gradle then deletes the stale outputs — which `onlyIf`
+ * would leave in place.
+ */
+private fun Provider<Boolean>.gate(files: Any): Provider<Any> = map { isEnabled ->
+    if (isEnabled) files else emptyList<File>()
 }
 
 /**

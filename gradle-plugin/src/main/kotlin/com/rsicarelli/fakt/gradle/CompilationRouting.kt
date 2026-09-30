@@ -5,7 +5,7 @@ package com.rsicarelli.fakt.gradle
 /**
  * Platforms the cache-correct worker can drive from a `FaktGenerateTask`. `K2JVMCompiler` (JVM,
  * Android) and `K2JSCompiler` (Kotlin/JS, and Kotlin/Wasm via `-Xwasm`) ship in
- * `kotlin-compiler-embeddable`; `K2NativeCompiler` does not, so Native targets are not drivable yet
+ * `kotlin-compiler-embeddable`; `K2Native` does not, so Native targets are not drivable yet
  * (issue #152).
  */
 internal fun isDrivablePlatform(platformTypeName: String): Boolean =

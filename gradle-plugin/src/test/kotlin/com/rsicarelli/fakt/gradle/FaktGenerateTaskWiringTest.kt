@@ -279,6 +279,48 @@ class FaktGenerateTaskWiringTest {
             .apply { writeText("// marker\n") }
 
     @Test
+    fun `GIVEN fakt enabled false WHEN producer registered THEN task sees no sources so Gradle reports NO-SOURCE`(
+        @TempDir tempDir: File
+    ) {
+        val project = evaluatedJvmProject(tempDir)
+        project.plantMarker("main", "Marker")
+        project.faktExtension().enabled.set(false)
+
+        FaktGenerateTaskWiring.registerProducer(
+            project,
+            project.jvmCompilation("main"),
+            project.faktExtension(),
+        )
+
+        val task = project.tasks.getByName("faktGenerateJvmMain") as FaktGenerateTask
+        assertTrue(
+            task.sources.files.isEmpty(),
+            "A disabled Fakt must feed the task no sources (SkipWhenEmpty -> NO-SOURCE, stale " +
+                "outputs deleted); onlyIf would leave them; sources: ${task.sources.files}",
+        )
+    }
+
+    @Test
+    fun `GIVEN fakt enabled false WHEN consumer registered THEN sources and analysis-only sources are empty`() {
+        val project = evaluatedKmpProject()
+        project.plantMarker("jvmMain", "JvmMarker")
+        project.plantMarker("commonMain", "CommonMarker")
+        project.faktExtension().enabled.set(false)
+
+        FaktGenerateTaskWiring.registerConsumer(
+            project,
+            project.kmpCompilation("jvm", "main"),
+            project.faktExtension(),
+        )
+
+        val task = project.tasks.getByName("faktGenerateJvmMain") as FaktGenerateTask
+        assertTrue(
+            task.sources.files.isEmpty() && task.analysisOnlySources.files.isEmpty(),
+            "sources: ${task.sources.files}, analysisOnly: ${task.analysisOnlySources.files}",
+        )
+    }
+
+    @Test
     fun `GIVEN drivable platform main WHEN registerConsumer THEN sources are partitioned to its own source set only`() {
         val project = evaluatedKmpProject()
         val jvmMarker = project.plantMarker("jvmMain", "JvmMarker")
@@ -336,19 +378,52 @@ class FaktGenerateTaskWiringTest {
     }
 
     @Test
-    fun `GIVEN KMP jvm main compilation WHEN register after commonMain THEN platform task dependsOn metadata counterpart`() {
+    fun `GIVEN KMP jvm main compilation WHEN register after commonMain THEN platform task does not dependOn the common producer`() {
         val project = evaluatedKmpProject()
         project.registerWiring("metadata", "commonMain")
         val commonTask = project.tasks.getByName("faktGenerateMetadataCommonMain")
 
         project.registerWiring("jvm", "main")
 
-        // taskProvider.configure {} is lazy — realizing the task applies the dependsOn wiring.
+        // taskProvider.configure {} is lazy — realizing the task applies any dependsOn wiring.
         val platformTask = project.tasks.getByName("faktGenerateJvmMain")
         assertTrue(
-            platformTask.dependsOn.contains(commonTask),
-            "Platform faktGenerate tasks must depend on the commonMain counterpart so common " +
-                "@Fake declarations are validated once; dependsOn: ${platformTask.dependsOn}",
+            !platformTask.dependsOn.contains(commonTask),
+            "A platform consumer never reads the common producer's output, so a dependsOn only " +
+                "serialises the graph; dependsOn: ${platformTask.dependsOn}",
+        )
+    }
+
+    @Test
+    fun `GIVEN FaktGenerateTask WHEN inspecting its properties THEN no FIR metadata cache property exists`() {
+        val propertyGetters = FaktGenerateTask::class.java.methods.map { it.name }
+
+        assertTrue(
+            propertyGetters.none { it == "getFirMetadataFile" || it == "getCommonFirMetadata" },
+            "Nothing on the task path reads the FIR metadata cache, so no task may declare or " +
+                "write it (#173: the per-interface rewrite is quadratic); getters: " +
+                propertyGetters.filter { it.contains("Metadata") },
+        )
+    }
+
+    @Test
+    fun `GIVEN a kotlinter lintKotlin task WHEN register THEN it gains no Fakt dependency`(
+        @TempDir tempDir: File
+    ) {
+        val project = evaluatedJvmProject(tempDir)
+        project.tasks.register("lintKotlin")
+
+        FaktGenerateTaskWiring.registerProducer(
+            project,
+            project.jvmCompilation("main"),
+            project.faktExtension(),
+        )
+
+        val deps = project.tasks.getByName("lintKotlin").taskDependencies.getDependencies(null)
+        assertTrue(
+            deps.none { it.name.startsWith("faktGenerate") },
+            "Only AGP's lintAnalyze* tasks read the generated dir; a style linter such as " +
+                "kotlinter's lintKotlin must not wait for the generator; deps: ${deps.map { it.name }}",
         )
     }
 
