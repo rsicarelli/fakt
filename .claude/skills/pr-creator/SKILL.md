@@ -45,11 +45,7 @@ git diff main..HEAD --stat
 - `build` — build.gradle.kts, Makefile, CI
 - `chore` — Maintenance
 
-**Determine scope from paths:**
-- `compiler` — compiler/src/**
-- `fir` / `ir` / `generation` — specific subdirectories
-- `gradle` — gradle-plugin/**
-- `samples` — samples/**
+**Determine scope from paths:** use the scope table in the `commit` skill (`compiler`, `codegen`, `gradle`, `annotations`, `samples`, `claude`, `ci`).
 
 ### 3. Generate PR Title
 
@@ -122,11 +118,6 @@ PR BLOCKED — No commits ahead of main
 PR BLOCKED — Title exceeds 72 characters (currently: {n})
 Suggested: "{shortened}"
 ```
-
-## Supporting Files
-
-- **`resources/pr-title-conventions.md`** — Title format spec
-- **`resources/pr-description-guide.md`** — Description best practices
 
 ## Related Skills
 

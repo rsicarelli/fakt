@@ -34,7 +34,21 @@ git diff --cached --name-only | grep -E '\.(env|pem|key|credentials)$'
 - `build` — Build system, dependencies
 - `chore` — Maintenance
 
-**Fakt-specific scopes:** `compiler`, `fir`, `ir`, `generation`, `analysis`, `dsl`, `gradle`, `annotations`, `samples`
+**Scopes** (pick from the paths changed; omit for cross-cutting changes):
+
+| Scope | Paths |
+|-------|-------|
+| `compiler` | `compiler/`, `compiler-api/` |
+| `codegen` | `codegen-runtime/` |
+| `gradle` | `gradle-plugin/`, `build-logic/` |
+| `annotations` | `annotations/` |
+| `samples` | `samples/` |
+| `claude` | `.claude/`, `CLAUDE.md` |
+| `ci` | `.github/` |
+| `deps` | dependency bumps (`chore(deps): ...`) |
+| `release` | release tooling |
+
+Documentation-only changes use the `docs` type (`docs(gradle): ...` when scoped to one module).
 
 ### 3. Validate Commit Message
 
@@ -85,9 +99,9 @@ git log -1 --format="%H %s"
 
 **Multiple logical changes** — recommend splitting:
 ```
-1. refactor(types): extract TypeResolver to separate file
-2. feat(types): add variance handling
-3. test(types): add unit tests for TypeResolver
+1. refactor(codegen): extract default-value lookup to its own strategy
+2. feat(codegen): add a default for kotlin.time.Duration
+3. test(codegen): cover the Duration default
 ```
 
 ## Error Messages
@@ -103,11 +117,6 @@ COMMIT BLOCKED — Invalid Type
 COMMIT BLOCKED — Subject exceeds 72 characters (currently: {n})
 Suggested: "{shortened version}"
 ```
-
-## Supporting Files
-
-- **`resources/conventional-commits-reference.md`** — Full spec
-- **`resources/commit-message-patterns.md`** — Project-specific examples
 
 ## Related Skills
 

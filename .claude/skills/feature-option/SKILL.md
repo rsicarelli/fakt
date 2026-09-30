@@ -242,6 +242,5 @@ This allows: global default via Gradle, per-interface override via annotation, s
 
 ## Related Skills
 
-- `workflow` — full development cycle for implementing the feature
-- `compiler-architecture-validator` — validate FIR/IR separation
+- `sample-scaffolder` — add a sample that demonstrates the option
 - `codegen` — understand code generation pipeline for Layer 11

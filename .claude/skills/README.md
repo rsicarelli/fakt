@@ -3,38 +3,33 @@
 > **Specialized skills for Kotlin compiler plugin development**
 > **Location**: `.claude/skills/`
 
-## Available Skills (15 Total)
+## Available Skills (10 Total)
 
 | Skill | Purpose |
 |-------|---------|
-| `behavior-analyzer-tester` | Deep behavior analysis and GIVEN-WHEN-THEN test generation |
-| `bdd-test-runner` | Executes and validates BDD-compliant tests |
+| `bdd-test-runner` | Runs tests and checks GIVEN-WHEN-THEN naming compliance |
 | `codegen` | Documents the code generation pipeline (model → builder → renderer) |
-| `compilation` | Validates compilation and diagnoses build failures |
-| `compiler-architecture-validator` | Validates compiler plugin best practices |
-| `docs-navigator` | Navigates internal + public documentation |
-| `feature-option` | Guides adding new @Fake annotation options (11 touchpoints) |
 | `commit` | `/commit`: Conventional Commits with the AI co-author trailer |
-| `interface-analyzer` | Deep structural analysis of @Fake interfaces |
+| `compilation` | Validates generated fakes compile and diagnoses build failures |
+| `feature-option` | Guides adding new @Fake annotation options (11 touchpoints) |
 | `issue-creator` | Creates GitHub issues with auto-detected project context |
-| `kotlin-api-consultant` | Validates Kotlin compiler API usage |
-| `pr-creator` | Creates professional draft PRs |
+| `kotlin-api-consultant` | Keeps compiler API usage working across supported Kotlin versions |
+| `pr-creator` | Creates draft PRs from the project template |
 | `sample-scaffolder` | Scaffolds new sample projects (JVM, KMP, Android) |
 | `skill-creator` | Meta-skill for creating new skills |
-| `workflow` | Orchestrates full development pipeline |
 
 ## How Skills Work
 
-Claude Code auto-activates skills based on the `description` field in each skill's YAML frontmatter. Write natural prompts and relevant skills are suggested automatically:
+Claude Code auto-activates skills based on the `description` field in each skill's YAML frontmatter, and any skill can be run by name as a slash command (`/commit`). Example prompts:
 
 ```
 "Run tests and check BDD compliance"          → bdd-test-runner
 "Compilation failed, help me debug"           → compilation
+"Commit this"                                 → commit
 "Create a PR for this branch"                 → pr-creator
-"Analyze the UserService interface"           → interface-analyzer
-"Start working on the new feature"            → workflow
 "Add a new option to @Fake"                   → feature-option
 "How does the codegen pipeline work?"         → codegen
+"Does this compiler API exist in Kotlin 2.2?" → kotlin-api-consultant
 "Create a new sample project"                 → sample-scaffolder
 "Create an issue for this bug"                → issue-creator
 ```

@@ -149,3 +149,4 @@ gradle-plugin/.../gradle/
 | Kotlin IR API | `.claude/docs/development/kotlin-compiler-ir-api.md` |
 | Troubleshooting | `.claude/docs/troubleshooting/common-issues.md` |
 | v1.0 sunset handover (tracker: #150) | `.claude/docs/implementation/v1-sunset-handover.md` |
+| Public user docs (MkDocs) | `docs/` — page tree in the `nav:` of `mkdocs.yml` |

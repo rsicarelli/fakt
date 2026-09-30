@@ -21,15 +21,16 @@ Executes GIVEN-WHEN-THEN tests with compliance validation and coverage analysis.
 
 ### 2. Pre-Execution BDD Compliance Check
 
+Unit tests live in `compiler/`, `codegen-runtime/`, `gradle-plugin/`, `compiler-api/` and `build-logic/` (`src/test/kotlin`); sample tests live under `samples/*/src/*Test/`.
+
 ```bash
-# Find all test files
-find compiler/src/test/kotlin -name "*Test.kt"
+TEST_DIRS="compiler/src/test codegen-runtime/src/test gradle-plugin/src/test compiler-api/src/test build-logic/src/test"
 
-# Check for GIVEN-WHEN-THEN pattern
-grep -r "fun \`GIVEN" compiler/src/test/kotlin/
+# Count GIVEN-WHEN-THEN tests
+grep -rh "fun \`GIVEN" $TEST_DIRS | wc -l
 
-# Check for forbidden "should" pattern (MUST BE ZERO)
-grep -r "fun \`should" compiler/src/test/kotlin/
+# Forbidden "should" naming — expect zero matches
+grep -rn "fun \`should" $TEST_DIRS
 ```
 
 **Compliance checklist:**
@@ -54,11 +55,14 @@ Reference: .claude/docs/development/validation/testing-guidelines.md
 # All tests (from the repository root)
 ./gradlew test
 
-# Compiler module
-./gradlew :compiler:test
+# One module (:compiler, :codegen-runtime, :gradle-plugin, :compiler-api)
+./gradlew :codegen-runtime:test
 
 # Pattern-based
 ./gradlew :compiler:test --tests "*{Pattern}*"
+
+# Samples (built against the published plugin)
+make publish-local && make test-sample
 ```
 
 ### 4. Analyze Results
@@ -72,12 +76,11 @@ Reference: .claude/docs/development/validation/testing-guidelines.md
 
 ### 5. Coverage Analysis
 
-```bash
-# Count GIVEN-WHEN-THEN tests
-grep -r "fun \`GIVEN" compiler/src/test/kotlin/ | wc -l
+List source files with no matching `*Test.kt` in the module you changed (a heuristic — some classes are covered through other tests):
 
-# Find implementation files without tests
-find compiler/src/main/kotlin -name "*.kt" | while read file; do
+```bash
+MODULE=codegen-runtime   # or compiler, gradle-plugin, compiler-api
+find $MODULE/src/main/kotlin -name "*.kt" | while read file; do
     testFile="${file/src\/main/src\/test}"
     testFile="${testFile/.kt/Test.kt}"
     if [ ! -f "$testFile" ]; then
@@ -105,10 +108,9 @@ Coverage:
 ```
 
 **Follow-up suggestions:**
-- If coverage gaps → offer to generate tests with `behavior-analyzer-tester`
+- If coverage gaps → offer to write GIVEN-WHEN-THEN tests for them
 - If failures → suggest fixes or relevant skills
 
 ## Related Skills
 
-- **`behavior-analyzer-tester`** — Generate missing tests
 - **`compilation`** — Validate code compiles

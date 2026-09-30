@@ -204,5 +204,4 @@ Extension functions on builders (in separate files):
 ## Related Skills
 
 - `feature-option` — adding options that conditionally enable/disable generation
-- `compiler-architecture-validator` — validate FIR/IR separation
-- `interface-analyzer` — understanding what gets analyzed before codegen
+- `compilation` — validate that generated output compiles
