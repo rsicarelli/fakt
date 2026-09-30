@@ -1,6 +1,6 @@
 ## #152 Native spike: results
 
-**Verdict: approach A works.** Linux passes all 8 exit criteria; the macOS run is pending. `K2Native`, loaded from
+**Verdict: approach A works.** All 8 exit criteria pass, on Linux and on macOS (arm64). `K2Native`, loaded from
 the K/N distribution's `kotlin-native-compiler-embeddable.jar` with Fakt as `-Xplugin` and FIR
 emission, produces fakes **byte-identical** to the in-process path for:
 - leaf targets;
@@ -21,7 +21,7 @@ Branch: `ccr-aa1d21c5-gqlrfs`. It holds a throwaway prototype behind
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
 | 1 | Leaf `linuxX64Main` fake over `platform.posix` byte-identical to in-process | ✅ PASS | `FakePosixClockImpl` sha256 equal. K2Native CLI with the args KGP uses for `compileKotlinLinuxX64` (`bin/c1-leaf.sh`) and on the Gradle task path |
-| 2 | `nativeMain` / `appleMain` via `-Xmetadata-klib`, incl. iOS forward declarations | ✅ PASS (Linux); macOS: _pending_ | `NativeMemory` (commonized `size_t`), `AppleUrls` (`NSURL`, `NSData`, suspend) and `IosViews` (`UIView`, `UIViewController`) are byte-identical. `iosArm64`, `iosSimulatorArm64` and `macosArm64` test klibs compile against them on Linux. macOS link and run: see the run below |
+| 2 | `nativeMain` / `appleMain` via `-Xmetadata-klib`, incl. iOS forward declarations | ✅ PASS (Linux + macOS) | `NativeMemory` (commonized `size_t`), `AppleUrls` (`NSURL`, `NSData`, suspend) and `IosViews` (`UIView`, `UIViewController`) are byte-identical. `iosArm64`, `iosSimulatorArm64` and `macosArm64` test klibs compile against them on Linux. On `macos-latest`, `iosSimulatorArm64Test` and `macosArm64Test` link and pass against task-path fakes, and all fakes are byte-identical to in-process there (runs 36702721411, 36703013116). `kmp-multi-target` iOS-simulator and macOS tests pass too |
 | 3 | User cinterop klibs resolve | ✅ PASS | `CinteropPort` uses `spike.cfixture.Point` and forward-declared `cnames.structs.Opaque`; byte-identical |
 | 4 | Distribution located without KGP internals, offline; when is it provisioned | ✅ PASS | Discovery uses `kotlin.native.home` → `konanDataDir`/`KONAN_DATA_DIR`/`~/.konan` + `kotlin-native-prebuilt-<host>-<ver>`; version from `kotlin.native.version` or `getKotlinPluginVersion()`. Clean `~/.konan` + `--offline` works on 2.2.0 and 2.4.10. Configuration cache is stored and then reused. Provisioning details below |
 | 5 | `~/.konan/dependencies` never accessed | ✅ PASS | strace (`%file`) of every K2Native run: 0 accesses to `dependencies/`. The only distribution files read are the compiler jar, `konan.properties`, `klib/common/stdlib` and `klib/platform/<target>` |
@@ -71,7 +71,7 @@ The prototype found these; the fixture alone didn't.
   ABI/apiVersion and add a KMP compat cell. It relates to #166.
 - **The unread producer metadata cache is quadratic.** In producer mode `FakeInterfaceChecker`
   rewrites the whole `FirMetadataCache` after **every** interface. On the 10,000-fake benchmark
-  the `commonMain` producer takes _BASELINE_ on today's default path vs _NOFIR_ without the file.
+  the `commonMain` producer takes about **30 min** on today's default path, against **46 s** for the same 10,000 fakes on the native producer, which doesn't write the file. The A/B run with only the file removed (`-Pfakt.spike.noFirMetadata=true`) has not been done yet.
   #164a (removing the consumer mode and `firMetadataFile`) therefore removes a large, measurable
   cost.
 - **Codegen: an interface-level `@OptIn(X::class)` is copied without importing `X`**, so the fake
