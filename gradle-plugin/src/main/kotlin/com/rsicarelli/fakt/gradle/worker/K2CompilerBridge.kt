@@ -22,6 +22,12 @@ internal object K2Fqns {
         "org.jetbrains.kotlin.cli.common.arguments.K2JSCompilerArguments"
     const val COMMON_COMPILER_ARGUMENTS =
         "org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments"
+    const val COMMON_TOOL_ARGUMENTS =
+        "org.jetbrains.kotlin.cli.common.arguments.CommonToolArguments"
+    const val PARSE_COMMAND_LINE_ARGUMENTS =
+        "org.jetbrains.kotlin.cli.common.arguments.ParseCommandLineArgumentsKt"
+    const val ARGUMENT_PARSE_ERRORS =
+        "org.jetbrains.kotlin.cli.common.arguments.ArgumentParseErrors"
     const val MESSAGE_COLLECTOR = "org.jetbrains.kotlin.cli.common.messages.MessageCollector"
     const val PRINTING_MESSAGE_COLLECTOR =
         "org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector"
@@ -160,6 +166,29 @@ internal class K2CompilerBridge(
         error(
             "Setter $setterName(${paramType.simpleName}) not found on ${argsInstance.javaClass.name}"
         )
+    }
+
+    /**
+     * Parses [arguments] into [argsInstance] exactly like the `kotlinc` command line does
+     * (`parseCommandLineArguments`), and returns the human-readable problems
+     * (`validateArgumentsAllErrors`). Empty when the arguments were accepted.
+     */
+    fun parseArguments(argsInstance: Any, arguments: List<String>): List<String> {
+        val toolArguments = load(K2Fqns.COMMON_TOOL_ARGUMENTS)
+        val parser = load(K2Fqns.PARSE_COMMAND_LINE_ARGUMENTS)
+        parser
+            .getMethod(
+                "parseCommandLineArguments",
+                List::class.java,
+                toolArguments,
+                Boolean::class.javaPrimitiveType,
+            )
+            .invoke(null, arguments, argsInstance, false)
+        val errors = toolArguments.getMethod("getErrors").invoke(argsInstance) ?: return emptyList()
+        val errorsClass = load(K2Fqns.ARGUMENT_PARSE_ERRORS)
+        val problems =
+            parser.getMethod("validateArgumentsAllErrors", errorsClass).invoke(null, errors)
+        return (problems as List<*>).map { it.toString() }
     }
 
     private fun plainFullPathsRenderer(): Any =
