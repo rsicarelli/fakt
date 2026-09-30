@@ -89,6 +89,16 @@ The prototype found these; the fixture alone didn't.
 - `CompilerOptimizations` creates `<outputDir>/../../cache/` (an undeclared write) on every
   driver. It is already on #150's removal list.
 
+### Existing test suites on the spike branch (flag off)
+- `:gradle-plugin:test` 252/252, `:compiler:test` 312/312, `:compiler-api:test` 27/27, all
+  green. The default path is unaffected.
+- `:gradle-plugin:apiCheck` fails **only** on the 7 new prototype properties of
+  `FaktGenerateTask`.
+- `:gradle-plugin:detekt` fails **only** on size thresholds in the prototype's additions
+  (`TooManyFunctions`, `LongMethod` in `register`, `LongParameterList` in `routeCompilation`).
+- Both are expected for throwaway code. Item 7 must split the code (for example a
+  `NativeCompilerDriver` and a `NativeTaskWiring` file) and run `apiDump`.
+
 ### Not validated by the spike (for item 7)
 - **Tests:** the prototype has no unit or integration tests. Item 7 needs:
   - `ProjectBuilder` routing tests (leaf → consumer, shared native → producer, the
