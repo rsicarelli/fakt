@@ -241,6 +241,5 @@ Convention plugins available: `fakt-sample-jvm`, `fakt-sample-kmp`, `fakt-sample
 
 ## Related Skills
 
-- `workflow` — full development cycle including sample creation
 - `compilation` — diagnose build failures in new samples
 - `feature-option` — new features often need a sample to demonstrate

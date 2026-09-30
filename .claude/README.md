@@ -3,64 +3,72 @@
 > **Purpose**: Internal documentation for Claude Code development workflow
 > **Testing Standard**: [Testing Guidelines](docs/development/validation/testing-guidelines.md)
 
+Project instructions live in [`CLAUDE.md`](../CLAUDE.md) at the repository root.
+
 ## Documentation
 
 ### Core Documentation
 - **[Project Overview](docs/README.md)** - Quick start and features
-- **[Architecture](docs/implementation/architecture/ARCHITECTURE.md)** - FIR→IR two-phase design
+- **[Architecture](docs/implementation/architecture/ARCHITECTURE.md)** - FIR emission in the `FaktGenerateTask` worker; legacy in-process IR path
 - **[KMP Optimization](docs/implementation/architecture/kmp-optimization-strategy.md)** - Multi-platform strategy
+- **[Metadata Producer / FIR Emission](docs/implementation/architecture/metadata-producer-fir-emission.md)** - KMP producer/consumer emission
+- **[v1.0 Sunset Handover](docs/implementation/v1-sunset-handover.md)** - Removing the legacy path (#150)
 - **[Testing Guidelines](docs/development/validation/testing-guidelines.md)** - GIVEN-WHEN-THEN standard
 - **[Troubleshooting](docs/troubleshooting/common-issues.md)** - Common issues and solutions
 
 ### Development Resources
 - **[Kotlin API Reference](docs/development/kotlin-api-reference.md)** - Compiler source consultation
 - **[Kotlin IR API](docs/development/kotlin-compiler-ir-api.md)** - IR API deep dive
+- **[Cache-Correct KMP Research](docs/implementation/research/issue-79-cache-correct-kmp-research.md)** - Background for #79
 
-## Skills
+## Skills and Commands
 
-See **[Skills README](skills/README.md)** for the complete skills system.
-
-### Available Skills
+See the **[Skills README](skills/README.md)** for what each skill does.
 
 | Category | Skills |
 |----------|--------|
-| **Analysis** | `kotlin-api-consultant`, `interface-analyzer`, `compilation-error-analyzer` |
-| **Core Workflows** | `bdd-test-runner`, `behavior-analyzer-tester`, `git-commit-guardian`, `pr-creator` |
-| **Validation** | `compilation-validator`, `compiler-architecture-validator`, `implementation-tracker` |
-| **Knowledge Base** | `fakt-docs-navigator`, `public-docs-navigator` |
-| **Development** | `skill-creator` |
+| **Compiler & codegen** | `codegen`, `feature-option`, `compilation`, `kotlin-api-consultant` |
+| **Testing & samples** | `bdd-test-runner`, `sample-scaffolder` |
+| **Git & GitHub** | `commit` (`/commit`), `pr` (`/pr`), `issue-creator` |
+| **Meta** | `skill-creator` |
+
+Custom command: `/release-notes <version>` (`commands/release-notes.md`).
 
 ## Structure
 
 ```
 .claude/
-├── README.md              # This file
+├── README.md                      # This file
+├── commands/
+│   └── release-notes.md
 ├── docs/
-│   ├── README.md          # Project overview
+│   ├── README.md                  # Project overview
 │   ├── development/
 │   │   ├── kotlin-api-reference.md
 │   │   ├── kotlin-compiler-ir-api.md
 │   │   └── validation/
 │   │       └── testing-guidelines.md
 │   ├── implementation/
-│   │   └── architecture/
-│   │       ├── ARCHITECTURE.md
-│   │       └── kmp-optimization-strategy.md
+│   │   ├── architecture/
+│   │   │   ├── ARCHITECTURE.md
+│   │   │   ├── kmp-optimization-strategy.md
+│   │   │   └── metadata-producer-fir-emission.md
+│   │   ├── research/
+│   │   │   └── issue-79-cache-correct-kmp-research.md
+│   │   └── v1-sunset-handover.md
 │   └── troubleshooting/
 │       └── common-issues.md
-└── skills/                # Claude Code skills (flat structure, 13 skills)
+└── skills/                        # One directory per skill, each with a SKILL.md
+    ├── README.md
     ├── bdd-test-runner/
-    ├── behavior-analyzer-tester/
-    ├── compilation-error-analyzer/
-    ├── compilation-validator/
-    ├── compiler-architecture-validator/
-    ├── fakt-docs-navigator/
-    ├── git-commit-guardian/
-    ├── implementation-tracker/
-    ├── interface-analyzer/
+    ├── codegen/
+    ├── commit/
+    ├── compilation/
+    ├── feature-option/
+    ├── issue-creator/
     ├── kotlin-api-consultant/
-    ├── pr-creator/
-    ├── public-docs-navigator/
+    ├── pr/
+    ├── sample-scaffolder/
     └── skill-creator/
 ```
 

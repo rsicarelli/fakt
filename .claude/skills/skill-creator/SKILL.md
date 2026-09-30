@@ -164,11 +164,6 @@ Tools: {allowed-tools}
 Test by asking naturally: "{example prompt that should trigger this skill}"
 ```
 
-## Templates
-
-- **`templates/SKILL-template.md`** — Base SKILL.md structure
-- **`templates/script-template.sh`** — Bash script template
-
 ## Related Skills
 
-- **`docs-navigator`** — Access existing skill patterns
+- **`codegen`**, **`feature-option`** — good examples of existing skill patterns

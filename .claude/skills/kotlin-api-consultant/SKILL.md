@@ -1,143 +1,55 @@
 ---
 name: kotlin-api-consultant
-description: Queries Kotlin compiler source code for API validation, compatibility checks, and breaking change detection. Use when validating Kotlin compiler APIs, checking IrGenerationExtension compatibility, analyzing compiler plugin API usage, or verifying that an API hasn't been deprecated or removed in a newer Kotlin version. Make sure to use this skill whenever compiler plugin code references Kotlin internal APIs — these APIs change frequently between Kotlin versions and silent breakage is common.
+description: Checks Kotlin compiler API usage against the Kotlin versions Fakt supports — which path runs on which compiler, how compat shims are written, how to verify across versions, and how to bump Kotlin. Use when calling a new FIR/IR/compiler-plugin API, seeing NoSuchMethodError, NoSuchFieldError or NoClassDefFoundError from compiler classes, bumping the Kotlin version, or checking whether an API exists in the minimum supported Kotlin. Make sure to use this skill whenever compiler plugin code starts using a Kotlin compiler API it didn't use before — these APIs change between Kotlin releases and a break only shows up on an older supported version.
 allowed-tools: Read, Grep, Glob, Bash, WebFetch
 ---
 
 # Kotlin API Consultant
 
-Validates Kotlin compiler API usage, detects breaking changes, and provides best practice recommendations for compiler plugin development.
-
-## Core Mission
-
-Provides Kotlin compiler API validation by consulting source code, detecting breaking changes, and ensuring API compatibility across Kotlin versions.
+Keeps Fakt's compiler plugin working across every Kotlin version in the support matrix.
 
 ## Instructions
 
-### 1. Identify Target API
+### 1. Know Which Compiler Runs the Code
 
-**Extract from conversation:**
-- API class/interface name from user's message
-- Look for patterns: "check IrGenerationExtension", "validate IrPluginContext API"
-- Common APIs: IrGenerationExtension, IrPluginContext, IrFactory, IrClass, IrTypeParameter, CompilerPluginRegistrar
+- **Supported range:** the matrix in `docs/compatibility.md` is the source of truth (minimum and latest tested).
+- **Build:** `compiler/` compiles `compileOnly` against `kotlin-compiler-embeddable` at the `kotlin` version in `gradle/libs.versions.toml`.
+- **Default FIR path** (`FaktGenerateTask` worker): runs on the compiler Fakt pins — `FAKT_KOTLIN_VERSION` in `gradle-plugin/.../FaktGradleSubplugin.kt`. The user's Kotlin version doesn't matter here.
+- **Legacy in-process path** (Native mains, `LEGACY`, or `-Pfakt.useExperimentalGenerateTask=false`): runs inside the user's own compiler, which can be as old as the minimum supported version.
 
-**If unclear or missing:**
-```
-Ask: "Which Kotlin compiler API would you like me to consult?"
-Suggest: IrGenerationExtension | IrPluginContext | IrFactory | CompilerPluginRegistrar | Other
-```
+So code reachable from the in-process path (the `ir/` package, `FaktCompilerPluginRegistrar`, and the FIR checkers it registers) must only use APIs present in every supported version.
 
-### 2. Locate API in Kotlin Compiler Source
+### 2. Check the API Across the Range
 
-**Search Kotlin source on GitHub or local copy if available:**
+Look the API up at the minimum and latest supported versions in the Kotlin repository (tags like `v2.2.0`), not just the version on the build classpath. Signs of trouble:
 
-Common package locations:
-- `org.jetbrains.kotlin.backend.common.extensions` (IR extension APIs)
-- `org.jetbrains.kotlin.ir.declarations` (IR tree elements)
-- `org.jetbrains.kotlin.ir.expressions` (IR expressions)
-- `org.jetbrains.kotlin.ir.types` (Type system)
-- `org.jetbrains.kotlin.fir` (FIR APIs)
-- `org.jetbrains.kotlin.compiler.plugin` (Plugin registration)
+- The symbol doesn't exist at the minimum version, or its signature differs
+- `@Deprecated(level = ERROR)`, or a replacement API introduced after the minimum
+- An opt-in annotation (`@ExperimentalCompilerApi`, `@UnsafeApi`) the module doesn't already opt into
 
-**If not found:**
-```
-API '${API_NAME}' not found
+### 3. Bridge Differences with a Compat Shim
 
-Suggestions:
-1. Check spelling (case-sensitive)
-2. Check if it's an internal/experimental API
-3. Consult: https://kotlinlang.org/docs/compiler-plugins.html
+When the API differs across the range, isolate it in a small private helper suffixed `Compat`, next to its call site. Existing patterns:
+
+- `FaktCompilerPluginRegistrar.registerExtensionCompat` — calls `registerExtension` reflectively; Kotlin 2.4.0 widened its receiver type, and a direct call compiled against 2.4 fails with `NoClassDefFoundError` on 2.2–2.3
+- `FirToIrTransformer.extensionReceiverParameterCompat` — reads the extension receiver from the unified `parameters` list instead of the deprecated `extensionReceiverParameter`
+
+Keep the shim's KDoc explaining which versions differ, so it can be deleted when the minimum moves past them.
+
+### 4. Verify on Every Supported Version
+
+```bash
+make test-compat-all          # publish-local + jvmTest on every samples/compat/kotlin-*/
+make test-compat-2.2.0        # one version
 ```
 
-### 3. Analyze API Definition
+CI runs the same matrix (version list in `.github/workflows/development.yml`) through `.github/actions/test-compat-samples`.
 
-**Extract key information:**
-- [ ] Package and imports
-- [ ] Interface/class declaration
-- [ ] Generic type parameters
-- [ ] Method signatures
-- [ ] Annotations (@UnsafeApi, @FirIncompatiblePluginAPI, @Deprecated)
-- [ ] Default implementations
+### 5. Bumping Kotlin
 
-**Critical annotation markers:**
-```kotlin
-@UnsafeApi                          // May change without notice
-@FirIncompatiblePluginAPI          // K1 only, not K2
-@Deprecated(message = "...", level = ERROR)  // Removal planned
-@ExperimentalCompilerApi           // Unstable, may change
-```
-
-### 4. Detect Breaking Changes
-
-**Breaking change indicators:**
-- Removed methods
-- Changed method signatures
-- Added abstract methods to interface
-- Changed return types
-- New required type parameters
-- Deprecation with ReplaceWith (migration path)
-
-### 5. Generate API Report
-
-```
-KOTLIN API CONSULTATION: ${API_NAME}
-
-LOCATION:
-Package: org.jetbrains.kotlin...
-Module: ...
-
-DEFINITION (Kotlin ${VERSION}):
-[Interface/class definition]
-
-STABILITY: Stable / Experimental / Deprecated
-K2 COMPATIBLE: Yes / No / Partial
-
-FAKT USAGE:
-- [How Fakt uses this API]
-- [Alignment status]
-
-WARNINGS:
-- [Any @UnsafeApi warnings]
-- [Deprecation notices]
-
-RECOMMENDATIONS:
-1. [Recommendation]
-...
-```
-
-### 6. Provide Usage Recommendations
-
-**If API is stable:** Safe to use directly.
-**If API has @UnsafeApi:** Consider abstraction layer for isolation.
-**If API is deprecated:** Show migration path with replacement API.
-
-## Supporting Files
-
-- **`resources/api-lookup-patterns.md`** - Strategies for finding APIs
-- **`resources/breaking-changes-catalog.md`** - Known breaking changes across Kotlin versions
-- **`resources/api-best-practices.md`** - Best practices for compiler plugin APIs
+Update `kotlin` in `gradle/libs.versions.toml` **and** `FAKT_KOTLIN_VERSION` (nothing checks that they match), add a `samples/compat/kotlin-<version>/` sample and its entry in `development.yml`, and update `docs/compatibility.md`.
 
 ## Related Skills
 
-- **`compiler-architecture-validator`** - Validate architectural patterns
-- **`compilation`** — Debug compilation errors
-- **`docs-navigator`** — Access documentation
-
-## API Categories
-
-| Category | Examples | Stability |
-|----------|----------|-----------|
-| Core IR | IrGenerationExtension, IrPluginContext | Stable |
-| FIR Phase | FirExtensionRegistrar | K2 specific |
-| Plugin System | CompilerPluginRegistrar | Stable |
-| Type System | IrTypeParameter, IrType | Moderate |
-| Experimental | Various @ExperimentalCompilerApi | Unstable |
-
-## Validation Checklist
-
-Before using an API in Fakt:
-- [ ] API located and analyzed
-- [ ] Current definition understood
-- [ ] Breaking changes checked
-- [ ] Deprecation status confirmed
-- [ ] K1/K2 compatibility verified
+- **`compilation`** — Diagnose the build failure that surfaced the API problem
+- **`codegen`** — Code generation, which doesn't touch compiler APIs

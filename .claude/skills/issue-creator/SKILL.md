@@ -14,7 +14,7 @@ Creates GitHub issues with proper context using `gh issue create` and the reposi
 
 Use `AskUserQuestion` to select:
 - **Bug report** — something broken, unexpected behavior
-- **Feature request** — new capability or enhancement
+- **Feature request** — new capability or enhancement (goes to Discussions, see below)
 - **Task/chore** — internal work, refactoring, documentation
 
 ### 2. Auto-Detect Project Context
@@ -85,32 +85,7 @@ EOF
 
 #### Feature Request
 
-Title prefix: `[Feature]: `. Auto-labels: `enhancement`, `needs-triage`.
-
-Template fields (from `.github/ISSUE_TEMPLATE/feature_request.yml`):
-- **Problem description** — what problem does this solve
-- **Proposed solution** — Kotlin code showing desired API
-- **Alternatives considered** (optional)
-- **Platform** (optional)
-
-```bash
-gh issue create \
-  --title "[Feature]: {description}" \
-  --label "enhancement,needs-triage" \
-  --body "$(cat <<'EOF'
-### Problem Description
-{problem}
-
-### Proposed Solution
-```kotlin
-{proposedApi}
-```
-
-### Alternatives Considered
-{alternatives}
-EOF
-)"
-```
+The repository has no feature-request issue template and blank issues are disabled: `.github/ISSUE_TEMPLATE/config.yml` routes ideas to GitHub Discussions (Ideas category). Point the user there; if they want a tracked issue instead, create it as a Task/chore.
 
 #### Task/Chore
 
@@ -179,6 +154,5 @@ After creating the issue, display:
 
 ## Related Skills
 
-- `pr-creator` — analogous GitHub creation workflow
-- `workflow` — can create issues for discovered bugs during development
+- `pr` — analogous GitHub creation workflow
 - `compilation` — provides error context for bug reports
