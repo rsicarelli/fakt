@@ -76,19 +76,21 @@ Default strategy: "" | 0 | false | null | emptyList() | emptyMap()
 
 **Classify patterns:**
 
-| Pattern | Example | Complexity | Support |
-|---------|---------|-----------|---------|
-| No generics | `interface UserService` | LOW | Phase 1 ✅ |
-| Interface-level | `interface Repository<T>` | MEDIUM | Type erasure (T→Any) |
-| Method-level | `fun <T> process(data: T): T` | MEDIUM | Scoping challenge |
-| Mixed | `interface Cache<K,V> { fun <R:V> compute(...): R }` | HIGH | Phase 2A+2B |
+| Pattern | Example | Complexity |
+|---------|---------|-----------|
+| No generics | `interface UserService` | LOW |
+| Interface-level | `interface Repository<T>` | MEDIUM |
+| Method-level | `fun <T> process(data: T): T` | MEDIUM |
+| Mixed / constrained | `interface Cache<K,V> { fun <R:V> compute(...): R }` | HIGH |
+
+Class-level generics, method-level generics and constraints are supported (`docs/get-started/features.md`); check `docs/user-guide/known-issues.md` for open cases.
 
 ### 7. Detect Special Patterns
 
-- **Suspend functions** → Phase 1 ✅, behavior must also be suspend
-- **Function type params** → Phase 1 ✅, default = empty lambda `{}`
-- **Nullable returns** → Phase 1 ✅, default = `null`
-- **Collections** → Phase 1 ✅, default = `emptyList()` / `emptySet()` / `emptyMap()`
+- **Suspend functions** → behavior must also be suspend
+- **Function type params** → default = empty lambda `{}`
+- **Nullable returns** → default = `null`
+- **Collections** → default = `emptyList()` / `emptySet()` / `emptyMap()`
 
 ### 8. Complexity Assessment
 
@@ -96,27 +98,18 @@ Default strategy: "" | 0 | false | null | emptyList() | emptyMap()
 ```
 No generics + simple types       = LOW
 Suspend + generic return types   = MEDIUM
-Interface-level generics         = MEDIUM (Phase 2B)
-Method-level generics            = MEDIUM (Phase 2A)
-Mixed generics + constraints     = HIGH (Phase 2A+2B)
+Interface-level generics         = MEDIUM
+Method-level generics            = MEDIUM
+Mixed generics + constraints     = HIGH
 ```
 
 ### 9. Generation Strategy
 
-**Based on complexity:**
+Complexity says where to look first when output is wrong, not whether generation is supported:
 
-**LOW** — Full Phase 1 support, 100% expected success
-- Generate with current plugin, verify compilation, write tests
-
-**MEDIUM** — Partial support, may need workarounds
-- Suspend: fully supported
-- Generic return types (Result<T>): supported
-- Interface-level generics: type erasure (T→Any)
-
-**HIGH** — Limited support, consider simplifications
-- Split into simpler interfaces
-- Use concrete types instead of generics
-- Or wait for Phase 2A/2B
+- **LOW** — generate, verify compilation, write tests
+- **MEDIUM** — also inspect the generated signatures for suspend and generic return types
+- **HIGH** — check type-parameter scoping and bounds in the generated fake; if it fails, reduce to a minimal reproducer and check known issues
 
 ### 10. Report
 
@@ -130,7 +123,7 @@ Overview:
 - Methods: ${count} | Properties: ${count}
 
 Methods:
-1. ${name} — ${complexity} — ${support_status}
+1. ${name} — ${complexity}
 ...
 
 Properties:

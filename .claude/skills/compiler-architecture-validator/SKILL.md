@@ -1,6 +1,6 @@
 ---
 name: compiler-architecture-validator
-description: Validates Fakt follows compiler plugin best practices — two-phase FIR→IR, context-driven generation, CompilerPluginRegistrar structure. Use when validating architecture, checking plugin structure, reviewing compiler patterns, or verifying that FIR and IR phases remain properly separated. Make sure to use this skill whenever compiler plugin code is modified — phase mixing and registration issues are subtle bugs that only surface at runtime.
+description: Validates Fakt follows compiler plugin best practices — FIR detection and emission, the legacy IR path kept separate, context-driven generation, CompilerPluginRegistrar structure. Use when validating architecture, checking plugin structure, reviewing compiler patterns, or verifying that FIR and IR phases remain properly separated. Make sure to use this skill whenever compiler plugin code is modified — phase mixing and registration issues are subtle bugs that only surface at runtime.
 allowed-tools: Read, Grep, Glob, TaskCreate, TaskUpdate
 ---
 
@@ -19,8 +19,8 @@ Validates Fakt compiler plugin follows industry-standard architectural patterns.
 
 **Components:**
 1. CompilerPluginRegistrar — Plugin registration
-2. IrGenerationExtension — IR generation logic
-3. FirExtensionRegistrar — FIR phase detection
+2. FirExtensionRegistrar + `fir/generation/` — FIR detection and emission (default path)
+3. IrGenerationExtension — legacy IR emission (removed for 1.0; check it gains no new features)
 4. Context Pattern — FaktSharedContext / IrFaktContext
 5. Error Handling — Diagnostic patterns
 
@@ -40,7 +40,7 @@ Read compiler/src/main/kotlin/com/rsicarelli/fakt/compiler/FaktCompilerPluginReg
 ### 3. Validate IrGenerationExtension
 
 ```bash
-Read compiler/src/main/kotlin/com/rsicarelli/fakt/compiler/ir/UnifiedFaktIrGenerationExtension.kt
+Read compiler/src/main/kotlin/com/rsicarelli/fakt/compiler/ir/generation/UnifiedFaktIrGenerationExtension.kt
 ```
 
 - [ ] Extends `IrGenerationExtension`
@@ -66,8 +66,8 @@ Read compiler/src/main/kotlin/com/rsicarelli/fakt/compiler/fir/FaktFirExtensionR
 ```
 
 - [ ] FirExtensionRegistrar implementation
-- [ ] @Fake annotation detection
-- [ ] Validation before IR phase
+- [ ] @Fake annotation detection and validation
+- [ ] Emission via `fir/generation/FirFakeEmitter.kt` → `FirToFakeDeclarationTranslator.kt`
 - [ ] Proper error reporting
 
 ### 6. Validate Error Handling

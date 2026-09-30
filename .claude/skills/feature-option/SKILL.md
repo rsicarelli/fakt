@@ -1,6 +1,6 @@
 ---
 name: feature-option
-description: Guides step-by-step through all 11 touchpoints for adding a new @Fake annotation option (like mutability or callHistory). Covers annotation enum, CLI processor, Gradle plugin, FIR metadata, IR bridge, analysis models, and code generators. Use when adding a new option to @Fake, adding a new enum to the annotation, making something configurable per-interface, implementing a new compiler plugin feature flag, adding a new Gradle extension property, or extending the three-tier resolution (annotation → plugin → default). Make sure to use this skill whenever a change touches more than one layer of the option pipeline, even for small additions like a new enum value.
+description: Guides step-by-step through all 11 touchpoints for adding a new @Fake annotation option (like mutability or callHistory). Covers annotation enum, CLI processor, Gradle plugin, FIR metadata, FIR translator, the shared FakeDeclaration model, and code generators. Use when adding a new option to @Fake, adding a new enum to the annotation, making something configurable per-interface, implementing a new compiler plugin feature flag, adding a new Gradle extension property, or extending the three-tier resolution (annotation → plugin → default). Make sure to use this skill whenever a change touches more than one layer of the option pipeline, even for small additions like a new enum value.
 allowed-tools: Read, Grep, Glob, AskUserQuestion
 ---
 
@@ -125,7 +125,7 @@ return FaktOptions(/* ...existing... */, enable{OptionName}Default = enable{Opti
 
 #### Layer 7 — FIR Mirror Enum + Validated Metadata
 
-**File**: `compiler/src/main/kotlin/com/rsicarelli/fakt/compiler/fir/metadata/FirFakeMetadata.kt`
+**File**: `codegen-runtime/src/main/kotlin/com/rsicarelli/fakt/compiler/fir/metadata/FirFakeMetadata.kt`
 
 ```kotlin
 // Mirror enum (avoids runtime dep on annotations):
@@ -166,45 +166,37 @@ private fun extract{OptionName}Mode(declaration: FirClass, session: FirSession):
 
 Call in `analyzeMetadata()` and pass to `ValidatedFakeInterface`/`ValidatedFakeClass` constructor.
 
-> **Layers 9-10** bridge the FIR metadata to code generation in the IR phase — the resolver function implements the three-tier resolution (annotation → plugin → default), and analysis models expose the final resolved boolean that generators consume.
+> **Layers 9-10** resolve the option and carry the result to code generation. New generation behaviour goes on the FIR path (see CLAUDE.md); the resolver implements the three-tier resolution (annotation → plugin → default) and the shared `FakeDeclaration` model carries the final boolean that generators consume.
 
-#### Layer 9 — IR Generation Metadata Bridge
+#### Layer 9 — Resolver + FIR Translator
 
-**File**: `compiler/.../ir/transform/IrGenerationMetadata.kt`
+**Files**: `codegen-runtime/.../compiler/fir/metadata/FirFakeMetadata.kt` + `compiler/.../fir/generation/FirToFakeDeclarationTranslator.kt` + `compiler/.../fir/generation/FirFakeEmitter.kt`
 
-Three additions:
-
-**a)** Field in `IrGenerationConfig`:
+**a)** Resolver next to the mirror enum (pattern: `resolveCallHistory`, `resolveMutability`):
 ```kotlin
-val {optionName}Mode: Fir{OptionName}Mode = Fir{OptionName}Mode.DEFAULT,
+fun Fir{OptionName}Mode.resolve{OptionName}(pluginDefault: Boolean): Boolean =
+    when (this) {
+        Fir{OptionName}Mode.{VALUE_A} -> true
+        Fir{OptionName}Mode.{VALUE_B} -> false
+        Fir{OptionName}Mode.DEFAULT -> pluginDefault
+    }
 ```
 
-**b)** Accessor on `IrGenerationMetadata` and `IrClassGenerationMetadata`:
-```kotlin
-val {optionName}Mode: Fir{OptionName}Mode get() = config.{optionName}Mode
-```
+**b)** In both `toFakeInterface()` and `toFakeClass()`, add an `enable{OptionName}Default: Boolean` parameter and set `generate{OptionName} = {optionName}Mode.resolve{OptionName}(enable{OptionName}Default)`.
 
-**c)** Resolver function + usage in `toInterfaceAnalysis()` and `toClassAnalysis()`:
-```kotlin
-private fun resolve{OptionName}Enabled(
-    annotationMode: Fir{OptionName}Mode,
-    pluginDefault: Boolean,
-): Boolean = when (annotationMode) {
-    Fir{OptionName}Mode.{VALUE_A} -> true
-    Fir{OptionName}Mode.{VALUE_B} -> false
-    Fir{OptionName}Mode.DEFAULT -> pluginDefault
-}
-```
+**c)** In both `FirFakeEmitter.emit()` overloads, pass `sharedContext.options.enable{OptionName}Default`.
 
-#### Layer 10 — Analysis Models (final boolean)
+#### Layer 10 — Shared Model (final boolean)
 
-**File**: `compiler/.../ir/analysis/AnalysisModels.kt`
+**File**: `codegen-runtime/.../codegen/analysis/FakeDeclaration.kt`
 
-Add resolved boolean to both `InterfaceAnalysis` and `ClassAnalysis`:
+Add the resolved boolean to the sealed interface and override it in both `Interface` and `Class`:
 
 ```kotlin
-val generate{OptionName}: Boolean = {defaultValue},
+val generate{OptionName}: Boolean
 ```
+
+The legacy `compiler/.../ir/analysis/IrToFakeDeclarationTranslator.kt` builds the same model, so it needs the argument to compile until #150 removes it; add no other IR-side logic.
 
 > **Layer 11** is where the option actually affects generated code — generators read the resolved boolean and conditionally emit different Kotlin source.
 
@@ -212,7 +204,7 @@ val generate{OptionName}: Boolean = {defaultValue},
 
 Modify generators based on what the option controls:
 
-- **`ImplementationGenerator.kt`** — pass `analysis.generate{OptionName}` to `generateCompleteFake()`
+- **`ImplementationGenerator.kt`** — pass `decl.generate{OptionName}` to `generateCompleteFake()`
 - **`ConfigurationDslGenerator.kt`** — conditionally generate DSL elements
 - **`FakeGenerator.kt`** / extensions — conditional code generation
 
@@ -227,9 +219,9 @@ Checklist:
 - [ ] `FaktOptions` has field + `load()` reads it
 - [ ] FIR mirror enum + fields in both `ValidatedFakeInterface` and `ValidatedFakeClass`
 - [ ] Both checkers have `extract{OptionName}Mode()` + call in `analyzeMetadata()`
-- [ ] IR metadata has config field, accessor, resolver function
-- [ ] Both `toInterfaceAnalysis()` and `toClassAnalysis()` pass resolved boolean
-- [ ] `InterfaceAnalysis` and `ClassAnalysis` have `generate{OptionName}: Boolean`
+- [ ] `resolve{OptionName}()` next to the mirror enum in `FirFakeMetadata.kt`
+- [ ] `toFakeInterface()` and `toFakeClass()` set the resolved boolean; both `FirFakeEmitter.emit()` overloads pass the plugin default
+- [ ] `FakeDeclaration` (and its `Interface`/`Class`) has `generate{OptionName}: Boolean`
 - [ ] Generators consume the boolean
 - [ ] `make publish-local && make test-sample` passes
 - [ ] `make format` applied

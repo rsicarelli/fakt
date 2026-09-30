@@ -6,16 +6,16 @@ allowed-tools: Read, Grep, Glob
 
 # Codegen Pipeline Guide
 
-The codegen system transforms IR analysis into Kotlin source files through a layered pipeline: **Model** (immutable AST) → **Builder** (DSL construction) → **Renderer** (string output).
+The codegen system transforms the shared `FakeDeclaration` model into Kotlin source files through a layered pipeline: **Model** (immutable AST) → **Builder** (DSL construction) → **Renderer** (string output).
 
 ## Instructions
 
 ### 1. Understand the Pipeline
 
 ```
-InterfaceAnalysis / ClassAnalysis          (from IR phase)
+FakeDeclaration                            (from FIR; legacy IR also builds it)
         ↓
-AnalysisToCodegenMapper                    (IR → MethodSpec/PropertySpec)
+SpecToCodegenMapper                        (toCodegenSpecs → method/property specs)
         ↓
 FakeGenerator / ConfigurationDslGenerator  (orchestrators)
         ↓
@@ -28,7 +28,7 @@ CodeFile.renderTo(CodeBuilder)             (Renderer)
 Kotlin source string                       (written to test source set)
 ```
 
-All codegen files live under `compiler/src/main/kotlin/com/rsicarelli/fakt/codegen/`.
+All codegen files live under `codegen-runtime/src/main/kotlin/com/rsicarelli/fakt/codegen/`.
 
 ### 2. Model Layer — `codegen/model/CodeFile.kt`
 
@@ -151,7 +151,7 @@ To add a new default strategy: implement `DefaultValueStrategy` interface (`supp
 
 ### 6. Extensions Layer — `codegen/extensions/`
 
-Spec types bridging IR analysis to builders:
+Spec types bridging the `FakeDeclaration` model to builders:
 
 | Spec | Purpose |
 |------|---------|
@@ -177,16 +177,16 @@ Extension functions on builders (in separate files):
 | `TypeParamsInfo.kt` | Type parameter analysis helpers | Type parameter metadata extraction |
 | `VisibilityExtensions.kt` | Visibility mapping helpers | FIR visibility to codegen modifier mapping |
 
-### 7. Generation Orchestrators — `compiler/ir/generation/`
+### 7. Generation Orchestrators — `codegen/generator/` (mapper in `codegen/analysis/`)
 
 | File | Class | Role |
 |------|-------|------|
-| `AnalysisToCodegenMapper.kt` | — | `FunctionAnalysis.toMethodSpec()`, `PropertyAnalysis.toPropertySpec()` |
-| `ImplementationGenerator.kt` | `ImplementationGenerator` | Produces `FakeXxxImpl` class + factory function + call history |
-| `ConfigurationDslGenerator.kt` | `ConfigurationDslGenerator` | Produces `FakeXxxConfig` DSL class |
+| `analysis/SpecToCodegenMapper.kt` | — | `FakeDeclaration.toCodegenSpecs()`, `toRenderableMethodSpec()`, `toRenderablePropertySpec()` |
+| `generator/ImplementationGenerator.kt` | `ImplementationGenerator` | Produces `FakeXxxImpl` class + factory function + call history |
+| `generator/ConfigurationDslGenerator.kt` | `ConfigurationDslGenerator` | Produces `FakeXxxConfig` DSL class |
 
 `ImplementationGenerator.generateImplementation()` flow:
-1. `analysis.toCodegenSpecs()` → `(List<MethodSpec>, List<PropertySpec>)`
+1. `decl.toCodegenSpecs()` → method and property specs
 2. `generateCompleteFake()` → `CodeFile` (impl class)
 3. `generateFactoryFunctionCodeFile()` → `CodeFile` (factory)
 4. `generateCallHistoryDeclarations()` → `List<CodeDeclaration>` (appended to impl file)

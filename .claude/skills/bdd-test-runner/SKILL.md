@@ -51,14 +51,14 @@ Reference: .claude/docs/development/validation/testing-guidelines.md
 ### 3. Execute Tests
 
 ```bash
-# All tests
-cd fakt && ./gradlew test
+# All tests (from the repository root)
+./gradlew test
 
 # Compiler module
-cd fakt && ./gradlew :compiler:test
+./gradlew :compiler:test
 
 # Pattern-based
-cd fakt && ./gradlew :compiler:test --tests "*{Pattern}*"
+./gradlew :compiler:test --tests "*{Pattern}*"
 ```
 
 ### 4. Analyze Results

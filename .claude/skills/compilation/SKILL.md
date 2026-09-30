@@ -29,13 +29,13 @@ Options: validate all generated fakes | diagnose build failure | validate specif
 # Clean and rebuild
 ./gradlew clean
 
-# Compile across platforms (captures errors)
-./gradlew :samples:jvm-single-module:build 2>&1 | tee compilation.log
-./gradlew :samples:android-single-module:build 2>&1 | tee -a compilation.log
-./gradlew :samples:kmp-single-module:compileKotlinJvm --no-build-cache 2>&1 | tee -a compilation.log
+# Compile across platforms (samples are separate builds, not root subprojects)
+./gradlew -p samples/jvm-single-module build 2>&1 | tee compilation.log
+./gradlew -p samples/android-single-module build 2>&1 | tee -a compilation.log
+./gradlew -p samples/kmp-single-module compileKotlinJvm --no-build-cache 2>&1 | tee -a compilation.log
 
 # For multi-module
-./gradlew :samples:kmp-multi-module:app:compileKotlinJvm 2>&1 | tee -a compilation.log
+./gradlew -p samples/kmp-multi-module build 2>&1 | tee -a compilation.log
 ```
 
 ### 3. Validate Generated Files
@@ -114,7 +114,8 @@ grep -A 10 "Exception" compilation.log
 | Category | Indicators | Common Fix |
 |----------|-----------|------------|
 | **Plugin Registration** | `CompilerPluginRegistrar not found`, ServiceLoader errors | `make publish-local` |
-| **IR Generation** | `IrGenerationExtension`, `IR generation failed` | Check `UnifiedFaktIrGenerationExtension` |
+| **FIR Emission** (default) | `FaktGenerateTask` / worker failure, emitted fake missing | Check `fir/generation/` (`FirFakeEmitter`, `FirToFakeDeclarationTranslator`) |
+| **IR Generation** (legacy) | `IrGenerationExtension`, `IR generation failed` | Check `UnifiedFaktIrGenerationExtension` |
 | **FIR Detection** | `FirExtension`, `@Fake annotation`, symbol resolution | Check `FaktFirExtensionRegistrar` |
 | **Generated Code** | Path contains `build/generated/fakt`, syntax errors | Inspect generated .kt files |
 | **Dependencies** | `ClassNotFoundException`, `Cannot resolve` | `make publish-local`, check versions |
@@ -140,9 +141,8 @@ grep "^import" build/generated/fakt/**/*.kt
 ```
 
 **Generic type issues (`Type mismatch: expected X, found Any?`):**
-- Class-level generics → type erasure (known limitation)
-- Method-level generics → scoping challenge
-- Workaround: use concrete types or interface-level generics
+- Class-level generics, method-level generics and constraints are supported (`docs/get-started/features.md`), so a mismatch is a bug to reproduce, not an expected limitation
+- Check `docs/user-guide/known-issues.md` for open cases before filing
 
 **Missing META-INF/services:**
 ```bash
