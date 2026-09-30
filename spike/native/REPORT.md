@@ -64,17 +64,48 @@ The prototype found these; the fixture alone didn't.
    artifact transform that extracts only `konan/lib` and `klib/`.
 
 ### Found along the way (not Native-specific; separate issues suggested)
-- **Kotlin < 2.4 cannot consume Fakt's published klibs.** `annotations-*` klibs are built with
+- **#171: Kotlin < 2.4 cannot consume Fakt's published klibs.** `annotations-*` klibs are built with
   2.4.10 (`abi_version=2.4.0`); K/N 2.2.0 rejects them with "can consume libraries having ABI
   version <= 2.2.0". This breaks Native, and likely JS/Wasm, users on Kotlin 2.2 and 2.3 today,
   in-process too. The `compat` CI cells are JVM-only. Fix: build `:annotations` with a lower klib
   ABI/apiVersion and add a KMP compat cell. It relates to #166.
-- **The unread producer metadata cache is quadratic.** In producer mode `FakeInterfaceChecker`
-  rewrites the whole `FirMetadataCache` after **every** interface. On the 10,000-fake benchmark
-  the `commonMain` producer takes about **30 min** on today's default path, against **46 s** for the same 10,000 fakes on the native producer, which doesn't write the file. The A/B run with only the file removed (`-Pfakt.spike.noFirMetadata=true`) has not been done yet.
-  #164a (removing the consumer mode and `firMetadataFile`) therefore removes a large, measurable
-  cost.
-- **Codegen: an interface-level `@OptIn(X::class)` is copied without importing `X`**, so the fake
+- **The unread producer metadata cache is quadratic.**
+  - In producer mode, `FakeInterfaceChecker` rewrites the whole `FirMetadataCache` after
+    **every** interface.
+  - On the task path nothing reads the file (#164a's unused consumer mode), yet every KMP
+    `commonMain` producer pays for it on today's default path.
+  - A/B on `faktGenerateMetadataCommonMain`, `kmp-benchmark` subsets, `--rerun`, warm daemon
+    dependencies, same fake count in both columns:
+
+    | fakes | with the file (today) | without it (`-Pfakt.spike.noFirMetadata=true`) | speedup |
+    |---|---|---|---|
+    | 2,400 | 2 min 0 s | 19.8 s | 6× |
+    | 4,900 | 7 min 23 s | 26.9 s | 16× |
+    | 10,000 | ≈30 min (first build) | 41.0 s | ~44× |
+
+    Doubling the fakes roughly quadruples the time. #164a removes this cost.
+- **#172: an interface-level `@OptIn(X::class)` is copied without importing `X`**, so the fake
   fails to compile. This happens in-process too.
 - `CompilerOptimizations` creates `<outputDir>/../../cache/` (an undeclared write) on every
   driver. It is already on #150's removal list.
+
+### Not validated by the spike (for item 7)
+- **Tests:** the prototype has no unit or integration tests. Item 7 needs:
+  - `ProjectBuilder` routing tests (leaf → consumer, shared native → producer, the
+    `SourceSetConfigurator` ownership of `nativeTest`/`iosTest`);
+  - a TestKit worker test with a real distribution (skip when `fakt.test.konanHome` is unset);
+  - a `CompilerDriverTest` case for `native`.
+- **CI at scale:** the 10,000-fake runs were local only. CI covered the fixture and
+  `kmp-multi-target` (Linux locally, macOS in CI).
+- **Timing:**
+  - no systematic cold-daemon vs warm-daemon matrix;
+  - no in-process vs task-path wall-time comparison beyond the metadata-cache A/B;
+  - no incremental measurement. `FaktGenerateTask` is not incremental on any driver, so any
+    change reruns the whole source set.
+- **Platforms and project shapes:**
+  - Windows host (mingw) and Intel macOS host;
+  - a single-target Native KMP project, which is routed `LEGACY` today and outside the spike;
+  - multi-module builds and collector mode with Native producers (#168);
+  - KGP 2.2.0 on a macOS host;
+  - Kotlin 2.3.x.
+
