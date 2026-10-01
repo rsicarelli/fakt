@@ -33,6 +33,13 @@ make test-compiler-interop INTEROP_TOOLCHAIN=21     # machine with only JDK 21
 - **JS tests.** `jsNodeTest` needs npm. Locally only `faktGenerateJsMain` and the JS test
   compilation were run.
 
+## JS yarn lock
+
+The root build moves the Kotlin/JS `yarn.lock` to `vendor/kotlin-js-store`, and the lock is
+committed, like in `samples/kmp-no-jvm`. With a committed lock, `kotlinRestoreYarnLock` runs before
+`kotlinStoreYarnLock`, so Gradle 9.5+ does not fail on a missing input (#144). To refresh it, run
+`./gradlew -p samples/compiler-interop kotlinUpgradeYarnLock` and commit the result.
+
 ## KSP
 
 `kspKotlin` is a task dependency of `faktGenerateJvmMain`, because KSP registers its output
