@@ -34,8 +34,8 @@ internal data class CompilerOptionsSnapshot(
  * relocatable).
  */
 internal fun forwardedCompilerArguments(s: CompilerOptionsSnapshot): List<String> = buildList {
-    addValueFlag("-language-version", s.languageVersion)
-    addValueFlag("-api-version", s.apiVersion)
+    addVersionFlag("-language-version", s.languageVersion)
+    addVersionFlag("-api-version", s.apiVersion)
     addValueFlag("-jvm-target", s.jvmTarget)
     addValueFlag("-jvm-default", s.jvmDefault)
     s.optIn.distinct().sorted().forEach { add("-opt-in=$it") }
@@ -43,6 +43,10 @@ internal fun forwardedCompilerArguments(s: CompilerOptionsSnapshot): List<String
     if (s.noJdk) add("-no-jdk")
     s.languageFeatures.forEach { add("-XXLanguage:+$it") }
     addAll(dropUnforwardableArguments(s.freeCompilerArgs))
+}
+
+private fun MutableList<String>.addVersionFlag(flag: String, value: String?) {
+    if (value != null && !isBelowWorkerMinimum(value)) addValueFlag(flag, value)
 }
 
 private fun MutableList<String>.addValueFlag(flag: String, value: String?) {
@@ -74,21 +78,43 @@ internal fun dropUnforwardableArguments(args: List<String>): List<String> {
     var index = 0
     while (index < args.size) {
         val token = args[index]
-        val value = if (token in ForwardingRules.VALUE_FLAGS) args.getOrNull(index + 1) else null
+        val next = args.getOrNull(index + 1)
+        val isPair = isFlagValuePair(token, next)
+        val value = if (isPair) next else null
         if (isForwardable(token, value)) {
             kept.add(token)
             value?.let(kept::add)
         }
-        index += if (token in ForwardingRules.VALUE_FLAGS) 2 else 1
+        index += if (isPair || token in ForwardingRules.VALUE_FLAGS) 2 else 1
     }
     return kept
 }
+
+/**
+ * A two-token flag: a known value flag, or an unknown `-X` flag without `=` that is followed by a
+ * token that is not a flag (old `-Xfoo value` forms that the worker compiler still parses).
+ */
+private fun isFlagValuePair(token: String, next: String?): Boolean =
+    token in ForwardingRules.VALUE_FLAGS ||
+        (token.startsWith("-X") &&
+            '=' !in token &&
+            next != null &&
+            !next.startsWith("-") &&
+            !next.startsWith("@"))
 
 private fun isForwardable(token: String, value: String?): Boolean =
     token.startsWith("-") &&
         !isDroppedFlag(token) &&
         !hasAbsolutePath(token.substringAfter('=', "")) &&
-        (value == null || !hasAbsolutePath(value))
+        (value == null || !hasAbsolutePath(value)) &&
+        !isOldVersionFlag(token, value)
+
+/** True for a `-language-version` / `-api-version` free arg below [MIN_WORKER_VERSION]. */
+private fun isOldVersionFlag(token: String, value: String?): Boolean {
+    val flag = token.substringBefore('=')
+    val version = if ('=' in token) token.substringAfter('=') else value
+    return flag in VERSION_FLAGS && version != null && isBelowWorkerMinimum(version)
+}
 
 private fun isDroppedFlag(token: String): Boolean =
     token.substringBefore('=') in ForwardingRules.ALWAYS_DROPPED_FLAGS ||
@@ -97,7 +123,28 @@ private fun isDroppedFlag(token: String): Boolean =
 
 private fun hasAbsolutePath(value: String): Boolean =
     ForwardingRules.ABSOLUTE_PATH.containsMatchIn(value) ||
-        value.split(File.pathSeparator).any(ForwardingRules.ABSOLUTE_PATH::containsMatchIn)
+        value.split(File.pathSeparator, ",").any(ForwardingRules.ABSOLUTE_PATH::containsMatchIn)
+
+/**
+ * The lowest language and API version the Fakt worker accepts: 2.0.
+ *
+ * The worker is always `kotlin-compiler-embeddable` 2.4.10, whose `LanguageVersion.FIRST_SUPPORTED`
+ * and `FIRST_API_SUPPORTED` are 2.0, and it rejects anything lower. A project on an older KGP can
+ * still compile with `apiVersion = 1.9`, so such a value is dropped instead of forwarded. Dropping
+ * is safe: the analysis becomes more lenient, never stricter.
+ */
+internal const val MIN_WORKER_VERSION = "2.0"
+
+private val VERSION_FLAGS = setOf("-language-version", "-api-version")
+
+/** A version that parses as `major.minor` and is lower than [MIN_WORKER_VERSION]. */
+private fun isBelowWorkerMinimum(version: String): Boolean {
+    val parts = version.split('.').map { it.toIntOrNull() }
+    val major = parts.getOrNull(0)
+    val minor = parts.getOrNull(1)
+    val (minMajor, minMinor) = MIN_WORKER_VERSION.split('.').map(String::toInt)
+    return major != null && (major < minMajor || (major == minMajor && (minor ?: 0) < minMinor))
+}
 
 /** The rule tables behind [dropUnforwardableArguments]. */
 internal object ForwardingRules {
@@ -128,6 +175,8 @@ internal object ForwardingRules {
             "-module-kind",
             "-source-map-prefix",
             "-source-map-base-dirs",
+            "-source-map-embed-sources",
+            "-source-map-names-policy",
         )
 
     /** Flags dropped by exact name (the part before any `=`). */
@@ -150,6 +199,7 @@ internal object ForwardingRules {
             "-no-stdlib",
             "-no-reflect",
             "-Xmulti-platform",
+            "-Xplugin",
         )
 
     val DROPPED_PREFIXES =

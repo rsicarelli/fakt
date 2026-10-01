@@ -89,6 +89,12 @@ class FaktGenerateCompilerOptionsTest {
         )
         val first = gradle(projectDir).build("faktGenerate")
         assertEquals(TaskOutcome.SUCCESS, first.task(":faktGenerate")?.outcome, first.output)
+        val control = gradle(projectDir).build("faktGenerate")
+        assertEquals(
+            TaskOutcome.UP_TO_DATE,
+            control.task(":faktGenerate")?.outcome,
+            "Unchanged compilerArguments must be UP-TO-DATE:\n${control.output}",
+        )
         projectDir
             .resolve("build.gradle.kts")
             .writeText(

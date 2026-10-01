@@ -19,10 +19,12 @@ import org.jetbrains.kotlin.gradle.plugin.LanguageSettingsBuilder
  * What is wired:
  * - `compilerArguments`: language and API version, opt-ins, progressive mode, free args and the
  *   language features of the default source set. JVM flags (`-jvm-target`, `-jvm-default`,
- *   `-no-jdk`) are added only for JVM compilations. The list is built in a `project.provider`, so
- *   it is read when the task is configured for execution and sees late edits of the options.
- * - `jdkVersion` and `jdkHome` (JVM and Android compilations only): the JDK of the project's Java
- *   toolchain. Gradle falls back to the JVM that runs the build when no toolchain is set.
+ *   `-no-jdk`) are added only for JVM compilations (`-no-jdk` not for Android). The list is built
+ *   in a `project.provider`, so it is read when the task is configured for execution and sees late
+ *   edits of the options.
+ * - `jdkVersion` and `jdkHome` (plain JVM compilations only, see [usesToolchainJdk]): the JDK of
+ *   the project's Java toolchain. Gradle falls back to the JVM that runs the build when no
+ *   toolchain is set.
  *
  * It uses `project.provider` and not `compileTaskProvider.map`: `map` would make the task depend on
  * `compileKotlin*`, and generation would run after compilation instead of before it.
@@ -38,13 +40,20 @@ internal fun configureCompilerOptions(
     task.compilerArguments.set(
         project.provider { forwardedCompilerArguments(snapshotOf(compilation)) }
     )
-    if (compilation.platformType.usesJdk()) {
+    if (usesToolchainJdk(compilation.platformType)) {
         project.plugins.withType(JavaBasePlugin::class.java) { wireToolchainJdk(project, task) }
     }
 }
 
-private fun KotlinPlatformType.usesJdk(): Boolean =
-    this == KotlinPlatformType.jvm || this == KotlinPlatformType.androidJvm
+/**
+ * Only plain JVM compilations get the toolchain JDK wiring and `-no-jdk`. Android is left out on
+ * purpose: `kotlin-android` sets `noJdk = true`, so forwarding it would leave the worker without a
+ * JDK and, when the boot classpath lookup falls back, without `android.jar` too. Android keeps the
+ * worker JDK plus `android.jar`, and its `jdkVersion` (just Gradle's JVM major) would only cause
+ * cache misses between machines.
+ */
+internal fun usesToolchainJdk(platformType: KotlinPlatformType): Boolean =
+    platformType == KotlinPlatformType.jvm
 
 /** Reads the options now. Call it inside a provider, never while the build is configuring. */
 private fun snapshotOf(compilation: KotlinCompilation<*>): CompilerOptionsSnapshot {
@@ -59,7 +68,9 @@ private fun snapshotOf(compilation: KotlinCompilation<*>): CompilerOptionsSnapsh
             freeCompilerArgs = options.freeCompilerArgs.get(),
             languageFeatures = settings.languageFeatures(),
         )
-    return if (options is KotlinJvmCompilerOptions) common.withJvm(options) else common
+    return if (options is KotlinJvmCompilerOptions)
+        common.withJvm(options, usesToolchainJdk(compilation.platformType))
+    else common
 }
 
 /**
@@ -75,11 +86,14 @@ private fun LanguageSettingsBuilder.languageFeatures(): List<String> =
         }
         .getOrDefault(emptyList())
 
-private fun CompilerOptionsSnapshot.withJvm(options: KotlinJvmCompilerOptions) =
+private fun CompilerOptionsSnapshot.withJvm(
+    options: KotlinJvmCompilerOptions,
+    forwardNoJdk: Boolean,
+) =
     copy(
         jvmTarget = options.jvmTarget.orNull?.target,
         jvmDefault = options.jvmDefault.orNull?.compilerArgument,
-        noJdk = options.noJdk.getOrElse(false),
+        noJdk = forwardNoJdk && options.noJdk.getOrElse(false),
     )
 
 private fun wireToolchainJdk(project: Project, task: FaktGenerateTask) {

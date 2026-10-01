@@ -28,9 +28,9 @@ class CompilerArgumentForwardingTest {
 
     @Test
     fun `GIVEN language and api version WHEN forwarding THEN both flags are emitted`() {
-        val result = forward(CompilerOptionsSnapshot(languageVersion = "1.9", apiVersion = "1.8"))
+        val result = forward(CompilerOptionsSnapshot(languageVersion = "2.0", apiVersion = "2.1"))
 
-        assertEquals(listOf("-language-version", "1.9", "-api-version", "1.8"), result)
+        assertEquals(listOf("-language-version", "2.0", "-api-version", "2.1"), result)
     }
 
     @Test
@@ -114,8 +114,8 @@ class CompilerArgumentForwardingTest {
         val result =
             forward(
                 CompilerOptionsSnapshot(
-                    languageVersion = "1.9",
-                    apiVersion = "1.9",
+                    languageVersion = "2.1",
+                    apiVersion = "2.1",
                     optIn = listOf("z.Z", "a.A"),
                     progressiveMode = true,
                     freeCompilerArgs = listOf("-Xcontext-parameters", "-Xjsr305=strict"),
@@ -129,9 +129,9 @@ class CompilerArgumentForwardingTest {
         assertEquals(
             listOf(
                 "-language-version",
-                "1.9",
+                "2.1",
                 "-api-version",
-                "1.9",
+                "2.1",
                 "-jvm-target",
                 "17",
                 "-jvm-default",
@@ -176,7 +176,7 @@ class CompilerArgumentForwardingTest {
 
     @Test
     fun `GIVEN value flag with relative value WHEN dropping THEN flag and value are kept`() {
-        assertKept("-opt-in", "a.B", "-language-version", "1.9")
+        assertKept("-opt-in", "a.B", "-language-version", "2.0")
     }
 
     // ---- DROP: always-drop flags ----
@@ -278,12 +278,12 @@ class CompilerArgumentForwardingTest {
 
     @Test
     fun `GIVEN bare positional tokens WHEN dropping THEN they are dropped`() {
-        assertEquals(listOf("-Xkeep"), drop("Main.kt", "-Xkeep", "src", "relative/dir"))
+        assertEquals(listOf("-Xkeep=1"), drop("Main.kt", "-Xkeep=1", "src", "relative/dir"))
     }
 
     @Test
     fun `GIVEN value of a value flag WHEN dropping THEN it is not treated as bare`() {
-        assertKept("-jvm-target", "17", "-api-version", "1.9", "-main", "call")
+        assertKept("-jvm-target", "17", "-api-version", "2.0", "-main", "call")
     }
 
     @Test
@@ -352,5 +352,93 @@ class CompilerArgumentForwardingTest {
         val absolute = Regex("^(/|\\\\|[A-Za-z]:[\\\\/])")
         assertTrue(result.none { absolute.containsMatchIn(it) || it.startsWith("@") }, "$result")
         assertEquals(listOf("-Xcontext-parameters"), result)
+    }
+
+    // ---- audit fix 1: versions below the worker minimum ----
+
+    @Test
+    fun `GIVEN versions below 2_0 in the snapshot WHEN forwarding THEN both flags are dropped`() {
+        listOf("1.8", "1.9").forEach { version ->
+            val result =
+                forward(CompilerOptionsSnapshot(languageVersion = version, apiVersion = version))
+
+            assertEquals(emptyList(), result, "version $version")
+        }
+    }
+
+    @Test
+    fun `GIVEN versions 2_0 and above in the snapshot WHEN forwarding THEN both flags stay`() {
+        listOf("2.0", "2.1").forEach { version ->
+            val result =
+                forward(CompilerOptionsSnapshot(languageVersion = version, apiVersion = version))
+
+            assertEquals(
+                listOf("-language-version", version, "-api-version", version),
+                result,
+                "version $version",
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN old versions as free args in pair or equals form WHEN dropping THEN they go`() {
+        assertDropped("-language-version", "1.9")
+        assertDropped("-api-version", "1.8")
+        assertDropped("-language-version=1.9")
+        assertDropped("-api-version=1.8")
+    }
+
+    @Test
+    fun `GIVEN current versions as free args in pair or equals form WHEN dropping THEN they stay`() {
+        assertKept("-language-version", "2.0")
+        assertKept("-api-version", "2.1")
+        assertKept("-language-version=2.0")
+        assertKept("-api-version=2.1")
+    }
+
+    // ---- audit fix 3: two-token flags the table does not know ----
+
+    @Test
+    fun `GIVEN source-map value flags WHEN dropping THEN flag and value stay together`() {
+        assertKept("-source-map-embed-sources", "always", "-Xcontext-parameters")
+        assertKept("-source-map-names-policy", "x", "-Xcontext-parameters")
+    }
+
+    @Test
+    fun `GIVEN Xplugin with a separate absolute value WHEN dropping THEN both tokens go`() {
+        assertEquals(
+            listOf("-Xcontext-parameters"),
+            drop("-Xplugin", "/abs/x.jar", "-Xcontext-parameters"),
+        )
+        assertDropped("-Xplugin", "/abs/x.jar")
+    }
+
+    @Test
+    fun `GIVEN a flag without value followed by another flag WHEN dropping THEN it stays single`() {
+        assertKept("-Xcontext-parameters", "-Xjsr305=strict")
+    }
+
+    @Test
+    fun `GIVEN an unknown X flag followed by a plain value WHEN dropping THEN they stay a pair`() {
+        assertKept("-Xfoo", "value")
+        assertEquals(listOf("-Xfoo", "value", "-Xbar"), drop("-Xfoo", "value", "-Xbar"))
+    }
+
+    @Test
+    fun `GIVEN an X flag pair whose value is an absolute path WHEN dropping THEN both go`() {
+        assertEquals(listOf("-Xbar"), drop("-Xfoo", "/abs/dir", "-Xbar"))
+    }
+
+    @Test
+    fun `GIVEN a truly bare token WHEN dropping THEN it is still dropped`() {
+        assertEquals(listOf("-Xbar"), drop("Main.kt", "-Xbar"))
+    }
+
+    // ---- audit fix 5a ----
+
+    @Test
+    fun `GIVEN a comma list with an absolute entry WHEN dropping THEN the flag is dropped`() {
+        assertDropped("-Xfoo=rel,/abs")
+        assertKept("-Xfoo=rel,other")
     }
 }

@@ -186,10 +186,22 @@ internal class K2CompilerBridge(
             .invoke(null, arguments, argsInstance, false)
         val errors = toolArguments.getMethod("getErrors").invoke(argsInstance) ?: return emptyList()
         val errorsClass = load(K2Fqns.ARGUMENT_PARSE_ERRORS)
-        val problems =
-            parser.getMethod("validateArgumentsAllErrors", errorsClass).invoke(null, errors)
-        return (problems as List<*>).map { it.toString() }
+        return validate(parser, errorsClass, errors)
     }
+
+    /**
+     * `validateArgumentsAllErrors` exists since 2.3.20; 2.2.x (a user's `faktWorker` override) only
+     * has `validateArguments(ArgumentParseErrors): String?`, so fall back to it.
+     */
+    private fun validate(parser: Class<*>, errorsClass: Class<*>, errors: Any): List<String> =
+        try {
+            val all =
+                parser.getMethod("validateArgumentsAllErrors", errorsClass).invoke(null, errors)
+            (all as List<*>).map { it.toString() }
+        } catch (_: NoSuchMethodException) {
+            val first = parser.getMethod("validateArguments", errorsClass).invoke(null, errors)
+            listOfNotNull(first as String?)
+        }
 
     private fun plainFullPathsRenderer(): Any =
         messageRendererClass.getField("PLAIN_FULL_PATHS").get(null)

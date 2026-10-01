@@ -19,6 +19,7 @@ import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.LanguageSettingsBuilder
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -178,6 +179,23 @@ class FaktGenerateCompilerOptionsWiringTest {
 
         assertTrue(deps.none { it.startsWith("compileKotlin") }, "dependencies: $deps")
         assertTrue(task.compilerArguments.get().isNotEmpty())
+    }
+
+    @Test
+    fun `GIVEN each platform type WHEN asking for the toolchain JDK THEN only jvm uses it`() {
+        val expected =
+            mapOf(
+                KotlinPlatformType.jvm to true,
+                KotlinPlatformType.androidJvm to false,
+                KotlinPlatformType.js to false,
+                KotlinPlatformType.wasm to false,
+                KotlinPlatformType.common to false,
+                KotlinPlatformType.native to false,
+            )
+
+        val actual = expected.keys.associateWith(::usesToolchainJdk)
+
+        assertEquals(expected, actual)
     }
 
     /**
