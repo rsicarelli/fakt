@@ -82,6 +82,8 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockito-kotlin" }
 mockative = { module = "io.mockative:mockative", version.ref = "mockative" }
+# KSP API for the local processor in samples/compiler-interop
+ksp-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
