@@ -47,3 +47,4 @@ rootProject.name = "compiler-interop"
 include(":jvm")
 include(":kmp")
 include(":processor")
+include(":serialization")

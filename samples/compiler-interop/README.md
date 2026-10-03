@@ -13,7 +13,27 @@ Proves that Fakt's generation step sees the same compiler settings as your norma
 | `:kmp` sets the opt-in with `languageSettings.optIn` and the flag with `compilerOptions.freeCompilerArgs` | Both KMP ways of setting options are forwarded, to the common producer and to the jvm and js producers. |
 | `:jvm` + local `:processor` (KSP) | A KSP-generated type (`GeneratedInvoice`) is visible to the worker. |
 | `jvmToolchain(interopToolchain)` and `src/jdk17` | The toolchain JDK is forwarded. With 17, main code references `java.lang.Compiler`. Gradle runs on JDK 21, where that class does not exist. |
-| `cache-correctness-check.sh` in CI | Forwarded arguments are relocatable: all four producers restore FROM-CACHE. |
+| `:serialization` (Kotlin serialization plugin, `Receipt.serializer()` in main code) | The worker does not stop on errors outside `@Fake` code. `compileKotlin` has the plugin, the worker does not, so it sees an unresolved `serializer`, tolerates it, and still writes the fakes. Its `@Fake` interfaces do not use `Receipt`. |
+| `cache-correctness-check.sh` in CI | Forwarded arguments are relocatable: all four producers of `:jvm` and `:kmp` restore FROM-CACHE. |
+
+## Why serialization is its own module
+
+The worker now tolerates errors outside `@Fake` code and only prints them (`Fakt: tolerated
+compiler error: ...`). That is what `:serialization` needs. But it also means `:jvm` and `:kmp`
+would still pass if option forwarding broke: the worker would quietly tolerate the errors. So the
+tolerance case lives in its own module, and the other two modules are guarded against it.
+
+## The two guards
+
+`cache-correctness-check.sh` reads the warm-up log (the forced run that really executes the
+producers). Both guards need the module's `fakt { logLevel }` to be INFO or higher; all three
+modules set it.
+
+- `FAKT_FORBID_TOLERATED=1` (used for `:jvm` and `:kmp`): fail if the log has a tolerated
+  error. These modules must be fully understood by the worker, so a tolerated error means an
+  option was not forwarded.
+- `FAKT_EXPECT_TOLERATED=1` (used for `:serialization`): fail if the log has no tolerated
+  error. Then the sample would prove nothing.
 
 ## Run it
 

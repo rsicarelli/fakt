@@ -68,7 +68,7 @@ test-kmp-single-target:
 INTEROP_TOOLCHAIN ?= 17
 test-compiler-interop:
 	@echo "🔌 Testing compiler-interop sample (forwarded options, toolchain JDK $(INTEROP_TOOLCHAIN))..."
-	./gradlew -p samples/compiler-interop :jvm:test :kmp:jvmTest :kmp:faktGenerateJsMain -PinteropToolchain=$(INTEROP_TOOLCHAIN)
+	./gradlew -p samples/compiler-interop :jvm:test :kmp:jvmTest :serialization:test :kmp:faktGenerateJsMain -PinteropToolchain=$(INTEROP_TOOLCHAIN)
 
 # Fake publishing sample (two-project workflow)
 test-fake-publishing:
