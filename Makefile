@@ -1,7 +1,7 @@
 # Fakt Development Commands
 # Run from fakt/ directory (or from project root)
 
-.PHONY: build test compile clean format shadowJar test-sample test-fake-publishing validate quick-test full-rebuild test-compat-all test-compat-agp-all test-kmp-single-target test-kmp-android-lint test-clean-rebuild-cache benchmark
+.PHONY: build test compile clean format shadowJar test-sample test-fake-publishing validate quick-test full-rebuild test-compat-all test-compat-agp-all test-kmp-single-target test-compiler-interop test-kmp-android-lint test-clean-rebuild-cache benchmark
 
 # Core build commands
 build:
@@ -61,6 +61,14 @@ test-kmp-no-jvm:
 test-kmp-single-target:
 	@echo "🎯 Testing kmp-single-target sample (single-target KMP)..."
 	cd samples/kmp-single-target && ./gradlew allTests
+
+# Compiler-options interop sample (#165): main code only compiles with a module-wide opt-in and an
+# experimental -X flag, and the :jvm module runs on a JDK toolchain. CI uses JDK 17 (the default);
+# on a machine with only JDK 21 run: make test-compiler-interop INTEROP_TOOLCHAIN=21
+INTEROP_TOOLCHAIN ?= 17
+test-compiler-interop:
+	@echo "🔌 Testing compiler-interop sample (forwarded options, toolchain JDK $(INTEROP_TOOLCHAIN))..."
+	./gradlew -p samples/compiler-interop :jvm:test :kmp:jvmTest :kmp:faktGenerateJsMain -PinteropToolchain=$(INTEROP_TOOLCHAIN)
 
 # Fake publishing sample (two-project workflow)
 test-fake-publishing:

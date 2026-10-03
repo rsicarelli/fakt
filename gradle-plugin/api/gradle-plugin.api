@@ -42,6 +42,7 @@ public abstract class com/rsicarelli/fakt/gradle/FaktGenerateTask : org/gradle/a
 	public abstract fun getCommonKlibClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
 	public abstract fun getCommonSources ()Lorg/gradle/api/file/ConfigurableFileCollection;
 	public abstract fun getCompileClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public abstract fun getCompilerArguments ()Lorg/gradle/api/provider/ListProperty;
 	public abstract fun getEnableCallHistory ()Lorg/gradle/api/provider/Property;
 	public abstract fun getEnableMutableFakes ()Lorg/gradle/api/provider/Property;
 	public abstract fun getFaktCompilerClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
@@ -49,6 +50,8 @@ public abstract class com/rsicarelli/fakt/gradle/FaktGenerateTask : org/gradle/a
 	public abstract fun getFaktWorkerClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
 	public abstract fun getGeneratedKotlinDir ()Lorg/gradle/api/file/DirectoryProperty;
 	public abstract fun getImports ()Lorg/gradle/api/provider/ListProperty;
+	public abstract fun getJdkHome ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getJdkVersion ()Lorg/gradle/api/provider/Property;
 	public abstract fun getLogLevel ()Lorg/gradle/api/provider/Property;
 	public abstract fun getScratchDir ()Lorg/gradle/api/file/DirectoryProperty;
 	public abstract fun getSourceSetContextJson ()Lorg/gradle/api/provider/Property;

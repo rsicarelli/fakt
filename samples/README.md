@@ -84,6 +84,20 @@ start multiplatform-ready:
 
 **Source Set Targets**: `commonMain` → `commonTest`, `jvmMain` → `jvmTest`
 
+### 🔌 **compiler-interop**
+A JVM module and a KMP module (`jvm()` + `js { nodejs() }`, no Native) whose **main code only
+compiles with options the build sets on the Kotlin compilation**. Fakt generates the fakes in its own
+worker, so it has to receive those options too (#165):
+- **Module-wide opt-in**: an ERROR-level `@RequiresOptIn` marker listed in `optIn` / `languageSettings`
+- **An experimental flag**: `-Xcontext-sensitive-resolution` (unqualified enum entries in `when`)
+- **A KSP-generated type** used by main code and by a `@Fake` signature (`:jvm`)
+- **A JDK toolchain**: `:jvm` compiles on JDK 17 and references `java.lang.Compiler` (gone in JDK 21)
+- **Cache-correct**: every producer restores FROM-CACHE
+
+**Structure**: `jvm/` + `kmp/` + `processor/` (local KSP processor). See the sample's own README.
+
+**Run**: `make test-compiler-interop` (needs JDK 17 + 21; on JDK 21 only: `INTEROP_TOOLCHAIN=21`).
+
 ### 📤 **fake-publishing** ⭐ NEW
 A two-project sample validating Maven artifact publishing workflow:
 - **Publisher Project**: Library with @Fake interfaces published to Maven Local

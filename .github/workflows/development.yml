@@ -183,6 +183,11 @@ jobs:
             tasks: allTests --continue
             check: true
             pre-publish: samples/fake-publishing/kmp-publisher
+          # Forwarded compiler options + toolchain JDK (#165). Needs JDK 17 next to JDK 21 (see the
+          # "Install JDK 17" step): the :jvm module compiles on a JDK 17 toolchain.
+          - sample: compiler-interop
+            path: samples/compiler-interop
+            tasks: build
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -192,6 +197,18 @@ jobs:
 
       - name: Restore Plugin Bundle
         uses: ./.github/actions/restore-plugin-bundle
+
+      # compiler-interop compiles its :jvm module on a JDK 17 toolchain (interopToolchain=17). JDK 21
+      # stays LAST so it remains the default JAVA_HOME that runs Gradle; JDK 17 is found through the
+      # ~/.m2/toolchains.xml that setup-java writes. The shared Setup Environment action is untouched.
+      - name: Install JDK 17 for the sample toolchain
+        if: ${{ matrix.sample == 'compiler-interop' }}
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: |
+            17
+            21
 
       - name: Pre-publish dependency
         if: ${{ matrix.pre-publish }}
@@ -254,6 +271,13 @@ jobs:
             path: samples/compat-agp/agp-9.0
             producers: faktGenerateAndroidjvmDebug
             cached-fakes: FakeUserRepositoryImpl FakeAppInfoProviderImpl
+          # Forwarded compiler options and toolchain JDK (#165): the main code only compiles with a
+          # module-wide opt-in and -Xcontext-sensitive-resolution, so these producers can only be
+          # cache-correct if the forwarded arguments are relocatable. The :jvm module is on JDK 17.
+          - sample: compiler-interop
+            path: samples/compiler-interop
+            producers: :jvm:faktGenerateJvmMain :kmp:faktGenerateMetadataCommonMain :kmp:faktGenerateJvmMain :kmp:faktGenerateJsMain
+            cached-fakes: FakeInvoiceRendererImpl FakeNotifierImpl FakeJvmOnlyFilesImpl FakeJsOnlyStorageImpl
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -263,6 +287,18 @@ jobs:
 
       - name: Restore Plugin Bundle
         uses: ./.github/actions/restore-plugin-bundle
+
+      # compiler-interop compiles its :jvm module on a JDK 17 toolchain (interopToolchain=17). JDK 21
+      # stays LAST so it remains the default JAVA_HOME that runs Gradle; JDK 17 is found through the
+      # ~/.m2/toolchains.xml that setup-java writes. The shared Setup Environment action is untouched.
+      - name: Install JDK 17 for the sample toolchain
+        if: ${{ matrix.sample == 'compiler-interop' }}
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: |
+            17
+            21
 
       # Issue #79: a warmed build cache must never produce empty/missing fakes. Warms the cache,
       # cleans, then rebuilds the FaktGenerateTask producers and asserts they restore FROM-CACHE

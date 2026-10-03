@@ -37,6 +37,8 @@ internal interface FaktCodegenWorkParameters : WorkParameters {
     val generatedKotlinDir: DirectoryProperty
     val commonGeneratedKotlinDir: DirectoryProperty
     val scratchDir: DirectoryProperty
+    val compilerArguments: ListProperty<String>
+    val jdkHome: DirectoryProperty
 }
 
 /** Default `walkTopDown` cap for source discovery — covers typical Gradle source-set nesting. */
@@ -101,6 +103,8 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
                 enableCallHistory = params.enableCallHistory.getOrElse(true),
                 enableMutableFakes = params.enableMutableFakes.getOrElse(false),
                 wasmTarget = params.wasmTarget.orNull,
+                compilerArguments = params.compilerArguments.getOrElse(emptyList()),
+                jdkHome = params.jdkHome.orNull?.asFile?.absolutePath,
             )
         )
     }
@@ -178,14 +182,21 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         val enableCallHistory: Boolean,
         val enableMutableFakes: Boolean,
         val wasmTarget: String?,
+        val compilerArguments: List<String>,
+        val jdkHome: String?,
     )
 
     private fun invokeK2(call: K2Invocation) {
         val bridge = K2CompilerBridge(javaClass.classLoader, call.driver)
         val args = bridge.newArgs()
+        // Forwarded compilation arguments first: Fakt's own setters below overwrite them.
+        applyForwardedArguments(bridge, args, call.compilerArguments)
         populateSourceArgs(bridge, args, call)
         when (call.driver) {
-            CompilerDriver.JVM -> populateJvmOutputArgs(bridge, args, call)
+            CompilerDriver.JVM -> {
+                populateJvmOutputArgs(bridge, args, call)
+                applyJdkHome(bridge, args, call.jdkHome)
+            }
             CompilerDriver.METADATA -> populateMetadataOutputArgs(bridge, args, call)
             CompilerDriver.JS -> populateJsOutputArgs(bridge, args, call)
         }
@@ -198,7 +209,7 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
                 .invoke(bridge.newCompiler(), collector, bridge.servicesEmpty(), args)
         val exitCodeName = (exitCode as Enum<*>).name
         check(exitCodeName == EXIT_CODE_OK) {
-            "Fakt analysis failed (${call.driver} exit=$exitCodeName). See messages above."
+            analysisFailedMessage(call.driver, exitCodeName, call.compilerArguments)
         }
     }
 

@@ -22,6 +22,12 @@ internal object K2Fqns {
         "org.jetbrains.kotlin.cli.common.arguments.K2JSCompilerArguments"
     const val COMMON_COMPILER_ARGUMENTS =
         "org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments"
+    const val COMMON_TOOL_ARGUMENTS =
+        "org.jetbrains.kotlin.cli.common.arguments.CommonToolArguments"
+    const val PARSE_COMMAND_LINE_ARGUMENTS =
+        "org.jetbrains.kotlin.cli.common.arguments.ParseCommandLineArgumentsKt"
+    const val ARGUMENT_PARSE_ERRORS =
+        "org.jetbrains.kotlin.cli.common.arguments.ArgumentParseErrors"
     const val MESSAGE_COLLECTOR = "org.jetbrains.kotlin.cli.common.messages.MessageCollector"
     const val PRINTING_MESSAGE_COLLECTOR =
         "org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector"
@@ -161,6 +167,41 @@ internal class K2CompilerBridge(
             "Setter $setterName(${paramType.simpleName}) not found on ${argsInstance.javaClass.name}"
         )
     }
+
+    /**
+     * Parses [arguments] into [argsInstance] exactly like the `kotlinc` command line does
+     * (`parseCommandLineArguments`), and returns the human-readable problems
+     * (`validateArgumentsAllErrors`). Empty when the arguments were accepted.
+     */
+    fun parseArguments(argsInstance: Any, arguments: List<String>): List<String> {
+        val toolArguments = load(K2Fqns.COMMON_TOOL_ARGUMENTS)
+        val parser = load(K2Fqns.PARSE_COMMAND_LINE_ARGUMENTS)
+        parser
+            .getMethod(
+                "parseCommandLineArguments",
+                List::class.java,
+                toolArguments,
+                Boolean::class.javaPrimitiveType,
+            )
+            .invoke(null, arguments, argsInstance, false)
+        val errors = toolArguments.getMethod("getErrors").invoke(argsInstance) ?: return emptyList()
+        val errorsClass = load(K2Fqns.ARGUMENT_PARSE_ERRORS)
+        return validate(parser, errorsClass, errors)
+    }
+
+    /**
+     * `validateArgumentsAllErrors` exists since 2.3.20; 2.2.x (a user's `faktWorker` override) only
+     * has `validateArguments(ArgumentParseErrors): String?`, so fall back to it.
+     */
+    private fun validate(parser: Class<*>, errorsClass: Class<*>, errors: Any): List<String> =
+        try {
+            val all =
+                parser.getMethod("validateArgumentsAllErrors", errorsClass).invoke(null, errors)
+            (all as List<*>).map { it.toString() }
+        } catch (_: NoSuchMethodException) {
+            val first = parser.getMethod("validateArguments", errorsClass).invoke(null, errors)
+            listOfNotNull(first as String?)
+        }
 
     private fun plainFullPathsRenderer(): Any =
         messageRendererClass.getField("PLAIN_FULL_PATHS").get(null)

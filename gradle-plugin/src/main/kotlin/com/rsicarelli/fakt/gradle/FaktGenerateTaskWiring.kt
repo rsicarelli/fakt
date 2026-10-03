@@ -130,6 +130,7 @@ internal object FaktGenerateTaskWiring {
                 task.imports.set(emptyList())
                 task.generatedKotlinDir.set(outputDir)
                 task.scratchDir.set(scratchDir)
+                configureCompilerOptions(project, task, kotlinCompilation)
             }
 
         // AGP 9 built-in Kotlin: the compilation's Kotlin source sets are empty; the variant API

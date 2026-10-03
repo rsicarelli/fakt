@@ -17,6 +17,7 @@ import org.gradle.api.tasks.Console
 import org.gradle.api.tasks.IgnoreEmptyDirectories
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.LocalState
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -174,6 +175,29 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
     @get:Input @get:Optional public abstract val wasmTarget: Property<String>
 
     /**
+     * Compiler arguments of the owning Kotlin compilation, forwarded to the worker's K2 invocation
+     * so it accepts the same code `compileKotlin*` does (module-wide `-opt-in`, `-Xcontext-*`
+     * flags, `-language-version`, ...). Parsed by the worker before Fakt's own settings, which
+     * always win. Relocatable by contract: the list never carries absolute paths. `@Input` so a
+     * change invalidates cached outputs; empty by default.
+     */
+    @get:Input public abstract val compilerArguments: ListProperty<String>
+
+    /**
+     * Installation directory of the JDK the compilation targets (the Java toolchain launcher),
+     * passed to the JVM worker driver as `-jdk-home`. `@Internal`: hashing a JDK tree is wrong and
+     * its path is machine specific; [jdkVersion] carries the cache-relevant identity. Absent for
+     * non-JVM compilations, where the worker compiler's own JDK is used.
+     */
+    @get:Internal public abstract val jdkHome: DirectoryProperty
+
+    /**
+     * Major version of the JDK behind [jdkHome]. `@Input` so switching the toolchain re-executes
+     * the task even though [jdkHome] itself is not an input.
+     */
+    @get:Input @get:Optional public abstract val jdkVersion: Property<Int>
+
+    /**
      * Generated `Fake<X>Impl.kt` files. Convention is
      * `build/generated/fakt/<target>/<sourceSet>/kotlin` — disjoint from `compileKotlin*`'s outputs
      * to avoid Gradle's overlapping-outputs rule.
@@ -229,6 +253,8 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
             params.generatedKotlinDir.set(generatedKotlinDir)
             params.commonGeneratedKotlinDir.set(commonGeneratedKotlinDir)
             params.scratchDir.set(scratchDir)
+            params.compilerArguments.set(compilerArguments)
+            params.jdkHome.set(jdkHome)
         }
     }
 }
