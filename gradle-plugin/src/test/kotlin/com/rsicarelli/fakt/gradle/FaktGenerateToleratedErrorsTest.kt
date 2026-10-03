@@ -38,6 +38,7 @@ class FaktGenerateToleratedErrorsTest {
             result.output,
         )
         assertContains(result.output, "Fakt: tolerated compiler error", message = result.output)
+        assertNoRawCompilerError(result)
     }
 
     @Test
@@ -50,6 +51,8 @@ class FaktGenerateToleratedErrorsTest {
 
         assertEquals(TaskOutcome.SUCCESS, result.task(":faktGenerate")?.outcome, result.output)
         assertFalse("Fakt: tolerated" in result.output, result.output)
+        assertNoRawCompilerError(result)
+        assertTrue(generatedFiles(projectDir).any { it.name.contains("UserService") })
     }
 
     @Test
@@ -79,9 +82,6 @@ class FaktGenerateToleratedErrorsTest {
         assertEquals(TaskOutcome.FAILED, result.task(":faktGenerate")?.outcome, result.output)
     }
 
-    // Depends on the compiler-side change (WP-A) that makes the Fakt FIR checker report
-    // `[FAKT] ... unresolved type(s)` for a @Fake whose signature has an unresolved type. It fails
-    // until that change is merged; do not disable it.
     @Test
     fun `GIVEN a fake whose signature uses an unresolved type WHEN the task runs THEN it fails with FAKT and generates nothing`(
         @TempDir projectDir: File
@@ -93,6 +93,36 @@ class FaktGenerateToleratedErrorsTest {
         assertEquals(TaskOutcome.FAILED, result.task(":faktGenerate")?.outcome, result.output)
         assertContains(result.output, "[FAKT]", message = result.output)
         assertTrue(generatedFiles(projectDir).none { it.name.contains("Broken") }, result.output)
+    }
+
+    @Test
+    fun `GIVEN a failing run with an unrelated located error WHEN the task fails THEN every error is printed`(
+        @TempDir projectDir: File
+    ) {
+        setupProject(
+            projectDir,
+            fixtures =
+                UNRESOLVED_IN_FAKE_FIXTURES + TOLERATED_FIXTURES.filterKeys { it == "Other.kt" },
+        )
+
+        val result = gradle(projectDir).buildAndFail("faktGenerate")
+
+        assertContains(result.output, "[FAKT]", message = result.output)
+        assertContains(result.output, "Other.kt", message = result.output)
+        assertContains(result.output, "Other.kt:3", message = result.output)
+        assertContains(result.output, "unresolved reference", message = result.output)
+    }
+
+    /** The printing collector renders `<path>:<line>:<col>: error: <message>`. */
+    private fun assertNoRawCompilerError(result: BuildResult) {
+        val raw =
+            result.output
+                .lines()
+                .filterNot { it.startsWith("Fakt: tolerated") }
+                .filter {
+                    it.contains("error:") || it.contains("unresolved reference", ignoreCase = true)
+                }
+        assertTrue(raw.isEmpty(), "worker printed raw compiler errors: $raw\n${result.output}")
     }
 
     private fun generatedFiles(projectDir: File): List<File> =

@@ -13,12 +13,35 @@ internal data class RecordedDiagnostic(val message: String, val verdict: Diagnos
 internal class AnalysisRecorder {
     private val recorded = mutableListOf<RecordedDiagnostic>()
 
-    /** Sink for `K2CompilerBridge.newRecordingCollector`. */
-    fun record(severity: String, message: String, hasLocation: Boolean) {
+    private val heldBack = mutableListOf<() -> Unit>()
+
+    /**
+     * Sink for `K2CompilerBridge.newRecordingCollector`. Returns true when the message is a
+     * tolerated error that the caller must NOT print now: [replay] is kept so [replayHeldBack] can
+     * print it later if the run fails.
+     */
+    fun record(
+        severity: String,
+        message: String,
+        hasLocation: Boolean,
+        replay: () -> Unit,
+    ): Boolean {
         val verdict = classify(severity, message, hasLocation)
         if (verdict != DiagnosticVerdict.IGNORED) {
             synchronized(recorded) { recorded += RecordedDiagnostic(message, verdict) }
         }
+        val hold = verdict == DiagnosticVerdict.TOLERATED
+        if (hold) synchronized(heldBack) { heldBack += replay }
+        return hold
+    }
+
+    /** True once any tolerated error was held back; keeps the collector's `hasErrors()` honest. */
+    fun hasHeldBack(): Boolean = synchronized(heldBack) { heldBack.isNotEmpty() }
+
+    /** Prints every held-back error through the original collector; call it when the run fails. */
+    fun replayHeldBack() {
+        val pending = synchronized(heldBack) { heldBack.toList().also { heldBack.clear() } }
+        pending.forEach { it() }
     }
 
     fun tolerated(): List<String> = messages(DiagnosticVerdict.TOLERATED)
@@ -51,24 +74,37 @@ internal fun analysisFailedWithDiagnostics(
 private const val REPORT_ARITY = 3
 
 /**
- * A `MessageCollector` proxy that forwards every call to [delegate] (console output and
- * `hasErrors()` stay exactly as the printing collector answers) and also hands each reported
- * message to [sink] as (severity name, message, has source location). No compiler types appear in
- * the signature.
+ * A `MessageCollector` proxy over [delegate] (the printing collector). Everything is forwarded
+ * unchanged except tolerated errors: [recorder] decides to hold those back (see
+ * [AnalysisRecorder.record]) so a green build does not print scary `error:` lines. `hasErrors()`
+ * still answers true for held-back errors, so K2's control flow and exit code do not change. No
+ * compiler types appear in the signature.
  */
 internal fun K2CompilerBridge.newRecordingCollector(
     delegate: Any,
-    sink: (String, String, Boolean) -> Unit,
+    recorder: AnalysisRecorder,
 ): Any {
     val collectorInterface = Class.forName(K2Fqns.MESSAGE_COLLECTOR, true, cl)
     return Proxy.newProxyInstance(cl, arrayOf(collectorInterface)) { _, method, args ->
         val callArgs = args ?: emptyArray()
-        if (method.name == "report" && callArgs.size == REPORT_ARITY) {
-            sink((callArgs[0] as Enum<*>).name, callArgs[1].toString(), callArgs[2] != null)
+        val forward = {
+            MethodHandles.lookup()
+                .unreflect(method)
+                .bindTo(delegate)
+                .invokeWithArguments(callArgs.asList())
         }
-        MethodHandles.lookup()
-            .unreflect(method)
-            .bindTo(delegate)
-            .invokeWithArguments(callArgs.asList())
+        when {
+            method.name == "report" && callArgs.size == REPORT_ARITY -> {
+                val severity = (callArgs[0] as Enum<*>).name
+                val held =
+                    recorder.record(severity, callArgs[1].toString(), callArgs[2] != null) {
+                        forward()
+                    }
+                if (held) null else forward()
+            }
+            method.name == "hasErrors" && callArgs.isEmpty() ->
+                forward() as Boolean || recorder.hasHeldBack()
+            else -> forward()
+        }
     }
 }

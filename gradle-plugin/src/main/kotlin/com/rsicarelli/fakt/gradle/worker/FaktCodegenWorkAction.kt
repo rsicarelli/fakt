@@ -203,16 +203,16 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
 
         val recorder = AnalysisRecorder()
         val collector =
-            bridge.newRecordingCollector(
-                bridge.newPrintingMessageCollector(System.err),
-                recorder::record,
-            )
+            bridge.newRecordingCollector(bridge.newPrintingMessageCollector(System.err), recorder)
         val exitCode =
             bridge
                 .execMethod()
                 .invoke(bridge.newCompiler(), collector, bridge.servicesEmpty(), args)
         val exitCodeName = (exitCode as Enum<*>).name
-        check(recorder.decide(exitCodeName) == AnalysisOutcome.SUCCESS) {
+        val succeeded = recorder.decide(exitCodeName) == AnalysisOutcome.SUCCESS
+        // A failed run must show every compiler error, including the ones held back.
+        if (!succeeded) recorder.replayHeldBack()
+        check(succeeded) {
             analysisFailedWithDiagnostics(
                 call.driver,
                 exitCodeName,
