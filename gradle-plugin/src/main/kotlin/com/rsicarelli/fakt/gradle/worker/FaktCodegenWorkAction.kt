@@ -45,7 +45,6 @@ internal interface FaktCodegenWorkParameters : WorkParameters {
 private const val DEFAULT_KOTLIN_SOURCE_DEPTH = 8
 
 private const val MODULE_NAME = "fakt-analysis"
-private const val EXIT_CODE_OK = "OK"
 
 /**
  * Worker entry point: drives a compiler front door from `kotlin-compiler-embeddable` with the Fakt
@@ -202,15 +201,26 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         }
         populatePluginArgs(bridge, args, call)
 
-        val collector = bridge.newPrintingMessageCollector(System.err)
+        val recorder = AnalysisRecorder()
+        val collector =
+            bridge.newRecordingCollector(
+                bridge.newPrintingMessageCollector(System.err),
+                recorder::record,
+            )
         val exitCode =
             bridge
                 .execMethod()
                 .invoke(bridge.newCompiler(), collector, bridge.servicesEmpty(), args)
         val exitCodeName = (exitCode as Enum<*>).name
-        check(exitCodeName == EXIT_CODE_OK) {
-            analysisFailedMessage(call.driver, exitCodeName, call.compilerArguments)
+        check(recorder.decide(exitCodeName) == AnalysisOutcome.SUCCESS) {
+            analysisFailedWithDiagnostics(
+                call.driver,
+                exitCodeName,
+                call.compilerArguments,
+                recorder.fatal(),
+            )
         }
+        toleratedLogLines(recorder.tolerated(), call.logLevel).forEach(::println)
     }
 
     private fun populateSourceArgs(bridge: K2CompilerBridge, args: Any, call: K2Invocation) {
