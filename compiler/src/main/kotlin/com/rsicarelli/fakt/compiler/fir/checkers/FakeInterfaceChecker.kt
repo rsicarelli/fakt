@@ -18,6 +18,7 @@ import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeInterface
 import com.rsicarelli.fakt.compiler.fir.rendering.renderDefaultValue
 import com.rsicarelli.fakt.compiler.fir.types.FirTypeRenderer
+import com.rsicarelli.fakt.compiler.fir.types.UnresolvedTypeScanner
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
@@ -124,6 +125,13 @@ internal class FakeInterfaceChecker(private val sharedContext: FaktSharedContext
             logger.debug("Skipped $simpleName: external interface not supported")
             reportError(FirFaktErrors.FAKE_CANNOT_BE_EXTERNAL)
             return // Skip external interfaces
+        }
+
+        // Unresolved types in the signature make the fake uncompilable: fail loudly, emit nothing
+        val unresolved = UnresolvedTypeScanner.scan(declaration, session)
+        if (unresolved.isNotEmpty()) {
+            logger.error(FirFaktErrors.fakeUnresolvedType(simpleName, unresolved))
+            return
         }
 
         // ✅ Validation passed - analyze and store metadata with timing

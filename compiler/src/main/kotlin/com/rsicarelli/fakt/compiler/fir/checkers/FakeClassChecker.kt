@@ -19,6 +19,7 @@ import com.rsicarelli.fakt.compiler.fir.metadata.FirVisibility
 import com.rsicarelli.fakt.compiler.fir.metadata.ValidatedFakeClass
 import com.rsicarelli.fakt.compiler.fir.rendering.renderDefaultValue
 import com.rsicarelli.fakt.compiler.fir.types.FirTypeRenderer
+import com.rsicarelli.fakt.compiler.fir.types.UnresolvedTypeScanner
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
@@ -153,6 +154,13 @@ internal class FakeClassChecker(private val sharedContext: FaktSharedContext) :
         if (declaration.status.isExternal) {
             logger.debug("Skipped $simpleName: external class not supported")
             logger.error(FirFaktErrors.FAKE_CANNOT_BE_EXTERNAL)
+            return
+        }
+
+        // Unresolved types in the signature make the fake uncompilable: fail loudly, emit nothing
+        val unresolved = UnresolvedTypeScanner.scan(declaration, session)
+        if (unresolved.isNotEmpty()) {
+            logger.error(FirFaktErrors.fakeUnresolvedType(simpleName, unresolved))
             return
         }
 

@@ -118,7 +118,7 @@ internal class CodeGenerator(
             writeToDisk(rendered, sourceSourceSet)
             GeneratedCode(file = rendered, linesOfCode = calculateLOC(rendered.content))
         } catch (e: Exception) {
-            logger.error("Failed to generate fake for $sourceName: ${e.message}")
+            logger.error("[FAKT] Failed to generate fake for $sourceName: ${e.message}")
             throw e
         }
 
