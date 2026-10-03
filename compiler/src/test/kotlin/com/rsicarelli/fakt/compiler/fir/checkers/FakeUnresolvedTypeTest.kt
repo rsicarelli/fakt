@@ -110,6 +110,112 @@ class FakeUnresolvedTypeTest {
         assertEquals(1, outcome.generatedFiles.size)
     }
 
+    @Test
+    fun `GIVEN private member with unresolved implicit type WHEN emitting at FIR THEN fake generates`() {
+        val outcome =
+            compileAtFir(
+                """
+                @Fake abstract class Store {
+                    private val ser = Missing.serializer()
+                    abstract fun save(r: Int)
+                }
+                """
+            )
+
+        assertGenerated(outcome)
+    }
+
+    @Test
+    fun `GIVEN final member of fake class with unresolved implicit type WHEN emitting THEN fake generates`() {
+        val outcome =
+            compileAtFir(
+                """
+                @Fake abstract class Store {
+                    fun encode() = Missing.serializer()
+                    abstract fun save(r: Int)
+                }
+                """
+            )
+
+        assertGenerated(outcome)
+    }
+
+    @Test
+    fun `GIVEN private function with body in interface WHEN emitting at FIR THEN fake generates`() {
+        val outcome =
+            compileAtFir(
+                """
+                @Fake interface Api {
+                    fun ping(): Int
+                    private fun helper() = Missing.serializer()
+                }
+                """
+            )
+
+        assertGenerated(outcome)
+    }
+
+    @Test
+    fun `GIVEN final member in source supertype class WHEN emitting at FIR THEN fake generates`() {
+        val outcome =
+            compileAtFir(
+                """
+                abstract class Base { fun encode() = Missing.serializer() }
+                @Fake abstract class Store : Base() { abstract fun save(r: Int) }
+                """
+            )
+
+        assertGenerated(outcome)
+    }
+
+    @Test
+    fun `GIVEN unresolved type in open member of fake class WHEN emitting at FIR THEN FAKT error`() {
+        val outcome = compileAtFir("@Fake abstract class Api { open fun load(): Missing? = null }")
+
+        assertRejected(outcome, "Api", "Missing")
+    }
+
+    @Test
+    fun `GIVEN unresolved constructor parameter of fake class WHEN emitting at FIR THEN FAKT error`() {
+        val outcome =
+            compileAtFir("@Fake abstract class Api(val seed: Missing) { abstract fun ping(): Int }")
+
+        assertRejected(outcome, "Api", "Missing")
+    }
+
+    @Test
+    fun `GIVEN typealias supertype to interface with unresolved member WHEN emitting THEN FAKT error`() {
+        val outcome =
+            compileAtFir(
+                """
+                interface Base { fun load(): Missing }
+                typealias Alias = Base
+                @Fake interface Api : Alias { fun ping(): Int }
+                """
+            )
+
+        assertRejected(outcome, "Api", "Missing")
+    }
+
+    @Test
+    fun `GIVEN typealias supertype to resolved interface WHEN emitting at FIR THEN fake generates`() {
+        val outcome =
+            compileAtFir(
+                """
+                interface Base { fun load(): String }
+                typealias Alias = Base
+                @Fake interface Api : Alias { fun ping(): Int }
+                """
+            )
+
+        assertGenerated(outcome)
+    }
+
+    private fun assertGenerated(outcome: FullPluginCompilationHarness.Outcome) {
+        assertTrue("[FAKT]" !in outcome.messages, outcome.messages)
+        assertEquals(1, outcome.generatedFiles.size, outcome.messages)
+    }
+
     private fun assertRejected(
         outcome: FullPluginCompilationHarness.Outcome,
         fakeName: String,

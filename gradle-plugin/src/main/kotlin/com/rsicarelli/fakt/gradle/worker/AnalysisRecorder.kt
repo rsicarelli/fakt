@@ -7,7 +7,12 @@ import java.lang.invoke.MethodHandles
 import java.lang.reflect.Proxy
 
 /** One message captured from the analysis run, already classified. */
-internal data class RecordedDiagnostic(val message: String, val verdict: DiagnosticVerdict)
+internal data class RecordedDiagnostic(
+    val message: String,
+    /** `path:line:col`, or null when the message had no source location. Console only. */
+    val location: String?,
+    val verdict: DiagnosticVerdict,
+)
 
 /** Collects the diagnostics of one K2 run and turns them into the worker's decision. */
 internal class AnalysisRecorder {
@@ -20,15 +25,10 @@ internal class AnalysisRecorder {
      * tolerated error that the caller must NOT print now: [replay] is kept so [replayHeldBack] can
      * print it later if the run fails.
      */
-    fun record(
-        severity: String,
-        message: String,
-        hasLocation: Boolean,
-        replay: () -> Unit,
-    ): Boolean {
-        val verdict = classify(severity, message, hasLocation)
+    fun record(severity: String, message: String, location: String?, replay: () -> Unit): Boolean {
+        val verdict = classify(severity, message, hasLocation = location != null)
         if (verdict != DiagnosticVerdict.IGNORED) {
-            synchronized(recorded) { recorded += RecordedDiagnostic(message, verdict) }
+            synchronized(recorded) { recorded += RecordedDiagnostic(message, location, verdict) }
         }
         val hold = verdict == DiagnosticVerdict.TOLERATED
         if (hold) synchronized(heldBack) { heldBack += replay }
@@ -44,20 +44,38 @@ internal class AnalysisRecorder {
         pending.forEach { it() }
     }
 
-    fun tolerated(): List<String> = messages(DiagnosticVerdict.TOLERATED)
+    fun tolerated(): List<RecordedDiagnostic> = withVerdict(DiagnosticVerdict.TOLERATED)
 
-    fun fatal(): List<String> = messages(DiagnosticVerdict.FATAL)
+    fun fatal(): List<String> = withVerdict(DiagnosticVerdict.FATAL).map { it.message }
 
-    fun decide(exitName: String): AnalysisOutcome = outcome(exitName, fatal().size)
+    fun decide(exitName: String): AnalysisOutcome =
+        outcome(exitName, fatal().size, tolerated().size)
 
-    private fun messages(verdict: DiagnosticVerdict): List<String> =
-        synchronized(recorded) { recorded.filter { it.verdict == verdict }.map { it.message } }
+    private fun withVerdict(verdict: DiagnosticVerdict): List<RecordedDiagnostic> =
+        synchronized(recorded) { recorded.filter { it.verdict == verdict } }
 }
 
-/** Lines to log when a run succeeded despite tolerated errors; empty below INFO. */
-internal fun toleratedLogLines(tolerated: List<String>, logLevel: LogLevel): List<String> =
-    if (logLevel >= LogLevel.INFO) tolerated.map { "Fakt: tolerated compiler error: $it" }
-    else emptyList()
+/**
+ * Lines to log when a run succeeded despite tolerated errors. Below INFO nothing; at INFO one
+ * summary; at DEBUG the summary plus every error with its location. Every line contains the stable
+ * text `Fakt: tolerated compiler error` that the CI guards grep for.
+ */
+internal fun toleratedLogLines(
+    tolerated: List<RecordedDiagnostic>,
+    logLevel: LogLevel,
+): List<String> {
+    if (tolerated.isEmpty() || logLevel < LogLevel.INFO) return emptyList()
+    val summary =
+        "Fakt: tolerated compiler error(s) outside @Fake code: ${tolerated.size} " +
+            "(set fakt logLevel to DEBUG to list each one)"
+    val each =
+        if (logLevel >= LogLevel.DEBUG) {
+            tolerated.map { "Fakt: tolerated compiler error: ${it.location}: ${it.message}" }
+        } else {
+            emptyList()
+        }
+    return listOf(summary) + each
+}
 
 /** [analysisFailedMessage] plus the fatal diagnostics the recorder saw. */
 internal fun analysisFailedWithDiagnostics(
@@ -97,7 +115,7 @@ internal fun K2CompilerBridge.newRecordingCollector(
             method.name == "report" && callArgs.size == REPORT_ARITY -> {
                 val severity = (callArgs[0] as Enum<*>).name
                 val held =
-                    recorder.record(severity, callArgs[1].toString(), callArgs[2] != null) {
+                    recorder.record(severity, callArgs[1].toString(), locationText(callArgs[2])) {
                         forward()
                     }
                 if (held) null else forward()
@@ -108,3 +126,21 @@ internal fun K2CompilerBridge.newRecordingCollector(
         }
     }
 }
+
+/**
+ * `path:line:col` read reflectively from a `CompilerMessageSourceLocation` (so no compiler types
+ * are needed). Null for a missing location; a placeholder when reflection fails.
+ */
+private fun locationText(location: Any?): String? {
+    if (location == null) return null
+    return runCatching {
+            val type = location.javaClass
+            val path = type.getMethod("getPath").invoke(location)
+            val line = type.getMethod("getLine").invoke(location)
+            val column = type.getMethod("getColumn").invoke(location)
+            "$path:$line:$column"
+        }
+        .getOrElse { UNKNOWN_LOCATION }
+}
+
+private const val UNKNOWN_LOCATION = "<unknown location>"

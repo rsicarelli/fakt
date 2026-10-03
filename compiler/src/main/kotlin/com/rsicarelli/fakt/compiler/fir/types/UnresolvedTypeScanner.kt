@@ -2,16 +2,23 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.compiler.fir.types
 
+import org.jetbrains.kotlin.descriptors.Modality
+import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.declarations.FirClass
 import org.jetbrains.kotlin.fir.declarations.FirFunction
+import org.jetbrains.kotlin.fir.declarations.FirMemberDeclaration
 import org.jetbrains.kotlin.fir.declarations.FirProperty
+import org.jetbrains.kotlin.fir.declarations.FirTypeParameterRef
 import org.jetbrains.kotlin.fir.declarations.processAllDeclarations
 import org.jetbrains.kotlin.fir.declarations.utils.classId
 import org.jetbrains.kotlin.fir.resolve.diagnostics.ConeUnresolvedError
+import org.jetbrains.kotlin.fir.resolve.fullyExpandedType
 import org.jetbrains.kotlin.fir.resolve.toSymbol
+import org.jetbrains.kotlin.fir.symbols.FirBasedSymbol
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol
+import org.jetbrains.kotlin.fir.symbols.impl.FirConstructorSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirFunctionSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirPropertySymbol
 import org.jetbrains.kotlin.fir.types.ConeClassLikeType
@@ -55,16 +62,14 @@ internal object UnresolvedTypeScanner {
     }
 
     @OptIn(SymbolInternals::class)
-    private fun scanTypeParameter(
-        ref: org.jetbrains.kotlin.fir.declarations.FirTypeParameterRef,
-        found: MutableSet<String>,
-    ) {
+    private fun scanTypeParameter(ref: FirTypeParameterRef, found: MutableSet<String>) {
         ref.symbol.fir.bounds.forEach { bound -> collect(bound.coneType, found) }
     }
 
     @OptIn(SymbolInternals::class)
     private fun scanMembers(declaration: FirClass, session: FirSession, found: MutableSet<String>) {
         declaration.processAllDeclarations(session = declaration.moduleData.session) { symbol ->
+            if (!symbol.isUsedByFake()) return@processAllDeclarations
             when (symbol) {
                 is FirPropertySymbol -> scanProperty(symbol.fir, found)
                 is FirFunctionSymbol<*> -> scanFunction(symbol.fir, found)
@@ -73,12 +78,25 @@ internal object UnresolvedTypeScanner {
         }
     }
 
+    /**
+     * The fake never touches private members nor final ones (it cannot override them). Constructors
+     * are kept: their parameters are forwarded to `super(...)`.
+     */
+    @OptIn(SymbolInternals::class)
+    private fun FirBasedSymbol<*>.isUsedByFake(): Boolean {
+        val status = (fir as? FirMemberDeclaration)?.status
+        return when {
+            this is FirConstructorSymbol || status == null -> true
+            status.visibility == Visibilities.Private -> false
+            else -> status.modality != Modality.FINAL
+        }
+    }
+
     private fun scanProperty(property: FirProperty, found: MutableSet<String>) {
         collect(property.returnTypeRef.coneType, found)
         property.receiverParameter?.typeRef?.let { collect(it.coneType, found) }
     }
 
-    @OptIn(SymbolInternals::class)
     private fun scanFunction(function: FirFunction, found: MutableSet<String>) {
         collect(function.returnTypeRef.coneType, found)
         function.receiverParameter?.typeRef?.let { collect(it.coneType, found) }
@@ -86,12 +104,11 @@ internal object UnresolvedTypeScanner {
         function.typeParameters.forEach { scanTypeParameter(it, found) }
     }
 
+    @OptIn(SymbolInternals::class)
     private fun superClassOf(ref: FirTypeRef, session: FirSession): FirClass? {
-        val type = ref.coneType as? ConeClassLikeType ?: return null
-        return (type.lookupTag.toSymbol(session) as? FirClassSymbol<*>)?.fir()
+        val type = ref.coneType.fullyExpandedType(session) as? ConeClassLikeType ?: return null
+        return (type.lookupTag.toSymbol(session) as? FirClassSymbol<*>)?.fir
     }
-
-    @OptIn(SymbolInternals::class) private fun FirClassSymbol<*>.fir(): FirClass = fir
 
     private fun collect(type: ConeKotlinType, found: MutableSet<String>) {
         if (type is ConeErrorType) {

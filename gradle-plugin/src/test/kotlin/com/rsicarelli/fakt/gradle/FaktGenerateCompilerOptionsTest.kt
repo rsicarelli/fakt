@@ -30,7 +30,7 @@ class FaktGenerateCompilerOptionsTest {
     fun `GIVEN main code using an ERROR-level opt-in marker WHEN no compiler argument is forwarded THEN the error is tolerated and logged`(
         @TempDir projectDir: File
     ) {
-        setupProject(projectDir, fixtures = OPT_IN_FIXTURES, taskConfig = INFO_LOG)
+        setupProject(projectDir, fixtures = OPT_IN_FIXTURES, taskConfig = DEBUG_LOG)
 
         val result = gradle(projectDir).build("faktGenerate")
 
@@ -314,6 +314,9 @@ class FaktGenerateCompilerOptionsTest {
     companion object {
         /** Later `logLevel.set` wins over the QUIET default of the generated build script. */
         private const val INFO_LOG = "logLevel.set(LogLevel.INFO)\n"
+
+        /** DEBUG lists each tolerated error with its message; INFO only prints a summary. */
+        private const val DEBUG_LOG = "logLevel.set(LogLevel.DEBUG)\n"
 
         private val STUB_CONTEXT =
             SourceSetContext(

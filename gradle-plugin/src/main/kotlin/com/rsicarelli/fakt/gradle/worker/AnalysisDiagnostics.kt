@@ -39,10 +39,15 @@ internal fun classify(severity: String, message: String, hasLocation: Boolean): 
         else -> DiagnosticVerdict.TOLERATED
     }
 
-/** Decides the run: exit OK, or COMPILATION_ERROR with no fatal diagnostic, succeeds. */
-internal fun outcome(exitName: String, fatalCount: Int): AnalysisOutcome =
+/**
+ * Decides the run: exit OK succeeds. COMPILATION_ERROR succeeds only when we saw at least one
+ * tolerated error and no fatal one: with nothing reported through our collector, K2 failed for a
+ * reason we cannot see, so the run fails closed.
+ */
+internal fun outcome(exitName: String, fatalCount: Int, toleratedCount: Int): AnalysisOutcome =
     when {
         exitName == EXIT_OK -> AnalysisOutcome.SUCCESS
-        exitName == EXIT_COMPILATION_ERROR && fatalCount == 0 -> AnalysisOutcome.SUCCESS
+        exitName == EXIT_COMPILATION_ERROR && fatalCount == 0 && toleratedCount > 0 ->
+            AnalysisOutcome.SUCCESS
         else -> AnalysisOutcome.FAILURE
     }

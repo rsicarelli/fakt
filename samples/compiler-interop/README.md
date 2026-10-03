@@ -35,6 +35,12 @@ modules set it.
 - `FAKT_EXPECT_TOLERATED=1` (used for `:serialization`): fail if the log has no tolerated
   error. Then the sample would prove nothing.
 
+## Known limits
+
+- If the `@Fake` annotation itself cannot be resolved in the worker (a classpath bug), the worker
+  finds no fake, treats that located error as tolerated, and succeeds. You only see
+  `unresolved reference FakeXxx` later, when the test source set compiles.
+
 ## Run it
 
 ```bash

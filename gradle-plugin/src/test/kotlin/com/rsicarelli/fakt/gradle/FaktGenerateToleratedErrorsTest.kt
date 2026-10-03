@@ -37,7 +37,28 @@ class FaktGenerateToleratedErrorsTest {
             generatedFiles(projectDir).any { it.name.contains("UserService") },
             result.output,
         )
-        assertContains(result.output, "Fakt: tolerated compiler error", message = result.output)
+        assertContains(
+            result.output,
+            "Fakt: tolerated compiler error(s) outside @Fake code: 1 " +
+                "(set fakt logLevel to DEBUG to list each one)",
+            message = result.output,
+        )
+        assertFalse("Other.kt" in result.output, "INFO must not list each error\n${result.output}")
+        assertNoRawCompilerError(result)
+    }
+
+    @Test
+    fun `GIVEN an unresolved reference outside any fake WHEN the log level is DEBUG THEN the located error is listed`(
+        @TempDir projectDir: File
+    ) {
+        setupProject(projectDir, fixtures = TOLERATED_FIXTURES, logLevel = "DEBUG")
+
+        val result = gradle(projectDir).build("faktGenerate")
+
+        assertEquals(TaskOutcome.SUCCESS, result.task(":faktGenerate")?.outcome, result.output)
+        val line = result.output.lines().single { it.startsWith("Fakt: tolerated compiler error:") }
+        assertTrue("Other.kt:3:" in line, line)
+        assertTrue("nresolved reference" in line, line)
         assertNoRawCompilerError(result)
     }
 
