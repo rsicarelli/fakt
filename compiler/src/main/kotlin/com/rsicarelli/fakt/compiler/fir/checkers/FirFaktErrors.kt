@@ -34,4 +34,9 @@ internal object FirFaktErrors {
         "[FAKT] @Fake class cannot be final (must be abstract or open)"
     const val FAKE_OPEN_CLASS_NO_OPEN_MEMBERS =
         "[FAKT] @Fake open class must have at least one open property or method"
+
+    /** Error for a `@Fake` whose signature touches unresolved types; no fake is generated. */
+    fun fakeUnresolvedType(fakeName: String, typeNames: List<String>): String =
+        "[FAKT] @Fake $fakeName references unresolved type(s) ${typeNames.joinToString()}; " +
+            "no fake generated"
 }
