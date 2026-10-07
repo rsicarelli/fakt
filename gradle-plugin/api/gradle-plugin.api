@@ -54,8 +54,10 @@ public abstract class com/rsicarelli/fakt/gradle/FaktGenerateTask : org/gradle/a
 	public abstract fun getJdkVersion ()Lorg/gradle/api/provider/Property;
 	public abstract fun getLogLevel ()Lorg/gradle/api/provider/Property;
 	public abstract fun getPlatformAnalysisOnlySources ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public abstract fun getRefinesKlibs ()Lorg/gradle/api/file/ConfigurableFileCollection;
 	public abstract fun getScratchDir ()Lorg/gradle/api/file/DirectoryProperty;
 	public abstract fun getSourceSetContextJson ()Lorg/gradle/api/provider/Property;
+	public abstract fun getSourceSetRoots ()Lorg/gradle/api/provider/MapProperty;
 	public abstract fun getSources ()Lorg/gradle/api/file/ConfigurableFileCollection;
 	public abstract fun getWasmTarget ()Lorg/gradle/api/provider/Property;
 }

@@ -9,6 +9,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
@@ -126,6 +127,24 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
      * actual content, closing that missed-invalidation hole. Empty for JVM/Android compilations.
      */
     @get:Classpath public abstract val commonKlibClasspath: ConfigurableFileCollection
+
+    /**
+     * Metadata klibs of the source sets the analysed set refines (its ancestors' metadata
+     * compilation outputs), passed to the metadata driver as `-Xrefines-paths` so an intermediate
+     * source set (`webMain`) analyses against `commonMain` without redeclaring it. Only the
+     * metadata driver reads it; the JS/JVM drivers describe the same relation through fragments.
+     * `@Classpath` for the same content-hashing reason as [commonKlibClasspath]. Empty by default.
+     */
+    @get:Classpath public abstract val refinesKlibs: ConfigurableFileCollection
+
+    /**
+     * Source directories per source set name (`jsMain` to its Kotlin roots), used by the worker to
+     * attribute every analysed file to a source set when it builds `-Xfragments`. `@Internal`: the
+     * paths are absolute and machine specific; the topology that decides the arguments is already
+     * in the [sourceSetContextJson] `@Input` and file contents in the source inputs. Empty by
+     * default, which keeps the `-Xcommon-sources` arguments.
+     */
+    @get:Internal public abstract val sourceSetRoots: MapProperty<String, List<String>>
 
     /**
      * Classpath for the Fakt worker — `kotlin-compiler-embeddable` (the `K2JVMCompiler` driver).
@@ -256,6 +275,8 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
             params.platformAnalysisOnlySources.from(platformAnalysisOnlySources)
             params.compileClasspath.from(compileClasspath)
             params.commonKlibClasspath.from(commonKlibClasspath)
+            params.refinesKlibs.from(refinesKlibs)
+            params.sourceSetRoots.set(sourceSetRoots)
             params.faktCompilerClasspath.from(faktCompilerClasspath)
             params.sourceSetContextJson.set(sourceSetContextJson)
             params.faktVersion.set(faktVersion)
