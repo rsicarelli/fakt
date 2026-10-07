@@ -33,6 +33,15 @@
 # Env:   FAKT_CACHED_FAKES    space-separated fake class basenames that must be restored from cache
 #        FAKT_PRESENCE_TASKS  space-separated compile tasks that generate non-cacheable platform fakes
 #        FAKT_PRESENCE_FAKES  space-separated fake class basenames asserted present after those tasks
+#        FAKT_FORBID_TOLERATED  set to 1 to fail if the warm-up log has a line
+#                             "Fakt: tolerated compiler error". Use it for modules the worker must
+#                             analyse fully: a hit means the module quietly relied on tolerance
+#                             (for example a compiler option was not forwarded to the worker).
+#        FAKT_EXPECT_TOLERATED  set to 1 to fail if the warm-up log has NO such line. Use it for a
+#                             sample that is built to trigger tolerance (code only the real build's
+#                             compiler plugin can resolve); without the line the sample proves nothing.
+#        Both checks read the warm-up log, the forced re-run that really executes the producers, and
+#        need the module's fakt logLevel to be INFO or higher so the line is printed.
 
 set -euo pipefail
 
@@ -75,6 +84,19 @@ warm_cached=$(grep -cE '^> Task .*faktGenerate.* (UP-TO-DATE|FROM-CACHE)' "$warm
 warm_executed=$((warm_total - warm_cached))
 if [ "$warm_executed" -le 0 ]; then
   echo "::error::Warm-up did not execute any faktGenerate producer (all UP-TO-DATE/FROM-CACHE despite --rerun-tasks) — the build cache was not seeded, so the FROM-CACHE contract cannot be evaluated. This is a harness/setup problem, not a cache-key regression."
+  exit 1
+fi
+
+# Tolerance guards (optional). Only the warm-up executes the producers, so only its log can show
+# whether the worker tolerated a compiler error.
+tolerated_count=$(grep -c 'Fakt: tolerated compiler error' "$warm_log" || true)
+if [ "${FAKT_FORBID_TOLERATED:-}" = "1" ] && [ "$tolerated_count" -gt 0 ]; then
+  echo "::error::${tolerated_count} 'Fakt: tolerated compiler error' line(s) in the warm-up log — a module that must be fully analysed by the worker silently relied on tolerance (an option or plugin was probably not forwarded)."
+  grep 'Fakt: tolerated compiler error' "$warm_log" | head -n 5
+  exit 1
+fi
+if [ "${FAKT_EXPECT_TOLERATED:-}" = "1" ] && [ "$tolerated_count" -eq 0 ]; then
+  echo "::error::No 'Fakt: tolerated compiler error' line in the warm-up log — the sample no longer triggers tolerance, so it proves nothing (or the fakt logLevel is below INFO)."
   exit 1
 fi
 

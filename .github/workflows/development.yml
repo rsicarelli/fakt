@@ -278,6 +278,17 @@ jobs:
             path: samples/compiler-interop
             producers: :jvm:faktGenerateJvmMain :kmp:faktGenerateMetadataCommonMain :kmp:faktGenerateJvmMain :kmp:faktGenerateJsMain
             cached-fakes: FakeInvoiceRendererImpl FakeNotifierImpl FakeJvmOnlyFilesImpl FakeJsOnlyStorageImpl
+            # These modules need no plugin the worker lacks: any tolerated error means an option
+            # was not forwarded and the worker hid it.
+            forbid-tolerated: "1"
+          # The serialization plugin runs in compileKotlin but not in the Fakt worker, so the worker
+          # must tolerate the unresolved Receipt.serializer() (#165). expect-tolerated keeps this
+          # sample honest: it fails if nothing is tolerated any more.
+          - sample: compiler-interop-serialization
+            path: samples/compiler-interop
+            producers: :serialization:faktGenerateJvmMain
+            cached-fakes: FakeReceiptSinkImpl FakeClockImpl
+            expect-tolerated: "1"
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -292,7 +303,8 @@ jobs:
       # stays LAST so it remains the default JAVA_HOME that runs Gradle; JDK 17 is found through the
       # ~/.m2/toolchains.xml that setup-java writes. The shared Setup Environment action is untouched.
       - name: Install JDK 17 for the sample toolchain
-        if: ${{ matrix.sample == 'compiler-interop' }}
+        # Both compiler-interop cells configure the :jvm module, so both need the JDK 17 toolchain.
+        if: ${{ startsWith(matrix.sample, 'compiler-interop') }}
         uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -310,6 +322,8 @@ jobs:
           FAKT_CACHED_FAKES: ${{ matrix.cached-fakes }}
           FAKT_PRESENCE_TASKS: ${{ matrix.presence-tasks }}
           FAKT_PRESENCE_FAKES: ${{ matrix.presence-fakes }}
+          FAKT_FORBID_TOLERATED: ${{ matrix.forbid-tolerated }}
+          FAKT_EXPECT_TOLERATED: ${{ matrix.expect-tolerated }}
         run: ./.github/scripts/cache-correctness-check.sh ${{ matrix.path }} ${{ matrix.producers }}
 
   test-clean-rebuild-cache:

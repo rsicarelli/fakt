@@ -117,7 +117,7 @@ internal object FaktPluginOptions {
  * inspector walks worker-action signatures during decoration and would choke otherwise.
  */
 internal class K2CompilerBridge(
-    private val cl: ClassLoader,
+    internal val cl: ClassLoader,
     private val driver: CompilerDriver = CompilerDriver.JVM,
 ) {
     private val compilerClass by lazy { load(driver.compilerFqn) }

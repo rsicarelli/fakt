@@ -7,6 +7,7 @@ import com.rsicarelli.fakt.compiler.api.SourceSetInfo
 import java.io.File
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlinx.serialization.json.Json
 import org.gradle.testkit.runner.BuildResult
@@ -26,15 +27,16 @@ import org.junit.jupiter.api.io.TempDir
 class FaktGenerateCompilerOptionsTest {
 
     @Test
-    fun `GIVEN main code using an ERROR-level opt-in marker WHEN no compiler argument is forwarded THEN the worker fails`(
+    fun `GIVEN main code using an ERROR-level opt-in marker WHEN no compiler argument is forwarded THEN the error is tolerated and logged`(
         @TempDir projectDir: File
     ) {
-        setupProject(projectDir, fixtures = OPT_IN_FIXTURES)
+        setupProject(projectDir, fixtures = OPT_IN_FIXTURES, taskConfig = DEBUG_LOG)
 
-        val result = gradle(projectDir).buildAndFail("faktGenerate")
+        val result = gradle(projectDir).build("faktGenerate")
 
+        assertContains(result.output, "Fakt: tolerated compiler error", message = result.output)
         assertContains(result.output, "Marker", message = result.output)
-        assertEquals(TaskOutcome.FAILED, result.task(":faktGenerate")?.outcome, result.output)
+        assertEquals(TaskOutcome.SUCCESS, result.task(":faktGenerate")?.outcome, result.output)
     }
 
     @Test
@@ -44,23 +46,25 @@ class FaktGenerateCompilerOptionsTest {
         setupProject(
             projectDir,
             fixtures = OPT_IN_FIXTURES,
-            taskConfig = """compilerArguments.set(listOf("-opt-in=fixture.Marker"))""",
+            taskConfig = INFO_LOG + """compilerArguments.set(listOf("-opt-in=fixture.Marker"))""",
         )
 
         val result = gradle(projectDir).build("faktGenerate")
 
         assertEquals(TaskOutcome.SUCCESS, result.task(":faktGenerate")?.outcome, result.output)
+        assertFalse("Fakt: tolerated" in result.output, result.output)
     }
 
     @Test
-    fun `GIVEN context-sensitive resolution outside any fake file WHEN no compiler argument is forwarded THEN the worker fails`(
+    fun `GIVEN context-sensitive resolution outside any fake file WHEN no compiler argument is forwarded THEN the error is tolerated and logged`(
         @TempDir projectDir: File
     ) {
-        setupProject(projectDir, fixtures = CONTEXT_FIXTURES)
+        setupProject(projectDir, fixtures = CONTEXT_FIXTURES, taskConfig = INFO_LOG)
 
-        val result = gradle(projectDir).buildAndFail("faktGenerate")
+        val result = gradle(projectDir).build("faktGenerate")
 
-        assertEquals(TaskOutcome.FAILED, result.task(":faktGenerate")?.outcome, result.output)
+        assertContains(result.output, "Fakt: tolerated compiler error", message = result.output)
+        assertEquals(TaskOutcome.SUCCESS, result.task(":faktGenerate")?.outcome, result.output)
     }
 
     @Test
@@ -70,12 +74,14 @@ class FaktGenerateCompilerOptionsTest {
         setupProject(
             projectDir,
             fixtures = CONTEXT_FIXTURES,
-            taskConfig = """compilerArguments.set(listOf("-Xcontext-sensitive-resolution"))""",
+            taskConfig =
+                INFO_LOG + """compilerArguments.set(listOf("-Xcontext-sensitive-resolution"))""",
         )
 
         val result = gradle(projectDir).build("faktGenerate")
 
         assertEquals(TaskOutcome.SUCCESS, result.task(":faktGenerate")?.outcome, result.output)
+        assertFalse("Fakt: tolerated" in result.output, result.output)
     }
 
     @Test
@@ -306,6 +312,12 @@ class FaktGenerateCompilerOptionsTest {
     private val json = Json { prettyPrint = false }
 
     companion object {
+        /** Later `logLevel.set` wins over the QUIET default of the generated build script. */
+        private const val INFO_LOG = "logLevel.set(LogLevel.INFO)\n"
+
+        /** DEBUG lists each tolerated error with its message; INFO only prints a summary. */
+        private const val DEBUG_LOG = "logLevel.set(LogLevel.DEBUG)\n"
+
         private val STUB_CONTEXT =
             SourceSetContext(
                 compilationName = "main",
