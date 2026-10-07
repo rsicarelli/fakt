@@ -8,6 +8,8 @@ import com.tschuchort.compiletesting.SourceFile
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -112,6 +114,80 @@ class FaktOutputDirectoriesTest {
             base.deleteRecursively()
         }
     }
+
+    @Test
+    fun `GIVEN a source set Fakt does not know WHEN the fake is skipped THEN a warning names it`() {
+        val base = Files.createTempDirectory("fakt-routes-warn-unknown").toFile()
+        val jvmDir = File(base, "out/jvmTest")
+        try {
+            val outcome =
+                FullPluginCompilationHarness.compile(
+                    fixtures = listOf(customLayout(base)),
+                    emitPhase = EmitPhase.FIR,
+                    outputDir = File(base, "out/fallback"),
+                    defaultSourceSetName = "jvmMain",
+                    outputDirectories = mapOf("jvmMain" to jvmDir.absolutePath),
+                    knownSourceSets = listOf("commonMain", "jvmMain"),
+                )
+
+            assertEquals(KotlinCompilation.ExitCode.OK, outcome.exitCode, outcome.messages)
+            assertEquals(emptySet(), generatedNames(jvmDir))
+            assertTrue(outcome.messages.contains("Odd"), outcome.messages)
+            assertTrue(outcome.messages.contains("src/<sourceSet>/kotlin"), outcome.messages)
+        } finally {
+            base.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun `GIVEN no source set attribution WHEN the default set is not owned THEN a warning is shown`() {
+        val base = Files.createTempDirectory("fakt-routes-warn-null").toFile()
+        val commonDir = File(base, "out/commonTest")
+        try {
+            val outcome =
+                FullPluginCompilationHarness.compile(
+                    fixtures = listOf(unattributed(base)),
+                    emitPhase = EmitPhase.FIR,
+                    outputDir = File(base, "out/fallback"),
+                    defaultSourceSetName = "jvmMain",
+                    outputDirectories = mapOf("commonMain" to commonDir.absolutePath),
+                    knownSourceSets = listOf("commonMain", "jvmMain"),
+                )
+
+            assertEquals(KotlinCompilation.ExitCode.OK, outcome.exitCode, outcome.messages)
+            assertEquals(emptySet(), generatedNames(commonDir))
+            assertTrue(outcome.messages.contains("Loose"), outcome.messages)
+        } finally {
+            base.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun `GIVEN a known source set this task does not own WHEN the fake is skipped THEN no warning`() {
+        val base = Files.createTempDirectory("fakt-routes-quiet").toFile()
+        val jvmDir = File(base, "out/jvmTest")
+        try {
+            val outcome =
+                FullPluginCompilationHarness.compile(
+                    fixtures = listOf(common(base), jvm(base)),
+                    emitPhase = EmitPhase.FIR,
+                    outputDir = File(base, "out/fallback"),
+                    defaultSourceSetName = "jvmMain",
+                    outputDirectories = mapOf("jvmMain" to jvmDir.absolutePath),
+                    knownSourceSets = listOf("commonMain", "jvmMain"),
+                )
+
+            assertEquals(KotlinCompilation.ExitCode.OK, outcome.exitCode, outcome.messages)
+            assertEquals(setOf("FakeJvmClockImpl.kt"), generatedNames(jvmDir))
+            assertFalse(outcome.messages.contains("CommonRepository"), outcome.messages)
+        } finally {
+            base.deleteRecursively()
+        }
+    }
+
+    /** A real source set folder name that no Gradle source set of the compilation uses. */
+    private fun customLayout(base: File): SourceFile =
+        fixture(File(base, "src/oddMain/kotlin/fixtures/Odd.kt"), "Odd", "fun run(): Int")
 
     private fun common(base: File): SourceFile =
         fixture(

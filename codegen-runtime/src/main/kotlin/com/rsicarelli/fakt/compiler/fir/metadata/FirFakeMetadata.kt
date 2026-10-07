@@ -324,7 +324,7 @@ data class FirSourceLocation(
             )
 
         // Regex to extract source set name from path like "src/commonMain/kotlin/..."
-        private val SOURCE_SET_REGEX = Regex("""/src/([^/]+)/kotlin/""")
+        private val SOURCE_SET_REGEX = Regex("""(?<![^/])src/([^/]+)/kotlin/""")
     }
 
     /**
@@ -343,13 +343,18 @@ data class FirSourceLocation(
      * - `/path/to/src/commonMain/kotlin/pkg/Service.kt` → "commonMain"
      * - `/path/to/src/iosMain/kotlin/pkg/Service.kt` → "iosMain"
      * - `/path/to/src/jvmMain/kotlin/pkg/Service.kt` → "jvmMain"
+     * - `C:\work\proj\src\commonMain\kotlin\A.kt` → "commonMain" (backslashes are normalised)
      * - `<unknown>` → null
+     *
+     * When the path has several `src/<name>/kotlin/` segments (a project that lives under one), the
+     * last match wins, because the source set folder is the innermost one.
      *
      * @return Source set name, or null if cannot be determined
      */
     fun extractSourceSetName(): String? {
         if (filePath == "<unknown>") return null
-        return SOURCE_SET_REGEX.find(filePath)?.groupValues?.get(1)
+        val normalized = filePath.replace('\\', '/')
+        return SOURCE_SET_REGEX.findAll(normalized).lastOrNull()?.groupValues?.get(1)
     }
 }
 

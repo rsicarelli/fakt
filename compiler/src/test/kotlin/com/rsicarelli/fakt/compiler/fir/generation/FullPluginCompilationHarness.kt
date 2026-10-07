@@ -55,6 +55,7 @@ internal object FullPluginCompilationHarness {
         commonTestOutputDir: File = outputDir,
         defaultSourceSetName: String = "main",
         outputDirectories: Map<String, String> = emptyMap(),
+        knownSourceSets: List<String> = emptyList(),
     ): Outcome {
         val defaultSourceSet = SourceSetInfo(name = defaultSourceSetName, parents = emptyList())
         val context =
@@ -64,7 +65,11 @@ internal object FullPluginCompilationHarness {
                 platformType = "jvm",
                 isTest = false,
                 defaultSourceSet = defaultSourceSet,
-                allSourceSets = listOf(defaultSourceSet),
+                allSourceSets =
+                    listOf(defaultSourceSet) +
+                        knownSourceSets
+                            .filter { it != defaultSourceSetName }
+                            .map { SourceSetInfo(name = it, parents = emptyList()) },
                 outputDirectory = outputDir.absolutePath,
                 commonTestOutputDirectory = commonTestOutputDir.absolutePath,
                 emitPhase = emitPhase,
