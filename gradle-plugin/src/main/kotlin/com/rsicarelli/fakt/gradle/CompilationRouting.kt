@@ -43,6 +43,20 @@ internal data class CompilationRoute(
 )
 
 /**
+ * The facts about one Kotlin compilation that [routeCompilation] decides on.
+ *
+ * @property name the compilation's name (`main`, `commonMain`, `debug`, …).
+ * @property platformTypeName the compilation target's `KotlinPlatformType` name.
+ * @property sharedSourceSetOwner who owns the default source set of a metadata-target compilation
+ *   (see [assignSourceSetOwners]), or `null` when the compilation has no owner to ask.
+ */
+internal data class RoutedCompilation(
+    val name: String,
+    val platformTypeName: String,
+    val sharedSourceSetOwner: SourceSetOwner? = null,
+)
+
+/**
  * Pure routing behind [FaktGradleSubplugin.applyToCompilation]'s cache-correct branch: decides how
  * one Kotlin compilation generates its fakes. `Project`-free so the full table is unit-testable
  * (mirrors [shouldWireGeneratedDir]).
@@ -59,20 +73,17 @@ internal data class CompilationRoute(
  *   project declares exactly one target (no per-source-set `commonMain` compilation exists, see
  *   `singleTargetPlatformTypeName` in FaktGradleSubplugin.kt); `null` for multi-target and non-KMP
  *   projects.
- * @param compilationName the compilation's name (`main`, `commonMain`, `debug`, …).
- * @param platformTypeName the compilation target's `KotlinPlatformType` name.
- * @param sharedSourceSetOwner who owns the default source set of a metadata-target compilation (see
- *   [assignSourceSetOwners]), or `null` when the compilation has no owner to ask.
+ * @param compilation the compilation being routed.
  */
 internal fun routeCompilation(
     unreadableSourcesReason: String?,
     isMultiplatform: Boolean,
     singleTargetPlatformTypeName: String?,
-    compilationName: String,
-    platformTypeName: String,
-    sharedSourceSetOwner: SourceSetOwner? = null,
-): CompilationRoute =
-    when {
+    compilation: RoutedCompilation,
+): CompilationRoute {
+    val compilationName = compilation.name
+    val platformTypeName = compilation.platformTypeName
+    return when {
         unreadableSourcesReason != null -> legacyRoute(unreadableSourcesReason)
         !isMultiplatform ->
             if (isDrivablePlatform(platformTypeName)) {
@@ -85,11 +96,12 @@ internal fun routeCompilation(
         compilationName == FaktGradleSubplugin.COMMON_MAIN_COMPILATION ->
             CompilationRoute(FaktGradleSubplugin.CacheCorrectDecision.REGISTER_PRODUCER)
         platformTypeName.equals("common", ignoreCase = true) ->
-            routeSharedMetadata(compilationName, sharedSourceSetOwner)
+            routeSharedMetadata(compilationName, compilation.sharedSourceSetOwner)
         isDrivablePlatform(platformTypeName) ->
             CompilationRoute(FaktGradleSubplugin.CacheCorrectDecision.REGISTER_CONSUMER)
         else -> CompilationRoute(FaktGradleSubplugin.CacheCorrectDecision.LEGACY_HYBRID)
     }
+}
 
 /**
  * A metadata-target compilation other than `commonMain`. The legacy `main` compilation and every

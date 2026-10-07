@@ -85,7 +85,7 @@ internal object FaktGenerateTaskWiring {
         extension: FaktPluginExtension,
     ) = register(project, kotlinCompilation, extension, TaskShape.SYNTHETIC)
 
-    private fun register(
+    internal fun register(
         project: Project,
         kotlinCompilation: KotlinCompilation<*>,
         extension: FaktPluginExtension,
@@ -122,6 +122,7 @@ internal object FaktGenerateTaskWiring {
                 if (shape == TaskShape.SINGLE_TARGET) {
                     task.commonGeneratedKotlinDir.set(commonOutputDir)
                 }
+                configureSourceSetRoots(task, kotlinCompilation)
                 configureDependencies(task, kotlinCompilation)
                 task.faktWorkerClasspath.from(workerClasspath)
                 task.faktCompilerClasspath.from(compilerClasspath)
@@ -141,10 +142,11 @@ internal object FaktGenerateTaskWiring {
         if (shape == TaskShape.PRODUCER && AndroidVariantSources.usesBuiltInKotlin(project)) {
             AndroidVariantSources.feed(project, compilationName, taskProvider)
         }
-        if (shape == TaskShape.SYNTHETIC) {
-            wireSyntheticCommonTest(project, taskProvider)
-        } else {
-            wireGeneratedDirConsumers(project, kotlinCompilation, extension, taskProvider)
+        when (shape) {
+            TaskShape.SYNTHETIC -> wireSyntheticCommonTest(project, taskProvider)
+            TaskShape.INTERMEDIATE_METADATA ->
+                wireIntermediateTestDirs(project, kotlinCompilation, taskProvider)
+            else -> wireGeneratedDirConsumers(project, kotlinCompilation, extension, taskProvider)
         }
         if (shape == TaskShape.SINGLE_TARGET) {
             wireSingleTargetCommonDir(project, taskProvider)
@@ -332,6 +334,12 @@ internal enum class TaskShape {
 
     /** Only `commonMain` emitted; the representative platform is analysed (all-JVM KMP). */
     SYNTHETIC,
+
+    /**
+     * An intermediate shared source set (`webMain`) analysed by the metadata driver from its own
+     * sources alone; the ancestors it refines arrive as klibs (see [IntermediateProducerWiring]).
+     */
+    INTERMEDIATE_METADATA,
 }
 
 /**
@@ -360,6 +368,8 @@ private fun configureSources(
             task.commonSources.from(enabled.gate(ancestors.map { it.kotlin }))
         }
         TaskShape.SYNTHETIC -> configureSyntheticSources(task, kotlinCompilation, enabled)
+        TaskShape.INTERMEDIATE_METADATA ->
+            configureIntermediateSources(task, kotlinCompilation, enabled)
     }
 }
 

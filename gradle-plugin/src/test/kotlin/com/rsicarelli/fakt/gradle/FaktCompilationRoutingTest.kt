@@ -189,8 +189,7 @@ class FaktCompilationRoutingTest {
                 unreadableSourcesReason = null,
                 isMultiplatform = true,
                 singleTargetPlatformTypeName = null,
-                compilationName = "main",
-                platformTypeName = "wasm",
+                compilation = RoutedCompilation("main", "wasm"),
             )
 
         assertNull(route.notCacheCorrectReason, "A task-driven compilation is cache-correct.")
@@ -203,8 +202,7 @@ class FaktCompilationRoutingTest {
                     unreadableSourcesReason = null,
                     isMultiplatform = false,
                     singleTargetPlatformTypeName = null,
-                    compilationName = "main",
-                    platformTypeName = "js",
+                    compilation = RoutedCompilation("main", "js"),
                 )
                 .decision
 
@@ -222,8 +220,7 @@ class FaktCompilationRoutingTest {
                 unreadableSourcesReason = "sources unreadable",
                 isMultiplatform = false,
                 singleTargetPlatformTypeName = null,
-                compilationName = "debug",
-                platformTypeName = "androidJvm",
+                compilation = RoutedCompilation("debug", "androidJvm"),
             )
 
         assertEquals(CacheCorrectDecision.LEGACY, route.decision)
@@ -237,8 +234,7 @@ class FaktCompilationRoutingTest {
                     unreadableSourcesReason = null,
                     isMultiplatform = false,
                     singleTargetPlatformTypeName = null,
-                    compilationName = "debug",
-                    platformTypeName = "androidJvm",
+                    compilation = RoutedCompilation("debug", "androidJvm"),
                 )
                 .decision
 
@@ -285,9 +281,7 @@ class FaktCompilationRoutingTest {
                 unreadableSourcesReason = null,
                 isMultiplatform = true,
                 singleTargetPlatformTypeName = null,
-                compilationName = compilationName,
-                platformTypeName = platformTypeName,
-                sharedSourceSetOwner = owner,
+                compilation = RoutedCompilation(compilationName, platformTypeName, owner),
             )
             .decision
 
@@ -296,7 +290,6 @@ class FaktCompilationRoutingTest {
             unreadableSourcesReason = null,
             isMultiplatform = true,
             singleTargetPlatformTypeName = target,
-            compilationName = "main",
-            platformTypeName = compilationPlatform,
+            compilation = RoutedCompilation("main", compilationPlatform),
         )
 }

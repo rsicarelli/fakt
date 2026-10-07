@@ -653,7 +653,7 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         // explode when the sourceSetContext option is missing.
         when (decision) {
             CacheCorrectDecision.REGISTER_PRODUCER ->
-                FaktGenerateTaskWiring.registerProducer(project, kotlinCompilation, extension)
+                registerProducerFor(project, kotlinCompilation, extension)
             CacheCorrectDecision.REGISTER_CONSUMER -> {
                 FaktGenerateTaskWiring.registerConsumer(project, kotlinCompilation, extension)
                 SyntheticProducerWiring.registerIfRepresentative(
@@ -755,8 +755,12 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                 unreadableSourcesReason = unreadableSourcesReason(project),
                 isMultiplatform = kmp != null,
                 singleTargetPlatformTypeName = kmp?.let(::singleTargetPlatformTypeName),
-                compilationName = kotlinCompilation.name,
-                platformTypeName = kotlinCompilation.target.platformType.name,
+                compilation =
+                    RoutedCompilation(
+                        name = kotlinCompilation.name,
+                        platformTypeName = kotlinCompilation.target.platformType.name,
+                        sharedSourceSetOwner = sharedSourceSetOwner(kmp, kotlinCompilation),
+                    ),
             )
         route.notCacheCorrectReason?.let { reason -> warnNotCacheCorrect(project, reason) }
         return route.decision

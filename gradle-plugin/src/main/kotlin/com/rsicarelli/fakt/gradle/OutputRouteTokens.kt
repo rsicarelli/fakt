@@ -15,12 +15,14 @@ import com.rsicarelli.fakt.gradle.worker.GENERATED_ROUTE_TOKEN
  * - [TaskShape.SINGLE_TARGET]: the default source set into `generatedKotlinDir`, every ancestor
  *   into `commonGeneratedKotlinDir`.
  * - [TaskShape.SYNTHETIC]: only `commonMain`, into `generatedKotlinDir`.
+ * - [TaskShape.INTERMEDIATE_METADATA]: only the intermediate set itself, into `generatedKotlinDir`.
  */
 internal fun outputRouteTokens(context: SourceSetContext, shape: TaskShape): Map<String, String> {
     val default = context.defaultSourceSet.name
     return when (shape) {
         TaskShape.PRODUCER -> emptyMap()
-        TaskShape.CONSUMER -> mapOf(default to GENERATED_ROUTE_TOKEN)
+        TaskShape.CONSUMER,
+        TaskShape.INTERMEDIATE_METADATA -> mapOf(default to GENERATED_ROUTE_TOKEN)
         TaskShape.SYNTHETIC -> mapOf(SYNTHETIC_OWNED_SOURCE_SET to GENERATED_ROUTE_TOKEN)
         TaskShape.SINGLE_TARGET ->
             buildMap {

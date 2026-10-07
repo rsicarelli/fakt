@@ -147,7 +147,8 @@ internal class SourceSetConfigurator(
      * Whether a [FaktGenerateTask] already feeds [testSourceSetName]: `jsTest` is owned when the
      * consumer `faktGenerateJsMain` (target `js`, compilation `main`) is registered, and
      * `commonTest` when a single-target or synthetic task owns the canonical directory
-     * ([COMMON_TEST_OWNER_PROPERTY]). Must be queried lazily (from a provider): the task may be
+     * ([COMMON_TEST_OWNER_PROPERTY]), and any test source set an intermediate producer feeds
+     * ([TEST_DIR_OWNERS_PROPERTY]). Must be queried lazily (from a provider): the task may be
      * registered after the source set is configured.
      */
     private fun isOwnedByConsumerTask(testSourceSetName: String): Boolean {
@@ -155,6 +156,7 @@ internal class SourceSetConfigurator(
             testSourceSetName == "commonTest" &&
                 project.extensions.extraProperties.has(COMMON_TEST_OWNER_PROPERTY)
         return ownedByCommonTestProducer ||
+            isTestDirOwned(project, testSourceSetName) ||
             consumerTaskNameFor(testSourceSetName)?.let(project.tasks.names::contains) ?: false
     }
 
