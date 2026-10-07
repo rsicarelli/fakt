@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.gradle
 
-import com.rsicarelli.fakt.gradle.android.AndroidIntegration
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -11,7 +10,6 @@ import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
-import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinMetadataTarget
 
 /** Name of the synthetic common producer task. */
@@ -47,7 +45,8 @@ internal object SyntheticProducerWiring {
         extension: FaktPluginExtension,
     ) {
         val kmp = project.extensions.findByType(KotlinMultiplatformExtension::class.java)
-        val representative = kmp?.let { predictSyntheticCommonMainTarget(targetNodes(it)) }
+        val representative =
+            kmp?.let { predictSyntheticCommonMainTarget(readSourceSetGraph(it).targets) }
         val isRepresentative =
             compilation.name == MAIN_COMPILATION &&
                 representative?.name == compilation.target.targetName &&
@@ -87,26 +86,6 @@ internal fun predictSyntheticCommonMainTarget(targets: List<TargetNode>): Target
         targets.first { it.name == synthetic.target }
     }
 }
-
-private fun targetNodes(kmp: KotlinMultiplatformExtension): List<TargetNode> =
-    kmp.targets
-        .filter { it !is KotlinMetadataTarget }
-        .map { target ->
-            TargetNode(
-                name = target.targetName,
-                platformType = target.platformType.name.lowercase(),
-                isAndroid = target.isAndroidTarget(),
-                mainSourceSets =
-                    listOf(
-                        target.compilations.findByName(MAIN_COMPILATION)?.defaultSourceSet?.name
-                            ?: "${target.targetName}Main"
-                    ),
-            )
-        }
-
-private fun KotlinTarget.isAndroidTarget(): Boolean =
-    platformType.name.equals("androidJvm", ignoreCase = true) ||
-        AndroidIntegration.isKmpAndroidTarget(this)
 
 /**
  * `enabled`, and for the synthetic shape also [ownsCommonMain], so a project where KGP did build a
