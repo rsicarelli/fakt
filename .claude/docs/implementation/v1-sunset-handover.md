@@ -78,7 +78,10 @@ A pure function assigns every **main** source set exactly one owner:
   `-Xcommon-sources`; the metadata driver rejects fragments and gets `-Xrefines-paths` instead.
 - Known limits: dependsOn edges that user code adds in a later `afterEvaluate` are missed. On
   Kotlin < 2.2.20 `webMain` is not in the default hierarchy, so declare it manually with
-  `dependsOn`. All-JS / all-Wasm and native intermediates (#152) are still not generated.
+  `dependsOn`. All-JS / all-Wasm intermediates are still not generated. Native intermediates are generated
+  in-process (LEGACY_HYBRID), not cache-correct, until #152. A synthetic intermediate with an
+  `expect` in the intermediate itself and an empty `commonMain` gets no fragments (flat shape):
+  its errors are tolerated, but `forbid-tolerated` would fail.
 - Why: #160 (no owner), #162 (intermediates routed SUPPRESS, consumers treat ancestors as
   analysis-only) and #163 (per-variant) are one class of bug. A pure function can be unit-tested
   without Gradle.

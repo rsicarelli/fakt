@@ -10,6 +10,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinMetadataTarget
 
 private const val MAIN_COMPILATION = "main"
@@ -165,8 +166,11 @@ private fun testSourceSetsFor(kmp: KotlinMultiplatformExtension, owned: String):
             .filter { it.isTestCompilation }
     val compiled =
         testCompilations.flatMapTo(linkedSetOf()) { c -> c.allKotlinSourceSets.map { it.name } }
+    // Native leaves keep their in-process fakes (plain dir, until #152): claiming the test set here
+    // would hide that directory and leave native-only fakes unresolved.
     val leaves =
         testCompilations
+            .filter { it.platformType != KotlinPlatformType.native }
             .filter { test ->
                 test.associatedCompilations.any { main ->
                     main.allKotlinSourceSets.any { it.name == owned }

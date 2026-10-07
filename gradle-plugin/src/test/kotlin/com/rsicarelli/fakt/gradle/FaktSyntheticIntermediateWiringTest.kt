@@ -163,12 +163,17 @@ class FaktSyntheticIntermediateWiringTest {
     }
 
     @Test
-    fun `GIVEN an evaluated project WHEN the late pass runs again THEN it stays a single task without error`() {
-        val project = sharedProject()
+    fun `GIVEN an evaluated project WHEN the late pass runs again THEN the test dir registry is unchanged`() {
+        val project = sharedProject(withTest = true)
+        val before =
+            testDirOwners(project).bySourceSet.toMap() to testDirOwners(project).tasks.toSet()
 
         SyntheticIntermediateWiring.registerMissing(project, project.faktExtension())
 
-        assertEquals(1, project.tasks.names.count { it == SHARED_TASK })
+        val after =
+            testDirOwners(project).bySourceSet.toMap() to testDirOwners(project).tasks.toSet()
+        assertEquals(before, after)
+        assertEquals(mapOf("desktopAndServerTest" to SHARED_TASK), after.first)
     }
 
     @Test

@@ -278,8 +278,10 @@ class FaktIntermediateProducerWiringTest {
     }
 
     @Test
-    fun `GIVEN an evaluated project WHEN the metadata compilation is applied again THEN it stays a single task without error`() {
+    fun `GIVEN an evaluated project WHEN the metadata compilation is applied again THEN the test dir registry is unchanged`() {
         val project = webProject()
+        val before =
+            testDirOwners(project).bySourceSet.toMap() to testDirOwners(project).tasks.toSet()
 
         FaktGradleSubplugin()
             .applyToCompilation(
@@ -292,6 +294,30 @@ class FaktIntermediateProducerWiringTest {
                     .getByName("webMain")
             )
 
-        assertEquals(1, project.tasks.names.count { it == WEB_TASK })
+        val after =
+            testDirOwners(project).bySourceSet.toMap() to testDirOwners(project).tasks.toSet()
+        assertEquals(before, after)
+        assertEquals(mapOf("webTest" to WEB_TASK), after.first)
+    }
+
+    @Test
+    fun `GIVEN a metadata intermediate shared with a native target and no compiled counterpart test WHEN wiring the leaves THEN the native test set is left to its own producer`() {
+        val project =
+            createKmpProject().also {
+                it.getKotlinExtension().apply {
+                    js { nodejs() }
+                    linuxX64()
+                    val shared = sourceSets.create("nonJvmMain")
+                    shared.dependsOn(sourceSets.getByName("commonMain"))
+                    sourceSets.getByName("jsMain").dependsOn(shared)
+                    sourceSets.getByName("linuxX64Main").dependsOn(shared)
+                }
+                it.evaluate()
+            }
+
+        val owned = testDirOwners(project).bySourceSet
+
+        assertEquals("faktGenerateMetadataNonJvmMain", owned["jsTest"], "owned: $owned")
+        assertTrue("linuxX64Test" !in owned, "native leaf must not be claimed: $owned")
     }
 }
