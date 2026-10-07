@@ -1,7 +1,7 @@
 # Fakt Development Commands
 # Run from fakt/ directory (or from project root)
 
-.PHONY: build test compile clean format shadowJar test-sample test-fake-publishing validate quick-test full-rebuild test-compat-all test-compat-agp-all test-kmp-single-target test-compiler-interop test-kmp-android-lint test-clean-rebuild-cache benchmark
+.PHONY: build test compile clean format shadowJar test-sample test-fake-publishing validate quick-test full-rebuild test-compat-all test-compat-agp-all test-kmp-single-target test-kmp-all-jvm test-compiler-interop test-kmp-android-lint test-clean-rebuild-cache benchmark
 
 # Core build commands
 build:
@@ -61,6 +61,11 @@ test-kmp-no-jvm:
 test-kmp-single-target:
 	@echo "🎯 Testing kmp-single-target sample (single-target KMP)..."
 	cd samples/kmp-single-target && ./gradlew allTests
+
+# KMP sample where every target is JVM (jvm("desktop") + jvm("server")): Fakt adds a common producer
+test-kmp-all-jvm:
+	@echo "🧩 Testing kmp-all-jvm sample (all targets are JVM)..."
+	cd samples/kmp-all-jvm && ./gradlew allTests --continue
 
 # Compiler-options interop sample (#165): main code only compiles with a module-wide opt-in and an
 # experimental -X flag, and the :jvm module runs on a JDK toolchain. CI uses JDK 17 (the default);
@@ -202,6 +207,7 @@ help:
 	@echo "  test-kmp-multi-target - Test kmp-multi-target sample (hierarchy validation)"
 	@echo "  test-kmp-no-jvm - Test kmp-no-jvm sample (no JVM/Android target)"
 	@echo "  test-kmp-single-target - Test kmp-single-target sample (exactly one target)"
+	@echo "  test-kmp-all-jvm - Test kmp-all-jvm sample (every target is JVM)"
 	@echo "  test-fake-publishing - Test fake-publishing sample (two-step workflow)"
 	@echo "  test-compat-all     - Test all compat samples (Kotlin 2.2.0-2.4.10)"
 	@echo "  test-compat-VERSION - Test specific compat sample (e.g., test-compat-2.2.0)"

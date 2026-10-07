@@ -410,7 +410,7 @@ with it — no empty or missing fakes on a cache hit.
 | JS / Wasm platform main    | ✅        | ✅            |
 | Native platform main       | ✅        | Not yet       |
 
-Every `@Fake` is always generated — none are dropped. Native platform fakes are not cache-correct
+Every `@Fake` is always generated. Native platform fakes are not cache-correct
 yet: the Kotlin/Native compiler is not part of the embeddable compiler Fakt runs in its Gradle task,
 so those fakes are still produced by the in-process plugin
 ([#152](https://github.com/rsicarelli/fakt/issues/152)).
@@ -421,6 +421,12 @@ so those fakes are still produced by the in-process plugin
     (`faktGenerateJvmMain`) generates every fake: the ones declared in `commonMain` go to
     `commonTest`, the ones declared in `jvmMain` go to `jvmTest`. This works for JVM, JS and Wasm
     single targets.
+
+!!! tip "Projects where every target is JVM"
+    When every target is a JVM target (for example `kotlin { jvm("desktop"); jvm("server") }`),
+    Kotlin gives `commonMain` no compilation of its own. Fakt then adds a `faktGenerateCommonMain`
+    task for it, so fakes declared in `commonMain` still reach `commonTest`. Each platform main
+    (`faktGenerateDesktopMain`, `faktGenerateServerMain`) keeps its own task and its own fakes.
 
 !!! note "Project shapes that keep the in-process path"
     A few shapes fall back to generating inside `compileKotlin*`. Fakes are still generated for
