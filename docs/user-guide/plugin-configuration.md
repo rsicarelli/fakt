@@ -437,10 +437,25 @@ so those fakes are still produced by the in-process plugin
     property `kotlin.internal.suppressGradlePluginErrors=KotlinTargetAlreadyDeclaredError`, which
     is not a supported setting. `samples/kmp-all-jvm` uses it.
 
-    Not generated yet: fakes declared in an intermediate source set that only JVM targets share
-    (for example `jvmShared`), fakes in `webMain`-style intermediate source sets
-    ([#162](https://github.com/rsicarelli/fakt/issues/162)), and fakes in projects whose targets
+    Intermediate source sets are generated too (#162): a fake in `webMain` (shared by `js` and
+    `wasmJs`) gets `faktGenerateMetadataWebMain`, and a fake in an intermediate that only JVM targets
+    share (for example `desktopAndServerMain`) gets `faktGenerateDesktopAndServerMain`. The fakes
+    land in the matching test source set (`webTest`, `desktopAndServerTest`) when it exists.
+    `samples/kmp-multi-target` and `samples/kmp-all-jvm` show both.
+
+    Not generated yet: fakes in intermediate source sets that only JS targets or only Wasm targets
+    share, fakes in native intermediate source sets such as `nativeMain`
+    ([#152](https://github.com/rsicarelli/fakt/issues/152)), and fakes in projects whose targets
     are all JS or all Wasm. These are follow-up work.
+
+    Two limits apply to intermediate source sets:
+
+    - On Kotlin older than 2.2.20 `webMain` is not part of the default hierarchy template. Declare
+      it yourself with `dependsOn` (`webMain` depends on `commonMain`; `jsMain` and `wasmJsMain`
+      depend on `webMain`).
+    - Fakt reads the `dependsOn` edges when the Kotlin plugin configures the project. Edges that
+      your own build code adds in a later `afterEvaluate` are missed, so the intermediate's fakes
+      are not generated. Declare the hierarchy in the `kotlin { sourceSets { } }` block.
 
 !!! note "Project shapes that keep the in-process path"
     A few shapes fall back to generating inside `compileKotlin*`. Fakes are still generated for
