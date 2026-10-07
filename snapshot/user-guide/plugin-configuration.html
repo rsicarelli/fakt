@@ -1837,7 +1837,7 @@ with it — no empty or missing fakes on a cache hit.</p>
 </tr>
 </tbody>
 </table>
-<p>Every <code>@Fake</code> is always generated — none are dropped. Native platform fakes are not cache-correct<br />
+<p>Native platform fakes are not cache-correct<br />
 yet: the Kotlin/Native compiler is not part of the embeddable compiler Fakt runs in its Gradle task,<br />
 so those fakes are still produced by the in-process plugin<br />
 (<a href="https://github.com/rsicarelli/fakt/issues/152">#152</a>).</p>
@@ -1848,6 +1848,24 @@ else) gets no <code>commonMain</code> compilation from Kotlin, so its lone platf
 (<code>faktGenerateJvmMain</code>) generates every fake: the ones declared in <code>commonMain</code> go to<br />
 <code>commonTest</code>, the ones declared in <code>jvmMain</code> go to <code>jvmTest</code>. This works for JVM, JS and Wasm<br />
 single targets.</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Projects where every target is JVM</p>
+<p>When every target is a JVM target, Kotlin gives <code>commonMain</code> no compilation of its own. Fakt<br />
+then adds a <code>faktGenerateCommonMain</code> task for it, so fakes declared in <code>commonMain</code> still reach<br />
+<code>commonTest</code>. Each platform main (for example <code>faktGenerateJvmMain</code>) keeps its own task and its<br />
+own fakes.</p>
+<p>The usual way to get this shape is the Android KMP library target with<br />
+<code>android.kmp.use.jvm.platform.type=true</code> in <code>gradle.properties</code>, next to <code>jvm()</code>. Both<br />
+targets are then JVM-typed.</p>
+<p>Two <code>jvm()</code> targets (<code>jvm("desktop")</code> and <code>jvm("server")</code>) also give this shape, but Kotlin<br />
+rejects them by default (<code>KotlinTargetAlreadyDeclaredError</code>). It only builds with the internal<br />
+property <code>kotlin.internal.suppressGradlePluginErrors=KotlinTargetAlreadyDeclaredError</code>, which<br />
+is not a supported setting. <code>samples/kmp-all-jvm</code> uses it.</p>
+<p>Not generated yet: fakes declared in an intermediate source set that only JVM targets share<br />
+(for example <code>jvmShared</code>), fakes in <code>webMain</code>-style intermediate source sets<br />
+(<a href="https://github.com/rsicarelli/fakt/issues/162">#162</a>), and fakes in projects whose targets<br />
+are all JS or all Wasm. These are follow-up work.</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Project shapes that keep the in-process path</p>
