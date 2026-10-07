@@ -107,7 +107,10 @@ internal object FaktGenerateTaskWiring {
         val outputDir = project.layout.buildDirectory.dir(generatedKotlinPath)
         val scratchDir =
             project.layout.buildDirectory.dir("faktCaches/$targetName/$compilationName")
-        val placeholderJson = encodePlaceholderContext(kotlinCompilation, shape)
+        // Read when the input resolves, not now: the route map names source sets, and KGP's
+        // `dependsOn` edges are not final while the compilation is still being applied.
+        val placeholderJson =
+            project.provider { encodePlaceholderContext(kotlinCompilation, shape) }
         val workerClasspath = project.configurations.named(FaktGradleSubplugin.WORKER_CONFIGURATION)
         val compilerClasspath =
             project.configurations.named(FaktGradleSubplugin.COMPILER_CLASSPATH_CONFIGURATION)
