@@ -59,8 +59,8 @@ internal fun buildFragmentArgs(
 private fun owningSourceSet(file: File, roots: Map<String, List<String>>): String? =
     roots.entries
         .flatMap { (name, dirs) -> dirs.map { name to it } }
-        .filter { (_, dir) -> file.absolutePath.startsWith(dir.trimEnd('/') + "/") }
-        .maxByOrNull { (_, dir) -> dir.length }
+        .filter { (_, dir) -> file.toPath().startsWith(File(dir).toPath()) }
+        .maxByOrNull { (_, dir) -> File(dir).toPath().nameCount }
         ?.first
 
 /** [sourceSets] ordered so every set follows all of its parents (stable for equal depth). */
