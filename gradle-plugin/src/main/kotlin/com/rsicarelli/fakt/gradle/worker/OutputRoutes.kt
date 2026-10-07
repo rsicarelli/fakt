@@ -29,9 +29,9 @@ internal fun resolveOutputRoutes(
             GENERATED_ROUTE_TOKEN -> generated.absolutePath
             COMMON_ROUTE_TOKEN ->
                 checkNotNull(common) {
-                        "Source set '$sourceSet' routes to '$COMMON_ROUTE_TOKEN', but the task has no " +
-                            "commonGeneratedKotlinDir: a task that emits common fakes needs a declared " +
-                            "output for them."
+                        "Source set '$sourceSet' routes to '$COMMON_ROUTE_TOKEN', but the task " +
+                            "has no commonGeneratedKotlinDir: a task that emits common fakes " +
+                            "needs a declared output for them."
                     }
                     .absolutePath
             else ->

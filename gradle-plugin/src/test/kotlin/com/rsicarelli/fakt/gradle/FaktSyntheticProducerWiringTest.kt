@@ -9,6 +9,7 @@ import com.rsicarelli.fakt.gradle.helpers.getKotlinExtension
 import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -22,22 +23,15 @@ import org.junit.jupiter.api.TestInstance
  * Pins the synthetic common producer of [SyntheticProducerWiring]: when every KMP target is
  * JVM-typed, KGP builds no `commonMain` metadata compilation, so one task owns `commonMain`.
  *
- * KGP does not call `applyToCompilation` under `ProjectBuilder`, so each test invokes the hook for
- * every `main` compilation, the way `applyToCompilation` does after `registerConsumer`.
+ * KGP does call `applyToCompilation` under `ProjectBuilder`, so `evaluate()` fires the hook once
+ * per `main` compilation, the way the real build does; the tests rely on that and never call the
+ * hook themselves, except the one that checks a second call is harmless.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FaktSyntheticProducerWiringTest {
 
     private fun Project.faktExtension(): FaktPluginExtension =
         extensions.getByType(FaktPluginExtension::class.java)
-
-    private fun Project.applyHookToEveryMain() {
-        getKotlinExtension()
-            .targets
-            .filter { it.platformType.name != "common" }
-            .mapNotNull { it.compilations.findByName("main") }
-            .forEach { SyntheticProducerWiring.registerIfRepresentative(this, it, faktExtension()) }
-    }
 
     private fun allJvmProject(): Project =
         createKmpProject().also {
@@ -59,10 +53,8 @@ class FaktSyntheticProducerWiringTest {
         tasks.names.filter { it == "faktGenerateCommonMain" }
 
     @Test
-    fun `GIVEN desktop and server jvm targets WHEN the hook runs for each main THEN exactly one faktGenerateCommonMain exists`() {
+    fun `GIVEN desktop and server jvm targets WHEN the project is evaluated THEN exactly one faktGenerateCommonMain exists`() {
         val project = allJvmProject()
-
-        project.applyHookToEveryMain()
 
         assertEquals(listOf("faktGenerateCommonMain"), project.syntheticTaskNames())
         val context =
@@ -80,8 +72,6 @@ class FaktSyntheticProducerWiringTest {
         val desktop = project.plantMarker("desktopMain", "DesktopMarker")
         val server = project.plantMarker("serverMain", "ServerMarker")
 
-        project.applyHookToEveryMain()
-
         val task = project.syntheticTask()
         assertTrue(common in task.commonSources.files, "commonSources: ${task.commonSources.files}")
         assertTrue(task.sources.files.isEmpty(), "sources: ${task.sources.files}")
@@ -98,8 +88,6 @@ class FaktSyntheticProducerWiringTest {
         project.plantMarker("desktopMain", "DesktopMarker")
         project.faktExtension().enabled.set(false)
 
-        project.applyHookToEveryMain()
-
         val task = project.syntheticTask()
         assertTrue(task.commonSources.files.isEmpty(), "${task.commonSources.files}")
         assertTrue(task.platformAnalysisOnlySources.files.isEmpty())
@@ -108,8 +96,6 @@ class FaktSyntheticProducerWiringTest {
     @Test
     fun `GIVEN the synthetic task WHEN reading commonTest THEN its srcDirs carry the task output`() {
         val project = allJvmProject()
-
-        project.applyHookToEveryMain()
 
         val commonTest = project.getKotlinExtension().sourceSets.getByName("commonTest")
         val deps = commonTest.kotlin.buildDependencies.getDependencies(null).map { it.name }
@@ -124,8 +110,6 @@ class FaktSyntheticProducerWiringTest {
     fun `GIVEN the synthetic task WHEN reading the extra property THEN it marks the common test owner`() {
         val project = allJvmProject()
 
-        project.applyHookToEveryMain()
-
         assertEquals(
             "faktGenerateCommonMain",
             project.extensions.extraProperties.get(COMMON_TEST_OWNER_PROPERTY),
@@ -136,8 +120,6 @@ class FaktSyntheticProducerWiringTest {
     fun `GIVEN the synthetic task WHEN decoding its context THEN it routes commonMain to the generated token`() {
         val project = allJvmProject()
 
-        project.applyHookToEveryMain()
-
         val context =
             Json.decodeFromString(
                 SourceSetContext.serializer(),
@@ -147,11 +129,9 @@ class FaktSyntheticProducerWiringTest {
     }
 
     @Test
-    fun `GIVEN an AGP-named lint task WHEN the hook runs THEN lint depends on the synthetic task`() {
+    fun `GIVEN an AGP-named lint task WHEN the project is evaluated THEN lint depends on the synthetic task`() {
         val project = allJvmProject()
         project.tasks.register("lintAnalyzeAndroidHostTest")
-
-        project.applyHookToEveryMain()
 
         val deps =
             project.tasks
@@ -165,11 +145,15 @@ class FaktSyntheticProducerWiringTest {
     }
 
     @Test
-    fun `GIVEN the hook runs twice WHEN registering THEN it stays a single task without error`() {
+    fun `GIVEN an evaluated project WHEN the hook is called again THEN it stays a single task without error`() {
         val project = allJvmProject()
 
-        project.applyHookToEveryMain()
-        project.applyHookToEveryMain()
+        val main = project.getKotlinExtension().targets.getByName("desktop").compilations
+        SyntheticProducerWiring.registerIfRepresentative(
+            project,
+            main.getByName("main"),
+            project.faktExtension(),
+        )
 
         assertEquals(1, project.syntheticTaskNames().size)
     }
@@ -187,13 +171,47 @@ class FaktSyntheticProducerWiringTest {
 
         val messages = generateSequence<Throwable>(failure) { it.cause }.map { it.message }.toList()
         assertTrue(
-            messages.any { it.orEmpty().contains("a different task already uses it") },
+            messages.any { it.orEmpty().contains("a task with that name already exists") },
             "messages: $messages",
         )
     }
 
     @Test
-    fun `GIVEN jvm and js targets WHEN the hook runs THEN no synthetic task is registered`() {
+    fun `GIVEN source sets without commonMain WHEN picking the common one THEN the error names it`() {
+        val project = allJvmProject()
+        val lonely = project.getKotlinExtension().sourceSets.create("lonelyMain")
+
+        val failure =
+            assertFailsWith<IllegalStateException> { requireCommonMain(listOf(lonely), "desktop") }
+
+        assertTrue(failure.message.orEmpty().contains("commonMain"), "${failure.message}")
+        assertTrue(failure.message.orEmpty().contains("lonelyMain"), "${failure.message}")
+        assertTrue(failure.message.orEmpty().contains("desktop"), "${failure.message}")
+    }
+
+    @Test
+    fun `GIVEN a user FaktGenerateTask named faktGenerateCommonMain WHEN evaluated THEN it fails loudly`() {
+        val project =
+            createKmpProject().also {
+                it.getKotlinExtension().jvm("desktop")
+                it.getKotlinExtension().jvm("server")
+                it.tasks.register("faktGenerateCommonMain", FaktGenerateTask::class.java)
+            }
+
+        val failure = assertFails { project.evaluate() }
+
+        val messages = generateSequence<Throwable>(failure) { it.cause }.map { it.message }.toList()
+        assertTrue(
+            messages.any {
+                it.orEmpty().contains("task with that name already exists") &&
+                    it.orEmpty().contains("faktGenerateCommonMain")
+            },
+            "messages: $messages",
+        )
+    }
+
+    @Test
+    fun `GIVEN jvm and js targets WHEN the project is evaluated THEN no synthetic task is registered`() {
         val project =
             createKmpProject().also {
                 it.getKotlinExtension().jvm()
@@ -201,13 +219,11 @@ class FaktSyntheticProducerWiringTest {
                 it.evaluate()
             }
 
-        project.applyHookToEveryMain()
-
         assertNull(project.tasks.findByName("faktGenerateCommonMain"))
     }
 
     @Test
-    fun `GIVEN jvm and linuxX64 targets WHEN the hook runs THEN no synthetic task is registered`() {
+    fun `GIVEN jvm and linuxX64 targets WHEN the project is evaluated THEN no synthetic task is registered`() {
         val project =
             createKmpProject().also {
                 it.getKotlinExtension().jvm()
@@ -215,20 +231,16 @@ class FaktSyntheticProducerWiringTest {
                 it.evaluate()
             }
 
-        project.applyHookToEveryMain()
-
         assertNull(project.tasks.findByName("faktGenerateCommonMain"))
     }
 
     @Test
-    fun `GIVEN a single jvm target WHEN the hook runs THEN no synthetic task is registered`() {
+    fun `GIVEN a single jvm target WHEN the project is evaluated THEN no synthetic task is registered`() {
         val project =
             createKmpProject().also {
                 it.getKotlinExtension().jvm()
                 it.evaluate()
             }
-
-        project.applyHookToEveryMain()
 
         assertNull(project.tasks.findByName("faktGenerateCommonMain"))
     }

@@ -32,7 +32,7 @@ class FaktGenerateSyntheticShapeTest {
     fun `GIVEN a platform actual for a common expect WHEN running THEN it succeeds and emits only the common fake`(
         @TempDir projectDir: File
     ) {
-        setupProject(projectDir, withSources = true)
+        setupProject(projectDir, withCommonSources = true)
 
         val result = runTask(projectDir, "faktGenerate")
 
@@ -42,10 +42,10 @@ class FaktGenerateSyntheticShapeTest {
     }
 
     @Test
-    fun `GIVEN no common and no platform sources WHEN running THEN the task is NO-SOURCE`(
+    fun `GIVEN platform sources but an empty commonMain WHEN running THEN the task is NO-SOURCE`(
         @TempDir projectDir: File
     ) {
-        setupProject(projectDir, withSources = false)
+        setupProject(projectDir, withCommonSources = false)
 
         val result = runTask(projectDir, "faktGenerate")
 
@@ -66,7 +66,7 @@ class FaktGenerateSyntheticShapeTest {
             .map { it.name }
             .toSet()
 
-    private fun setupProject(projectDir: File, withSources: Boolean) {
+    private fun setupProject(projectDir: File, withCommonSources: Boolean) {
         projectDir
             .resolve("settings.gradle.kts")
             .writeText("""rootProject.name = "fakt-synthetic-shape-test"""")
@@ -75,12 +75,13 @@ class FaktGenerateSyntheticShapeTest {
             .writeText("org.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=1024m\n")
         projectDir.resolve("src/commonMain/kotlin/fixture").mkdirs()
         projectDir.resolve("src/desktopMain/kotlin/fixture").mkdirs()
-        if (withSources) {
+        if (withCommonSources) {
             projectDir.resolve("src/commonMain/kotlin/fixture/Common.kt").writeText(COMMON_FIXTURE)
-            projectDir
-                .resolve("src/desktopMain/kotlin/fixture/Desktop.kt")
-                .writeText(DESKTOP_FIXTURE)
         }
+        // The platform sources always exist: they must not keep the task out of NO-SOURCE.
+        projectDir
+            .resolve("src/desktopMain/kotlin/fixture/Desktop.kt")
+            .writeText(if (withCommonSources) DESKTOP_FIXTURE else DESKTOP_ONLY_FIXTURE)
         projectDir.resolve("build.gradle.kts").writeText(buildScript(projectDir))
     }
 
@@ -177,6 +178,14 @@ class FaktGenerateSyntheticShapeTest {
             interface CommonAuditService {
                 fun record(event: String): Boolean
             }
+            """
+                .trimIndent()
+
+        private val DESKTOP_ONLY_FIXTURE =
+            """
+            package fixture
+
+            fun platformName(): String = "Desktop"
             """
                 .trimIndent()
 

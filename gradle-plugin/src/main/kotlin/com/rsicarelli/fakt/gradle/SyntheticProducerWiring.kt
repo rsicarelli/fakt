@@ -5,10 +5,12 @@ package com.rsicarelli.fakt.gradle
 import com.rsicarelli.fakt.gradle.android.AndroidIntegration
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
+import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinMetadataTarget
 
@@ -36,7 +38,7 @@ internal object SyntheticProducerWiring {
     /**
      * Registers the task when [compilation] is the `main` compilation of the representative target
      * that owns `commonMain` and that target is JVM-typed; otherwise does nothing. A task already
-     * named [SYNTHETIC_TASK_NAME] that is not a `FaktGenerateTask` is a name clash and fails the
+     * named [SYNTHETIC_TASK_NAME] that Fakt did not register itself is a name clash and fails the
      * build with a clear message instead of being skipped.
      */
     fun registerIfRepresentative(
@@ -51,19 +53,25 @@ internal object SyntheticProducerWiring {
                 representative?.name == compilation.target.targetName &&
                 representative.platformType == JVM_TYPE
         if (!isRepresentative) return
-        when (project.tasks.findByName(SYNTHETIC_TASK_NAME)) {
-            null ->
+        val existing = project.tasks.findByName(SYNTHETIC_TASK_NAME)
+        when {
+            existing == null ->
                 FaktGenerateTaskWiring.registerSyntheticProducer(project, compilation, extension)
-            is FaktGenerateTask -> Unit
+            isRegisteredByFakt(project, existing) -> Unit
             else ->
                 throw GradleException(
-                    "Fakt needs the task name '$SYNTHETIC_TASK_NAME' in project " +
-                        "'${project.path}' to generate the commonMain fakes of an all-JVM " +
-                        "Kotlin Multiplatform project, but a different task already uses it. " +
-                        "Rename that task."
+                    "Fakt needs the task name '$SYNTHETIC_TASK_NAME' for the common producer of " +
+                        "an all-JVM project, but a task with that name already exists in " +
+                        "project '${project.path}'. Rename that task."
                 )
         }
     }
+
+    /** True when [task] is the one this object registered (the owner property names it). */
+    private fun isRegisteredByFakt(project: Project, task: Task): Boolean =
+        task is FaktGenerateTask &&
+            project.extensions.extraProperties.has(COMMON_TEST_OWNER_PROPERTY) &&
+            project.extensions.extraProperties.get(COMMON_TEST_OWNER_PROPERTY) == task.name
 }
 
 /**
@@ -147,11 +155,23 @@ internal fun configureSyntheticSources(
     gate: Provider<Boolean>,
 ) {
     val commonMain =
-        representative.allKotlinSourceSets.first { it.name == SYNTHETIC_OWNED_SOURCE_SET }
+        requireCommonMain(representative.allKotlinSourceSets, representative.target.targetName)
     val platform = representative.allKotlinSourceSets - commonMain
     task.commonSources.from(gate.gate(commonMain.kotlin))
     task.platformAnalysisOnlySources.from(gate.gate(platform.map { it.kotlin }))
 }
+
+/** The `commonMain` source set, or a clear error naming what the target does have. */
+internal fun requireCommonMain(
+    sourceSets: Collection<KotlinSourceSet>,
+    targetName: String,
+): KotlinSourceSet =
+    sourceSets.firstOrNull { it.name == SYNTHETIC_OWNED_SOURCE_SET }
+        ?: error(
+            "Fakt could not find the '$SYNTHETIC_OWNED_SOURCE_SET' source set for target " +
+                "'$targetName' (it has: ${sourceSets.map { it.name }}). The common producer of an " +
+                "all-JVM project needs it."
+        )
 
 /**
  * Hands the task output to `commonTest` (lazy, so Gradle infers the task dependency), makes AGP
