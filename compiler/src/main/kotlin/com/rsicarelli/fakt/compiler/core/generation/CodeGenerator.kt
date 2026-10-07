@@ -53,6 +53,10 @@ internal class CodeGenerator(
      * [SourceSetContext.outputDirectory] and every other (common-fragment) source set's fakes go to
      * [SourceSetContext.commonOutputDirectory].
      *
+     * On the FIR path, when [SourceSetContext.outputDirectories] is not empty, the map decides: the
+     * source set's entry is used (the default source set when [sourceSourceSet] is null), and
+     * [SourceSetContext.outputDirectory] is the fallback for a set without an entry.
+     *
      * On the FIR (task) path ([EmitPhase.FIR]) the task owns exactly one declared output, so the
      * fake always goes to [SourceSetContext.outputDirectory] and no path is derived by string
      * rewriting — that rewrite of `/commonTest/` corrupted checkouts whose absolute path contains
@@ -63,7 +67,11 @@ internal class CodeGenerator(
      */
     private fun selectOutputDirectory(sourceSourceSet: String?): String {
         val commonOutputDirectory = sourceSetContext.commonOutputDirectory
+        val routes = sourceSetContext.outputDirectories
         return when {
+            sourceSetContext.emitPhase == EmitPhase.FIR && routes.isNotEmpty() ->
+                routes[sourceSourceSet ?: sourceSetContext.defaultSourceSet.name]
+                    ?: sourceSetContext.outputDirectory
             sourceSourceSet == null -> sourceSetContext.outputDirectory
             sourceSetContext.emitPhase == EmitPhase.FIR && commonOutputDirectory == null ->
                 sourceSetContext.outputDirectory

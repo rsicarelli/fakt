@@ -55,6 +55,7 @@ internal object FullPluginCompilationHarness {
         commonTestOutputDir: File = outputDir,
         defaultSourceSetName: String = "main",
         commonOutputDir: File? = null,
+        outputDirectories: Map<String, String> = emptyMap(),
     ): Outcome {
         val defaultSourceSet = SourceSetInfo(name = defaultSourceSetName, parents = emptyList())
         val context =
@@ -69,6 +70,7 @@ internal object FullPluginCompilationHarness {
                 commonTestOutputDirectory = commonTestOutputDir.absolutePath,
                 emitPhase = emitPhase,
                 commonOutputDirectory = commonOutputDir?.absolutePath,
+                outputDirectories = outputDirectories,
             )
         val contextBase64 =
             Base64.getEncoder()

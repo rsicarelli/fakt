@@ -67,20 +67,32 @@ internal class FirFakeEmitter(private val sharedContext: FaktSharedContext) {
     }
 
     /**
-     * A consumer invocation feeds ancestor sources (commonMain and intermediates) for expect/actual
-     * and common-type resolution only — the common producer already owns their fakes. When
+     * When [com.rsicarelli.fakt.compiler.core.config.FaktOptions.outputDirectories] is set, this
+     * compilation emits only the source sets it owns; a declaration with no source set uses the
+     * default source set, so it is skipped when that set is not owned.
+     *
+     * Otherwise the older rule applies: a consumer invocation feeds ancestor sources (commonMain
+     * and intermediates) for expect/actual and common-type resolution only, so when
      * [com.rsicarelli.fakt.compiler.core.config.FaktOptions.emitSourceSets] restricts emission,
-     * skip declarations from other source sets. A `null` source set (non-standard layout) fails
-     * open and emits, preserving pre-restriction behavior.
+     * declarations from other source sets are skipped. A `null` source set fails open there.
      */
     private fun shouldEmit(sourceSourceSet: String?, simpleName: String): Boolean {
-        val allowed = sharedContext.options.emitSourceSets
-        if (allowed.isEmpty() || sourceSourceSet == null || sourceSourceSet in allowed) return true
-        logger.debug(
-            "Skipping FIR emission for $simpleName: source set '$sourceSourceSet' is " +
-                "analysis-only in this invocation (emitting: $allowed)"
-        )
-        return false
+        val options = sharedContext.options
+        val owned = options.outputDirectories.keys
+        val allowed = options.emitSourceSets
+        val emit =
+            if (owned.isNotEmpty()) {
+                (sourceSourceSet ?: options.sourceSetContext?.defaultSourceSet?.name) in owned
+            } else {
+                allowed.isEmpty() || sourceSourceSet == null || sourceSourceSet in allowed
+            }
+        if (!emit) {
+            logger.debug(
+                "Skipping FIR emission for $simpleName: source set '$sourceSourceSet' is " +
+                    "analysis-only in this invocation (emitting: ${owned.ifEmpty { allowed }})"
+            )
+        }
+        return emit
     }
 
     private fun claimOutput(

@@ -55,6 +55,11 @@ import kotlinx.serialization.Serializable
  *   routing derived from [commonTestOutputDirectory]. Set by the cache-correct worker for a
  *   single-target KMP project, where one compilation owns both the common and the platform fakes
  *   and each half must land in its own declared task output.
+ * @property outputDirectories Where each source set's fakes are written, keyed by the name of a
+ *   source set this compilation owns (for example `commonMain` or `jvmMain`) and valued with an
+ *   absolute directory. A source set that is not a key here is not owned: its fakes are not written
+ *   by this compilation. Empty (the default, omitted from serialized JSON) means "no routing": the
+ *   older behaviour with [outputDirectory], [commonOutputDirectory] and [emitSourceSets] applies.
  * @see SourceSetInfo
  */
 @Serializable
@@ -72,6 +77,7 @@ data class SourceSetContext(
     val emitPhase: EmitPhase = EmitPhase.IR,
     val emitSourceSets: List<String> = emptyList(),
     val commonOutputDirectory: String? = null,
+    val outputDirectories: Map<String, String> = emptyMap(),
 ) {
     init {
         require(compilationName.isNotBlank()) { "compilationName cannot be blank" }

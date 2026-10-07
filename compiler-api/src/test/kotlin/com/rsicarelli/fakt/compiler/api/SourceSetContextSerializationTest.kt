@@ -317,6 +317,56 @@ class SourceSetContextSerializationTest {
     }
 
     @Test
+    fun `GIVEN default outputDirectories WHEN encoding with defaults omitted THEN field is absent from JSON`() =
+        runTest {
+            // GIVEN: a legacy context with no routing
+            val context = routedContext(emptyMap())
+
+            // WHEN
+            val jsonString = Json.encodeToString(context)
+
+            // THEN: legacy payloads stay byte-identical
+            assertTrue(
+                "outputDirectories" !in jsonString,
+                "An empty outputDirectories must be omitted. Got: $jsonString",
+            )
+        }
+
+    @Test
+    fun `GIVEN outputDirectories WHEN roundtripping THEN the map is preserved`() = runTest {
+        // GIVEN
+        val original =
+            routedContext(
+                mapOf(
+                    "commonMain" to "/build/generated/fakt/commonTest/kotlin",
+                    "jvmMain" to "/build/generated/fakt/jvmTest/kotlin",
+                )
+            )
+
+        // WHEN
+        val jsonString = Json.encodeToString(original)
+        val decoded = Json.decodeFromString<SourceSetContext>(jsonString)
+
+        // THEN
+        assertTrue("outputDirectories" in jsonString, "Got: $jsonString")
+        assertEquals(original, decoded)
+        assertEquals(original.outputDirectories, decoded.outputDirectories)
+    }
+
+    private fun routedContext(outputDirectories: Map<String, String>): SourceSetContext =
+        SourceSetContext(
+            compilationName = "main",
+            targetName = "jvm",
+            platformType = "jvm",
+            isTest = false,
+            defaultSourceSet = SourceSetInfo(name = "jvmMain", parents = emptyList()),
+            allSourceSets = listOf(SourceSetInfo(name = "jvmMain", parents = emptyList())),
+            outputDirectory = "/build/generated/fakt/jvm/main/kotlin",
+            commonTestOutputDirectory = "/build/generated/fakt/commonTest/kotlin",
+            outputDirectories = outputDirectories,
+        )
+
+    @Test
     fun `GIVEN emitSourceSets restriction WHEN roundtripping THEN restriction is preserved`() =
         runTest {
             // GIVEN: a consumer invocation restricted to its own source set

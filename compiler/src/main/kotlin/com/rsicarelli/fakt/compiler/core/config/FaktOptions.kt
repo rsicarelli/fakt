@@ -62,6 +62,14 @@ data class FaktOptions(
     val emitSourceSets: List<String>
         get() = sourceSetContext?.emitSourceSets ?: emptyList()
 
+    /**
+     * Where each owned source set's fakes are written (see
+     * [com.rsicarelli.fakt.compiler.api.SourceSetContext.outputDirectories]); empty means no
+     * routing.
+     */
+    val outputDirectories: Map<String, String>
+        get() = sourceSetContext?.outputDirectories ?: emptyMap()
+
     companion object {
         fun load(configuration: CompilerConfiguration): FaktOptions {
             // Load configuration from the command line processor
