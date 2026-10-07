@@ -135,17 +135,20 @@ internal fun configureSourceSetRoots(task: FaktGenerateTask, compilation: Kotlin
  * source set (`webTest`) when a test compilation compiles it, otherwise each leaf test source set
  * (see [testWiringFor]). The srcDir goes through the [taskProvider], so Gradle infers the task
  * dependency, and every wired set is recorded so [SourceSetConfigurator] adds no plain directory.
+ * [owned] is the set whose fakes the task writes: the compilation's own default set for a metadata
+ * producer, the intermediate set for a synthetic one that rides on a platform compilation.
  */
 internal fun wireIntermediateTestDirs(
     project: Project,
     compilation: KotlinCompilation<*>,
     taskProvider: TaskProvider<FaktGenerateTask>,
+    owned: String? = null,
 ) {
     val kmp = project.extensions.findByType(KotlinMultiplatformExtension::class.java) ?: return
     val owners = testDirOwners(project)
     owners.tasks.add(taskProvider.name)
     val generated = taskProvider.flatMap { it.generatedKotlinDir }
-    testSourceSetsFor(kmp, compilation.defaultSourceSet.name).forEach { name ->
+    testSourceSetsFor(kmp, owned ?: compilation.defaultSourceSet.name).forEach { name ->
         kmp.sourceSets.findByName(name)?.let { testSet ->
             testSet.kotlin.srcDir(generated)
             owners.bySourceSet[name] = taskProvider.name

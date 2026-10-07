@@ -357,6 +357,8 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         // AGP 9 built-in Kotlin keeps sources in its variant model; `onVariants` has to be hooked
         // before AGP finalises its variants, so this cannot wait for `afterEvaluate`.
         AndroidVariantSources.install(target)
+        // JVM-only intermediate source sets: the late pass sees the final `dependsOn` edges.
+        SyntheticIntermediateWiring.installLatePass(target, extension)
 
         // Determine mode after project evaluation
         target.afterEvaluate {
@@ -661,6 +663,7 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                     kotlinCompilation,
                     extension,
                 )
+                SyntheticIntermediateWiring.registerEager(project, kotlinCompilation, extension)
             }
             CacheCorrectDecision.REGISTER_SINGLE_TARGET ->
                 FaktGenerateTaskWiring.registerSingleTarget(project, kotlinCompilation, extension)

@@ -11,18 +11,32 @@ import com.rsicarelli.fakt.gradle.worker.GENERATED_ROUTE_TOKEN
  * real directories at execution time, so the `@Input` JSON never carries a machine path.
  * - [TaskShape.PRODUCER]: empty, which means "emit everything analysed" (AGP built-in producers
  *   rely on this).
- * - [TaskShape.CONSUMER]: only the default source set, into `generatedKotlinDir`.
+ * - [TaskShape.CONSUMER]: the default source set and every [platformOwned] ancestor (one only this
+ *   target compiles, so only this consumer can emit it), into `generatedKotlinDir`.
  * - [TaskShape.SINGLE_TARGET]: the default source set into `generatedKotlinDir`, every ancestor
  *   into `commonGeneratedKotlinDir`.
  * - [TaskShape.SYNTHETIC]: only `commonMain`, into `generatedKotlinDir`.
  * - [TaskShape.INTERMEDIATE_METADATA]: only the intermediate set itself, into `generatedKotlinDir`.
+ * - [TaskShape.SYNTHETIC_INTERMEDIATE]: only the [owned] intermediate set, into
+ *   `generatedKotlinDir`.
  */
-internal fun outputRouteTokens(context: SourceSetContext, shape: TaskShape): Map<String, String> {
+internal fun outputRouteTokens(
+    context: SourceSetContext,
+    shape: TaskShape,
+    owned: String? = null,
+    platformOwned: Set<String> = emptySet(),
+): Map<String, String> {
     val default = context.defaultSourceSet.name
     return when (shape) {
         TaskShape.PRODUCER -> emptyMap()
-        TaskShape.CONSUMER,
+        TaskShape.CONSUMER ->
+            buildMap {
+                put(default, GENERATED_ROUTE_TOKEN)
+                platformOwned.forEach { put(it, GENERATED_ROUTE_TOKEN) }
+            }
         TaskShape.INTERMEDIATE_METADATA -> mapOf(default to GENERATED_ROUTE_TOKEN)
+        TaskShape.SYNTHETIC_INTERMEDIATE ->
+            mapOf(requireNotNull(owned) { "an owned source set" } to GENERATED_ROUTE_TOKEN)
         TaskShape.SYNTHETIC -> mapOf(SYNTHETIC_OWNED_SOURCE_SET to GENERATED_ROUTE_TOKEN)
         TaskShape.SINGLE_TARGET ->
             buildMap {

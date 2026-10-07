@@ -10,7 +10,6 @@ import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinMetadataTarget
 
 /** Name of the synthetic common producer task. */
 internal const val SYNTHETIC_TASK_NAME: String = "faktGenerateCommonMain"
@@ -88,39 +87,33 @@ internal fun predictSyntheticCommonMainTarget(targets: List<TargetNode>): Target
 }
 
 /**
- * `enabled`, and for the synthetic shape also [ownsCommonMain], so a project where KGP did build a
- * `commonMain` metadata compilation (a producer owns it) never emits it twice.
+ * `enabled`, and for the synthetic shapes also [syntheticOwnerConfirmed], so a project where KGP
+ * did build a metadata compilation (a producer owns it) never emits the same set twice. The
+ * confirmation is read when the task inputs resolve (never at registration, the compilations may
+ * not exist yet) and remembered only once the project has finished evaluating.
  */
 internal fun sourceGate(
     project: Project,
     shape: TaskShape,
     extension: FaktPluginExtension,
-): Provider<Boolean> =
-    if (shape == TaskShape.SYNTHETIC) {
-        extension.enabled.zip(ownsCommonMain(project)) { enabled, owns -> enabled && owns }
-    } else {
-        extension.enabled
-    }
-
-/**
- * Safety net for the prediction: true while the metadata target has no `commonMain` compilation. It
- * is read when the task inputs resolve (never at registration, the compilations may not exist yet)
- * and remembered only once the project has finished evaluating.
- */
-private fun ownsCommonMain(project: Project): Provider<Boolean> {
+    compilation: KotlinCompilation<*>,
+    owned: String?,
+): Provider<Boolean> {
+    val ownedSet =
+        when (shape) {
+            TaskShape.SYNTHETIC -> SYNTHETIC_OWNED_SOURCE_SET
+            TaskShape.SYNTHETIC_INTERMEDIATE -> owned
+            else -> null
+        } ?: return extension.enabled
     var remembered: Boolean? = null
-    return project.provider {
-        remembered
-            ?: project.extensions
-                .findByType(KotlinMultiplatformExtension::class.java)
-                ?.targets
-                ?.withType(KotlinMetadataTarget::class.java)
-                ?.firstOrNull()
-                ?.compilations
-                ?.findByName(SYNTHETIC_OWNED_SOURCE_SET)
-                .let { it == null }
-                .also { if (project.state.executed) remembered = it }
-    }
+    val confirmed =
+        project.provider {
+            remembered
+                ?: syntheticOwnerConfirmed(project, ownedSet, compilation.target.targetName).also {
+                    if (project.state.executed) remembered = it
+                }
+        }
+    return extension.enabled.zip(confirmed) { enabled, owns -> enabled && owns }
 }
 
 /**
@@ -183,7 +176,14 @@ internal data class TaskLayout(
  * non-drivable platform compilation (Native) finds the common fakes there and dedup-skips them (no
  * `Redeclaration` in shared test sets). Every other compilation keeps a per-compilation directory.
  */
-internal fun taskLayoutFor(compilation: KotlinCompilation<*>, shape: TaskShape): TaskLayout {
+internal fun taskLayoutFor(
+    compilation: KotlinCompilation<*>,
+    shape: TaskShape,
+    owned: String? = null,
+): TaskLayout {
+    if (shape == TaskShape.SYNTHETIC_INTERMEDIATE) {
+        return syntheticIntermediateLayout(requireNotNull(owned) { "an owned source set" })
+    }
     val target =
         compilation.target.targetName.ifBlank { compilation.target.platformType.name.lowercase() }
     val name = compilation.name
