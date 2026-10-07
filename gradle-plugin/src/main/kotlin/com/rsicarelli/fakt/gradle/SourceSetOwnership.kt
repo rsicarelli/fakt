@@ -73,7 +73,7 @@ private val JVM_TYPES = setOf("jvm", "androidjvm")
  * [kgpCreatesMetadataCompilation] predicts one, and otherwise [SourceSetOwner.Synthetic] on the
  * [chooseRepresentative] target. Ancestors of a built set count as built, because their compilers
  * are a superset. Apart from `commonMain`, a set that only JVM and Android JVM targets compile is
- * never predicted: KGP disables its metadata compilation, so it is synthetic.
+ * always synthetic: KGP disables its metadata compilation.
  *
  * The function is pure: the same graph always gives the same owners, whatever the input order.
  */
@@ -95,7 +95,8 @@ private fun ownerOf(
     val types = compilers.map { it.platformType }.toSet()
     return when {
         compilers.size == 1 -> SourceSetOwner.Platform(compilers.single().name)
-        !metadataBuilt && !predictsMetadataCompilation(set, types, compilers.size) ->
+        isJvmOnlyIntermediate(set, types) -> syntheticOwner(set, compilers)
+        !metadataBuilt && !kgpCreatesMetadataCompilation(types, compilers.size) ->
             syntheticOwner(set, compilers)
         types == setOf(NATIVE_TYPE) -> SourceSetOwner.NativeShared(set)
         else -> SourceSetOwner.Metadata(set)
@@ -103,12 +104,12 @@ private fun ownerOf(
 }
 
 /**
- * [kgpCreatesMetadataCompilation], except that KGP disables the metadata compilation of any set
- * other than `commonMain` that only JVM and Android JVM targets compile.
+ * KGP builds the metadata compilation of a set other than `commonMain` that only JVM and Android
+ * JVM targets compile, but disables its task, so no klib exists for a producer to read. Such a set
+ * is synthetic even when it is listed as built.
  */
-private fun predictsMetadataCompilation(set: String, types: Set<String>, count: Int): Boolean =
-    kgpCreatesMetadataCompilation(types, count) &&
-        (set == COMMON_MAIN || !JVM_TYPES.containsAll(types))
+private fun isJvmOnlyIntermediate(set: String, types: Set<String>): Boolean =
+    set != COMMON_MAIN && JVM_TYPES.containsAll(types)
 
 private fun syntheticOwner(set: String, compilers: List<TargetNode>): SourceSetOwner.Synthetic {
     val representative = chooseRepresentative(compilers)

@@ -65,17 +65,14 @@ class SourceSetOwnershipIntermediateTest {
         val owners =
             assignSourceSetOwners(
                 graphOf(
-                    node("desktop", "jvm"),
-                    node("server", "jvm"),
-                    extraParents = desktopAndServerParents,
-                    metadataCompilations = setOf("desktopAndServerMain"),
+                    node("js", "js"),
+                    node("wasmJs", "wasm"),
+                    extraParents = webParents,
+                    metadataCompilations = setOf("webMain"),
                 )
             )
 
-        assertEquals(
-            SourceSetOwner.Metadata("desktopAndServerMain"),
-            owners["desktopAndServerMain"],
-        )
+        assertEquals(SourceSetOwner.Metadata("webMain"), owners["webMain"])
         assertEquals(SourceSetOwner.Metadata("commonMain"), owners["commonMain"])
     }
 
@@ -131,12 +128,12 @@ class SourceSetOwnershipIntermediateTest {
         val owners =
             assignSourceSetOwners(
                 graphOf(
-                    node("jvm", "jvm"),
-                    node("android", "androidjvm", isAndroid = true),
+                    node("js", "js"),
+                    node("wasmJs", "wasm"),
                     extraParents =
                         mapOf(
-                            "jvmMain" to setOf("leafMain"),
-                            "androidMain" to setOf("leafMain"),
+                            "jsMain" to setOf("leafMain"),
+                            "wasmJsMain" to setOf("leafMain"),
                             "leafMain" to setOf("midMain"),
                             "midMain" to setOf("commonMain"),
                         ),
@@ -281,6 +278,26 @@ class SourceSetOwnershipIntermediateTest {
                     node("jvm", "jvm"),
                     node("android", "androidjvm", true),
                     extraParents = jvmAndAndroidParents,
+                )
+            )
+
+        assertEquals(SourceSetOwner.Metadata("commonMain"), owners["commonMain"])
+        assertEquals(
+            SourceSetOwner.Synthetic("jvmAndAndroidMain", "jvm", "jvmMain"),
+            owners["jvmAndAndroidMain"],
+        )
+    }
+
+    @Test
+    fun `GIVEN KGP lists a jvm and android only set as built WHEN assigning owners THEN it is still synthetic because KGP disables its compile`() {
+        val owners =
+            assignSourceSetOwners(
+                graphOf(
+                    node("jvm", "jvm"),
+                    node("android", "androidjvm", true),
+                    node("js", "js"),
+                    extraParents = jvmAndAndroidParents,
+                    metadataCompilations = setOf("commonMain", "jvmAndAndroidMain"),
                 )
             )
 
