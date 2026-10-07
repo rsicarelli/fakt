@@ -50,8 +50,8 @@ internal object FaktGenerateTaskWiring {
      * source set ([KotlinCompilation.defaultSourceSet]); ancestor sources (commonMain and
      * intermediates) ride along as `analysisOnlySources` so the frontend can pair `actual`
      * declarations with their `expect`s and resolve common types in platform `@Fake` signatures —
-     * their own fakes stay owned by the common producer (`SourceSetContext.emitSourceSets`
-     * restricts emission), so nothing is emitted twice and the task stays fully cache-correct.
+     * their own fakes stay owned by the common producer (the context's route map restricts
+     * emission), so nothing is emitted twice and the task stays fully cache-correct.
      */
     fun registerConsumer(
         project: Project,
@@ -107,7 +107,7 @@ internal object FaktGenerateTaskWiring {
         val outputDir = project.layout.buildDirectory.dir(generatedKotlinPath)
         val scratchDir =
             project.layout.buildDirectory.dir("faktCaches/$targetName/$compilationName")
-        val placeholderJson = encodePlaceholderContext(kotlinCompilation)
+        val placeholderJson = encodePlaceholderContext(kotlinCompilation, shape)
         val workerClasspath = project.configurations.named(FaktGradleSubplugin.WORKER_CONFIGURATION)
         val compilerClasspath =
             project.configurations.named(FaktGradleSubplugin.COMPILER_CLASSPATH_CONFIGURATION)
@@ -229,7 +229,10 @@ internal object FaktGenerateTaskWiring {
     private fun getSubpluginInstance(project: Project): FaktGradleSubplugin =
         project.plugins.getPlugin(FaktGradleSubplugin::class.java)
 
-    private fun encodePlaceholderContext(kotlinCompilation: KotlinCompilation<*>): String {
+    private fun encodePlaceholderContext(
+        kotlinCompilation: KotlinCompilation<*>,
+        shape: TaskShape,
+    ): String {
         // `useTestFixtures` is intentionally left at its default here. In `buildContext` it only
         // affects `outputDirectory`, which the `.copy` below replaces with a placeholder and the
         // worker later overwrites with the task's real `generatedKotlinDir`. It changes nothing
@@ -247,6 +250,7 @@ internal object FaktGenerateTaskWiring {
                     metadataOutputPath = null,
                     metadataCachePath = null,
                 )
+                .let { it.copy(outputDirectories = outputRouteTokens(it, shape)) }
         val json = Json { prettyPrint = false }
         return json.encodeToString(SourceSetContext.serializer(), context)
     }
@@ -308,7 +312,7 @@ internal const val SINGLE_TARGET_PRODUCER_PROPERTY: String = "fakt.singleTargetP
  * How a `FaktGenerateTask` partitions its compilation's sources (see the `register*` functions of
  * [FaktGenerateTaskWiring]).
  */
-private enum class TaskShape {
+internal enum class TaskShape {
     /** Every source set analysed and emitted (KMP `commonMain`, single-platform JVM `main`). */
     PRODUCER,
 

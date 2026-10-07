@@ -23,7 +23,7 @@ import org.junit.jupiter.api.io.TempDir
  * The worker marks the ancestors `-Xcommon-sources` under `-Xmulti-platform`, so platform `actual`
  * declarations pair with their commonMain `expect`s — real KMP platform source sets almost always
  * contain actuals, and without the pairing the frontend rejects the `actual` keyword outright.
- * Emission stays restricted to the consumer's own source set (`SourceSetContext.emitSourceSets`):
+ * Emission stays restricted to the consumer's own source set (its `outputDirectories` route map):
  * the common producer owns the ancestors' fakes, so nothing is generated twice.
  *
  * Worker classpath is built from the test JVM's own classpath with KGP and kctfork filtered out,
@@ -185,6 +185,7 @@ class FaktGenerateConsumerTest {
                     ),
                 outputDirectory = "/tmp/fakt-spike/jvmMain",
                 commonTestOutputDirectory = "/tmp/fakt-spike/commonTest",
+                outputDirectories = mapOf("jvmMain" to "fakt://generated"),
             )
 
         private val COMMON_FIXTURE =

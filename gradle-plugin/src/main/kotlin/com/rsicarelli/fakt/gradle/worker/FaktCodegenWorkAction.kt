@@ -24,6 +24,7 @@ internal interface FaktCodegenWorkParameters : WorkParameters {
     val sources: ConfigurableFileCollection
     val analysisOnlySources: ConfigurableFileCollection
     val commonSources: ConfigurableFileCollection
+    val platformAnalysisOnlySources: ConfigurableFileCollection
     val compileClasspath: ConfigurableFileCollection
     val commonKlibClasspath: ConfigurableFileCollection
     val faktCompilerClasspath: ConfigurableFileCollection
@@ -79,17 +80,19 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         params.commonGeneratedKotlinDir.orNull?.asFile?.let(::resetDirectory)
         val analysisOnlyFiles = collectKotlinSources(params.analysisOnlySources.files)
         val commonFiles = collectKotlinSources(params.commonSources.files)
-        require(commonFiles.isEmpty() || params.commonGeneratedKotlinDir.isPresent) {
-            "commonSources require commonGeneratedKotlinDir: their fakes need a declared output."
-        }
-        val sourceSetContext = populateSourceSetContext(params, analysisOnlyFiles.isNotEmpty())
+        val platformAnalysisOnlyFiles =
+            collectKotlinSources(params.platformAnalysisOnlySources.files)
+        val sourceSetContext = populateSourceSetContext(params)
         val pluginJars = resolvePluginJars(params)
 
         invokeK2(
             K2Invocation(
                 driver = CompilerDriver.forPlatformType(sourceSetContext.platformType),
                 sourceFiles =
-                    collectKotlinSources(params.sources.files) + commonFiles + analysisOnlyFiles,
+                    collectKotlinSources(params.sources.files) +
+                        commonFiles +
+                        analysisOnlyFiles +
+                        platformAnalysisOnlyFiles,
                 commonFragmentFiles = analysisOnlyFiles + commonFiles,
                 compileClasspath =
                     params.compileClasspath.files.toList() +
@@ -121,19 +124,12 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
      * `FirIrEmissionParityTest`. Set at execution time (not in the stored `@Input` JSON) like the
      * other mutated fields — the legacy in-process path never sets it and keeps emitting at IR.
      *
-     * When ancestor sources ride along for analysis only ([hasAnalysisOnlySources] — the
-     * source-partitioned consumer with expect/actual or common-type references), emission is
-     * restricted to the compilation's own source set: the common producer owns the ancestors'
-     * fakes.
-     *
-     * When [FaktCodegenWorkParameters.commonGeneratedKotlinDir] is set (a single-target KMP
-     * project), it becomes [SourceSetContext.commonOutputDirectory]: the common fragment's fakes
-     * are routed there and the default source set's fakes to the main output directory.
+     * The stored [SourceSetContext.outputDirectories] hold route tokens (`fakt://generated`,
+     * `fakt://common`), never paths; [resolveOutputRoutes] swaps them for the task's real output
+     * directories. Which source sets this run emits, and where each one goes, is decided entirely
+     * by that map (empty means "emit everything analysed into the main output directory").
      */
-    private fun populateSourceSetContext(
-        params: FaktCodegenWorkParameters,
-        hasAnalysisOnlySources: Boolean,
-    ): SourceSetContext {
+    private fun populateSourceSetContext(params: FaktCodegenWorkParameters): SourceSetContext {
         val storedContext =
             Json.decodeFromString(SourceSetContext.serializer(), params.sourceSetContextJson.get())
         val outputDirectory = params.generatedKotlinDir.asFile.get().absolutePath
@@ -143,10 +139,12 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
             metadataOutputPath = null,
             metadataCachePath = null,
             emitPhase = EmitPhase.FIR,
-            commonOutputDirectory = params.commonGeneratedKotlinDir.orNull?.asFile?.absolutePath,
-            emitSourceSets =
-                if (hasAnalysisOnlySources) listOf(storedContext.defaultSourceSet.name)
-                else emptyList(),
+            outputDirectories =
+                resolveOutputRoutes(
+                    storedContext.outputDirectories,
+                    params.generatedKotlinDir.asFile.get(),
+                    params.commonGeneratedKotlinDir.orNull?.asFile,
+                ),
         )
     }
 

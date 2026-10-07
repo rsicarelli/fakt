@@ -223,6 +223,8 @@ class FaktGenerateSingleTargetTest {
                     ),
                 outputDirectory = "fakt://generated",
                 commonTestOutputDirectory = "fakt://generated",
+                outputDirectories =
+                    mapOf("jvmMain" to "fakt://generated", "commonMain" to "fakt://common"),
             )
 
         private val COMMON_FIXTURE =
