@@ -48,11 +48,6 @@ internal class CodeGenerator(
      * - JvmOnlyService (jvmMain) → jvmTest
      * - IosOnlyService (iosMain) → iosTest
      *
-     * When [SourceSetContext.commonOutputDirectory] is set (a single-target KMP compilation that
-     * owns both halves), routing is explicit instead: the default source set's fakes go to
-     * [SourceSetContext.outputDirectory] and every other (common-fragment) source set's fakes go to
-     * [SourceSetContext.commonOutputDirectory].
-     *
      * On the FIR path, when [SourceSetContext.outputDirectories] is not empty, the map decides: the
      * source set's entry is used (the default source set when [sourceSourceSet] is null), and
      * [SourceSetContext.outputDirectory] is the fallback for a set without an entry.
@@ -66,19 +61,14 @@ internal class CodeGenerator(
      * @return Absolute path to output directory
      */
     private fun selectOutputDirectory(sourceSourceSet: String?): String {
-        val commonOutputDirectory = sourceSetContext.commonOutputDirectory
         val routes = sourceSetContext.outputDirectories
         return when {
             sourceSetContext.emitPhase == EmitPhase.FIR && routes.isNotEmpty() ->
                 routes[sourceSourceSet ?: sourceSetContext.defaultSourceSet.name]
                     ?: sourceSetContext.outputDirectory
             sourceSourceSet == null -> sourceSetContext.outputDirectory
-            sourceSetContext.emitPhase == EmitPhase.FIR && commonOutputDirectory == null ->
-                sourceSetContext.outputDirectory
-            commonOutputDirectory == null -> testCounterpartDirectory(sourceSourceSet)
-            sourceSourceSet == sourceSetContext.defaultSourceSet.name ->
-                sourceSetContext.outputDirectory
-            else -> commonOutputDirectory
+            sourceSetContext.emitPhase == EmitPhase.FIR -> sourceSetContext.outputDirectory
+            else -> testCounterpartDirectory(sourceSourceSet)
         }
     }
 

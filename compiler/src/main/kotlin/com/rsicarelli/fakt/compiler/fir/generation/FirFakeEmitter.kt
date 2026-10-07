@@ -69,27 +69,19 @@ internal class FirFakeEmitter(private val sharedContext: FaktSharedContext) {
     /**
      * When [com.rsicarelli.fakt.compiler.core.config.FaktOptions.outputDirectories] is set, this
      * compilation emits only the source sets it owns; a declaration with no source set uses the
-     * default source set, so it is skipped when that set is not owned.
-     *
-     * Otherwise the older rule applies: a consumer invocation feeds ancestor sources (commonMain
-     * and intermediates) for expect/actual and common-type resolution only, so when
-     * [com.rsicarelli.fakt.compiler.core.config.FaktOptions.emitSourceSets] restricts emission,
-     * declarations from other source sets are skipped. A `null` source set fails open there.
+     * default source set, so it is skipped when that set is not owned. An empty map means "emit
+     * everything analysed".
      */
     private fun shouldEmit(sourceSourceSet: String?, simpleName: String): Boolean {
         val options = sharedContext.options
         val owned = options.outputDirectories.keys
-        val allowed = options.emitSourceSets
         val emit =
-            if (owned.isNotEmpty()) {
+            owned.isEmpty() ||
                 (sourceSourceSet ?: options.sourceSetContext?.defaultSourceSet?.name) in owned
-            } else {
-                allowed.isEmpty() || sourceSourceSet == null || sourceSourceSet in allowed
-            }
         if (!emit) {
             logger.debug(
                 "Skipping FIR emission for $simpleName: source set '$sourceSourceSet' is " +
-                    "analysis-only in this invocation (emitting: ${owned.ifEmpty { allowed }})"
+                    "analysis-only in this invocation (emitting: $owned)"
             )
         }
         return emit

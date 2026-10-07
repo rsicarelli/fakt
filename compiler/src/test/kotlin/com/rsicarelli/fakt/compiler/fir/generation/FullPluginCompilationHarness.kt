@@ -54,7 +54,6 @@ internal object FullPluginCompilationHarness {
         enableCallHistory: Boolean = true,
         commonTestOutputDir: File = outputDir,
         defaultSourceSetName: String = "main",
-        commonOutputDir: File? = null,
         outputDirectories: Map<String, String> = emptyMap(),
     ): Outcome {
         val defaultSourceSet = SourceSetInfo(name = defaultSourceSetName, parents = emptyList())
@@ -69,7 +68,6 @@ internal object FullPluginCompilationHarness {
                 outputDirectory = outputDir.absolutePath,
                 commonTestOutputDirectory = commonTestOutputDir.absolutePath,
                 emitPhase = emitPhase,
-                commonOutputDirectory = commonOutputDir?.absolutePath,
                 outputDirectories = outputDirectories,
             )
         val contextBase64 =
