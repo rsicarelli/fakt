@@ -410,7 +410,7 @@ with it — no empty or missing fakes on a cache hit.
 | JS / Wasm platform main    | ✅        | ✅            |
 | Native platform main       | ✅        | Not yet       |
 
-Every `@Fake` is always generated. Native platform fakes are not cache-correct
+Native platform fakes are not cache-correct
 yet: the Kotlin/Native compiler is not part of the embeddable compiler Fakt runs in its Gradle task,
 so those fakes are still produced by the in-process plugin
 ([#152](https://github.com/rsicarelli/fakt/issues/152)).
@@ -423,10 +423,24 @@ so those fakes are still produced by the in-process plugin
     single targets.
 
 !!! tip "Projects where every target is JVM"
-    When every target is a JVM target (for example `kotlin { jvm("desktop"); jvm("server") }`),
-    Kotlin gives `commonMain` no compilation of its own. Fakt then adds a `faktGenerateCommonMain`
-    task for it, so fakes declared in `commonMain` still reach `commonTest`. Each platform main
-    (`faktGenerateDesktopMain`, `faktGenerateServerMain`) keeps its own task and its own fakes.
+    When every target is a JVM target, Kotlin gives `commonMain` no compilation of its own. Fakt
+    then adds a `faktGenerateCommonMain` task for it, so fakes declared in `commonMain` still reach
+    `commonTest`. Each platform main (for example `faktGenerateJvmMain`) keeps its own task and its
+    own fakes.
+
+    The usual way to get this shape is the Android KMP library target with
+    `android.kmp.use.jvm.platform.type=true` in `gradle.properties`, next to `jvm()`. Both
+    targets are then JVM-typed.
+
+    Two `jvm()` targets (`jvm("desktop")` and `jvm("server")`) also give this shape, but Kotlin
+    rejects them by default (`KotlinTargetAlreadyDeclaredError`). It only builds with the internal
+    property `kotlin.internal.suppressGradlePluginErrors=KotlinTargetAlreadyDeclaredError`, which
+    is not a supported setting. `samples/kmp-all-jvm` uses it.
+
+    Not generated yet: fakes declared in an intermediate source set that only JVM targets share
+    (for example `jvmShared`), fakes in `webMain`-style intermediate source sets
+    ([#162](https://github.com/rsicarelli/fakt/issues/162)), and fakes in projects whose targets
+    are all JS or all Wasm. These are follow-up work.
 
 !!! note "Project shapes that keep the in-process path"
     A few shapes fall back to generating inside `compileKotlin*`. Fakes are still generated for
