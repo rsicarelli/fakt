@@ -63,6 +63,7 @@ A comprehensive KMP hierarchy validation sample demonstrating:
 - **Source Set Isolation**: Platform-specific fakes don't leak across siblings
 - **45+ Test Cases**: 30 basic tests + 15 hierarchy validation tests
 - **Complete KMP Coverage**: Validates fake generation for ALL source sets
+- **Intermediate Source Set**: a `@Fake` in `webMain` (shared by js + wasmJs) reaches `webTest` (#162)
 
 **Key Validations:**
 - ✅ `commonMain` fakes accessible from ALL child source sets
@@ -85,14 +86,16 @@ start multiplatform-ready:
 **Source Set Targets**: `commonMain` → `commonTest`, `jvmMain` → `jvmTest`
 
 ### 🧩 **kmp-all-jvm**
-A KMP module where **every** target is a JVM target (`jvm("desktop")` + `jvm("server")`):
+A KMP module where **every** target is a JVM target (`jvm("desktop")`, `jvm("server")` and `jvm("cli")`):
 - **No `commonMain` compilation**: Kotlin gives all-JVM projects none, so Fakt adds a synthetic
-  common producer (`faktGenerateCommonMain`) next to `faktGenerateDesktopMain` and `faktGenerateServerMain`
+  common producer (`faktGenerateCommonMain`) next to `faktGenerateDesktopMain`, `faktGenerateServerMain` and `faktGenerateCliMain`
+- **Intermediate source set** (#162): `desktopAndServerMain` (shared by desktop + server, not cli) has
+  its own synthetic producer `faktGenerateDesktopAndServerMain` and delivers to `desktopAndServerTest`
 - **Split outputs**: `commonMain` fakes → `commonTest`, `desktopMain` → `desktopTest`, `serverMain` → `serverTest`
-- **expect/actual**: `platformName()` has one `actual` per target
-- **Cache-correct**: all three producers restore FROM-CACHE
+- **expect/actual**: `platformName()` has one `actual` per target; `transport()` has one in `cliMain` and one in `desktopAndServerMain`
+- **Cache-correct**: all five producers restore FROM-CACHE
 
-**Source Set Targets**: `commonMain` → `commonTest`, `desktopMain` → `desktopTest`, `serverMain` → `serverTest`
+**Source Set Targets**: `commonMain` → `commonTest`, `desktopAndServerMain` → `desktopAndServerTest`, `desktopMain` → `desktopTest`, `serverMain` → `serverTest`, `cliMain` → `cliTest`
 
 **Run**: `make test-kmp-all-jvm`
 
