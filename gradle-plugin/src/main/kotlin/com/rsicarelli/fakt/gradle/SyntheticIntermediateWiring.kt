@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.gradle
 
-import java.util.concurrent.Callable
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
@@ -145,8 +144,8 @@ internal fun syntheticIntermediateLayout(owned: String): TaskLayout =
  * Feeds a synthetic intermediate task. The owned set is the only emitted input ([task] `sources`,
  * so an empty set makes the task `NO-SOURCE`); its ancestors (`commonMain` and any set above) are
  * analysis-only common-fragment sources, and every other source set of the representative is
- * analysed as platform code, so `actual`s pair with their `expect`s. The split is read when the
- * inputs resolve, because the `dependsOn` edges are not final while the compilation is applied.
+ * analysed as platform code, so `actual`s pair with their `expect`s. The split is read at
+ * registration, when the owner is confirmed and the `dependsOn` edges are visible.
  */
 internal fun configureSyntheticIntermediateSources(
     task: FaktGenerateTask,
@@ -155,12 +154,13 @@ internal fun configureSyntheticIntermediateSources(
     owned: String?,
 ) {
     val sourceSet = requireNotNull(owned) { "an owned source set" }
-    fun split() = SourceSplit.of(representative, sourceSet)
-    task.sources.from(gate.gate(Callable { split().owned.kotlin }))
-    task.analysisOnlySources.from(gate.gate(Callable { split().ancestors.map { it.kotlin } }))
-    task.platformAnalysisOnlySources.from(
-        gate.gate(Callable { split().platform.map { it.kotlin } })
-    )
+    // Read now, not inside a lambda: a lambda would capture the compilation, which the
+    // configuration cache cannot store. The synthetic task is registered once the owner is
+    // confirmed, so the dependsOn edges are visible here.
+    val split = SourceSplit.of(representative, sourceSet)
+    task.sources.from(gate.gate(split.owned.kotlin))
+    task.analysisOnlySources.from(gate.gate(split.ancestors.map { it.kotlin }))
+    task.platformAnalysisOnlySources.from(gate.gate(split.platform.map { it.kotlin }))
 }
 
 private class SourceSplit(
