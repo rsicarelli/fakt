@@ -67,8 +67,59 @@ class FaktCompilationRoutingTest {
     }
 
     @Test
-    fun `GIVEN multi-target KMP WHEN routing a shared metadata compilation THEN suppresses it`() {
+    fun `GIVEN multi-target KMP WHEN routing a shared metadata compilation with no owner THEN suppresses it`() {
         val decision = routeKmp(compilationName = "nativeMain", platformTypeName = "common")
+
+        assertEquals(CacheCorrectDecision.SUPPRESS, decision)
+    }
+
+    @Test
+    fun `GIVEN a metadata compilation owned by the metadata producer WHEN routing it THEN registers a producer`() {
+        val decision =
+            routeKmp(
+                compilationName = "webMain",
+                platformTypeName = "common",
+                owner = SourceSetOwner.Metadata("webMain"),
+            )
+
+        assertEquals(CacheCorrectDecision.REGISTER_PRODUCER, decision)
+    }
+
+    @Test
+    fun `GIVEN a native shared metadata compilation WHEN routing it THEN suppresses it`() {
+        val decision =
+            routeKmp(
+                compilationName = "nativeMain",
+                platformTypeName = "common",
+                owner = SourceSetOwner.NativeShared("nativeMain"),
+            )
+
+        assertEquals(CacheCorrectDecision.SUPPRESS, decision)
+    }
+
+    @Test
+    fun `GIVEN synthetic or platform owners WHEN routing their metadata compilation THEN suppresses it`() {
+        val owners =
+            listOf(
+                SourceSetOwner.Synthetic("desktopAndServerMain", "desktop", "desktopMain"),
+                SourceSetOwner.Platform("jvm"),
+            )
+
+        owners.forEach { owner ->
+            val decision =
+                routeKmp(compilationName = "sharedMain", platformTypeName = "common", owner = owner)
+            assertEquals(CacheCorrectDecision.SUPPRESS, decision, "owner: $owner")
+        }
+    }
+
+    @Test
+    fun `GIVEN the legacy metadata main compilation WHEN routing it with a metadata owner THEN suppresses it`() {
+        val decision =
+            routeKmp(
+                compilationName = "main",
+                platformTypeName = "common",
+                owner = SourceSetOwner.Metadata("commonMain"),
+            )
 
         assertEquals(CacheCorrectDecision.SUPPRESS, decision)
     }
@@ -225,13 +276,18 @@ class FaktCompilationRoutingTest {
         assertNull(consumerTaskNameFor("Test"))
     }
 
-    private fun routeKmp(compilationName: String, platformTypeName: String): CacheCorrectDecision =
+    private fun routeKmp(
+        compilationName: String,
+        platformTypeName: String,
+        owner: SourceSetOwner? = null,
+    ): CacheCorrectDecision =
         routeCompilation(
                 unreadableSourcesReason = null,
                 isMultiplatform = true,
                 singleTargetPlatformTypeName = null,
                 compilationName = compilationName,
                 platformTypeName = platformTypeName,
+                sharedSourceSetOwner = owner,
             )
             .decision
 
