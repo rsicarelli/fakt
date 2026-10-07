@@ -11,6 +11,7 @@ import kotlinx.serialization.json.Json
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
@@ -27,6 +28,8 @@ internal interface FaktCodegenWorkParameters : WorkParameters {
     val platformAnalysisOnlySources: ConfigurableFileCollection
     val compileClasspath: ConfigurableFileCollection
     val commonKlibClasspath: ConfigurableFileCollection
+    val refinesKlibs: ConfigurableFileCollection
+    val sourceSetRoots: MapProperty<String, List<String>>
     val faktCompilerClasspath: ConfigurableFileCollection
     val sourceSetContextJson: Property<String>
     val faktVersion: Property<String>
@@ -84,16 +87,28 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
             collectKotlinSources(params.platformAnalysisOnlySources.files)
         val sourceSetContext = populateSourceSetContext(params)
         val pluginJars = resolvePluginJars(params)
+        val driver = CompilerDriver.forPlatformType(sourceSetContext.platformType)
+        val sourceFiles =
+            collectKotlinSources(params.sources.files) +
+                commonFiles +
+                analysisOnlyFiles +
+                platformAnalysisOnlyFiles
+        val commonFragmentFiles = analysisOnlyFiles + commonFiles
 
         invokeK2(
             K2Invocation(
-                driver = CompilerDriver.forPlatformType(sourceSetContext.platformType),
-                sourceFiles =
-                    collectKotlinSources(params.sources.files) +
-                        commonFiles +
-                        analysisOnlyFiles +
-                        platformAnalysisOnlyFiles,
-                commonFragmentFiles = analysisOnlyFiles + commonFiles,
+                driver = driver,
+                sourceFiles = sourceFiles,
+                commonFragmentFiles = commonFragmentFiles,
+                fragments =
+                    fragmentsFor(
+                        driver,
+                        commonFragmentFiles,
+                        sourceSetContext.allSourceSets,
+                        sourceFiles,
+                        params.sourceSetRoots.getOrElse(emptyMap()),
+                    ),
+                refinesPaths = params.refinesKlibs.files.toList(),
                 compileClasspath =
                     params.compileClasspath.files.toList() +
                         params.commonKlibClasspath.files.toList(),
@@ -170,6 +185,10 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         val sourceFiles: List<File>,
         /** Sources compiled as the common fragment (`-Xcommon-sources`). */
         val commonFragmentFiles: List<File>,
+        /** Multi-fragment structure replacing `-Xcommon-sources`; `null` keeps the flat shape. */
+        val fragments: FragmentArguments?,
+        /** Ancestor metadata klibs for `-Xrefines-paths` (metadata driver only). */
+        val refinesPaths: List<File>,
         val compileClasspath: List<File>,
         val pluginJars: List<File>,
         val outputDir: File,
@@ -252,7 +271,7 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         // Leave the JDK on the compilation classpath — production sources reference
         // `java.io.Serializable`, `java.util.*`, etc. K2 needs JDK rt to resolve them.
 
-        populateConsumerMultiplatformArgs(bridge, args, call.commonFragmentFiles)
+        populateConsumerMultiplatformArgs(bridge, args, call.commonFragmentFiles, call.fragments)
     }
 
     private fun populateJsOutputArgs(bridge: K2CompilerBridge, args: Any, call: K2Invocation) {
@@ -272,7 +291,7 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
             bridge.setOnArgs(args, "setWasm", Boolean::class.javaPrimitiveType!!, true)
             bridge.setOnArgs(args, "setWasmTarget", String::class.java, call.wasmTarget)
         }
-        populateConsumerMultiplatformArgs(bridge, args, call.commonFragmentFiles)
+        populateConsumerMultiplatformArgs(bridge, args, call.commonFragmentFiles, call.fragments)
     }
 
     private fun populateMetadataOutputArgs(
@@ -297,6 +316,9 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         // are safe here regardless: this pipeline has no IR actualizer, the sole origin of
         // NO_ACTUAL_FOR_EXPECT.
         bridge.setOnArgs(args, "setExpectActualClasses", Boolean::class.javaPrimitiveType!!, true)
+        // An intermediate set (webMain) analyses its own sources only; the ancestors it refines
+        // arrive as metadata klibs. The driver rejects -Xfragments, so this is the only link.
+        applyRefinesPaths(bridge, args, call.refinesPaths)
     }
 
     private fun populatePluginArgs(bridge: K2CompilerBridge, args: Any, call: K2Invocation) {
@@ -330,21 +352,28 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
  * rejects the `actual` keyword outright, and ACTUAL_WITHOUT_EXPECT is an error even under
  * `-Xmulti-platform`). `-Xexpect-actual-classes` mutes the expect/actual-classes Beta warning —
  * nothing else. All three live on `CommonCompilerArguments`, so every platform driver shares this.
+ * When [fragments] is set (an intermediate source set is analysed) the module is split into one
+ * fragment per source set instead of the flat common/platform pair.
  */
 private fun populateConsumerMultiplatformArgs(
     bridge: K2CompilerBridge,
     args: Any,
     commonFragmentFiles: List<File>,
+    fragments: FragmentArguments?,
 ) {
     if (commonFragmentFiles.isEmpty()) return
     bridge.setOnArgs(args, "setMultiPlatform", Boolean::class.javaPrimitiveType!!, true)
     bridge.setOnArgs(args, "setExpectActualClasses", Boolean::class.javaPrimitiveType!!, true)
-    bridge.setOnArgs(
-        args,
-        "setCommonSources",
-        Array<String>::class.java,
-        commonFragmentFiles.map { it.absolutePath }.toTypedArray(),
-    )
+    if (fragments != null) {
+        applyFragmentArgs(bridge, args, fragments)
+    } else {
+        bridge.setOnArgs(
+            args,
+            "setCommonSources",
+            Array<String>::class.java,
+            commonFragmentFiles.map { it.absolutePath }.toTypedArray(),
+        )
+    }
 }
 
 /** Kotlin source files under [roots], walking directories up to [maxDepth] levels deep. */
