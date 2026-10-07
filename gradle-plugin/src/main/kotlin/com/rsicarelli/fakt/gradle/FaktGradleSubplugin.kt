@@ -654,8 +654,14 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
         when (decision) {
             CacheCorrectDecision.REGISTER_PRODUCER ->
                 FaktGenerateTaskWiring.registerProducer(project, kotlinCompilation, extension)
-            CacheCorrectDecision.REGISTER_CONSUMER ->
+            CacheCorrectDecision.REGISTER_CONSUMER -> {
                 FaktGenerateTaskWiring.registerConsumer(project, kotlinCompilation, extension)
+                SyntheticProducerWiring.registerIfRepresentative(
+                    project,
+                    kotlinCompilation,
+                    extension,
+                )
+            }
             CacheCorrectDecision.REGISTER_SINGLE_TARGET ->
                 FaktGenerateTaskWiring.registerSingleTarget(project, kotlinCompilation, extension)
             CacheCorrectDecision.LEGACY_HYBRID ->

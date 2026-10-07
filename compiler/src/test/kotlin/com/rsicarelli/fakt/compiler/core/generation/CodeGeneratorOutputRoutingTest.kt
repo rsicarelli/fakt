@@ -26,7 +26,11 @@ class CodeGeneratorOutputRoutingTest {
 
     private val jvmMain = SourceSetInfo(name = "jvmMain", parents = listOf("commonMain"))
 
-    private fun context(outputDirectory: File, emitPhase: EmitPhase): SourceSetContext =
+    private fun context(
+        outputDirectory: File,
+        emitPhase: EmitPhase,
+        outputDirectories: Map<String, String> = emptyMap(),
+    ): SourceSetContext =
         SourceSetContext(
             compilationName = "main",
             targetName = "jvm",
@@ -39,12 +43,13 @@ class CodeGeneratorOutputRoutingTest {
             // The worker sets both to the task's declared output.
             commonTestOutputDirectory = outputDirectory.absolutePath,
             emitPhase = emitPhase,
+            outputDirectories = outputDirectories,
         )
 
-    private fun declaration(): FakeDeclaration.Interface =
+    private fun declaration(name: String = "UserService"): FakeDeclaration.Interface =
         FakeDeclaration.Interface(
-            simpleName = "UserService",
-            qualifiedSourceName = "UserService",
+            simpleName = name,
+            qualifiedSourceName = name,
             packageName = "com.example",
             typeParameters = emptyList(),
             visibility = FirVisibility.PUBLIC,
@@ -76,6 +81,82 @@ class CodeGeneratorOutputRoutingTest {
             expected.isFile,
             "The task's declared output must receive the fake; found: " +
                 root.walkTopDown().filter { it.isFile }.toList(),
+        )
+    }
+
+    @Test
+    fun `GIVEN FIR emission and an output map WHEN generating common and platform fakes THEN each lands in its mapped directory`(
+        @TempDir root: File
+    ) {
+        val commonDir = root.resolve("commonTest")
+        val jvmDir = root.resolve("jvmTest")
+        val generator =
+            CodeGenerator(
+                importResolver = ImportResolver(),
+                sourceSetContext =
+                    context(
+                        root.resolve("fallback"),
+                        EmitPhase.FIR,
+                        mapOf(
+                            "commonMain" to commonDir.absolutePath,
+                            "jvmMain" to jvmDir.absolutePath,
+                        ),
+                    ),
+                logger = FaktLogger.quiet(),
+            )
+
+        generator.generateWorkingFakeImplementation(declaration(), sourceSourceSet = "commonMain")
+        generator.generateWorkingFakeImplementation(
+            declaration("OrderService"),
+            sourceSourceSet = "jvmMain",
+        )
+
+        assertTrue(commonDir.resolve("com/example/FakeUserServiceImpl.kt").isFile)
+        assertTrue(jvmDir.resolve("com/example/FakeOrderServiceImpl.kt").isFile)
+        assertTrue(!jvmDir.resolve("com/example/FakeUserServiceImpl.kt").exists())
+    }
+
+    @Test
+    fun `GIVEN FIR emission and an output map WHEN the source set is unknown THEN the default source set route is used`(
+        @TempDir root: File
+    ) {
+        val jvmDir = root.resolve("jvmTest")
+        val generator =
+            CodeGenerator(
+                importResolver = ImportResolver(),
+                sourceSetContext =
+                    context(
+                        root.resolve("fallback"),
+                        EmitPhase.FIR,
+                        mapOf("jvmMain" to jvmDir.absolutePath),
+                    ),
+                logger = FaktLogger.quiet(),
+            )
+
+        generator.generateWorkingFakeImplementation(declaration(), sourceSourceSet = null)
+
+        assertTrue(jvmDir.resolve("com/example/FakeUserServiceImpl.kt").isFile)
+    }
+
+    @Test
+    fun `GIVEN IR emission and no output map WHEN generating THEN the test counterpart directory is kept`(
+        @TempDir root: File
+    ) {
+        val commonTest = root.resolve("build/commonTest/kotlin")
+        val generator =
+            CodeGenerator(
+                importResolver = ImportResolver(),
+                sourceSetContext =
+                    context(root.resolve("out"), EmitPhase.IR)
+                        .copy(commonTestOutputDirectory = commonTest.absolutePath),
+                logger = FaktLogger.quiet(),
+            )
+
+        generator.generateWorkingFakeImplementation(declaration(), sourceSourceSet = "jvmMain")
+
+        assertTrue(
+            root.resolve("build/jvmTest/kotlin/com/example/FakeUserServiceImpl.kt").isFile,
+            "found: " + root.walkTopDown().filter { it.isFile }.toList(),
         )
     }
 }

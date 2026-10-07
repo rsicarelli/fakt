@@ -22,6 +22,42 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FirFakeMetadataTest {
     @Test
+    fun `GIVEN a Windows path WHEN extracting the source set THEN it reads the source set name`() {
+        // GIVEN
+        val location = locationAt("""C:\work\proj\src\commonMain\kotlin\p\A.kt""")
+
+        // WHEN
+        val sourceSet = location.extractSourceSetName()
+
+        // THEN
+        assertEquals("commonMain", sourceSet)
+    }
+
+    @Test
+    fun `GIVEN a project nested under a src kotlin folder WHEN extracting THEN the last match wins`() {
+        // GIVEN
+        val location = locationAt("/home/u/src/work/kotlin/proj/src/jvmMain/kotlin/A.kt")
+
+        // WHEN
+        val sourceSet = location.extractSourceSetName()
+
+        // THEN
+        assertEquals("jvmMain", sourceSet)
+    }
+
+    @Test
+    fun `GIVEN an unusual layout WHEN extracting the source set THEN it is null`() {
+        // GIVEN
+        val location = locationAt("/home/u/proj/generated/ksp/A.kt")
+
+        // WHEN
+        val sourceSet = location.extractSourceSetName()
+
+        // THEN
+        assertEquals(null, sourceSet)
+    }
+
+    @Test
     fun `GIVEN FirSourceLocation WHEN converting to display string THEN formats correctly`() =
         runTest {
             // GIVEN
@@ -782,4 +818,13 @@ class FirFakeMetadataTest {
             // THEN
             assertEquals(FirCallHistoryMode.DEFAULT, metadata.callHistoryMode)
         }
+
+    private fun locationAt(path: String) =
+        FirSourceLocation(
+            filePath = path,
+            startLine = 1,
+            startColumn = 0,
+            endLine = 1,
+            endColumn = 1,
+        )
 }

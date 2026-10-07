@@ -64,10 +64,11 @@ A pure function assigns every **main** source set exactly one owner:
 | shared, no metadata compilation (all targets JVM-typed) | synthetic K2JVM producer on a deterministic representative compilation |
 | shared native (`nativeMain`, `appleMain`) | Native driver (#152) |
 
-- `emitSourceSets` = the owned set.
-- `SourceSetContext` gets an explicit `sourceSet → outputDir` map. It replaces
-  `commonOutputDirectory` / `testCounterpartDirectory`, which does string rewrites of `/commonTest/`
-  and breaks on absolute paths.
+- The owned set is the key set of the route map (`SourceSetContext.outputDirectories`); empty
+  means the old behaviour (emit everything analysed).
+- `SourceSetContext.outputDirectories` is an explicit `sourceSet → outputDir` map. It replaced the
+  removed `emitSourceSets` / `commonOutputDirectory` fields (and the `testCounterpartDirectory`
+  string rewrites of `/commonTest/`, which break on absolute paths) on the FIR path.
 - Test wiring: the generated dir goes to the **lowest** matching `*Test` source set.
 - Why: #160 (no owner), #162 (intermediates routed SUPPRESS, consumers treat ancestors as
   analysis-only) and #163 (per-variant) are one class of bug. A pure function can be unit-tested

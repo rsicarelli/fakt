@@ -101,9 +101,11 @@ AFTER (single-JVM producer / KMP JVM-Android consumer):
       -Xcommon-sources under -Xmulti-platform: platform `actual`s must pair with their `expect`s
       (the frontend rejects the `actual` keyword outright otherwise, and ACTUAL_WITHOUT_EXPECT is
       an ERROR even under -Xmulti-platform), and platform @Fake signatures may reference common
-      types. Those ancestor declarations are ANALYSIS-ONLY: `SourceSetContext.emitSourceSets`
-      (execution-time field, same pattern as emitPhase) restricts the FIR emitter to the
-      consumer's own source set, so the common producer stays the sole owner of common fakes.
+      types. Those ancestor declarations are ANALYSIS-ONLY: the route map
+      `SourceSetContext.outputDirectories` (owned source set -> output dir; execution-time field,
+      same pattern as emitPhase) restricts the FIR emitter to the source sets the task owns, so
+      the common producer stays the sole owner of common fakes. An empty map keeps the old
+      behaviour (emit everything analysed).
 
 LEGACY (default, in-process — byte-for-byte untouched):
   compileKotlin* ──▶ FIR checkers ──▶ IR extension ──▶ .kt   (emitPhase defaults to IR)
@@ -281,13 +283,13 @@ branch is **deleted** (the producer no longer needs a JVM classpath):
 | Single-platform JVM `main` | REGISTER_PRODUCER | K2JVM, FIR-emit |
 | Single-platform JS/Wasm `main` | REGISTER_PRODUCER | K2JS, FIR-emit |
 | Single-platform non-drivable (Native) | LEGACY | in-process, IR |
-| **Single-target KMP** (JVM/JS/Wasm lone target) platform `main` (#153) | REGISTER_SINGLE_TARGET | one task: own source set as `sources`, ancestors as emitted `commonSources` (`-Xcommon-sources`); `commonOutputDirectory` routes common fakes to the canonical `commonTest` dir, platform fakes to the task dir |
+| **Single-target KMP** (JVM/JS/Wasm lone target) platform `main` (#153) | REGISTER_SINGLE_TARGET | one task: own source set as `sources`, ancestors as emitted `commonSources` (`-Xcommon-sources`); the route map routes common fakes to the canonical `commonTest` dir, platform fakes to the task dir |
 | **Single-target KMP** (JVM/JS/Wasm) legacy metadata `main` | SUPPRESS | — |
 | Any compilation of a **single-target Android/Native KMP** project | LEGACY | in-process, IR |
 | Any compilation of an **Android module without KGP** (AGP built-in Kotlin) | LEGACY | in-process, IR |
 | KMP `commonMain` (any target set, **incl. no JVM/Android target**) | REGISTER_PRODUCER | **KotlinMetadataCompiler**, FIR-emit |
 | KMP other `platformType == common` metadata compilations | SUPPRESS | — |
-| KMP JVM/Android platform `main` | REGISTER_CONSUMER | K2JVM, FIR-emit; ancestors ride as `-Xcommon-sources` analysis-only (`emitSourceSets` restricts emission to the platform source set) |
+| KMP JVM/Android platform `main` | REGISTER_CONSUMER | K2JVM, FIR-emit; ancestors ride as `-Xcommon-sources` analysis-only (the route map `outputDirectories` restricts emission to the platform source set) |
 | KMP JS/Wasm platform `main` (#151) | REGISTER_CONSUMER | K2JS (`-Xwasm -Xwasm-target=…` for Wasm) over platform klibs, klib output to `scratchDir`, FIR-emit; ancestors ride as `-Xcommon-sources` exactly like the JVM consumer |
 | KMP Native platform `main` | LEGACY_HYBRID | in-process, IR (ordered after producer) |
 
@@ -302,7 +304,7 @@ compilation — which carries `commonMain` as its default source set but resolve
 classpath, so `KotlinMetadataCompiler` cannot be driven over it. Since #153 the lone platform main
 owns both halves in **one** task (`REGISTER_SINGLE_TARGET`): its own source set goes in `sources`,
 the ancestors in `commonSources` (emitted, and marked `-Xcommon-sources` so `actual`s pair with
-their `expect`s), and the worker sets `SourceSetContext.commonOutputDirectory` so `CodeGenerator`
+their `expect`s), and the worker sets the route map `SourceSetContext.outputDirectories` so `CodeGenerator`
 writes the default source set's fakes to `generatedKotlinDir` (→ platform test source set) and every
 other source set's fakes to `commonGeneratedKotlinDir` — the canonical
 `generated/fakt/commonTest/kotlin` (→ `commonTest`), which the worker resets, clearing copies a

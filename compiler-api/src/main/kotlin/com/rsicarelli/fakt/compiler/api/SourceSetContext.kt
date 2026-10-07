@@ -43,18 +43,11 @@ import kotlinx.serialization.Serializable
  * @property metadataOutputPath Path to write FIR cache (producer mode: metadata compilation only)
  * @property metadataCachePath Path to read FIR cache (consumer mode: platform compilations)
  * @property emitPhase Compilation phase that writes generated fake sources (see [EmitPhase])
- * @property emitSourceSets Source sets whose `@Fake` declarations this compilation may emit. Empty
- *   (the default, omitted from serialized JSON) means "emit everything analyzed" — the legacy path
- *   and producer invocations. The cache-correct worker sets it at execution time for
- *   source-partitioned consumers that additionally feed ancestor sources (via `-Xcommon-sources`)
- *   for expect/actual and common-type resolution: those ancestor declarations are analysis-only,
- *   and emitting them would duplicate the common producer's output.
- * @property commonOutputDirectory Absolute path that receives the fakes of every source set other
- *   than [defaultSourceSet] (the common fragment), while [defaultSourceSet]'s own fakes go to
- *   [outputDirectory]. `null` (the default, omitted from serialized JSON) keeps the source-set-name
- *   routing derived from [commonTestOutputDirectory]. Set by the cache-correct worker for a
- *   single-target KMP project, where one compilation owns both the common and the platform fakes
- *   and each half must land in its own declared task output.
+ * @property outputDirectories Where each source set's fakes are written, keyed by the name of a
+ *   source set this compilation owns (for example `commonMain` or `jvmMain`) and valued with an
+ *   absolute directory. A source set that is not a key here is not owned: its fakes are not written
+ *   by this compilation. Empty (the default, omitted from serialized JSON) means "no routing": the
+ *   older behaviour applies: everything analysed is emitted into [outputDirectory].
  * @see SourceSetInfo
  */
 @Serializable
@@ -70,8 +63,7 @@ data class SourceSetContext(
     val metadataOutputPath: String? = null,
     val metadataCachePath: String? = null,
     val emitPhase: EmitPhase = EmitPhase.IR,
-    val emitSourceSets: List<String> = emptyList(),
-    val commonOutputDirectory: String? = null,
+    val outputDirectories: Map<String, String> = emptyMap(),
 ) {
     init {
         require(compilationName.isNotBlank()) { "compilationName cannot be blank" }

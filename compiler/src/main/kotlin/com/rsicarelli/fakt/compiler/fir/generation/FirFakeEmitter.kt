@@ -38,7 +38,11 @@ internal class FirFakeEmitter(private val sharedContext: FaktSharedContext) {
     fun emit(metadata: ValidatedFakeInterface) {
         val generator = codeGenerator ?: return missingContext(metadata.simpleName)
         val allowed =
-            shouldEmit(metadata.sourceSourceSet, metadata.simpleName) &&
+            shouldEmit(
+                metadata.sourceSourceSet,
+                metadata.simpleName,
+                metadata.sourceLocation.filePath,
+            ) &&
                 claimOutput(metadata.packageName, metadata.simpleName, metadata.qualifiedSourceName)
         if (allowed) {
             val decl =
@@ -54,7 +58,11 @@ internal class FirFakeEmitter(private val sharedContext: FaktSharedContext) {
     fun emit(metadata: ValidatedFakeClass) {
         val generator = codeGenerator ?: return missingContext(metadata.simpleName)
         val allowed =
-            shouldEmit(metadata.sourceSourceSet, metadata.simpleName) &&
+            shouldEmit(
+                metadata.sourceSourceSet,
+                metadata.simpleName,
+                metadata.sourceLocation.filePath,
+            ) &&
                 claimOutput(metadata.packageName, metadata.simpleName, metadata.qualifiedSourceName)
         if (allowed) {
             val decl =
@@ -67,20 +75,54 @@ internal class FirFakeEmitter(private val sharedContext: FaktSharedContext) {
     }
 
     /**
-     * A consumer invocation feeds ancestor sources (commonMain and intermediates) for expect/actual
-     * and common-type resolution only — the common producer already owns their fakes. When
-     * [com.rsicarelli.fakt.compiler.core.config.FaktOptions.emitSourceSets] restricts emission,
-     * skip declarations from other source sets. A `null` source set (non-standard layout) fails
-     * open and emits, preserving pre-restriction behavior.
+     * When [com.rsicarelli.fakt.compiler.core.config.FaktOptions.outputDirectories] is set, this
+     * compilation emits only the source sets it owns; a declaration with no source set uses the
+     * default source set, so it is skipped when that set is not owned. An empty map means "emit
+     * everything analysed".
      */
-    private fun shouldEmit(sourceSourceSet: String?, simpleName: String): Boolean {
-        val allowed = sharedContext.options.emitSourceSets
-        if (allowed.isEmpty() || sourceSourceSet == null || sourceSourceSet in allowed) return true
-        logger.debug(
-            "Skipping FIR emission for $simpleName: source set '$sourceSourceSet' is " +
-                "analysis-only in this invocation (emitting: $allowed)"
-        )
-        return false
+    private fun shouldEmit(
+        sourceSourceSet: String?,
+        simpleName: String,
+        filePath: String,
+    ): Boolean {
+        val options = sharedContext.options
+        val owned = options.outputDirectories.keys
+        val emit =
+            owned.isEmpty() ||
+                (sourceSourceSet ?: options.sourceSetContext?.defaultSourceSet?.name) in owned
+        if (!emit) {
+            reportSkip(sourceSourceSet, simpleName, filePath, owned)
+        }
+        return emit
+    }
+
+    /**
+     * A skip because the declaration belongs to a known source set that another task owns is normal
+     * (analysis-only ancestors). A skip because the source set is unknown or unreadable drops the
+     * fake for good, so it is a warning.
+     */
+    private fun reportSkip(
+        sourceSourceSet: String?,
+        simpleName: String,
+        filePath: String,
+        owned: Set<String>,
+    ) {
+        val known =
+            sharedContext.options.sourceSetContext?.allSourceSets.orEmpty().map { it.name }.toSet()
+        if (sourceSourceSet != null && sourceSourceSet in known) {
+            logger.debug(
+                "Skipping FIR emission for $simpleName: source set '$sourceSourceSet' is " +
+                    "analysis-only in this invocation (emitting: $owned)"
+            )
+        } else {
+            logger.warn(
+                "[FAKT] No fake was generated for $simpleName ($filePath): Fakt cannot tell " +
+                    "which source set it belongs to (found: ${sourceSourceSet ?: "none"}). " +
+                    "This compilation owns: $owned. " +
+                    "Keep the sources under src/<sourceSet>/kotlin so Fakt can tell which " +
+                    "source set they belong to."
+            )
+        }
     }
 
     private fun claimOutput(

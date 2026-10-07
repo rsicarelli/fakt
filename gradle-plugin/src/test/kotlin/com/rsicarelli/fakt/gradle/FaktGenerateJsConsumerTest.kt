@@ -182,6 +182,7 @@ class FaktGenerateJsConsumerTest {
                 listOf(platformSourceSet, SourceSetInfo("commonMain", parents = emptyList())),
             outputDirectory = "fakt://generated",
             commonTestOutputDirectory = "fakt://generated",
+            outputDirectories = mapOf(platformSourceSet.name to "fakt://generated"),
         )
     }
 

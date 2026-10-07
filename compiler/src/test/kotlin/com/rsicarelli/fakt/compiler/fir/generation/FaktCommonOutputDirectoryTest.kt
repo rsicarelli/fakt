@@ -14,9 +14,8 @@ import org.junit.jupiter.api.TestInstance
 
 /**
  * Proves the explicit output routing behind a single-target KMP project (issue #153): when
- * [com.rsicarelli.fakt.compiler.api.SourceSetContext.commonOutputDirectory] is set, fakes declared
- * in the compilation's default source set (`jvmMain`) land in `outputDirectory`, while fakes from
- * every other source set (the common fragment, `commonMain`) land in `commonOutputDirectory`. The
+ * [com.rsicarelli.fakt.compiler.api.SourceSetContext.outputDirectories] routes `jvmMain` and
+ * `commonMain` to different directories, each source set's fakes land in its own directory. The
  * Gradle plugin wires those two directories into `jvmTest` and `commonTest` respectively.
  *
  * Fixtures are written under real `src/<sourceSet>/kotlin/` paths because the emitter derives a
@@ -26,7 +25,7 @@ import org.junit.jupiter.api.TestInstance
 class FaktCommonOutputDirectoryTest {
 
     @Test
-    fun `GIVEN commonOutputDirectory WHEN compiling common and platform fakes THEN each lands in its own directory`() {
+    fun `GIVEN a route per source set WHEN compiling common and platform fakes THEN each lands in its own directory`() {
         // Given
         val base = Files.createTempDirectory("fakt-common-output").toFile()
         val platformDir = File(base, "out/jvmTest/kotlin")
@@ -70,19 +69,22 @@ class FaktCommonOutputDirectoryTest {
                     emitPhase = EmitPhase.FIR,
                     outputDir = platformDir,
                     defaultSourceSetName = "jvmMain",
-                    commonOutputDir = commonDir,
+                    outputDirectories =
+                        mapOf(
+                            "jvmMain" to platformDir.absolutePath,
+                            "commonMain" to commonDir.absolutePath,
+                        ),
                 )
 
             // Then
             assertEquals(KotlinCompilation.ExitCode.OK, outcome.exitCode, outcome.messages)
             assertTrue(
                 generatedNames(platformDir) == setOf("FakeJvmClockImpl.kt"),
-                "the default source set's fake belongs in outputDirectory; got " +
-                    generatedNames(platformDir),
+                "jvmMain's fake belongs in its routed directory; got " + generatedNames(platformDir),
             )
             assertTrue(
                 generatedNames(commonDir) == setOf("FakeCommonRepositoryImpl.kt"),
-                "common-fragment fakes belong in commonOutputDirectory; got " +
+                "commonMain fakes belong in their routed directory; got " +
                     generatedNames(commonDir),
             )
         } finally {
@@ -91,7 +93,7 @@ class FaktCommonOutputDirectoryTest {
     }
 
     @Test
-    fun `GIVEN no commonOutputDirectory WHEN compiling a default source set fake THEN it lands in outputDirectory`() {
+    fun `GIVEN no routes WHEN compiling a default source set fake THEN it lands in outputDirectory`() {
         // Given
         val base = Files.createTempDirectory("fakt-common-output-default").toFile()
         val outputDir = File(base, "out/jvm/main/kotlin")
@@ -121,7 +123,7 @@ class FaktCommonOutputDirectoryTest {
                     defaultSourceSetName = "jvmMain",
                 )
 
-            // Then — unchanged routing: without a commonOutputDirectory nothing is split.
+            // Then — unchanged routing: without routes nothing is split.
             assertEquals(KotlinCompilation.ExitCode.OK, outcome.exitCode, outcome.messages)
             assertEquals(setOf("FakeJvmClockImpl.kt"), generatedNames(outputDir))
         } finally {

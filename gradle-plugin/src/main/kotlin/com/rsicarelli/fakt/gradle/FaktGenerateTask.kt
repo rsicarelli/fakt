@@ -76,7 +76,7 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
      * consumer for **analysis only**: they let the K2JVM frontend pair `actual` declarations with
      * their `expect`s (via `-Xcommon-sources`) and resolve common types referenced from platform
      * `@Fake` signatures. Their own `@Fake` declarations never emit here — the common producer owns
-     * those (`SourceSetContext.emitSourceSets` restricts the FIR emitter). Empty for producers.
+     * those (the context's `outputDirectories` restrict the FIR emitter). Empty for producers.
      */
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -99,6 +99,19 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
     @get:SkipWhenEmpty
     @get:IgnoreEmptyDirectories
     public abstract val commonSources: ConfigurableFileCollection
+
+    /**
+     * Sources of the representative platform, analysed so its `actual`s pair with the common
+     * `expect`s; its fakes are NOT emitted (it does not own them). They are passed as ordinary
+     * sources, not as `-Xcommon-sources`.
+     *
+     * Deliberately not `@SkipWhenEmpty`: a task with no [commonSources] must still be skipped, and
+     * these files alone must never make it run.
+     */
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:IgnoreEmptyDirectories
+    public abstract val platformAnalysisOnlySources: ConfigurableFileCollection
 
     /**
      * Klib dependencies for klib-based compilations — the compilation's own
@@ -240,6 +253,7 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
             params.sources.from(sources)
             params.analysisOnlySources.from(analysisOnlySources)
             params.commonSources.from(commonSources)
+            params.platformAnalysisOnlySources.from(platformAnalysisOnlySources)
             params.compileClasspath.from(compileClasspath)
             params.commonKlibClasspath.from(commonKlibClasspath)
             params.faktCompilerClasspath.from(faktCompilerClasspath)

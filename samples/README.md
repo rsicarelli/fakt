@@ -84,6 +84,18 @@ start multiplatform-ready:
 
 **Source Set Targets**: `commonMain` → `commonTest`, `jvmMain` → `jvmTest`
 
+### 🧩 **kmp-all-jvm**
+A KMP module where **every** target is a JVM target (`jvm("desktop")` + `jvm("server")`):
+- **No `commonMain` compilation**: Kotlin gives all-JVM projects none, so Fakt adds a synthetic
+  common producer (`faktGenerateCommonMain`) next to `faktGenerateDesktopMain` and `faktGenerateServerMain`
+- **Split outputs**: `commonMain` fakes → `commonTest`, `desktopMain` → `desktopTest`, `serverMain` → `serverTest`
+- **expect/actual**: `platformName()` has one `actual` per target
+- **Cache-correct**: all three producers restore FROM-CACHE
+
+**Source Set Targets**: `commonMain` → `commonTest`, `desktopMain` → `desktopTest`, `serverMain` → `serverTest`
+
+**Run**: `make test-kmp-all-jvm`
+
 ### 🔌 **compiler-interop**
 A JVM module and a KMP module (`jvm()` + `js { nodejs() }`, no Native) whose **main code only
 compiles with options the build sets on the Kotlin compilation**. Fakt generates the fakes in its own

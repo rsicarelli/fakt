@@ -50,8 +50,8 @@ internal object FaktGenerateTaskWiring {
      * source set ([KotlinCompilation.defaultSourceSet]); ancestor sources (commonMain and
      * intermediates) ride along as `analysisOnlySources` so the frontend can pair `actual`
      * declarations with their `expect`s and resolve common types in platform `@Fake` signatures —
-     * their own fakes stay owned by the common producer (`SourceSetContext.emitSourceSets`
-     * restricts emission), so nothing is emitted twice and the task stays fully cache-correct.
+     * their own fakes stay owned by the common producer (the context's route map restricts
+     * emission), so nothing is emitted twice and the task stays fully cache-correct.
      */
     fun registerConsumer(
         project: Project,
@@ -74,40 +74,38 @@ internal object FaktGenerateTaskWiring {
         extension: FaktPluginExtension,
     ) = register(project, kotlinCompilation, extension, TaskShape.SINGLE_TARGET)
 
+    /**
+     * Registers the synthetic common producer (issue #160): when every KMP target is JVM-typed KGP
+     * builds no `commonMain` metadata compilation, so one task, driven by the representative
+     * target's [kotlinCompilation], owns the `commonMain` fakes. See [SyntheticProducerWiring].
+     */
+    fun registerSyntheticProducer(
+        project: Project,
+        kotlinCompilation: KotlinCompilation<*>,
+        extension: FaktPluginExtension,
+    ) = register(project, kotlinCompilation, extension, TaskShape.SYNTHETIC)
+
     private fun register(
         project: Project,
         kotlinCompilation: KotlinCompilation<*>,
         extension: FaktPluginExtension,
         shape: TaskShape,
     ) {
-        val targetName =
-            kotlinCompilation.target.targetName.ifBlank {
-                kotlinCompilation.target.platformType.name.lowercase()
-            }
+        val layout = taskLayoutFor(kotlinCompilation, shape)
+        val taskName = layout.taskName
         val compilationName = kotlinCompilation.name
-        val taskName = taskNameFor(targetName, compilationName)
         if (project.tasks.findByName(taskName) != null) return
 
         // applyToCompilation fires before afterEvaluate, so the configurations may not exist yet
         // by the time we land here. Idempotent helper makes the call safe to repeat.
         getSubpluginInstance(project).ensureFaktConfigurations(project)
 
-        // A KMP `commonMain` producer writes to the canonical `commonTest` directory so the
-        // in-process plugin riding a non-drivable platform compilation (Native) finds the
-        // common fakes there and dedup-skips them, generating only its own platform-specific fakes
-        // —
-        // no `Redeclaration` in shared test sets. Every other compilation keeps a per-compilation
-        // directory.
-        val generatedKotlinPath =
-            if (kotlinCompilation.defaultSourceSet.name == "commonMain") {
-                CANONICAL_COMMON_TEST_DIR
-            } else {
-                "generated/fakt/$targetName/$compilationName/kotlin"
-            }
-        val outputDir = project.layout.buildDirectory.dir(generatedKotlinPath)
-        val scratchDir =
-            project.layout.buildDirectory.dir("faktCaches/$targetName/$compilationName")
-        val placeholderJson = encodePlaceholderContext(kotlinCompilation)
+        val outputDir = project.layout.buildDirectory.dir(layout.outputPath)
+        val scratchDir = project.layout.buildDirectory.dir(layout.scratchPath)
+        // Read when the input resolves, not now: the route map names source sets, and KGP's
+        // `dependsOn` edges are not final while the compilation is still being applied.
+        val placeholderJson =
+            project.provider { encodePlaceholderContext(kotlinCompilation, shape) }
         val workerClasspath = project.configurations.named(FaktGradleSubplugin.WORKER_CONFIGURATION)
         val compilerClasspath =
             project.configurations.named(FaktGradleSubplugin.COMPILER_CLASSPATH_CONFIGURATION)
@@ -115,7 +113,12 @@ internal object FaktGenerateTaskWiring {
 
         val taskProvider =
             project.tasks.register(taskName, FaktGenerateTask::class.java) { task ->
-                configureSources(task, kotlinCompilation, shape, extension.enabled)
+                configureSources(
+                    task,
+                    kotlinCompilation,
+                    shape,
+                    sourceGate(project, shape, extension),
+                )
                 if (shape == TaskShape.SINGLE_TARGET) {
                     task.commonGeneratedKotlinDir.set(commonOutputDir)
                 }
@@ -138,7 +141,11 @@ internal object FaktGenerateTaskWiring {
         if (shape == TaskShape.PRODUCER && AndroidVariantSources.usesBuiltInKotlin(project)) {
             AndroidVariantSources.feed(project, compilationName, taskProvider)
         }
-        wireGeneratedDirConsumers(project, kotlinCompilation, extension, taskProvider)
+        if (shape == TaskShape.SYNTHETIC) {
+            wireSyntheticCommonTest(project, taskProvider)
+        } else {
+            wireGeneratedDirConsumers(project, kotlinCompilation, extension, taskProvider)
+        }
         if (shape == TaskShape.SINGLE_TARGET) {
             wireSingleTargetCommonDir(project, taskProvider)
         }
@@ -229,7 +236,10 @@ internal object FaktGenerateTaskWiring {
     private fun getSubpluginInstance(project: Project): FaktGradleSubplugin =
         project.plugins.getPlugin(FaktGradleSubplugin::class.java)
 
-    private fun encodePlaceholderContext(kotlinCompilation: KotlinCompilation<*>): String {
+    private fun encodePlaceholderContext(
+        kotlinCompilation: KotlinCompilation<*>,
+        shape: TaskShape,
+    ): String {
         // `useTestFixtures` is intentionally left at its default here. In `buildContext` it only
         // affects `outputDirectory`, which the `.copy` below replaces with a placeholder and the
         // worker later overwrites with the task's real `generatedKotlinDir`. It changes nothing
@@ -247,6 +257,7 @@ internal object FaktGenerateTaskWiring {
                     metadataOutputPath = null,
                     metadataCachePath = null,
                 )
+                .let { it.copy(outputDirectories = outputRouteTokens(it, shape)) }
         val json = Json { prettyPrint = false }
         return json.encodeToString(SourceSetContext.serializer(), context)
     }
@@ -276,7 +287,7 @@ internal object FaktGenerateTaskWiring {
  * Safe under Gradle 9 Project Isolation: no `afterEvaluate` and no task-graph reads — the match is
  * lazy and `configureEach` only runs for lint tasks that are actually realized.
  */
-private fun wireAndroidLintOrdering(
+internal fun wireAndroidLintOrdering(
     project: Project,
     taskProvider: TaskProvider<FaktGenerateTask>,
 ) {
@@ -295,20 +306,21 @@ internal fun isAgpLintAnalysisTask(taskName: String): Boolean =
     taskName.startsWith("lintAnalyze") || taskName.startsWith("lintVitalAnalyze")
 
 /** Build-dir-relative canonical `commonTest` output, shared by the common producers. */
-private const val CANONICAL_COMMON_TEST_DIR: String = "generated/fakt/commonTest/kotlin"
+internal const val CANONICAL_COMMON_TEST_DIR: String = "generated/fakt/commonTest/kotlin"
 
 /**
- * Project extra property naming the single-target `FaktGenerateTask` that owns the canonical
- * `commonTest` directory. `SourceSetConfigurator` reads it to skip its own plain registration of
- * that directory, which would otherwise expose stale in-process copies without a task dependency.
+ * Project extra property naming the `FaktGenerateTask` (single-target or synthetic common producer)
+ * that owns the canonical `commonTest` directory. `SourceSetConfigurator` reads it to skip its own
+ * plain registration of that directory, which would otherwise expose stale in-process copies
+ * without a task dependency.
  */
-internal const val SINGLE_TARGET_PRODUCER_PROPERTY: String = "fakt.singleTargetProducer"
+internal const val COMMON_TEST_OWNER_PROPERTY: String = "fakt.commonTestOwner"
 
 /**
  * How a `FaktGenerateTask` partitions its compilation's sources (see the `register*` functions of
  * [FaktGenerateTaskWiring]).
  */
-private enum class TaskShape {
+internal enum class TaskShape {
     /** Every source set analysed and emitted (KMP `commonMain`, single-platform JVM `main`). */
     PRODUCER,
 
@@ -317,6 +329,9 @@ private enum class TaskShape {
 
     /** Own source set and ancestors both emitted, each into its own output (single-target KMP). */
     SINGLE_TARGET,
+
+    /** Only `commonMain` emitted; the representative platform is analysed (all-JVM KMP). */
+    SYNTHETIC,
 }
 
 /**
@@ -344,6 +359,7 @@ private fun configureSources(
             task.sources.from(enabled.gate(own))
             task.commonSources.from(enabled.gate(ancestors.map { it.kotlin }))
         }
+        TaskShape.SYNTHETIC -> configureSyntheticSources(task, kotlinCompilation, enabled)
     }
 }
 
@@ -352,20 +368,20 @@ private fun configureSources(
  * `@SkipWhenEmpty` report `NO-SOURCE`, and Gradle then deletes the stale outputs — which `onlyIf`
  * would leave in place.
  */
-private fun Provider<Boolean>.gate(files: Any): Provider<Any> = map { isEnabled ->
+internal fun Provider<Boolean>.gate(files: Any): Provider<Any> = map { isEnabled ->
     if (isEnabled) files else emptyList<File>()
 }
 
 /**
  * Wires a single-target task's `commonGeneratedKotlinDir` into `commonTest` (lazy, so Gradle infers
  * the task dependency) and records the task as the owner of the canonical `commonTest` directory
- * ([SINGLE_TARGET_PRODUCER_PROPERTY]).
+ * ([COMMON_TEST_OWNER_PROPERTY]).
  */
 private fun wireSingleTargetCommonDir(
     project: Project,
     taskProvider: TaskProvider<FaktGenerateTask>,
 ) {
-    project.extensions.extraProperties.set(SINGLE_TARGET_PRODUCER_PROPERTY, taskProvider.name)
+    project.extensions.extraProperties.set(COMMON_TEST_OWNER_PROPERTY, taskProvider.name)
     project.extensions
         .findByType(KotlinMultiplatformExtension::class.java)
         ?.sourceSets
@@ -382,7 +398,10 @@ private fun wireSingleTargetCommonDir(
  * feed their jar dependencies to the K2JVM driver through `compileClasspath`, Android ones plus the
  * SDK boot classpath.
  */
-private fun configureDependencies(task: FaktGenerateTask, kotlinCompilation: KotlinCompilation<*>) {
+internal fun configureDependencies(
+    task: FaktGenerateTask,
+    kotlinCompilation: KotlinCompilation<*>,
+) {
     val platformType = kotlinCompilation.target.platformType.name.lowercase()
     val isKlibBased =
         kotlinCompilation.defaultSourceSet.name == "commonMain" ||
@@ -404,7 +423,7 @@ private fun configureDependencies(task: FaktGenerateTask, kotlinCompilation: Kot
     if (needsBootClasspath) AndroidIntegration.addBootClasspath(task, kotlinCompilation.project)
 }
 
-private fun taskNameFor(targetName: String, compilationName: String): String =
+internal fun taskNameFor(targetName: String, compilationName: String): String =
     "faktGenerate" + capitalizeAscii(targetName) + capitalizeAscii(compilationName)
 
 /**
