@@ -281,6 +281,12 @@ jobs:
             cached-fakes: FakeUserRepositoryImpl FakeWindowManagerImpl FakeRequestLogImpl FakeSessionStoreImpl
             # This sample needs no plugin the worker lacks: any tolerated error is a real problem.
             forbid-tolerated: "1"
+          # Extra Android build types whose names contain another variant's name (#164b): one producer
+          # per variant. Task names follow taskLayoutFor (empty KGP target name -> "androidjvm").
+          - sample: android-single-module
+            path: samples/android-single-module
+            producers: faktGenerateAndroidjvmDebug faktGenerateAndroidjvmDebugMinified faktGenerateAndroidjvmRelease faktGenerateAndroidjvmPreRelease
+            cached-fakes: FakeUserRepositoryImpl FakeAppInfoProviderImpl FakeAuthenticationServiceImpl FakePropertyAndMethodInterfaceImpl
           # AGP 9 built-in Kotlin (#154): the KGP source sets are empty, so the debug producer reads
           # its sources from AGP's variant API. Includes an android.content.Context-typed fake (#158).
           - sample: compat-agp-9.0
@@ -365,7 +371,12 @@ jobs:
           # desktopAndServerMain producer's (#162), must also survive a clean.
           - sample: kmp-all-jvm
             path: samples/kmp-all-jvm
-            tasks: desktopTest serverTest cliTest
+            tasks: desktopTest serverTest cliTest serverIntegrationTest
+          # Each build type's fakes reach only that variant's unit tests: debugMinified and preRelease
+          # used to redeclare the debug/release fakes (#164b).
+          - sample: android-single-module
+            path: samples/android-single-module
+            tasks: testDebugMinifiedUnitTest testPreReleaseUnitTest
           # The in-process opt-out, which is where #142 was reported. Generation rides
           # compileKotlin*, so that task must stay out of the build cache or the fakes never land.
           - sample: jvm-test-fixtures-in-process
