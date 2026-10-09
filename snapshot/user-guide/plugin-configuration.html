@@ -1882,6 +1882,22 @@ in-process plugin and are not cache-correct yet<br />
   are not generated. Declare the hierarchy in the <code>kotlin { sourceSets { } }</code> block.</li>
 </ul>
 </div>
+<div class="admonition tip">
+<p class="admonition-title">Custom test compilations and Android build types</p>
+<p>Generated fakes reach a test compilation <strong>by association</strong>: a custom test compilation, such<br />
+as <code>compilations.create("integrationTest")</code> on a JVM target, receives the fakes of the platform<br />
+compilation it is associated with (the target&rsquo;s own source sets). This includes associations<br />
+made after evaluation, for example<br />
+<code>afterEvaluate { integrationTest.associateWith(compilations.getByName("main")) }</code>.<br />
+<code>samples/kmp-all-jvm</code> has such a <code>serverIntegrationTest</code>.</p>
+<p>Fakes of an intermediate source set are wired when its producer is registered, so an<br />
+association made later does not receive them. Fakes of <code>commonMain</code> reach only <code>commonTest</code>; a<br />
+custom compilation sees them only if its source set depends on <code>commonTest</code>.</p>
+<p>On Android, each build type or flavour&rsquo;s fakes reach only that variant&rsquo;s tests. A build type<br />
+whose name contains another&rsquo;s, such as <code>debugMinified</code> next to <code>debug</code>, gets its own fakes in<br />
+<code>testDebugMinifiedUnitTest</code> and never the ones of <code>debug</code>. <code>samples/android-single-module</code><br />
+declares <code>debugMinified</code> and <code>preRelease</code> to prove it.</p>
+</div>
 <div class="admonition note">
 <p class="admonition-title">Project shapes that keep the in-process path</p>
 <p>A few shapes fall back to generating inside <code>compileKotlin*</code>. Fakes are still generated for<br />
