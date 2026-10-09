@@ -41,11 +41,24 @@ build-logic uses. Every AGP symbol referenced must exist in the floor. Behaviour
 has is reached through `android/AndroidIntegration`. Runtime proof:
 `samples/compat-agp/agp-{8.11,8.12,9.0,9.4}`.
 
-### 3.2 KMP `androidTarget()` stays in-process until #163
+### 3.2 KMP `androidTarget()` is generated per variant (#163)
 
-It is compiled per variant (`debug`/`release`), so a single producer is wrong. It is routed `LEGACY`
-via `unreadableSourcesReason`. There is a pre-existing bug even in-process: `androidMain` fakes land
-in `generated/fakt/androidTest` and never reach `androidUnitTest`. #163 fixes both.
+Kotlin compiles `androidTarget()` per Android variant (`debug`, `release`, flavors), so one producer
+is wrong. Each variant compilation gets its own producer (`faktGenerateAndroidDebug`,
+`faktGenerateAndroidFreeDebug`, ...) that analyses the variant's member source sets
+(`[default set, androidMain, flavor, build type]`) and emits the `androidMain` fakes into that
+variant's own output directory, so a type declared only in `androidDebug`/`androidRelease` can appear
+in an `androidMain` fake. Unit and instrumented test compilations receive the fakes of the variant
+they are associated with; the shared `androidUnitTest`/`androidInstrumentedTest` sets get no
+directory. In single-target Android there is no `commonMain` metadata compilation: a synthetic
+`faktGenerateCommonMain` on the debug-preferred variant emits it into `commonTest`.
+The in-process legacy path used to put `androidMain` fakes in `generated/fakt/androidTest`, where
+`androidUnitTest` never saw them; that only remains with `fakt.useExperimentalGenerateTask=false`
+(removed in 1.0). `com.android.kotlin.multiplatform.library` reports platform type `jvm`, was already
+on the task path and is untouched. Proof: `samples/kmp-android-target` (CI sample, cache and
+clean-rebuild cells). Known limit: Android `compileDependencyFiles` contain `.aar` files, so a
+`@Fake` signature using an AAR type can stay unresolved (R4; the sample uses only
+`android.content.Context`).
 
 ### 3.3 One PR per issue
 
@@ -92,8 +105,14 @@ A pure function assigns every **main** source set exactly one owner:
     so a custom compilation without "test" in its name that is associated late is main in early
     reads and test-like later (rare).
   - Known limit: intermediate-producer leaf wiring is still eager (D4).
-  - Proofs: `samples/kmp-all-jvm` (`serverIntegrationTest`, associated late), and
-    `samples/android-single-module` (`debugMinified`, `preRelease`; CI only).
+  - Member sets (#163): an Android variant owns every source set of its compilation (`androidMain`,
+    flavor and build-type sets included), each emitted into that variant's own directory only. No
+    per-variant directory goes into `androidUnitTest`, `androidInstrumentedTest` or `commonTest`.
+    Associations, `dependsOn` edges and the metadata `commonMain` compilation do not exist yet at the
+    first `applyToCompilation` of an Android variant, so they are read lazily (inside a Callable).
+  - Proofs: `samples/kmp-all-jvm` (`serverIntegrationTest`, associated late),
+    `samples/android-single-module` (`debugMinified`, `preRelease`) and
+    `samples/kmp-android-target` (variants, flavors, single target).
 - Ownership covers intermediate source sets too (#162, done for `webMain` and all-JVM
   intermediates). When the analysed source sets have an intermediate level the worker passes
   `-Xfragments` / `-Xfragment-sources` / `-Xfragment-refines` instead of lumping everything into
@@ -217,12 +236,13 @@ FAKT_CACHED_FAKES="FakeXImpl ..." ./.github/scripts/cache-correctness-check.sh s
 ```
 
 Make equivalents: `make publish-local`, `make validate`, `make test-kmp-single-target`,
-`make test-compat-agp-9.4`, `make test-clean-rebuild-cache`, `make test-kmp-android-lint`.
+`make test-compat-agp-9.4`, `make test-clean-rebuild-cache`, `make test-kmp-android-lint`, `make test-kmp-android-target`.
 
 ## 7. Gotchas
 
 - **Own wrappers:** `samples/compat-agp/agp-*` and `samples/kmp-android-lint` pin their own Gradle.
-  `cd` into them instead of using root `./gradlew -p`.
+  `cd` into them instead of using root `./gradlew -p`. `samples/kmp-android-target` has no wrapper:
+  AGP 8.11.1 works under the root Gradle, so it runs as `./gradlew -p samples/kmp-android-target`.
 - **ProjectBuilderWarmUp:** gradle-plugin tests run in parallel.
   - `ProjectBuilderImpl`'s static initializer races SLF4J and poisons the class, so later tests fail
     with `NoClassDefFoundError`.
@@ -247,9 +267,21 @@ Make equivalents: `make publish-local`, `make validate`, `make test-kmp-single-t
 
 ## 8. Sandbox and CI facts
 
-- **No Android SDK** in the cloud sandbox: every Android cell (`android-single-module`,
-  `android-test-fixtures`, compat-agp) runs only in CI. A new Android task name is confirmed by
-  the first CI log, not locally.
+- **No Android SDK** in the cloud sandbox: the real Android cells (`android-single-module`,
+  `android-test-fixtures`, compat-agp) run only in CI, and a new Android task name is confirmed by
+  the first CI log. A fake SDK is enough for `faktGenerate*`, Kotlin compilation and
+  `test*UnitTest` locally (not resource linking, lint or dexing). Rebuild one in five steps:
+  1. `platforms/android-35/android.jar`: a jar `javac` builds from stubs of `android.content.Context`
+     and `android.R$attr` (`R$attr` is mandatory, or AGP fails with "Missing attr resources"), plus
+     `source.properties` and an empty `data/` next to it.
+  2. `build-tools/{34,35,36}.0.0/` with `source.properties`, empty stub executables (`aapt`, `aapt2`,
+     `aidl`, `dx`, `dexdump`, `zipalign`), `core-lambda-stubs.jar` and valid empty
+     `lib/{dx,d8,apksigner}.jar`; without them AGP reports "Build Tools corrupted".
+  3. `platform-tools/source.properties`.
+  4. Point `sdk.dir` at the directory in an uncommitted `local.properties` (it is gitignored), or set
+     `ANDROID_HOME`.
+  5. Keep `compileOptions` out of the module: with Java 11 AGP wants `core-for-system-modules.jar`,
+     which this SDK lacks. Skip `processDebugAndroidTestResources` (stub `aapt2` cannot link).
 - **No npm:** JS/Wasm browser tests are CI-only.
 - **The memory cgroup kills Gradle daemons.** Run TestKit classes in small groups with
   `--max-workers=2`, `./gradlew --stop` between groups, never two Gradle builds at once, and kill
