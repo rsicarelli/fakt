@@ -14,7 +14,8 @@ private const val COMMON_MAIN = "commonMain"
 /**
  * Reads the live KMP model into the plain [SourceSetGraph] that [assignSourceSetOwners] decides on.
  * - `targets`: every real target (never the metadata target), each with the default source set of
- *   its non-test compilations.
+ *   its non-test compilations, plus the other source sets those compilations list directly
+ *   (`androidMain` next to `androidDebug`).
  * - `parents`: the `dependsOn` edges of every source set, plus `commonMain` above every main source
  *   set, because KGP wires it even before the default hierarchy edges exist.
  * - `metadataCompilations`: the source sets KGP built a non-main metadata compilation for.
@@ -23,7 +24,7 @@ private const val COMMON_MAIN = "commonMain"
  */
 internal fun readSourceSetGraph(kmp: KotlinMultiplatformExtension): SourceSetGraph {
     val targets = kmp.targets.filter { it !is KotlinMetadataTarget }.map { it.toTargetNode() }
-    val mainSets = targets.flatMapTo(linkedSetOf()) { it.mainSourceSets }
+    val mainSets = targets.flatMapTo(linkedSetOf()) { it.mainSourceSets + it.memberSourceSets }
     val edges =
         kmp.sourceSets.associate { set -> set.name to set.dependsOn.map { it.name }.toSet() }
     val parents =
@@ -41,15 +42,18 @@ internal fun readSourceSetGraph(kmp: KotlinMultiplatformExtension): SourceSetGra
 }
 
 private fun KotlinTarget.toTargetNode(): TargetNode =
-    TargetNode(
+    targetNodeOf(
         name = targetName,
         platformType = platformType.name.lowercase(),
         isAndroid = isAndroidTarget(),
-        mainSourceSets =
-            compilations
-                .filterNot { it.isTestCompilation() }
-                .map { it.defaultSourceSet.name }
-                .ifEmpty { listOf("${targetName}Main") },
+        compilations =
+            compilations.map { compilation ->
+                CompilationFacts(
+                    default = compilation.defaultSourceSet.name,
+                    members = compilation.kotlinSourceSets.map { it.name },
+                    isTest = compilation.isTestCompilation(),
+                )
+            },
     )
 
 /**

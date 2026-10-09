@@ -9,12 +9,16 @@ package com.rsicarelli.fakt.gradle
  * @property platformType Lowercased KGP platform type: `jvm`, `androidjvm`, `js`, `wasm`, `native`.
  * @property isAndroid True for an Android target.
  * @property mainSourceSets The default source set of every main (or variant) compilation.
+ * @property memberSourceSets The other source sets KGP adds directly to a main compilation next to
+ *   its default one (`androidMain`, a flavor or a build type set). They are not `dependsOn`
+ *   ancestors of the default set, so the closure must seed them explicitly.
  */
 internal data class TargetNode(
     val name: String,
     val platformType: String,
     val isAndroid: Boolean,
     val mainSourceSets: List<String>,
+    val memberSourceSets: List<String> = emptyList(),
 )
 
 /**
@@ -61,7 +65,8 @@ internal sealed interface SourceSetOwner {
 
 private const val NATIVE_TYPE = "native"
 private const val COMMON_MAIN = "commonMain"
-private val JVM_TYPES = setOf("jvm", "androidjvm")
+private const val ANDROID_JVM_TYPE = "androidjvm"
+private val JVM_TYPES = setOf("jvm", ANDROID_JVM_TYPE)
 
 /**
  * Decides the owner of every source set that at least one main compilation reaches.
@@ -78,7 +83,10 @@ private val JVM_TYPES = setOf("jvm", "androidjvm")
  * The function is pure: the same graph always gives the same owners, whatever the input order.
  */
 internal fun assignSourceSetOwners(graph: SourceSetGraph): Map<String, SourceSetOwner> {
-    val closures = graph.targets.associateWith { mainClosure(it.mainSourceSets, graph.parents) }
+    val closures =
+        graph.targets.associateWith {
+            mainClosure(it.mainSourceSets + it.memberSourceSets, graph.parents)
+        }
     val allSets = closures.values.flatten().toSortedSet()
     val built = mainClosure(graph.metadataCompilations, graph.parents)
     return allSets.associateWith { set ->
@@ -94,6 +102,7 @@ private fun ownerOf(
 ): SourceSetOwner {
     val types = compilers.map { it.platformType }.toSet()
     return when {
+        isSingleAndroidCommonMain(set, compilers) -> syntheticOwner(set, compilers)
         compilers.size == 1 -> SourceSetOwner.Platform(compilers.single().name)
         isJvmOnlyIntermediate(set, types) -> syntheticOwner(set, compilers)
         !metadataBuilt && !kgpCreatesMetadataCompilation(types, compilers.size) ->
@@ -111,12 +120,30 @@ private fun ownerOf(
 private fun isJvmOnlyIntermediate(set: String, types: Set<String>): Boolean =
     set != COMMON_MAIN && JVM_TYPES.containsAll(types)
 
+/**
+ * A lone `androidTarget()` compiles `commonMain` once per variant. One representative variant must
+ * generate it, or every variant would emit the same fakes into `commonTest`. The `jvm` platform
+ * type (the Android library plugin of KMP) has no variants and stays with the platform.
+ */
+private fun isSingleAndroidCommonMain(set: String, compilers: List<TargetNode>): Boolean =
+    set == COMMON_MAIN && compilers.singleOrNull()?.platformType == ANDROID_JVM_TYPE
+
+/**
+ * Picks the variant that compiles a synthetic source set: the first `...Debug` one by name, else
+ * the first by name. The order does not depend on the input list, so every build picks the same
+ * variant.
+ */
+internal fun representativeVariantSourceSet(mainSourceSets: List<String>): String =
+    mainSourceSets.sorted().let { sorted ->
+        sorted.firstOrNull { it.endsWith("Debug") } ?: sorted.min()
+    }
+
 private fun syntheticOwner(set: String, compilers: List<TargetNode>): SourceSetOwner.Synthetic {
     val representative = chooseRepresentative(compilers)
     return SourceSetOwner.Synthetic(
         sourceSet = set,
         target = representative.name,
-        compilationSourceSet = representative.mainSourceSets.min(),
+        compilationSourceSet = representativeVariantSourceSet(representative.mainSourceSets),
     )
 }
 
