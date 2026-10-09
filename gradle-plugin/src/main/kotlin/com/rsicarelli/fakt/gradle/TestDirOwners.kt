@@ -33,15 +33,15 @@ internal fun testDirOwners(project: Project): TestDirOwners {
     return extra.get(TEST_DIR_OWNERS_PROPERTY) as TestDirOwners
 }
 
-/** Whether a Fakt task feeds [testSourceSet] with its generated directory. */
-internal fun isTestDirOwned(project: Project, testSourceSet: String): Boolean =
-    project.extensions.extraProperties.has(TEST_DIR_OWNERS_PROPERTY) &&
-        testSourceSet in testDirOwners(project).bySourceSet
+/** The registry of [project] when a producer created it, else `null`; never creates it. */
+private fun existingTestDirOwners(project: Project): TestDirOwners? =
+    project.extensions.extraProperties
+        .takeIf { it.has(TEST_DIR_OWNERS_PROPERTY) }
+        ?.get(TEST_DIR_OWNERS_PROPERTY) as? TestDirOwners
 
 /** Whether [taskName] is a task Fakt itself registered through the registry. */
 internal fun isFaktTestDirOwner(project: Project, taskName: String): Boolean =
-    project.extensions.extraProperties.has(TEST_DIR_OWNERS_PROPERTY) &&
-        taskName in testDirOwners(project).tasks
+    existingTestDirOwners(project)?.tasks?.contains(taskName) == true
 
 /**
  * A non-metadata compilation as the owner query sees it: the name of its default source set and the
@@ -78,13 +78,14 @@ internal fun claimTestSourceSet(project: Project, testSet: String, task: String)
 /**
  * The task that owns [testSet], or `null` when none does: an explicit [TestDirOwners.bySourceSet]
  * claim first, otherwise the task of the first main compilation a non-metadata compilation with
- * that default source set is associated with. Associations are read on every call.
+ * that default source set is associated with. Associations are read on every call. Read only: a
+ * project without a registry has no owner and the registry is not created.
  */
-internal fun testDirOwnerOf(project: Project, testSet: String): String? {
-    val owners = testDirOwners(project)
-    return owners.bySourceSet[testSet]
-        ?: ownerByAssociation(testSet, associationNodes(project), owners.byMainCompilation)
-}
+internal fun testDirOwnerOf(project: Project, testSet: String): String? =
+    existingTestDirOwners(project)?.let { owners ->
+        owners.bySourceSet[testSet]
+            ?: ownerByAssociation(testSet, associationNodes(project), owners.byMainCompilation)
+    }
 
 /** Pure part of [testDirOwnerOf]: the association rule over already read [tests]. */
 internal fun ownerByAssociation(

@@ -8,6 +8,7 @@ import com.rsicarelli.fakt.gradle.helpers.getKotlinExtension
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import org.gradle.api.Project
+import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -125,5 +126,16 @@ class TestDirOwnersTest {
             mapOf("jvm/main" to "faktGenerateJvmMain"),
             testDirOwners(project).byMainCompilation,
         )
+    }
+
+    @Test
+    fun `GIVEN a project without the registry WHEN querying the owner THEN the property stays absent`() {
+        val project = ProjectBuilder.builder().build()
+        assertEquals(false, project.extensions.extraProperties.has(TEST_DIR_OWNERS_PROPERTY))
+
+        val owner = testDirOwnerOf(project, "jvmTest")
+
+        assertNull(owner)
+        assertEquals(false, project.extensions.extraProperties.has(TEST_DIR_OWNERS_PROPERTY))
     }
 }
