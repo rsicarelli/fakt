@@ -475,19 +475,30 @@ so those fakes are still produced by the in-process plugin
     `testDebugMinifiedUnitTest` and never the ones of `debug`. `samples/android-single-module`
     declares `debugMinified` and `preRelease` to prove it.
 
+    In a multiplatform module that declares `androidTarget()`, the fakes of `androidMain` reach each
+    variant's unit and instrumented tests: every variant (`debug`, `release`, or `freeDebug` with
+    flavors) generates its own copy of the `androidMain` fakes into its own output directory, and
+    the shared `androidUnitTest` and `androidInstrumentedTest` source sets receive none. That is
+    what lets a type declared only in `androidDebug` or `androidRelease` (the same name with
+    different members per build type) appear in an `androidMain` fake's signature. When
+    `androidTarget()` is the only target, `commonMain` has no metadata compilation: its fakes reach
+    `commonTest` from `faktGenerateCommonMain`, which runs on the debug variant.
+    `samples/kmp-android-target` covers all three shapes.
+
+    Known limit: an Android compilation's classpath holds `.aar` files, which the generation
+    worker does not read yet. A `@Fake` signature that uses a type from an AAR dependency can stay
+    unresolved. Types from the Android SDK (`android.content.Context`) and from plain JAR
+    dependencies are fine.
+
 !!! note "Project shapes that keep the in-process path"
     A few shapes fall back to generating inside `compileKotlin*`. Fakes are still generated for
     every `@Fake` — they just aren't declared task outputs, so those modules' `compileKotlin*`
     tasks opt out of the Gradle build cache (see below). Fakt logs a warning naming the reason
     whenever a module lands here.
 
-    - **Single-target Android or Native multiplatform projects** (for example `kotlin {
-      androidTarget() }` or `kotlin { linuxX64() }` and nothing else). Adding a second target
-      moves the project onto the cache-correct path automatically.
-    - **Multiplatform projects that declare `androidTarget()` through `com.android.library` or
-      `com.android.application`.** Kotlin compiles those per Android variant (`debug`, `release`),
-      which Fakt can't drive from a task yet. The KMP Android library plugin
-      (`com.android.kotlin.multiplatform.library`) is on the cache-correct path.
+    - **Single-target Native multiplatform projects** (for example `kotlin { linuxX64() }` and
+      nothing else). Adding a second target moves the project onto the cache-correct path
+      automatically.
     - **Android modules on AGP's built-in Kotlin support whose Android Gradle Plugin isn't visible
       to Fakt** (for example, AGP only in a subproject's build script while Fakt is on the root
       build classpath). AGP 9's built-in Kotlin keeps sources in its variant model, which Fakt
