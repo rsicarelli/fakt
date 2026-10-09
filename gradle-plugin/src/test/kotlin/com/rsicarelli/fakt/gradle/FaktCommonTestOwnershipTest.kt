@@ -9,6 +9,7 @@ import com.rsicarelli.fakt.gradle.helpers.kmpCompilation
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.gradle.api.Project
+import org.gradle.api.file.SourceDirectorySet
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -24,15 +25,28 @@ class FaktCommonTestOwnershipTest {
     private fun Project.faktExtension(): FaktPluginExtension =
         extensions.getByType(FaktPluginExtension::class.java)
 
-    private fun Project.canonicalCommonTestDirs(): List<String> =
-        getKotlinExtension()
-            .sourceSets
-            .getByName("commonTest")
-            .kotlin
-            .sourceDirectories
-            .files
+    /**
+     * Every `commonTest` srcDir registration that resolves to the canonical task output directory.
+     * The public views (`srcDirs`, `srcDirTrees`, `sourceDirectories`) are sets and hide a repeated
+     * registration, so this reads the registrations Gradle keeps before de-duplication (the private
+     * `source` list of `DefaultSourceDirectorySet`; no public API exposes it).
+     */
+    private fun Project.canonicalCommonTestDirs(): List<String> {
+        val kotlin = getKotlinExtension().sourceSets.getByName("commonTest").kotlin
+        return registeredSrcDirs(kotlin)
+            .flatMap { files(it).files }
             .map { it.path }
             .filter { it.endsWith(CANONICAL_COMMON_TEST_DIR) }
+    }
+
+    private fun registeredSrcDirs(kotlin: SourceDirectorySet): List<*> {
+        var type: Class<*>? = kotlin.javaClass
+        while (type != null && type.declaredFields.none { it.name == "source" }) {
+            type = type.superclass
+        }
+        val field = checkNotNull(type) { "no `source` registrations on ${kotlin.javaClass}" }
+        return field.getDeclaredField("source").apply { isAccessible = true }.get(kotlin) as List<*>
+    }
 
     private fun Project.commonTestDeps(): List<String> =
         getKotlinExtension()
