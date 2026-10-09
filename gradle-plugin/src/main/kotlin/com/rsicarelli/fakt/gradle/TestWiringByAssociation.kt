@@ -3,6 +3,14 @@
 package com.rsicarelli.fakt.gradle
 
 import java.util.Locale
+import java.util.concurrent.Callable
+import org.gradle.api.Project
+import org.gradle.api.file.Directory
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.TaskProvider
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
+import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
 
 /** The kind of test-like Kotlin compile task a name denotes. */
 internal enum class TestCompileKind {
@@ -68,12 +76,21 @@ internal fun wiresTestCompile(
     val sameVariant = parsed?.variant.equals(producer, ignoreCase = true)
     return when {
         useTestFixtures -> parsed?.kind == TestCompileKind.FIXTURES && (producesMain || sameVariant)
-        parsed == null -> producesMain && associatedWith == null && isPlainTestTask(taskName)
-        parsed.kind == TestCompileKind.FIXTURES -> false
-        associatedWith != null -> producer in associatedWith
+        parsed?.kind == TestCompileKind.FIXTURES -> false
+        associatedWith != null ->
+            producer in associatedWith && !isProductionCompile(taskName, producer)
+        parsed == null -> producesMain && isPlainTestTask(taskName)
         else -> producesMain || sameVariant
     }
 }
+
+/** Whether [taskName] is the production compile of [producer] itself, which fakes never reach. */
+private fun isProductionCompile(taskName: String, producer: String): Boolean =
+    taskName.equals(
+        if (producer.equals(MAIN_VARIANT, ignoreCase = true)) "compileKotlin"
+        else "compile${producer.replaceFirstChar { it.uppercase(Locale.ROOT) }}Kotlin",
+        ignoreCase = true,
+    )
 
 /** Today's `main` rule for task names the parser does not know: a non-fixtures `*test*` task. */
 private fun isPlainTestTask(taskName: String): Boolean =
@@ -82,3 +99,96 @@ private fun isPlainTestTask(taskName: String): Boolean =
 /** Whether [taskName] is a `testFixtures` Kotlin compile task (legacy fixtures route). */
 internal fun isTestFixturesCompileTask(taskName: String): Boolean =
     taskName.contains("testfixtures", ignoreCase = true)
+
+/**
+ * Adds [taskProvider]'s generated directory to the tests of [compilation], decided by association
+ * and never by name. Lazy via the task provider, so Gradle infers `builtBy` and the test compile
+ * waits for the generator with no explicit `dependsOn`.
+ * - KMP `commonMain`: feeds `commonTest`.
+ * - KMP platform compilation: feeds the default source set of every compilation associated with it
+ *   ([wireKmpAssociatedTests]); the KMP Android library target's `androidMain` is tested by
+ *   `androidHostTest` / `androidDeviceTest`, not by a `<target>Test` name.
+ * - Non-KMP: feeds the compile tasks [wiresTestCompile] accepts ([wireCompileTasksByAssociation]).
+ */
+internal fun wireTestSrcDirByAssociation(
+    project: Project,
+    compilation: KotlinCompilation<*>,
+    taskProvider: TaskProvider<FaktGenerateTask>,
+    useTestFixtures: Boolean,
+) {
+    val kmp = project.extensions.findByType(KotlinMultiplatformExtension::class.java)
+    val generatedDir = taskProvider.flatMap { it.generatedKotlinDir }
+    when {
+        kmp == null ->
+            wireCompileTasksByAssociation(project, compilation, generatedDir, useTestFixtures)
+        compilation.defaultSourceSet.name == "commonMain" ->
+            kmp.sourceSets.findByName("commonTest")?.kotlin?.srcDir(generatedDir)
+        else -> wireKmpAssociatedTests(project, compilation, taskProvider.name, generatedDir)
+    }
+}
+
+/**
+ * Claims every test compilation associated with [main] for [taskName] in the registry, and gives
+ * each one's default source set the generated directory. The association is read inside a
+ * [Callable], when Gradle resolves the files or visits the dependencies, so one made after this
+ * call still counts; a [Callable] (never `project.provider {}`) keeps the task dependency.
+ */
+private fun wireKmpAssociatedTests(
+    project: Project,
+    main: KotlinCompilation<*>,
+    taskName: String,
+    generatedDir: Provider<Directory>,
+) {
+    claimAssociatedTests(project, compilationKey(main.target.name, main.name), taskName)
+    main.target.compilations.configureEach { candidate ->
+        if (candidate != main) {
+            candidate.defaultSourceSet.kotlin.srcDir(
+                project.files(
+                    Callable {
+                        if (main in candidate.associatedCompilations) generatedDir
+                        else emptyList<Any>()
+                    }
+                )
+            )
+        }
+    }
+}
+
+/**
+ * Sources [generatedDir] into every Kotlin compile task [wiresTestCompile] accepts for the producer
+ * [compilation]. A non-KMP target may register several producers (one per Android variant); each
+ * feeds only its own variant's tests, or the `testFixtures` compile in fixtures mode. The
+ * association of the task's compilation is read lazily, inside the [Callable].
+ */
+private fun wireCompileTasksByAssociation(
+    project: Project,
+    compilation: KotlinCompilation<*>,
+    generatedDir: Provider<Directory>,
+    useTestFixtures: Boolean,
+) {
+    project.tasks.withType(AbstractKotlinCompile::class.java).configureEach { compileTask ->
+        compileTask.source(
+            project.files(
+                Callable {
+                    val wired =
+                        wiresTestCompile(
+                            compileTask.name,
+                            compilation.name,
+                            associationsOf(compilation, compileTask.name),
+                            useTestFixtures,
+                        )
+                    if (wired) generatedDir else emptyList<Any>()
+                }
+            )
+        )
+    }
+}
+
+/** Names the compilation behind [taskName] is associated with, `null` when it has none. */
+private fun associationsOf(compilation: KotlinCompilation<*>, taskName: String): Set<String>? =
+    compilation.target.compilations
+        .firstOrNull { it.compileKotlinTaskName == taskName }
+        ?.associatedCompilations
+        ?.map { it.name }
+        ?.toSet()
+        ?.takeIf { it.isNotEmpty() }

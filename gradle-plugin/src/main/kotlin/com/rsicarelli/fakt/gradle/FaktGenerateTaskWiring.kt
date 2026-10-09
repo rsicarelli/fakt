@@ -15,7 +15,6 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.targets.js.KotlinWasmTargetType
 import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTarget
-import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
 
 /**
  * Registers a `FaktGenerateTask` for a single Kotlin compilation and wires its `@OutputDirectory`
@@ -171,7 +170,7 @@ internal object FaktGenerateTaskWiring {
         // applied (warns and falls back to `test` otherwise), matching the legacy path's semantics.
         val useTestFixtures =
             getSubpluginInstance(project).resolveTestFixturesMode(project, extension)
-        wireTestSrcDir(project, kotlinCompilation, taskProvider, useTestFixtures)
+        wireTestSrcDirByAssociation(project, kotlinCompilation, taskProvider, useTestFixtures)
         wireAndroidLintOrdering(project, taskProvider)
     }
 
@@ -197,47 +196,6 @@ internal object FaktGenerateTaskWiring {
             }
     }
 
-    /**
-     * Adds the task's `generatedKotlinDir` to the matching test source set as a Kotlin srcDir. Lazy
-     * via `TaskProvider` so Gradle infers `builtBy` and downstream `compileKotlin*Test` waits for
-     * the generator with no explicit `dependsOn`.
-     *
-     * In KMP the common producer feeds `commonTest`; a platform compilation feeds the default
-     * source set of every test compilation KGP associates with it. Association, not `<target>Test`
-     * naming, because not every target names its tests that way: the KMP Android library target's
-     * `androidMain` is tested by `androidHostTest` / `androidDeviceTest`.
-     */
-    private fun wireTestSrcDir(
-        project: Project,
-        kotlinCompilation: KotlinCompilation<*>,
-        taskProvider: TaskProvider<FaktGenerateTask>,
-        useTestFixtures: Boolean,
-    ) {
-        val kmp = project.extensions.findByType(KotlinMultiplatformExtension::class.java)
-        val generatedDirProvider = taskProvider.flatMap { it.generatedKotlinDir }
-        if (kmp != null) {
-            if (kotlinCompilation.defaultSourceSet.name == "commonMain") {
-                kmp.sourceSets.findByName("commonTest")?.kotlin?.srcDir(generatedDirProvider)
-            } else {
-                kotlinCompilation.target.compilations.configureEach { candidate ->
-                    if (kotlinCompilation in candidate.associatedCompilations) {
-                        candidate.defaultSourceSet.kotlin.srcDir(generatedDirProvider)
-                    }
-                }
-            }
-        } else {
-            // A non-KMP target may register several producers (one per Android variant). Each feeds
-            // only the compile tasks belonging to its own variant, and — under test-fixtures mode —
-            // only the `testFixtures` compilation. See [shouldWireGeneratedDir].
-            val compilationName = kotlinCompilation.name
-            project.tasks.withType(AbstractKotlinCompile::class.java).configureEach { compileTask ->
-                if (shouldWireGeneratedDir(compileTask.name, compilationName, useTestFixtures)) {
-                    compileTask.source(generatedDirProvider)
-                }
-            }
-        }
-    }
-
     /** Locate the [FaktGradleSubplugin] instance applied to [project] to call its helpers. */
     private fun getSubpluginInstance(project: Project): FaktGradleSubplugin =
         project.plugins.getPlugin(FaktGradleSubplugin::class.java)
@@ -251,7 +209,8 @@ internal object FaktGenerateTaskWiring {
         // affects `outputDirectory`, which the `.copy` below replaces with a placeholder and the
         // worker later overwrites with the task's real `generatedKotlinDir`. It changes nothing
         // else in the context, so test-fixtures routing is decided purely by which compile task
-        // sources the generated dir (see `wireTestSrcDir`), never by this serialized JSON.
+        // sources the generated dir (see `wireTestSrcDirByAssociation`), never by this serialized
+        // JSON.
         val context =
             SourceSetDiscovery.buildContext(
                     kotlinCompilation,
@@ -453,41 +412,6 @@ internal fun configureDependencies(
 
 internal fun taskNameFor(targetName: String, compilationName: String): String =
     "faktGenerate" + capitalizeAscii(targetName) + capitalizeAscii(compilationName)
-
-/**
- * Decides whether a non-KMP producer's generated-fakes directory should be sourced by a given
- * Kotlin compile task.
- *
- * A single Android target registers one producer per build variant (`debug`, `release`, …), each
- * writing the same fakes to its own directory. Feeding every producer into every `*Test` compile
- * task duplicates those top-level declarations and breaks overload resolution, so the match is
- * scoped to the producer's own variant. Test-fixtures mode narrows further: fakes belong to the
- * `testFixtures` compilation only (the `test` compilation reuses them through its implicit
- * `testFixtures` dependency).
- *
- * @param compileTaskName candidate `AbstractKotlinCompile` task name.
- * @param producingCompilationName compilation that registered the producer (`main`, `debug`, …).
- * @param useTestFixtures whether `useGradleTestFixtures` resolved to active.
- */
-internal fun shouldWireGeneratedDir(
-    compileTaskName: String,
-    producingCompilationName: String,
-    useTestFixtures: Boolean,
-): Boolean {
-    val name = compileTaskName.lowercase()
-    val isTestFixtures = name.contains("testfixtures")
-    // `main` (single-platform JVM) has no variant, so it feeds every test compile as before;
-    // an Android variant (`debug`/`release`/…) feeds only the compile tasks carrying its name
-    // (`compileDebugUnitTestKotlin`, `compileDebugAndroidTestKotlin`, …).
-    val variantMatches =
-        producingCompilationName.equals("main", ignoreCase = true) ||
-            name.contains(producingCompilationName.lowercase())
-    return if (useTestFixtures) {
-        isTestFixtures && variantMatches
-    } else {
-        name.contains("test") && !isTestFixtures && variantMatches
-    }
-}
 
 private fun capitalizeAscii(s: String): String =
     if (s.isEmpty()) s else s.substring(0, 1).uppercase(Locale.ROOT) + s.substring(1)

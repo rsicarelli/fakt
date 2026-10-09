@@ -312,6 +312,19 @@ class FaktWireTestSrcDirTest {
     }
 
     @Test
+    fun `GIVEN jvm main producer WHEN matching a custom compile associated with main THEN it is wired whatever its name`() {
+        assertTrue(
+            wiresTestCompile(
+                "compileIntegrationKotlin",
+                "main",
+                associatedWith = setOf("main"),
+                useTestFixtures = false,
+            ),
+            "A compilation associated with main is a test of main even without test in its name.",
+        )
+    }
+
+    @Test
     fun `GIVEN jvm main producer associated with main WHEN matching the production compile THEN it is not wired`() {
         assertFalse(
             wiresTestCompile(

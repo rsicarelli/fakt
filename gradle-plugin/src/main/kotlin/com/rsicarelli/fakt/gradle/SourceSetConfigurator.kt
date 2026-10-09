@@ -223,10 +223,9 @@ internal class SourceSetConfigurator(
      * 2. **Android (and JVM):** source the dir into every `compile*TestFixturesKotlin` task.
      *    Android has no `JavaPluginExtension`, so this Kotlin-compile-task route is the only one
      *    that reaches AGP's per-variant `compileDebugTestFixturesKotlin` /
-     *    `compileReleaseTestFixturesKotlin`. Selection reuses [shouldWireGeneratedDir] (producing
-     *    token `"main"` matches every variant), keeping the scoping identical to the experimental
-     *    generate-task path. `configureEach` is lazy so AGP's later-registered per-variant tasks
-     *    are still covered.
+     *    `compileReleaseTestFixturesKotlin`. Selection uses [isTestFixturesCompileTask], which
+     *    matches every variant's fixtures compile. `configureEach` is lazy so AGP's
+     *    later-registered per-variant tasks are still covered.
      */
     private fun configureTestFixturesSourceSet() {
         val generatedDir =
@@ -242,7 +241,7 @@ internal class SourceSetConfigurator(
 
         // Route 2 — Kotlin testFixtures compile tasks (Android variants + JVM).
         project.tasks.withType(AbstractKotlinCompile::class.java).configureEach { task ->
-            if (shouldWireGeneratedDir(task.name, "main", useTestFixtures = true)) {
+            if (isTestFixturesCompileTask(task.name)) {
                 task.source(generatedDir)
                 project.logger.info(
                     "Fakt: Configured testFixtures compile task '${task.name}' " +
