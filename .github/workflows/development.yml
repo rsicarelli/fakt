@@ -238,6 +238,8 @@ jobs:
       # The second run of the same tasks must reuse the entry the first one stored.
       - name: Reuse the configuration cache for ${{ matrix.sample }}
         if: ${{ matrix.cc-reuse }}
+        # pipefail: a failing second build must fail the step even when it printed "reused".
+        shell: bash
         run: |
           ./gradlew -p ${{ matrix.path }} ${{ matrix.tasks }} 2>&1 | tee second-run.log
           grep -q "Configuration cache entry reused" second-run.log

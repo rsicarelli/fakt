@@ -27,12 +27,13 @@ import org.junit.jupiter.api.io.TempDir
 /**
  * Pins [AndroidIntegration], Fakt's only use of AGP types (issue #158).
  *
- * AGP's API (`gradle-api`, the same floor version Fakt compiles against) is on the test classpath,
- * but no AGP implementation is: the `androidComponents` extension is a hand-written fake registered
- * on a `ProjectBuilder` project. The "AGP not visible to Fakt's classloader" case is reproduced by
- * a lookup that throws the [NoClassDefFoundError] the JVM would. The end-to-end path (real AGP,
- * `android.*` types in `@Fake` signatures) is locked by the Android samples: the `compat-agp` cells
- * from the 8.11 floor to the newest AGP, `android-single-module` and `kmp-android-lint`.
+ * The real AGP is on the test classpath (the 8.11 API floor and the full plugin), but these rows
+ * stay hermetic: the `androidComponents` extension is a hand-written fake registered on a
+ * `ProjectBuilder` project. The "AGP not visible to Fakt's classloader" case is reproduced by a
+ * lookup that throws the [NoClassDefFoundError] the JVM would. Real AGP and KGP together are pinned
+ * by `AgpKmpAndroidShapeTest`; the end-to-end path (`android.*` and AAR types in `@Fake`
+ * signatures) is locked by the Android samples: the `compat-agp` cells from the 8.11 floor to the
+ * newest AGP, `android-single-module`, `kmp-android-lint` and `kmp-android-target`.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AndroidIntegrationTest {

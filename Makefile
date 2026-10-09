@@ -137,7 +137,11 @@ test-kmp-android-lint: publish-local
 test-kmp-android-target: publish-local
 	@echo "🤖 Testing kmp-android-target sample (per-variant Android generation)..."
 	./gradlew -p samples/kmp-android-target build compileDebugAndroidTestKotlinAndroid
-	./gradlew -p samples/kmp-android-target build compileDebugAndroidTestKotlinAndroid 2>&1 | tee /dev/stderr | grep -q "Configuration cache entry reused"
+	@log=$$(mktemp) && \
+	./gradlew -p samples/kmp-android-target build compileDebugAndroidTestKotlinAndroid > "$$log" 2>&1; \
+	status=$$?; cat "$$log"; \
+	if [ $$status -ne 0 ]; then rm -f "$$log"; echo "second run failed"; exit $$status; fi; \
+	grep -q "Configuration cache entry reused" "$$log"; found=$$?; rm -f "$$log"; exit $$found
 
 # Runtime benchmark — measures test EXECUTION time of Fakt vs mock libraries and prints a comparison
 # table. Runs every competitor in its own isolated module across FORKS fresh JVMs. --continue keeps
