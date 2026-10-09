@@ -225,7 +225,14 @@ internal object FaktGenerateTaskWiring {
                 )
                 .let {
                     val platformOwned = platformOwnedAncestorsOf(kotlinCompilation, shape)
-                    it.copy(outputDirectories = outputRouteTokens(it, shape, owned, platformOwned))
+                    it.copy(
+                        allSourceSets =
+                            appendMissingSourceSets(
+                                it.allSourceSets,
+                                kotlinCompilation.sourceSetInfos(),
+                            ),
+                        outputDirectories = outputRouteTokens(it, shape, owned, platformOwned),
+                    )
                 }
         val json = Json { prettyPrint = false }
         return json.encodeToString(SourceSetContext.serializer(), context)
@@ -327,8 +334,9 @@ private fun configureSources(
         TaskShape.PRODUCER ->
             task.sources.from(enabled.gate(kotlinCompilation.allKotlinSourceSets.map { it.kotlin }))
         TaskShape.CONSUMER -> {
-            task.sources.from(enabled.gate(own))
-            task.analysisOnlySources.from(enabled.gate(ancestors.map { it.kotlin }))
+            val split = memberSplit(kotlinCompilation)
+            task.sources.from(enabled.gate(split.own.map { it.kotlin }))
+            task.analysisOnlySources.from(enabled.gate(split.analysisOnly.map { it.kotlin }))
         }
         TaskShape.SINGLE_TARGET -> {
             task.sources.from(enabled.gate(own))

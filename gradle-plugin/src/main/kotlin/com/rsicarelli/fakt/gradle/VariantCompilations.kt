@@ -2,6 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.gradle
 
+import com.rsicarelli.fakt.compiler.api.SourceSetInfo
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
+import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
+
 /**
  * One compilation of a target, reduced to the source set names the ownership rules need.
  *
@@ -56,3 +60,43 @@ internal fun targetNodeOf(
         memberSourceSets = sets.members,
     )
 }
+
+/**
+ * The source sets a consumer task owns and the ones it only analyses.
+ *
+ * @property own Every source set the compilation lists directly (KGP `kotlinSourceSets`): for an
+ *   Android variant `androidDebug` and `androidMain` (plus flavor and build type sets), for any
+ *   other compilation just its default source set.
+ * @property analysisOnly The rest of the compilation's sources, `commonMain` and the shared
+ *   intermediates (the common fragment).
+ */
+internal data class MemberSplit(
+    val own: List<KotlinSourceSet>,
+    val analysisOnly: List<KotlinSourceSet>,
+)
+
+/** Splits [compilation]'s source sets into the ones it lists directly and the shared rest. */
+internal fun memberSplit(compilation: KotlinCompilation<*>): MemberSplit =
+    MemberSplit(
+        own = compilation.kotlinSourceSets.toList(),
+        analysisOnly = (compilation.allKotlinSourceSets - compilation.kotlinSourceSets).toList(),
+    )
+
+/**
+ * Appends to [infos] the [extra] source sets whose names are not listed yet, sorted by name. The
+ * existing entries keep their order, so a compilation that lists nothing outside its default
+ * closure serializes exactly as before.
+ */
+internal fun appendMissingSourceSets(
+    infos: List<SourceSetInfo>,
+    extra: List<SourceSetInfo>,
+): List<SourceSetInfo> {
+    val known = infos.mapTo(hashSetOf()) { it.name }
+    return infos + extra.filter { it.name !in known }.distinctBy { it.name }.sortedBy { it.name }
+}
+
+/** Every source set [compilation] compiles, with its sorted `dependsOn` names. */
+internal fun KotlinCompilation<*>.sourceSetInfos(): List<SourceSetInfo> =
+    allKotlinSourceSets.map { set ->
+        SourceSetInfo(set.name, set.dependsOn.map { it.name }.sorted())
+    }

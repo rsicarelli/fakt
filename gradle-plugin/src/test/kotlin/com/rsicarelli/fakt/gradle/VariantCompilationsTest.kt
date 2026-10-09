@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.gradle
 
+import com.rsicarelli.fakt.compiler.api.SourceSetInfo
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import org.junit.jupiter.api.TestInstance
@@ -138,5 +139,51 @@ class VariantCompilationsTest {
             )
 
         assertEquals(listOf("desktopMain"), node.mainSourceSets)
+    }
+
+    private fun info(name: String, vararg parents: String) = SourceSetInfo(name, parents.toList())
+
+    @Test
+    fun `GIVEN every extra set already listed WHEN appending THEN the infos are unchanged`() {
+        val infos = listOf(info("jvmMain", "commonMain"), info("commonMain"))
+
+        val result = appendMissingSourceSets(infos, listOf(info("commonMain"), info("jvmMain")))
+
+        assertEquals(infos, result)
+    }
+
+    @Test
+    fun `GIVEN missing sets WHEN appending THEN they follow the existing infos sorted by name`() {
+        val infos = listOf(info("androidDebug", "commonMain"), info("commonMain"))
+        val extra =
+            listOf(
+                info("androidMain", "commonMain"),
+                info("androidFree", "commonMain"),
+                info("commonMain"),
+            )
+
+        val result = appendMissingSourceSets(infos, extra)
+
+        assertEquals(
+            listOf(
+                info("androidDebug", "commonMain"),
+                info("commonMain"),
+                info("androidFree", "commonMain"),
+                info("androidMain", "commonMain"),
+            ),
+            result,
+        )
+    }
+
+    @Test
+    fun `GIVEN a duplicated missing name WHEN appending THEN it is appended once`() {
+        val result = appendMissingSourceSets(listOf(info("a")), listOf(info("b"), info("b")))
+
+        assertEquals(listOf(info("a"), info("b")), result)
+    }
+
+    @Test
+    fun `GIVEN no infos and no extras WHEN appending THEN the result is empty`() {
+        assertEquals(emptyList(), appendMissingSourceSets(emptyList(), emptyList()))
     }
 }
