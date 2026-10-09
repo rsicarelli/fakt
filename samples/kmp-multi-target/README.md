@@ -25,6 +25,9 @@ kmp-multi-target/
 ├── jsMain/          → JsOnlyService.kt (@Fake)
 ├── jsTest/          → JsOnlyServiceTest.kt (tests own fake)
 │                    → JsHierarchyTest.kt (tests commonMain fake) ⭐
+├── webMain/         → WebStorage.kt (@Fake, shared by js + wasmJs; uses commonMain DeviceInfo + StorageKey)
+│                    → Runtime.web.kt (actual runtimeFamily() for js + wasmJs)
+├── webTest/         → WebStorageTest.kt (tests the webMain fake and runtimeFamily())
 ├── wasmJsMain/      → WasmOnlyService.kt (@Fake)
 ├── wasmJsTest/      → WasmOnlyServiceTest.kt (tests own fake)
 │                    → WasmHierarchyTest.kt (tests commonMain fake) ⭐
@@ -63,6 +66,12 @@ kmp-multi-target/
 - Generated fake ONLY in `wasmJsTest`
 - WebAssembly-specific capabilities
 
+### **WebStorage** (`webMain`, shared by js + wasmJs)
+- Declared in the intermediate source set `webMain` (#162), not in `commonMain` or a leaf
+- Uses the `commonMain` `expect class DeviceInfo` and the `commonMain` data class `StorageKey`
+- Produced by `faktGenerateMetadataWebMain`, delivered to `webTest` (and compiled by `jsTest`/`wasmJsTest`)
+- `runtimeFamily()` is a `commonMain` `expect fun` with actuals in `jvmMain`, `webMain` and `nativeMain`
+
 ### **NativeOnlyService** (all native targets)
 - C interop, native memory management
 - Generated fake in `nativeTest`
@@ -77,8 +86,9 @@ kmp-multi-target/
 ```
 commonMain (root)
 ├── jvmMain
-├── jsMain
-├── wasmJsMain
+├── webMain (intermediate, #162)
+│   ├── jsMain
+│   └── wasmJsMain
 └── nativeMain
     └── iosMain (inherits from both commonMain + nativeMain)
 ```
@@ -114,6 +124,7 @@ commonMain (root)
 # - build/generated/kmp/jsTest/kotlin/FakeJsOnlyServiceImpl.kt
 # - build/generated/kmp/wasmJsTest/kotlin/FakeWasmOnlyServiceImpl.kt
 # - build/generated/kmp/nativeTest/kotlin/FakeNativeOnlyServiceImpl.kt
+# - build/generated/fakt/metadata/webMain/kotlin/.../FakeWebStorageImpl.kt (-> webTest)
 ```
 
 ### **Testing**

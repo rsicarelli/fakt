@@ -1,7 +1,7 @@
 # v1.0 Legacy Sunset: Handover
 
 **Status:** In progress. **Live checklist, order and open decisions: GitHub issue #150** (not here).
-**Last Updated:** 2026-09-30 (Native spike results)
+**Last Updated:** 2026-10-07 (#162 intermediate source sets)
 **Delete when:** 1.0 ships (fold the surviving design notes into `architecture/ARCHITECTURE.md`).
 
 This file holds the *durable* context a fresh session needs: what the end state is, why the
@@ -60,9 +60,11 @@ A pure function assigns every **main** source set exactly one owner:
 | Source set | Owner |
 |---|---|
 | target-exclusive | that target's main compilation(s), one per Android variant |
-| shared, a metadata compilation exists | METADATA producer |
-| shared, no metadata compilation (all targets JVM-typed) | synthetic K2JVM producer on a deterministic representative compilation |
+| shared, a metadata compilation exists (`commonMain`, `webMain`, custom intermediates over several platform types) | METADATA producer (`faktGenerateMetadata<Set>`; an intermediate analyses its own sources and gets its ancestors' metadata klibs plus `-Xrefines-paths`) |
+| shared, no metadata compilation (all targets JVM-typed), or an intermediate compiled only by JVM and Android-JVM (KGP disables its metadata compilation) | synthetic K2JVM producer on a deterministic representative compilation (`faktGenerate<Set>`, e.g. `faktGenerateDesktopAndServerMain`) |
+| shared by one compiler only (for example a `sharedJvmMain` used only by `jvm`) | that target's consumer; its route tokens include every such ancestor |
 | shared native (`nativeMain`, `appleMain`) | Native driver (#152) |
+| all-JS or all-Wasm intermediate | not generated yet (follow-up) |
 
 - The owned set is the key set of the route map (`SourceSetContext.outputDirectories`); empty
   means the old behaviour (emit everything analysed).
@@ -70,6 +72,16 @@ A pure function assigns every **main** source set exactly one owner:
   removed `emitSourceSets` / `commonOutputDirectory` fields (and the `testCounterpartDirectory`
   string rewrites of `/commonTest/`, which break on absolute paths) on the FIR path.
 - Test wiring: the generated dir goes to the **lowest** matching `*Test` source set.
+- Ownership covers intermediate source sets too (#162, done for `webMain` and all-JVM
+  intermediates). When the analysed source sets have an intermediate level the worker passes
+  `-Xfragments` / `-Xfragment-sources` / `-Xfragment-refines` instead of lumping everything into
+  `-Xcommon-sources`; the metadata driver rejects fragments and gets `-Xrefines-paths` instead.
+- Known limits: dependsOn edges that user code adds in a later `afterEvaluate` are missed. On
+  Kotlin < 2.2.20 `webMain` is not in the default hierarchy, so declare it manually with
+  `dependsOn`. All-JS / all-Wasm intermediates are still not generated. Native intermediates are generated
+  in-process (LEGACY_HYBRID), not cache-correct, until #152. A synthetic intermediate with an
+  `expect` in the intermediate itself and an empty `commonMain` gets no fragments (flat shape):
+  its errors are tolerated, but `forbid-tolerated` would fail.
 - Why: #160 (no owner), #162 (intermediates routed SUPPRESS, consumers treat ancestors as
   analysis-only) and #163 (per-variant) are one class of bug. A pure function can be unit-tested
   without Gradle.

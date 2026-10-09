@@ -20,6 +20,9 @@ interface UserRepository {
 /** Resolved per target; the `actual` lives in desktopMain and in serverMain. */
 expect fun platformName(): String
 
+/** How this target talks to the outside world ("gui", "http" or "stdio"). */
+expect fun transport(): String
+
 /** Common logic under test in commonTest. */
 class Greeter(private val repository: UserRepository) {
     /** Says hello to user [id], naming the platform it runs on. */

@@ -43,6 +43,20 @@ internal data class CompilationRoute(
 )
 
 /**
+ * The facts about one Kotlin compilation that [routeCompilation] decides on.
+ *
+ * @property name the compilation's name (`main`, `commonMain`, `debug`, …).
+ * @property platformTypeName the compilation target's `KotlinPlatformType` name.
+ * @property sharedSourceSetOwner who owns the default source set of a metadata-target compilation
+ *   (see [assignSourceSetOwners]), or `null` when the compilation has no owner to ask.
+ */
+internal data class RoutedCompilation(
+    val name: String,
+    val platformTypeName: String,
+    val sharedSourceSetOwner: SourceSetOwner? = null,
+)
+
+/**
  * Pure routing behind [FaktGradleSubplugin.applyToCompilation]'s cache-correct branch: decides how
  * one Kotlin compilation generates its fakes. `Project`-free so the full table is unit-testable
  * (mirrors [shouldWireGeneratedDir]).
@@ -59,17 +73,17 @@ internal data class CompilationRoute(
  *   project declares exactly one target (no per-source-set `commonMain` compilation exists, see
  *   `singleTargetPlatformTypeName` in FaktGradleSubplugin.kt); `null` for multi-target and non-KMP
  *   projects.
- * @param compilationName the compilation's name (`main`, `commonMain`, `debug`, …).
- * @param platformTypeName the compilation target's `KotlinPlatformType` name.
+ * @param compilation the compilation being routed.
  */
 internal fun routeCompilation(
     unreadableSourcesReason: String?,
     isMultiplatform: Boolean,
     singleTargetPlatformTypeName: String?,
-    compilationName: String,
-    platformTypeName: String,
-): CompilationRoute =
-    when {
+    compilation: RoutedCompilation,
+): CompilationRoute {
+    val compilationName = compilation.name
+    val platformTypeName = compilation.platformTypeName
+    return when {
         unreadableSourcesReason != null -> legacyRoute(unreadableSourcesReason)
         !isMultiplatform ->
             if (isDrivablePlatform(platformTypeName)) {
@@ -82,11 +96,27 @@ internal fun routeCompilation(
         compilationName == FaktGradleSubplugin.COMMON_MAIN_COMPILATION ->
             CompilationRoute(FaktGradleSubplugin.CacheCorrectDecision.REGISTER_PRODUCER)
         platformTypeName.equals("common", ignoreCase = true) ->
-            CompilationRoute(FaktGradleSubplugin.CacheCorrectDecision.SUPPRESS)
+            routeSharedMetadata(compilationName, compilation.sharedSourceSetOwner)
         isDrivablePlatform(platformTypeName) ->
             CompilationRoute(FaktGradleSubplugin.CacheCorrectDecision.REGISTER_CONSUMER)
         else -> CompilationRoute(FaktGradleSubplugin.CacheCorrectDecision.LEGACY_HYBRID)
     }
+}
+
+/**
+ * A metadata-target compilation other than `commonMain`. The legacy `main` compilation and every
+ * set the metadata producer does not own (native-shared, synthetic, platform) are suppressed. A set
+ * owned by [SourceSetOwner.Metadata] (`webMain`) gets its own producer, whose shape the wiring
+ * picks from the compilation.
+ */
+private fun routeSharedMetadata(compilationName: String, owner: SourceSetOwner?): CompilationRoute =
+    if (compilationName != LEGACY_METADATA_COMPILATION && owner is SourceSetOwner.Metadata) {
+        CompilationRoute(FaktGradleSubplugin.CacheCorrectDecision.REGISTER_PRODUCER)
+    } else {
+        CompilationRoute(FaktGradleSubplugin.CacheCorrectDecision.SUPPRESS)
+    }
+
+private const val LEGACY_METADATA_COMPILATION = "main"
 
 /**
  * A single-target KMP project has no per-source-set `commonMain` compilation, only KGP's legacy

@@ -85,13 +85,14 @@ internal object FaktGenerateTaskWiring {
         extension: FaktPluginExtension,
     ) = register(project, kotlinCompilation, extension, TaskShape.SYNTHETIC)
 
-    private fun register(
+    internal fun register(
         project: Project,
         kotlinCompilation: KotlinCompilation<*>,
         extension: FaktPluginExtension,
         shape: TaskShape,
+        owned: String? = null,
     ) {
-        val layout = taskLayoutFor(kotlinCompilation, shape)
+        val layout = taskLayoutFor(kotlinCompilation, shape, owned)
         val taskName = layout.taskName
         val compilationName = kotlinCompilation.name
         if (project.tasks.findByName(taskName) != null) return
@@ -105,7 +106,7 @@ internal object FaktGenerateTaskWiring {
         // Read when the input resolves, not now: the route map names source sets, and KGP's
         // `dependsOn` edges are not final while the compilation is still being applied.
         val placeholderJson =
-            project.provider { encodePlaceholderContext(kotlinCompilation, shape) }
+            project.provider { encodePlaceholderContext(kotlinCompilation, shape, owned) }
         val workerClasspath = project.configurations.named(FaktGradleSubplugin.WORKER_CONFIGURATION)
         val compilerClasspath =
             project.configurations.named(FaktGradleSubplugin.COMPILER_CLASSPATH_CONFIGURATION)
@@ -117,11 +118,13 @@ internal object FaktGenerateTaskWiring {
                     task,
                     kotlinCompilation,
                     shape,
-                    sourceGate(project, shape, extension),
+                    sourceGate(project, shape, extension, kotlinCompilation, owned),
+                    owned,
                 )
                 if (shape == TaskShape.SINGLE_TARGET) {
                     task.commonGeneratedKotlinDir.set(commonOutputDir)
                 }
+                configureSourceSetRoots(task, kotlinCompilation)
                 configureDependencies(task, kotlinCompilation)
                 task.faktWorkerClasspath.from(workerClasspath)
                 task.faktCompilerClasspath.from(compilerClasspath)
@@ -141,10 +144,13 @@ internal object FaktGenerateTaskWiring {
         if (shape == TaskShape.PRODUCER && AndroidVariantSources.usesBuiltInKotlin(project)) {
             AndroidVariantSources.feed(project, compilationName, taskProvider)
         }
-        if (shape == TaskShape.SYNTHETIC) {
-            wireSyntheticCommonTest(project, taskProvider)
-        } else {
-            wireGeneratedDirConsumers(project, kotlinCompilation, extension, taskProvider)
+        when (shape) {
+            TaskShape.SYNTHETIC -> wireSyntheticCommonTest(project, taskProvider)
+            TaskShape.INTERMEDIATE_METADATA ->
+                wireIntermediateTestDirs(project, kotlinCompilation, taskProvider)
+            TaskShape.SYNTHETIC_INTERMEDIATE ->
+                wireIntermediateTestDirs(project, kotlinCompilation, taskProvider, owned)
+            else -> wireGeneratedDirConsumers(project, kotlinCompilation, extension, taskProvider)
         }
         if (shape == TaskShape.SINGLE_TARGET) {
             wireSingleTargetCommonDir(project, taskProvider)
@@ -239,6 +245,7 @@ internal object FaktGenerateTaskWiring {
     private fun encodePlaceholderContext(
         kotlinCompilation: KotlinCompilation<*>,
         shape: TaskShape,
+        owned: String?,
     ): String {
         // `useTestFixtures` is intentionally left at its default here. In `buildContext` it only
         // affects `outputDirectory`, which the `.copy` below replaces with a placeholder and the
@@ -257,7 +264,10 @@ internal object FaktGenerateTaskWiring {
                     metadataOutputPath = null,
                     metadataCachePath = null,
                 )
-                .let { it.copy(outputDirectories = outputRouteTokens(it, shape)) }
+                .let {
+                    val platformOwned = platformOwnedAncestorsOf(kotlinCompilation, shape)
+                    it.copy(outputDirectories = outputRouteTokens(it, shape, owned, platformOwned))
+                }
         val json = Json { prettyPrint = false }
         return json.encodeToString(SourceSetContext.serializer(), context)
     }
@@ -332,6 +342,19 @@ internal enum class TaskShape {
 
     /** Only `commonMain` emitted; the representative platform is analysed (all-JVM KMP). */
     SYNTHETIC,
+
+    /**
+     * A JVM-only intermediate shared source set (`desktopAndServerMain`) owned by its
+     * representative target: the owned set is emitted, `commonMain` and the other ancestors are
+     * analysed (see [SyntheticIntermediateWiring]).
+     */
+    SYNTHETIC_INTERMEDIATE,
+
+    /**
+     * An intermediate shared source set (`webMain`) analysed by the metadata driver from its own
+     * sources alone; the ancestors it refines arrive as klibs (see [IntermediateProducerWiring]).
+     */
+    INTERMEDIATE_METADATA,
 }
 
 /**
@@ -345,6 +368,7 @@ private fun configureSources(
     kotlinCompilation: KotlinCompilation<*>,
     shape: TaskShape,
     enabled: Provider<Boolean>,
+    owned: String?,
 ) {
     val ancestors = kotlinCompilation.allKotlinSourceSets - kotlinCompilation.defaultSourceSet
     val own = kotlinCompilation.defaultSourceSet.kotlin
@@ -360,6 +384,10 @@ private fun configureSources(
             task.commonSources.from(enabled.gate(ancestors.map { it.kotlin }))
         }
         TaskShape.SYNTHETIC -> configureSyntheticSources(task, kotlinCompilation, enabled)
+        TaskShape.INTERMEDIATE_METADATA ->
+            configureIntermediateSources(task, kotlinCompilation, enabled)
+        TaskShape.SYNTHETIC_INTERMEDIATE ->
+            configureSyntheticIntermediateSources(task, kotlinCompilation, enabled, owned)
     }
 }
 

@@ -47,7 +47,7 @@ test-kmp-multi-module:
 	@echo "🏢 Testing kmp-multi-module sample (composite build)..."
 	cd samples/kmp-multi-module && ./gradlew :app:build
 
-# KMP multi-target sample (hierarchy validation)
+# KMP multi-target sample (hierarchy validation, incl. the webMain intermediate source set)
 test-kmp-multi-target:
 	@echo "🎯 Testing kmp-multi-target sample (hierarchy validation)..."
 	cd samples/kmp-multi-target && ./gradlew allTests
@@ -62,7 +62,7 @@ test-kmp-single-target:
 	@echo "🎯 Testing kmp-single-target sample (single-target KMP)..."
 	cd samples/kmp-single-target && ./gradlew allTests
 
-# KMP sample where every target is JVM (jvm("desktop") + jvm("server")): Fakt adds a common producer
+# KMP sample where every target is JVM (desktop, server, cli + a desktopAndServerMain intermediate): Fakt adds synthetic producers
 test-kmp-all-jvm:
 	@echo "🧩 Testing kmp-all-jvm sample (all targets are JVM)..."
 	cd samples/kmp-all-jvm && ./gradlew allTests --continue
@@ -204,10 +204,10 @@ help:
 	@echo "  publish-local   - Publish to Maven Local (⭐ use this for development!)"
 	@echo "  test-sample     - Test kmp-single-module sample (composite build)"
 	@echo "  test-kmp-multi-module - Test kmp-multi-module sample (composite build)"
-	@echo "  test-kmp-multi-target - Test kmp-multi-target sample (hierarchy validation)"
+	@echo "  test-kmp-multi-target - Test kmp-multi-target sample (hierarchy validation + webMain)"
 	@echo "  test-kmp-no-jvm - Test kmp-no-jvm sample (no JVM/Android target)"
 	@echo "  test-kmp-single-target - Test kmp-single-target sample (exactly one target)"
-	@echo "  test-kmp-all-jvm - Test kmp-all-jvm sample (every target is JVM)"
+	@echo "  test-kmp-all-jvm - Test kmp-all-jvm sample (every target is JVM + desktopAndServerMain)"
 	@echo "  test-fake-publishing - Test fake-publishing sample (two-step workflow)"
 	@echo "  test-compat-all     - Test all compat samples (Kotlin 2.2.0-2.4.10)"
 	@echo "  test-compat-VERSION - Test specific compat sample (e.g., test-compat-2.2.0)"

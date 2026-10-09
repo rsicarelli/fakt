@@ -8,6 +8,8 @@ plugins {
     alias(libs.plugins.fakt)
 }
 
+// Besides commonMain and the platform mains, this sample declares a fake in `webMain` (the
+// intermediate source set js and wasmJs share). `faktGenerateMetadataWebMain` produces it (#162).
 kotlin {
     sourceSets {
         commonMain {
