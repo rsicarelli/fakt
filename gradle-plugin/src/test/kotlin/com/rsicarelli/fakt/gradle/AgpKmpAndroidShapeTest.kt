@@ -320,6 +320,18 @@ class AgpKmpAndroidShapeTest {
     }
 
     @Test
+    fun `GIVEN opt-in on androidMain WHEN reading a variant task THEN the worker arguments carry it`() {
+        val project = androidProject {
+            val main = it.kmp().sourceSets.getByName("androidMain")
+            main.languageSettings.optIn("y.Marker")
+        }
+
+        val args = project.fakt("faktGenerateAndroidDebug").compilerArguments.get()
+
+        assertTrue("-opt-in=y.Marker" in args, "args: $args")
+    }
+
+    @Test
     fun `GIVEN only androidTarget WHEN evaluating THEN the synthetic commonMain producer writes the canonical commonTest directory`() {
         val project = androidProject(withJvm = false)
 
