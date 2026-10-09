@@ -76,13 +76,22 @@ A pure function assigns every **main** source set exactly one owner:
   Callable, so associations added in a later `afterEvaluate` count). The generated dir is added as
   a source dir of the test compilation's source set and the compile task depends on the producer.
   - `testDirOwnerOf` (the owner registry) is the single owner rule: the plain `*Test` dir of a
-    source set goes to the lowest owner the registry names. `commonTest` is folded into that
-    registry; there is no separate common-test property or consumer-name function any more.
+    source set is not registered at all when the registry names an owner for it (an owned test
+    set gets no plain dir). `commonTest` is folded into that registry; there is no separate
+    common-test property or consumer-name function any more.
   - Variant and compilation names are matched **exactly**. A name that merely contains another
     (`debugMinified` vs `debug`, `preRelease` vs `release`) never receives its neighbour's fakes.
     Exact parsing is kept only for `testFixtures` and for compile tasks without a Kotlin
     compilation or association data (AGP 9 built-in Kotlin falls back to the exact name).
-  - Known limit: the intermediate producer leaf wiring still reads associations eagerly (D4).
+  - A late-associated custom compilation receives the fakes of the PLATFORM producer it is
+    associated with (the target's own source sets). Intermediate fakes are wired when the
+    intermediate producer is registered, so later associations are missed. `commonMain` fakes
+    reach only `commonTest`; a custom compilation sees them only if its source set depends on
+    `commonTest`.
+  - Known limit: the graph reader decides "test-like" by association + name at the time it runs,
+    so a custom compilation without "test" in its name that is associated late is main in early
+    reads and test-like later (rare).
+  - Known limit: intermediate-producer leaf wiring is still eager (D4).
   - Proofs: `samples/kmp-all-jvm` (`serverIntegrationTest`, associated late), and
     `samples/android-single-module` (`debugMinified`, `preRelease`; CI only).
 - Ownership covers intermediate source sets too (#162, done for `webMain` and all-JVM
