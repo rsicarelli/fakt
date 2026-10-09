@@ -71,7 +71,20 @@ A pure function assigns every **main** source set exactly one owner:
 - `SourceSetContext.outputDirectories` is an explicit `sourceSet → outputDir` map. It replaced the
   removed `emitSourceSets` / `commonOutputDirectory` fields (and the `testCounterpartDirectory`
   string rewrites of `/commonTest/`, which break on absolute paths) on the FIR path.
-- Test wiring: the generated dir goes to the **lowest** matching `*Test` source set.
+- Test wiring (#164b) is **by association**, not by name. A test compilation receives the fakes of
+  the main compilation it is associated with (`associatedCompilations`, read lazily inside a
+  Callable, so associations added in a later `afterEvaluate` count). The generated dir is added as
+  a source dir of the test compilation's source set and the compile task depends on the producer.
+  - `testDirOwnerOf` (the owner registry) is the single owner rule: the plain `*Test` dir of a
+    source set goes to the lowest owner the registry names. `commonTest` is folded into that
+    registry; there is no separate common-test property or consumer-name function any more.
+  - Variant and compilation names are matched **exactly**. A name that merely contains another
+    (`debugMinified` vs `debug`, `preRelease` vs `release`) never receives its neighbour's fakes.
+    Exact parsing is kept only for `testFixtures` and for compile tasks without a Kotlin
+    compilation or association data (AGP 9 built-in Kotlin falls back to the exact name).
+  - Known limit: the intermediate producer leaf wiring still reads associations eagerly (D4).
+  - Proofs: `samples/kmp-all-jvm` (`serverIntegrationTest`, associated late), and
+    `samples/android-single-module` (`debugMinified`, `preRelease`; CI only).
 - Ownership covers intermediate source sets too (#162, done for `webMain` and all-JVM
   intermediates). When the analysed source sets have an intermediate level the worker passes
   `-Xfragments` / `-Xfragment-sources` / `-Xfragment-refines` instead of lumping everything into
@@ -222,3 +235,21 @@ Make equivalents: `make publish-local`, `make validate`, `make test-kmp-single-t
 - **JS/Wasm browser tests** need npm, which the cloud sandbox blocks. CI runs them.
 - **Signed commits:** the session's stop hook flags unsigned commits. Plumbing such as `commit-tree`
   produces them; fix with `git rebase --exec "git commit --amend --no-edit --reset-author"`.
+
+## 8. Sandbox and CI facts
+
+- **No Android SDK** in the cloud sandbox: every Android cell (`android-single-module`,
+  `android-test-fixtures`, compat-agp) runs only in CI. A new Android task name is confirmed by
+  the first CI log, not locally.
+- **No npm:** JS/Wasm browser tests are CI-only.
+- **The memory cgroup kills Gradle daemons.** Run TestKit classes in small groups with
+  `--max-workers=2`, `./gradlew --stop` between groups, never two Gradle builds at once, and kill
+  orphan test JVMs by PID. A `limit-parallel` init script (capping `maxParallelForks` and workers)
+  keeps a run inside the limit.
+- **CI runs samples with the configuration cache ON.** Never validate a sample with
+  `--no-configuration-cache`: a PR already failed in CI because it passed locally only that way.
+  Run the sample's exact CI command; the second run must print `Configuration cache entry reused`.
+  The two contract scripts add `--no-configuration-cache` themselves where they need it.
+- **Spotless** needs `--no-configuration-cache` (see the gotcha above).
+- **Run Tests job:** under runner load TestKit tests can hit the 5-minute timeout. One re-run of
+  the job is acceptable.
