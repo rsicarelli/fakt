@@ -99,10 +99,13 @@ internal class SourceSetConfigurator(
      * in-process plugin (`LEGACY_HYBRID`) writes its platform-specific fakes. Empty directories are
      * harmless.
      *
-     * A platform test source set whose main is driven by a consumer `FaktGenerateTask` (`jvmTest`,
-     * `jsTest`, `wasmJsTest`, …) is skipped: its fakes arrive through the task's own
-     * `@OutputDirectory`, and a stale in-process copy left in the canonical dir by an earlier build
-     * would otherwise be compiled next to the task output as a `Redeclaration`.
+     * A test source set the owner registry attributes to a `FaktGenerateTask` ([testDirOwnerOf]) is
+     * skipped: its fakes arrive through the task's own `@OutputDirectory`, and a stale in-process
+     * copy left in the canonical dir by an earlier build would otherwise be compiled next to the
+     * task output as a `Redeclaration`. Ownership follows the association of the test compilation
+     * with the main the task serves (`jvmTest`, `jsTest`, a custom `jvmIntegrationTest`,
+     * `androidHostTest`), not the source set's name. Native targets have no task yet, so their test
+     * sets keep the plain directory.
      */
     fun configureKmpTestSourceSetDirs() =
         project.extensions
@@ -144,21 +147,15 @@ internal class SourceSetConfigurator(
     }
 
     /**
-     * Whether a [FaktGenerateTask] already feeds [testSourceSetName]: `jsTest` is owned when the
-     * consumer `faktGenerateJsMain` (target `js`, compilation `main`) is registered, and
-     * `commonTest` when a single-target or synthetic task owns the canonical directory
-     * ([COMMON_TEST_OWNER_PROPERTY]), and any test source set an intermediate producer feeds
-     * ([TEST_DIR_OWNERS_PROPERTY]). Must be queried lazily (from a provider): the task may be
-     * registered after the source set is configured.
+     * Whether a [FaktGenerateTask] already feeds [testSourceSetName], per the owner registry
+     * ([testDirOwnerOf]): an explicit claim (`commonTest`, intermediate producers) or the task of
+     * the main compilation a test compilation with that default source set is associated with
+     * (`jvmTest`, a custom `jvmIntegrationTest`, `androidHostTest`). Must be queried lazily (from a
+     * provider): the task may be registered, and the association made, after the source set is
+     * configured.
      */
-    private fun isOwnedByConsumerTask(testSourceSetName: String): Boolean {
-        val ownedByCommonTestProducer =
-            testSourceSetName == "commonTest" &&
-                project.extensions.extraProperties.has(COMMON_TEST_OWNER_PROPERTY)
-        return ownedByCommonTestProducer ||
-            isTestDirOwned(project, testSourceSetName) ||
-            consumerTaskNameFor(testSourceSetName)?.let(project.tasks.names::contains) ?: false
-    }
+    private fun isOwnedByConsumerTask(testSourceSetName: String): Boolean =
+        testDirOwnerOf(project, testSourceSetName) != null
 
     /**
      * Name of the [FaktGenerateTask] whose `@OutputDirectory` equals this test source set's
@@ -259,22 +256,5 @@ internal class SourceSetConfigurator(
     private fun isTestTask(taskName: String): Boolean {
         val normalized = taskName.lowercase()
         return normalized.contains("test")
-    }
-}
-
-/**
- * Consumer [FaktGenerateTask] name that would own a KMP platform test source set (`jsTest` →
- * `faktGenerateJsMain`), or `null` for `commonTest` (owned by the common producer) and anything
- * that isn't a `<target>Test` source set. Follows KGP's default `<target>Main` / `<target>Test`
- * naming, which is what `FaktGenerateTaskWiring` derives task names from.
- */
-internal fun consumerTaskNameFor(testSourceSetName: String): String? {
-    val target = testSourceSetName.removeSuffix("Test")
-    val isPlatformTestSourceSet =
-        testSourceSetName.endsWith("Test") && target.isNotEmpty() && target != "common"
-    return if (isPlatformTestSourceSet) {
-        "faktGenerate" + target.replaceFirstChar { it.uppercaseChar() } + "Main"
-    } else {
-        null
     }
 }

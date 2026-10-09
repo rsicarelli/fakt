@@ -6,6 +6,7 @@ import com.rsicarelli.fakt.gradle.helpers.createJvmProject
 import com.rsicarelli.fakt.gradle.helpers.createKmpProject
 import com.rsicarelli.fakt.gradle.helpers.getKotlinExtension
 import java.io.File
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import org.gradle.api.Project
@@ -130,5 +131,51 @@ class FaktTestWiringByAssociationTest {
         assertTrue("faktGenerateJvmMain" in project.dependenciesOfTask("compileIntegrationKotlin"))
         assertTrue(marker in testCompile.sources.files, "compileTestKotlin must stay wired")
         assertFalse(marker in mainCompile.sources.files, "compileKotlin must not be wired")
+    }
+
+    // ---- B8: the plain in-process directory is never next to a task output ---------------------
+
+    private fun Project.plainDirOf(sourceSet: String): List<File> =
+        srcDirsOf(sourceSet).filter { it.path.endsWith("generated/fakt/$sourceSet/kotlin") }
+
+    @Test
+    fun `GIVEN an associated custom test compilation WHEN configuring test source set dirs THEN jvm test sets get no plain directory`() {
+        val (project, jvm) = kmpWithConsumer()
+        jvm.compilations.create("integrationTest").associateWith(jvm.compilations.getByName("main"))
+
+        SourceSetConfigurator(project).configureKmpTestSourceSetDirs()
+
+        assertTrue(
+            project.plainDirOf("jvmIntegrationTest").isEmpty(),
+            "${project.srcDirsOf("jvmIntegrationTest")}",
+        )
+        assertTrue(project.plainDirOf("jvmTest").isEmpty(), "${project.srcDirsOf("jvmTest")}")
+    }
+
+    @Test
+    fun `GIVEN a Native target without a task WHEN configuring test source set dirs THEN linuxX64Test keeps its plain directory`() {
+        val (project, _) = kmpWithConsumer()
+
+        SourceSetConfigurator(project).configureKmpTestSourceSetDirs()
+
+        assertEquals(
+            1,
+            project.plainDirOf("linuxX64Test").size,
+            "${project.srcDirsOf("linuxX64Test")}",
+        )
+    }
+
+    @Test
+    fun `GIVEN the configurator already ran WHEN a compilation is associated afterwards THEN its source set still gets no plain directory`() {
+        val (project, jvm) = kmpWithConsumer()
+        val integration = jvm.compilations.create("integrationTest")
+        SourceSetConfigurator(project).configureKmpTestSourceSetDirs()
+
+        integration.associateWith(jvm.compilations.getByName("main"))
+
+        assertTrue(
+            project.plainDirOf("jvmIntegrationTest").isEmpty(),
+            "${project.srcDirsOf("jvmIntegrationTest")}",
+        )
     }
 }
