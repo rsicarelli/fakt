@@ -127,6 +127,13 @@ tasks {
         // the 1g/30s defaults that worked when this module had only ProjectBuilder tests.
         jvmArgs("-Xmx2g")
         systemProperty("junit.jupiter.execution.timeout.default", "5m")
+        // The shared convention runs up to 2x CPU forks, each with concurrent JUnit tests. Every
+        // TestKit test starts its own Gradle daemon and compiler worker, so on a 4-core runner a
+        // burst of them starves each other and hits the timeout above together. Cap both levels,
+        // as the compiler module does for its heavy tests.
+        maxParallelForks = 2
+        systemProperty("junit.jupiter.execution.parallel.config.strategy", "fixed")
+        systemProperty("junit.jupiter.execution.parallel.config.fixed.parallelism", "2")
         // Resolved lazily at execution time (jvmArgumentProviders, not systemProperty) so the
         // configuration isn't resolved during configuration; a dedicated provider class keeps the
         // configuration cache free of script-object references.
