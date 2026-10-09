@@ -5,6 +5,9 @@ package com.rsicarelli.fakt.gradle
 import com.rsicarelli.fakt.compiler.api.SourceSetInfo
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -185,5 +188,83 @@ class VariantCompilationsTest {
     @Test
     fun `GIVEN no infos and no extras WHEN appending THEN the result is empty`() {
         assertEquals(emptyList(), appendMissingSourceSets(emptyList(), emptyList()))
+    }
+
+    private fun androidNode(vararg mains: String) =
+        TargetNode("android", "androidjvm", true, mains.toList(), listOf("androidMain"))
+
+    @Test
+    fun `GIVEN a single androidjvm target WHEN predicting the owner THEN commonMain is synthetic on the debug variant`() {
+        val owner =
+            predictSyntheticCommonMainOwner(listOf(androidNode("androidDebug", "androidRelease")))
+
+        assertEquals(SourceSetOwner.Synthetic("commonMain", "android", "androidDebug"), owner)
+    }
+
+    @Test
+    fun `GIVEN a single androidjvm target with flavors WHEN predicting the owner THEN the debug flavor represents`() {
+        val owner =
+            predictSyntheticCommonMainOwner(
+                listOf(androidNode("androidFreeDebug", "androidFreeRelease", "androidPaidDebug"))
+            )
+
+        assertEquals("androidFreeDebug", owner?.compilationSourceSet)
+    }
+
+    @Test
+    fun `GIVEN androidjvm next to jvm WHEN predicting the owner THEN there is none because metadata owns commonMain`() {
+        val jvm = TargetNode("jvm", "jvm", false, listOf("jvmMain"))
+
+        assertNull(predictSyntheticCommonMainOwner(listOf(androidNode("androidDebug"), jvm)))
+    }
+
+    @Test
+    fun `GIVEN two jvm targets WHEN predicting the owner THEN the representative desktop owns commonMain`() {
+        val owner =
+            predictSyntheticCommonMainOwner(
+                listOf(
+                    TargetNode("server", "jvm", false, listOf("serverMain")),
+                    TargetNode("desktop", "jvm", false, listOf("desktopMain")),
+                )
+            )
+
+        assertEquals("desktop", owner?.target)
+    }
+
+    private val androidOwner = SourceSetOwner.Synthetic("commonMain", "android", "androidDebug")
+    private val jvmOwner = SourceSetOwner.Synthetic("commonMain", "desktop", "desktopMain")
+
+    @Test
+    fun `GIVEN an androidjvm owner WHEN checking compilations THEN only the one whose default is the owner set represents`() {
+        fun represents(compilation: String, default: String) =
+            isSyntheticCommonMainRepresentative(androidOwner, compilation, default, "androidjvm")
+
+        assertTrue(represents("debug", "androidDebug"))
+        assertFalse(represents("release", "androidRelease"))
+        assertFalse(represents("debugUnitTest", "androidUnitTestDebug"))
+        assertFalse(represents("main", "androidMain"))
+    }
+
+    @Test
+    fun `GIVEN a jvm owner WHEN checking compilations THEN only main represents whatever its default set`() {
+        fun represents(compilation: String, default: String) =
+            isSyntheticCommonMainRepresentative(jvmOwner, compilation, default, "jvm")
+
+        assertTrue(represents("main", "desktopMain"))
+        assertFalse(represents("test", "desktopTest"))
+        assertFalse(represents("debug", "desktopMain"))
+    }
+
+    @Test
+    fun `GIVEN no owner WHEN checking a compilation THEN it never represents`() {
+        assertFalse(isSyntheticCommonMainRepresentative(null, "main", "jvmMain", "jvm"))
+        assertFalse(
+            isSyntheticCommonMainRepresentative(null, "debug", "androidDebug", "androidjvm")
+        )
+    }
+
+    @Test
+    fun `GIVEN an owner and a non jvm type WHEN checking a compilation THEN it does not represent`() {
+        assertFalse(isSyntheticCommonMainRepresentative(androidOwner, "main", "jsMain", "js"))
     }
 }

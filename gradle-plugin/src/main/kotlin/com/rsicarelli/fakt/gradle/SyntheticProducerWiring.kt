@@ -16,14 +16,11 @@ internal const val SYNTHETIC_TASK_NAME: String = "faktGenerateCommonMain"
 /** The one source set the synthetic common producer owns (and emits). */
 internal const val SYNTHETIC_OWNED_SOURCE_SET: String = "commonMain"
 
-private const val MAIN_COMPILATION = "main"
-private const val JVM_TYPE = "jvm"
-
 /**
  * Registers the synthetic common producer for KMP projects whose targets are all JVM-typed
- * (`jvm("desktop")` + `jvm("server")`, or AGP with `android.kmp.use.jvm.platform.type=true`). KGP
- * builds no `commonMain` metadata compilation for them, so without this task `commonTest` would
- * never see the `commonMain` fakes.
+ * (`jvm("desktop")` + `jvm("server")`, or AGP with `android.kmp.use.jvm.platform.type=true`), and
+ * for a project whose only target is `androidTarget()`. KGP builds no `commonMain` metadata
+ * compilation for them, so without this task `commonTest` would never see the `commonMain` fakes.
  *
  * The decision is made from the target list alone (no `afterEvaluate`, no other project is read),
  * so it is safe under Gradle Project Isolation. KGP resolves its subplugins after the `kotlin { }`
@@ -32,10 +29,11 @@ private const val JVM_TYPE = "jvm"
 internal object SyntheticProducerWiring {
 
     /**
-     * Registers the task when [compilation] is the `main` compilation of the representative target
-     * that owns `commonMain` and that target is JVM-typed; otherwise does nothing. A task already
-     * named [SYNTHETIC_TASK_NAME] that Fakt did not register itself is a name clash and fails the
-     * build with a clear message instead of being skipped.
+     * Registers the task when [compilation] is the representative compilation of the target that
+     * owns `commonMain` (`main` of a JVM-typed target, the debug variant of a single
+     * `androidTarget()` project, see [isSyntheticCommonMainRepresentative]); otherwise does
+     * nothing. A task already named [SYNTHETIC_TASK_NAME] that Fakt did not register itself is a
+     * name clash and fails the build with a clear message instead of being skipped.
      */
     fun registerIfRepresentative(
         project: Project,
@@ -43,12 +41,15 @@ internal object SyntheticProducerWiring {
         extension: FaktPluginExtension,
     ) {
         val kmp = project.extensions.findByType(KotlinMultiplatformExtension::class.java)
-        val representative =
-            kmp?.let { predictSyntheticCommonMainTarget(readSourceSetGraph(it).targets) }
+        val owner = kmp?.let { predictSyntheticCommonMainOwner(readSourceSetGraph(it).targets) }
         val isRepresentative =
-            compilation.name == MAIN_COMPILATION &&
-                representative?.name == compilation.target.targetName &&
-                representative.platformType == JVM_TYPE
+            owner?.target == compilation.target.targetName &&
+                isSyntheticCommonMainRepresentative(
+                    owner,
+                    compilation.name,
+                    compilation.defaultSourceSet.name,
+                    compilation.target.platformType.name.lowercase(),
+                )
         if (!isRepresentative) return
         val existing = project.tasks.findByName(SYNTHETIC_TASK_NAME)
         when {
@@ -72,11 +73,8 @@ internal object SyntheticProducerWiring {
  * set reaches it.
  */
 internal fun predictSyntheticCommonMainTarget(targets: List<TargetNode>): TargetNode? {
-    val parents = targets.flatMap { it.mainSourceSets }.associateWith { setOf("commonMain") }
-    val owner = assignSourceSetOwners(SourceSetGraph(targets, parents))["commonMain"]
-    return (owner as? SourceSetOwner.Synthetic)?.let { synthetic ->
-        targets.first { it.name == synthetic.target }
-    }
+    val owner = predictSyntheticCommonMainOwner(targets)
+    return owner?.let { synthetic -> targets.first { it.name == synthetic.target } }
 }
 
 /**

@@ -100,3 +100,34 @@ internal fun KotlinCompilation<*>.sourceSetInfos(): List<SourceSetInfo> =
     allKotlinSourceSets.map { set ->
         SourceSetInfo(set.name, set.dependsOn.map { it.name }.sorted())
     }
+
+/**
+ * The owner of `commonMain` when it is [SourceSetOwner.Synthetic], or `null` when [targets] do not
+ * call for one. This mirrors KGP: no `commonMain` metadata compilation exists when two or more real
+ * targets share one non-native platform type, or when the only target is `androidTarget()`.
+ * `commonMain` needs no `dependsOn` edges, every main and member source set reaches it.
+ */
+internal fun predictSyntheticCommonMainOwner(targets: List<TargetNode>): SourceSetOwner.Synthetic? {
+    val sets = targets.flatMap { it.mainSourceSets + it.memberSourceSets }
+    val parents = sets.associateWith { setOf("commonMain") }
+    return assignSourceSetOwners(SourceSetGraph(targets, parents))["commonMain"]
+        as? SourceSetOwner.Synthetic
+}
+
+/**
+ * Whether a compilation of the owner's target is the one that drives the synthetic `commonMain`
+ * producer. A `jvm` target drives it from `main`; an `androidjvm` target from the variant whose
+ * default source set is the owner's representative (`androidDebug`). No owner, or any other type,
+ * means no.
+ */
+internal fun isSyntheticCommonMainRepresentative(
+    owner: SourceSetOwner.Synthetic?,
+    compilationName: String,
+    defaultSourceSet: String,
+    targetType: String,
+): Boolean =
+    when (targetType) {
+        "jvm" -> owner != null && compilationName == "main"
+        "androidjvm" -> owner != null && defaultSourceSet == owner.compilationSourceSet
+        else -> false
+    }
