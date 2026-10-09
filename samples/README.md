@@ -20,6 +20,7 @@ An Android Library module showcasing Fakt for Android projects:
 - **Unit Tests**: Standard JUnit tests in `src/test/kotlin`
 - **Same Scenarios**: Identical to jvm-single-module for consistency
 - **AGP Compatibility**: Works with Android Gradle Plugin 8.12.3+
+- **Extra Build Types**: `debugMinified` and `preRelease` (names that contain `debug`/`release`) prove each variant's fakes reach only that variant's unit tests
 
 **Source Set Targets**: `main` → `test` (unit tests), `androidTest` (instrumented tests supported)
 
@@ -96,6 +97,8 @@ A KMP module where **every** target is a JVM target (`jvm("desktop")`, `jvm("ser
 - **Cache-correct**: all five producers restore FROM-CACHE
 
 **Source Set Targets**: `commonMain` → `commonTest`, `desktopAndServerMain` → `desktopAndServerTest`, `desktopMain` → `desktopTest`, `serverMain` → `serverTest`, `cliMain` → `cliTest`
+
+**Custom test compilation**: `serverIntegrationTest`, associated with `server`'s `main` in `afterEvaluate`, receives the server fakes through the association.
 
 **Run**: `make test-kmp-all-jvm`
 

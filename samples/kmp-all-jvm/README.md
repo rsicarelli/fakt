@@ -38,6 +38,9 @@ Before issue #160 there was no common producer, and `commonTest` failed with
 - `desktopAndServerMain`: `SessionStore` (`@Fake`) and the `actual fun transport()` for desktop
   and server.
 - `commonTest`, `desktopTest`, `serverTest`, `cliTest`, `desktopAndServerTest`: tests using the fakes.
+- `serverIntegrationTest`: a custom test compilation of the `server` target, associated with
+  `main` late (`afterEvaluate`). It uses `fakeRequestLog()` because generated fakes reach a test
+  compilation through its association, not through its name (#164b).
 
 ## Run
 
