@@ -449,18 +449,6 @@ so those fakes are still produced by the in-process plugin
     in-process plugin and are not cache-correct yet
     ([#152](https://github.com/rsicarelli/fakt/issues/152)).
 
-!!! tip "Custom test compilations and Android build types"
-    Generated fakes reach a test compilation **by association**: a custom test compilation, such
-    as `compilations.create("integrationTest")` on a JVM target, receives the fakes of the main
-    compilation it is associated with. This includes associations made after evaluation, for
-    example `afterEvaluate { integrationTest.associateWith(compilations.getByName("main")) }`.
-    `samples/kmp-all-jvm` has such a `serverIntegrationTest`.
-
-    On Android, each build type or flavour's fakes reach only that variant's tests. A build type
-    whose name contains another's, such as `debugMinified` next to `debug`, gets its own fakes in
-    `testDebugMinifiedUnitTest` and never the ones of `debug`. `samples/android-single-module`
-    declares `debugMinified` and `preRelease` to prove it.
-
     Two limits apply to intermediate source sets:
 
     - On Kotlin older than 2.2.20 `webMain` is not part of the default hierarchy template. Declare
@@ -469,6 +457,23 @@ so those fakes are still produced by the in-process plugin
     - Fakt reads the `dependsOn` edges when the Kotlin plugin configures the project. Edges that
       your own build code adds in a later `afterEvaluate` are missed, so the intermediate's fakes
       are not generated. Declare the hierarchy in the `kotlin { sourceSets { } }` block.
+
+!!! tip "Custom test compilations and Android build types"
+    Generated fakes reach a test compilation **by association**: a custom test compilation, such
+    as `compilations.create("integrationTest")` on a JVM target, receives the fakes of the platform
+    compilation it is associated with (the target's own source sets). This includes associations
+    made after evaluation, for example
+    `afterEvaluate { integrationTest.associateWith(compilations.getByName("main")) }`.
+    `samples/kmp-all-jvm` has such a `serverIntegrationTest`.
+
+    Fakes of an intermediate source set are wired when its producer is registered, so an
+    association made later does not receive them. Fakes of `commonMain` reach only `commonTest`; a
+    custom compilation sees them only if its source set depends on `commonTest`.
+
+    On Android, each build type or flavour's fakes reach only that variant's tests. A build type
+    whose name contains another's, such as `debugMinified` next to `debug`, gets its own fakes in
+    `testDebugMinifiedUnitTest` and never the ones of `debug`. `samples/android-single-module`
+    declares `debugMinified` and `preRelease` to prove it.
 
 !!! note "Project shapes that keep the in-process path"
     A few shapes fall back to generating inside `compileKotlin*`. Fakes are still generated for
