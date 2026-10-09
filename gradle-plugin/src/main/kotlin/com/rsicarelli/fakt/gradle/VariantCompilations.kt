@@ -4,9 +4,12 @@ package com.rsicarelli.fakt.gradle
 
 import com.rsicarelli.fakt.compiler.api.SourceSetInfo
 import java.util.concurrent.Callable
+import org.gradle.api.artifacts.type.ArtifactTypeDefinition
+import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 
 /**
@@ -151,3 +154,35 @@ internal fun isSyntheticCommonMainRepresentative(
         "androidjvm" -> owner != null && defaultSourceSet == owner.compilationSourceSet
         else -> false
     }
+
+private const val AAR_EXTENSION = "aar"
+private const val ANDROID_CLASSES_JAR = "android-classes-jar"
+
+/**
+ * The compile dependencies the generation worker can read. KGP's `compileDependencyFiles` for an
+ * Android compilation is the raw variant configuration, which holds `.aar` files the K2 driver
+ * cannot open, so an `androidx` type in a `@Fake` signature would stay unresolved. For an Android
+ * compilation this keeps the jars and directories and adds the unpacked class jars AGP exposes as
+ * `android-classes-jar` (a lenient artifact view, so a dependency without one is skipped). Any
+ * other compilation gets `compileDependencyFiles` unchanged. Both parts stay lazy and
+ * configuration-cache safe: no lambda captures the compilation.
+ */
+internal fun KotlinCompilation<*>.workerDependencyFiles(): FileCollection {
+    if (platformType != KotlinPlatformType.androidJvm) return compileDependencyFiles
+    val classJars =
+        project.configurations
+            .getByName(compileDependencyConfigurationName)
+            .incoming
+            .artifactView { view ->
+                view.isLenient = true
+                view.attributes.attribute(
+                    Attribute.of(
+                        ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE.name,
+                        String::class.java,
+                    ),
+                    ANDROID_CLASSES_JAR,
+                )
+            }
+            .files
+    return project.files(compileDependencyFiles.filter { it.extension != AAR_EXTENSION }, classJars)
+}

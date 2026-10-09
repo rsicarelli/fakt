@@ -339,6 +339,29 @@ class AgpKmpAndroidShapeTest {
         assertTrue(task.analysisOnlySources.files.isEmpty())
     }
 
+    // Resolving the Android classes-jar view needs an installed SDK, which ProjectBuilder does not
+    // have: the sample (samples/kmp-android-target, AarTypeSource) proves the AAR resolution, and
+    // these two rows pin the wiring decision.
+    @Test
+    fun `GIVEN an android compilation WHEN reading the worker dependencies THEN they are not the raw variant files`() {
+        val project = androidProject()
+        val debug = project.android("debug")
+
+        val files = debug.workerDependencyFiles()
+
+        assertTrue(files !== debug.compileDependencyFiles)
+    }
+
+    @Test
+    fun `GIVEN a jvm compilation WHEN reading the worker dependencies THEN they are the compile dependency files`() {
+        val project = androidProject()
+        val main = project.kmp().targets.getByName("jvm").compilations.getByName("main")
+
+        val files = main.workerDependencyFiles()
+
+        assertTrue(files === main.compileDependencyFiles)
+    }
+
     private companion object {
         var counter = 0
     }

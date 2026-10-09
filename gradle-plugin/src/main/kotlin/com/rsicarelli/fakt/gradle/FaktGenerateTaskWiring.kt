@@ -396,7 +396,7 @@ internal fun configureDependencies(
     if (isKlibBased) {
         task.commonKlibClasspath.from(kotlinCompilation.compileDependencyFiles)
     } else {
-        task.compileClasspath.from(kotlinCompilation.compileDependencyFiles)
+        task.compileClasspath.from(kotlinCompilation.workerDependencyFiles())
     }
     // `-Xwasm-target` is read from KGP's own target model, so a custom target name
     // (`wasmJs("web")`) still resolves to the right flavour. Absent for Kotlin/JS.
