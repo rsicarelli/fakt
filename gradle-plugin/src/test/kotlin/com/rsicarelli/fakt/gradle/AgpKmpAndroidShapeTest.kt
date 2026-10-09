@@ -332,6 +332,24 @@ class AgpKmpAndroidShapeTest {
     }
 
     @Test
+    fun `GIVEN androidMain under a custom intermediate WHEN reading the variant roots THEN none are given so the worker stays flat`() {
+        val project = androidProject {
+            val sets = it.kmp().sourceSets
+            val shared = sets.create("jvmAndAndroidMain")
+            shared.dependsOn(sets.getByName("commonMain"))
+            sets.getByName("androidMain").dependsOn(shared)
+            sets.getByName("jvmMain").dependsOn(shared)
+            it.plantMarker("jvmAndAndroidMain")
+        }
+
+        val android = project.fakt("faktGenerateAndroidDebug").sourceSetRoots.get()
+        val jvm = project.fakt("faktGenerateJvmMain").sourceSetRoots.get()
+
+        assertEquals(emptyMap(), android)
+        assertTrue("jvmMain" in jvm.keys, "$jvm")
+    }
+
+    @Test
     fun `GIVEN only androidTarget WHEN evaluating THEN the synthetic commonMain producer writes the canonical commonTest directory`() {
         val project = androidProject(withJvm = false)
 
