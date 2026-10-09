@@ -334,9 +334,10 @@ private fun configureSources(
         TaskShape.PRODUCER ->
             task.sources.from(enabled.gate(kotlinCompilation.allKotlinSourceSets.map { it.kotlin }))
         TaskShape.CONSUMER -> {
-            val split = memberSplit(kotlinCompilation)
-            task.sources.from(enabled.gate(split.own.map { it.kotlin }))
-            task.analysisOnlySources.from(enabled.gate(split.analysisOnly.map { it.kotlin }))
+            task.sources.from(kotlinCompilation.lazySources(enabled) { memberSplit(it).own })
+            task.analysisOnlySources.from(
+                kotlinCompilation.lazySources(enabled) { memberSplit(it).analysisOnly }
+            )
         }
         TaskShape.SINGLE_TARGET -> {
             task.sources.from(enabled.gate(own))

@@ -3,6 +3,9 @@
 package com.rsicarelli.fakt.gradle
 
 import com.rsicarelli.fakt.compiler.api.SourceSetInfo
+import java.util.concurrent.Callable
+import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 
@@ -80,6 +83,23 @@ internal fun memberSplit(compilation: KotlinCompilation<*>): MemberSplit =
     MemberSplit(
         own = compilation.kotlinSourceSets.toList(),
         analysisOnly = (compilation.allKotlinSourceSets - compilation.kotlinSourceSets).toList(),
+    )
+
+/**
+ * The Kotlin sources of the source sets [select] picks, read when Gradle resolves the files and
+ * empty while [enabled] is false. Never read at registration: KGP can realize the task while it is
+ * still creating the Android source sets, before the compilation lists all its members and before
+ * any `dependsOn` edge (so `commonMain`) exists. The [Callable] sits directly inside
+ * `project.files`, which keeps the task graph configuration-cache safe.
+ */
+internal fun KotlinCompilation<*>.lazySources(
+    enabled: Provider<Boolean>,
+    select: (KotlinCompilation<*>) -> Collection<KotlinSourceSet>,
+): FileCollection =
+    project.files(
+        Callable {
+            if (enabled.get()) select(this@lazySources).map { it.kotlin } else emptyList<Any>()
+        }
     )
 
 /**

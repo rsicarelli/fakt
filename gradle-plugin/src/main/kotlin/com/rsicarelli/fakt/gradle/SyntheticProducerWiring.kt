@@ -117,11 +117,16 @@ internal fun configureSyntheticSources(
     representative: KotlinCompilation<*>,
     gate: Provider<Boolean>,
 ) {
-    val commonMain =
-        requireCommonMain(representative.allKotlinSourceSets, representative.target.targetName)
-    val platform = representative.allKotlinSourceSets - commonMain
-    task.commonSources.from(gate.gate(commonMain.kotlin))
-    task.platformAnalysisOnlySources.from(gate.gate(platform.map { it.kotlin }))
+    task.commonSources.from(
+        representative.lazySources(gate) {
+            listOf(requireCommonMain(it.allKotlinSourceSets, it.target.targetName))
+        }
+    )
+    task.platformAnalysisOnlySources.from(
+        representative.lazySources(gate) {
+            it.allKotlinSourceSets - requireCommonMain(it.allKotlinSourceSets, it.target.targetName)
+        }
+    )
 }
 
 /** The `commonMain` source set, or a clear error naming what the target does have. */
