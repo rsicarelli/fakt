@@ -66,6 +66,16 @@ internal fun claimAssociatedTests(project: Project, mainKey: String, task: Strin
 }
 
 /**
+ * Records that [task] owns the test source set [testSet] outright (`commonTest` for the common
+ * producers and the single-target task, the intermediate producers' test sets).
+ */
+internal fun claimTestSourceSet(project: Project, testSet: String, task: String) {
+    val owners = testDirOwners(project)
+    owners.bySourceSet[testSet] = task
+    owners.tasks += task
+}
+
+/**
  * The task that owns [testSet], or `null` when none does: an explicit [TestDirOwners.bySourceSet]
  * claim first, otherwise the task of the first main compilation a non-metadata compilation with
  * that default source set is associated with. Associations are read on every call.

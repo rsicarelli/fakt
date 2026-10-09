@@ -278,14 +278,6 @@ internal fun isAgpLintAnalysisTask(taskName: String): Boolean =
 internal const val CANONICAL_COMMON_TEST_DIR: String = "generated/fakt/commonTest/kotlin"
 
 /**
- * Project extra property naming the `FaktGenerateTask` (single-target or synthetic common producer)
- * that owns the canonical `commonTest` directory. `SourceSetConfigurator` reads it to skip its own
- * plain registration of that directory, which would otherwise expose stale in-process copies
- * without a task dependency.
- */
-internal const val COMMON_TEST_OWNER_PROPERTY: String = "fakt.commonTestOwner"
-
-/**
  * How a `FaktGenerateTask` partitions its compilation's sources (see the `register*` functions of
  * [FaktGenerateTaskWiring]).
  */
@@ -361,14 +353,13 @@ internal fun Provider<Boolean>.gate(files: Any): Provider<Any> = map { isEnabled
 
 /**
  * Wires a single-target task's `commonGeneratedKotlinDir` into `commonTest` (lazy, so Gradle infers
- * the task dependency) and records the task as the owner of the canonical `commonTest` directory
- * ([COMMON_TEST_OWNER_PROPERTY]).
+ * the task dependency) and claims `commonTest` for the task in the owner registry.
  */
 private fun wireSingleTargetCommonDir(
     project: Project,
     taskProvider: TaskProvider<FaktGenerateTask>,
 ) {
-    project.extensions.extraProperties.set(COMMON_TEST_OWNER_PROPERTY, taskProvider.name)
+    claimTestSourceSet(project, "commonTest", taskProvider.name)
     project.extensions
         .findByType(KotlinMultiplatformExtension::class.java)
         ?.sourceSets

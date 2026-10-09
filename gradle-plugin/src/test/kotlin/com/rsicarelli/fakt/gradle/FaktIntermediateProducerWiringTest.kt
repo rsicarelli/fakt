@@ -297,7 +297,10 @@ class FaktIntermediateProducerWiringTest {
         val after =
             testDirOwners(project).bySourceSet.toMap() to testDirOwners(project).tasks.toSet()
         assertEquals(before, after)
-        assertEquals(mapOf("webTest" to WEB_TASK), after.first)
+        assertEquals(
+            mapOf("commonTest" to "faktGenerateMetadataCommonMain", "webTest" to WEB_TASK),
+            after.first,
+        )
     }
 
     @Test

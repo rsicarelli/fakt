@@ -121,8 +121,10 @@ internal fun wireTestSrcDirByAssociation(
     when {
         kmp == null ->
             wireCompileTasksByAssociation(project, compilation, generatedDir, useTestFixtures)
-        compilation.defaultSourceSet.name == "commonMain" ->
+        compilation.defaultSourceSet.name == "commonMain" -> {
+            claimTestSourceSet(project, "commonTest", taskProvider.name)
             kmp.sourceSets.findByName("commonTest")?.kotlin?.srcDir(generatedDir)
+        }
         else -> wireKmpAssociatedTests(project, compilation, taskProvider.name, generatedDir)
     }
 }

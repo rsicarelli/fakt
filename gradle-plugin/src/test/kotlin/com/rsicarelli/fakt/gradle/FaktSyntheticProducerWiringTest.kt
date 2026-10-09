@@ -107,13 +107,11 @@ class FaktSyntheticProducerWiringTest {
     }
 
     @Test
-    fun `GIVEN the synthetic task WHEN reading the extra property THEN it marks the common test owner`() {
+    fun `GIVEN the synthetic task WHEN reading the registry THEN it owns commonTest`() {
         val project = allJvmProject()
 
-        assertEquals(
-            "faktGenerateCommonMain",
-            project.extensions.extraProperties.get(COMMON_TEST_OWNER_PROPERTY),
-        )
+        assertEquals("faktGenerateCommonMain", testDirOwnerOf(project, "commonTest"))
+        assertTrue(isFaktTestDirOwner(project, "faktGenerateCommonMain"))
     }
 
     @Test

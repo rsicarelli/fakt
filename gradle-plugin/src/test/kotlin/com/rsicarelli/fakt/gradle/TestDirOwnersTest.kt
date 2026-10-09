@@ -111,7 +111,7 @@ class TestDirOwnersTest {
         assertEquals("faktGenerateJvmMain", testDirOwnerOf(project, "jvmIntegrationTest"))
         assertEquals("faktGenerateJvmMain", testDirOwnerOf(project, "jvmTest"))
         assertNull(testDirOwnerOf(project, "linuxX64Test"))
-        assertNull(testDirOwnerOf(project, "commonTest"))
+        assertEquals("faktGenerateMetadataCommonMain", testDirOwnerOf(project, "commonTest"))
     }
 
     @Test

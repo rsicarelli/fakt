@@ -5,6 +5,7 @@ package com.rsicarelli.fakt.gradle
 import com.rsicarelli.fakt.gradle.helpers.createKmpProject
 import com.rsicarelli.fakt.gradle.helpers.evaluate
 import com.rsicarelli.fakt.gradle.helpers.getKotlinExtension
+import com.rsicarelli.fakt.gradle.helpers.kmpCompilation
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -100,9 +101,13 @@ class SimplifiedSourceSetConfigurationTest {
         val project = createKmpProject()
         val kotlin = project.getKotlinExtension()
         kotlin.jvm()
+        kotlin.linuxX64()
         project.evaluate()
-        // Stand in for the real KGP-driven FaktGenerateTask, which ProjectBuilder cannot register.
-        project.tasks.register("faktGenerateMetadataCommonMain")
+        FaktGenerateTaskWiring.registerProducer(
+            project,
+            project.kmpCompilation("metadata", "commonMain"),
+            project.extensions.getByType(FaktPluginExtension::class.java),
+        )
 
         // When
         SourceSetConfigurator(project).configureKmpTestSourceSetDirs()
