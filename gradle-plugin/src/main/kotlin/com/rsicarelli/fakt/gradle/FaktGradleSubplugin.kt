@@ -107,8 +107,7 @@ internal fun unreadableSourcesReason(
  * compilation to receive them — supplied either by the `java-test-fixtures` Gradle plugin (JVM) or
  * by the Android Gradle plugin's `android { testFixtures { enable = true } }`
  * (`com.android.library` / `com.android.application`). Extracted as a `Project`-free function so
- * the full truth table is unit-testable without a Gradle project (mirrors
- * [shouldWireGeneratedDir]).
+ * the full truth table is unit-testable without a Gradle project (mirrors [wiresTestCompile]).
  *
  * @param useGradleTestFixtures the resolved `fakt { useGradleTestFixtures }` value.
  * @param hasJavaTestFixtures whether the `java-test-fixtures` plugin is applied.
@@ -124,7 +123,7 @@ internal fun shouldEnableTestFixtures(
  * Whether a routing decision leaves generation inside `compileKotlin*`, where the fakes are an
  * undeclared side effect and the task's cache entry is therefore incomplete (issue #142).
  *
- * Pure so the mapping is unit-testable without a Gradle project (mirrors [shouldWireGeneratedDir]).
+ * Pure so the mapping is unit-testable without a Gradle project (mirrors [wiresTestCompile]).
  */
 internal fun generatesFakesInProcess(decision: FaktGradleSubplugin.CacheCorrectDecision): Boolean =
     when (decision) {

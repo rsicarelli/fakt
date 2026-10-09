@@ -99,10 +99,13 @@ internal class SourceSetConfigurator(
      * in-process plugin (`LEGACY_HYBRID`) writes its platform-specific fakes. Empty directories are
      * harmless.
      *
-     * A platform test source set whose main is driven by a consumer `FaktGenerateTask` (`jvmTest`,
-     * `jsTest`, `wasmJsTest`, …) is skipped: its fakes arrive through the task's own
-     * `@OutputDirectory`, and a stale in-process copy left in the canonical dir by an earlier build
-     * would otherwise be compiled next to the task output as a `Redeclaration`.
+     * A test source set the owner registry attributes to a `FaktGenerateTask` ([testDirOwnerOf]) is
+     * skipped: its fakes arrive through the task's own `@OutputDirectory`, and a stale in-process
+     * copy left in the canonical dir by an earlier build would otherwise be compiled next to the
+     * task output as a `Redeclaration`. Ownership follows the association of the test compilation
+     * with the main the task serves (`jvmTest`, `jsTest`, a custom `jvmIntegrationTest`,
+     * `androidHostTest`), not the source set's name. Native targets have no task yet, so their test
+     * sets keep the plain directory.
      */
     fun configureKmpTestSourceSetDirs() =
         project.extensions
@@ -114,70 +117,33 @@ internal class SourceSetConfigurator(
         kotlin.sourceSets.configureEach { sourceSet ->
             if (sourceSet.name.endsWith("Test")) {
                 val generatedDir = File(buildDir, "generated/fakt/${sourceSet.name}/kotlin")
-                // When a FaktGenerateTask declares this dir as an @OutputDirectory (experimental
-                // path, commonTest only), register it through a builder-carrying FileCollection so
-                // Gradle infers the dependency. Otherwise (legacy in-process path, empty native/js
-                // dirs) there is no producer to wire, so keep the plain-File registration. Without
-                // the builder, AGP lintAnalyze*/lintReport* trip Gradle 9.6+ implicit-dependency
-                // validation (#129). Resolve inside the action so producers registered by
-                // applyToCompilation (which runs before this afterEvaluate) are visible.
-                val producer = producerTaskNameFor(sourceSet.name)
-                if (producer != null) {
-                    sourceSet.kotlin.srcDir(
-                        project.files(generatedDir).builtBy(project.tasks.named(producer))
-                    )
-                } else {
-                    // Decided lazily, when the source dirs are resolved: KGP can resolve a
-                    // platform compilation's subplugins (and so register its consumer task) after
-                    // this `configureEach` already ran — Kotlin/JS does.
-                    val testSourceSetName = sourceSet.name
-                    sourceSet.kotlin.srcDir(
-                        project.provider {
-                            if (isOwnedByConsumerTask(testSourceSetName)) emptyList()
-                            else listOf(generatedDir)
-                        }
-                    )
-                }
+                // Decided lazily, when the source dirs are resolved: KGP can resolve a platform
+                // compilation's subplugins (and so register its consumer task) after this
+                // `configureEach` already ran — Kotlin/JS does. A test set a FaktGenerateTask owns
+                // (`commonTest` included) gets its task output srcDir from the wiring, which
+                // carries the task dependency (#129); no plain directory is added next to it.
+                val testSourceSetName = sourceSet.name
+                sourceSet.kotlin.srcDir(
+                    project.provider {
+                        if (isOwnedByConsumerTask(testSourceSetName)) emptyList()
+                        else listOf(generatedDir)
+                    }
+                )
                 project.logger.info("Fakt: Added generated dir to ${sourceSet.name}: $generatedDir")
             }
         }
     }
 
     /**
-     * Whether a [FaktGenerateTask] already feeds [testSourceSetName]: `jsTest` is owned when the
-     * consumer `faktGenerateJsMain` (target `js`, compilation `main`) is registered, and
-     * `commonTest` when a single-target or synthetic task owns the canonical directory
-     * ([COMMON_TEST_OWNER_PROPERTY]), and any test source set an intermediate producer feeds
-     * ([TEST_DIR_OWNERS_PROPERTY]). Must be queried lazily (from a provider): the task may be
-     * registered after the source set is configured.
+     * Whether a [FaktGenerateTask] already feeds [testSourceSetName], per the owner registry
+     * ([testDirOwnerOf]): an explicit claim (`commonTest`, intermediate producers) or the task of
+     * the main compilation a test compilation with that default source set is associated with
+     * (`jvmTest`, a custom `jvmIntegrationTest`, `androidHostTest`). Must be queried lazily (from a
+     * provider): the task may be registered, and the association made, after the source set is
+     * configured.
      */
-    private fun isOwnedByConsumerTask(testSourceSetName: String): Boolean {
-        val ownedByCommonTestProducer =
-            testSourceSetName == "commonTest" &&
-                project.extensions.extraProperties.has(COMMON_TEST_OWNER_PROPERTY)
-        return ownedByCommonTestProducer ||
-            isTestDirOwned(project, testSourceSetName) ||
-            consumerTaskNameFor(testSourceSetName)?.let(project.tasks.names::contains) ?: false
-    }
-
-    /**
-     * Name of the [FaktGenerateTask] whose `@OutputDirectory` equals this test source set's
-     * canonical generated dir, or `null` when none owns it.
-     *
-     * Only `commonTest` collides: the common producer writes the canonical
-     * `generated/fakt/commonTest/kotlin` (see `FaktGenerateTaskWiring.register`), while every other
-     * producer writes a per-compilation `generated/fakt/<target>/<compilation>/kotlin` path. In
-     * legacy mode no `FaktGenerateTask` exists at all, so the lookup returns `null` and the dir
-     * stays a plain-File registration (nothing to declare a dependency on).
-     */
-    private fun producerTaskNameFor(testSourceSetName: String): String? =
-        if (testSourceSetName == "commonTest") {
-            listOf("faktGenerateMetadataCommonMain", "faktGenerateCommonMain").firstOrNull {
-                project.tasks.names.contains(it)
-            }
-        } else {
-            null
-        }
+    private fun isOwnedByConsumerTask(testSourceSetName: String): Boolean =
+        testDirOwnerOf(project, testSourceSetName) != null
 
     /**
      * Configure JVM-only projects and Android projects.
@@ -223,10 +189,9 @@ internal class SourceSetConfigurator(
      * 2. **Android (and JVM):** source the dir into every `compile*TestFixturesKotlin` task.
      *    Android has no `JavaPluginExtension`, so this Kotlin-compile-task route is the only one
      *    that reaches AGP's per-variant `compileDebugTestFixturesKotlin` /
-     *    `compileReleaseTestFixturesKotlin`. Selection reuses [shouldWireGeneratedDir] (producing
-     *    token `"main"` matches every variant), keeping the scoping identical to the experimental
-     *    generate-task path. `configureEach` is lazy so AGP's later-registered per-variant tasks
-     *    are still covered.
+     *    `compileReleaseTestFixturesKotlin`. Selection uses [isTestFixturesCompileTask], which
+     *    matches every variant's fixtures compile. `configureEach` is lazy so AGP's
+     *    later-registered per-variant tasks are still covered.
      */
     private fun configureTestFixturesSourceSet() {
         val generatedDir =
@@ -242,7 +207,7 @@ internal class SourceSetConfigurator(
 
         // Route 2 — Kotlin testFixtures compile tasks (Android variants + JVM).
         project.tasks.withType(AbstractKotlinCompile::class.java).configureEach { task ->
-            if (shouldWireGeneratedDir(task.name, "main", useTestFixtures = true)) {
+            if (isTestFixturesCompileTask(task.name)) {
                 task.source(generatedDir)
                 project.logger.info(
                     "Fakt: Configured testFixtures compile task '${task.name}' " +
@@ -260,22 +225,5 @@ internal class SourceSetConfigurator(
     private fun isTestTask(taskName: String): Boolean {
         val normalized = taskName.lowercase()
         return normalized.contains("test")
-    }
-}
-
-/**
- * Consumer [FaktGenerateTask] name that would own a KMP platform test source set (`jsTest` →
- * `faktGenerateJsMain`), or `null` for `commonTest` (owned by the common producer) and anything
- * that isn't a `<target>Test` source set. Follows KGP's default `<target>Main` / `<target>Test`
- * naming, which is what `FaktGenerateTaskWiring` derives task names from.
- */
-internal fun consumerTaskNameFor(testSourceSetName: String): String? {
-    val target = testSourceSetName.removeSuffix("Test")
-    val isPlatformTestSourceSet =
-        testSourceSetName.endsWith("Test") && target.isNotEmpty() && target != "common"
-    return if (isPlatformTestSourceSet) {
-        "faktGenerate" + target.replaceFirstChar { it.uppercaseChar() } + "Main"
-    } else {
-        null
     }
 }

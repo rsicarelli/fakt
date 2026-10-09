@@ -15,7 +15,7 @@ import org.junit.jupiter.api.TestInstance
 /**
  * Pins [routeCompilation], the pure decision behind how each Kotlin compilation generates its
  * fakes, together with the helpers it and the task wiring rely on ([isDrivablePlatform],
- * [isSingleTargetDrivablePlatform], [wasmCompilerTarget], [consumerTaskNameFor]).
+ * [isSingleTargetDrivablePlatform], [wasmCompilerTarget]).
  *
  * Issue #151 moved Kotlin/JS and Kotlin/Wasm platform mains off the in-process plugin
  * (`LEGACY_HYBRID`) onto a `K2JSCompiler`-driven consumer `FaktGenerateTask`. Issue #153 moved
@@ -256,20 +256,6 @@ class FaktCompilationRoutingTest {
         assertEquals("wasm-js", wasmCompilerTarget(KotlinWasmTargetType.JS))
         assertEquals("wasm-wasi", wasmCompilerTarget(KotlinWasmTargetType.WASI))
         assertNull(wasmCompilerTarget(null), "A Kotlin/JS target must leave the driver in JS mode.")
-    }
-
-    @Test
-    fun `GIVEN platform test source sets WHEN resolving the owning consumer task THEN follows faktGenerate target Main naming`() {
-        assertEquals("faktGenerateJsMain", consumerTaskNameFor("jsTest"))
-        assertEquals("faktGenerateWasmJsMain", consumerTaskNameFor("wasmJsTest"))
-        assertEquals("faktGenerateJvmMain", consumerTaskNameFor("jvmTest"))
-    }
-
-    @Test
-    fun `GIVEN commonTest or a non-test source set WHEN resolving the owning consumer task THEN returns null`() {
-        assertNull(consumerTaskNameFor("commonTest"), "commonTest is owned by the common producer")
-        assertNull(consumerTaskNameFor("jsMain"))
-        assertNull(consumerTaskNameFor("Test"))
     }
 
     private fun routeKmp(

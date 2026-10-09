@@ -4,7 +4,6 @@ package com.rsicarelli.fakt.gradle
 
 import org.gradle.api.GradleException
 import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
@@ -55,7 +54,7 @@ internal object SyntheticProducerWiring {
         when {
             existing == null ->
                 FaktGenerateTaskWiring.registerSyntheticProducer(project, compilation, extension)
-            isRegisteredByFakt(project, existing) -> Unit
+            isFaktTestDirOwner(project, existing.name) -> Unit
             else ->
                 throw GradleException(
                     "Fakt needs the task name '$SYNTHETIC_TASK_NAME' for the common producer of " +
@@ -64,12 +63,6 @@ internal object SyntheticProducerWiring {
                 )
         }
     }
-
-    /** True when [task] is the one this object registered (the owner property names it). */
-    private fun isRegisteredByFakt(project: Project, task: Task): Boolean =
-        task is FaktGenerateTask &&
-            project.extensions.extraProperties.has(COMMON_TEST_OWNER_PROPERTY) &&
-            project.extensions.extraProperties.get(COMMON_TEST_OWNER_PROPERTY) == task.name
 }
 
 /**
@@ -147,13 +140,13 @@ internal fun requireCommonMain(
 
 /**
  * Hands the task output to `commonTest` (lazy, so Gradle infers the task dependency), makes AGP
- * lint wait for it, and records it as the owner of the canonical `commonTest` directory.
+ * lint wait for it, and claims `commonTest` for it in the owner registry.
  */
 internal fun wireSyntheticCommonTest(
     project: Project,
     taskProvider: TaskProvider<FaktGenerateTask>,
 ) {
-    project.extensions.extraProperties.set(COMMON_TEST_OWNER_PROPERTY, taskProvider.name)
+    claimTestSourceSet(project, "commonTest", taskProvider.name)
     project.extensions
         .findByType(KotlinMultiplatformExtension::class.java)
         ?.sourceSets

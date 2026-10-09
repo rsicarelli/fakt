@@ -18,6 +18,9 @@ import com.rsicarelli.fakt.compiler.api.LogLevel
  * Without the common producer, `commonTest` could not find the commonMain fakes (issue #160).
  * Without the intermediate producer, `SessionStore` was never generated (issue #162).
  *
+ * `server` also has a custom `integrationTest` compilation associated with `main` after
+ * evaluation (#164b): it receives the server fakes through the association, with no naming rule.
+ *
  * `commonMain` declares `expect fun transport()`: `cliMain` has one actual and
  * `desktopAndServerMain` the other, so the analysis of that intermediate level must keep the
  * expect (commonMain) and the actual (intermediate) apart.
@@ -29,7 +32,15 @@ plugins {
 
 kotlin {
     jvm("desktop")
-    jvm("server")
+    jvm("server") {
+        // A custom test compilation: it only sees the fakes of `main` through its association,
+        // which is added late (after evaluation), as real builds do from convention plugins.
+        val integrationTest = compilations.create("integrationTest")
+        testRuns.create("integration") { setExecutionSourceFrom(integrationTest) }
+        project.afterEvaluate {
+            integrationTest.associateWith(compilations.getByName("main"))
+        }
+    }
     jvm("cli")
 
     sourceSets {
@@ -46,6 +57,10 @@ kotlin {
                 implementation(libs.fakt.annotations)
                 implementation(libs.coroutines)
             }
+        }
+
+        getByName("serverIntegrationTest") {
+            dependencies { implementation(libs.kotlin.test) }
         }
 
         commonTest {

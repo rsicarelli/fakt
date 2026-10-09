@@ -173,7 +173,10 @@ class FaktSyntheticIntermediateWiringTest {
         val after =
             testDirOwners(project).bySourceSet.toMap() to testDirOwners(project).tasks.toSet()
         assertEquals(before, after)
-        assertEquals(mapOf("desktopAndServerTest" to SHARED_TASK), after.first)
+        assertEquals(
+            mapOf("commonTest" to "faktGenerateCommonMain", "desktopAndServerTest" to SHARED_TASK),
+            after.first,
+        )
     }
 
     @Test
@@ -324,10 +327,7 @@ class FaktSyntheticIntermediateWiringTest {
         val project = sharedProject()
 
         val common = project.tasks.getByName("faktGenerateCommonMain") as FaktGenerateTask
-        assertEquals(
-            "faktGenerateCommonMain",
-            project.extensions.extraProperties.get(COMMON_TEST_OWNER_PROPERTY),
-        )
+        assertEquals("faktGenerateCommonMain", testDirOwnerOf(project, "commonTest"))
         assertEquals(mapOf("commonMain" to "fakt://generated"), common.context().outputDirectories)
         assertTrue(
             common.generatedKotlinDir.get().asFile.path.endsWith(CANONICAL_COMMON_TEST_DIR),

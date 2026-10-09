@@ -59,7 +59,7 @@ internal data class RoutedCompilation(
 /**
  * Pure routing behind [FaktGradleSubplugin.applyToCompilation]'s cache-correct branch: decides how
  * one Kotlin compilation generates its fakes. `Project`-free so the full table is unit-testable
- * (mirrors [shouldWireGeneratedDir]).
+ * (mirrors [wiresTestCompile]).
  *
  * `commonMain` is checked before the `common` platform-type guard because the metadata target
  * exposes both the per-source-set `commonMain` compilation (the producer) and a legacy `main`
