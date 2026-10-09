@@ -35,6 +35,7 @@ class AgpKmpAndroidShapeTest {
 
     private fun androidProject(
         flavors: Boolean = false,
+        flavorNames: List<String> = listOf("free", "paid"),
         withJvm: Boolean = true,
         configure: (Project) -> Unit = {},
     ): Project {
@@ -55,8 +56,9 @@ class AgpKmpAndroidShapeTest {
         android.compileSdk = 34
         if (flavors) {
             android.flavorDimensions += "tier"
-            android.productFlavors.create("free") { it.dimension = "tier" }
-            android.productFlavors.create("paid") { it.dimension = "tier" }
+            flavorNames.forEach { name ->
+                android.productFlavors.create(name) { it.dimension = "tier" }
+            }
         }
         configure(project)
         listOf("androidDebug", "androidMain", "commonMain", "androidRelease").forEach {
@@ -297,6 +299,23 @@ class AgpKmpAndroidShapeTest {
         assertEquals(
             setOf("androidFreeDebug", "androidMain", "androidFree", "androidDebug"),
             context.outputDirectories.keys,
+        )
+    }
+
+    @Test
+    fun `GIVEN flavors named latest and contest WHEN evaluating THEN their variants stay main and route their sets`() {
+        val project = androidProject(flavors = true, flavorNames = listOf("latest", "contest"))
+
+        val latest = project.context("faktGenerateAndroidLatestDebug").outputDirectories.keys
+        val contest = project.context("faktGenerateAndroidContestRelease").outputDirectories.keys
+
+        assertEquals(
+            setOf("androidLatestDebug", "androidMain", "androidLatest", "androidDebug"),
+            latest,
+        )
+        assertEquals(
+            setOf("androidContestRelease", "androidMain", "androidContest", "androidRelease"),
+            contest,
         )
     }
 

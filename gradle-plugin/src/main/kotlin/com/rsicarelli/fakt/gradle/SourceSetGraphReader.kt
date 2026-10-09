@@ -56,14 +56,8 @@ private fun KotlinTarget.toTargetNode(): TargetNode =
             },
     )
 
-/**
- * A compilation is test-like when it is associated with another compilation (the KGP shape of a
- * custom `integration`/`e2e`/`benchmark` test compilation) or its name says so (Android variants
- * and the default `test` compilation). An unassociated custom compilation without "test" in its
- * name stays a main compilation.
- */
 private fun KotlinCompilation<*>.isTestCompilation(): Boolean =
-    associatedCompilations.isNotEmpty() || name.contains("test", ignoreCase = true)
+    isTestLikeCompilation(name, associatedCompilations.isNotEmpty())
 
 private fun KotlinTarget.isAndroidTarget(): Boolean =
     platformType.name.equals("androidJvm", ignoreCase = true) ||

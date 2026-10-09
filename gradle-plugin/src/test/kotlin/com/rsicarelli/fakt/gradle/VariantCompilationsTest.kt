@@ -267,4 +267,38 @@ class VariantCompilationsTest {
     fun `GIVEN an owner and a non jvm type WHEN checking a compilation THEN it does not represent`() {
         assertFalse(isSyntheticCommonMainRepresentative(androidOwner, "main", "jsMain", "js"))
     }
+
+    @Test
+    fun `GIVEN test shaped names WHEN deciding test likeness THEN they are tests`() {
+        val names =
+            listOf(
+                "test",
+                "integrationTest",
+                "debugUnitTest",
+                "freeReleaseUnitTest",
+                "debugAndroidTest",
+                "debugTestFixtures",
+                "testFixtures",
+                "hostTest",
+            )
+
+        val tests = names.filter { isTestLikeCompilation(it, associated = false) }
+
+        assertEquals(names, tests)
+    }
+
+    @Test
+    fun `GIVEN variant names that only contain test WHEN deciding test likeness THEN they stay main`() {
+        val names =
+            listOf("latestDebug", "contestRelease", "attestDebug", "testingDebug", "main", "debug")
+
+        val tests = names.filter { isTestLikeCompilation(it, associated = false) }
+
+        assertEquals(emptyList(), tests)
+    }
+
+    @Test
+    fun `GIVEN an associated compilation WHEN deciding test likeness THEN it is a test whatever its name`() {
+        assertTrue(isTestLikeCompilation("benchmark", associated = true))
+    }
 }

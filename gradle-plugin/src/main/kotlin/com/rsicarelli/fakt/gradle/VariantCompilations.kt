@@ -186,3 +186,15 @@ internal fun KotlinCompilation<*>.workerDependencyFiles(): FileCollection {
             .files
     return project.files(compileDependencyFiles.filter { it.extension != AAR_EXTENSION }, classJars)
 }
+
+private val TEST_NAME = Regex("(test|testFixtures|.*(Test|UnitTest|AndroidTest|TestFixtures))")
+
+/**
+ * Whether a compilation is test-like: associated with another compilation (the KGP shape of a
+ * custom test compilation), the default `test` or `testFixtures`, or named with a capitalised test
+ * suffix (`integrationTest`, `debugUnitTest`, `debugAndroidTest`, `debugTestFixtures`). A bare
+ * substring is not enough: the flavor `latest` or `testing` and the build type `contest` give the
+ * main variants `latestDebug` and `testingDebug`, whose fakes must not be dropped.
+ */
+internal fun isTestLikeCompilation(name: String, associated: Boolean): Boolean =
+    associated || TEST_NAME.matches(name)
