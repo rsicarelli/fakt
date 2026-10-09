@@ -24,13 +24,14 @@ internal enum class TestCompileKind {
 internal data class TestCompileTask(val variant: String, val kind: TestCompileKind)
 
 private val TEST_COMPILE_TASK =
-    Regex("^compile(.*?)(UnitTest|AndroidTest|TestFixtures|Test)Kotlin$")
+    Regex("^(?:compile|kaptGenerateStubs|ksp)(.*?)(UnitTest|AndroidTest|TestFixtures|Test)Kotlin$")
 
 private const val MAIN_VARIANT = "main"
 
 /**
  * Parses a Kotlin compile task name into its build variant and test kind, or `null` when the task
- * is not a test-like compile (`compileKotlin`, `compileDebugKotlin`). The variant is matched as a
+ * is not a test-like compile (`compileKotlin`, `compileDebugKotlin`). The kapt stub and KSP tasks
+ * of a test compilation parse to the same variant as its compile task. The variant is matched as a
  * whole, so `debugMinified` is never confused with `debug`.
  *
  * `compileDebugMinifiedUnitTestKotlin` -> (`debugMinified`, UNIT); `compileTestKotlin` -> (`main`,
@@ -92,9 +93,13 @@ private fun isProductionCompile(taskName: String, producer: String): Boolean =
         ignoreCase = true,
     )
 
-/** Today's `main` rule for task names the parser does not know: a non-fixtures `*test*` task. */
+/**
+ * `main` rule for task names the parser does not know: a non-fixtures task with a capitalised
+ * `Test` word (`kaptGenerateStubsKotlin` has a lowercase `teStubs` and is production).
+ */
 private fun isPlainTestTask(taskName: String): Boolean =
-    taskName.contains("test", ignoreCase = true) && !isTestFixturesCompileTask(taskName)
+    (taskName.contains("Test") || taskName.startsWith("test")) &&
+        !isTestFixturesCompileTask(taskName)
 
 /** Whether [taskName] is a `testFixtures` Kotlin compile task (legacy fixtures route). */
 internal fun isTestFixturesCompileTask(taskName: String): Boolean =

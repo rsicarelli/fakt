@@ -64,6 +64,40 @@ class TestWiringByAssociationTest {
     }
 
     @Test
+    fun `GIVEN a kapt stub task of a variant WHEN parsing THEN it parses to the same variant`() {
+        assertEquals(
+            TestCompileTask("debug", TestCompileKind.UNIT),
+            testCompileVariant("kaptGenerateStubsDebugUnitTestKotlin"),
+        )
+    }
+
+    @Test
+    fun `GIVEN a ksp task of a variant WHEN parsing THEN it parses to the same variant`() {
+        assertEquals(
+            TestCompileTask("debug", TestCompileKind.UNIT),
+            testCompileVariant("kspDebugUnitTestKotlin"),
+        )
+    }
+
+    @Test
+    fun `GIVEN the jvm kapt stub and ksp test tasks WHEN parsing THEN the variant is main`() {
+        assertEquals(
+            TestCompileTask("main", TestCompileKind.TEST),
+            testCompileVariant("kaptGenerateStubsTestKotlin"),
+        )
+        assertEquals(
+            TestCompileTask("main", TestCompileKind.TEST),
+            testCompileVariant("kspTestKotlin"),
+        )
+    }
+
+    @Test
+    fun `GIVEN the production kapt stub and ksp tasks WHEN parsing THEN they are not test compiles`() {
+        assertNull(testCompileVariant("kaptGenerateStubsKotlin"))
+        assertNull(testCompileVariant("kspKotlin"))
+    }
+
+    @Test
     fun `GIVEN the production compile task WHEN parsing THEN it is not a test compile`() {
         assertNull(testCompileVariant("compileKotlin"))
     }

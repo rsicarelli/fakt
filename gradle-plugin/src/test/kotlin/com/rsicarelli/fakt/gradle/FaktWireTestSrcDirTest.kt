@@ -349,4 +349,103 @@ class FaktWireTestSrcDirTest {
             "The debug unit-test compilation is associated with debug.",
         )
     }
+
+    @Test
+    fun `GIVEN debug producer with fixtures off WHEN matching the debug kapt stub unit-test task THEN it is wired`() {
+        assertTrue(
+            wiresTestCompile(
+                "kaptGenerateStubsDebugUnitTestKotlin",
+                "debug",
+                associatedWith = null,
+                useTestFixtures = false,
+            ),
+            "kaptGenerateStubsDebugUnitTestKotlin for producer debug.",
+        )
+    }
+
+    @Test
+    fun `GIVEN debug producer with fixtures off WHEN matching the debug ksp unit-test task THEN it is wired`() {
+        assertTrue(
+            wiresTestCompile(
+                "kspDebugUnitTestKotlin",
+                "debug",
+                associatedWith = null,
+                useTestFixtures = false,
+            ),
+            "kspDebugUnitTestKotlin for producer debug.",
+        )
+    }
+
+    @Test
+    fun `GIVEN debug producer with fixtures off WHEN matching the debugMinified kapt stub unit-test task THEN it is not wired`() {
+        assertFalse(
+            wiresTestCompile(
+                "kaptGenerateStubsDebugMinifiedUnitTestKotlin",
+                "debug",
+                associatedWith = null,
+                useTestFixtures = false,
+            ),
+            "kaptGenerateStubsDebugMinifiedUnitTestKotlin for producer debug.",
+        )
+    }
+
+    @Test
+    fun `GIVEN release producer with fixtures off WHEN matching the preRelease ksp unit-test task THEN it is not wired`() {
+        assertFalse(
+            wiresTestCompile(
+                "kspPreReleaseUnitTestKotlin",
+                "release",
+                associatedWith = null,
+                useTestFixtures = false,
+            ),
+            "kspPreReleaseUnitTestKotlin for producer release.",
+        )
+    }
+
+    @Test
+    fun `GIVEN main producer with fixtures off WHEN matching the jvm kapt stub test task THEN it is wired`() {
+        assertTrue(
+            wiresTestCompile(
+                "kaptGenerateStubsTestKotlin",
+                "main",
+                associatedWith = null,
+                useTestFixtures = false,
+            ),
+            "kaptGenerateStubsTestKotlin for producer main.",
+        )
+    }
+
+    @Test
+    fun `GIVEN main producer with fixtures off WHEN matching the jvm ksp test task THEN it is wired`() {
+        assertTrue(
+            wiresTestCompile(
+                "kspTestKotlin",
+                "main",
+                associatedWith = null,
+                useTestFixtures = false,
+            ),
+            "kspTestKotlin for producer main.",
+        )
+    }
+
+    @Test
+    fun `GIVEN main producer with fixtures off WHEN matching the production kapt stub task THEN it is not wired`() {
+        assertFalse(
+            wiresTestCompile(
+                "kaptGenerateStubsKotlin",
+                "main",
+                associatedWith = null,
+                useTestFixtures = false,
+            ),
+            "kaptGenerateStubsKotlin for producer main.",
+        )
+    }
+
+    @Test
+    fun `GIVEN main producer with fixtures off WHEN matching the production ksp task THEN it is not wired`() {
+        assertFalse(
+            wiresTestCompile("kspKotlin", "main", associatedWith = null, useTestFixtures = false),
+            "kspKotlin for producer main.",
+        )
+    }
 }
