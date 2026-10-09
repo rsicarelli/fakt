@@ -8,6 +8,16 @@ plugins {
     alias(libs.plugins.fakt)
 }
 
+android {
+    buildTypes {
+        // Extra build types whose names CONTAIN another variant's name ("debugMinified" contains
+        // "debug", "preRelease" contains "release"). Each variant's fakes must reach only that
+        // variant's unit tests, never a neighbour's (#164b).
+        create("debugMinified") { initWith(getByName("debug")) }
+        create("preRelease") { initWith(getByName("release")) }
+    }
+}
+
 dependencies {
     implementation(libs.fakt.annotations)
 
