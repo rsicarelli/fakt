@@ -334,7 +334,7 @@ jobs:
           - sample: kmp-android-target
             path: samples/kmp-android-target
             producers: :shared:faktGenerateMetadataCommonMain :shared:faktGenerateJvmMain :shared:faktGenerateAndroidDebug :shared:faktGenerateAndroidRelease :android-only:faktGenerateCommonMain :android-only:faktGenerateAndroidDebug :android-only:faktGenerateAndroidRelease :flavored:faktGenerateAndroidFreeDebug :flavored:faktGenerateAndroidPaidRelease
-            cached-fakes: FakeUserRepositoryImpl FakeAndroidOnlyImpl FakeFlagReaderImpl FakeDebugMenuImpl FakeJvmOnlyImpl FakeClockImpl FakeBatteryImpl FakeFeatureGateImpl FakeTierFeaturesImpl
+            cached-fakes: FakeUserRepositoryImpl FakeAndroidOnlyImpl FakeAarTypeSourceImpl FakeFlagReaderImpl FakeDebugMenuImpl FakeJvmOnlyImpl FakeClockImpl FakeBatteryImpl FakeFeatureGateImpl FakeTierFeaturesImpl
             # This sample needs no plugin the worker lacks: any tolerated error is a real problem.
             forbid-tolerated: "1"
     steps:
