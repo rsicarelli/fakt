@@ -75,6 +75,8 @@ dependencies {
     testImplementation(libs.junit.platform.launcher)
     // AGP's API types for AndroidIntegrationTest's hand-written androidComponents fake.
     testImplementation(libs.agp.api.floor)
+    // The real AGP, for AgpKmpAndroidShapeTest's ProjectBuilder contract (no Android SDK needed).
+    testImplementation(libs.android.gradlePlugin)
     testImplementation(libs.kotlin.gradlePlugin)
     testImplementation(libs.kotlin.gradlePlugin.api)
     testImplementation(libs.coroutines.test)
