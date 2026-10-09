@@ -41,6 +41,8 @@ dependencyResolutionManagement {
             library("fakt-annotations", "com.rsicarelli.fakt", "annotations").versionRef("fakt")
             library("coroutines", "org.jetbrains.kotlinx", "kotlinx-coroutines-core")
                 .versionRef("coroutines")
+            // An AAR dependency (androidx.core.util.Consumer lives in core, an .aar).
+            library("androidx-core", "androidx.core", "core-ktx").version("1.13.1")
         }
     }
 }

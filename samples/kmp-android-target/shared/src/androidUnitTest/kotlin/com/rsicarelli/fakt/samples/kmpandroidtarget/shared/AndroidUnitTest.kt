@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.samples.kmpandroidtarget.shared
 
+import androidx.core.util.Consumer
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -29,5 +30,18 @@ class AndroidUnitTest {
         // Then
         assertEquals("android-user", name)
         assertEquals("android", platformName())
+    }
+
+    @Test
+    fun `GIVEN fake using an AAR type WHEN subscribing THEN the consumer reaches the behavior`() {
+        // Given
+        val received = mutableListOf<String>()
+        val source = fakeAarTypeSource { subscribe { consumer -> consumer.accept("aar") } }
+
+        // When
+        source.subscribe(Consumer { received.add(it) })
+
+        // Then
+        assertEquals(listOf("aar"), received)
     }
 }

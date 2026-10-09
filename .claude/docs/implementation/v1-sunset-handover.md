@@ -56,9 +56,9 @@ The in-process legacy path used to put `androidMain` fakes in `generated/fakt/an
 `androidUnitTest` never saw them; that only remains with `fakt.useExperimentalGenerateTask=false`
 (removed in 1.0). `com.android.kotlin.multiplatform.library` reports platform type `jvm`, was already
 on the task path and is untouched. Proof: `samples/kmp-android-target` (CI sample, cache and
-clean-rebuild cells). Known limit: Android `compileDependencyFiles` contain `.aar` files, so a
-`@Fake` signature using an AAR type can stay unresolved (R4; the sample uses only
-`android.content.Context`).
+clean-rebuild cells). Android `compileDependencyFiles` contain `.aar` files the worker cannot read, so for androidJvm
+compilations `workerDependencyFiles()` (VariantCompilations.kt) keeps the jars and adds the
+`android-classes-jar` artifact view; `AarTypeSource` in the sample (androidx `core`) proves it.
 
 ### 3.3 One PR per issue
 

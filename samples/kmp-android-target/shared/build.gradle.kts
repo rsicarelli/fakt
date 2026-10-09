@@ -19,6 +19,10 @@ kotlin {
             // Generated fakes track call history via kotlinx-coroutines StateFlow.
             implementation(libs.coroutines)
         }
+        androidMain.dependencies {
+            // An AAR: its types appear in an androidMain @Fake signature (AarTypeSource).
+            implementation(libs.androidx.core)
+        }
         commonTest.dependencies { implementation(kotlin("test")) }
     }
 }

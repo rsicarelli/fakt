@@ -31,11 +31,12 @@ shared `androidUnitTest` and `androidInstrumentedTest` source sets receive no ge
 The sample sets `fakt { logLevel = INFO }` in every module: the cache-contract CI cell forbids
 `Fakt: tolerated compiler error` lines, and they are only printed at INFO or above.
 
-## Avoided on purpose
+## AAR types in a signature
 
-`@Fake` signatures use no types from AAR dependencies. Android compile classpaths contain `.aar`
-files, which the generation worker does not read yet (see the limits in the plugin configuration
-guide), so the sample keeps to `android.content.Context` from `android.jar`.
+`:shared` `androidMain` declares `AarTypeSource`, a `@Fake` whose signature uses
+`androidx.core.util.Consumer`, a type from the `core` AAR (`androidx.core:core-ktx`). Android compile
+classpaths contain `.aar` files; Fakt hands the generation worker the unpacked class jars
+(`android-classes-jar`) instead, so the type resolves and `AndroidUnitTest` runs the generated fake.
 
 ## Run
 

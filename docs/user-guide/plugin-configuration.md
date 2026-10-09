@@ -485,10 +485,9 @@ so those fakes are still produced by the in-process plugin
     `commonTest` from `faktGenerateCommonMain`, which runs on the debug variant.
     `samples/kmp-android-target` covers all three shapes.
 
-    Known limit: an Android compilation's classpath holds `.aar` files, which the generation
-    worker does not read yet. A `@Fake` signature that uses a type from an AAR dependency can stay
-    unresolved. Types from the Android SDK (`android.content.Context`) and from plain JAR
-    dependencies are fine.
+    Types from AAR dependencies (`androidx`) can appear in a `@Fake` signature: for an Android
+    compilation Fakt gives the generation worker the unpacked class jars of the AARs, not the
+    `.aar` files.
 
 !!! note "Project shapes that keep the in-process path"
     A few shapes fall back to generating inside `compileKotlin*`. Fakes are still generated for
