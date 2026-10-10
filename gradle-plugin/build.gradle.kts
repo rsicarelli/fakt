@@ -138,7 +138,7 @@ tasks {
         systemProperty("junit.jupiter.execution.parallel.config.fixed.parallelism", "2")
         // A parent test task that waits on its children makes the fork-join pool add a thread, so
         // "parallelism 2" alone still ran about seven TestKit builds (each with a 2g daemon) at
-        // once. Capping the pool size keeps it at the number above; a single fork keeps that number a
+        // once. Capping the pool size keeps it at the number above, and a single fork makes that a
         // total rather than a per-fork limit.
         systemProperty("junit.jupiter.execution.parallel.config.fixed.max-pool-size", "2")
         // Resolved lazily at execution time (jvmArgumentProviders, not systemProperty) so the
