@@ -228,6 +228,12 @@ jobs:
           ORG_GRADLE_PROJECT_SKIP_SIGNING: true
         run: ./gradlew -p ${{ matrix.pre-publish }} publishToMavenLocal
 
+      # AGP creates this directory on its first run. Gradle records it as a configuration-cache
+      # input, so creating it mid-build would invalidate the entry the reuse check below needs.
+      - name: Pre-create the Android tooling cache directory
+        if: ${{ matrix.cc-reuse }}
+        run: mkdir -p ~/.config/.android/cache
+
       - name: Test ${{ matrix.sample }}
         run: ./gradlew -p ${{ matrix.path }} ${{ matrix.tasks }}
 
