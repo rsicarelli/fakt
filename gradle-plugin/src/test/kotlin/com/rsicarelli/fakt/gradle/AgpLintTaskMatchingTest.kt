@@ -11,13 +11,21 @@ import org.junit.jupiter.api.TestInstance
 class AgpLintTaskMatchingTest {
 
     @Test
-    fun `GIVEN task names WHEN matching AGP lint analysis THEN only AGP analysis tasks match`() {
+    fun `GIVEN task names WHEN matching AGP lint analysis THEN only AGP lint tasks that read the sources match`() {
         val expected =
             mapOf(
                 "lintAnalyzeDebug" to true,
                 "lintAnalyzeDebugUnitTest" to true,
                 "lintAnalyzeAndroidHostTest" to true,
                 "lintVitalAnalyzeRelease" to true,
+                "generateDebugLintModel" to true,
+                "generateDebugUnitTestLintModel" to true,
+                "generateDebugAndroidTestLintModel" to true,
+                "generateReleaseLintReportModel" to true,
+                "generateReleaseLintVitalReportModel" to true,
+                "generateFreeDebugUnitTestLintModel" to true,
+                "generateDebugResources" to false,
+                "generateDebugLintKotlin" to false,
                 "lintKotlin" to false,
                 "lintKotlinMain" to false,
                 "lintFix" to false,

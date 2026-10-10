@@ -276,10 +276,17 @@ internal fun wireAndroidLintOrdering(
  * Whether [taskName] is one of AGP's lint *analysis* tasks (`lintAnalyze<Variant>`,
  * `lintVitalAnalyze<Variant>`, `lintAnalyzeAndroidHostTest`, …) — the tasks that read the generated
  * directory through the Android variant model. A bare `startsWith("lint")` also caught unrelated
- * tasks such as kotlinter's `lintKotlin`, which never touch the fakes.
+ * tasks such as kotlinter's `lintKotlin`, which never touch the fakes. AGP's lint model writers
+ * (`generate<Variant>LintModel`, `generate<Variant>UnitTestLintModel`, `…LintReportModel`,
+ * `…LintVitalReportModel`) read the same source directories, so they are matched too.
  */
 internal fun isAgpLintAnalysisTask(taskName: String): Boolean =
-    taskName.startsWith("lintAnalyze") || taskName.startsWith("lintVitalAnalyze")
+    taskName.startsWith("lintAnalyze") ||
+        taskName.startsWith("lintVitalAnalyze") ||
+        (taskName.startsWith("generate") &&
+            (taskName.endsWith("LintModel") ||
+                taskName.endsWith("LintReportModel") ||
+                taskName.endsWith("LintVitalReportModel")))
 
 /** Build-dir-relative canonical `commonTest` output, shared by the common producers. */
 internal const val CANONICAL_COMMON_TEST_DIR: String = "generated/fakt/commonTest/kotlin"
