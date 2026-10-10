@@ -154,14 +154,38 @@ class FaktCompilationRoutingTest {
     }
 
     @Test
-    fun `GIVEN single-target Android KMP WHEN routing any compilation THEN stays on the in-process plugin with a reason`() {
-        listOf("androidJvm", "common").forEach { compilationPlatform ->
+    fun `GIVEN single-target Android KMP WHEN routing an Android variant THEN registers a consumer task`() {
+        listOf("debug", "release", "debugUnitTest", "releaseUnitTest").forEach { variant ->
             val route =
-                routeSingleTarget(target = "androidJvm", compilationPlatform = compilationPlatform)
+                routeCompilation(
+                    unreadableSourcesReason = null,
+                    isMultiplatform = true,
+                    singleTargetPlatformTypeName = "androidJvm",
+                    compilation = RoutedCompilation(variant, "androidJvm"),
+                )
 
-            assertEquals(CacheCorrectDecision.LEGACY, route.decision, compilationPlatform)
-            assertNotNull(route.notCacheCorrectReason, "The fallback must never be silent.")
+            assertEquals(CacheCorrectDecision.REGISTER_CONSUMER, route.decision, variant)
+            assertNull(route.notCacheCorrectReason, "$variant is task-driven and cache-correct.")
         }
+    }
+
+    @Test
+    fun `GIVEN single-target Android KMP WHEN routing the legacy metadata main THEN suppresses it`() {
+        val route = routeSingleTarget(target = "androidJvm", compilationPlatform = "common")
+
+        assertEquals(
+            CacheCorrectDecision.SUPPRESS,
+            route.decision,
+            "The synthetic commonMain producer owns the common fakes; the metadata main must not.",
+        )
+        assertNull(route.notCacheCorrectReason, "A suppressed compilation is not a fallback.")
+    }
+
+    @Test
+    fun `GIVEN multi-target KMP with androidTarget WHEN routing an Android variant THEN registers a consumer task`() {
+        val decision = routeKmp(compilationName = "debug", platformTypeName = "androidJvm")
+
+        assertEquals(CacheCorrectDecision.REGISTER_CONSUMER, decision)
     }
 
     @Test
@@ -173,7 +197,7 @@ class FaktCompilationRoutingTest {
     }
 
     @Test
-    fun `GIVEN KGP platform type names WHEN checking single-target drivability THEN only JVM JS and Wasm qualify`() {
+    fun `GIVEN KGP platform type names WHEN checking single-target drivability THEN only JVM JS and Wasm qualify and Android is routed by its own branch`() {
         listOf("jvm", "js", "wasm").forEach { platform ->
             assertTrue(isSingleTargetDrivablePlatform(platform), "$platform must qualify")
         }

@@ -116,6 +116,18 @@ worker, so it has to receive those options too (#165):
 
 **Run**: `make test-compiler-interop` (needs JDK 17 + 21; on JDK 21 only: `INTEROP_TOOLCHAIN=21`).
 
+### 🤖 **kmp-android-target**
+Three KMP modules that declare `androidTarget()` through `com.android.library` (AGP 8.11.1), generated
+per Android variant from cacheable `faktGenerate*` tasks:
+- **`:shared`** (`jvm()` + `androidTarget()`): `commonMain`, `androidMain`, `androidDebug` and `jvmMain` fakes; `androidMain` fakes reach each variant's unit and instrumented tests; `androidDebug`/`androidRelease` declare a same-FQN `BuildFlags` with different members (per-variant analysis)
+- **`:android-only`** (`androidTarget()` alone): `commonMain` fakes reach `commonTest` from `faktGenerateCommonMain`; no `src/androidDebug`
+- **`:flavored`**: flavor dimension `tier` (`free`/`paid`) with a same-FQN `TierFeatures` fake per flavor
+- **Cache-correct**: configuration cache reused on the second run, producers restore FROM-CACHE
+
+**Structure**: `shared/` + `android-only/` + `flavored/`. See the sample's own README.
+
+**Run**: `make test-kmp-android-target` (needs an Android SDK).
+
 ### 📤 **fake-publishing** ⭐ NEW
 A two-project sample validating Maven artifact publishing workflow:
 - **Publisher Project**: Library with @Fake interfaces published to Maven Local

@@ -120,12 +120,21 @@ private fun refinesOutputs(compilation: KotlinCompilation<*>): FileCollection =
  * Tells [task] where every analysed source set keeps its sources, so the worker can attribute each
  * file to a source set when an intermediate level makes it pass fragments. Read when the input
  * resolves, because the `dependsOn` edges are not final while the compilation is being applied.
+ *
+ * A compilation that lists more than its default source set (an Android variant: `androidDebug`
+ * plus `androidMain`) gets no roots: KGP compiles those sets as one module, but fragments would
+ * make them siblings that cannot see each other. Without roots the worker keeps the flat
+ * common/platform split.
  */
 internal fun configureSourceSetRoots(task: FaktGenerateTask, compilation: KotlinCompilation<*>) {
     task.sourceSetRoots.putAll(
         task.project.provider {
-            compilation.allKotlinSourceSets.associate { set ->
-                set.name to set.kotlin.srcDirs.map { it.path }
+            if (compilation.kotlinSourceSets.size > 1) {
+                emptyMap()
+            } else {
+                compilation.allKotlinSourceSets.associate { set ->
+                    set.name to set.kotlin.srcDirs.map { it.path }
+                }
             }
         }
     )

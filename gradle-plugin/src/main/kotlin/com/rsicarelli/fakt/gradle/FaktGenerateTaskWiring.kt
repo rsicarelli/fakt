@@ -225,7 +225,14 @@ internal object FaktGenerateTaskWiring {
                 )
                 .let {
                     val platformOwned = platformOwnedAncestorsOf(kotlinCompilation, shape)
-                    it.copy(outputDirectories = outputRouteTokens(it, shape, owned, platformOwned))
+                    it.copy(
+                        allSourceSets =
+                            appendMissingSourceSets(
+                                it.allSourceSets,
+                                kotlinCompilation.sourceSetInfos(),
+                            ),
+                        outputDirectories = outputRouteTokens(it, shape, owned, platformOwned),
+                    )
                 }
         val json = Json { prettyPrint = false }
         return json.encodeToString(SourceSetContext.serializer(), context)
@@ -269,10 +276,17 @@ internal fun wireAndroidLintOrdering(
  * Whether [taskName] is one of AGP's lint *analysis* tasks (`lintAnalyze<Variant>`,
  * `lintVitalAnalyze<Variant>`, `lintAnalyzeAndroidHostTest`, …) — the tasks that read the generated
  * directory through the Android variant model. A bare `startsWith("lint")` also caught unrelated
- * tasks such as kotlinter's `lintKotlin`, which never touch the fakes.
+ * tasks such as kotlinter's `lintKotlin`, which never touch the fakes. AGP's lint model writers
+ * (`generate<Variant>LintModel`, `generate<Variant>UnitTestLintModel`, `…LintReportModel`,
+ * `…LintVitalReportModel`) read the same source directories, so they are matched too.
  */
 internal fun isAgpLintAnalysisTask(taskName: String): Boolean =
-    taskName.startsWith("lintAnalyze") || taskName.startsWith("lintVitalAnalyze")
+    taskName.startsWith("lintAnalyze") ||
+        taskName.startsWith("lintVitalAnalyze") ||
+        (taskName.startsWith("generate") &&
+            (taskName.endsWith("LintModel") ||
+                taskName.endsWith("LintReportModel") ||
+                taskName.endsWith("LintVitalReportModel")))
 
 /** Build-dir-relative canonical `commonTest` output, shared by the common producers. */
 internal const val CANONICAL_COMMON_TEST_DIR: String = "generated/fakt/commonTest/kotlin"
@@ -327,8 +341,10 @@ private fun configureSources(
         TaskShape.PRODUCER ->
             task.sources.from(enabled.gate(kotlinCompilation.allKotlinSourceSets.map { it.kotlin }))
         TaskShape.CONSUMER -> {
-            task.sources.from(enabled.gate(own))
-            task.analysisOnlySources.from(enabled.gate(ancestors.map { it.kotlin }))
+            task.sources.from(kotlinCompilation.lazySources(enabled) { memberSplit(it).own })
+            task.analysisOnlySources.from(
+                kotlinCompilation.lazySources(enabled) { memberSplit(it).analysisOnly }
+            )
         }
         TaskShape.SINGLE_TARGET -> {
             task.sources.from(enabled.gate(own))
@@ -387,7 +403,7 @@ internal fun configureDependencies(
     if (isKlibBased) {
         task.commonKlibClasspath.from(kotlinCompilation.compileDependencyFiles)
     } else {
-        task.compileClasspath.from(kotlinCompilation.compileDependencyFiles)
+        task.compileClasspath.from(kotlinCompilation.workerDependencyFiles())
     }
     // `-Xwasm-target` is read from KGP's own target model, so a custom target name
     // (`wasmJs("web")`) still resolves to the right flavour. Absent for Kotlin/JS.

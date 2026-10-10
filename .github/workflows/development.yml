@@ -192,6 +192,14 @@ jobs:
           - sample: compiler-interop
             path: samples/compiler-interop
             tasks: build
+          # KMP + androidTarget() through com.android.library (AGP 8.11.1): per-variant generation,
+          # flavors and a single-target Android module (#163). The build covers every variant's unit
+          # tests, jvmTest and lint; the instrumented compilation is compile-only. A second run must
+          # reuse the configuration cache.
+          - sample: kmp-android-target
+            path: samples/kmp-android-target
+            tasks: build compileDebugAndroidTestKotlinAndroid
+            cc-reuse: true
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -220,12 +228,27 @@ jobs:
           ORG_GRADLE_PROJECT_SKIP_SIGNING: true
         run: ./gradlew -p ${{ matrix.pre-publish }} publishToMavenLocal
 
+      # AGP creates this directory on its first run. Gradle records it as a configuration-cache
+      # input, so creating it mid-build would invalidate the entry the reuse check below needs.
+      - name: Pre-create the Android tooling cache directory
+        if: ${{ matrix.cc-reuse }}
+        run: mkdir -p ~/.config/.android/cache
+
       - name: Test ${{ matrix.sample }}
         run: ./gradlew -p ${{ matrix.path }} ${{ matrix.tasks }}
 
       - name: Check ${{ matrix.sample }}
         if: ${{ matrix.check }}
         run: ./gradlew -p ${{ matrix.path }} check
+
+      # The second run of the same tasks must reuse the entry the first one stored.
+      - name: Reuse the configuration cache for ${{ matrix.sample }}
+        if: ${{ matrix.cc-reuse }}
+        # pipefail: a failing second build must fail the step even when it printed "reused".
+        shell: bash
+        run: |
+          ./gradlew -p ${{ matrix.path }} ${{ matrix.tasks }} 2>&1 | tee second-run.log
+          grep -q "Configuration cache entry reused" second-run.log
 
       - name: Upload test results
         if: always()
@@ -311,6 +334,15 @@ jobs:
             producers: :serialization:faktGenerateJvmMain
             cached-fakes: FakeReceiptSinkImpl FakeClockImpl
             expect-tolerated: "1"
+          # KMP + androidTarget() (#163): one producer per Android variant, each emitting its own copy
+          # of the androidMain fakes, plus the metadata/JVM producers; :android-only has no commonMain
+          # metadata compilation, so its commonMain fakes come from faktGenerateCommonMain.
+          - sample: kmp-android-target
+            path: samples/kmp-android-target
+            producers: :shared:faktGenerateMetadataCommonMain :shared:faktGenerateJvmMain :shared:faktGenerateAndroidDebug :shared:faktGenerateAndroidRelease :android-only:faktGenerateCommonMain :android-only:faktGenerateAndroidDebug :android-only:faktGenerateAndroidRelease :flavored:faktGenerateAndroidFreeDebug :flavored:faktGenerateAndroidPaidRelease
+            cached-fakes: FakeUserRepositoryImpl FakeAndroidOnlyImpl FakeAarTypeSourceImpl FakeFlagReaderImpl FakeDebugMenuImpl FakeJvmOnlyImpl FakeClockImpl FakeBatteryImpl FakeFeatureGateImpl FakeTierFeaturesImpl
+            # This sample needs no plugin the worker lacks: any tolerated error is a real problem.
+            forbid-tolerated: "1"
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -383,6 +415,11 @@ jobs:
             path: samples/jvm-test-fixtures
             tasks: ":app:test"
             gradle: "./gradlew -p samples/jvm-test-fixtures -Pfakt.useExperimentalGenerateTask=false"
+          # Each Android variant's fakes reach only that variant's unit tests, also for flavors and
+          # the single-target module (#163).
+          - sample: kmp-android-target
+            path: samples/kmp-android-target
+            tasks: ":shared:testDebugUnitTest :shared:testReleaseUnitTest :android-only:testDebugUnitTest :flavored:testPaidReleaseUnitTest"
     steps:
       - name: Checkout
         uses: actions/checkout@v6

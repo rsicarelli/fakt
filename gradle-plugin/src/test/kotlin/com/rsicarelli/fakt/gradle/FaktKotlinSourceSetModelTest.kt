@@ -85,16 +85,21 @@ class FaktKotlinSourceSetModelTest {
     }
 
     @Test
-    fun `GIVEN a multiplatform androidTarget on com android library WHEN deciding THEN stays in-process even with the variant API`() {
-        val reason =
-            unreadableSourcesReason(
-                hasAndroidPlugin = true,
-                hasKotlinAndroidPlugin = false,
-                isMultiplatform = true,
-                canReadVariantSources = true,
-            )
+    fun `GIVEN a multiplatform androidTarget on com android library WHEN deciding THEN is readable whatever the variant API says`() {
+        listOf(true, false).forEach { canReadVariantSources ->
+            val reason =
+                unreadableSourcesReason(
+                    hasAndroidPlugin = true,
+                    hasKotlinAndroidPlugin = false,
+                    isMultiplatform = true,
+                    canReadVariantSources = canReadVariantSources,
+                )
 
-        assertNotNull(reason, "Per-variant compilations would drop androidMain fakes.")
-        assertTrue("androidTarget()" in reason, reason)
+            assertNull(
+                reason,
+                "KGP's Kotlin source sets are populated for KMP (canRead=$canReadVariantSources); " +
+                    "the AGP 9 built-in Kotlin message must not leak.",
+            )
+        }
     }
 }
