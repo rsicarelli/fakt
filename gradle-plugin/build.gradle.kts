@@ -133,9 +133,14 @@ tasks {
         // TestKit test starts its own Gradle daemon and compiler worker, so on a 4-core runner a
         // burst of them starves each other and hits the timeout above together. Cap both levels,
         // as the compiler module does for its heavy tests.
-        maxParallelForks = 2
+        maxParallelForks = 1
         systemProperty("junit.jupiter.execution.parallel.config.strategy", "fixed")
         systemProperty("junit.jupiter.execution.parallel.config.fixed.parallelism", "2")
+        // A parent test task that waits on its children makes the fork-join pool add a thread, so
+        // "parallelism 2" alone still ran about seven TestKit builds (each with a 2g daemon) at
+        // once. Capping the pool size keeps it at the number above; a single fork keeps that number a
+        // total rather than a per-fork limit.
+        systemProperty("junit.jupiter.execution.parallel.config.fixed.max-pool-size", "2")
         // Resolved lazily at execution time (jvmArgumentProviders, not systemProperty) so the
         // configuration isn't resolved during configuration; a dedicated provider class keeps the
         // configuration cache free of script-object references.
