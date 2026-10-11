@@ -500,7 +500,8 @@ hits across operating systems are therefore not guaranteed.
     - The fakes of a source set that only one target compiles (for example `mingwMain` with a
       single `mingwX64` target) reach that target's test compilation (`mingwX64Test`). Write the
       tests that use them in `mingwX64Test`: the intermediate `mingwTest` is its parent, cannot see
-      them, and keeps an empty generated directory.
+      them, and keeps an empty generated directory
+      ([#187](https://github.com/rsicarelli/fakt/issues/187)).
     - An `@OptIn` on the interface loses its import in the fake
       ([#172](https://github.com/rsicarelli/fakt/issues/172)). For cinterop types, opt in for the
       whole module instead, for example `optIn("kotlinx.cinterop.ExperimentalForeignApi")` in
