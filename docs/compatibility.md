@@ -47,6 +47,14 @@ To skip the stop, add this to `gradle.properties`. The error becomes a warning:
 fakt.allowNewerKotlin=true
 ```
 
+This property is the only thing that clears the stop. Changing the `faktWorker` compiler (see
+below) does not: the check compares your Kotlin with the version Fakt pins, not with what the
+`faktWorker` configuration resolves to.
+
+The check only runs when Fakt generates fakes in the worker (the default). It does not run with
+`fakt.useExperimentalGenerateTask=false`, in collector mode, or for the few shapes that still fall
+back to the old in-process path. With many Fakt modules in one build, the warning is printed once.
+
 ### Use a different worker compiler
 
 The worker's compiler comes from the `faktWorker` Gradle configuration. Fakt adds a fixed version

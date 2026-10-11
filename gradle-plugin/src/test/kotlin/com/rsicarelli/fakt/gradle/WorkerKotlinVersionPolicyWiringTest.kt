@@ -4,6 +4,7 @@ package com.rsicarelli.fakt.gradle
 
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import org.gradle.api.GradleException
 import org.gradle.api.internal.project.ProjectInternal
@@ -92,15 +93,15 @@ class WorkerKotlinVersionPolicyWiringTest {
     }
 
     @Test
-    fun `GIVEN project without the Kotlin plugin WHEN checking THEN it is skipped silently`() {
-        // getKotlinPluginVersion() reads the KGP on the classpath, so the project helper cannot
-        // observe "no plugin" here; the null-version skip is covered by the seam test above.
-        val project = ProjectBuilder.builder().build()
-        val warnings = mutableListOf<String>()
+    fun `GIVEN two projects of one build WHEN each claims the warning THEN only the first gets it`() {
+        val root = ProjectBuilder.builder().build()
+        val child = ProjectBuilder.builder().withParent(root).build()
 
-        checkWorkerKotlinVersion(project, project.getKotlinPluginVersion(), warn = warnings::add)
+        val first = workerVersionWarningOnce(root).claim()
+        val second = workerVersionWarningOnce(child).claim()
 
-        assertTrue(warnings.isEmpty())
+        assertTrue(first)
+        assertFalse(second)
     }
 
     @Test

@@ -111,6 +111,40 @@ class WorkerKotlinVersionPolicyTest {
     }
 
     @Test
+    fun `GIVEN one minor newer WHEN building the warning THEN it keeps the phrase the CI canary greps`() {
+        val message = newerMinorWarning(user = "2.5.0", worker = worker)
+
+        assertTrue("one minor newer than the Kotlin" in message, message)
+    }
+
+    @Test
+    fun `GIVEN a two minors newer user WHEN building the error THEN it is honest about the fix`() {
+        val message = unsupportedNewerError(user = "2.6.0", worker = worker)
+
+        assertTrue("does not clear this check" in message, message)
+        assertFalse("Update Fakt to a release built for" in message, message)
+    }
+
+    @Test
+    fun `GIVEN allowNewer WHEN building the downgraded warning THEN it does not ask to set the property`() {
+        val message = allowedNewerWarning(user = "2.6.0", worker = worker)
+
+        assertTrue("2.6.0" in message && worker in message, message)
+        assertFalse("To build anyway" in message, message)
+        assertTrue("fakt.allowNewerKotlin=true" in message, message)
+    }
+
+    @Test
+    fun `GIVEN raw property values WHEN reading allowNewerKotlin THEN only true enables it`() {
+        assertTrue(allowNewerKotlin("true"))
+        assertTrue(allowNewerKotlin("TRUE"))
+        assertFalse(allowNewerKotlin("false"))
+        assertFalse(allowNewerKotlin("yes"))
+        assertFalse(allowNewerKotlin(""))
+        assertFalse(allowNewerKotlin(null))
+    }
+
+    @Test
     fun `GIVEN each verdict WHEN allowNewer is false THEN outcome is silent warn or fail`() {
         fun outcome(user: String) = workerKotlinOutcome(user, worker, allowNewer = false)
 
@@ -127,7 +161,7 @@ class WorkerKotlinVersionPolicyTest {
     fun `GIVEN allowNewer true WHEN the user is two minors newer THEN warn not fail`() {
         val outcome = workerKotlinOutcome("2.6.0", worker, allowNewer = true)
 
-        assertEquals(WorkerKotlinOutcome.Warn(unsupportedNewerError("2.6.0", worker)), outcome)
+        assertEquals(WorkerKotlinOutcome.Warn(allowedNewerWarning("2.6.0", worker)), outcome)
     }
 
     @Test

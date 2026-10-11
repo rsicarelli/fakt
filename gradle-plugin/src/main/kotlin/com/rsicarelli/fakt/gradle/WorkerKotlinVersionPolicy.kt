@@ -2,8 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.gradle
 
+import java.util.concurrent.atomic.AtomicBoolean
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.services.BuildService
+import org.gradle.api.services.BuildServiceParameters
 import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 
 /** Leading `major.minor.patch` of a Kotlin version string; a missing patch reads as 0. */
@@ -72,16 +75,23 @@ internal fun workerKotlinVersionVerdict(
 
 internal fun newerMinorWarning(user: String, worker: String): String =
     "Fakt: your Kotlin Gradle plugin is $user, one minor newer than the Kotlin $worker " +
-        "that Fakt's worker compiles with. Fakt usually still works, but if generation " +
-        "fails, update Fakt or see Compatibility > Worker compiler version in the docs."
+        "that Fakt's worker compiles with. Fakt often still works. If generation fails, " +
+        "check for a newer Fakt or see Compatibility > Worker compiler version in the docs."
 
 internal fun unsupportedNewerError(user: String, worker: String): String =
     "Fakt: your Kotlin Gradle plugin is $user, but Fakt's worker compiles with Kotlin " +
-        "$worker, and your Kotlin may be at most one minor version newer than that. Update " +
-        "Fakt to a release built for Kotlin $user, or point the `faktWorker` configuration at a " +
-        "matching kotlin-compiler-embeddable. To build anyway, set `fakt.allowNewerKotlin=true` " +
-        "in gradle.properties, which turns this error into a warning. " +
-        "See Compatibility > Worker compiler version in the docs."
+        "$worker, and your Kotlin may be at most one minor version newer than that. Check " +
+        "whether a newer Fakt supports Kotlin $user. To build anyway, set " +
+        "`fakt.allowNewerKotlin=true` in gradle.properties; this turns the error into a " +
+        "warning. Pointing the `faktWorker` configuration at a newer compiler does not clear " +
+        "this check. See Compatibility > Worker compiler version in the docs."
+
+/** The warning shown instead of the error once `fakt.allowNewerKotlin=true` is set. */
+internal fun allowedNewerWarning(user: String, worker: String): String =
+    "Fakt: your Kotlin Gradle plugin is $user, newer than the Kotlin $worker that Fakt's " +
+        "worker compiles with, and `fakt.allowNewerKotlin=true` is set, so Fakt goes on. If " +
+        "generation fails, check for a newer Fakt or see Compatibility > Worker compiler " +
+        "version in the docs."
 
 /** Combines the verdict with `fakt.allowNewerKotlin`: it turns a failure into a warning. */
 internal fun workerKotlinOutcome(
@@ -95,8 +105,11 @@ internal fun workerKotlinOutcome(
         WorkerKotlinVerdict.NEWER_MINOR ->
             WorkerKotlinOutcome.Warn(newerMinorWarning(userKotlin, workerKotlin))
         WorkerKotlinVerdict.UNSUPPORTED_NEWER -> {
-            val message = unsupportedNewerError(userKotlin, workerKotlin)
-            if (allowNewer) WorkerKotlinOutcome.Warn(message) else WorkerKotlinOutcome.Fail(message)
+            if (allowNewer) {
+                WorkerKotlinOutcome.Warn(allowedNewerWarning(userKotlin, workerKotlin))
+            } else {
+                WorkerKotlinOutcome.Fail(unsupportedNewerError(userKotlin, workerKotlin))
+            }
         }
     }
 
@@ -104,8 +117,8 @@ internal fun workerKotlinOutcome(
 internal const val ALLOW_NEWER_KOTLIN_PROPERTY: String = "fakt.allowNewerKotlin"
 
 /**
- * Testable seam of [checkWorkerKotlinVersion]: a `null` [userKotlin] (no Kotlin plugin applied) is
- * skipped, warnings go to [warn], and a failure throws [GradleException].
+ * Testable seam of [checkWorkerKotlinVersion]: a `null` [userKotlin] (a version that could not be
+ * read) is skipped, warnings go to [warn], and a failure throws [GradleException].
  */
 internal fun checkWorkerKotlinVersion(
     userKotlin: String?,
@@ -121,20 +134,45 @@ internal fun checkWorkerKotlinVersion(
     }
 }
 
+/** Only the literal `true` (any case) turns `fakt.allowNewerKotlin` on. */
+internal fun allowNewerKotlin(value: String?): Boolean = value.toBoolean()
+
 /**
- * Compares the project's Kotlin Gradle plugin version with the worker's pinned compiler. Projects
- * without the Kotlin plugin (for example AGP built-in Kotlin) are skipped.
+ * Build-wide switch that lets only the first module print the newer-minor warning, so a build with
+ * many Fakt modules says it once. A shared build service is safe for Isolated Projects and does not
+ * outlive the build, unlike a static in the daemon. The error is not deduplicated: it fails each
+ * module that has it.
+ */
+internal abstract class WorkerVersionWarningOnce : BuildService<BuildServiceParameters.None> {
+    private val claimed = AtomicBoolean(false)
+
+    /** `true` for the first caller of the build, `false` afterwards. */
+    fun claim(): Boolean = !claimed.getAndSet(true)
+}
+
+private const val WARNING_ONCE_SERVICE = "faktWorkerKotlinVersionWarning"
+
+internal fun workerVersionWarningOnce(project: Project): WorkerVersionWarningOnce =
+    project.gradle.sharedServices
+        .registerIfAbsent(WARNING_ONCE_SERVICE, WorkerVersionWarningOnce::class.java) {}
+        .get()
+
+/**
+ * Compares the project's Kotlin Gradle plugin version with the worker's pinned compiler. A version
+ * that cannot be read is skipped. The warning is printed once per build.
  */
 internal fun checkWorkerKotlinVersion(
     project: Project,
     workerKotlin: String = FaktGradleSubplugin.FAKT_KOTLIN_VERSION,
-    warn: (String) -> Unit = project.logger::warn,
+    warn: (String) -> Unit = { message ->
+        if (workerVersionWarningOnce(project).claim()) project.logger.warn(message)
+    },
 ) {
     checkWorkerKotlinVersion(
         userKotlin = runCatching { project.getKotlinPluginVersion() }.getOrNull(),
         workerKotlin = workerKotlin,
         allowNewer =
-            project.providers.gradleProperty(ALLOW_NEWER_KOTLIN_PROPERTY).orNull.toBoolean(),
+            allowNewerKotlin(project.providers.gradleProperty(ALLOW_NEWER_KOTLIN_PROPERTY).orNull),
         warn = warn,
     )
 }
