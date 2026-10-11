@@ -124,9 +124,13 @@ class SimplifiedSourceSetConfigurationTest {
 
     @Test
     fun `GIVEN no producer task WHEN configuring KMP test source set dirs THEN commonTest generated dir has no Fakt build dependency`() {
-        // Given - legacy mode: a single-target Native project registers no FaktGenerateTask
-        // (Native is not drivable yet, #152), so generation is in-process at compile time
+        // Given - legacy mode (`useExperimentalGenerateTask` off) registers no FaktGenerateTask,
+        // so generation is in-process at compile time
         val project = createKmpProject()
+        project.extensions
+            .getByType(FaktPluginExtension::class.java)
+            .useExperimentalGenerateTask
+            .set(false)
         val kotlin = project.getKotlinExtension()
         kotlin.linuxX64()
         project.evaluate()
@@ -196,7 +200,7 @@ class SimplifiedSourceSetConfigurationTest {
     }
 
     @Test
-    fun `GIVEN iosArm64Test source set WHEN configured THEN should include build generated fakt iosArm64Fakes kotlin`() {
+    fun `GIVEN single-target iosArm64 WHEN configured THEN iosArm64Test reads the task output and no plain dir`() {
         // Given
         val project = createKmpProject()
         val kotlin = project.getKotlinExtension()
@@ -206,12 +210,8 @@ class SimplifiedSourceSetConfigurationTest {
         project.evaluate()
         val iosTest = kotlin.sourceSets.getByName("iosArm64Test")
 
-        // Then - Should add generated dir to EXISTING iosArm64Test
-        assertTrue(
-            iosTest.kotlin.srcDirs.any {
-                it.path.contains("build/generated/fakt/iosArm64Test/kotlin")
-            }
-        )
+        // Then - issue #152: the lone native main owns its platform fakes from one task
+        assertConsumerOwned(iosTest, targetName = "iosArm64")
     }
 
     @Test
@@ -231,8 +231,8 @@ class SimplifiedSourceSetConfigurationTest {
         val jsTest = kotlin.sourceSets.getByName("jsTest")
         val iosTest = kotlin.sourceSets.getByName("iosArm64Test")
 
-        // Then - commonTest and the Native test set keep the canonical dir; jvmTest and jsTest are
-        // fed by their consumer FaktGenerateTask's output instead (issue #151)
+        // Then - commonTest keeps the canonical dir; jvmTest, jsTest and the Native test set are
+        // fed by their consumer FaktGenerateTask's output instead (issues #151, #152)
         assertTrue(
             commonTest.kotlin.srcDirs.any {
                 it.path.contains("build/generated/fakt/commonTest/kotlin")
@@ -240,15 +240,11 @@ class SimplifiedSourceSetConfigurationTest {
         )
         assertConsumerOwned(jvmTest, targetName = "jvm")
         assertConsumerOwned(jsTest, targetName = "js")
-        assertTrue(
-            iosTest.kotlin.srcDirs.any {
-                it.path.contains("build/generated/fakt/iosArm64Test/kotlin")
-            }
-        )
+        assertConsumerOwned(iosTest, targetName = "iosArm64")
     }
 
     @Test
-    fun `GIVEN KMP project with iOS WHEN configured THEN iosX64Test should include its own generated dir`() {
+    fun `GIVEN KMP project with iOS WHEN configured THEN iosX64Test reads its consumer task output`() {
         // GIVEN
         val project = createKmpProject()
         val kotlin = project.getKotlinExtension()
@@ -259,14 +255,9 @@ class SimplifiedSourceSetConfigurationTest {
         project.evaluate()
         val iosX64Test = kotlin.sourceSets.getByName("iosX64Test")
 
-        // THEN - Should include ONLY iosX64Test dir (not commonTest)
+        // THEN - fed by the iosX64 consumer task, with no plain in-process dir next to it
         // PASS 2 was removed: KMP dependency propagation handles KLIB visibility
-        assertTrue(
-            iosX64Test.kotlin.srcDirs.any {
-                it.path.contains("build/generated/fakt/iosX64Test/kotlin")
-            },
-            "iosX64Test should have its own generated directory",
-        )
+        assertConsumerOwned(iosX64Test, targetName = "iosX64")
     }
 
     @Test
@@ -306,22 +297,20 @@ class SimplifiedSourceSetConfigurationTest {
         // WHEN
         project.evaluate()
 
-        // THEN - Each Native platform test set has its own in-process generated dir (not
-        // commonTest); jvmTest and jsTest are fed by their consumer FaktGenerateTask (issue #151).
+        // THEN - Each Native platform test set is fed by its own consumer FaktGenerateTask, as
+        // are jvmTest and jsTest (issues #151, #152).
         // PASS 2 was removed: KMP dependency propagation handles KLIB visibility
-        val nativeTestSourceSets = listOf("iosX64Test", "iosArm64Test", "iosSimulatorArm64Test")
         assertConsumerOwned(kotlin.sourceSets.getByName("jvmTest"), targetName = "jvm")
         assertConsumerOwned(kotlin.sourceSets.getByName("jsTest"), targetName = "js")
 
-        nativeTestSourceSets.forEach { sourceSetName ->
-            val sourceSet = kotlin.sourceSets.getByName(sourceSetName)
-            assertTrue(
-                sourceSet.kotlin.srcDirs.any {
-                    it.path.contains("build/generated/fakt/$sourceSetName/kotlin")
-                },
-                "$sourceSetName should have its own generated directory",
+        mapOf(
+                "iosX64Test" to "iosX64",
+                "iosArm64Test" to "iosArm64",
+                "iosSimulatorArm64Test" to "iosSimulatorArm64",
             )
-        }
+            .forEach { (sourceSetName, targetName) ->
+                assertConsumerOwned(kotlin.sourceSets.getByName(sourceSetName), targetName)
+            }
     }
 
     /**

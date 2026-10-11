@@ -174,28 +174,6 @@ internal object FaktGenerateTaskWiring {
         wireAndroidLintOrdering(project, taskProvider)
     }
 
-    /**
-     * Sequences a non-drivable platform compilation (Native) after the common producer so the
-     * producer's common fakes exist on disk before the in-process plugin's file-existence dedup
-     * runs on the platform main compile — otherwise it would regenerate them and collide. The test
-     * compile already waits for the producer transitively through the `commonTest` srcDir's
-     * `builtBy`, so only the main compile is wired here. Safe under Gradle 9 Project Isolation (no
-     * `afterEvaluate`, no task-graph reads); the producer lookup runs lazily inside
-     * `configureEach`.
-     */
-    fun wireLegacyHybridOrdering(project: Project, kotlinCompilation: KotlinCompilation<*>) {
-        if (project.extensions.findByType(KotlinMultiplatformExtension::class.java) == null) return
-        val mainCompileTask = kotlinCompilation.compileKotlinTaskName
-        project.tasks
-            .matching { it.name == mainCompileTask }
-            .configureEach { compileTask ->
-                val commonTask =
-                    project.tasks.findByName("faktGenerateMetadataCommonMain")
-                        ?: project.tasks.findByName("faktGenerateCommonMain")
-                if (commonTask != null) compileTask.dependsOn(commonTask)
-            }
-    }
-
     /** Locate the [FaktGradleSubplugin] instance applied to [project] to call its helpers. */
     private fun getSubpluginInstance(project: Project): FaktGradleSubplugin =
         project.plugins.getPlugin(FaktGradleSubplugin::class.java)
@@ -386,11 +364,11 @@ private fun wireSingleTargetCommonDir(
 
 /**
  * Routes a compilation's dependencies to the input its compiler driver reads. Klib-based
- * compilations — common producers (`KotlinMetadataCompiler`, metadata klibs) and JS/Wasm platform
- * mains (`K2JSCompiler`, platform klibs) — go through the `@Classpath` `commonKlibClasspath`
- * (content-hashed; `@CompileClasspath` can fingerprint klibs as empty). JVM/Android compilations
- * feed their jar dependencies to the K2JVM driver through `compileClasspath`, Android ones plus the
- * SDK boot classpath.
+ * compilations — common producers (`KotlinMetadataCompiler`, metadata klibs), JS/Wasm platform
+ * mains (`K2JSCompiler`, platform klibs) and Native compilations (`K2Native`, user and cinterop
+ * klibs) — go through the `@Classpath` `commonKlibClasspath` (content-hashed; `@CompileClasspath`
+ * can fingerprint klibs as empty). JVM/Android compilations feed their jar dependencies to the
+ * K2JVM driver through `compileClasspath`, Android ones plus the SDK boot classpath.
  */
 internal fun configureDependencies(
     task: FaktGenerateTask,
@@ -399,7 +377,7 @@ internal fun configureDependencies(
     val platformType = kotlinCompilation.target.platformType.name.lowercase()
     val isKlibBased =
         kotlinCompilation.defaultSourceSet.name == "commonMain" ||
-            platformType in setOf("common", "js", "wasm")
+            platformType in setOf("common", "js", "wasm", "native")
     if (isKlibBased) {
         task.commonKlibClasspath.from(kotlinCompilation.compileDependencyFiles)
     } else {
@@ -415,6 +393,7 @@ internal fun configureDependencies(
             AndroidIntegration.isKmpAndroidTarget(target)
         }
     if (needsBootClasspath) AndroidIntegration.addBootClasspath(task, kotlinCompilation.project)
+    if (isNativeCompilation(kotlinCompilation)) configureNativeInputs(task, kotlinCompilation)
 }
 
 internal fun taskNameFor(targetName: String, compilationName: String): String =

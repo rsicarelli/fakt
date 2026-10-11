@@ -428,27 +428,6 @@ class FaktGenerateTaskWiringTest {
     }
 
     @Test
-    fun `GIVEN non-drivable platform main WHEN wireLegacyHybridOrdering THEN main compile dependsOn common producer`() {
-        val project = evaluatedKmpProject()
-        project.registerWiring("metadata", "commonMain")
-        val commonTask = project.tasks.getByName("faktGenerateMetadataCommonMain")
-
-        FaktGenerateTaskWiring.wireLegacyHybridOrdering(
-            project,
-            project.kmpCompilation("linuxX64", "main"),
-        )
-
-        // configureEach is lazy — realizing the compile task applies the dependsOn wiring.
-        val compileTask = project.tasks.getByName("compileKotlinLinuxX64")
-        assertTrue(
-            compileTask.dependsOn.contains(commonTask),
-            "A non-drivable platform's main compile must run after the common producer so its " +
-                "in-process plugin dedup-skips already-generated common fakes; dependsOn: " +
-                "${compileTask.dependsOn}",
-        )
-    }
-
-    @Test
     fun `GIVEN KMP metadata commonMain compilation WHEN register THEN no dependsOn wiring added`() {
         val project = evaluatedKmpProject()
 

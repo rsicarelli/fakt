@@ -231,7 +231,7 @@ class FaktGradleSubpluginFlagResolutionTest {
     }
 
     @Test
-    fun `GIVEN single-target Native KMP WHEN applyToCompilation on the platform main THEN stays legacy and registers no task`() {
+    fun `GIVEN single-target Native KMP WHEN applyToCompilation on the platform main THEN registers the single-target task`() {
         val project = createKmpProject()
         project.getKotlinExtension().linuxX64()
         project.evaluate()
@@ -242,21 +242,16 @@ class FaktGradleSubpluginFlagResolutionTest {
                 .applyToCompilation(project.kmpCompilation("linuxX64", "main"))
                 .get()
 
-        // Native cannot be driven from a task yet (issue #152), so a Native-only project keeps the
-        // in-process plugin: correct, just not cache-correct.
+        // Issue #152: a Native-only project is driven by one K2Native task, in-process is off.
+        assertEquals("false", options.single { it.key == "enabled" }.value)
         assertTrue(
-            options.size > 1,
-            "Single-target Native keeps the full legacy payload; keys: ${options.map { it.key }}",
-        )
-        assertEquals("true", options.first { it.key == "enabled" }.value)
-        assertFalse(
-            project.tasks.names.any { it.startsWith("faktGenerate") },
-            "No FaktGenerateTask may be registered for a single-target Native project.",
+            project.tasks.names.contains("faktGenerateLinuxX64Main"),
+            "A single-target Native project registers its single task.",
         )
     }
 
     @Test
-    fun `GIVEN flag true AND non-drivable KMP platform main WHEN applyToCompilation THEN returns legacy options and registers no task`() {
+    fun `GIVEN flag true AND a native leaf main in a multi-target KMP WHEN applyToCompilation THEN disables in-process and registers the consumer`() {
         val project = createKmpProject()
         project.getKotlinExtension().jvm()
         project.getKotlinExtension().linuxX64()
@@ -269,14 +264,10 @@ class FaktGradleSubpluginFlagResolutionTest {
                 .applyToCompilation(project.kmpCompilation("linuxX64", "main"))
                 .get()
 
+        assertEquals("false", options.single { it.key == "enabled" }.value)
         assertTrue(
-            options.any { it.key == "sourceSetContext" },
-            "A non-drivable platform main keeps the in-process plugin (legacy hybrid) so it still " +
-                "generates its platform-specific fakes; keys: ${options.map { it.key }}",
-        )
-        assertTrue(
-            project.tasks.names.none { it == "faktGenerateLinuxX64Main" },
-            "Native mains can't be driven in-process — no FaktGenerateTask for them.",
+            project.tasks.names.contains("faktGenerateLinuxX64Main"),
+            "A native leaf main is driven by a consumer FaktGenerateTask.",
         )
     }
 
@@ -308,7 +299,7 @@ class FaktGradleSubpluginFlagResolutionTest {
     }
 
     @Test
-    fun `GIVEN flag true AND KMP without a drivable target WHEN applyToCompilation on native main THEN stays legacy hybrid`() {
+    fun `GIVEN flag true AND KMP without a drivable target WHEN applyToCompilation on native main THEN registers the consumer`() {
         val project = createKmpProject()
         project.getKotlinExtension().linuxX64()
         project.getKotlinExtension().mingwX64()
@@ -321,14 +312,10 @@ class FaktGradleSubpluginFlagResolutionTest {
                 .applyToCompilation(project.kmpCompilation("linuxX64", "main"))
                 .get()
 
+        assertEquals("false", options.single { it.key == "enabled" }.value)
         assertTrue(
-            options.any { it.key == "sourceSetContext" },
-            "A native main keeps the in-process plugin (legacy hybrid) so its platform fakes are " +
-                "still generated; keys: ${options.map { it.key }}",
-        )
-        assertTrue(
-            project.tasks.names.none { it == "faktGenerateLinuxX64Main" },
-            "Native mains can't be driven by the worker — no FaktGenerateTask for them.",
+            project.tasks.names.contains("faktGenerateLinuxX64Main"),
+            "A native main is driven by a consumer FaktGenerateTask.",
         )
     }
 
