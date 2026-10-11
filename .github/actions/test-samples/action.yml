@@ -53,6 +53,14 @@ runs:
       shell: bash
       run: ./gradlew -p samples/kmp-multi-target check
 
+    - name: Test kmp-native-only sample (all-native and single native target)
+      shell: bash
+      run: ./gradlew -p samples/kmp-native-only allTests --continue
+
+    - name: Check kmp-native-only sample (validations)
+      shell: bash
+      run: ./gradlew -p samples/kmp-native-only check
+
     - name: Test kmp-no-jvm sample (no drivable target)
       shell: bash
       run: ./gradlew -p samples/kmp-no-jvm allTests --continue
