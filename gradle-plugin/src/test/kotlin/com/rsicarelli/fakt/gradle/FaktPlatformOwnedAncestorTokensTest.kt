@@ -9,6 +9,7 @@ import com.rsicarelli.fakt.gradle.helpers.evaluate
 import com.rsicarelli.fakt.gradle.helpers.getKotlinExtension
 import java.io.File
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
 import org.gradle.api.Project
@@ -116,7 +117,7 @@ class FaktPlatformOwnedAncestorTokensTest {
     }
 
     @Test
-    fun `GIVEN sharedJvmMain sources WHEN reading the jvm consumer THEN they are analysed with it`() {
+    fun `GIVEN sharedJvmMain sources WHEN reading the jvm consumer THEN they are emitted sources not analysis only`() {
         val project = jvmJsProject()
         val marker =
             File(project.projectDir, "src/sharedJvmMain/kotlin")
@@ -126,7 +127,8 @@ class FaktPlatformOwnedAncestorTokensTest {
 
         val task = project.consumer("faktGenerateJvmMain")
 
-        assertTrue(marker in task.analysisOnlySources.files, "${task.analysisOnlySources.files}")
+        assertTrue(marker in task.sources.files, "${task.sources.files}")
+        assertFalse(marker in task.analysisOnlySources.files, "${task.analysisOnlySources.files}")
         assertTrue(
             task.sourceSetRoots.get().containsKey("sharedJvmMain"),
             "roots: ${task.sourceSetRoots.get()}",

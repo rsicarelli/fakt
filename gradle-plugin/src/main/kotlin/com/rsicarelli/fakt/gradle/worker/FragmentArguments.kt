@@ -30,12 +30,15 @@ internal data class FragmentArguments(
  *
  * Returns `null` ("keep today's `-Xcommon-sources` arguments") when any file is under no known root
  * (the compiler rejects a source that belongs to no fragment) or when no intermediate level exists,
- * i.e. no fragment both refines another and is refined by another.
+ * i.e. no fragment both refines another and is refined by another, unless [requireIntermediate] is
+ * `false`: K2Native only pairs `expect`/`actual` through fragments, so a Native leaf directly under
+ * `commonMain` is split too.
  */
 internal fun buildFragmentArgs(
     sourceSets: List<SourceSetInfo>,
     files: List<File>,
     roots: Map<String, List<String>>,
+    requireIntermediate: Boolean = true,
 ): FragmentArguments? {
     val owners = files.map { it to owningSourceSet(it, roots) }
     if (owners.any { (_, set) -> set == null }) return null
@@ -52,7 +55,7 @@ internal fun buildFragmentArgs(
                 },
             refines = refines.map { (child, parent) -> "$child:$parent" },
         )
-        .takeIf { hasIntermediate }
+        .takeIf { hasIntermediate || !requireIntermediate }
 }
 
 /** Source set whose root is the deepest directory containing [file], or `null` when none does. */
@@ -105,7 +108,8 @@ private fun collapsedRefines(
 /**
  * The fragment structure for a run, or `null` to keep the flat `-Xcommon-sources` shape. Never for
  * the metadata driver, which rejects `-Xfragments` ("HMPP module structure should not be passed
- * during metadata compilation"), and never without common-fragment files.
+ * during metadata compilation"), and never without common-fragment files. The Native driver always
+ * gets fragments when the source set roots are known (see [buildFragmentArgs]).
  */
 internal fun fragmentsFor(
     driver: CompilerDriver,
@@ -117,7 +121,12 @@ internal fun fragmentsFor(
     if (driver == CompilerDriver.METADATA || commonFragmentFiles.isEmpty()) {
         null
     } else {
-        buildFragmentArgs(sourceSets, files, roots)
+        buildFragmentArgs(
+            sourceSets,
+            files,
+            roots,
+            requireIntermediate = driver != CompilerDriver.NATIVE,
+        )
     }
 
 /** Sets the three `-Xfragment*` arguments; all live on `CommonCompilerArguments`. */

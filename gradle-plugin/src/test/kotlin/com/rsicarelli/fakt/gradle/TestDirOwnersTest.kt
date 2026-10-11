@@ -199,7 +199,11 @@ class TestDirOwnersTest {
 
         assertEquals("faktGenerateJvmMain", testDirOwnerOf(project, "jvmIntegrationTest"))
         assertEquals("faktGenerateJvmMain", testDirOwnerOf(project, "jvmTest"))
-        assertNull(testDirOwnerOf(project, "linuxX64Test"))
+        assertEquals(
+            "faktGenerateLinuxX64Main",
+            testDirOwnerOf(project, "linuxX64Test"),
+            "a native leaf main is a task now: its test set is owned by association",
+        )
         assertEquals("faktGenerateMetadataCommonMain", testDirOwnerOf(project, "commonTest"))
     }
 
@@ -211,7 +215,10 @@ class TestDirOwnersTest {
 
         assertEquals(true, isFaktTestDirOwner(project, "faktGenerateJvmMain"))
         assertEquals(
-            mapOf("jvm/main" to "faktGenerateJvmMain"),
+            mapOf(
+                "jvm/main" to "faktGenerateJvmMain",
+                "linuxX64/main" to "faktGenerateLinuxX64Main",
+            ),
             testDirOwners(project).byMainCompilation,
         )
     }

@@ -31,15 +31,6 @@ class FaktInProcessCachingTest {
     }
 
     @Test
-    fun `GIVEN the legacy hybrid decision WHEN asking whether fakes are generated in-process THEN it is true`() {
-        assertTrue(
-            generatesFakesInProcess(CacheCorrectDecision.LEGACY_HYBRID),
-            "LEGACY_HYBRID keeps the in-process plugin on for a non-drivable platform main so it " +
-                "writes that platform's own fakes — undeclared, exactly like LEGACY.",
-        )
-    }
-
-    @Test
     fun `GIVEN the producer decision WHEN asking whether fakes are generated in-process THEN it is false`() {
         assertFalse(
             generatesFakesInProcess(CacheCorrectDecision.REGISTER_PRODUCER),
@@ -75,10 +66,10 @@ class FaktInProcessCachingTest {
     }
 
     @Test
-    fun `GIVEN every routing decision WHEN mapping to in-process generation THEN exactly the two legacy decisions qualify`() {
+    fun `GIVEN every routing decision WHEN mapping to in-process generation THEN exactly the legacy decision qualifies`() {
         val inProcess = CacheCorrectDecision.entries.filter(::generatesFakesInProcess).toSet()
         assertTrue(
-            inProcess == setOf(CacheCorrectDecision.LEGACY, CacheCorrectDecision.LEGACY_HYBRID),
+            inProcess == setOf(CacheCorrectDecision.LEGACY),
             "A new routing decision must declare whether it generates in-process; defaulting it to " +
                 "cacheable would silently reintroduce issue #142. Got: $inProcess",
         )

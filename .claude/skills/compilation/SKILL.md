@@ -34,7 +34,7 @@ Samples are separate Gradle builds, not subprojects of the root build:
 ### 3. Know Which Path Generated the Fakes
 
 - **Default (cache-correct):** `faktGenerate<Target><Compilation>` tasks (`FaktGenerateTask`) run an embedded K2 compiler in a Gradle worker; FIR checkers emit the fakes (`compiler/.../fir/generation/`).
-- **Legacy in-process:** Native platform mains (`LEGACY_HYBRID`), compilations the task can't drive (`LEGACY`), or any build with `-Pfakt.useExperimentalGenerateTask=false`. Generation runs inside `compileKotlin*` via `UnifiedFaktIrGenerationExtension`.
+- **Legacy in-process:** compilations the task can't drive (`LEGACY`), or any build with `-Pfakt.useExperimentalGenerateTask=false`. Generation runs inside `compileKotlin*` via `UnifiedFaktIrGenerationExtension`.
 
 Routing lives in `FaktGradleSubplugin.kt` (`CacheCorrectDecision`). If a failure only reproduces on one path, compare with the other by toggling the property above.
 

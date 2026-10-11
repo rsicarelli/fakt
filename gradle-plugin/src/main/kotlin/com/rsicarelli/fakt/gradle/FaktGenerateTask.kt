@@ -6,6 +6,7 @@ import com.rsicarelli.fakt.compiler.api.LogLevel
 import com.rsicarelli.fakt.gradle.worker.FaktCodegenWorkAction
 import javax.inject.Inject
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
@@ -230,6 +231,35 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
     @get:Input @get:Optional public abstract val jdkVersion: Property<Int>
 
     /**
+     * Root of the Kotlin/Native distribution (`konan.home`) the Native driver runs from; the worker
+     * forks with only its `kotlin-native-compiler-embeddable.jar`. `@Internal`: the path is
+     * absolute and machine specific, so it must never enter the cache key; [kotlinNativeVersion]
+     * carries the distribution's identity. Absent for every non-Native compilation.
+     */
+    @get:Internal public abstract val konanHome: DirectoryProperty
+
+    /**
+     * Version of the Kotlin/Native distribution behind [konanHome]. `@Input` so switching the
+     * distribution re-executes the task even though [konanHome] itself is not an input; `@Optional`
+     * because only Native compilations set it.
+     */
+    @get:Input @get:Optional public abstract val kotlinNativeVersion: Property<String>
+
+    /**
+     * Kotlin/Native targets (`linux_x64`, `ios_arm64`, ...) the compilation covers: one for a leaf,
+     * several for a shared-native source set. Non-empty selects the Native driver. Callers supply
+     * it sorted, so it is a host-independent `@Input`: the representative `-target` is chosen by
+     * the worker at execution time, never baked into the cache key. Empty for non-Native tasks.
+     */
+    @get:Input public abstract val konanTargets: ListProperty<String>
+
+    /**
+     * `true` for a shared-native compilation (`nativeMain`, `appleMain`, all-native `commonMain`),
+     * which is analysed against the distribution stdlib only. Absent or `false` for a leaf.
+     */
+    @get:Input @get:Optional public abstract val sharedNative: Property<Boolean>
+
+    /**
      * Generated `Fake<X>Impl.kt` files. Convention is
      * `build/generated/fakt/<target>/<sourceSet>/kotlin` — disjoint from `compileKotlin*`'s outputs
      * to avoid Gradle's overlapping-outputs rule.
@@ -260,12 +290,19 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
         // Metaspace`).
         // The fork is reused across tasks with identical options, so the JVM-startup cost is paid
         // once per pooled worker, not per task.
+        // A Native task forks with only the distribution's embeddable compiler (see
+        // workerForkPlan); every other task keeps the Fakt worker classpath.
+        nativeTaskProblem(konanTargets.get(), konanHome.orNull?.asFile)?.let {
+            throw GradleException(it)
+        }
+        val plan = workerForkPlan(konanHome.orNull?.asFile, faktWorkerClasspath.files)
         val queue =
             workers.processIsolation { spec ->
-                spec.classpath.from(faktWorkerClasspath)
+                spec.classpath.from(plan.classpath)
                 spec.forkOptions { options ->
                     options.maxHeapSize = WORKER_MAX_HEAP
                     options.jvmArgs(WORKER_METASPACE_ARG)
+                    plan.systemProperties.forEach(options::systemProperty)
                 }
             }
         queue.submit(FaktCodegenWorkAction::class.java) { params ->
@@ -290,6 +327,9 @@ public abstract class FaktGenerateTask @Inject constructor(private val workers: 
             params.scratchDir.set(scratchDir)
             params.compilerArguments.set(compilerArguments)
             params.jdkHome.set(jdkHome)
+            params.konanHome.set(konanHome)
+            params.konanTargets.set(konanTargets)
+            params.sharedNative.set(sharedNative)
         }
     }
 }

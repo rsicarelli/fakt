@@ -178,4 +178,48 @@ class FragmentArgumentsTest {
 
         assertNull(args)
     }
+
+    private val flatSets =
+        listOf(
+            SourceSetInfo("linuxX64Main", listOf("commonMain")),
+            SourceSetInfo("commonMain", emptyList()),
+        )
+    private val flatRoots =
+        mapOf(
+            "linuxX64Main" to listOf("/p/src/linuxX64Main/kotlin"),
+            "commonMain" to listOf("/p/src/commonMain/kotlin"),
+        )
+    private val flatFiles =
+        listOf(File("/p/src/linuxX64Main/kotlin/A.kt"), File("/p/src/commonMain/kotlin/C.kt"))
+
+    @Test
+    fun `GIVEN a native leaf under commonMain WHEN planning fragments THEN the flat pair is split`() {
+        val args =
+            assertNotNull(
+                fragmentsFor(
+                    CompilerDriver.NATIVE,
+                    commonFragmentFiles = flatFiles.takeLast(1),
+                    sourceSets = flatSets,
+                    files = flatFiles,
+                    roots = flatRoots,
+                )
+            )
+
+        assertEquals(listOf("commonMain", "linuxX64Main"), args.fragments)
+        assertEquals(listOf("linuxX64Main:commonMain"), args.refines)
+    }
+
+    @Test
+    fun `GIVEN a jvm consumer under commonMain WHEN planning fragments THEN keeps the flat shape`() {
+        val args =
+            fragmentsFor(
+                CompilerDriver.JVM,
+                commonFragmentFiles = flatFiles.takeLast(1),
+                sourceSets = flatSets,
+                files = flatFiles,
+                roots = flatRoots,
+            )
+
+        assertNull(args)
+    }
 }

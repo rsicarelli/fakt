@@ -15,10 +15,24 @@ runs:
       shell: bash
       run: ./gradlew :annotations:allTests --continue
 
-    # Run test for JVM-only modules (compiler, compiler-api, gradle-plugin)
+    # Run test for JVM-only modules (compiler, compiler-api, gradle-plugin). The Kotlin/Native
+    # TestKit suite needs a real distribution: pass it when the restored ~/.konan has one, so the
+    # suite runs instead of being skipped. Without it the tests are skipped and show as such.
     - name: Run JVM module tests
       shell: bash
-      run: ./gradlew :compiler:test :compiler-api:test :gradle-plugin:test
+      run: |
+        # The exact version the build compiles with, never the lexically last directory: a restored
+        # cache can hold several distributions, and "2.4.9" sorts after "2.4.10".
+        KOTLIN_VERSION="$(sed -n 's/^kotlin = "\([^"]*\)".*/\1/p' gradle/libs.versions.toml | head -n 1)"
+        KONAN_HOME="$HOME/.konan/kotlin-native-prebuilt-linux-x86_64-$KOTLIN_VERSION"
+        EXTRA=()
+        if [ -f "$KONAN_HOME/konan/lib/kotlin-native-compiler-embeddable.jar" ]; then
+          echo "Kotlin/Native distribution found: $KONAN_HOME"
+          EXTRA+=("-Pfakt.test.konanHome=$KONAN_HOME")
+        else
+          echo "No Kotlin/Native $KOTLIN_VERSION distribution under ~/.konan: the native TestKit suite will be skipped"
+        fi
+        ./gradlew :compiler:test :compiler-api:test :gradle-plugin:test "${EXTRA[@]}"
 
     # Run check for additional validations (apiCheck, binary compatibility, etc.)
     - name: Run all checks (apiCheck, compilation validation)

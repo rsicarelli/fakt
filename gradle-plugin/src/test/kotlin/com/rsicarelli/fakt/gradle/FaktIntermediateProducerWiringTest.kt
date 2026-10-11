@@ -304,7 +304,7 @@ class FaktIntermediateProducerWiringTest {
     }
 
     @Test
-    fun `GIVEN a metadata intermediate shared with a native target and no compiled counterpart test WHEN wiring the leaves THEN the native test set is left to its own producer`() {
+    fun `GIVEN a metadata intermediate shared with a native target and no compiled counterpart test WHEN wiring the leaves THEN the native test set is wired too`() {
         val project =
             createKmpProject().also {
                 it.getKotlinExtension().apply {
@@ -321,6 +321,6 @@ class FaktIntermediateProducerWiringTest {
         val owned = testDirOwners(project).bySourceSet
 
         assertEquals("faktGenerateMetadataNonJvmMain", owned["jsTest"], "owned: $owned")
-        assertTrue("linuxX64Test" !in owned, "native leaf must not be claimed: $owned")
+        assertEquals("faktGenerateMetadataNonJvmMain", owned["linuxX64Test"], "owned: $owned")
     }
 }

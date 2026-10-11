@@ -95,17 +95,16 @@ internal class SourceSetConfigurator(
      * set (`jvmTest → build/generated/fakt/jvmTest/kotlin`, etc.). Idempotent and lazy via
      * `configureEach`, so it composes with the cache-correct path: under the experimental flag the
      * common producer and drivable consumers wire their own task `@OutputDirectory` into the
-     * matching test source set, and this adds the directories where a non-drivable platform main's
-     * in-process plugin (`LEGACY_HYBRID`) writes its platform-specific fakes. Empty directories are
-     * harmless.
+     * matching test source set, and this adds the plain directory to the sets no task owns (for
+     * example `mingwTest`), where it stays empty. Empty directories are harmless.
      *
      * A test source set the owner registry attributes to a `FaktGenerateTask` ([testDirOwnerOf]) is
      * skipped: its fakes arrive through the task's own `@OutputDirectory`, and a stale in-process
      * copy left in the canonical dir by an earlier build would otherwise be compiled next to the
      * task output as a `Redeclaration`. Ownership follows the association of the test compilation
      * with the main the task serves (`jvmTest`, `jsTest`, a custom `jvmIntegrationTest`,
-     * `androidHostTest`), not the source set's name. Native targets have no task yet, so their test
-     * sets keep the plain directory.
+     * `androidHostTest`), not the source set's name. Native leaf and shared test sets are owned
+     * like any other.
      */
     fun configureKmpTestSourceSetDirs() =
         project.extensions

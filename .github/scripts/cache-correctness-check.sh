@@ -23,16 +23,12 @@
 # When FAKT_CACHED_FAKES is set, every fake named there must be among the files restored from cache —
 # a stronger check than "some fakes came back" that pins which platform producers own which fakes.
 #
-# Non-drivable platform mains (Native) generate their platform-specific fakes via the in-process
-# plugin, which is not cacheable by construction. Those fakes must still never be dropped,
-# so when FAKT_PRESENCE_TASKS is set this script additionally runs those compile tasks and asserts
-# every fake named in FAKT_PRESENCE_FAKES physically exists — present, not cached.
+# List only producers that have sources: a NO-SOURCE task is not FROM-CACHE, so this script counts it
+# as re-executed.
 #
 # Usage: cache-correctness-check.sh <project-path> [producer-task...]
 #        (producer task defaults to `faktGenerateMetadataCommonMain`)
 # Env:   FAKT_CACHED_FAKES    space-separated fake class basenames that must be restored from cache
-#        FAKT_PRESENCE_TASKS  space-separated compile tasks that generate non-cacheable platform fakes
-#        FAKT_PRESENCE_FAKES  space-separated fake class basenames asserted present after those tasks
 #        FAKT_FORBID_TOLERATED  set to 1 to fail if the warm-up log has a line
 #                             "Fakt: tolerated compiler error". Use it for modules the worker must
 #                             analyse fully: a hit means the module quietly relied on tolerance
@@ -169,24 +165,3 @@ if [ "$fail" -ne 0 ]; then
 fi
 
 echo "✅ Issue #79 contract holds for ${PROJECT_PATH}: ${restored} fake file(s) restored from cache, all ${total} producer(s) FROM-CACHE."
-
-# Non-cacheable platform fakes (Native via the in-process plugin) must still be generated.
-if [ -n "${FAKT_PRESENCE_TASKS:-}" ]; then
-  echo "::group::Generate non-cacheable platform fakes — ${FAKT_PRESENCE_TASKS}"
-  # shellcheck disable=SC2086
-  "${GRADLE[@]}" $FAKT_PRESENCE_TASKS
-  echo "::endgroup::"
-  presence_fail=0
-  for fake in ${FAKT_PRESENCE_FAKES:-}; do
-    if [ -z "$(find "$PROJECT_PATH" -path '*build/generated*' -name "${fake}.kt" 2>/dev/null | head -n1)" ]; then
-      echo "::error::Platform fake ${fake}.kt was not generated — a platform-specific @Fake was dropped."
-      presence_fail=1
-    else
-      echo "Present (not cached): ${fake}.kt"
-    fi
-  done
-  if [ "$presence_fail" -ne 0 ]; then
-    exit 1
-  fi
-  echo "✅ Platform fakes present for ${PROJECT_PATH}: ${FAKT_PRESENCE_FAKES:-}."
-fi

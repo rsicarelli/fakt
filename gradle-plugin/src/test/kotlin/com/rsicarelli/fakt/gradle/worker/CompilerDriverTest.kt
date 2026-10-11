@@ -44,4 +44,40 @@ class CompilerDriverTest {
             CompilerDriver.JS.argumentsFqn,
         )
     }
+
+    @Test
+    fun `GIVEN native platform WHEN picking the driver THEN uses K2Native`() {
+        assertEquals(CompilerDriver.NATIVE, CompilerDriver.forPlatformType("native"))
+    }
+
+    @Test
+    fun `GIVEN the native driver WHEN reading its front door THEN points at K2Native and its arguments`() {
+        assertEquals("org.jetbrains.kotlin.cli.bc.K2Native", CompilerDriver.NATIVE.compilerFqn)
+        assertEquals(
+            "org.jetbrains.kotlin.cli.common.arguments.K2NativeCompilerArguments",
+            CompilerDriver.NATIVE.argumentsFqn,
+        )
+    }
+
+    @Test
+    fun `GIVEN a common platform with konan targets WHEN selecting THEN uses K2Native`() {
+        val driver =
+            CompilerDriver.select(
+                platformType = "common",
+                konanTargets = listOf("linux_arm64", "linux_x64"),
+            )
+
+        assertEquals(CompilerDriver.NATIVE, driver)
+    }
+
+    @Test
+    fun `GIVEN a common platform without konan targets WHEN selecting THEN uses the metadata compiler`() {
+        assertEquals(CompilerDriver.METADATA, CompilerDriver.select("common", emptyList()))
+    }
+
+    @Test
+    fun `GIVEN no konan targets WHEN selecting THEN falls back to the platform driver`() {
+        assertEquals(CompilerDriver.JVM, CompilerDriver.select("jvm", emptyList()))
+        assertEquals(CompilerDriver.JS, CompilerDriver.select("js", emptyList()))
+    }
 }

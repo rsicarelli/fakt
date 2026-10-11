@@ -160,6 +160,10 @@ jobs:
             path: samples/kmp-multi-target
             tasks: allTests --continue
             check: true
+          - sample: kmp-native-only
+            path: samples/kmp-native-only
+            tasks: allTests --continue
+            check: true
           - sample: kmp-multi-module
             path: samples/kmp-multi-module
             tasks: allTests --continue
