@@ -54,16 +54,22 @@ of `org.jetbrains.kotlin:kotlin-compiler-embeddable` to it. Because of that, Gra
 resolution lets you move **up**: declare a newer version and it wins.
 
 ```kotlin
-dependencies {
-    "faktWorker"("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.5.0")
+configurations.matching { it.name == "faktWorker" }.configureEach {
+    dependencies.add(
+        project.dependencies.create("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.5.0")
+    )
 }
 ```
+
+Fakt creates the `faktWorker` configuration after your build script has run, so use
+`configurations.matching { ... }` as shown. A plain `dependencies { "faktWorker"(...) }` block fails
+with "Configuration with name 'faktWorker' not found".
 
 Going **down** needs `resolutionStrategy.force(...)`, because Gradle keeps the higher version
 unless you force the lower one:
 
 ```kotlin
-configurations.named("faktWorker") {
+configurations.matching { it.name == "faktWorker" }.configureEach {
     resolutionStrategy.force("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.3.20")
 }
 ```
