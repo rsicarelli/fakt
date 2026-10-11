@@ -19,6 +19,7 @@ import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinMetadataTarget
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.parallel.Isolated
 
 /**
  * Pins the Kotlin/Native wiring of `FaktGenerateTask` (#152, WP4): native leaf mains are consumers,
@@ -26,7 +27,12 @@ import org.junit.jupiter.api.TestInstance
  * all-native project) is a producer, a lone native target is a single-target task. Real KGP
  * compilations from `ProjectBuilder` with native targets, no mocks. `applyToCompilation` fires
  * under `evaluate()`, so the tasks exist the way a real build registers them.
+ *
+ * `@Isolated`: the missing-distribution test sets a JVM-wide system property while a project is
+ * built, and the suite runs its classes concurrently. `@Isolated` runs this class alone, so no
+ * `ProjectBuilder` project of another test can read the bogus property.
  */
+@Isolated
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FaktNativeTaskWiringTest {
 
@@ -416,7 +422,7 @@ class FaktNativeTaskWiringTest {
     // ---- B26: laziness ------------------------------------------------------------------------
 
     @Test
-    fun `GIVEN a missing Kotlin Native home WHEN evaluating and realizing the native tasks THEN nothing touches the file system`() {
+    fun `GIVEN a missing Kotlin Native home WHEN evaluating and realizing the native tasks THEN neither throws and the missing path is only reported`() {
         val key = "org.gradle.project.kotlin.native.home"
         val previous = System.getProperty(key)
         System.setProperty(key, MISSING_HOME)
