@@ -1897,6 +1897,18 @@ custom compilation sees them only if its source set depends on <code>commonTest<
 whose name contains another&rsquo;s, such as <code>debugMinified</code> next to <code>debug</code>, gets its own fakes in<br />
 <code>testDebugMinifiedUnitTest</code> and never the ones of <code>debug</code>. <code>samples/android-single-module</code><br />
 declares <code>debugMinified</code> and <code>preRelease</code> to prove it.</p>
+<p>In a multiplatform module that declares <code>androidTarget()</code>, the fakes of <code>androidMain</code> reach each<br />
+variant&rsquo;s unit and instrumented tests: every variant (<code>debug</code>, <code>release</code>, or <code>freeDebug</code> with<br />
+flavors) generates its own copy of the <code>androidMain</code> fakes into its own output directory, and<br />
+the shared <code>androidUnitTest</code> and <code>androidInstrumentedTest</code> source sets receive none. That is<br />
+what lets a type declared only in <code>androidDebug</code> or <code>androidRelease</code> (the same name with<br />
+different members per build type) appear in an <code>androidMain</code> fake&rsquo;s signature. When<br />
+<code>androidTarget()</code> is the only target, <code>commonMain</code> has no metadata compilation: its fakes reach<br />
+<code>commonTest</code> from <code>faktGenerateCommonMain</code>, which runs on the debug variant.<br />
+<code>samples/kmp-android-target</code> covers all three shapes.</p>
+<p>Types from AAR dependencies (<code>androidx</code>) can appear in a <code>@Fake</code> signature: for an Android<br />
+compilation Fakt gives the generation worker the unpacked class jars of the AARs, not the<br />
+<code>.aar</code> files.</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Project shapes that keep the in-process path</p>
@@ -1905,13 +1917,9 @@ every <code>@Fake</code> — they just aren&rsquo;t declared task outputs, so th
 tasks opt out of the Gradle build cache (see below). Fakt logs a warning naming the reason<br />
 whenever a module lands here.</p>
 <ul>
-<li><strong>Single-target Android or Native multiplatform projects</strong> (for example <code>kotlin {
-  androidTarget() }</code> or <code>kotlin { linuxX64() }</code> and nothing else). Adding a second target<br />
-  moves the project onto the cache-correct path automatically.</li>
-<li><strong>Multiplatform projects that declare <code>androidTarget()</code> through <code>com.android.library</code> or<br />
-<code>com.android.application</code>.</strong> Kotlin compiles those per Android variant (<code>debug</code>, <code>release</code>),<br />
-  which Fakt can&rsquo;t drive from a task yet. The KMP Android library plugin<br />
-  (<code>com.android.kotlin.multiplatform.library</code>) is on the cache-correct path.</li>
+<li><strong>Single-target Native multiplatform projects</strong> (for example <code>kotlin { linuxX64() }</code> and<br />
+  nothing else). Adding a second target moves the project onto the cache-correct path<br />
+  automatically.</li>
 <li><strong>Android modules on AGP&rsquo;s built-in Kotlin support whose Android Gradle Plugin isn&rsquo;t visible<br />
   to Fakt</strong> (for example, AGP only in a subproject&rsquo;s build script while Fakt is on the root<br />
   build classpath). AGP 9&rsquo;s built-in Kotlin keeps sources in its variant model, which Fakt<br />
