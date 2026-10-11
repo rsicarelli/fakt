@@ -477,6 +477,9 @@ jobs:
           - "2.3.10"
           - "2.3.20"
           - "2.4.10"
+          # Canary for the worker version policy (#166): one minor newer than the worker's Kotlin,
+          # so it must build and print the "one minor newer" warning (real KGP, not a mock).
+          - "2.5.0-Beta1"
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -488,6 +491,7 @@ jobs:
         uses: ./.github/actions/test-compat-samples
         with:
           kotlin-version: ${{ matrix.kotlin-version }}
+          expect-output: ${{ matrix.kotlin-version == '2.5.0-Beta1' && 'one minor newer than the Kotlin' || '' }}
 
   test-compat-agp:
     name: Compat / AGP ${{ matrix.agp-version }}
