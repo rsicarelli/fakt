@@ -386,6 +386,7 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                             "path stays disabled. Opt out with " +
                             "-Pfakt.useExperimentalGenerateTask=false."
                     )
+                    checkWorkerKotlinVersion(target)
                     ensureFaktConfigurations(target)
                     // Every producer and consumer task wires its own output dir into the test
                     // source sets it feeds; this adds the plain dir only to the sets no task owns

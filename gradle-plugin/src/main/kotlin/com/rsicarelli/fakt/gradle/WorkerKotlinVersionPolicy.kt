@@ -2,6 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsicarelli.fakt.gradle
 
+import org.gradle.api.GradleException
+import org.gradle.api.Project
+import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
+
 /** Leading `major.minor.patch` of a Kotlin version string; a missing patch reads as 0. */
 internal data class KotlinVersionParts(val major: Int, val minor: Int, val patch: Int)
 
@@ -38,10 +42,11 @@ private const val ONE_MINOR_NEWER = 1
  * `2.5.20-dev-1234`, `2.4.0-titan-100`). Returns `null` when major and minor cannot be read.
  */
 internal fun parseKotlinVersion(version: String): KotlinVersionParts? {
-    val groups = VERSION_PREFIX.find(version)?.groupValues ?: return null
-    val major = groups[1].toIntOrNull()
-    val minor = groups[2].toIntOrNull()
-    val patch = groups[3].ifEmpty { "0" }.toIntOrNull()
+    val (majorText, minorText, patchText) =
+        VERSION_PREFIX.find(version)?.destructured ?: return null
+    val major = majorText.toIntOrNull()
+    val minor = minorText.toIntOrNull()
+    val patch = patchText.ifEmpty { "0" }.toIntOrNull()
     return if (major == null || minor == null || patch == null) {
         null
     } else {
@@ -94,3 +99,42 @@ internal fun workerKotlinOutcome(
             if (allowNewer) WorkerKotlinOutcome.Warn(message) else WorkerKotlinOutcome.Fail(message)
         }
     }
+
+/** Gradle property that lets a build go ahead when the user's Kotlin is too new for the worker. */
+internal const val ALLOW_NEWER_KOTLIN_PROPERTY: String = "fakt.allowNewerKotlin"
+
+/**
+ * Testable seam of [checkWorkerKotlinVersion]: a `null` [userKotlin] (no Kotlin plugin applied) is
+ * skipped, warnings go to [warn], and a failure throws [GradleException].
+ */
+internal fun checkWorkerKotlinVersion(
+    userKotlin: String?,
+    workerKotlin: String,
+    allowNewer: Boolean,
+    warn: (String) -> Unit,
+) {
+    if (userKotlin == null) return
+    when (val outcome = workerKotlinOutcome(userKotlin, workerKotlin, allowNewer)) {
+        WorkerKotlinOutcome.Silent -> Unit
+        is WorkerKotlinOutcome.Warn -> warn(outcome.message)
+        is WorkerKotlinOutcome.Fail -> throw GradleException(outcome.message)
+    }
+}
+
+/**
+ * Compares the project's Kotlin Gradle plugin version with the worker's pinned compiler. Projects
+ * without the Kotlin plugin (for example AGP built-in Kotlin) are skipped.
+ */
+internal fun checkWorkerKotlinVersion(
+    project: Project,
+    workerKotlin: String = FaktGradleSubplugin.FAKT_KOTLIN_VERSION,
+    warn: (String) -> Unit = project.logger::warn,
+) {
+    checkWorkerKotlinVersion(
+        userKotlin = runCatching { project.getKotlinPluginVersion() }.getOrNull(),
+        workerKotlin = workerKotlin,
+        allowNewer =
+            project.providers.gradleProperty(ALLOW_NEWER_KOTLIN_PROPERTY).orNull.toBoolean(),
+        warn = warn,
+    )
+}
