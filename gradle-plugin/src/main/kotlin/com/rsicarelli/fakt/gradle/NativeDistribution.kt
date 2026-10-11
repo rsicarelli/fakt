@@ -91,7 +91,8 @@ internal fun nativeDistributionProblem(konanHome: File): String? =
         "No Kotlin/Native distribution at '${konanHome.path}' (missing " +
             "konan/lib/$EMBEDDABLE_COMPILER_JAR). Fakt reads the distribution Kotlin Gradle " +
             "plugin provisions. Set kotlin.native.home to an existing distribution, or " +
-            "konan.data.dir to the directory that holds it."
+            "konan.data.dir to the directory that holds it. Both are read from Gradle " +
+            "properties only (gradle.properties or -P), not from local.properties."
     }
 
 /**

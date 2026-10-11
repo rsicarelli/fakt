@@ -30,8 +30,8 @@ Generation runs in dedicated `faktGenerate*` tasks whose generated `.kt` files a
 outputs, so a warm Gradle build cache restores the fakes along with the compilation that uses them.
 See [Cache-Correct Generation](plugin-configuration.md#cache-correct-generation).
 
-Native is covered too: the Kotlin/Native generation task is cacheable and its key does not depend
-on the host (see [Kotlin/Native](plugin-configuration.md#kotlinnative)).
+Native is covered too: the Kotlin/Native generation task is cacheable and its key holds no absolute
+path or host target, so it is relocatable (see [Kotlin/Native](plugin-configuration.md#kotlinnative)).
 
 A few project shapes still generate inside `compileKotlin*` — Android modules on AGP's built-in
 Kotlin support whose Android Gradle Plugin isn't visible to Fakt, and builds that set

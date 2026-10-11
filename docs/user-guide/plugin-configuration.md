@@ -483,16 +483,24 @@ When both `konan.data.dir` and `kotlin.native.home` are set, `konan.data.dir` wi
 found, the task fails with a message naming the path it looked at, `kotlin.native.home` and
 `konan.data.dir`.
 
-The cache key holds the sorted Native targets and the Kotlin/Native version, not the path of the
-distribution. A Linux CI machine and a macOS laptop can share cache hits, and the build can move
-between directories.
+`kotlin.native.home`, `konan.data.dir` and `kotlin.native.version` are read from Gradle properties
+only (`gradle.properties` or `-P`). Fakt does not read `local.properties`, which Kotlin Gradle
+plugin also consults, so a value set only there is ignored by Fakt.
+
+The cache key holds the sorted Native targets and the Kotlin/Native version, and no absolute path
+and no host target, so it is relocatable: the build can move between directories. The target list
+does not depend on the host, but the Native dependency klibs (the standard library, the platform
+libraries, commonizer output) come from your host's distribution and are part of the key. Cache
+hits across operating systems are therefore not guaranteed.
 
 !!! warning "Kotlin/Native limits"
     - Native needs Kotlin 2.4 or newer for now: older compilers cannot read the published
       annotations klibs ([#171](https://github.com/rsicarelli/fakt/issues/171)).
     - Windows hosts are not covered yet ([#167](https://github.com/rsicarelli/fakt/issues/167)).
-    - A test source set that no producer owns (for example `mingwTest`) keeps an empty generated
-      directory and receives no fakes.
+    - The fakes of a source set that only one target compiles (for example `mingwMain` with a
+      single `mingwX64` target) reach that target's test compilation (`mingwX64Test`). Write the
+      tests that use them in `mingwX64Test`: the intermediate `mingwTest` is its parent, cannot see
+      them, and keeps an empty generated directory.
     - An `@OptIn` on the interface loses its import in the fake
       ([#172](https://github.com/rsicarelli/fakt/issues/172)). For cinterop types, opt in for the
       whole module instead, for example `optIn("kotlinx.cinterop.ExperimentalForeignApi")` in

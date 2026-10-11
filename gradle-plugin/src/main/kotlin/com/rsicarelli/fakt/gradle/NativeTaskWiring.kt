@@ -17,7 +17,8 @@ internal fun isNativeCompilation(compilation: KotlinCompilation<*>): Boolean =
 /**
  * The konan target names a native [compilation] is compiled for: its own target for a leaf, the
  * sorted set of its targets for a shared compilation, empty for anything else. Sorted and free of
- * the build host, so it can be a cache key shared by Linux CI and macOS developers.
+ * the build host, so the list is a relocatable cache key. The dependency klibs the task also hashes
+ * come from the host's distribution, so cross-OS cache hits are not guaranteed.
  */
 internal fun konanTargetNames(compilation: KotlinCompilation<*>): List<String> =
     when (compilation) {

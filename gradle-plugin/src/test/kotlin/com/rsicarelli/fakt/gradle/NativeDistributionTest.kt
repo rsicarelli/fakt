@@ -139,6 +139,14 @@ class NativeDistributionTest {
     }
 
     @Test
+    fun `GIVEN a missing directory WHEN checking it THEN the message says the settings come from Gradle properties only`() {
+        val message = assertNotNull(nativeDistributionProblem(File("does-not-exist")))
+
+        assertTrue("gradle.properties" in message, message)
+        assertTrue("local.properties" in message, message)
+    }
+
+    @Test
     fun `GIVEN only kotlin-native jar WHEN checking it THEN it is rejected`(@TempDir root: File) {
         distribution(root, "kotlin-native.jar")
 

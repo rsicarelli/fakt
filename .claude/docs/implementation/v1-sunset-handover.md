@@ -164,8 +164,9 @@ Native runs on the cache-correct task path. Code: `gradle-plugin/.../NativeDistr
   cinterop/link tasks do. A missing distribution fails the task with a message naming the path,
   `kotlin.native.home` and `konan.data.dir`.
 - **Cache key.** `konanTargets` (sorted, host independent) and `kotlinNativeVersion` are `@Input`;
-  `konanHome` is `@Internal`. Linux CI and macOS developers can share hits and the build is
-  relocatable.
+  `konanHome` is `@Internal`. The key holds no absolute path or host target, so it is relocatable;
+  the target list is host independent, but the stdlib and platform klibs are content-hashed from the
+  host's distribution, so cross-OS hits are not guaranteed.
 - **Samples and CI.** `kmp-multi-target` has posix/cinterop/`linuxMain`/`appleMain`/`iosMain` fakes
   and runs with the configuration cache on. New `samples/kmp-native-only` (`:all-native`,
   `:single`). `presence-*` and `FAKT_PRESENCE_*` are gone. New CI job `test-native-macos`. `run-tests`
@@ -176,7 +177,9 @@ Native runs on the cache-correct task path. Code: `gradle-plugin/.../NativeDistr
     blocked there.
   - Windows host not covered (#167, Windows half).
   - Collector mode (#168) is unchanged; native outputs flow into collectors automatically.
-  - Unowned test sets (`mingwTest`, all-JS/Wasm intermediates) keep an empty plain dir.
+  - Unowned test sets (`mingwTest`, all-JS/Wasm intermediates) keep an empty plain dir. Fakes of a
+    platform-owned set (`mingwMain`) reach the leaf test compilation (`mingwX64Test`) only: the
+    intermediate `mingwTest` fragment is its parent and cannot see them.
   - #172: interface-level `@OptIn` loses its import. Samples use a module-wide
     `optIn("kotlinx.cinterop.ExperimentalForeignApi")` as a workaround.
   - `test-native-macos` is the only proof that Apple tests link and run against task-path fakes.
