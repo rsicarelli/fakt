@@ -19,8 +19,10 @@ looking for "what next", open #150.
 - Gone: the in-process plugin inside `compileKotlin*` (IR emission, `compiler/.../ir/`),
   `EmitPhase`, and `fakt.useExperimentalGenerateTask`.
 - Routing today: `FaktGradleSubplugin.cacheCorrectDecision`. `LEGACY_HYBRID` and
-  `wireLegacyHybridOrdering` are deleted. `LEGACY` remains only for the explicit opt-out
-  (`fakt.useExperimentalGenerateTask=false`) and AGP 9 built-in Kotlin without a hook.
+  `wireLegacyHybridOrdering` are deleted. `LEGACY` remains for the explicit opt-out
+  (`fakt.useExperimentalGenerateTask=false`) and the few shapes a task cannot read (AGP 9
+  built-in Kotlin without a hook, a platform that cannot be driven from a task), each with a
+  reason in the warning.
 
 ## 2. Key code on the task path
 
