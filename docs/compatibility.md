@@ -8,6 +8,7 @@ Fakt is tested against multiple Kotlin and Android Gradle Plugin versions on eve
 
 | Kotlin Version | Status | CI |
 |---------------|--------|-----|
+| 2.5.0-Beta1 | 🐤 Canary (newer than the worker): warns, builds | ✅ |
 | **2.4.10** | ⭐ **Latest tested** | ✅ |
 | 2.3.20 | ✅ Supported | ✅ |
 | 2.3.10 | ✅ Supported | ✅ |
@@ -19,6 +20,70 @@ Fakt is tested against multiple Kotlin and Android Gradle Plugin versions on eve
 | 2.1.x | ⚠️ Not tested | — |
 | 2.0.x | ⚠️ Not tested | — |
 | 1.x | ❌ Not supported (K1) | — |
+
+---
+
+## Worker compiler version
+
+Fakt generates your fakes in a separate step, called the worker. The worker runs its own Kotlin
+compiler, and Fakt pins it to the Kotlin version Fakt was tested with (**2.4.10** today). Your
+project can still use an older or newer Kotlin. Fakt compares your Kotlin Gradle plugin version with
+the worker's version, looking only at the major and minor numbers:
+
+| Your Kotlin | What happens |
+|-------------|--------------|
+| Same or older | Works. Fakt says nothing. |
+| One minor newer (for example 2.5.x) | A warning. It usually works fine. |
+| Two or more minors newer (for example 2.6.x) | The build stops with a message. The pinned compiler may not be able to read your Kotlin. |
+
+A newer patch of the same minor (2.4.20 with a 2.4.10 worker) counts as the same. Pre-release
+versions such as `2.5.0-Beta1` are compared by their `major.minor.patch` numbers.
+
+### Build anyway
+
+To skip the stop, add this to `gradle.properties`. The error becomes a warning:
+
+```properties
+fakt.allowNewerKotlin=true
+```
+
+### Use a different worker compiler
+
+The worker's compiler comes from the `faktWorker` Gradle configuration. Fakt adds a fixed version
+of `org.jetbrains.kotlin:kotlin-compiler-embeddable` to it. Because of that, Gradle's conflict
+resolution lets you move **up**: declare a newer version and it wins.
+
+```kotlin
+dependencies {
+    "faktWorker"("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.5.0")
+}
+```
+
+Going **down** needs `resolutionStrategy.force(...)`, because Gradle keeps the higher version
+unless you force the lower one:
+
+```kotlin
+configurations.named("faktWorker") {
+    resolutionStrategy.force("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.3.20")
+}
+```
+
+!!! warning "At your own risk"
+    Fakt's jar is built against the pinned compiler API. A different worker compiler can break
+    with errors such as `NoSuchMethodError`. Fakt does not test this setup.
+
+### Kotlin/Native
+
+The Native worker does not use the pinned compiler. It runs on your own Kotlin/Native compiler, the
+same version as your build. The version check still compares your Kotlin Gradle plugin version, and
+it does so for every target, Native included.
+
+### Why not use your Kotlin version for the worker?
+
+It would mean Fakt's jar has to work with every supported compiler. The compiler API changes between
+Kotlin versions, so Fakt would need a compatibility layer for each one. A single pinned worker keeps
+the generated code the same for everyone, and the version check tells you when your Kotlin has moved
+too far ahead.
 
 ---
 
@@ -59,7 +124,8 @@ When a new Kotlin version is released, we add it to the matrix and verify compat
 
 ## What the Status Labels Mean
 
-- ⭐ **Latest tested** — The Kotlin version Fakt is compiled against and recommended for new projects.
+- ⭐ **Latest tested** — The newest stable Kotlin version Fakt is compiled against, and the one its worker uses. Recommended for new projects.
+- 🐤 **Canary** — A pre-release Kotlin that is newer than the worker. It checks that Fakt's version check works with a real newer Kotlin: Fakt prints a warning and the build passes.
 - ✅ **Supported** — Verified working via CI on every commit. Safe to use.
 - ⚠️ **Not tested** — May work, but not part of the CI matrix. If you encounter issues, [open a bug report](https://github.com/rsicarelli/fakt/issues/new?template=bug_report.yml) and we'll investigate adding it to the matrix.
 - ❌ **Not supported** — Known to be incompatible (e.g., Kotlin 1.x uses the K1 compiler, which Fakt does not support).
