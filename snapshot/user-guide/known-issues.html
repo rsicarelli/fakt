@@ -893,6 +893,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#kotlinnative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kotlin/Native
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1171,6 +1182,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#kotlinnative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kotlin/Native
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1241,6 +1263,21 @@
 <h3 id="default-parameters-in-interface-methods">❌ Default Parameters in Interface Methods<a class="headerlink" href="#default-parameters-in-interface-methods" title="Permanent link">&para;</a></h3>
 <p>Interfaces with default parameters are not yet supported.</p>
 <p><strong>Workaround</strong>: Use overloaded methods or remove defaults.</p>
+<hr />
+<h3 id="kotlinnative">Kotlin/Native<a class="headerlink" href="#kotlinnative" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Kotlin older than 2.4 cannot read the published annotations klibs, so Native projects need 2.4 or<br />
+  newer (<a href="https://github.com/rsicarelli/fakt/issues/171">#171</a>).</li>
+<li>Windows hosts are not covered (<a href="https://github.com/rsicarelli/fakt/issues/167">#167</a>).</li>
+<li>The fakes of a source set that only one target compiles (for example <code>mingwMain</code> with a single<br />
+<code>mingwX64</code> target) are visible in that target&rsquo;s test compilation (<code>mingwX64Test</code>), not in the<br />
+  intermediate <code>mingwTest</code> above it, whose own generated directory stays empty<br />
+  (<a href="https://github.com/rsicarelli/fakt/issues/187">#187</a>). Write those tests in <code>mingwX64Test</code>.</li>
+<li>An <code>@OptIn</code> on the interface loses its import in the fake<br />
+  (<a href="https://github.com/rsicarelli/fakt/issues/172">#172</a>). <strong>Workaround</strong>: opt in for the whole<br />
+  module, for example <code>optIn("kotlinx.cinterop.ExperimentalForeignApi")</code>.</li>
+</ul>
+<p>See <a href="plugin-configuration.html#kotlinnative">Kotlin/Native</a> for how the distribution is found.</p>
 <hr />
 <h2 id="reporting-issues">Reporting Issues<a class="headerlink" href="#reporting-issues" title="Permanent link">&para;</a></h2>
 <p>Found a limitation not listed here? <a href="https://github.com/rsicarelli/fakt/issues">Report it on GitHub</a>.</p>
