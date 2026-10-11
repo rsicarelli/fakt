@@ -21,13 +21,16 @@ runs:
     - name: Run JVM module tests
       shell: bash
       run: |
-        KONAN_HOME="$(ls -d "$HOME"/.konan/kotlin-native-prebuilt-linux-x86_64-* 2>/dev/null | sort | tail -n 1 || true)"
+        # The exact version the build compiles with, never the lexically last directory: a restored
+        # cache can hold several distributions, and "2.4.9" sorts after "2.4.10".
+        KOTLIN_VERSION="$(sed -n 's/^kotlin = "\([^"]*\)".*/\1/p' gradle/libs.versions.toml | head -n 1)"
+        KONAN_HOME="$HOME/.konan/kotlin-native-prebuilt-linux-x86_64-$KOTLIN_VERSION"
         EXTRA=()
-        if [ -n "$KONAN_HOME" ] && [ -f "$KONAN_HOME/konan/lib/kotlin-native-compiler-embeddable.jar" ]; then
+        if [ -f "$KONAN_HOME/konan/lib/kotlin-native-compiler-embeddable.jar" ]; then
           echo "Kotlin/Native distribution found: $KONAN_HOME"
           EXTRA+=("-Pfakt.test.konanHome=$KONAN_HOME")
         else
-          echo "No Kotlin/Native distribution under ~/.konan: the native TestKit suite will be skipped"
+          echo "No Kotlin/Native $KOTLIN_VERSION distribution under ~/.konan: the native TestKit suite will be skipped"
         fi
         ./gradlew :compiler:test :compiler-api:test :gradle-plugin:test "${EXTRA[@]}"
 
