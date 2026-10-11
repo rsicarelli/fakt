@@ -387,6 +387,32 @@ class FaktNativeTaskWiringTest {
         }
     }
 
+    // ---- audit finding 1: platform-owned native ancestor with an empty leaf --------------------
+
+    @Test
+    fun `GIVEN a Fake only in nativeMain of a jvm plus one native target WHEN reading the leaf task THEN nativeMain is an emitted source and commonMain stays analysis only`() {
+        val project =
+            createKmpProject().also {
+                it.getKotlinExtension().apply {
+                    jvm()
+                    linuxX64()
+                }
+                it.evaluate()
+            }
+        val nativeMarker = project.plantMarker("nativeMain", "NativeOnly")
+        val commonMarker = project.plantMarker("commonMain", "Common")
+
+        val task = project.generate("faktGenerateLinuxX64Main")
+
+        assertTrue(nativeMarker in task.sources.files, "sources: ${task.sources.files}")
+        assertFalse(
+            nativeMarker in task.analysisOnlySources.files,
+            "analysis only: ${task.analysisOnlySources.files}",
+        )
+        assertTrue(commonMarker in task.analysisOnlySources.files)
+        assertFalse(commonMarker in task.sources.files)
+    }
+
     // ---- B26: laziness ------------------------------------------------------------------------
 
     @Test

@@ -318,12 +318,7 @@ private fun configureSources(
     when (shape) {
         TaskShape.PRODUCER ->
             task.sources.from(enabled.gate(kotlinCompilation.allKotlinSourceSets.map { it.kotlin }))
-        TaskShape.CONSUMER -> {
-            task.sources.from(kotlinCompilation.lazySources(enabled) { memberSplit(it).own })
-            task.analysisOnlySources.from(
-                kotlinCompilation.lazySources(enabled) { memberSplit(it).analysisOnly }
-            )
-        }
+        TaskShape.CONSUMER -> configureConsumerSources(task, kotlinCompilation, enabled)
         TaskShape.SINGLE_TARGET -> {
             task.sources.from(enabled.gate(own))
             task.commonSources.from(enabled.gate(ancestors.map { it.kotlin }))
