@@ -10,8 +10,8 @@ Kotlin compiler plugin that generates type-safe test fakes at compile time using
 1. **Default: FIR emission** (`FaktGenerateTask` -> Gradle Worker -> embedded K2 with Fakt as `-Xplugin`).
    `FaktFirExtensionRegistrar` detects and validates `@Fake`; the FIR checkers emit the fakes
    (`fir/generation/`) as declared, cache-correct task outputs.
-2. **Legacy: IR emission** (`fakt.useExperimentalGenerateTask=false`, and AGP 9 built-in Kotlin
-   without a hook; both routed `LEGACY`). The plugin runs inside `compileKotlin*`;
+2. **Legacy: IR emission** (`fakt.useExperimentalGenerateTask=false`, and the few shapes a task
+   cannot read, such as AGP 9 built-in Kotlin without a hook; all routed `LEGACY` with a reason). The plugin runs inside `compileKotlin*`;
    `UnifiedFaktIrGenerationExtension` generates. Native is not legacy: it runs on the task path. **Do not add features here.** It is deleted for 1.0.
 
 Both paths share the codegen in `codegen-runtime/` (the `FakeDeclaration` model -> generators).
