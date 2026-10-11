@@ -270,8 +270,7 @@ producer-mode `SourceSetContext`.
   (`generatedAt=0`, zeroed timings, canonicalized source paths). Existing FROM-CACHE-across-dirs and
   byte-identity tests remain the lock.
 - **Output hygiene:** the worker clears `generatedKotlinDir` at start (stale-fake correctness on source
-  deletion; safe — the dir is task-owned, and LEGACY_HYBRID platform compiles are ordered after the
-  producer).
+  deletion; safe — the dir is task-owned).
 
 ## 8. Routing table (after)
 
@@ -291,11 +290,10 @@ branch is **deleted** (the producer no longer needs a JVM classpath):
 | KMP other `platformType == common` metadata compilations | SUPPRESS | — |
 | KMP JVM/Android platform `main` | REGISTER_CONSUMER | K2JVM, FIR-emit; ancestors ride as `-Xcommon-sources` analysis-only (the route map `outputDirectories` restricts emission to the platform source set) |
 | KMP JS/Wasm platform `main` (#151) | REGISTER_CONSUMER | K2JS (`-Xwasm -Xwasm-target=…` for Wasm) over platform klibs, klib output to `scratchDir`, FIR-emit; ancestors ride as `-Xcommon-sources` exactly like the JVM consumer |
-| KMP Native platform `main` | LEGACY_HYBRID | in-process, IR (ordered after producer) |
+| KMP Native platform `main` (#152) | REGISTER_CONSUMER | K2Native from the distribution's embeddable jar, klib output to `scratchDir`, FIR-emit |
 
-Platform-declared `@Fake` in `nativeMain`/`iosMain`/`linuxX64Main` stays on LEGACY_HYBRID —
-correct, but not cache-correct (no Native driver in the embeddable; tracked in #152). CI presence
-checks continue to lock it. `jsMain`/`wasmJsMain` moved to K2JS-driven consumers in #151; the routing
+Platform-declared `@Fake` in `nativeMain`/`iosMain`/`linuxX64Main` was on a hybrid in-process route
+here; #152 moved it to the K2Native-driven consumer and producers (shared-native sets). `jsMain`/`wasmJsMain` moved to K2JS-driven consumers in #151; the routing
 table is pinned by `FaktCompilationRoutingTest` (pure `routeCompilation`).
 
 **Single-target KMP** (exactly one non-`metadata` target, e.g. `kotlin { jvm() }`): KGP never

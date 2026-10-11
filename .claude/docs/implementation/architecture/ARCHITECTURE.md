@@ -385,15 +385,15 @@ files real task outputs:
   and keeps emitting at IR.
 - **Routing** (`FaktGradleSubplugin.cacheCorrectDecision` → pure `routeCompilation`): commonMain →
   producer; JVM/Android platform mains → K2JVM consumers; JS/Wasm platform mains → K2JS consumers
-  (#151); Native platform mains → LEGACY_HYBRID (in-process plugin, ordered after the producer,
-  #152); other metadata compilations → suppressed. Single-target KMP projects (one
+  (#151); Native platform mains → K2Native consumers, shared-native source sets → producers
+  (#152); other metadata compilations → suppressed. Single-target KMP projects (one
   non-`metadata` target, no `commonMain` compilation) route their JVM/JS/Wasm lone platform main to
   one task owning both the common and the platform fakes (#153); Android/Native lone targets and
   Android modules on AGP's built-in Kotlin (no `org.jetbrains.kotlin.android`, no readable Kotlin
   source sets) route every compilation to LEGACY.
 
 - **The in-process path refuses the build cache** (issue #142). Every compilation routed to LEGACY
-  or LEGACY_HYBRID gets `outputs.cacheIf { false }` on its own `compileKotlin*` task
+  gets `outputs.cacheIf { false }` on its own `compileKotlin*` task
   (`FaktGradleSubplugin.refuseBuildCache`, gated by the pure `generatesFakesInProcess(decision)`
   predicate). A cache hit on such a task skips generation entirely — `compileKotlin FROM-CACHE` →
   `compileTestFixturesKotlin NO-SOURCE` → unresolved references downstream — because the fakes were
