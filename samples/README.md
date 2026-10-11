@@ -72,7 +72,18 @@ A comprehensive KMP hierarchy validation sample demonstrating:
 - ✅ Platform-specific fakes isolated (jvm ≠ ios ≠ js ≠ wasm)
 - ❌ Horizontal isolation maintained (jvmTest cannot access iosFakes)
 
-**Source Set Targets**: `commonMain`, `jvmMain`, `iosMain`, `jsMain`, `wasmJsMain`, `nativeMain` → corresponding test source sets
+- **Native platform types** (#152): `platform.posix` and cinterop (forward-declared struct) in `linuxX64Main`, commonized posix in `linuxMain`, Foundation in `appleMain`, UIKit in `iosMain`
+- **Configuration cache on**: a second run must reuse the entry
+
+**Source Set Targets**: `commonMain`, `jvmMain`, `iosMain`, `jsMain`, `wasmJsMain`, `nativeMain`, `linuxX64Main`, `linuxMain`, `appleMain` → corresponding test source sets
+
+### 🐧 **kmp-native-only**
+Two modules whose targets are all Kotlin/Native (#152):
+- **`:all-native`** (`linuxX64`, `linuxArm64`, `iosArm64`, `iosSimulatorArm64`): Kotlin builds `commonMain` as a shared-native compilation, so the Kotlin/Native driver generates its fakes. `NativeBuffer` uses the commonized `platform.posix.size_t`; the tests run on Linux through `linuxX64Test`, and the iOS targets are compile-only there
+- **`:single`** (`linuxX64` only): no `commonMain` compilation exists, so the lone `faktGenerateLinuxX64Main` owns common fakes (`Greeter`, into `commonTest`) and posix fakes (`Stat`, into `linuxX64Test`)
+- **Cache-correct**: both producers restore FROM-CACHE; the configuration cache is on
+
+**Run**: `make test-kmp-native-only`
 
 ### 🎯 **kmp-single-target**
 A KMP module with exactly **one** target (`kotlin { jvm() }`) — a common shape for libraries that

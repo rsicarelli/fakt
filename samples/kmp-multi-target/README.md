@@ -32,8 +32,18 @@ kmp-multi-target/
 ├── wasmJsTest/      → WasmOnlyServiceTest.kt (tests own fake)
 │                    → WasmHierarchyTest.kt (tests commonMain fake) ⭐
 ├── nativeMain/      → NativeOnlyService.kt (@Fake)
-└── nativeTest/      → NativeOnlyServiceTest.kt (tests own fake)
-                     → NativeHierarchyTest.kt (tests commonMain fake) ⭐
+├── nativeTest/      → NativeOnlyServiceTest.kt (tests own fake)
+│                    → NativeHierarchyTest.kt (tests commonMain fake) ⭐
+├── linuxX64Main/    → PosixClock.kt (@Fake, platform.posix types)
+│                    → CinteropPort.kt (@Fake, cinterop + forward-declared struct)
+├── linuxX64Test/    → PosixClockTest.kt, CinteropPortTest.kt
+├── linuxMain/       → LinuxMemory.kt (@Fake, commonized platform.posix.size_t)
+├── linuxTest/       → LinuxMemoryTest.kt
+├── appleMain/       → AppleUrls.kt (@Fake, Foundation NSURL/NSData)
+├── appleTest/       → AppleUrlsTest.kt (macOS runs it; Linux compiles it)
+├── iosMain/         → IosViews.kt (@Fake, UIKit UIView)
+├── iosTest/         → IosViewsTest.kt (iOS simulator on macOS)
+└── nativeInterop/cinterop/ → sampleport.def + sampleport.h (the cinterop library)
 ```
 
 **⭐ = Hierarchy Test**: Validates that child source sets can access fakes from parent source sets
@@ -77,6 +87,18 @@ kmp-multi-target/
 - Generated fake in `nativeTest`
 - Shared across iOS, macOS, Linux, Windows native targets
 
+### **Native platform types** (#152)
+- `PosixClock` and `CinteropPort` live in `linuxX64Main`. Their signatures use `platform.posix` and a
+  cinterop library with a forward-declared C struct (`cnames.structs.Opaque`), which only the
+  Kotlin/Native compiler resolves. `faktGenerateLinuxX64Main` produces them.
+- `LinuxMemory` is in `linuxMain` (commonized posix; not `nativeMain`, which also holds mingwX64).
+  `faktGenerateMetadataLinuxMain` produces it.
+- `AppleUrls` (`appleMain`) and `IosViews` (`iosMain`) use Foundation and UIKit. They are generated on
+  any host (klib cross-compilation) but linked and run on macOS only.
+- The module-wide `optIn("kotlinx.cinterop.ExperimentalForeignApi")` in `build.gradle.kts` works around
+  #172 (an interface-level `@OptIn` loses its import in the generated fake).
+- The sample runs with the configuration cache on; CI runs it twice and the second run must reuse it.
+
 ## 🔗 KMP Hierarchy Tests
 
 **CRITICAL**: These tests validate that Fakt respects the KMP source set hierarchy.
@@ -90,7 +112,10 @@ commonMain (root)
 │   ├── jsMain
 │   └── wasmJsMain
 └── nativeMain
-    └── iosMain (inherits from both commonMain + nativeMain)
+    ├── linuxMain (linuxX64Main, linuxArm64Main)
+    ├── appleMain
+    │   └── iosMain (inherits from commonMain + nativeMain + appleMain)
+    └── mingwX64Main
 ```
 
 ### **What Each Hierarchy Test Validates**
