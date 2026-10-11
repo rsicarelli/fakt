@@ -5,15 +5,16 @@ package com.rsicarelli.fakt.gradle
 /**
  * Platforms the cache-correct worker can drive from a `FaktGenerateTask`. `K2JVMCompiler` (JVM,
  * Android) and `K2JSCompiler` (Kotlin/JS, and Kotlin/Wasm via `-Xwasm`) ship in
- * `kotlin-compiler-embeddable`; `K2Native` does not, so Native targets are not drivable yet
- * (issue #152).
+ * `kotlin-compiler-embeddable`; `K2Native` comes from the project's own Kotlin/Native distribution
+ * and runs on a separate fork (issue #152).
  */
 internal fun isDrivablePlatform(platformTypeName: String): Boolean =
     when (platformTypeName.lowercase()) {
         "jvm",
         "androidjvm",
         "js",
-        "wasm" -> true
+        "wasm",
+        "native" -> true
         else -> false
     }
 
@@ -21,14 +22,14 @@ internal fun isDrivablePlatform(platformTypeName: String): Boolean =
  * Platforms whose lone target in a single-target KMP project can own both the common and the
  * platform fakes from one `FaktGenerateTask` (issue #153). They are drivable AND expose a single
  * main compilation. `androidJvm` is deliberately absent: its variant compilations (`debug`,
- * `release`, …) are consumers and [routeSingleTarget] routes them with its own `androidjvm` branch;
- * Native is not drivable yet (issue #152).
+ * `release`, …) are consumers and [routeSingleTarget] routes them with its own `androidjvm` branch.
  */
 internal fun isSingleTargetDrivablePlatform(platformTypeName: String): Boolean =
     when (platformTypeName.lowercase()) {
         "jvm",
         "js",
-        "wasm" -> true
+        "wasm",
+        "native" -> true
         else -> false
     }
 
@@ -99,18 +100,21 @@ internal fun routeCompilation(
             routeSharedMetadata(compilationName, compilation.sharedSourceSetOwner)
         isDrivablePlatform(platformTypeName) ->
             CompilationRoute(FaktGradleSubplugin.CacheCorrectDecision.REGISTER_CONSUMER)
-        else -> CompilationRoute(FaktGradleSubplugin.CacheCorrectDecision.LEGACY_HYBRID)
+        else -> legacyRoute("the '$platformTypeName' platform cannot be driven from a Gradle task")
     }
 }
 
 /**
  * A metadata-target compilation other than `commonMain`. The legacy `main` compilation and every
- * set the metadata producer does not own (native-shared, synthetic, platform) are suppressed. A set
- * owned by [SourceSetOwner.Metadata] (`webMain`) gets its own producer, whose shape the wiring
- * picks from the compilation.
+ * set no metadata or native producer owns (synthetic, platform) are suppressed. A set owned by
+ * [SourceSetOwner.Metadata] (`webMain`) or [SourceSetOwner.NativeShared] (`nativeMain`) gets its
+ * own producer, whose shape and driver the wiring picks from the compilation.
  */
 private fun routeSharedMetadata(compilationName: String, owner: SourceSetOwner?): CompilationRoute =
-    if (compilationName != LEGACY_METADATA_COMPILATION && owner is SourceSetOwner.Metadata) {
+    if (
+        compilationName != LEGACY_METADATA_COMPILATION &&
+            (owner is SourceSetOwner.Metadata || owner is SourceSetOwner.NativeShared)
+    ) {
         CompilationRoute(FaktGradleSubplugin.CacheCorrectDecision.REGISTER_PRODUCER)
     } else {
         CompilationRoute(FaktGradleSubplugin.CacheCorrectDecision.SUPPRESS)

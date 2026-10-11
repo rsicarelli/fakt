@@ -5,9 +5,9 @@ package com.rsicarelli.fakt.gradle
 import com.rsicarelli.fakt.gradle.FaktGradleSubplugin.CacheCorrectDecision
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.targets.js.KotlinWasmTargetType
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -17,12 +17,13 @@ import org.junit.jupiter.api.TestInstance
  * fakes, together with the helpers it and the task wiring rely on ([isDrivablePlatform],
  * [isSingleTargetDrivablePlatform], [wasmCompilerTarget]).
  *
- * Issue #151 moved Kotlin/JS and Kotlin/Wasm platform mains off the in-process plugin
- * (`LEGACY_HYBRID`) onto a `K2JSCompiler`-driven consumer `FaktGenerateTask`. Issue #153 moved
- * single-target JVM/JS/Wasm KMP projects onto one task that owns both the common and the platform
- * fakes. Issue #154 moved Android modules on AGP 9's built-in Kotlin onto the producer path.
- * End-to-end behaviour is locked by the `kmp-multi-target`, `kmp-no-jvm` and `kmp-single-target`
- * cache-correctness CI cells.
+ * Issue #151 moved Kotlin/JS and Kotlin/Wasm platform mains off the in-process plugin onto a
+ * `K2JSCompiler`-driven consumer `FaktGenerateTask`. Issue #153 moved single-target JVM/JS/Wasm KMP
+ * projects onto one task that owns both the common and the platform fakes. Issue #154 moved Android
+ * modules on AGP 9's built-in Kotlin onto the producer path. Issue #152 moved Native onto it: leaf
+ * mains are consumers, every shared native set a producer, a lone native target a single-target
+ * task. End-to-end behaviour is locked by the `kmp-multi-target`, `kmp-no-jvm` and
+ * `kmp-single-target` cache-correctness CI cells.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FaktCompilationRoutingTest {
@@ -49,17 +50,6 @@ class FaktCompilationRoutingTest {
     }
 
     @Test
-    fun `GIVEN multi-target KMP WHEN routing a Native main THEN stays on the in-process plugin`() {
-        val decision = routeKmp(compilationName = "main", platformTypeName = "native")
-
-        assertEquals(
-            CacheCorrectDecision.LEGACY_HYBRID,
-            decision,
-            "Native is not drivable from a task yet (issue #152).",
-        )
-    }
-
-    @Test
     fun `GIVEN multi-target KMP WHEN routing commonMain THEN registers the common producer`() {
         val decision = routeKmp(compilationName = "commonMain", platformTypeName = "common")
 
@@ -83,18 +73,6 @@ class FaktCompilationRoutingTest {
             )
 
         assertEquals(CacheCorrectDecision.REGISTER_PRODUCER, decision)
-    }
-
-    @Test
-    fun `GIVEN a native shared metadata compilation WHEN routing it THEN suppresses it`() {
-        val decision =
-            routeKmp(
-                compilationName = "nativeMain",
-                platformTypeName = "common",
-                owner = SourceSetOwner.NativeShared("nativeMain"),
-            )
-
-        assertEquals(CacheCorrectDecision.SUPPRESS, decision)
     }
 
     @Test
@@ -189,19 +167,11 @@ class FaktCompilationRoutingTest {
     }
 
     @Test
-    fun `GIVEN single-target Native KMP WHEN routing the native main THEN stays on the in-process plugin with a reason`() {
-        val route = routeSingleTarget(target = "native", compilationPlatform = "native")
-
-        assertEquals(CacheCorrectDecision.LEGACY, route.decision, "Native is #152.")
-        assertNotNull(route.notCacheCorrectReason, "The fallback must never be silent.")
-    }
-
-    @Test
-    fun `GIVEN KGP platform type names WHEN checking single-target drivability THEN only JVM JS and Wasm qualify and Android is routed by its own branch`() {
-        listOf("jvm", "js", "wasm").forEach { platform ->
+    fun `GIVEN KGP platform type names WHEN checking single-target drivability THEN JVM JS Wasm and Native qualify and Android is routed by its own branch`() {
+        listOf("jvm", "js", "wasm", "native").forEach { platform ->
             assertTrue(isSingleTargetDrivablePlatform(platform), "$platform must qualify")
         }
-        listOf("androidJvm", "native", "common").forEach { platform ->
+        listOf("androidJvm", "common").forEach { platform ->
             assertFalse(isSingleTargetDrivablePlatform(platform), "$platform must not qualify")
         }
     }
@@ -266,13 +236,11 @@ class FaktCompilationRoutingTest {
     }
 
     @Test
-    fun `GIVEN KGP platform type names WHEN checking drivability THEN JVM Android JS and Wasm are drivable`() {
-        listOf("jvm", "androidJvm", "js", "wasm").forEach { platform ->
+    fun `GIVEN KGP platform type names WHEN checking drivability THEN JVM Android JS Wasm and Native are drivable`() {
+        listOf("jvm", "androidJvm", "js", "wasm", "native").forEach { platform ->
             assertTrue(isDrivablePlatform(platform), "$platform must be drivable")
         }
-        listOf("native", "common").forEach { platform ->
-            assertFalse(isDrivablePlatform(platform), "$platform must not be drivable")
-        }
+        assertFalse(isDrivablePlatform("common"), "common must not be drivable")
     }
 
     @Test
@@ -280,6 +248,90 @@ class FaktCompilationRoutingTest {
         assertEquals("wasm-js", wasmCompilerTarget(KotlinWasmTargetType.JS))
         assertEquals("wasm-wasi", wasmCompilerTarget(KotlinWasmTargetType.WASI))
         assertNull(wasmCompilerTarget(null), "A Kotlin/JS target must leave the driver in JS mode.")
+    }
+
+    // ---- #152 WP4: Native routing (B1-B6) ------------------------------------------------------
+
+    @Test
+    fun `GIVEN multi-target KMP WHEN routing a native leaf main THEN registers a consumer without a reason`() {
+        val route =
+            routeCompilation(
+                unreadableSourcesReason = null,
+                isMultiplatform = true,
+                singleTargetPlatformTypeName = null,
+                compilation = RoutedCompilation("main", "native"),
+            )
+
+        assertEquals(CacheCorrectDecision.REGISTER_CONSUMER, route.decision)
+        assertNull(route.notCacheCorrectReason, "A task-driven Native main is cache-correct.")
+    }
+
+    @Test
+    fun `GIVEN a metadata compilation owned as native shared WHEN routing it THEN registers a producer`() {
+        listOf("nativeMain", "appleMain", "iosMain", "linuxMain").forEach { set ->
+            val decision =
+                routeKmp(
+                    compilationName = set,
+                    platformTypeName = "common",
+                    owner = SourceSetOwner.NativeShared(set),
+                )
+
+            assertEquals(CacheCorrectDecision.REGISTER_PRODUCER, decision, set)
+        }
+    }
+
+    @Test
+    fun `GIVEN single-target Native KMP WHEN routing its mains THEN the native main drives and the metadata main is suppressed`() {
+        val nativeMain = routeSingleTarget(target = "native", compilationPlatform = "native")
+        val metadataMain = routeSingleTarget(target = "native", compilationPlatform = "common")
+
+        assertEquals(CacheCorrectDecision.REGISTER_SINGLE_TARGET, nativeMain.decision)
+        assertNull(nativeMain.notCacheCorrectReason, "Native single-target is cache-correct.")
+        assertEquals(CacheCorrectDecision.SUPPRESS, metadataMain.decision)
+        assertNull(metadataMain.notCacheCorrectReason, "A suppressed compilation is no fallback.")
+    }
+
+    @Test
+    fun `GIVEN native WHEN checking drivability THEN it is drivable and single-target drivable and common is not`() {
+        assertTrue(isDrivablePlatform("native"), "native")
+        assertTrue(isSingleTargetDrivablePlatform("native"), "native single-target")
+        assertFalse(isDrivablePlatform("common"), "common")
+        assertFalse(isSingleTargetDrivablePlatform("common"), "common single-target")
+    }
+
+    @Test
+    fun `GIVEN every KGP platform type WHEN routing a multi-target main THEN no platform stays on the in-process plugin`() {
+        val allowed =
+            setOf(
+                CacheCorrectDecision.REGISTER_PRODUCER,
+                CacheCorrectDecision.REGISTER_CONSUMER,
+                CacheCorrectDecision.SUPPRESS,
+            )
+
+        KotlinPlatformType.entries.forEach { type ->
+            val decision = routeKmp(compilationName = "main", platformTypeName = type.name)
+
+            assertTrue(decision in allowed, "${type.name} routed to $decision")
+        }
+    }
+
+    @Test
+    fun `GIVEN an all-native project WHEN routing its metadata compilations THEN commonMain produces and the legacy main is suppressed`() {
+        val common =
+            routeKmp(
+                compilationName = "commonMain",
+                platformTypeName = "common",
+                owner = SourceSetOwner.NativeShared("commonMain"),
+            )
+        val legacyMain =
+            routeKmp(
+                compilationName = "main",
+                platformTypeName = "common",
+                owner = SourceSetOwner.NativeShared("commonMain"),
+            )
+
+        assertEquals(CacheCorrectDecision.REGISTER_PRODUCER, common)
+        assertEquals(CacheCorrectDecision.SUPPRESS, legacyMain)
     }
 
     private fun routeKmp(

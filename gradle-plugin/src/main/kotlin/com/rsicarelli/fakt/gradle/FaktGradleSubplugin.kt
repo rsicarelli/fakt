@@ -123,8 +123,7 @@ internal fun shouldEnableTestFixtures(
  */
 internal fun generatesFakesInProcess(decision: FaktGradleSubplugin.CacheCorrectDecision): Boolean =
     when (decision) {
-        FaktGradleSubplugin.CacheCorrectDecision.LEGACY,
-        FaktGradleSubplugin.CacheCorrectDecision.LEGACY_HYBRID -> true
+        FaktGradleSubplugin.CacheCorrectDecision.LEGACY -> true
         FaktGradleSubplugin.CacheCorrectDecision.REGISTER_PRODUCER,
         FaktGradleSubplugin.CacheCorrectDecision.REGISTER_CONSUMER,
         FaktGradleSubplugin.CacheCorrectDecision.REGISTER_SINGLE_TARGET,
@@ -388,9 +387,9 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
                             "-Pfakt.useExperimentalGenerateTask=false."
                     )
                     ensureFaktConfigurations(target)
-                    // Non-drivable KMP platform mains (Native) keep generating their own
-                    // fakes via the in-process plugin; wire the platform *Test source sets so those
-                    // generated fakes compile (the producer/consumer tasks wire their own dirs).
+                    // Every producer and consumer task wires its own output dir into the test
+                    // source sets it feeds; this adds the plain dir only to the sets no task owns
+                    // (for example `mingwTest`), where it stays empty.
                     SourceSetConfigurator(target, useTestFixtures).configureKmpTestSourceSetDirs()
                 } else {
                     val configurator = SourceSetConfigurator(target, useTestFixtures)
@@ -640,14 +639,11 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             }
 
         // REGISTER_PRODUCER / REGISTER_CONSUMER / REGISTER_SINGLE_TARGET drive generation from a
-        // FaktGenerateTask and
-        // disable the in-process plugin. SUPPRESS (the legacy metadata `main` and shared-source-set
-        // metadata compilations, which have no IR phase) also disables it. LEGACY_HYBRID keeps the
-        // in-process plugin ON for a non-drivable platform main so it generates that platform's own
-        // fakes the legacy way, but orders it after the common producer so it dedup-skips common
-        // fakes instead of regenerating them. The first four return `enabled=false`; an empty list
-        // isn't enough because FaktCompilerPluginRegistrar defaults `enabled` to true and would
-        // explode when the sourceSetContext option is missing.
+        // FaktGenerateTask and disable the in-process plugin. SUPPRESS (the legacy metadata `main`
+        // and shared-source-set metadata compilations that no producer owns, which have no IR
+        // phase) also disables it. All four return `enabled=false`; an empty list isn't enough
+        // because FaktCompilerPluginRegistrar defaults `enabled` to true and would explode when
+        // the sourceSetContext option is missing.
         when (decision) {
             CacheCorrectDecision.REGISTER_PRODUCER ->
                 registerProducerFor(project, kotlinCompilation, extension)
@@ -662,8 +658,6 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             }
             CacheCorrectDecision.REGISTER_SINGLE_TARGET ->
                 FaktGenerateTaskWiring.registerSingleTarget(project, kotlinCompilation, extension)
-            CacheCorrectDecision.LEGACY_HYBRID ->
-                FaktGenerateTaskWiring.wireLegacyHybridOrdering(project, kotlinCompilation)
             CacheCorrectDecision.SUPPRESS,
             CacheCorrectDecision.LEGACY -> Unit
         }
@@ -680,7 +674,6 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
             CacheCorrectDecision.REGISTER_SINGLE_TARGET,
             CacheCorrectDecision.SUPPRESS ->
                 project.provider { listOf(SubpluginOption(key = "enabled", value = "false")) }
-            CacheCorrectDecision.LEGACY_HYBRID,
             CacheCorrectDecision.LEGACY ->
                 project.provider { legacyInProcessOptions(project, kotlinCompilation, extension) }
         }
@@ -690,26 +683,24 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
     internal enum class CacheCorrectDecision {
         /**
          * Drive a producer compilation from a `FaktGenerateTask`: `KotlinMetadataCompiler` over KMP
-         * `commonMain` (+ ancestors), or `K2JVMCompiler` over a single-platform JVM `main`.
+         * `commonMain` (+ ancestors), `K2Native` over a shared native set (`nativeMain`, and
+         * `commonMain` of an all-native project), or `K2JVMCompiler` over a single-platform JVM
+         * `main`.
          */
         REGISTER_PRODUCER,
         /**
-         * Drive a platform compiler (`K2JVMCompiler` for JVM/Android, `K2JSCompiler` for JS/Wasm)
-         * over a drivable platform main's own sources from a `FaktGenerateTask` (source-partitioned
-         * consumer); ancestor sources ride along for analysis only.
+         * Drive a platform compiler (`K2JVMCompiler` for JVM/Android, `K2JSCompiler` for JS/Wasm,
+         * `K2Native` for a native leaf) over a drivable platform main's own sources from a
+         * `FaktGenerateTask` (source-partitioned consumer); ancestor sources ride along for
+         * analysis only.
          */
         REGISTER_CONSUMER,
         /**
-         * Drive the lone platform main of a single-target KMP project (JVM, JS or Wasm) from one
-         * `FaktGenerateTask` that owns both halves: its own source set's fakes go to the platform
-         * test source set and the common fragment's fakes to `commonTest` (issue #153).
+         * Drive the lone platform main of a single-target KMP project (JVM, JS, Wasm or Native)
+         * from one `FaktGenerateTask` that owns both halves: its own source set's fakes go to the
+         * platform test source set and the common fragment's fakes to `commonTest` (issue #153).
          */
         REGISTER_SINGLE_TARGET,
-        /**
-         * Keep the in-process plugin ON for a non-drivable platform main (Native) so it generates
-         * that platform's fakes the legacy way, ordered after the common producer.
-         */
-        LEGACY_HYBRID,
         /** Suppress the in-process plugin; another task already owns this compilation's fakes. */
         SUPPRESS,
         /** Cache-correct path can't own this compilation; use the in-process plugin. */
@@ -726,20 +717,18 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
      * `wasmJsMain`) gets its own source-partitioned consumer task. The remaining `common`-platform
      * metadata compilations are suppressed.
      *
-     * A Native platform main (`iosMain` / `nativeMain` / `linuxX64Main`) cannot be driven from a
-     * task yet (`K2NativeCompiler` is not on the embeddable classpath, issue #152), so it stays on
-     * the in-process plugin ([CacheCorrectDecision.LEGACY_HYBRID]): its platform-specific fakes are
-     * generated (not cache-correct), while the common producer still owns the cache-correct common
-     * fakes.
+     * A Native leaf main (`linuxX64Main`, `iosArm64Main`) is a consumer, and every shared native
+     * set (`nativeMain`, `appleMain`, and `commonMain` of an all-native project, whose compilation
+     * is a `KotlinSharedNativeCompilation`) is a producer; the worker drives `K2Native` from the
+     * project's own Kotlin/Native distribution (issue #152).
      *
      * A single-target KMP project has no per-source-set `commonMain` compilation at all (see
      * [singleTargetPlatformTypeName]): a JVM/JS/Wasm lone target owns both the common and the
      * platform fakes from one task ([CacheCorrectDecision.REGISTER_SINGLE_TARGET]), while a lone
      * `androidTarget()` registers every variant as a consumer (the synthetic `commonMain` producer
-     * owns the common fakes) and a Native lone target stays on the in-process plugin. An Android
-     * project on AGP's built-in Kotlin exposes empty Kotlin source sets; its producers read AGP's
-     * variant API instead, and only when that API is not visible to Fakt does it stay on the
-     * in-process plugin (see [unreadableSourcesReason]).
+     * owns the common fakes). An Android project on AGP's built-in Kotlin exposes empty Kotlin
+     * source sets; its producers read AGP's variant API instead, and only when that API is not
+     * visible to Fakt does it stay on the in-process plugin (see [unreadableSourcesReason]).
      */
     private fun cacheCorrectDecision(
         kotlinCompilation: KotlinCompilation<*>
