@@ -1,7 +1,7 @@
 # v1.0 Legacy Sunset: Handover
 
 **Status:** In progress. **Live checklist, order and open decisions: GitHub issue #150** (not here).
-**Last Updated:** 2026-10-07 (#162 intermediate source sets)
+**Last Updated:** 2026-10-11 (#152 Native on the task path)
 **Delete when:** 1.0 ships (fold the surviving design notes into `architecture/ARCHITECTURE.md`).
 
 This file holds the *durable* context a fresh session needs: what the end state is, why the
@@ -18,8 +18,9 @@ looking for "what next", open #150.
   so they are cache-correct and relocatable.
 - Gone: the in-process plugin inside `compileKotlin*` (IR emission, `compiler/.../ir/`),
   `EmitPhase`, and `fakt.useExperimentalGenerateTask`.
-- Routing today: `FaktGradleSubplugin.cacheCorrectDecision`. Anything that returns `LEGACY` or
-  `LEGACY_HYBRID` is a shape that still needs closing.
+- Routing today: `FaktGradleSubplugin.cacheCorrectDecision`. `LEGACY_HYBRID` and
+  `wireLegacyHybridOrdering` are deleted. `LEGACY` remains only for the explicit opt-out
+  (`fakt.useExperimentalGenerateTask=false`) and AGP 9 built-in Kotlin without a hook.
 
 ## 2. Key code on the task path
 
@@ -76,7 +77,7 @@ A pure function assigns every **main** source set exactly one owner:
 | shared, a metadata compilation exists (`commonMain`, `webMain`, custom intermediates over several platform types) | METADATA producer (`faktGenerateMetadata<Set>`; an intermediate analyses its own sources and gets its ancestors' metadata klibs plus `-Xrefines-paths`) |
 | shared, no metadata compilation (all targets JVM-typed), or an intermediate compiled only by JVM and Android-JVM (KGP disables its metadata compilation) | synthetic K2JVM producer on a deterministic representative compilation (`faktGenerate<Set>`, e.g. `faktGenerateDesktopAndServerMain`) |
 | shared by one compiler only (for example a `sharedJvmMain` used only by `jvm`) | that target's consumer; its route tokens include every such ancestor |
-| shared native (`nativeMain`, `appleMain`) | Native driver (#152) |
+| shared native (`nativeMain`, `appleMain`, `iosMain`, `linuxMain`, `commonMain` of an all-native project) | Native driver producer (#152) |
 | all-JS or all-Wasm intermediate | not generated yet (follow-up) |
 
 - The owned set is the key set of the route map (`SourceSetContext.outputDirectories`); empty
@@ -119,82 +120,68 @@ A pure function assigns every **main** source set exactly one owner:
   `-Xcommon-sources`; the metadata driver rejects fragments and gets `-Xrefines-paths` instead.
 - Known limits: dependsOn edges that user code adds in a later `afterEvaluate` are missed. On
   Kotlin < 2.2.20 `webMain` is not in the default hierarchy, so declare it manually with
-  `dependsOn`. All-JS / all-Wasm intermediates are still not generated. Native intermediates are generated
-  in-process (LEGACY_HYBRID), not cache-correct, until #152. A synthetic intermediate with an
+  `dependsOn`. All-JS / all-Wasm intermediates are still not generated. A synthetic intermediate with an
   `expect` in the intermediate itself and an empty `commonMain` gets no fragments (flat shape):
   its errors are tolerated, but `forbid-tolerated` would fail.
 - Why: #160 (no owner), #162 (intermediates routed SUPPRESS, consumers treat ancestors as
   analysis-only) and #163 (per-variant) are one class of bug. A pure function can be unit-tested
   without Gradle.
 
-### 3.5 Native: approach A (K2Native driver), #152
+### 3.5 Native: K2Native driver (#152), done in item 7
 
-- The K/N distribution (`kotlin-native-prebuilt`, under `~/.konan`) ships
-  `konan/lib/kotlin-native-compiler-embeddable.jar`. It contains
+Native runs on the cache-correct task path. Code: `gradle-plugin/.../NativeDistribution.kt`,
+`NativeTaskWiring.kt`, `CompilationRouting.kt`, `worker/NativeArguments.kt`, `WorkerForkPlan.kt`.
+
+- **Approach.** The K/N distribution ships `konan/lib/kotlin-native-compiler-embeddable.jar` with
   `org.jetbrains.kotlin.cli.bc.K2Native`, a CLICompiler with the same `exec` surface as the JVM/JS
-  drivers.
-- Plan: a `NATIVE` `CompilerDriver`.
-  - The worker fork gets `-Dkonan.home`.
-  - Args: `-produce library -Xmetadata-klib`.
-  - Shared-native uses KGP's shared-native metadata compilation with commonized klibs.
-  - The Linux distribution includes the ios/macos platform klibs.
-- Rejected: the metadata compiler over native klibs, because it can't resolve cinterop forward
-  declarations (`cnames.structs.*`).
-- **Spike exit criteria** (all must pass):
-  1. A leaf `linuxX64Main` fake using `platform.posix` is byte-identical to the in-process output.
-  2. `nativeMain`/`appleMain` work via `-Xmetadata-klib`, including iOS forward declarations.
-  3. User cinterop klibs work.
-  4. The distribution is located without KGP internals and offline. The spike also settles whether
-     provisioning happens at configuration time or in a task.
-  5. `~/.konan/dependencies` is never accessed.
-  6. The cache key is relocatable and configuration-cache-safe.
-  7. It works on Kotlin 2.2.0 and 2.4.10.
-  8. Heap use and run time are acceptable.
-- **Spike result (Sept 2026): all 8 criteria pass**, on Linux and on macOS (arm64), with Kotlin
-  2.2.0 and 2.4.10. D1 is not needed. Full report on #152. The throwaway prototype (behind
-  `-Pfakt.spike.native=true`) and the harness live on branch `ccr-aa1d21c5-gqlrfs`, in
-  `spike/native/`: `REPORT.md`, `FINDINGS.md`, `bin/`, `fixture/`.
-- **What the implementation (item 7) must do**, learned from the prototype:
-  - **Leaf native main** → `NATIVE` consumer, routed like JS/Wasm: own source set emitted,
-    ancestors passed as `-Xcommon-sources`, `-target=<konanTarget>`.
-  - **`KotlinSharedNativeCompilation`** (`nativeMain`, `appleMain`, `iosMain`, …) → `NATIVE`
-    producer that owns its source set. Today these compilations are `SUPPRESS`ed, so a
-    leaf-only driver would silently drop every shared-native fake. Arguments, mirroring KGP:
-    - `-produce library -Xmetadata-klib -no-default-libs -nostdlib`;
-    - `-library` = the distribution stdlib + the compilation's dependency files, which already
-      include the commonized klibs;
-    - `-Xcommon-sources=<own>`;
-    - **`-Xrefines-paths=<ancestor metadata klibs>`**. Without it, `actual`s in `nativeMain`
-      have no `expect`;
-    - `-target` = the host target if covered, else the first (KGP's choice).
-  - **#165 first:** without the compilation's `-opt-in` values, every cinterop signature fails
-    analysis.
-  - **Worker:**
-    - a separate fork whose classpath is the distribution's
-      `kotlin-native-compiler-embeddable.jar` (self-contained on 2.2.0 and 2.4.10; ignore 2.2.0's
-      extra `kotlin-native.jar`);
-    - `systemProperty("konan.home", …)`;
-    - `konanHome` `@Internal`; `kotlinNativeVersion` and `konanTarget` `@Input`.
-
-    1g heap handles 10,000 fakes in a single source set (about 46 s, 1.2 GB RSS).
-  - **Distribution lookup:** `kotlin.native.home`, then `konanDataDir` / `KONAN_DATA_DIR` /
-    `~/.konan` + `kotlin-native-prebuilt-<host>-<ver>`. The version comes from
-    `kotlin.native.version` or `getKotlinPluginVersion()`.
-  - **Provisioning:**
-    - KGP 2.4.10 provisions in a configuration-time `ValueSource` **and** in
-      `:downloadKotlinNativeDistribution`;
-    - KGP 2.2.0 has only the `ValueSource`.
-
-    Either way it is done before tasks run. Don't depend on the task: it also downloads the LLVM
-    toolchain, which Fakt never reads.
-  - **CI:** the `kmp-multi-target` cell moves from `FAKT_PRESENCE_*` to `producers` /
-    `cached-fakes` with `faktGenerateMetadataNativeMain` and `faktGenerateMetadataIosMain`. This
-    was proven on the branch: 6/6 FROM-CACHE.
-- **Found by the spike, tracked separately:**
-  - #171: Kotlin < 2.4 can't read the published annotation klibs (klib ABI 2.4.0).
-  - #172: `@OptIn` is copied into fakes without its import.
-  - #173: the unread producer `FirMetadataCache` is rewritten after every interface, which is
-    quadratic. It is removed by #164a.
+  drivers. A `NATIVE` `CompilerDriver` runs it. Rejected: the metadata compiler over native klibs,
+  because it can't resolve cinterop forward declarations (`cnames.structs.*`).
+- **Routing.**
+  - Multi-target leaf native mains are consumers: K2Native, a **full klib** (not
+    `-Xmetadata-klib`), fragments for the ancestors.
+  - Every shared-native compilation (`nativeMain`, `appleMain`, `iosMain`, `linuxMain`, and
+    `commonMain` of an all-native project) is a producer on the Native driver. It emits a metadata
+    klib with `-Xrefines-paths=<ancestor metadata klibs>`; without it `actual`s in `nativeMain` have
+    no `expect`.
+  - Single-target Native is a single-target task.
+  - Native test sets are wired by the owner registry: an owned set gets no plain
+    `build/generated/fakt/<set>/kotlin` directory.
+- **Worker.** A Native task forks on the user's own distribution:
+  `kotlin-native-compiler-embeddable.jar` as classpath and `-Dkonan.home`. So it runs the user's
+  K/N version, not `FAKT_KOTLIN_VERSION`. Heap is still the fixed 1g (#164c); 10,000 fakes in one
+  source set took about 46 s and 1.2 GB RSS in the spike.
+- **Distribution lookup** (KGP's real order, verified with `javap`; see the KDoc of
+  `resolveKonanHome`): the `konan.data.dir` Gradle property
+  (`<dir>/kotlin-native-prebuilt-<os>-<arch>-<version>`) first, then `kotlin.native.home`
+  (alias `org.jetbrains.kotlin.native.home`), then the default directory (`KONAN_DATA_DIR`, else
+  `~/.konan`). **`konan.data.dir` beats `kotlin.native.home`.** Version: `kotlin.native.version` or
+  the applied KGP version.
+- **Provisioning.** KGP provisions the distribution at configuration time (a `ValueSource`; 2.4.10
+  also in `:downloadKotlinNativeDistribution`). Fakt does not depend on that task (it also downloads
+  the LLVM toolchain, which Fakt never reads) and never reads `~/.konan/dependencies`. The user's own
+  cinterop/link tasks do. A missing distribution fails the task with a message naming the path,
+  `kotlin.native.home` and `konan.data.dir`.
+- **Cache key.** `konanTargets` (sorted, host independent) and `kotlinNativeVersion` are `@Input`;
+  `konanHome` is `@Internal`. Linux CI and macOS developers can share hits and the build is
+  relocatable.
+- **Samples and CI.** `kmp-multi-target` has posix/cinterop/`linuxMain`/`appleMain`/`iosMain` fakes
+  and runs with the configuration cache on. New `samples/kmp-native-only` (`:all-native`,
+  `:single`). `presence-*` and `FAKT_PRESENCE_*` are gone. New CI job `test-native-macos`. `run-tests`
+  passes `-Pfakt.test.konanHome`, so the native TestKit suite (`FaktGenerateNativeTest`) runs in CI
+  and skips locally unless that property is set.
+- **Known limits, not done:**
+  - #171: Kotlin < 2.4 can't read the published annotation klibs (klib ABI 2.4.0), so Native is
+    blocked there.
+  - Windows host not covered (#167, Windows half).
+  - Collector mode (#168) is unchanged; native outputs flow into collectors automatically.
+  - Unowned test sets (`mingwTest`, all-JS/Wasm intermediates) keep an empty plain dir.
+  - #172: interface-level `@OptIn` loses its import. Samples use a module-wide
+    `optIn("kotlinx.cinterop.ExperimentalForeignApi")` as a workaround.
+  - `test-native-macos` is the only proof that Apple tests link and run against task-path fakes.
+- Found by the spike, tracked separately: #173 (the unread producer `FirMetadataCache` is rewritten
+  after every interface, which is quadratic; removed by #164a).
+- Spike material (all 8 criteria passed, Linux and macOS arm64, Kotlin 2.2.0 and 2.4.10) lives on
+  branch `ccr-aa1d21c5-gqlrfs`, `spike/native/`; the report is on #152.
 
 ## 4. Known gaps that are not shape-specific
 
@@ -207,7 +194,7 @@ Each one is tracked in #150 "Up next". Why each matters:
   - Code that relies on other compiler plugins breaks the same way: serialization `serializer()`,
     Parcelize, FIR-generating DI plugins.
 - **Worker version pin** (#166). 2.4.10 can't read metadata from a newer user Kotlin.
-- **CI is ubuntu-only** (#167). There is no Windows run (path bugs) and no macOS/Apple coverage.
+- **CI has no Windows run** (#167, path bugs). macOS runs only `test-native-macos`.
 - **Collector mode** (`FakeCollectorTask`) reads other projects' tasks, which breaks Isolated
   Projects (#168). It ships in 1.0.
 - **Worker heap** is fixed at 1g (`FaktGenerateTask.kt`, `WORKER_MAX_HEAP`). Tracked in #164.
@@ -221,7 +208,8 @@ Each one is tracked in #150 "Up next". Why each matters:
   first.
 - **Keep** `SourceSetContext.outputDirectory`. The worker uses it.
 - Convert `FirIrEmissionParityTest` to golden snapshots **before** deleting `ir/`.
-- Move `FAKT_PRESENCE_*` checks only after #152. Delete the flag last.
+- `FAKT_PRESENCE_*` checks are gone (moved in #152, item 7). Producers and cached-fakes cells cover
+  Native now.
 
 ## 6. Local verification
 
@@ -292,5 +280,7 @@ Make equivalents: `make publish-local`, `make validate`, `make test-kmp-single-t
   Run the sample's exact CI command; the second run must print `Configuration cache entry reused`.
   The two contract scripts add `--no-configuration-cache` themselves where they need it.
 - **Spotless** needs `--no-configuration-cache` (see the gotcha above).
-- **Run Tests job:** under runner load TestKit tests can hit the 5-minute timeout. One re-run of
-  the job is acceptable.
+- **Run Tests job (test pool):** gradle-plugin tests run in one fork with a JUnit pool of 2
+  (`parallelism` 2, `max-pool-size` 2 in `gradle-plugin/build.gradle.kts`). Without the cap,
+  fork-join compensation ran about 7 TestKit builds at once, each with a 2g daemon, and runs hit
+  the 5-minute timeout. If a run still times out, check the pool before re-running.

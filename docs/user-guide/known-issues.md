@@ -41,6 +41,20 @@ Interfaces with default parameters are not yet supported.
 
 ---
 
+### Kotlin/Native
+
+- Kotlin older than 2.4 cannot read the published annotations klibs, so Native projects need 2.4 or
+  newer ([#171](https://github.com/rsicarelli/fakt/issues/171)).
+- Windows hosts are not covered ([#167](https://github.com/rsicarelli/fakt/issues/167)).
+- A native test source set that no producer owns (for example `mingwTest`) gets no fakes.
+- An `@OptIn` on the interface loses its import in the fake
+  ([#172](https://github.com/rsicarelli/fakt/issues/172)). **Workaround**: opt in for the whole
+  module, for example `optIn("kotlinx.cinterop.ExperimentalForeignApi")`.
+
+See [Kotlin/Native](plugin-configuration.md#kotlinnative) for how the distribution is found.
+
+---
+
 ## Reporting Issues
 
 Found a limitation not listed here? [Report it on GitHub](https://github.com/rsicarelli/fakt/issues).
