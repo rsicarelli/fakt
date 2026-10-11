@@ -1,7 +1,7 @@
 # Fakt Development Commands
 # Run from fakt/ directory (or from project root)
 
-.PHONY: build test compile clean format shadowJar test-sample test-fake-publishing validate quick-test full-rebuild test-compat-all test-compat-agp-all test-kmp-single-target test-kmp-all-jvm test-compiler-interop test-kmp-android-lint test-kmp-android-target test-clean-rebuild-cache benchmark
+.PHONY: build test compile clean format shadowJar test-sample test-fake-publishing validate quick-test full-rebuild test-compat-all test-compat-agp-all test-kmp-single-target test-kmp-all-jvm test-compiler-interop test-kmp-android-lint test-kmp-android-target test-clean-rebuild-cache test-kmp-native-only test-native-cache benchmark
 
 # Core build commands
 build:
@@ -51,6 +51,20 @@ test-kmp-multi-module:
 test-kmp-multi-target:
 	@echo "🎯 Testing kmp-multi-target sample (hierarchy validation)..."
 	cd samples/kmp-multi-target && ./gradlew allTests
+
+# KMP sample with only native targets (all-native commonMain + single-target linuxX64, #152)
+test-kmp-native-only:
+	@echo "🐧 Testing kmp-native-only sample (all-native + single-target Native)..."
+	./gradlew -p samples/kmp-native-only allTests --continue
+
+# Native cache contract (#152): the Native producers must restore FROM-CACHE after a clean, for the
+# hierarchy sample and for the native-only shapes. Apple producers are covered by CI on macOS.
+test-native-cache: publish-local
+	@echo "🧊 Verifying the Native cache contract (#152)..."
+	FAKT_CACHED_FAKES="FakeJvmOnlyServiceImpl FakeJsOnlyServiceImpl FakeWasmOnlyServiceImpl FakeWebStorageImpl FakeNativeOnlyServiceImpl FakeLinuxMemoryImpl FakeAppleUrlsImpl FakeIosOnlyServiceImpl FakeIosViewsImpl FakePosixClockImpl FakeCinteropPortImpl" FAKT_FORBID_TOLERATED=1 \
+		./.github/scripts/cache-correctness-check.sh samples/kmp-multi-target faktGenerateMetadataCommonMain faktGenerateMetadataWebMain faktGenerateJvmMain faktGenerateJsMain faktGenerateWasmJsMain faktGenerateMetadataNativeMain faktGenerateMetadataLinuxMain faktGenerateMetadataAppleMain faktGenerateMetadataIosMain faktGenerateLinuxX64Main
+	FAKT_CACHED_FAKES="FakeNativeBufferImpl FakeGreeterImpl FakeStatImpl" FAKT_FORBID_TOLERATED=1 \
+		./.github/scripts/cache-correctness-check.sh samples/kmp-native-only :all-native:faktGenerateMetadataCommonMain :single:faktGenerateLinuxX64Main
 
 # KMP sample without any JVM/Android target (metadata-driver producer)
 test-kmp-no-jvm:
@@ -122,6 +136,8 @@ test-clean-rebuild-cache: publish-local
 	./.github/scripts/clean-rebuild-cache-check.sh samples/jvm-test-fixtures :app:test
 	FAKT_GRADLE="./gradlew -p samples/jvm-test-fixtures -Pfakt.useExperimentalGenerateTask=false" \
 		./.github/scripts/clean-rebuild-cache-check.sh samples/jvm-test-fixtures :app:test
+	./.github/scripts/clean-rebuild-cache-check.sh samples/kmp-multi-target linuxX64Test compileTestKotlinIosSimulatorArm64 compileTestKotlinMacosArm64
+	./.github/scripts/clean-rebuild-cache-check.sh samples/kmp-native-only :all-native:linuxX64Test :single:linuxX64Test
 
 # KMP + Android sample pinned to its own Gradle 9.6.1 wrapper. Runs AGP lint over the commonTest
 # generated source dir as an end-to-end smoke test for #129 (the deterministic guard is the
@@ -220,6 +236,8 @@ help:
 	@echo "  test-kmp-multi-target - Test kmp-multi-target sample (hierarchy validation + webMain)"
 	@echo "  test-kmp-no-jvm - Test kmp-no-jvm sample (no JVM/Android target)"
 	@echo "  test-kmp-single-target - Test kmp-single-target sample (exactly one target)"
+	@echo "  test-kmp-native-only - Test kmp-native-only sample (all-native + single-target Native)"
+	@echo "  test-native-cache - Verify the Native cache contract (kmp-multi-target + kmp-native-only, #152)"
 	@echo "  test-kmp-all-jvm - Test kmp-all-jvm sample (every target is JVM + desktopAndServerMain)"
 	@echo "  test-fake-publishing - Test fake-publishing sample (two-step workflow)"
 	@echo "  test-compat-all     - Test all compat samples (Kotlin 2.2.0-2.4.10)"
