@@ -215,6 +215,9 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
             }
             CompilerDriver.METADATA -> populateMetadataOutputArgs(bridge, args, call)
             CompilerDriver.JS -> populateJsOutputArgs(bridge, args, call)
+            // Placeholder keeping the `when` exhaustive; the Native branch lands with the plumbing.
+            CompilerDriver.NATIVE ->
+                error("The Kotlin/Native driver is not wired into the worker yet")
         }
         populatePluginArgs(bridge, args, call)
 

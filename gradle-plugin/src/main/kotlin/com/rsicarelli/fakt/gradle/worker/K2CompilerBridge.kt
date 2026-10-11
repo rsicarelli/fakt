@@ -20,6 +20,9 @@ internal object K2Fqns {
     const val K2_JS_COMPILER = "org.jetbrains.kotlin.cli.js.K2JSCompiler"
     const val K2_JS_COMPILER_ARGUMENTS =
         "org.jetbrains.kotlin.cli.common.arguments.K2JSCompilerArguments"
+    const val K2_NATIVE = "org.jetbrains.kotlin.cli.bc.K2Native"
+    const val K2_NATIVE_COMPILER_ARGUMENTS =
+        "org.jetbrains.kotlin.cli.common.arguments.K2NativeCompilerArguments"
     const val COMMON_COMPILER_ARGUMENTS =
         "org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments"
     const val COMMON_TOOL_ARGUMENTS =
@@ -50,25 +53,39 @@ internal object K2Fqns {
  *   `K2JSCompiler` KGP runs for `compileKotlinJs` / `compileKotlinWasmJs`. Dependencies are the
  *   compilation's **platform klibs** (`-libraries`); the pipeline stops at klib serialization
  *   (`-Xir-produce-klib-dir`), so no JS/Wasm code generation happens.
+ * - [NATIVE] — `K2Native` from the Kotlin/Native distribution's embeddable compiler jar, the front
+ *   door KGP runs for `compileKotlinLinuxX64` and the shared-native metadata compilations.
+ *   Dependencies are **klibs** (`-library`); with `-Xmetadata-klib` the pipeline stops at klib
+ *   serialization, so no native code generation or linking happens.
  */
 internal enum class CompilerDriver(val compilerFqn: String, val argumentsFqn: String) {
     JVM(K2Fqns.K2_JVM_COMPILER, K2Fqns.K2_JVM_COMPILER_ARGUMENTS),
     METADATA(K2Fqns.KOTLIN_METADATA_COMPILER, K2Fqns.K2_METADATA_COMPILER_ARGUMENTS),
-    JS(K2Fqns.K2_JS_COMPILER, K2Fqns.K2_JS_COMPILER_ARGUMENTS);
+    JS(K2Fqns.K2_JS_COMPILER, K2Fqns.K2_JS_COMPILER_ARGUMENTS),
+    NATIVE(K2Fqns.K2_NATIVE, K2Fqns.K2_NATIVE_COMPILER_ARGUMENTS);
 
     companion object {
         /**
          * Driver for a [com.rsicarelli.fakt.compiler.api.SourceSetContext.platformType] (a KGP
-         * `KotlinPlatformType` name): `common` → [METADATA], `js` / `wasm` → [JS], anything else
-         * (`jvm`, `androidJvm`) → [JVM].
+         * `KotlinPlatformType` name): `common` → [METADATA], `js` / `wasm` → [JS], `native` →
+         * [NATIVE], anything else (`jvm`, `androidJvm`) → [JVM].
          */
         fun forPlatformType(platformType: String): CompilerDriver =
             when (platformType.lowercase()) {
                 "common" -> METADATA
                 "js",
                 "wasm" -> JS
+                "native" -> NATIVE
                 else -> JVM
             }
+
+        /**
+         * Driver for one run. A shared-native compilation keeps `platformType = "common"` in its
+         * context, so a non-empty [konanTargets] (the Native task inputs) takes precedence over the
+         * platform type; otherwise [forPlatformType] decides.
+         */
+        fun select(platformType: String, konanTargets: List<String>): CompilerDriver =
+            if (konanTargets.isNotEmpty()) NATIVE else forPlatformType(platformType)
     }
 }
 
