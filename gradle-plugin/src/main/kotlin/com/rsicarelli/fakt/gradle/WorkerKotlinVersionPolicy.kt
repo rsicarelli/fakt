@@ -77,9 +77,9 @@ internal fun newerMinorWarning(user: String, worker: String): String =
 
 internal fun unsupportedNewerError(user: String, worker: String): String =
     "Fakt: your Kotlin Gradle plugin is $user, but Fakt's worker compiles with Kotlin " +
-        "$worker, two or more minor versions older. Update Fakt to a release built for " +
-        "Kotlin $user, or point the `faktWorker` configuration at a matching " +
-        "kotlin-compiler-embeddable. To build anyway, set `fakt.allowNewerKotlin=true` " +
+        "$worker, and your Kotlin may be at most one minor version newer than that. Update " +
+        "Fakt to a release built for Kotlin $user, or point the `faktWorker` configuration at a " +
+        "matching kotlin-compiler-embeddable. To build anyway, set `fakt.allowNewerKotlin=true` " +
         "in gradle.properties, which turns this error into a warning. " +
         "See Compatibility > Worker compiler version in the docs."
 

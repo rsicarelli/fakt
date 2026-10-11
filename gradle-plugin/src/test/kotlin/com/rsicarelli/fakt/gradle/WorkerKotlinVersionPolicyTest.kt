@@ -3,6 +3,7 @@
 package com.rsicarelli.fakt.gradle
 
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
@@ -97,6 +98,16 @@ class WorkerKotlinVersionPolicyTest {
         assertTrue("faktWorker" in message, message)
         assertTrue("fakt.allowNewerKotlin" in message, message)
         assertTrue("Compatibility > Worker compiler version" in message, message)
+    }
+
+    @Test
+    fun `GIVEN two minors or a newer major WHEN building the error THEN it states the real rule`() {
+        listOf("2.6.0", "3.0.0").forEach { user ->
+            val message = unsupportedNewerError(user = user, worker = worker)
+
+            assertTrue("at most one minor version newer" in message, message)
+            assertFalse("two or more minor versions older" in message, message)
+        }
     }
 
     @Test
