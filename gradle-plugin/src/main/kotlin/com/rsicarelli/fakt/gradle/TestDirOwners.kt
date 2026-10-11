@@ -44,12 +44,14 @@ internal fun isFaktTestDirOwner(project: Project, taskName: String): Boolean =
     existingTestDirOwners(project)?.tasks?.contains(taskName) == true
 
 /**
- * A non-metadata compilation as the owner query sees it: the name of its default source set and the
- * [compilationKey] of every compilation it is associated with.
+ * A non-metadata compilation as the owner query sees it: the name of its default source set, the
+ * [compilationKey] of every compilation it is associated with, and the other source sets that are
+ * members of it ([memberSourceSets], e.g. `androidUnitTest` in AGP's `debugUnitTest`).
  */
 internal data class TestCompilationNode(
     val defaultSourceSet: String,
     val associatedMainKeys: List<String>,
+    val memberSourceSets: List<String> = emptyList(),
 )
 
 /** The registry key of a compilation: `<target>/<compilation>`. */
@@ -78,8 +80,8 @@ internal fun claimTestSourceSet(project: Project, testSet: String, task: String)
 /**
  * The task that owns [testSet], or `null` when none does: an explicit [TestDirOwners.bySourceSet]
  * claim first, otherwise the task of the first main compilation a non-metadata compilation with
- * that default source set is associated with. Associations are read on every call. Read only: a
- * project without a registry has no owner and the registry is not created.
+ * that default source set, or that has it as a member, is associated with. Associations are read on
+ * every call. Read only: a project without a registry has no owner and the registry is not created.
  */
 internal fun testDirOwnerOf(project: Project, testSet: String): String? =
     existingTestDirOwners(project)?.let { owners ->
@@ -87,14 +89,19 @@ internal fun testDirOwnerOf(project: Project, testSet: String): String? =
             ?: ownerByAssociation(testSet, associationNodes(project), owners.byMainCompilation)
     }
 
-/** Pure part of [testDirOwnerOf]: the association rule over already read [tests]. */
+/**
+ * Pure part of [testDirOwnerOf]: the association rule over already read [tests]. A test set shared
+ * by several compilations (Android's `androidUnitTest` is a member of both `debugUnitTest` and
+ * `releaseUnitTest`) is fed by several variant tasks, so the answer there only means "owned": it is
+ * the task of the first claimed association, in [tests] order.
+ */
 internal fun ownerByAssociation(
     testSet: String,
     tests: List<TestCompilationNode>,
     byMain: Map<String, String>,
 ): String? =
     tests
-        .filter { it.defaultSourceSet == testSet }
+        .filter { it.defaultSourceSet == testSet || testSet in it.memberSourceSets }
         .flatMap { it.associatedMainKeys }
         .firstNotNullOfOrNull { byMain[it] }
 
@@ -108,6 +115,10 @@ private fun associationNodes(project: Project): List<TestCompilationNode> =
             target.compilations.map { compilation ->
                 TestCompilationNode(
                     defaultSourceSet = compilation.defaultSourceSet.name,
+                    memberSourceSets =
+                        compilation.kotlinSourceSets
+                            .map { it.name }
+                            .filter { it != compilation.defaultSourceSet.name },
                     associatedMainKeys =
                         compilation.associatedCompilations.map {
                             compilationKey(target.name, it.name)

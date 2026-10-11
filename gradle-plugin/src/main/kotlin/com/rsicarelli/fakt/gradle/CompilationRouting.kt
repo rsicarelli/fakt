@@ -20,9 +20,9 @@ internal fun isDrivablePlatform(platformTypeName: String): Boolean =
 /**
  * Platforms whose lone target in a single-target KMP project can own both the common and the
  * platform fakes from one `FaktGenerateTask` (issue #153). They are drivable AND expose a single
- * main compilation. `androidJvm` is drivable but its variant compilations (`debug`, `release`, …)
- * would each claim the same `commonTest` output, so a single-target Android project stays on the
- * in-process plugin; Native is not drivable yet (issue #152).
+ * main compilation. `androidJvm` is deliberately absent: its variant compilations (`debug`,
+ * `release`, …) are consumers and [routeSingleTarget] routes them with its own `androidjvm` branch;
+ * Native is not drivable yet (issue #152).
  */
 internal fun isSingleTargetDrivablePlatform(platformTypeName: String): Boolean =
     when (platformTypeName.lowercase()) {
@@ -123,12 +123,22 @@ private const val LEGACY_METADATA_COMPILATION = "main"
  * metadata `main` (platformType `common`, empty compile classpath). When the lone target can own
  * everything, its main compilation becomes the single producer and the metadata compilation is
  * suppressed; otherwise every compilation stays on the in-process plugin.
+ *
+ * A lone `androidTarget()` is the exception: it has one compilation per variant, so none of them is
+ * the single producer. The common fakes come from the synthetic `commonMain` producer (see
+ * `SyntheticProducerWiring`), every variant is a consumer, and the metadata `main` is suppressed.
  */
 private fun routeSingleTarget(
     singleTargetPlatformTypeName: String,
     platformTypeName: String,
 ): CompilationRoute =
     when {
+        singleTargetPlatformTypeName.equals("androidjvm", ignoreCase = true) ->
+            if (platformTypeName.equals("common", ignoreCase = true)) {
+                CompilationRoute(FaktGradleSubplugin.CacheCorrectDecision.SUPPRESS)
+            } else {
+                CompilationRoute(FaktGradleSubplugin.CacheCorrectDecision.REGISTER_CONSUMER)
+            }
         !isSingleTargetDrivablePlatform(singleTargetPlatformTypeName) ->
             legacyRoute(
                 "a single-target multiplatform project on '$singleTargetPlatformTypeName' cannot " +

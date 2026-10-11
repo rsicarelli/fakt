@@ -78,6 +78,94 @@ class TestDirOwnersTest {
         assertEquals("jvm/main", compilationKey("jvm", "main"))
     }
 
+    // ---- B7: Android variants (a test set that is a MEMBER of an associated compilation) -----
+
+    private val androidByMain =
+        mapOf(
+            "android/debug" to "faktGenerateAndroidDebug",
+            "android/release" to "faktGenerateAndroidRelease",
+        )
+
+    private val androidTests =
+        listOf(
+            TestCompilationNode(
+                defaultSourceSet = "androidUnitTestDebug",
+                associatedMainKeys = listOf("android/debug"),
+                memberSourceSets = listOf("androidUnitTest"),
+            ),
+            TestCompilationNode(
+                defaultSourceSet = "androidUnitTestRelease",
+                associatedMainKeys = listOf("android/release"),
+                memberSourceSets = listOf("androidUnitTest"),
+            ),
+            TestCompilationNode(
+                defaultSourceSet = "androidInstrumentedTestDebug",
+                associatedMainKeys = listOf("android/debug"),
+                memberSourceSets = listOf("androidInstrumentedTest"),
+            ),
+            TestCompilationNode("commonTest", emptyList()),
+        )
+
+    @Test
+    fun `GIVEN androidUnitTest a member of debugUnitTest WHEN resolving the owner THEN it is the debug task`() {
+        val debugOnly = listOf(androidTests.first())
+
+        assertEquals(
+            "faktGenerateAndroidDebug",
+            ownerByAssociation("androidUnitTest", debugOnly, androidByMain),
+        )
+    }
+
+    @Test
+    fun `GIVEN androidUnitTestDebug the default set of debugUnitTest WHEN resolving the owner THEN it is the debug task`() {
+        assertEquals(
+            "faktGenerateAndroidDebug",
+            ownerByAssociation("androidUnitTestDebug", androidTests, androidByMain),
+        )
+    }
+
+    @Test
+    fun `GIVEN androidUnitTestRelease the default set of releaseUnitTest WHEN resolving the owner THEN it is the release task`() {
+        assertEquals(
+            "faktGenerateAndroidRelease",
+            ownerByAssociation("androidUnitTestRelease", androidTests, androidByMain),
+        )
+    }
+
+    @Test
+    fun `GIVEN androidUnitTest shared by the debug and release test compilations WHEN resolving the owner THEN it is owned by the first compilation`() {
+        // Several variant tasks feed the shared set, so the registry only answers "owned" (non
+        // null, which keeps the plain directory unregistered); it picks the first associated
+        // compilation in declaration order, which is deterministic.
+        assertEquals(
+            "faktGenerateAndroidDebug",
+            ownerByAssociation("androidUnitTest", androidTests, androidByMain),
+        )
+    }
+
+    @Test
+    fun `GIVEN a shared member whose first compilation is unclaimed WHEN resolving the owner THEN it falls to the next claimed one`() {
+        val releaseOnly = mapOf("android/release" to "faktGenerateAndroidRelease")
+
+        assertEquals(
+            "faktGenerateAndroidRelease",
+            ownerByAssociation("androidUnitTest", androidTests, releaseOnly),
+        )
+    }
+
+    @Test
+    fun `GIVEN androidInstrumentedTest a member of the androidTest compilation WHEN resolving the owner THEN it is the debug task`() {
+        assertEquals(
+            "faktGenerateAndroidDebug",
+            ownerByAssociation("androidInstrumentedTest", androidTests, androidByMain),
+        )
+    }
+
+    @Test
+    fun `GIVEN commonTest and the Android variant compilations WHEN resolving the owner THEN there is none`() {
+        assertNull(ownerByAssociation("commonTest", androidTests, androidByMain))
+    }
+
     // ---- ProjectBuilder ---------------------------------------------------------------------
 
     private fun jvmProject(): Project =

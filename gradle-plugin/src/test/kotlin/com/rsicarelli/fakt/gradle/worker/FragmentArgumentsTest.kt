@@ -155,4 +155,27 @@ class FragmentArgumentsTest {
             args.refines,
         )
     }
+
+    @Test
+    fun `GIVEN an android variant with its androidMain member under an intermediate WHEN no roots are given THEN returns null`() {
+        // androidDebug and androidMain are one KGP module; as fragments they would be siblings.
+        val sets =
+            listOf(
+                SourceSetInfo("androidDebug", listOf("commonMain")),
+                SourceSetInfo("androidMain", listOf("jvmAndAndroidMain")),
+                SourceSetInfo("jvmAndAndroidMain", listOf("commonMain")),
+                SourceSetInfo("commonMain", emptyList()),
+            )
+        val files =
+            listOf(
+                File("/p/src/androidDebug/kotlin/A.kt"),
+                File("/p/src/androidMain/kotlin/B.kt"),
+                File("/p/src/jvmAndAndroidMain/kotlin/C.kt"),
+                File("/p/src/commonMain/kotlin/D.kt"),
+            )
+
+        val args = buildFragmentArgs(sets, files, roots = emptyMap())
+
+        assertNull(args)
+    }
 }

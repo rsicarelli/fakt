@@ -18,7 +18,7 @@ import org.jetbrains.kotlin.gradle.plugin.LanguageSettingsBuilder
  *
  * What is wired:
  * - `compilerArguments`: language and API version, opt-ins, progressive mode, free args and the
- *   language features of the default source set. JVM flags (`-jvm-target`, `-jvm-default`,
+ *   language features of the compilation's source sets. JVM flags (`-jvm-target`, `-jvm-default`,
  *   `-no-jdk`) are added only for JVM compilations (`-no-jdk` not for Android). The list is built
  *   in a `project.provider`, so it is read when the task is configured for execution and sees late
  *   edits of the options.
@@ -58,15 +58,18 @@ internal fun usesToolchainJdk(platformType: KotlinPlatformType): Boolean =
 /** Reads the options now. Call it inside a provider, never while the build is configuring. */
 private fun snapshotOf(compilation: KotlinCompilation<*>): CompilerOptionsSnapshot {
     val options: KotlinCommonCompilerOptions = compilation.compileTaskProvider.get().compilerOptions
-    val settings = compilation.defaultSourceSet.languageSettings
+    // Every source set the compilation lists, not just the default one: an Android variant also
+    // compiles `androidMain` (and flavor and build type sets) whose opt-ins `compileKotlin*`
+    // honors.
+    val settings = compilation.kotlinSourceSets.map { it.languageSettings }
     val common =
         CompilerOptionsSnapshot(
             languageVersion = options.languageVersion.orNull?.version,
             apiVersion = options.apiVersion.orNull?.version,
-            optIn = options.optIn.get() + settings.optInAnnotationsInUse,
+            optIn = options.optIn.get() + settings.flatMap { it.optInAnnotationsInUse },
             progressiveMode = options.progressiveMode.get(),
             freeCompilerArgs = options.freeCompilerArgs.get(),
-            languageFeatures = settings.languageFeatures(),
+            languageFeatures = settings.flatMap { it.languageFeatures() }.distinct(),
         )
     return if (options is KotlinJvmCompilerOptions)
         common.withJvm(options, usesToolchainJdk(compilation.platformType))

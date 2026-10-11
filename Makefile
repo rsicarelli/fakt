@@ -1,7 +1,7 @@
 # Fakt Development Commands
 # Run from fakt/ directory (or from project root)
 
-.PHONY: build test compile clean format shadowJar test-sample test-fake-publishing validate quick-test full-rebuild test-compat-all test-compat-agp-all test-kmp-single-target test-kmp-all-jvm test-compiler-interop test-kmp-android-lint test-clean-rebuild-cache benchmark
+.PHONY: build test compile clean format shadowJar test-sample test-fake-publishing validate quick-test full-rebuild test-compat-all test-compat-agp-all test-kmp-single-target test-kmp-all-jvm test-compiler-interop test-kmp-android-lint test-kmp-android-target test-clean-rebuild-cache benchmark
 
 # Core build commands
 build:
@@ -130,6 +130,19 @@ test-kmp-android-lint: publish-local
 	@echo "🤖 Testing kmp-android-lint sample (Gradle 9.6.1, AGP lint)..."
 	cd samples/kmp-android-lint && ./gradlew lint --no-daemon
 
+# KMP + androidTarget() sample (com.android.library, AGP 8.11.1): per-variant faktGenerate* tasks, the
+# androidMain fakes reaching each variant's unit and instrumented tests, flavors and a
+# single-target Android module. Needs an Android SDK. Runs the build twice: the second run must
+# reuse the configuration cache.
+test-kmp-android-target: publish-local
+	@echo "🤖 Testing kmp-android-target sample (per-variant Android generation)..."
+	./gradlew -p samples/kmp-android-target build compileDebugAndroidTestKotlinAndroid
+	@log=$$(mktemp) && \
+	./gradlew -p samples/kmp-android-target build compileDebugAndroidTestKotlinAndroid > "$$log" 2>&1; \
+	status=$$?; cat "$$log"; \
+	if [ $$status -ne 0 ]; then rm -f "$$log"; echo "second run failed"; exit $$status; fi; \
+	grep -q "Configuration cache entry reused" "$$log"; found=$$?; rm -f "$$log"; exit $$found
+
 # Runtime benchmark — measures test EXECUTION time of Fakt vs mock libraries and prints a comparison
 # table. Runs every competitor in its own isolated module across FORKS fresh JVMs. --continue keeps
 # one technology's failure from hiding the others. The authoritative run is CI (benchmark.yml).
@@ -214,6 +227,7 @@ help:
 	@echo "  test-compat-agp-all - Test all AGP compat samples (AGP 8.11, 8.12, 9.0, 9.4)"
 	@echo "  test-compat-agp-VERSION - Test specific AGP compat sample (e.g., test-compat-agp-8.11)"
 	@echo "  test-kmp-android-lint - Test KMP+Android sample AGP lint on Gradle 9.6.1 (#129 guard)"
+	@echo "  test-kmp-android-target - Test KMP + androidTarget() sample (per-variant generation, needs an Android SDK)"
 	@echo "  test-clean-rebuild-cache - Verify fakes survive clean on a warm build cache (#142)"
 	@echo "  benchmark       - 📊 Runtime benchmark: Fakt vs mock libraries (comparison table)"
 	@echo ""

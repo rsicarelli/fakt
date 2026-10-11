@@ -188,9 +188,11 @@ private class SourceSplit(
 }
 
 /**
- * The ancestors of a consumer's default source set that only its own target compiles, so only this
- * consumer can emit their fakes. Computed when the consumer's context is encoded, with the final
- * graph. Empty for every other shape and for non-KMP projects.
+ * The source sets of a consumer's compilation, other than its default one, that only its own target
+ * compiles, so only this consumer can emit their fakes: the platform ancestors of the default set
+ * and, for an Android variant, the `androidMain` (and flavor) sets it lists next to it. Computed
+ * when the consumer's context is encoded, with the final graph. Empty for every other shape and for
+ * non-KMP projects.
  */
 internal fun platformOwnedAncestorsOf(
     compilation: KotlinCompilation<*>,
@@ -199,7 +201,7 @@ internal fun platformOwnedAncestorsOf(
     val kmp = compilation.project.extensions.findByType(KotlinMultiplatformExtension::class.java)
     if (shape != TaskShape.CONSUMER || kmp == null) return emptySet()
     val default = compilation.defaultSourceSet
-    val ancestors = default.getAllParentSourceSets().mapTo(linkedSetOf()) { it.name } - default.name
+    val ancestors = compilation.allKotlinSourceSets.mapTo(linkedSetOf()) { it.name } - default.name
     return platformOwnedAncestors(
         assignSourceSetOwners(readSourceSetGraph(kmp)),
         compilation.target.targetName,

@@ -70,9 +70,9 @@ private fun unreadableSourcesReason(project: Project): String? =
  * unit-testable (mirrors [shouldEnableTestFixtures]). Only variant-model Android plugins
  * (`com.android.library`, `com.android.application`, …) without KGP's
  * `org.jetbrains.kotlin.android` can be unreadable:
- * - Kotlin Multiplatform with `androidTarget()`: KGP compiles one compilation per Android variant
- *   (`debug`, `release`), whose default source sets (`androidDebug`) exclude `androidMain`, so a
- *   per-compilation task would drop its fakes. Stays in-process until it has a per-variant design.
+ * - Kotlin Multiplatform with `androidTarget()`: readable. KGP populates its source sets, and each
+ *   variant compilation (`debug`, `release`) is a consumer whose members include `androidMain`, so
+ *   the variant-model plugin never reaches the AGP 9 built-in Kotlin message below.
  * - AGP 9 built-in Kotlin: readable through AGP's variant API, unless Fakt could not hook it.
  *
  * @param hasAndroidPlugin whether a variant-model Android plugin is applied.
@@ -88,11 +88,7 @@ internal fun unreadableSourcesReason(
 ): String? =
     when {
         !hasAndroidPlugin || hasKotlinAndroidPlugin -> null
-        isMultiplatform ->
-            "this multiplatform project declares androidTarget() through the com.android.library " +
-                "or com.android.application plugin, whose per-variant compilations Fakt cannot " +
-                "drive from a Gradle task yet; the com.android.kotlin.multiplatform.library " +
-                "plugin is supported"
+        isMultiplatform -> null
         canReadVariantSources -> null
         else ->
             "this Android module uses AGP's built-in Kotlin support and Fakt could not hook AGP's " +
@@ -738,11 +734,12 @@ public class FaktGradleSubplugin : KotlinCompilerPluginSupportPlugin {
      *
      * A single-target KMP project has no per-source-set `commonMain` compilation at all (see
      * [singleTargetPlatformTypeName]): a JVM/JS/Wasm lone target owns both the common and the
-     * platform fakes from one task ([CacheCorrectDecision.REGISTER_SINGLE_TARGET]), while an
-     * Android or Native lone target stays on the in-process plugin. An Android project on AGP's
-     * built-in Kotlin exposes empty Kotlin source sets; its producers read AGP's variant API
-     * instead, and only when that API is not visible to Fakt does it stay on the in-process plugin
-     * (see [unreadableSourcesReason]).
+     * platform fakes from one task ([CacheCorrectDecision.REGISTER_SINGLE_TARGET]), while a lone
+     * `androidTarget()` registers every variant as a consumer (the synthetic `commonMain` producer
+     * owns the common fakes) and a Native lone target stays on the in-process plugin. An Android
+     * project on AGP's built-in Kotlin exposes empty Kotlin source sets; its producers read AGP's
+     * variant API instead, and only when that API is not visible to Fakt does it stay on the
+     * in-process plugin (see [unreadableSourcesReason]).
      */
     private fun cacheCorrectDecision(
         kotlinCompilation: KotlinCompilation<*>

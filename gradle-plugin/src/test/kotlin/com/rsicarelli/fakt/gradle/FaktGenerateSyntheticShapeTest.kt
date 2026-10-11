@@ -53,6 +53,20 @@ class FaktGenerateSyntheticShapeTest {
         assertTrue(fakeNames(projectDir.resolve(OUTPUT)).isEmpty())
     }
 
+    @Test
+    fun `GIVEN androidDebug and androidMain actuals as platform analysis-only WHEN running THEN it emits only the common fake without tolerated errors`(
+        @TempDir projectDir: File
+    ) {
+        setupProject(projectDir, withCommonSources = true, platformSets = ANDROID_SETS)
+
+        val result = runTask(projectDir, "faktGenerate")
+
+        assertEquals(TaskOutcome.SUCCESS, result.task(":faktGenerate")?.outcome, result.output)
+        assertFalse(result.output.contains("NO_ACTUAL_FOR_EXPECT"), result.output)
+        assertFalse(result.output.contains("Fakt: tolerated"), result.output)
+        assertEquals(setOf("FakeCommonAuditServiceImpl.kt"), fakeNames(projectDir.resolve(OUTPUT)))
+    }
+
     private fun runTask(projectDir: File, vararg arguments: String): BuildResult =
         GradleRunner.create()
             .withProjectDir(projectDir)
@@ -66,7 +80,11 @@ class FaktGenerateSyntheticShapeTest {
             .map { it.name }
             .toSet()
 
-    private fun setupProject(projectDir: File, withCommonSources: Boolean) {
+    private fun setupProject(
+        projectDir: File,
+        withCommonSources: Boolean,
+        platformSets: List<String> = listOf("desktopMain"),
+    ) {
         projectDir
             .resolve("settings.gradle.kts")
             .writeText("""rootProject.name = "fakt-synthetic-shape-test"""")
@@ -74,19 +92,30 @@ class FaktGenerateSyntheticShapeTest {
             .resolve("gradle.properties")
             .writeText("org.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=1024m\n")
         projectDir.resolve("src/commonMain/kotlin/fixture").mkdirs()
-        projectDir.resolve("src/desktopMain/kotlin/fixture").mkdirs()
+        platformSets.forEach { projectDir.resolve("src/$it/kotlin/fixture").mkdirs() }
         if (withCommonSources) {
             projectDir.resolve("src/commonMain/kotlin/fixture/Common.kt").writeText(COMMON_FIXTURE)
         }
-        // The platform sources always exist: they must not keep the task out of NO-SOURCE.
-        projectDir
-            .resolve("src/desktopMain/kotlin/fixture/Desktop.kt")
-            .writeText(if (withCommonSources) DESKTOP_FIXTURE else DESKTOP_ONLY_FIXTURE)
-        projectDir.resolve("build.gradle.kts").writeText(buildScript(projectDir))
+        if (platformSets == ANDROID_SETS) {
+            // KGP's Android shape: androidMain is a sibling member of the androidDebug compilation.
+            projectDir
+                .resolve("src/androidMain/kotlin/fixture/Platform.android.kt")
+                .writeText(ANDROID_MAIN_FIXTURE)
+            projectDir
+                .resolve("src/androidDebug/kotlin/fixture/DebugFlags.kt")
+                .writeText(ANDROID_DEBUG_FIXTURE)
+        } else {
+            // The platform sources always exist: they must not keep the task out of NO-SOURCE.
+            projectDir
+                .resolve("src/desktopMain/kotlin/fixture/Desktop.kt")
+                .writeText(if (withCommonSources) DESKTOP_FIXTURE else DESKTOP_ONLY_FIXTURE)
+        }
+        projectDir.resolve("build.gradle.kts").writeText(buildScript(projectDir, platformSets))
     }
 
-    private fun buildScript(projectDir: File): String {
+    private fun buildScript(projectDir: File, platformSets: List<String>): String {
         val sourceSetContextJson = json.encodeToString(SourceSetContext.serializer(), CONTEXT)
+        val platformDirs = platformSets.joinToString { """file("src/$it/kotlin")""" }
         val cp = workerClasspath()
         val classpathLiteral = cp.joinToString(",\n        ") { fileLiteral(it) }
         val compilerJarLiteral =
@@ -111,7 +140,7 @@ class FaktGenerateSyntheticShapeTest {
 
             tasks.register<FaktGenerateTask>("faktGenerate") {
                 commonSources.from(file("src/commonMain/kotlin"))
-                platformAnalysisOnlySources.from(file("src/desktopMain/kotlin"))
+                platformAnalysisOnlySources.from($platformDirs)
                 compileClasspath.from(
                     $classpathLiteral
                 )
@@ -123,7 +152,7 @@ class FaktGenerateSyntheticShapeTest {
                 )
                 sourceSetContextJson.set(${'"'}${'"'}${'"'}${sourceSetContextJson}${'"'}${'"'}${'"'})
                 faktVersion.set("test-1.0")
-                logLevel.set(LogLevel.QUIET)
+                logLevel.set(LogLevel.INFO)
                 imports.set(listOf<String>())
                 generatedKotlinDir.set(file("${projectDir.resolve(OUTPUT).slashPath()}"))
                 scratchDir.set(layout.buildDirectory.dir("faktCaches/desktop/main"))
@@ -165,6 +194,36 @@ class FaktGenerateSyntheticShapeTest {
                 commonTestOutputDirectory = "fakt://generated",
                 outputDirectories = mapOf("commonMain" to "fakt://generated"),
             )
+
+        private val ANDROID_SETS = listOf("androidDebug", "androidMain")
+
+        private val ANDROID_MAIN_FIXTURE =
+            """
+            package fixture
+
+            import com.rsicarelli.fakt.Fake
+
+            actual fun platformName(): String = "Android"
+
+            @Fake
+            interface AndroidOnly {
+                fun label(): String
+            }
+            """
+                .trimIndent()
+
+        private val ANDROID_DEBUG_FIXTURE =
+            """
+            package fixture
+
+            import com.rsicarelli.fakt.Fake
+
+            @Fake
+            interface DebugFlags {
+                fun enabled(): Boolean
+            }
+            """
+                .trimIndent()
 
         private val COMMON_FIXTURE =
             """
