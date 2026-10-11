@@ -52,10 +52,14 @@ public abstract class com/rsicarelli/fakt/gradle/FaktGenerateTask : org/gradle/a
 	public abstract fun getImports ()Lorg/gradle/api/provider/ListProperty;
 	public abstract fun getJdkHome ()Lorg/gradle/api/file/DirectoryProperty;
 	public abstract fun getJdkVersion ()Lorg/gradle/api/provider/Property;
+	public abstract fun getKonanHome ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getKonanTargets ()Lorg/gradle/api/provider/ListProperty;
+	public abstract fun getKotlinNativeVersion ()Lorg/gradle/api/provider/Property;
 	public abstract fun getLogLevel ()Lorg/gradle/api/provider/Property;
 	public abstract fun getPlatformAnalysisOnlySources ()Lorg/gradle/api/file/ConfigurableFileCollection;
 	public abstract fun getRefinesKlibs ()Lorg/gradle/api/file/ConfigurableFileCollection;
 	public abstract fun getScratchDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getSharedNative ()Lorg/gradle/api/provider/Property;
 	public abstract fun getSourceSetContextJson ()Lorg/gradle/api/provider/Property;
 	public abstract fun getSourceSetRoots ()Lorg/gradle/api/provider/MapProperty;
 	public abstract fun getSources ()Lorg/gradle/api/file/ConfigurableFileCollection;

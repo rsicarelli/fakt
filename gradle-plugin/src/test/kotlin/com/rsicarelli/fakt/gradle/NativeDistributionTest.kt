@@ -144,4 +144,25 @@ class NativeDistributionTest {
 
         assertNotNull(nativeDistributionProblem(root))
     }
+
+    @Test
+    fun `GIVEN no konan targets WHEN planning a task THEN there is no problem even without a home`() {
+        assertNull(nativeTaskProblem(emptyList(), konanHome = null))
+    }
+
+    @Test
+    fun `GIVEN konan targets without a home WHEN planning a task THEN the message names konanHome`() {
+        val message = assertNotNull(nativeTaskProblem(listOf("linux_x64"), konanHome = null))
+
+        assertTrue("konanHome" in message, message)
+    }
+
+    @Test
+    fun `GIVEN konan targets and a missing distribution WHEN planning a task THEN it is reported`() {
+        val missing = File("does-not-exist").resolve("k2n")
+
+        val message = assertNotNull(nativeTaskProblem(listOf("linux_x64"), missing))
+
+        assertEquals(nativeDistributionProblem(missing), message)
+    }
 }

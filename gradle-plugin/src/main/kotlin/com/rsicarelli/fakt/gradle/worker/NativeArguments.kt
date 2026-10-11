@@ -52,8 +52,10 @@ private const val STDLIB_RELATIVE_PATH = "klib/common/stdlib"
 
 /**
  * Plans the `K2Native` invocation.
- * - **Leaf**: default libs stay on (K2Native adds `klib/common/stdlib` and `klib/platform/<t>` from
- *   `konan.home`), so only the compilation's own dependencies go on `-library`.
+ * - **Leaf**: a full (not metadata) klib, because `-Xmetadata-klib` stops K2Native pairing
+ *   `actual`s with the `expect`s of `-Xfragments`; default libs stay on (K2Native adds
+ *   `klib/common/stdlib` and `klib/platform/<t>` from `konan.home`), so only the compilation's own
+ *   dependencies go on `-library`.
  * - **Shared**: the platform libs of one concrete target are wrong for a shared set, so
  *   `-no-default-libs` and `-nostdlib` are set and the distribution stdlib is listed explicitly
  *   ahead of the (commonized) dependencies. The own sources are analysed as `-Xcommon-sources`
@@ -76,7 +78,7 @@ private fun leafArguments(
 ): NativeArguments =
     NativeArguments(
         produce = "library",
-        metadataKlib = true,
+        metadataKlib = false,
         target = target,
         outputName = outputName,
         libraries = input.dependencies.map { it.absolutePath },

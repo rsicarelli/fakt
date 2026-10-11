@@ -44,11 +44,13 @@ class NativeArgumentsTest {
     // region leaf plan
 
     @Test
-    fun `GIVEN a leaf native compilation WHEN planning THEN produces a metadata klib for its target`() {
+    fun `GIVEN a leaf native compilation WHEN planning THEN produces a full klib for its target`() {
         val plan = nativeArguments(input(shared = false, konanTargets = listOf("linux_x64")))
 
         assertEquals("library", plan.produce)
-        assertTrue(plan.metadataKlib)
+        // `-Xmetadata-klib` stops K2Native pairing a leaf's `actual`s with the `expect`s declared
+        // in `-Xfragments` ("declared in the same module"); only shared sets are metadata klibs.
+        assertFalse(plan.metadataKlib)
         assertEquals("linux_x64", plan.target)
         assertEquals(File(scratch, "native-klib/fakt-analysis").absolutePath, plan.outputName)
     }

@@ -43,6 +43,9 @@ internal interface FaktCodegenWorkParameters : WorkParameters {
     val scratchDir: DirectoryProperty
     val compilerArguments: ListProperty<String>
     val jdkHome: DirectoryProperty
+    val konanHome: DirectoryProperty
+    val konanTargets: ListProperty<String>
+    val sharedNative: Property<Boolean>
 }
 
 /** Default `walkTopDown` cap for source discovery — covers typical Gradle source-set nesting. */
@@ -55,7 +58,7 @@ private const val MODULE_NAME = "fakt-analysis"
  * `:compiler` shadowJar attached as a `-Xplugin`, writing generated `.kt` files into
  * [FaktCodegenWorkParameters.generatedKotlinDir].
  *
- * Three drivers (see [CompilerDriver]):
+ * Four drivers (see [CompilerDriver]):
  * - **`KotlinMetadataCompiler`** for common (`commonMain`) producers — frontend-only, so unpaired
  *   `expect` declarations cannot fail the run, and generation happens at the FIR phase
  *   ([EmitPhase.FIR], the pipeline has no IR phase). Dependencies come from
@@ -67,6 +70,9 @@ private const val MODULE_NAME = "fakt-analysis"
  *   compilation's platform klibs (routed through the same klib input as the metadata driver); the
  *   run stops at klib serialization into [FaktCodegenWorkParameters.scratchDir], and generation
  *   happens at the FIR phase exactly as on the other drivers.
+ * - **`K2Native`** for Kotlin/Native compilations (non-empty `konanTargets`), forked from the
+ *   distribution's own embeddable compiler jar. It stops at a throwaway klib in
+ *   [FaktCodegenWorkParameters.scratchDir]; the argument plan lives in `NativeArguments.kt`.
  *
  * The FIR metadata cache is never enabled here: nothing on the task path reads it, and writing it
  * after every interface is quadratic in the `@Fake` count (issue #173).
@@ -87,13 +93,20 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
             collectKotlinSources(params.platformAnalysisOnlySources.files)
         val sourceSetContext = populateSourceSetContext(params)
         val pluginJars = resolvePluginJars(params)
-        val driver = CompilerDriver.forPlatformType(sourceSetContext.platformType)
+        val driver =
+            CompilerDriver.select(
+                sourceSetContext.platformType,
+                params.konanTargets.getOrElse(emptyList()),
+            )
         val sourceFiles =
             collectKotlinSources(params.sources.files) +
                 commonFiles +
                 analysisOnlyFiles +
                 platformAnalysisOnlyFiles
         val commonFragmentFiles = analysisOnlyFiles + commonFiles
+        val dependencies =
+            params.compileClasspath.files.toList() + params.commonKlibClasspath.files.toList()
+        val refinesPaths = params.refinesKlibs.files.toList()
 
         invokeK2(
             K2Invocation(
@@ -108,10 +121,9 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
                         sourceFiles,
                         params.sourceSetRoots.getOrElse(emptyMap()),
                     ),
-                refinesPaths = params.refinesKlibs.files.toList(),
-                compileClasspath =
-                    params.compileClasspath.files.toList() +
-                        params.commonKlibClasspath.files.toList(),
+                refinesPaths = refinesPaths,
+                compileClasspath = dependencies,
+                native = nativeArgumentsInput(params, sourceFiles, dependencies, refinesPaths),
                 pluginJars = pluginJars,
                 outputDir = outputDir,
                 scratchOutputDir = params.scratchDir.asFile.get(),
@@ -200,6 +212,8 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         val wasmTarget: String?,
         val compilerArguments: List<String>,
         val jdkHome: String?,
+        /** Set exactly when [driver] is [CompilerDriver.NATIVE]. */
+        val native: NativeArgumentsInput?,
     )
 
     private fun invokeK2(call: K2Invocation) {
@@ -215,9 +229,16 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
             }
             CompilerDriver.METADATA -> populateMetadataOutputArgs(bridge, args, call)
             CompilerDriver.JS -> populateJsOutputArgs(bridge, args, call)
-            // Placeholder keeping the `when` exhaustive; the Native branch lands with the plumbing.
-            CompilerDriver.NATIVE ->
-                error("The Kotlin/Native driver is not wired into the worker yet")
+            CompilerDriver.NATIVE -> {
+                applyNativeArguments(bridge, args, nativeArguments(checkNotNull(call.native)))
+                // A leaf's common fragment rides the shared path; a shared set has none.
+                populateConsumerMultiplatformArgs(
+                    bridge,
+                    args,
+                    call.commonFragmentFiles,
+                    call.fragments,
+                )
+            }
         }
         populatePluginArgs(bridge, args, call)
 
@@ -254,9 +275,13 @@ internal abstract class FaktCodegenWorkAction : WorkAction<FaktCodegenWorkParame
         // their klib dependencies from `-libraries` instead.
         val dependencies =
             call.compileClasspath.joinToString(File.pathSeparator) { it.absolutePath }
-        val dependencySetter =
-            if (call.driver == CompilerDriver.JS) "setLibraries" else "setClasspath"
-        bridge.setOnArgs(args, dependencySetter, String::class.java, dependencies)
+        when (call.driver) {
+            // K2Native has no `-classpath`, and its `-library` list is an array set with the plan.
+            CompilerDriver.NATIVE -> Unit
+            CompilerDriver.JS ->
+                bridge.setOnArgs(args, "setLibraries", String::class.java, dependencies)
+            else -> bridge.setOnArgs(args, "setClasspath", String::class.java, dependencies)
+        }
         bridge.setOnArgs(args, "setModuleName", String::class.java, MODULE_NAME)
     }
 

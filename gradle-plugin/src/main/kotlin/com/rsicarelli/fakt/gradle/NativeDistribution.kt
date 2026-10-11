@@ -94,6 +94,18 @@ internal fun nativeDistributionProblem(konanHome: File): String? =
             "konan.data.dir to the directory that holds it."
     }
 
+/**
+ * Why a task with [konanTargets] cannot run, or null when it can (or is not a Native task). A
+ * Native task needs a [konanHome], and that directory must hold a runnable distribution.
+ */
+internal fun nativeTaskProblem(konanTargets: List<String>, konanHome: File?): String? =
+    when {
+        konanTargets.isEmpty() -> null
+        konanHome == null ->
+            "A Kotlin/Native task needs konanHome, but none is set (konanTargets=$konanTargets)."
+        else -> nativeDistributionProblem(konanHome)
+    }
+
 /** The lazily resolved distribution of one project. */
 internal class NativeDistributionProviders(
     val konanHome: Provider<Directory>,
