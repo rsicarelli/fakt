@@ -153,7 +153,9 @@ tasks {
         // Opt-in Native suite: forwards the distribution path only when the property is given.
         jvmArgumentProviders.add(
             objects.newInstance(KonanHomeArgProvider::class.java).apply {
-                konanHome.set(providers.gradleProperty("fakt.test.konanHome"))
+                val property = providers.gradleProperty("fakt.test.konanHome")
+                konanHome.set(property)
+                nativeSuiteEnabled.set(property.map { true }.orElse(false))
             }
         )
     }
@@ -185,11 +187,14 @@ abstract class StdlibMetadataArgProvider : CommandLineArgumentProvider {
 
 /**
  * Forwards the Gradle property `fakt.test.konanHome` to the test JVM as a system property, only
- * when it is set. `@Internal`: the distribution path is machine specific and must not key the test
- * task's up-to-date check. The Native TestKit suite is skipped without it.
+ * when it is set. The path is `@Internal`: it is machine specific and must not key the test task's
+ * up-to-date check. Whether the Native TestKit suite runs at all (the property is set) is an
+ * `@Input`, so adding or removing the property never reuses a result that skipped, or ran, it.
  */
 abstract class KonanHomeArgProvider : CommandLineArgumentProvider {
     @get:Internal abstract val konanHome: Property<String>
+
+    @get:Input abstract val nativeSuiteEnabled: Property<Boolean>
 
     override fun asArguments(): List<String> =
         konanHome.map { listOf("-Dfakt.test.konanHome=$it") }.getOrElse(emptyList())
