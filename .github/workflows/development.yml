@@ -287,8 +287,8 @@ jobs:
           # producers that have sources are listed: a NO-SOURCE task counts as re-executed.
           - sample: kmp-multi-target
             path: samples/kmp-multi-target
-            producers: faktGenerateMetadataCommonMain faktGenerateMetadataWebMain faktGenerateJvmMain faktGenerateJsMain faktGenerateWasmJsMain faktGenerateMetadataNativeMain faktGenerateMetadataLinuxMain faktGenerateMetadataAppleMain faktGenerateMetadataIosMain faktGenerateLinuxX64Main
-            cached-fakes: FakeJvmOnlyServiceImpl FakeJsOnlyServiceImpl FakeWasmOnlyServiceImpl FakeWebStorageImpl FakeNativeOnlyServiceImpl FakeLinuxMemoryImpl FakeAppleUrlsImpl FakeIosOnlyServiceImpl FakeIosViewsImpl FakePosixClockImpl FakeCinteropPortImpl
+            producers: faktGenerateMetadataCommonMain faktGenerateMetadataWebMain faktGenerateJvmMain faktGenerateJsMain faktGenerateWasmJsMain faktGenerateMetadataNativeMain faktGenerateMetadataLinuxMain faktGenerateMetadataAppleMain faktGenerateMetadataIosMain faktGenerateLinuxX64Main faktGenerateMingwX64Main
+            cached-fakes: FakeJvmOnlyServiceImpl FakeJsOnlyServiceImpl FakeWasmOnlyServiceImpl FakeWebStorageImpl FakeNativeOnlyServiceImpl FakeLinuxMemoryImpl FakeAppleUrlsImpl FakeIosOnlyServiceImpl FakeIosViewsImpl FakePosixClockImpl FakeCinteropPortImpl FakeMingwOnlyServiceImpl
             # This sample needs no plugin the worker lacks: any tolerated error is a real problem.
             forbid-tolerated: "1"
           # Only native targets (#152): the all-native commonMain producer runs on the Kotlin/Native

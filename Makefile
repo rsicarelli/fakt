@@ -61,8 +61,8 @@ test-kmp-native-only:
 # hierarchy sample and for the native-only shapes. Apple producers are covered by CI on macOS.
 test-native-cache: publish-local
 	@echo "🧊 Verifying the Native cache contract (#152)..."
-	FAKT_CACHED_FAKES="FakeJvmOnlyServiceImpl FakeJsOnlyServiceImpl FakeWasmOnlyServiceImpl FakeWebStorageImpl FakeNativeOnlyServiceImpl FakeLinuxMemoryImpl FakeAppleUrlsImpl FakeIosOnlyServiceImpl FakeIosViewsImpl FakePosixClockImpl FakeCinteropPortImpl" FAKT_FORBID_TOLERATED=1 \
-		./.github/scripts/cache-correctness-check.sh samples/kmp-multi-target faktGenerateMetadataCommonMain faktGenerateMetadataWebMain faktGenerateJvmMain faktGenerateJsMain faktGenerateWasmJsMain faktGenerateMetadataNativeMain faktGenerateMetadataLinuxMain faktGenerateMetadataAppleMain faktGenerateMetadataIosMain faktGenerateLinuxX64Main
+	FAKT_CACHED_FAKES="FakeJvmOnlyServiceImpl FakeJsOnlyServiceImpl FakeWasmOnlyServiceImpl FakeWebStorageImpl FakeNativeOnlyServiceImpl FakeLinuxMemoryImpl FakeAppleUrlsImpl FakeIosOnlyServiceImpl FakeIosViewsImpl FakePosixClockImpl FakeCinteropPortImpl FakeMingwOnlyServiceImpl" FAKT_FORBID_TOLERATED=1 \
+		./.github/scripts/cache-correctness-check.sh samples/kmp-multi-target faktGenerateMetadataCommonMain faktGenerateMetadataWebMain faktGenerateJvmMain faktGenerateJsMain faktGenerateWasmJsMain faktGenerateMetadataNativeMain faktGenerateMetadataLinuxMain faktGenerateMetadataAppleMain faktGenerateMetadataIosMain faktGenerateLinuxX64Main faktGenerateMingwX64Main
 	FAKT_CACHED_FAKES="FakeNativeBufferImpl FakeGreeterImpl FakeStatImpl" FAKT_FORBID_TOLERATED=1 \
 		./.github/scripts/cache-correctness-check.sh samples/kmp-native-only :all-native:faktGenerateMetadataCommonMain :single:faktGenerateLinuxX64Main
 
