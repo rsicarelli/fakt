@@ -554,6 +554,18 @@ hits across operating systems are therefore not guaranteed.
 
 **Default:** `true`.
 
+### Newer Kotlin than the worker
+
+Fakt's worker compiles with the Kotlin version Fakt was tested with. If your Kotlin Gradle plugin
+is two or more minor versions newer, the build stops with a clear message. To build anyway, set
+this Gradle property in `gradle.properties`, which turns the error into a warning:
+
+```properties
+fakt.allowNewerKotlin=true
+```
+
+See [Worker compiler version](../compatibility.md#worker-compiler-version) for the full rules.
+
 ### Opting out
 
 The previous behaviour — generation running inside `compileKotlin*` as a side effect — is still

@@ -5,6 +5,12 @@ inputs:
   kotlin-version:
     description: Kotlin version to test (e.g., 2.2.0, 2.3.20)
     required: true
+  expect-output:
+    description: >-
+      Optional text the Gradle output must contain. When set, the run is logged and the step fails
+      if the text is missing.
+    required: false
+    default: ""
 
 runs:
   using: composite
@@ -14,4 +20,17 @@ runs:
 
     - name: Test compat sample (Kotlin ${{ inputs.kotlin-version }})
       shell: bash
-      run: ./gradlew -p samples/compat/kotlin-${{ inputs.kotlin-version }} jvmTest --no-daemon
+      env:
+        EXPECT_OUTPUT: ${{ inputs.expect-output }}
+        SAMPLE_DIR: samples/compat/kotlin-${{ inputs.kotlin-version }}
+      run: |
+        if [ -z "$EXPECT_OUTPUT" ]; then
+          ./gradlew -p "$SAMPLE_DIR" jvmTest --no-daemon
+          exit 0
+        fi
+        # bash runs with pipefail, so a failing build still fails the step despite the tee.
+        ./gradlew -p "$SAMPLE_DIR" jvmTest --no-daemon 2>&1 | tee compat-sample.log
+        if ! grep -qF -- "$EXPECT_OUTPUT" compat-sample.log; then
+          echo "::error::Expected the Gradle output to contain: $EXPECT_OUTPUT"
+          exit 1
+        fi

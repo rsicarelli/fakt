@@ -198,7 +198,10 @@ Each one is tracked in #150 "Up next". Why each matters:
     `-Xcontext-parameters`, optIn, explicit API, `-Xjdk-release`, language/API version.
   - Code that relies on other compiler plugins breaks the same way: serialization `serializer()`,
     Parcelize, FIR-generating DI plugins.
-- **Worker version pin** (#166). 2.4.10 can't read metadata from a newer user Kotlin.
+- **Worker version pin** (#166). Handled by `checkWorkerKotlinVersion`
+  (`WorkerKotlinVersionPolicy.kt`): silent up to the pin's minor, a warning one minor newer, an error
+  beyond (`fakt.allowNewerKotlin=true` downgrades it). The `samples/compat/kotlin-2.5.0-Beta1` canary
+  proves the call site on CI; bump it when a newer pre-release appears. Docs: `docs/compatibility.md`.
 - **CI has no Windows run** (#167, path bugs). macOS runs only `test-native-macos`.
 - **Collector mode** (`FakeCollectorTask`) reads other projects' tasks, which breaks Isolated
   Projects (#168). It ships in 1.0.
