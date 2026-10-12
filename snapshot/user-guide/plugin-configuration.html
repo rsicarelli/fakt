@@ -638,6 +638,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#newer-kotlin-than-the-worker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Newer Kotlin than the worker
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#opting-out" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1378,6 +1389,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#newer-kotlin-than-the-worker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Newer Kotlin than the worker
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#opting-out" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2000,15 +2022,22 @@ whenever a module lands here.</p>
 </ul>
 </div>
 <p><strong>Default:</strong> <code>true</code>.</p>
+<h3 id="newer-kotlin-than-the-worker">Newer Kotlin than the worker<a class="headerlink" href="#newer-kotlin-than-the-worker" title="Permanent link">&para;</a></h3>
+<p>Fakt&rsquo;s worker compiles with the Kotlin version Fakt was tested with. If your Kotlin Gradle plugin<br />
+is two or more minor versions newer, the build stops with a clear message. To build anyway, set<br />
+this Gradle property in <code>gradle.properties</code>, which turns the error into a warning:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="na">fakt.allowNewerKotlin</span><span class="o">=</span><span class="s">true</span>
+</code></pre></div>
+<p>See <a href="../compatibility.html#worker-compiler-version">Worker compiler version</a> for the full rules.</p>
 <h3 id="opting-out">Opting out<a class="headerlink" href="#opting-out" title="Permanent link">&para;</a></h3>
 <p>The previous behaviour — generation running inside <code>compileKotlin*</code> as a side effect — is still<br />
 available. Turn it off via the extension or a Gradle property (the property wins over the extension,<br />
 so a command-line opt-out always applies):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="w">    </span><span class="n">useExperimentalGenerateTask</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
-<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="n">fakt</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="w">    </span><span class="n">useExperimentalGenerateTask</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="p">}</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>gradle<span class="w"> </span>build<span class="w"> </span>-Pfakt.useExperimentalGenerateTask<span class="o">=</span><span class="nb">false</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>gradle<span class="w"> </span>build<span class="w"> </span>-Pfakt.useExperimentalGenerateTask<span class="o">=</span><span class="nb">false</span>
 </code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">Temporary escape hatch</p>
@@ -2020,10 +2049,10 @@ so a command-line opt-out always applies):</p>
 declares them. That makes the task&rsquo;s build-cache entry incomplete: after a <code>clean</code>, Gradle sees<br />
 unchanged inputs, restores the compilation from the cache, and never runs the compiler — so the<br />
 <code>.kt</code> files are never written. The build then continues with an empty generated directory:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>&gt; Task :core:compileKotlin FROM-CACHE
-<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>&gt; Task :core:compileTestFixturesKotlin NO-SOURCE
-<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>&gt; Task :app:compileTestKotlin FAILED
-<a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a>e: UserServiceTest.kt:5:54 Unresolved reference &#39;fakeCacheManager&#39;.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>&gt; Task :core:compileKotlin FROM-CACHE
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>&gt; Task :core:compileTestFixturesKotlin NO-SOURCE
+<a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>&gt; Task :app:compileTestKotlin FAILED
+<a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a>e: UserServiceTest.kt:5:54 Unresolved reference &#39;fakeCacheManager&#39;.
 </code></pre></div>
 <p>So Fakt takes those <code>compileKotlin*</code> tasks out of the build cache<br />
 (<a href="https://github.com/rsicarelli/fakt/issues/142">issue #142</a>). Only that one task per module is<br />
