@@ -21,6 +21,9 @@ Fakt is tested against multiple Kotlin and Android Gradle Plugin versions on eve
 | 2.0.x | ⚠️ Not tested | — |
 | 1.x | ❌ Not supported (K1) | — |
 
+Intermediate source sets are verified on the minimum version too: a 2.2.0 project with an all-JVM
+intermediate (shared by two of three `jvm()` targets) builds and its tests pass in CI.
+
 ---
 
 ## Worker compiler version

@@ -5,6 +5,16 @@ inputs:
   kotlin-version:
     description: Kotlin version to test (e.g., 2.2.0, 2.3.20)
     required: true
+  sample:
+    description: >-
+      Directory name under samples/compat. Defaults to kotlin-<kotlin-version>; set it to run a
+      variant such as kotlin-2.2.0-intermediates-jvm.
+    required: false
+    default: ""
+  tasks:
+    description: Gradle test tasks to run in the sample.
+    required: false
+    default: jvmTest
   expect-output:
     description: >-
       Optional text the Gradle output must contain. When set, the run is logged and the step fails
@@ -22,14 +32,15 @@ runs:
       shell: bash
       env:
         EXPECT_OUTPUT: ${{ inputs.expect-output }}
-        SAMPLE_DIR: samples/compat/kotlin-${{ inputs.kotlin-version }}
+        SAMPLE_DIR: samples/compat/${{ inputs.sample || format('kotlin-{0}', inputs.kotlin-version) }}
+        TASKS: ${{ inputs.tasks }}
       run: |
         if [ -z "$EXPECT_OUTPUT" ]; then
-          ./gradlew -p "$SAMPLE_DIR" jvmTest --no-daemon
+          ./gradlew -p "$SAMPLE_DIR" $TASKS --no-daemon
           exit 0
         fi
         # bash runs with pipefail, so a failing build still fails the step despite the tee.
-        ./gradlew -p "$SAMPLE_DIR" jvmTest --no-daemon 2>&1 | tee compat-sample.log
+        ./gradlew -p "$SAMPLE_DIR" $TASKS --no-daemon 2>&1 | tee compat-sample.log
         if ! grep -qF -- "$EXPECT_OUTPUT" compat-sample.log; then
           echo "::error::Expected the Gradle output to contain: $EXPECT_OUTPUT"
           exit 1
