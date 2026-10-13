@@ -493,6 +493,28 @@ jobs:
           kotlin-version: ${{ matrix.kotlin-version }}
           expect-output: ${{ matrix.kotlin-version == '2.5.0-Beta1' && 'one minor newer than the Kotlin' || '' }}
 
+  # Intermediate source sets run the worker's -Xfragments / -Xrefines-paths drivers (#160, #162)
+  # on a project whose Kotlin (2.2.0, the minimum) is older than the worker's. The plain compat
+  # cells above have no intermediate, so they never exercise that path.
+  test-compat-intermediates:
+    name: Compat / Kotlin 2.2.0 intermediates (JVM)
+    needs: [check-code-changes, publish-plugin-bundle]
+    if: ${{ needs.check-code-changes.outputs.has-changes == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Test Compat Sample
+        uses: ./.github/actions/test-compat-samples
+        with:
+          kotlin-version: "2.2.0"
+          sample: kotlin-2.2.0-intermediates-jvm
+          tasks: desktopTest serverTest cliTest
+
   test-compat-agp:
     name: Compat / AGP ${{ matrix.agp-version }}
     needs: [check-code-changes, publish-plugin-bundle]
@@ -608,6 +630,7 @@ jobs:
       - test-cache-correctness
       - test-clean-rebuild-cache
       - test-compat
+      - test-compat-intermediates
       - test-compat-agp
       - test-kmp-android-lint
       - test-native-macos
